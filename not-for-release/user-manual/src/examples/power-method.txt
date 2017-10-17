@@ -1,0 +1,30 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 2
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: None
+OpenMP threads:2
+MPI is not initialized
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; reading...
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; done
+Gershgorin : Lambda min = 0; Lambda max = 16
+LocalMatrix name=/home/dimitar/matrices/small/sym/gr_30_30.mtx; rows=900; cols=900; nnz=7744; prec=64bit; asm=no; format=CSR; host backend={CPU(OpenMP)}; accelerator backend={None}; current=CPU(OpenMP)
+Power method (lambda max) execution:0.338008 sec
+Power method (lambda min) execution:0.310945 sec
+Power method Lambda min = 0.0614628; Lambda max = 11.9591; iter=2x10000
+Chebyshev (non-precond) linear solver starts
+IterationControl criteria: abs tol=1e-15; rel tol=1e-06; div tol=1e+08; max iter=1000000
+IterationControl initial residual = 30
+IterationControl RELATIVE criteria has been reached: res norm=2.98708e-05; rel val=9.95692e-07; iter=919
+Chebyshev (non-precond) ends
+Solver execution:0.028368 sec
+PCG solver starts, with preconditioner:
+Approximate Inverse Chebyshev(3) preconditioner
+AI matrix nnz = 62500
+IterationControl criteria: abs tol=1e-15; rel tol=1e-06; div tol=1e+08; max iter=1000000
+IterationControl initial residual = 30
+IterationControl RELATIVE criteria has been reached: res norm=2.55965e-05; rel val=8.53216e-07; iter=17
+PCG ends
+Solver execution:0.002306 sec

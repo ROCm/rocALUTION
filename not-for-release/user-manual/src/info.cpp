@@ -1,0 +1,2 @@
+mat.info();
+vec.info();

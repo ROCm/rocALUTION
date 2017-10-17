@@ -1,0 +1,20 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 2
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: None
+OpenMP threads:2
+MPI is not initialized
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; reading...
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; done
+LocalMatrix name=/home/dimitar/matrices/small/sym/gr_30_30.mtx; rows=900; cols=900; nnz=7744; prec=64bit; asm=no; format=CSR; host backend={CPU(OpenMP)}; accelerator backend={None}; current=CPU(OpenMP)
+PCG solver starts, with preconditioner:
+Multicolored ILU preconditioner (power(q)-pattern method), ILU(0,1)
+number of colors = 4; ILU nnz = 7744
+IterationControl criteria: abs tol=1e-15; rel tol=1e-06; div tol=1e+08; max iter=1000000
+IterationControl initial residual = 30
+IterationControl RELATIVE criteria has been reached: res norm=2.532e-05; rel val=8.43999e-07; iter=24
+PCG ends
+Solver execution:0.001982 sec

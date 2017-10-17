@@ -1,0 +1,51 @@
+This is BibTeX, Version 0.99d (TeX Live 2014)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: paralution-um.aux
+The style file: acm.bst
+Database file #1: ref.bib
+Warning--to sort, need author or key in gr3030mtx
+Warning--to sort, need author or key in nos5mtx
+Warning--to sort, need author or key in impcolcmtx
+Warning--to sort, need author or key in tols340mtx
+You've used 39 entries,
+            2253 wiz_defined-function locations,
+            727 strings with 8520 characters,
+and the built_in function-call counts, 9797 in all, are:
+= -- 901
+> -- 389
+< -- 0
++ -- 167
+- -- 126
+* -- 589
+:= -- 1585
+add.period$ -- 114
+call.type$ -- 39
+change.case$ -- 174
+chr.to.int$ -- 0
+cite$ -- 43
+duplicate$ -- 355
+empty$ -- 937
+format.name$ -- 126
+if$ -- 2077
+int.to.chr$ -- 0
+int.to.str$ -- 39
+missing$ -- 24
+newline$ -- 193
+num.names$ -- 70
+pop$ -- 320
+preamble$ -- 1
+purify$ -- 141
+quote$ -- 0
+skip$ -- 228
+stack$ -- 0
+substring$ -- 440
+swap$ -- 74
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 142
+warning$ -- 4
+while$ -- 83
+width$ -- 41
+write$ -- 375
+(There were 4 warnings)

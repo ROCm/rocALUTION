@@ -1,0 +1,26 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+The default OS thread affinity configuration will be used
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: GPU(CUDA)
+OpenMP threads:1
+Selected GPU device: 0
+------------------------------------------------
+Device number: 0
+Device name: Tesla K20c
+totalGlobalMem: 4799 MByte
+clockRate: 705500
+compute capability: 3.5
+ECCEnabled: 1
+------------------------------------------------
+------------------------------------------------
+Device number: 1
+Device name: Tesla K20c
+totalGlobalMem: 4799 MByte
+clockRate: 705500
+compute capability: 3.5
+ECCEnabled: 1
+------------------------------------------------
+MPI rank:0
+MPI size:2

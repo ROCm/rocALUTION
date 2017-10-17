@@ -1,0 +1,32 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 32
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+Number of OpenCL devices in the system: 2
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: OpenCL
+OpenMP threads:32
+Selected OpenCL platform: 0
+Selected OpenCL device: 0
+------------------------------------------------
+Platform number: 0
+Platform name: NVIDIA CUDA
+Device number: 0
+Device name: Tesla K20c
+Device type: GPU
+totalGlobalMem: 4799 MByte
+clockRate: 705
+OpenCL version: OpenCL 1.1 CUDA
+------------------------------------------------
+------------------------------------------------
+Platform number: 0
+Platform name: NVIDIA CUDA
+Device number: 1
+Device name: Tesla K20c
+Device type: GPU
+totalGlobalMem: 4799 MByte
+clockRate: 705
+OpenCL version: OpenCL 1.1 CUDA
+------------------------------------------------
+MPI is not initialized

@@ -1,0 +1,10 @@
+  call paralution_fortran_solve_csr(                                      &
+  &             n, m, nnz,                                                &
+  &             'CG' // C_NULL_CHAR,                                      &
+  &             'CSR' // C_NULL_CHAR,                                     &
+  &             'MultiColoredSGS' // C_NULL_CHAR,                         &
+  &             'CSR' // C_NULL_CHAR,                                     &
+  &             C_LOC(row_offset), C_LOC(col), C_LOC(val), C_LOC(rhs),    &
+  &             1e-10_C_DOUBLE, 1e-6_C_DOUBLE, 1e+8_C_DOUBLE, 2000,       &
+  &             0, 0, 1,                                                  &
+  &             C_LOC(x), iter, resnorm, stat )

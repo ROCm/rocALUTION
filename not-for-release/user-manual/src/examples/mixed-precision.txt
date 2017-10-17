@@ -1,0 +1,47 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 2
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: None
+OpenMP threads:2
+MPI is not initialized
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; reading...
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; done
+MixedPrecisionDC [64bit-32bit] solver starts, with solver:
+PCG solver, with preconditioner:
+Multicolored ILU preconditioner (power(q)-pattern method), ILU(0,1)
+number of colors = 4; ILU nnz = 7744
+IterationControl criteria: abs tol=1e-15; rel tol=1e-06; div tol=1e+08; max iter=1000000
+IterationControl initial residual = 30
+MixedPrecisionDC: starting the internal solver [32bit]
+PCG solver starts, with preconditioner:
+Multicolored ILU preconditioner (power(q)-pattern method), ILU(0,1)
+number of colors = 4; ILU nnz = 7744
+IterationControl criteria: abs tol=1e-05; rel tol=0.01; div tol=1e+20; max iter=100000
+IterationControl initial residual = 30
+IterationControl RELATIVE criteria has been reached: res norm=0.227825; rel val=0.00759417; iter=11
+PCG ends
+MixedPrecisionDC: defect correcting on the host [64bit]
+MixedPrecisionDC: starting the internal solver [32bit]
+PCG solver starts, with preconditioner:
+Multicolored ILU preconditioner (power(q)-pattern method), ILU(0,1)
+number of colors = 4; ILU nnz = 7744
+IterationControl criteria: abs tol=1e-05; rel tol=0.01; div tol=1e+20; max iter=100000
+IterationControl initial residual = 0.227811
+IterationControl RELATIVE criteria has been reached: res norm=0.00154375; rel val=0.00677646; iter=8
+PCG ends
+MixedPrecisionDC: defect correcting on the host [64bit]
+MixedPrecisionDC: starting the internal solver [32bit]
+PCG solver starts, with preconditioner:
+Multicolored ILU preconditioner (power(q)-pattern method), ILU(0,1)
+number of colors = 4; ILU nnz = 7744
+IterationControl criteria: abs tol=1e-05; rel tol=0.01; div tol=1e+20; max iter=100000
+IterationControl initial residual = 0.00154375
+IterationControl RELATIVE criteria has been reached: res norm=1.46245e-05; rel val=0.0094733; iter=14
+PCG ends
+MixedPrecisionDC: defect correcting on the host [64bit]
+IterationControl RELATIVE criteria has been reached: res norm=1.46244e-05; rel val=4.87482e-07; iter=4
+MixedPrecisionDC ends
+Solver execution:0.002661 sec

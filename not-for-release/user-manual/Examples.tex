@@ -1,0 +1,64 @@
+\chapter{Code Examples}
+
+\section{Preconditioned CG}
+
+\lstinputlisting[title="Preconditioned CG solver"]{./src/examples/cg.cpp}
+\lstinputlisting[title="Output of a preconditioned CG test with matrix {gr\_30\_30.mtx}", numbers=none]{./src/examples/cg.txt}
+
+\newpage
+\section{Multi-Elimination ILU Preconditioner with CG}
+
+\lstinputlisting[title="Multi-Elimination ILU Preconditioner with CG"]{./src/examples/me-preconditioner.cpp}
+\lstinputlisting[title="Output of a preconditioned CG (ME-ILU) test with matrix {gr\_30\_30.mtx}", numbers=none]{./src/examples/me-preconditioner.txt}
+
+\newpage
+\section{Gershgorin Circles+Power Method+Chebyshev Iteration+PCG with Chebyshev Polynomial}
+
+\lstinputlisting[title="Gershgorin circles + Power method + Chebyshev iteration + PCG with Chebyshev polynomial"]{./src/examples/power-method.cpp}
+\lstinputlisting[title="Output of the program with matrix {gr\_30\_30.mtx}", numbers=none]{./src/examples/power-method.txt}
+
+
+\newpage
+\section{Mixed-precision PCG Solver}
+
+\lstinputlisting[title="Mixed-precision PCG solver"]{./src/examples/mixed-precision.cpp}
+\lstinputlisting[title="Output of the program with matrix {gr\_30\_30.mtx}", numbers=none]{./src/examples/mixed-precision.txt}
+
+\newpage
+\section{PCG Solver with AMG}
+
+\lstinputlisting[title="PCG with AMG"]{./src/examples/cg-amg.cpp}
+\lstinputlisting[title="Output of the program with matrix {gr\_30\_30.mtx}", numbers=none]{./src/examples/cg-amg.txt}
+
+\newpage
+\section{AMG Solver with External Smoothers}
+
+\lstinputlisting[title="AMG with external smoothers"]{./src/examples/amg.cpp}
+\lstinputlisting[title="Output of the program with matrix {gr\_30\_30.mtx}", numbers=none]{./src/examples/amg.txt}
+
+\newpage
+\section{Laplace Example File with 4 MPI Process}
+\label{mpi-laplace-data}
+
+\lstinputlisting[title="Parallel manager (main) file with 4 MPI ranks"]{./src/MPI4/manager.pm}
+\lstinputlisting[title="Parallel manager RANK 0 file"]{./src/MPI4/manager.pm.rank.0}
+\lstinputlisting[title="Parallel manager RANK 1 file"]{./src/MPI4/manager.pm.rank.1}
+\lstinputlisting[title="Parallel manager RANK 2 file"]{./src/MPI4/manager.pm.rank.2}
+\lstinputlisting[title="Parallel manager RANK 3 file"]{./src/MPI4/manager.pm.rank.3}
+
+
+\lstinputlisting[title="Matrix file with 4 MPI ranks"]{./src/MPI4/matrix.mtx}
+\lstinputlisting[title="Matrix interior RANK 0 file"]{./src/MPI4/matrix.mtx.interior.rank.0}
+\lstinputlisting[title="Matrix ghost RANK 0 file"]{./src/MPI4/matrix.mtx.ghost.rank.0}
+\lstinputlisting[title="Matrix interior RANK 1 file"]{./src/MPI4/matrix.mtx.interior.rank.1}
+\lstinputlisting[title="Matrix ghost RANK 1 file"]{./src/MPI4/matrix.mtx.ghost.rank.1}
+\lstinputlisting[title="Matrix interior RANK 2 file"]{./src/MPI4/matrix.mtx.interior.rank.2}
+\lstinputlisting[title="Matrix ghost RANK 2 file"]{./src/MPI4/matrix.mtx.ghost.rank.2}
+\lstinputlisting[title="Matrix interior RANK 3 file"]{./src/MPI4/matrix.mtx.interior.rank.3}
+\lstinputlisting[title="Matrix ghost RANK 3 file"]{./src/MPI4/matrix.mtx.ghost.rank.3}
+
+\lstinputlisting[title="Vector (main) file with 4 MPI ranks"]{./src/MPI4/rhs.dat}
+\lstinputlisting[title="Vector RANK 0 file"]{./src/MPI4/rhs.dat.rank.0}
+\lstinputlisting[title="Vector RANK 1 file"]{./src/MPI4/rhs.dat.rank.1}
+\lstinputlisting[title="Vector RANK 2 file"]{./src/MPI4/rhs.dat.rank.2}
+\lstinputlisting[title="Vector RANK 3 file"]{./src/MPI4/rhs.dat.rank.3}

@@ -1,0 +1,12 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 16
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+MIC backed is initialized
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: MIC(OpenMP)
+OpenMP threads:16
+Number of MIC devices in the system: 2
+Selected MIC devices:0
+MPI is not initialized

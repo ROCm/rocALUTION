@@ -1,0 +1,363 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{D219B009-C2B5-46EE-9F18-4263FA8F68A8}</ProjectGuid>
+    <RootNamespace>paralution_cuda</RootNamespace>
+    <ProjectName>paralution</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <OpenMPSupport>false</OpenMPSupport>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);SUPPORT_CUDA</PreprocessorDefinitions>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+      <Optimization>Od</Optimization>
+    </CudaCompile>
+    <CudaLink>
+      <GPUDebugInfo>true</GPUDebugInfo>
+    </CudaLink>
+    <CudaLink>
+      <Optimization>Od</Optimization>
+    </CudaLink>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);SUPPORT_CUDA</PreprocessorDefinitions>
+      <OpenMPSupport>false</OpenMPSupport>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <Optimization>Od</Optimization>
+    </CudaCompile>
+    <CudaLink>
+      <GPUDebugInfo>true</GPUDebugInfo>
+    </CudaLink>
+    <CudaLink>
+      <Optimization>Od</Optimization>
+    </CudaLink>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);SUPPORT_CUDA</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+    </CudaCompile>
+    <CudaLink>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <Optimization>O3</Optimization>
+    </CudaLink>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);SUPPORT_CUDA</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
+    </CudaCompile>
+    <CudaLink>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <Optimization>O3</Optimization>
+    </CudaLink>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\base\global_matrix.hpp" />
+    <ClInclude Include="..\..\..\src\base\global_vector.hpp" />
+    <ClInclude Include="..\..\..\src\base\parallel_manager.hpp" />
+    <ClInclude Include="..\..\..\src\paralution.hpp" />
+    <ClInclude Include="..\..\..\src\base\backend_manager.hpp" />
+    <ClInclude Include="..\..\..\src\base\base_matrix.hpp" />
+    <ClInclude Include="..\..\..\src\base\base_paralution.hpp" />
+    <ClInclude Include="..\..\..\src\base\base_stencil.hpp" />
+    <ClInclude Include="..\..\..\src\base\base_vector.hpp" />
+    <ClInclude Include="..\..\..\src\base\local_matrix.hpp" />
+    <ClInclude Include="..\..\..\src\base\local_stencil.hpp" />
+    <ClInclude Include="..\..\..\src\base\local_vector.hpp" />
+    <ClInclude Include="..\..\..\src\base\matrix_formats.hpp" />
+    <ClInclude Include="..\..\..\src\base\matrix_formats_ind.hpp" />
+    <ClInclude Include="..\..\..\src\base\operator.hpp" />
+    <ClInclude Include="..\..\..\src\base\stencil_types.hpp" />
+    <ClInclude Include="..\..\..\src\base\vector.hpp" />
+    <ClInclude Include="..\..\..\src\base\version.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_affinity.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_conversion.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_io.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_bcsr.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_coo.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_csr.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_dense.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_dia.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_ell.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_hyb.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_matrix_mcsr.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_stencil_laplace2d.hpp" />
+    <ClInclude Include="..\..\..\src\base\host\host_vector.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\chebyshev.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\iter_ctrl.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\mixed_precision.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\solver.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\direct\inversion.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\direct\lu.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\direct\qr.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\bicgstab.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\bicgstabl.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\cg.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\cr.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\fcg.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\fgmres.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\gmres.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\idr.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\krylov\qmrcgstab.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\multigrid\amg.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\multigrid\base_amg.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\multigrid\base_multigrid.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\multigrid\multigrid.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\multigrid\pairwise_amg.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\multigrid\ruge_stueben_amg.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_ai.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_as.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_blockprecond.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_multicolored_gs.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_multicolored.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_multicolored_ilu.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_multielimination.hpp" />
+    <ClInclude Include="..\..\..\src\solvers\preconditioners\preconditioner_saddlepoint.hpp" />
+    <ClInclude Include="..\..\..\src\utils\allocate_free.hpp" />
+    <ClInclude Include="..\..\..\src\utils\def.hpp" />
+    <ClInclude Include="..\..\..\src\utils\log.hpp" />
+    <ClInclude Include="..\..\..\src\utils\math_functions.hpp" />
+    <ClInclude Include="..\..\..\src\utils\time_functions.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\..\src\base\gpu\backend_gpu.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_allocate_free.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_bcsr.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_coo.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_csr.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_dense.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_dia.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_ell.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_hyb.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_matrix_mcsr.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\src\base\gpu\gpu_vector.cu">
+      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compute_20,sm_20</CodeGeneration>
+      <Defines Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SUPPORT_CUDA</Defines>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\base\backend_manager.cpp" />
+    <ClCompile Include="..\..\..\src\base\base_matrix.cpp" />
+    <ClCompile Include="..\..\..\src\base\base_paralution.cpp" />
+    <ClCompile Include="..\..\..\src\base\base_stencil.cpp" />
+    <ClCompile Include="..\..\..\src\base\base_vector.cpp" />
+    <ClCompile Include="..\..\..\src\base\global_matrix.cpp" />
+    <ClCompile Include="..\..\..\src\base\global_vector.cpp" />
+    <ClCompile Include="..\..\..\src\base\local_matrix.cpp" />
+    <ClCompile Include="..\..\..\src\base\local_stencil.cpp" />
+    <ClCompile Include="..\..\..\src\base\local_vector.cpp" />
+    <ClCompile Include="..\..\..\src\base\operator.cpp" />
+    <ClCompile Include="..\..\..\src\base\parallel_manager.cpp" />
+    <ClCompile Include="..\..\..\src\base\vector.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_affinity.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_conversion.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_io.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_bcsr.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_coo.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_csr.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_dense.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_dia.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_ell.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_hyb.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_matrix_mcsr.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_stencil_laplace2d.cpp" />
+    <ClCompile Include="..\..\..\src\base\host\host_vector.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\chebyshev.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\iter_ctrl.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\mixed_precision.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\solver.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\direct\inversion.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\direct\lu.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\direct\qr.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\bicgstab.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\bicgstabl.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\cg.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\cr.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\fcg.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\fgmres.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\gmres.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\idr.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\krylov\qmrcgstab.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\multigrid\amg.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\multigrid\base_amg.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\multigrid\base_multigrid.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\multigrid\multigrid.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\multigrid\pairwise_amg.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\multigrid\ruge_stueben_amg.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_ai.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_as.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_blockprecond.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_multicolored.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_multicolored_gs.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_multicolored_ilu.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_multielimination.cpp" />
+    <ClCompile Include="..\..\..\src\solvers\preconditioners\preconditioner_saddlepoint.cpp" />
+    <ClCompile Include="..\..\..\src\utils\allocate_free.cpp" />
+    <ClCompile Include="..\..\..\src\utils\log.cpp" />
+    <ClCompile Include="..\..\..\src\utils\math_functions.cpp" />
+    <ClCompile Include="..\..\..\src\utils\time_functions.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />
+  </ImportGroup>
+</Project>

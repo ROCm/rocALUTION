@@ -1,0 +1,172 @@
+\contentsline {chapter}{\numberline {1}Introduction}{9}{chapter.1}
+\contentsline {section}{\numberline {1.1}Overview}{9}{section.1.1}
+\contentsline {section}{\numberline {1.2}Purpose of this User Manual}{10}{section.1.2}
+\contentsline {section}{\numberline {1.3}API Documentation}{10}{section.1.3}
+\contentsline {section}{\numberline {1.4}PARALUTION Versions}{10}{section.1.4}
+\contentsline {subsection}{\numberline {1.4.1}Single-node PARALUTION Package}{11}{subsection.1.4.1}
+\contentsline {subsection}{\numberline {1.4.2}Multi-node PARALUTION Package}{11}{subsection.1.4.2}
+\contentsline {section}{\numberline {1.5}Version Nomenclature}{11}{section.1.5}
+\contentsline {section}{\numberline {1.6}Features Nomenclature}{11}{section.1.6}
+\contentsline {section}{\numberline {1.7}Cite}{12}{section.1.7}
+\contentsline {section}{\numberline {1.8}Website}{12}{section.1.8}
+\contentsline {chapter}{\numberline {2}Installation}{13}{chapter.2}
+\contentsline {section}{\numberline {2.1}Linux/Unix-like OS}{13}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}Makefile}{13}{subsection.2.1.1}
+\contentsline {subsection}{\numberline {2.1.2}CMake}{13}{subsection.2.1.2}
+\contentsline {subsection}{\numberline {2.1.3}Shared Library}{14}{subsection.2.1.3}
+\contentsline {section}{\numberline {2.2}Windows OS}{14}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}OpenMP backend}{14}{subsection.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}CUDA backend}{15}{subsection.2.2.2}
+\contentsline {subsection}{\numberline {2.2.3}OpenCL backend}{15}{subsection.2.2.3}
+\contentsline {section}{\numberline {2.3}Mac OS}{17}{section.2.3}
+\contentsline {section}{\numberline {2.4}Supported Compilers}{17}{section.2.4}
+\contentsline {section}{\numberline {2.5}Simple Test}{17}{section.2.5}
+\contentsline {section}{\numberline {2.6}Compilation and Linking}{17}{section.2.6}
+\contentsline {chapter}{\numberline {3}Basics}{19}{chapter.3}
+\contentsline {section}{\numberline {3.1}Design and Philosophy}{19}{section.3.1}
+\contentsline {section}{\numberline {3.2}Operators and Vectors}{19}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}Local Operators/Vectors}{19}{subsection.3.2.1}
+\contentsline {subsection}{\numberline {3.2.2}Global Operators/Vectors}{20}{subsection.3.2.2}
+\contentsline {section}{\numberline {3.3}Functionality on the Accelerators}{20}{section.3.3}
+\contentsline {section}{\numberline {3.4}Initialization of the Library}{20}{section.3.4}
+\contentsline {subsection}{\numberline {3.4.1}Thread-core Mapping}{22}{subsection.3.4.1}
+\contentsline {subsection}{\numberline {3.4.2}OpenMP Threshold Size}{23}{subsection.3.4.2}
+\contentsline {subsection}{\numberline {3.4.3}Disable the Accelerator}{23}{subsection.3.4.3}
+\contentsline {subsection}{\numberline {3.4.4}MPI and Multi-accelerators}{23}{subsection.3.4.4}
+\contentsline {section}{\numberline {3.5}Automatic Object Tracking}{24}{section.3.5}
+\contentsline {section}{\numberline {3.6}Verbose Output}{24}{section.3.6}
+\contentsline {section}{\numberline {3.7}Verbose Output and MPI}{24}{section.3.7}
+\contentsline {section}{\numberline {3.8}Debug Output}{24}{section.3.8}
+\contentsline {section}{\numberline {3.9}File Logging}{24}{section.3.9}
+\contentsline {section}{\numberline {3.10}Versions}{25}{section.3.10}
+\contentsline {chapter}{\numberline {4}Single-node Computation}{27}{chapter.4}
+\contentsline {section}{\numberline {4.1}Introduction}{27}{section.4.1}
+\contentsline {section}{\numberline {4.2}Code Structure}{27}{section.4.2}
+\contentsline {section}{\numberline {4.3}Value Type}{27}{section.4.3}
+\contentsline {section}{\numberline {4.4}Complex Support}{28}{section.4.4}
+\contentsline {section}{\numberline {4.5}Allocation and Free}{29}{section.4.5}
+\contentsline {section}{\numberline {4.6}Matrix Formats}{29}{section.4.6}
+\contentsline {subsection}{\numberline {4.6.1}Coordinate Format -- COO}{30}{subsection.4.6.1}
+\contentsline {subsection}{\numberline {4.6.2}Compressed Sparse Row/Column Format -- CSR/CSC}{30}{subsection.4.6.2}
+\contentsline {subsection}{\numberline {4.6.3}Diagonal Format -- DIA}{31}{subsection.4.6.3}
+\contentsline {subsection}{\numberline {4.6.4}ELL Format}{31}{subsection.4.6.4}
+\contentsline {subsection}{\numberline {4.6.5}HYB Format}{32}{subsection.4.6.5}
+\contentsline {subsection}{\numberline {4.6.6}Memory Usage}{32}{subsection.4.6.6}
+\contentsline {subsection}{\numberline {4.6.7}Backend support}{32}{subsection.4.6.7}
+\contentsline {section}{\numberline {4.7}I/O}{32}{section.4.7}
+\contentsline {section}{\numberline {4.8}Access}{33}{section.4.8}
+\contentsline {section}{\numberline {4.9}Raw Access to the Data}{33}{section.4.9}
+\contentsline {section}{\numberline {4.10}Copy CSR Matrix Host Data}{35}{section.4.10}
+\contentsline {section}{\numberline {4.11}Copy Data}{35}{section.4.11}
+\contentsline {section}{\numberline {4.12}Object Info}{35}{section.4.12}
+\contentsline {section}{\numberline {4.13}Copy}{35}{section.4.13}
+\contentsline {section}{\numberline {4.14}Clone}{36}{section.4.14}
+\contentsline {section}{\numberline {4.15}Check}{36}{section.4.15}
+\contentsline {section}{\numberline {4.16}Sort}{37}{section.4.16}
+\contentsline {section}{\numberline {4.17}Keying}{37}{section.4.17}
+\contentsline {section}{\numberline {4.18}Graph Analyzers}{37}{section.4.18}
+\contentsline {section}{\numberline {4.19}Basic Linear Algebra Operations}{38}{section.4.19}
+\contentsline {section}{\numberline {4.20}Local Stencils}{40}{section.4.20}
+\contentsline {chapter}{\numberline {5}Multi-node Computation}{43}{chapter.5}
+\contentsline {section}{\numberline {5.1}Introduction}{43}{section.5.1}
+\contentsline {section}{\numberline {5.2}Code Structure}{44}{section.5.2}
+\contentsline {section}{\numberline {5.3}Parallel Manager}{44}{section.5.3}
+\contentsline {section}{\numberline {5.4}Global Matrices and Vectors}{45}{section.5.4}
+\contentsline {subsection}{\numberline {5.4.1}Value Type and Formats}{45}{subsection.5.4.1}
+\contentsline {subsection}{\numberline {5.4.2}Matrix and Vector Operations}{45}{subsection.5.4.2}
+\contentsline {subsection}{\numberline {5.4.3}Asynchronous SpMV}{45}{subsection.5.4.3}
+\contentsline {section}{\numberline {5.5}Communication Channel}{45}{section.5.5}
+\contentsline {section}{\numberline {5.6}I/O}{45}{section.5.6}
+\contentsline {subsection}{\numberline {5.6.1}File Organization}{45}{subsection.5.6.1}
+\contentsline {subsection}{\numberline {5.6.2}Parallel Manager}{46}{subsection.5.6.2}
+\contentsline {subsection}{\numberline {5.6.3}Matrices}{47}{subsection.5.6.3}
+\contentsline {subsection}{\numberline {5.6.4}Vectors}{47}{subsection.5.6.4}
+\contentsline {chapter}{\numberline {6}Solvers}{49}{chapter.6}
+\contentsline {section}{\numberline {6.1}Code Structure}{49}{section.6.1}
+\contentsline {section}{\numberline {6.2}Iterative Linear Solvers}{51}{section.6.2}
+\contentsline {section}{\numberline {6.3}Stopping Criteria}{51}{section.6.3}
+\contentsline {section}{\numberline {6.4}Building and Solving Phase}{52}{section.6.4}
+\contentsline {section}{\numberline {6.5}Clear function and Destructor}{53}{section.6.5}
+\contentsline {section}{\numberline {6.6}Numerical Update}{53}{section.6.6}
+\contentsline {section}{\numberline {6.7}Fixed-point Iteration}{53}{section.6.7}
+\contentsline {section}{\numberline {6.8}Krylov Subspace Solvers}{54}{section.6.8}
+\contentsline {subsection}{\numberline {6.8.1}CG}{54}{subsection.6.8.1}
+\contentsline {subsection}{\numberline {6.8.2}CR}{54}{subsection.6.8.2}
+\contentsline {subsection}{\numberline {6.8.3}GMRES}{54}{subsection.6.8.3}
+\contentsline {subsection}{\numberline {6.8.4}FGMRES}{55}{subsection.6.8.4}
+\contentsline {subsection}{\numberline {6.8.5}BiCGStab}{55}{subsection.6.8.5}
+\contentsline {subsection}{\numberline {6.8.6}IDR}{55}{subsection.6.8.6}
+\contentsline {subsection}{\numberline {6.8.7}FCG}{55}{subsection.6.8.7}
+\contentsline {subsection}{\numberline {6.8.8}QMRCGStab}{56}{subsection.6.8.8}
+\contentsline {subsection}{\numberline {6.8.9}BiCGStab(l)}{56}{subsection.6.8.9}
+\contentsline {section}{\numberline {6.9}Chebyshev Iteration}{56}{section.6.9}
+\contentsline {section}{\numberline {6.10}Mixed-precision Solver}{57}{section.6.10}
+\contentsline {section}{\numberline {6.11}Multigrid Solver}{57}{section.6.11}
+\contentsline {subsection}{\numberline {6.11.1}Geometric Multigrid}{57}{subsection.6.11.1}
+\contentsline {subsection}{\numberline {6.11.2}Algebraic Multigrid}{58}{subsection.6.11.2}
+\contentsline {subsubsection}{Plain and Smoothed Aggregation}{58}{section*.3}
+\contentsline {subsubsection}{Ruge-Stueben}{60}{section*.4}
+\contentsline {subsubsection}{Pair-wise}{60}{section*.5}
+\contentsline {subsubsection}{Global AMG (MPI)}{60}{section*.6}
+\contentsline {section}{\numberline {6.12}Direct Linear Solvers}{60}{section.6.12}
+\contentsline {chapter}{\numberline {7}Preconditioners}{61}{chapter.7}
+\contentsline {section}{\numberline {7.1}Code Structure}{61}{section.7.1}
+\contentsline {section}{\numberline {7.2}Jacobi}{61}{section.7.2}
+\contentsline {section}{\numberline {7.3}Multi-colored (Symmetric) Gauss-Seidel and SOR}{62}{section.7.3}
+\contentsline {section}{\numberline {7.4}Incomplete LU with levels -- ILU($p$)}{63}{section.7.4}
+\contentsline {section}{\numberline {7.5}Incomplete Cholesky -- IC}{63}{section.7.5}
+\contentsline {section}{\numberline {7.6}Incomplete LU with threshold -- ILUT($t$,$m$)}{63}{section.7.6}
+\contentsline {section}{\numberline {7.7}Power($q$)-pattern method -- ILU($p$,$q$)}{64}{section.7.7}
+\contentsline {section}{\numberline {7.8}Multi-Elimination ILU}{64}{section.7.8}
+\contentsline {section}{\numberline {7.9}Diagonal Preconditioner for Saddle-Point Problems}{64}{section.7.9}
+\contentsline {section}{\numberline {7.10}Chebyshev Polynomial}{65}{section.7.10}
+\contentsline {section}{\numberline {7.11}FSAI($q$)}{65}{section.7.11}
+\contentsline {section}{\numberline {7.12}SPAI}{66}{section.7.12}
+\contentsline {section}{\numberline {7.13}Block Preconditioner}{66}{section.7.13}
+\contentsline {section}{\numberline {7.14}Additive Schwarz and Restricted Additive Schwarz -- AS and RAS}{68}{section.7.14}
+\contentsline {section}{\numberline {7.15}Truncated Neumann Series Preconditioner (TNS)}{69}{section.7.15}
+\contentsline {section}{\numberline {7.16}Variable Preconditioner}{70}{section.7.16}
+\contentsline {section}{\numberline {7.17}CPR Preconditioner}{70}{section.7.17}
+\contentsline {section}{\numberline {7.18}MPI Preconditioners}{70}{section.7.18}
+\contentsline {chapter}{\numberline {8}Backends}{71}{chapter.8}
+\contentsline {section}{\numberline {8.1}Backend and Accelerators}{71}{section.8.1}
+\contentsline {section}{\numberline {8.2}Copy}{71}{section.8.2}
+\contentsline {section}{\numberline {8.3}CloneBackend}{71}{section.8.3}
+\contentsline {section}{\numberline {8.4}Moving Objects To and From the Accelerator}{72}{section.8.4}
+\contentsline {section}{\numberline {8.5}Asynchronous Transfers}{73}{section.8.5}
+\contentsline {section}{\numberline {8.6}Systems without Accelerators}{74}{section.8.6}
+\contentsline {chapter}{\numberline {9}Advanced Techniques}{75}{chapter.9}
+\contentsline {section}{\numberline {9.1}Memory Allocation}{75}{section.9.1}
+\contentsline {subsection}{\numberline {9.1.1}Allocation Problems}{75}{subsection.9.1.1}
+\contentsline {subsection}{\numberline {9.1.2}Memory Alignment}{75}{subsection.9.1.2}
+\contentsline {subsection}{\numberline {9.1.3}Pinned Memory Allocation (CUDA)}{75}{subsection.9.1.3}
+\contentsline {chapter}{\numberline {10}Plug-ins}{77}{chapter.10}
+\contentsline {section}{\numberline {10.1}FORTRAN}{77}{section.10.1}
+\contentsline {chapter}{\numberline {11}Remarks}{79}{chapter.11}
+\contentsline {section}{\numberline {11.1}Performance}{79}{section.11.1}
+\contentsline {section}{\numberline {11.2}Accelerators}{80}{section.11.2}
+\contentsline {section}{\numberline {11.3}Correctness}{80}{section.11.3}
+\contentsline {section}{\numberline {11.4}Compilation}{80}{section.11.4}
+\contentsline {section}{\numberline {11.5}Portability}{81}{section.11.5}
+\contentsline {chapter}{\numberline {12}Performance Benchmarks}{83}{chapter.12}
+\contentsline {section}{\numberline {12.1}Single-Node Benchmarks}{83}{section.12.1}
+\contentsline {subsection}{\numberline {12.1.1}Hardware Description}{83}{subsection.12.1.1}
+\contentsline {subsection}{\numberline {12.1.2}BLAS1 and SpMV}{83}{subsection.12.1.2}
+\contentsline {subsection}{\numberline {12.1.3}CG Solver}{84}{subsection.12.1.3}
+\contentsline {chapter}{\numberline {13}Graph Analyzers}{87}{chapter.13}
+\contentsline {chapter}{\numberline {14}Functionality Table}{91}{chapter.14}
+\contentsline {section}{\numberline {14.1}Backend Support}{91}{section.14.1}
+\contentsline {section}{\numberline {14.2}Matrix-Vector Multiplication Formats}{91}{section.14.2}
+\contentsline {section}{\numberline {14.3}Local Matrices and Vectors}{92}{section.14.3}
+\contentsline {section}{\numberline {14.4}Global Matrices and Vectors}{92}{section.14.4}
+\contentsline {section}{\numberline {14.5}Local Solvers and Preconditioners}{93}{section.14.5}
+\contentsline {section}{\numberline {14.6}Global Solvers and Preconditioners}{95}{section.14.6}
+\contentsline {chapter}{\numberline {15}Code Examples}{97}{chapter.15}
+\contentsline {section}{\numberline {15.1}Preconditioned CG}{97}{section.15.1}
+\contentsline {section}{\numberline {15.2}Multi-Elimination ILU Preconditioner with CG}{99}{section.15.2}
+\contentsline {section}{\numberline {15.3}Gershgorin Circles+Power Method+Chebyshev Iteration+PCG with Chebyshev Polynomial}{101}{section.15.3}
+\contentsline {section}{\numberline {15.4}Mixed-precision PCG Solver}{105}{section.15.4}
+\contentsline {section}{\numberline {15.5}PCG Solver with AMG}{108}{section.15.5}
+\contentsline {section}{\numberline {15.6}AMG Solver with External Smoothers}{111}{section.15.6}
+\contentsline {section}{\numberline {15.7}Laplace Example File with 4 MPI Process}{115}{section.15.7}
+\contentsline {chapter}{Bibliography}{121}{lstnumber.-127.4}

@@ -1,0 +1,14 @@
+<paralution.pc>
+prefix=${CMAKE_BINARY_DIR}
+exec_prefix=${CMAKE_BINARY_DIR}
+libdir=${LIB_BUILD_DIR}
+includedir=${INC_BUILD_DIR}
+
+Name: libparalution
+Description: PARALUTION
+Version: ${PARALUTION_VERSION}
+Requires:
+Libs: -L${LIB_BUILD_DIR} -lparalution
+Libs.private:
+Cflags: -I${INC_BUILD_DIR}
+</paralution.pc>

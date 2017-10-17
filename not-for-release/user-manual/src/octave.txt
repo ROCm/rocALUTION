@@ -1,0 +1,19 @@
+octave:1> pcg_example
+pcg: converged in 159 iterations. the initial residual norm was reduced 1.06664e+06 times.
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 8
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+Number of GPU devices in the system: 2
+MPI is not initialized
+LocalMatrix name=A; rows=10000; cols=10000; nnz=49600; prec=64bit; asm=no; format=CSR; host backend={CPU(OpenMP)}; accelerator backend={GPU(CUDA)}; current=GPU(CUDA)
+PCG solver starts, with preconditioner:
+Jacobi preconditioner
+IterationControl criteria: abs tol=0; rel tol=1e-06; div tol=1e+08; max iter=500
+IterationControl initial residual = 100
+IterationControl RELATIVE criteria has been reached: res norm=9.37523e-05; rel val=9.37523e-07; iter=159
+PCG ends
+dim =  100
+L2 norm |x_matlab - x_paralution| is
+ 1.9739e-09
+octave:2>

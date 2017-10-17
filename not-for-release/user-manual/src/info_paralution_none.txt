@@ -1,0 +1,9 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 2
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: None
+OpenMP threads:2
+MPI is not initialized

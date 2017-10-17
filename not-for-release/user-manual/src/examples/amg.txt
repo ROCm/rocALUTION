@@ -1,0 +1,43 @@
+This version of PARALUTION is released under GPL.
+By downloading this package you fully agree with the GPL license.
+Number of CPU cores: 2
+Host thread affinity policy - thread mapping on every second core (avoiding HyperThreading)
+PARALUTION ver M1.2.0
+PARALUTION platform is initialized
+Accelerator backend: None
+OpenMP threads:2
+MPI is not initialized
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; reading...
+ReadFileMTX: filename=/home/dimitar/matrices/small/sym/gr_30_30.mtx; done
+LocalMatrix name=/home/dimitar/matrices/small/sym/gr_30_30.mtx; rows=900; cols=900; nnz=7744; prec=64bit; asm=no; format=CSR; host backend={CPU(OpenMP)}; accelerator backend={None}; current=CPU(OpenMP)
+Building time:0.041741 sec
+AMG solver starts
+AMG number of levels 2
+AMG using smoothed aggregation interpolation
+AMG coarsest operator size = 100
+AMG coarsest level nnz = 816
+AMG with smoother:
+Fixed Point Iteration solver, with preconditioner:
+Multicolored Gauss-Seidel (GS) preconditioner
+number of colors = 4
+IterationControl criteria: abs tol=1e-10; rel tol=1e-08; div tol=1e+08; max iter=10000
+IterationControl initial residual = 30
+IterationControl iter=1; residual=11.9091
+IterationControl iter=2; residual=3.13946
+IterationControl iter=3; residual=0.853698
+IterationControl iter=4; residual=0.232396
+IterationControl iter=5; residual=0.0632451
+IterationControl iter=6; residual=0.0172144
+IterationControl iter=7; residual=0.00468651
+IterationControl iter=8; residual=0.00127601
+IterationControl iter=9; residual=0.000347431
+IterationControl iter=10; residual=9.45946e-05
+IterationControl iter=11; residual=2.57537e-05
+IterationControl iter=12; residual=7.01112e-06
+IterationControl iter=13; residual=1.90858e-06
+IterationControl iter=14; residual=5.19535e-07
+IterationControl iter=15; residual=1.41417e-07
+IterationControl RELATIVE criteria has been reached: res norm=1.41417e-07; rel val=4.7139e-09; iter=15
+AMG ends
+Solver execution:0.012193 sec
+Total runtime:0.054093 sec
