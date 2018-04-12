@@ -16,7 +16,5 @@ You can test the installation by running a CG solver on a Laplace matrix:
 *   gzip -d gr_30_30.mtx.gz
 *   ./cg gr_30_30.mtx
 
-Download packages by clicking the github releases tab. Release notes are available for each release on the releases tab.
-
 [ROCm]: https://github.com/RadeonOpenCompute/ROCm
 [HIP]: https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/
