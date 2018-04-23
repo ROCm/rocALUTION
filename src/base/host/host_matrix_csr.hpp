@@ -183,7 +183,7 @@ private:
   friend class HostMatrixMCSR<ValueType>;
   friend class HostMatrixBCSR<ValueType>;
 
-  friend class GPUAcceleratorMatrixCSR<ValueType>;
+  friend class HIPAcceleratorMatrixCSR<ValueType>;
 
   bool L_diag_unit_;
   bool U_diag_unit_;

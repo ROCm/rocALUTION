@@ -17,7 +17,7 @@ template <typename ValueType>
 class HostMatrix;
 
 /// Backend descriptor - keeps information about the
-/// hardware - OpenMP (threads); CUDA (blocksizes, handles, etc);
+/// hardware - OpenMP (threads); HIP (blocksizes, handles, etc);
 struct Paralution_Backend_Descriptor {
 
   // set by initbackend();
@@ -39,19 +39,19 @@ struct Paralution_Backend_Descriptor {
   // Host threshold size
   int OpenMP_threshold;
 
-  // GPU section
-  // gpu handles
-  // cublasHandle_t casted in void **
-  void *GPU_cublas_handle;
-  // cusparseHandle_t casted in void **
-  void *GPU_cusparse_handle;
+  // HIP section
+  // handles
+  // rocblasHandle_t casted in void **
+  void *HIP_rocblas_handle;
+  // rocsparseHandle_t casted in void **
+  void *HIP_rocsparse_handle;
 
-  int GPU_dev;
-  int GPU_warp;
-  int GPU_block_size;
-  int GPU_max_threads;
-  int GPU_num_procs;
-  int GPU_threads_per_proc;
+  int HIP_dev;
+  int HIP_warp;
+  int HIP_block_size;
+  int HIP_max_threads;
+  int HIP_num_procs;
+  int HIP_threads_per_proc;
 
   // MPI rank/id
   int rank;
@@ -71,7 +71,7 @@ extern const std::string _paralution_backend_name [2];
 
 /// Backend IDs
 enum _paralution_backend_id {None=0,
-                             GPU=1};
+                             HIP=1};
 
 
 
@@ -89,8 +89,8 @@ void set_omp_threads_paralution(const int nthreads);
 /// Set host affinity (true-on/false-off)
 void set_omp_affinity(bool affinity);
 
-/// Set a specific GPU device
-void set_gpu_cuda_paralution(const int ngpu);
+/// Set a specific HIP device
+void set_hip_gpu_paralution(const int ngpu);
 
 /// Set OpenMP threshold size
 void set_omp_threshold(const int threshold);

@@ -1,23 +1,23 @@
-#ifndef PARALUTION_HOST_MATRIX_BCSR_HPP_
-#define PARALUTION_HOST_MATRIX_BCSR_HPP_
+#ifndef PARALUTION_HIP_MATRIX_BCSR_HPP_
+#define PARALUTION_HIP_MATRIX_BCSR_HPP_
 
-#include "../base_vector.hpp"
 #include "../base_matrix.hpp"
+#include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
 namespace paralution {
 
 template <typename ValueType>
-class HostMatrixBCSR : public HostMatrix<ValueType> {
+class HIPAcceleratorMatrixBCSR : public HIPAcceleratorMatrix<ValueType> {
 
 public:
 
-  HostMatrixBCSR();
-  HostMatrixBCSR(const Paralution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixBCSR();
+  HIPAcceleratorMatrixBCSR();
+  HIPAcceleratorMatrixBCSR(const Paralution_Backend_Descriptor local_backend);
+  virtual ~HIPAcceleratorMatrixBCSR();
 
   virtual void info(void) const;
-  virtual unsigned int get_mat_format(void) const { return  BCSR; }
+  virtual unsigned int get_mat_format(void) const { return BCSR; }
 
   virtual void Clear(void);
   virtual void AllocateBCSR(const int nnz, const int nrow, const int ncol);
@@ -26,6 +26,9 @@ public:
 
   virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
   virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+
+  virtual void CopyFromHost(const HostMatrix<ValueType> &src);
+  virtual void CopyToHost(HostMatrix<ValueType> *dst) const;
 
   virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
   virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
@@ -36,17 +39,12 @@ private:
   MatrixBCSR<ValueType, int> mat_;
 
   friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-
-  friend class HIPAcceleratorMatrixBCSR<ValueType>;
+  friend class AcceleratorVector<ValueType>;
+  friend class HIPAcceleratorVector<ValueType>;
 
 };
 
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_BCSR_HPP_
+#endif // PARALUTION_HIP_MATRIX_BCSR_HPP_

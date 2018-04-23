@@ -62,15 +62,15 @@ else()
 endif()
 
 #######################################################################################################################
-# CUDA
+# HIP
 find_package(CUDA)
 if (NOT CUDA_FOUND)
-  message("-- CUDA not found. Compiling WITHOUT CUDA support.")
+  message("-- HIP not found. Compiling WITHOUT HIP support.")
 else()
-  option(SUPPORT_CUDA "Compile WITH CUDA support." ON)
-  if (SUPPORT_CUDA)
+  option(SUPPORT_HIP "Compile WITH HIP support." ON)
+  if (SUPPORT_HIP)
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3 -arch sm_35 --compiler-options -Wall -D_FORCE_INLINES")
-    set(CUDA_CXX_FLAGS -DSUPPORT_CUDA)
+    set(CUDA_CXX_FLAGS -DSUPPORT_HIP)
   endif()
 endif()
 

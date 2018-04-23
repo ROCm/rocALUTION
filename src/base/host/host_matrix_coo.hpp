@@ -63,7 +63,7 @@ private:
   friend class HostMatrixHYB<ValueType>;
   friend class HostMatrixDENSE<ValueType>;
 
-  friend class GPUAcceleratorMatrixCOO<ValueType>;
+  friend class HIPAcceleratorMatrixCOO<ValueType>;
 
 };
 

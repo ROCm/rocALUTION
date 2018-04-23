@@ -30,7 +30,7 @@ private:
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
 
-  //  friend class GPUAcceleratorStencilLaplace2D<ValueType>;
+  //  friend class HIPAcceleratorStencilLaplace2D<ValueType>;
 
 };
 

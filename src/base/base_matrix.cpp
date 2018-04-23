@@ -882,11 +882,11 @@ void AcceleratorMatrix<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *dst) c
 
 
 template <typename ValueType>
-GPUAcceleratorMatrix<ValueType>::GPUAcceleratorMatrix() {
+HIPAcceleratorMatrix<ValueType>::HIPAcceleratorMatrix() {
 }
 
 template <typename ValueType>
-GPUAcceleratorMatrix<ValueType>::~GPUAcceleratorMatrix() {
+HIPAcceleratorMatrix<ValueType>::~HIPAcceleratorMatrix() {
 }
 
 
@@ -914,12 +914,12 @@ template class AcceleratorMatrix<std::complex<float> >;
 #endif
 template class AcceleratorMatrix<int>;
 
-template class GPUAcceleratorMatrix<double>;
-template class GPUAcceleratorMatrix<float>;
+template class HIPAcceleratorMatrix<double>;
+template class HIPAcceleratorMatrix<float>;
 #ifdef SUPPORT_COMPLEX
-template class GPUAcceleratorMatrix<std::complex<double> >;
-template class GPUAcceleratorMatrix<std::complex<float> >;
+template class HIPAcceleratorMatrix<std::complex<double> >;
+template class HIPAcceleratorMatrix<std::complex<float> >;
 #endif
-template class GPUAcceleratorMatrix<int>;
+template class HIPAcceleratorMatrix<int>;
 
 }

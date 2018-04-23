@@ -57,7 +57,7 @@ endforeach()
 #######################################################################################################################
 
 # Replace CUDA files in PARALUTION list since it is compiled by NVCC
-if (SUPPORT_CUDA)
+if (SUPPORT_HIP)
   foreach(i ${PARALUTION_SOURCES})
 
     if (${i} MATCHES ".cu")
@@ -75,6 +75,6 @@ add_library(${PARALUTION_LIBRARY} ${LIBRARY_TYPE} ${PARALUTION_SOURCES})
 #######################################################################################################################
 
 # Link platform specific libraries
-if (SUPPORT_CUDA)
+if (SUPPORT_HIP)
   target_link_libraries(${PARALUTION_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
 endif()

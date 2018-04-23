@@ -11,7 +11,7 @@ class BaseVector;
 template <typename ValueType>
 class HostVector;
 template <typename ValueType>
-class GPUAcceleratorVector;
+class HIPAcceleratorVector;
 
 template <typename ValueType>
 class HostMatrixCSR;
@@ -31,21 +31,21 @@ template <typename ValueType>
 class HostMatrixBCSR;
 
 template <typename ValueType>
-class GPUAcceleratorMatrixCSR;
+class HIPAcceleratorMatrixCSR;
 template <typename ValueType>
-class GPUAcceleratorMatrixMCSR;
+class HIPAcceleratorMatrixMCSR;
 template <typename ValueType>
-class GPUAcceleratorMatrixBCSR;
+class HIPAcceleratorMatrixBCSR;
 template <typename ValueType>
-class GPUAcceleratorMatrixCOO;
+class HIPAcceleratorMatrixCOO;
 template <typename ValueType>
-class GPUAcceleratorMatrixDIA;
+class HIPAcceleratorMatrixDIA;
 template <typename ValueType>
-class GPUAcceleratorMatrixELL;
+class HIPAcceleratorMatrixELL;
 template <typename ValueType>
-class GPUAcceleratorMatrixHYB;
+class HIPAcceleratorMatrixHYB;
 template <typename ValueType>
-class GPUAcceleratorMatrixDENSE;
+class HIPAcceleratorMatrixDENSE;
 
 /// Base class for all host/accelerator matrices
 template <typename ValueType>
@@ -414,7 +414,7 @@ protected:
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
-  friend class GPUAcceleratorVector<ValueType>;
+  friend class HIPAcceleratorVector<ValueType>;
 
 };
 
@@ -451,12 +451,12 @@ public:
 };
 
 template <typename ValueType>
-class GPUAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
+class HIPAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
 
 public:
 
-  GPUAcceleratorMatrix();
-  virtual ~GPUAcceleratorMatrix();
+  HIPAcceleratorMatrix();
+  virtual ~HIPAcceleratorMatrix();
 
 };
 

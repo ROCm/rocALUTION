@@ -95,11 +95,11 @@ AcceleratorStencil<ValueType>::~AcceleratorStencil() {
 
 
 template <typename ValueType>
-GPUAcceleratorStencil<ValueType>::GPUAcceleratorStencil() {
+HIPAcceleratorStencil<ValueType>::HIPAcceleratorStencil() {
 }
 
 template <typename ValueType>
-GPUAcceleratorStencil<ValueType>::~GPUAcceleratorStencil() {
+HIPAcceleratorStencil<ValueType>::~HIPAcceleratorStencil() {
 }
 
 
@@ -127,12 +127,12 @@ template class AcceleratorStencil<std::complex<float> >;
 #endif
 template class AcceleratorStencil<int>;
 
-template class GPUAcceleratorStencil<double>;
-template class GPUAcceleratorStencil<float>;
+template class HIPAcceleratorStencil<double>;
+template class HIPAcceleratorStencil<float>;
 #ifdef SUPPORT_COMPLEX
-template class GPUAcceleratorStencil<std::complex<double> >;
-template class GPUAcceleratorStencil<std::complex<float> >;
+template class HIPAcceleratorStencil<std::complex<double> >;
+template class HIPAcceleratorStencil<std::complex<float> >;
 #endif
-template class GPUAcceleratorStencil<int>;
+template class HIPAcceleratorStencil<int>;
 
 }

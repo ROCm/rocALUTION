@@ -10,14 +10,14 @@ class BaseVector;
 template <typename ValueType>
 class HostVector;
 template <typename ValueType>
-class GPUAcceleratorVector;
+class HIPAcceleratorVector;
 
 template <typename ValueType>
 class HostStencilLaplace2D;
 template <typename ValueType>
-class GPUAcceleratorStencil;
+class HIPAcceleratorStencil;
 template <typename ValueType>
-class GPUAcceleratorStencilLaplace2D;
+class HIPAcceleratorStencilLaplace2D;
 
 /// Base class for all host/accelerator stencils
 template <typename ValueType>
@@ -66,7 +66,7 @@ protected:
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
-  friend class GPUAcceleratorVector<ValueType>;
+  friend class HIPAcceleratorVector<ValueType>;
 
 };
 
@@ -97,12 +97,12 @@ public:
 };
 
 template <typename ValueType>
-class GPUAcceleratorStencil : public AcceleratorStencil<ValueType> {
+class HIPAcceleratorStencil : public AcceleratorStencil<ValueType> {
 
 public:
 
-  GPUAcceleratorStencil();
-  virtual ~GPUAcceleratorStencil();
+  HIPAcceleratorStencil();
+  virtual ~HIPAcceleratorStencil();
 
 };
 

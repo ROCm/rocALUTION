@@ -1,29 +1,26 @@
-#ifndef PARALUTION_HOST_VECTOR_HPP_
-#define PARALUTION_HOST_VECTOR_HPP_
+#ifndef PARALUTION_HIP_VECTOR_HPP_
+#define PARALUTION_HIP_VECTOR_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
-#include "../base_stencil.hpp"
+#include "../backend_manager.hpp"
+#include "../../utils/log.hpp"
 
 #include <complex>
 
 namespace paralution {
 
 template <typename ValueType>
-class LocalVector;
-
-template <typename ValueType>
-class HostVector : public BaseVector<ValueType> {
+class HIPAcceleratorVector : public AcceleratorVector<ValueType> {
 
 public:
 
-  HostVector();
-  HostVector(const Paralution_Backend_Descriptor local_backend);
-  virtual ~HostVector();
+  HIPAcceleratorVector();
+  HIPAcceleratorVector(const Paralution_Backend_Descriptor local_backend);
+  virtual ~HIPAcceleratorVector();
 
   virtual void info(void) const;
 
-  virtual bool Check(void) const;
   virtual void Allocate(const int n);
   virtual void SetDataPtr(ValueType **ptr, const int size);
   virtual void LeaveDataPtr(ValueType **ptr);
@@ -31,38 +28,34 @@ public:
   virtual void Zeros(void);
   virtual void Ones(void);
   virtual void SetValues(const ValueType val);
-  virtual void SetRandom(const ValueType a, const ValueType b, const int seed);
 
-  virtual void CopyFrom(const BaseVector<ValueType> &vec);
-  virtual void CopyFromFloat(const BaseVector<float> &vec);
-  virtual void CopyFromDouble(const BaseVector<double> &vec);
-  virtual void CopyTo(BaseVector<ValueType> *vec) const;
+  virtual void CopyFrom(const BaseVector<ValueType> &src);
+  virtual void CopyFromAsync(const BaseVector<ValueType> &src);
   virtual void CopyFrom(const BaseVector<ValueType> &src,
                         const int src_offset,
                         const int dst_offset,
                         const int size);
+
+  virtual void CopyTo(BaseVector<ValueType> *dst) const;
+  virtual void CopyToAsync(BaseVector<ValueType> *dst) const;
+  virtual void CopyFromFloat(const BaseVector<float> &src);
+  virtual void CopyFromDouble(const BaseVector<double> &src);
+
+  virtual void CopyFromHostAsync(const HostVector<ValueType> &src);
+  virtual void CopyFromHost(const HostVector<ValueType> &src);
+  virtual void CopyToHostAsync(HostVector<ValueType> *dst) const;
+  virtual void CopyToHost(HostVector<ValueType> *dst) const;
+
+  virtual void CopyFromData(const ValueType *data);
+  virtual void CopyToData(ValueType *data) const;
+
   virtual void CopyFromPermute(const BaseVector<ValueType> &src,
                                const BaseVector<int> &permutation);
   virtual void CopyFromPermuteBackward(const BaseVector<ValueType> &src,
                                        const BaseVector<int> &permutation);
 
-  virtual void CopyFromData(const ValueType *data);
-  virtual void CopyToData(ValueType *data) const;
-
   virtual void Permute(const BaseVector<int> &permutation);
   virtual void PermuteBackward(const BaseVector<int> &permutation);
-
-  virtual bool Restriction(const BaseVector<ValueType> &vec_fine, const BaseVector<int> &map);
-  virtual bool Prolongation(const BaseVector<ValueType> &vec_coarse, const BaseVector<int> &map);
-
-  /// Read vector from ASCII file
-  void ReadFileASCII(const std::string filename);
-  /// Write vector to ASCII file
-  void WriteFileASCII(const std::string filename) const;
-  /// Read vector from binary file
-  void ReadFileBinary(const std::string filename);
-  /// Write vector to binary file
-  void WriteFileBinary(const std::string filename) const;
 
   // this = this + alpha*x
   virtual void AddScale(const BaseVector<ValueType> &x, const ValueType alpha);
@@ -86,7 +79,7 @@ public:
   virtual ValueType DotNonConj(const BaseVector<ValueType> &x) const;
   // srqt(this^T this)
   virtual ValueType Norm(void) const;
-  // reduce vector
+  // reduce
   virtual ValueType Reduce(void) const;
   // Compute sum of absolute values of this
   virtual ValueType Asum(void) const;
@@ -96,7 +89,6 @@ public:
   virtual void PointWiseMult(const BaseVector<ValueType> &x);
   virtual void PointWiseMult(const BaseVector<ValueType> &x, const BaseVector<ValueType> &y);
   virtual void Power(const double power);
-
 
   // set index array
   virtual void SetIndexArray(const int size, const int *index);
@@ -108,6 +100,7 @@ public:
   virtual void GetContinuousValues(const int start, const int end, ValueType *values) const;
   // set continuous index values
   virtual void SetContinuousValues(const int start, const int end, const ValueType *values);
+
   // get coarse boundary mapping
   virtual void ExtractCoarseMapping(const int start, const int end, const int *index,
                                     const int nc, int *size, int *map) const;
@@ -120,47 +113,42 @@ private:
   ValueType *vec_;
 
   int *index_array_;
+  ValueType *index_buffer_;
 
-  // for [] operator in LocalVector
-  friend class LocalVector<ValueType>;
+  ValueType *host_buffer_;
+  ValueType *device_buffer_;
 
-  friend class HostVector<double>;
-  friend class HostVector<float>;
-  friend class HostVector<std::complex<double> >;
-  friend class HostVector<std::complex<float> >;
-  friend class HostVector<int>;
+  friend class HIPAcceleratorVector<float>;
+  friend class HIPAcceleratorVector<double>;
+  friend class HIPAcceleratorVector<std::complex<float> >;
+  friend class HIPAcceleratorVector<std::complex<double> >;
+  friend class HIPAcceleratorVector<int>;
 
-  friend class HostMatrix<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixDIA<ValueType>;
-  friend class HostMatrixELL<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-  friend class HostMatrixMCSR<ValueType>;
-  friend class HostMatrixBCSR<ValueType>;
+  friend class HostVector<ValueType>;
+  friend class AcceleratorMatrix<ValueType>;
 
-  friend class HostMatrixCOO<float>;
-  friend class HostMatrixCOO<double>;
-  friend class HostMatrixCOO<std::complex<float> >;
-  friend class HostMatrixCOO<std::complex<double> >;
+  friend class HIPAcceleratorMatrixCSR<ValueType>;
+  friend class HIPAcceleratorMatrixMCSR<ValueType>;
+  friend class HIPAcceleratorMatrixBCSR<ValueType>;
+  friend class HIPAcceleratorMatrixCOO<ValueType>;
+  friend class HIPAcceleratorMatrixDIA<ValueType>;
+  friend class HIPAcceleratorMatrixELL<ValueType>;
+  friend class HIPAcceleratorMatrixDENSE<ValueType>;
+  friend class HIPAcceleratorMatrixHYB<ValueType>;
 
-  friend class HostMatrixCSR<double>;
-  friend class HostMatrixCSR<float>;
-  friend class HostMatrixCSR<std::complex<float> >;
-  friend class HostMatrixCSR<std::complex<double> >;
+  friend class HIPAcceleratorMatrixCOO<double>;
+  friend class HIPAcceleratorMatrixCOO<float>;
+  friend class HIPAcceleratorMatrixCOO<std::complex<double> >;
+  friend class HIPAcceleratorMatrixCOO<std::complex<float> >;
 
-  friend class HostMatrixDENSE<double>;
-  friend class HostMatrixDENSE<float>;
-
-  friend class HIPAcceleratorVector<ValueType>;
-
-  friend class HostStencil<ValueType>;
-  friend class HostStencilLaplace2D<ValueType>;
+  friend class HIPAcceleratorMatrixCSR<double>;
+  friend class HIPAcceleratorMatrixCSR<float>;
+  friend class HIPAcceleratorMatrixCSR<std::complex<double> >;
+  friend class HIPAcceleratorMatrixCSR<std::complex<float> >;
 
 };
 
 
 }
 
-#endif // PARALUTION_HOST_VECTOR_HPP_
+#endif // PARALUTION_BASE_VECTOR_HPP_

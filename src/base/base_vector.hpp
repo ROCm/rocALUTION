@@ -13,7 +13,7 @@ template <typename ValueType>
 class AcceleratorVector;
 
 template <typename ValueType>
-class GPUAcceleratorVector;
+class HIPAcceleratorVector;
 
 /// Base class for all host/accelerator vectors
 template <typename ValueType>

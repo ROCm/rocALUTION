@@ -1,27 +1,27 @@
-#ifndef PARALUTION_HOST_MATRIX_HYB_HPP_
-#define PARALUTION_HOST_MATRIX_HYB_HPP_
+#ifndef PARALUTION_HIP_MATRIX_HYB_HPP_
+#define PARALUTION_HIP_MATRIX_HYB_HPP_
 
-#include "../base_vector.hpp"
 #include "../base_matrix.hpp"
+#include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
 namespace paralution {
 
 template <typename ValueType>
-class HostMatrixHYB : public HostMatrix<ValueType> {
+class HIPAcceleratorMatrixHYB : public HIPAcceleratorMatrix<ValueType> {
 
 public:
 
-  HostMatrixHYB();
-  HostMatrixHYB(const Paralution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixHYB();
+  HIPAcceleratorMatrixHYB();
+  HIPAcceleratorMatrixHYB(const Paralution_Backend_Descriptor local_backend);
+  virtual ~HIPAcceleratorMatrixHYB();
 
   inline int get_ell_max_row(void) const { return this->mat_.ELL.max_row; }
   inline int get_ell_nnz(void) const { return this->ell_nnz_; }
   inline int get_coo_nnz(void) const { return this->coo_nnz_; }
 
   virtual void info(void) const;
-  virtual unsigned int get_mat_format(void) const { return  HYB; }
+  virtual unsigned int get_mat_format(void) const { return HYB; }
 
   virtual void Clear(void);
   virtual void AllocateHYB(const int ell_nnz, const int coo_nnz, const int ell_max_row,
@@ -30,7 +30,14 @@ public:
   virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
 
   virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
+  virtual void CopyFromAsync(const BaseMatrix<ValueType> &mat);
   virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+  virtual void CopyToAsync(BaseMatrix<ValueType> *mat) const;
+
+  virtual void CopyFromHost(const HostMatrix<ValueType> &src);
+  virtual void CopyFromHostAsync(const HostMatrix<ValueType> &src);
+  virtual void CopyToHost(HostMatrix<ValueType> *dst) const;
+  virtual void CopyToHostAsync(HostMatrix<ValueType> *dst) const;
 
   virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
   virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
@@ -43,17 +50,12 @@ private:
   int coo_nnz_;
 
   friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixELL<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-
-  friend class HIPAcceleratorMatrixHYB<ValueType>;
+  friend class AcceleratorVector<ValueType>;
+  friend class HIPAcceleratorVector<ValueType>;
 
 };
 
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_HYB_HPP_
+#endif // PARALUTION_HIP_MATRIX_HYB_HPP_
