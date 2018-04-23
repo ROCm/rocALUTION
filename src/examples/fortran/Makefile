@@ -1,6 +1,6 @@
 CC=g++
 FC=gfortran
-FLAGS=-O3 -lstdc++ -fopenmp -lcudart -lcusparse -lcublas -lOpenCL -L/usr/local/cuda/lib64
+FLAGS=-O3 -lstdc++ -fopenmp -lcudart -lcusparse -lcublas -L/usr/local/cuda/lib64
 INC=-I../../../build/inc
 LIB=../../../build/lib/libparalution.so
 OBJ=mmio.o paralution_fortran.o paralution_solver.o

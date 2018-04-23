@@ -50,8 +50,6 @@ private:
   friend class HostMatrixDENSE<ValueType>;
 
   friend class GPUAcceleratorMatrixHYB<ValueType>;
-  friend class OCLAcceleratorMatrixHYB<ValueType>;
-  friend class MICAcceleratorMatrixHYB<ValueType>;
 
 };
 

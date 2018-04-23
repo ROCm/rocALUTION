@@ -154,8 +154,6 @@ private:
   friend class HostMatrixDENSE<float>;
 
   friend class GPUAcceleratorVector<ValueType>;
-  friend class OCLAcceleratorVector<ValueType>;
-  friend class MICAcceleratorVector<ValueType>;
 
   friend class HostStencil<ValueType>;
   friend class HostStencilLaplace2D<ValueType>;

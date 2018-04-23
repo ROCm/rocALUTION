@@ -21,11 +21,6 @@
 #define omp_set_nested(num)  ;
 #endif
 
-#ifdef SUPPORT_MKL
-#include <mkl.h>
-#include <mkl_spblas.h>
-#endif
-
 namespace paralution {
 
 template <typename ValueType>
@@ -503,66 +498,6 @@ void HostVector<ValueType>::WriteFileBinary(const std::string filename) const {
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-void HostVector<double>::AddScale(const BaseVector<double> &x, const double alpha) {
-
-  const HostVector<double> *cast_x = dynamic_cast<const HostVector<double>*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  cblas_daxpy(this->size_, alpha, cast_x->vec_, 1, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<float>::AddScale(const BaseVector<float> &x, const float alpha) {
-
-  const HostVector<float> *cast_x = dynamic_cast<const HostVector<float>*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  cblas_saxpy(this->size_, alpha, cast_x->vec_, 1, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<std::complex<double> >::AddScale(const BaseVector<std::complex<double> > &x, const std::complex<double> alpha) {
-
-  const HostVector<std::complex<double> > *cast_x = dynamic_cast<const HostVector<std::complex<double> >*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  cblas_zaxpy(this->size_, &alpha, cast_x->vec_, 1, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<std::complex<float> >::AddScale(const BaseVector<std::complex<float> > &x, const std::complex<float> alpha) {
-
-  const HostVector<std::complex<float> > *cast_x = dynamic_cast<const HostVector<std::complex<float> >*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  cblas_caxpy(this->size_, &alpha, cast_x->vec_, 1, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<int>::AddScale(const BaseVector<int> &x, const int alpha) {
-
-  LOG_INFO("No int MKL axpy function");
-  FATAL_ERROR(__FILE__, __LINE__);
-
-}
-
-#else
-
 template <typename ValueType>
 void HostVector<ValueType>::AddScale(const BaseVector<ValueType> &x, const ValueType alpha) {
 
@@ -578,8 +513,6 @@ void HostVector<ValueType>::AddScale(const BaseVector<ValueType> &x, const Value
     this->vec_[i] = this->vec_[i] + alpha*cast_x->vec_[i];
 
 }
-
-#endif
 
 template <typename ValueType>
 void HostVector<ValueType>::ScaleAdd(const ValueType alpha, const BaseVector<ValueType> &x) {
@@ -654,46 +587,6 @@ void HostVector<ValueType>::ScaleAdd2(const ValueType alpha, const BaseVector<Va
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-void HostVector<double>::Scale(const double alpha) {
-
-  cblas_dscal(this->size_, alpha, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<float>::Scale(const float alpha) {
-
-  cblas_sscal(this->size_, alpha, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<std::complex<double> >::Scale(const std::complex<double> alpha) {
-
-  cblas_zscal(this->size_, &alpha, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<std::complex<float> >::Scale(const std::complex<float> alpha) {
-
-  cblas_cscal(this->size_, &alpha, this->vec_, 1);
-
-}
-
-template <>
-void HostVector<int>::Scale(const int alpha) {
-
-  LOG_INFO("No int MKL scale function");
-  FATAL_ERROR(__FILE__, __LINE__);  
-
-}
-
-#else
-
 template <typename ValueType>
 void HostVector<ValueType>::Scale(const ValueType alpha) {
 
@@ -704,8 +597,6 @@ void HostVector<ValueType>::Scale(const ValueType alpha) {
     this->vec_[i] *= alpha;
 
 }
-
-#endif
 
 template <typename ValueType>
 void HostVector<ValueType>::ExclusiveScan(const BaseVector<ValueType> &x) {
@@ -722,74 +613,6 @@ void HostVector<ValueType>::ExclusiveScan(const BaseVector<ValueType> &x) {
     this->vec_[i] = cast_x->vec_[i] + this->vec_[i-1];
 
 }
-
-#ifdef SUPPORT_MKL
-
-template <>
-double HostVector<double>::Dot(const BaseVector<double> &x) const {
-
-  const HostVector<double> *cast_x = dynamic_cast<const HostVector<double>*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  return cblas_ddot(this->size_, this->vec_, 1, cast_x->vec_, 1);
-
-}
-
-template <>
-float HostVector<float>::Dot(const BaseVector<float> &x) const {
-
-  const HostVector<float> *cast_x = dynamic_cast<const HostVector<float>*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  return cblas_sdot(this->size_, this->vec_, 1, cast_x->vec_, 1);
-
-}
-
-template <>
-std::complex<double> HostVector<std::complex<double> >::Dot(const BaseVector<std::complex<double> > &x) const {
-
-  const HostVector<std::complex<double> > *cast_x = dynamic_cast<const HostVector<std::complex<double> >*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  std::complex<double> res;
-
-  cblas_zdotc_sub(this->size_, this->vec_, 1, cast_x->vec_, 1, &res);
-
-  return res;
-
-}
-
-template <>
-std::complex<float> HostVector<std::complex<float> >::Dot(const BaseVector<std::complex<float> > &x) const {
-
-  const HostVector<std::complex<float> > *cast_x = dynamic_cast<const HostVector<std::complex<float> >*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  std::complex<float> res;
-
-  cblas_cdotc_sub(this->size_, this->vec_, 1, cast_x->vec_, 1, &res);
-
-  return res;
-
-}
-
-template <>
-int HostVector<int>::Dot(const BaseVector<int> &x) const {
-
-  LOG_INFO("No int MKL dot function");
-  FATAL_ERROR(__FILE__, __LINE__);
-
-}
-
-#else
 
 template <typename ValueType>
 ValueType HostVector<ValueType>::Dot(const BaseVector<ValueType> &x) const {
@@ -861,50 +684,12 @@ std::complex<double> HostVector<std::complex<double> >::Dot(const BaseVector<std
 
 }
 
-#endif
-
 template <typename ValueType>
 ValueType HostVector<ValueType>::DotNonConj(const BaseVector<ValueType> &x) const {
 
   return this->Dot(x);
 
 }
-
-#ifdef SUPPORT_MKL
-
-template <>
-std::complex<double> HostVector<std::complex<double> >::DotNonConj(const BaseVector<std::complex<double> > &x) const {
-
-  const HostVector<std::complex<double> > *cast_x = dynamic_cast<const HostVector<std::complex<double> >*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  std::complex<double> res;
-
-  cblas_zdotu_sub(this->size_, this->vec_, 1, cast_x->vec_, 1, &res);
-
-  return res;
-
-}
-
-template <>
-std::complex<float> HostVector<std::complex<float> >::DotNonConj(const BaseVector<std::complex<float> > &x) const {
-
-  const HostVector<std::complex<float> > *cast_x = dynamic_cast<const HostVector<std::complex<float> >*> (&x);
-
-  assert(cast_x != NULL);
-  assert(this->size_ == cast_x->size_);
-
-  std::complex<float> res;
-
-  cblas_cdotu_sub(this->size_, this->vec_, 1, cast_x->vec_, 1, &res);
-
-  return res;
-
-}
-
-#else
 
 template <>
 std::complex<float> HostVector<std::complex<float> >::DotNonConj(const BaseVector<std::complex<float> > &x) const {
@@ -955,8 +740,6 @@ std::complex<double> HostVector<std::complex<double> >::DotNonConj(const BaseVec
   return std::complex<double>(dot_real, dot_imag);
 
 }
-
-#endif
 
 template <typename ValueType>
 ValueType HostVector<ValueType>::Asum(void) const {
@@ -1038,38 +821,6 @@ int HostVector<ValueType>::Amax(ValueType &value) const {
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-double HostVector<double>::Norm(void) const {
-
-  return cblas_dnrm2(this->size_, this->vec_, 1);
-
-}
-
-template <>
-float HostVector<float>::Norm(void) const {
-
-  return cblas_snrm2(this->size_, this->vec_, 1);
-
-}
-
-template <>
-std::complex<double> HostVector<std::complex<double> >::Norm(void) const {
-
-  return cblas_dznrm2(this->size_, this->vec_, 1);
-
-}
-
-template <>
-std::complex<float> HostVector<std::complex<float> >::Norm(void) const {
-
-  return cblas_scnrm2(this->size_, this->vec_, 1);
-
-}
-
-#else 
-
 template <typename ValueType>
 ValueType HostVector<ValueType>::Norm(void) const {
 
@@ -1118,8 +869,6 @@ std::complex<double> HostVector<std::complex<double> >::Norm(void) const {
   return res;
 
 }
-
-#endif
 
 template <>
 int HostVector<int>::Norm(void) const {

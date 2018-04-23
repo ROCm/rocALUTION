@@ -12,10 +12,6 @@ template <typename ValueType>
 class HostVector;
 template <typename ValueType>
 class GPUAcceleratorVector;
-template <typename ValueType>
-class OCLAcceleratorVector;
-template <typename ValueType>
-class MICAcceleratorVector;
 
 template <typename ValueType>
 class HostMatrixCSR;
@@ -50,40 +46,6 @@ template <typename ValueType>
 class GPUAcceleratorMatrixHYB;
 template <typename ValueType>
 class GPUAcceleratorMatrixDENSE;
-
-template <typename ValueType>
-class OCLAcceleratorMatrixCSR;
-template <typename ValueType>
-class OCLAcceleratorMatrixMCSR;
-template <typename ValueType>
-class OCLAcceleratorMatrixBCSR;
-template <typename ValueType>
-class OCLAcceleratorMatrixCOO;
-template <typename ValueType>
-class OCLAcceleratorMatrixDIA;
-template <typename ValueType>
-class OCLAcceleratorMatrixELL;
-template <typename ValueType>
-class OCLAcceleratorMatrixHYB;
-template <typename ValueType>
-class OCLAcceleratorMatrixDENSE;
-
-template <typename ValueType>
-class MICAcceleratorMatrixCSR;
-template <typename ValueType>
-class MICAcceleratorMatrixMCSR;
-template <typename ValueType>
-class MICAcceleratorMatrixBCSR;
-template <typename ValueType>
-class MICAcceleratorMatrixCOO;
-template <typename ValueType>
-class MICAcceleratorMatrixDIA;
-template <typename ValueType>
-class MICAcceleratorMatrixELL;
-template <typename ValueType>
-class MICAcceleratorMatrixHYB;
-template <typename ValueType>
-class MICAcceleratorMatrixDENSE;
 
 /// Base class for all host/accelerator matrices
 template <typename ValueType>
@@ -453,8 +415,6 @@ protected:
   friend class HostVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
   friend class GPUAcceleratorVector<ValueType>;
-  friend class OCLAcceleratorVector<ValueType>;
-  friend class MICAcceleratorVector<ValueType>;
 
 };
 
@@ -499,27 +459,6 @@ public:
   virtual ~GPUAcceleratorMatrix();
 
 };
-
-template <typename ValueType>
-class OCLAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
-
-public:
-
-  OCLAcceleratorMatrix();
-  virtual ~OCLAcceleratorMatrix();
-
-};
-
-template <typename ValueType>
-class MICAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
-
-public:
-
-  MICAcceleratorMatrix();
-  virtual ~MICAcceleratorMatrix();
-
-};
-
 
 }
 

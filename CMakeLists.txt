@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 project(PARALUTION)
 
 #######################################################################################################################
@@ -69,70 +69,8 @@ if (NOT CUDA_FOUND)
 else()
   option(SUPPORT_CUDA "Compile WITH CUDA support." ON)
   if (SUPPORT_CUDA)
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3 -arch sm_20 --compiler-options -Wall -D_FORCE_INLINES")
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3 -arch sm_35 --compiler-options -Wall -D_FORCE_INLINES")
     set(CUDA_CXX_FLAGS -DSUPPORT_CUDA)
-  endif()
-endif()
-
-#######################################################################################################################
-# OpenCL - only compile OpenCL when CUDA is not picked
-find_package(OpenCL)
-if (NOT OPENCL_FOUND)
-  message("-- OpenCL not found. Compiling WITHOUT OpenCL support.")
-else()
-  if (NOT SUPPORT_CUDA)
-    option(SUPPORT_OCL "Compile WITH OpenCL support." ON)
-    if (SUPPORT_OCL)
-      set(OCL_CXX_FLAGS -DSUPPORT_OCL)
-      include_directories(${OPENCL_INCLUDE_DIRS})
-    endif()
-  else()
-    message("-- OpenCL not supported while CUDA is enabled.")
-  endif()
-endif()
-
-#######################################################################################################################
-# MIC - only compile MIC when CUDA and OpenCL is not picked
-if (NOT SUPPORT_CUDA)
-  if (NOT SUPPORT_OCL)
-    # Check for Intel Compiler
-    find_program(CMAKE_C_COMPILER NAMES icc)
-    find_program(CMAKE_CXX_COMPILER NAMES icpc)
-    if (CMAKE_C_COMPILER MATCHES CMAKE_C_COMPILER-NOTFOUND OR
-        CMAKE_CXX_COMPILER MATCHES CMAKE_CXX_COMPILER-NOTFOUND)
-      message("-- MIC only supported by Intel Compiler. Compiling WITHOUT MIC support.")
-    else()
-      option(SUPPORT_MIC "Compile WITH MIC support." OFF)
-      if (SUPPORT_MIC)
-        include(CMakeForceCompiler)
-        CMAKE_FORCE_C_COMPILER(icc "Intel C Compiler")
-        CMAKE_FORCE_CXX_COMPILER(icpc "Intel C++ Compiler")
-        set(CMAKE_AR xiar)
-        set(CMAKE_LINKER xild)
-        set(MIC_CXX_FLAGS "-DSUPPORT_MIC -offload-option,mic,compiler,\"-z defs\"")
-      endif()
-    endif()
-  else()
-    message("-- MIC not supported while OpenCL is enabled.")
-  endif()
-else()
-  message("-- MIC not supported while CUDA is enabled.")
-endif()
-
-#######################################################################################################################
-# MKL
-set(MKL_MULTI_THREADED ON)
-find_package(MKL)
-if (NOT MKL_FOUND)
-  message("-- MKL not found. Compiling WITHOUT MKL support.")
-else()
-  if (NOT SUPPORT_OCL)
-    option(SUPPORT_MKL "Compile WITH MKL support." OFF)
-    if (SUPPORT_MKL)
-      set(MKL_CXX_FLAGS -DSUPPORT_MKL)
-    endif()
-  else()
-    message("-- MKL not supported while OpenCL is enabled.")
   endif()
 endif()
 
@@ -165,7 +103,7 @@ option(BUILD_EXAMPLES "Build examples." ON)
 
 #######################################################################################################################
 
-set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${OMP_CXX_FLAGS} ${CUDA_CXX_FLAGS} ${OCL_CXX_FLAGS} ${MKL_CXX_FLAGS} ${MIC_CXX_FLAGS} ${MPI_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${OMP_CXX_FLAGS} ${CUDA_CXX_FLAGS} ${MPI_CXX_FLAGS}")
 
 add_subdirectory(src)
 if (BUILD_EXAMPLES)

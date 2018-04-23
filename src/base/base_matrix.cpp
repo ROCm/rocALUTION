@@ -890,26 +890,6 @@ GPUAcceleratorMatrix<ValueType>::~GPUAcceleratorMatrix() {
 }
 
 
-
-
-template <typename ValueType>
-OCLAcceleratorMatrix<ValueType>::OCLAcceleratorMatrix() {
-}
-
-template <typename ValueType>
-OCLAcceleratorMatrix<ValueType>::~OCLAcceleratorMatrix() {
-}
-
-
-template <typename ValueType>
-MICAcceleratorMatrix<ValueType>::MICAcceleratorMatrix() {
-}
-
-template <typename ValueType>
-MICAcceleratorMatrix<ValueType>::~MICAcceleratorMatrix() {
-}
-
-
 template class BaseMatrix<double>;
 template class BaseMatrix<float>;
 #ifdef SUPPORT_COMPLEX
@@ -941,21 +921,5 @@ template class GPUAcceleratorMatrix<std::complex<double> >;
 template class GPUAcceleratorMatrix<std::complex<float> >;
 #endif
 template class GPUAcceleratorMatrix<int>;
-
-template class OCLAcceleratorMatrix<double>;
-template class OCLAcceleratorMatrix<float>;
-#ifdef SUPPORT_COMPLEX
-template class OCLAcceleratorMatrix<std::complex<double> >;
-template class OCLAcceleratorMatrix<std::complex<float> >;
-#endif
-template class OCLAcceleratorMatrix<int>;
-
-template class MICAcceleratorMatrix<double>;
-template class MICAcceleratorMatrix<float>;
-#ifdef SUPPORT_COMPLEX
-template class MICAcceleratorMatrix<std::complex<double> >;
-template class MICAcceleratorMatrix<std::complex<float> >;
-#endif
-template class MICAcceleratorMatrix<int>;
 
 }

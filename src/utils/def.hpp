@@ -22,9 +22,6 @@
 // When logging into a file, this will be unset
 #define LOG_MPI_RANK 0
 
-// Uncomment to enable encryption for the OpenCL kernels
-// #define OCL_ENC
-
 // Uncomment to disable automatic object tracking
 // #define OBJ_TRACKING_OFF
 
@@ -58,15 +55,7 @@
 
 #endif
 
-#if defined(SUPPORT_MIC)
-
-#undef SUPPORT_COMPLEX
-
-#else
-
 #define SUPPORT_COMPLEX
-
-#endif
 
 #ifdef LOG_FILE
 

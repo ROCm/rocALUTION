@@ -1,9 +1,3 @@
-#if defined(SUPPORT_MIC)
-#undef SUPPORT_COMPLEX
-#else
-#define SUPPORT_COMPLEX
-#endif
-
 #include <iostream>
 #include <cstdlib>
 #include <complex>
@@ -26,8 +20,6 @@ int main(int argc, char* argv[]) {
   } 
 
   info_paralution();
-
-#ifdef SUPPORT_COMPLEX
 
   LocalVector<std::complex<double> > x;
   LocalVector<std::complex<double> > rhs;
@@ -70,12 +62,6 @@ int main(int argc, char* argv[]) {
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   ls.Clear();
-
-#else
-
-  std::cout << "The basic version does not support complex on CUDA/OpenCL/MIC" << std::endl;
-
-#endif
 
   stop_paralution();
 

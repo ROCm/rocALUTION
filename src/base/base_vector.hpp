@@ -15,12 +15,6 @@ class AcceleratorVector;
 template <typename ValueType>
 class GPUAcceleratorVector;
 
-template <typename ValueType>
-class OCLAcceleratorVector;
-
-template <typename ValueType>
-class MICAcceleratorVector;
-
 /// Base class for all host/accelerator vectors
 template <typename ValueType>
 class BaseVector {

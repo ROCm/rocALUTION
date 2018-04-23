@@ -18,7 +18,6 @@ class HostMatrix;
 
 /// Backend descriptor - keeps information about the
 /// hardware - OpenMP (threads); CUDA (blocksizes, handles, etc);
-/// OpenCL (workgroupsizes, handles, etc);
 struct Paralution_Backend_Descriptor {
 
   // set by initbackend();
@@ -54,25 +53,6 @@ struct Paralution_Backend_Descriptor {
   int GPU_num_procs;
   int GPU_threads_per_proc;
 
-  // OCL section
-  void *OCL_context;
-  void *OCL_command_queue;
-  std::vector<void*> OCL_program;
-  std::map<std::string, void*> OCL_kernels;
-
-  int OCL_plat;
-  int OCL_dev;
-  void *OCL_platform_id;
-  void *OCL_device_id;
-  int OCL_block_size;
-  int OCL_warp_size;
-  int OCL_num_procs;
-  int OCL_threads_per_proc;
-  size_t OCL_regs_per_block;
-
-  // MIC section
-  int MIC_dev;
-
   // MPI rank/id
   int rank;
 
@@ -87,13 +67,11 @@ extern struct Paralution_Backend_Descriptor _Backend_Descriptor;
 extern const std::string _paralution_host_name [1];
 
 /// Backend names
-extern const std::string _paralution_backend_name [4];
+extern const std::string _paralution_backend_name [2];
 
 /// Backend IDs
 enum _paralution_backend_id {None=0,
-                             GPU=1,
-                             OCL=2,
-                             MIC=3};
+                             GPU=1};
 
 
 
@@ -113,12 +91,6 @@ void set_omp_affinity(bool affinity);
 
 /// Set a specific GPU device
 void set_gpu_cuda_paralution(const int ngpu);
-
-/// Set a specific OpenCL device
-void set_ocl_paralution(const int nplatform, const int ndevice);
-
-/// Set a specific OpenCL platform
-void set_ocl_platform_paralution(int platform);
 
 /// Set OpenMP threshold size
 void set_omp_threshold(const int threshold);

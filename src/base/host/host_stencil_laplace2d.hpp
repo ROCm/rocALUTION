@@ -31,8 +31,6 @@ private:
   friend class HostVector<ValueType>;
 
   //  friend class GPUAcceleratorStencilLaplace2D<ValueType>;
-  //  friend class OCLAcceleratorStencilLaplace2D<ValueType>;
-  //  friend class MICAcceleratorStencilLaplace2D<ValueType>;
 
 };
 

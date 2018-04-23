@@ -1960,7 +1960,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrices(const int row_num_blocks,
   if (this->get_nnz() > 0) {
 
     // implementation via ExtractSubMatrix() calls
-    //OMP not working with OpenCL
+    //TODO OMP
     //#pragma omp parallel for schedule(dynamic,1) collapse(2)
     for (int i=0; i<row_num_blocks; ++i)
       for (int j=0; j<col_num_blocks; ++j)

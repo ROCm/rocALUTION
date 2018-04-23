@@ -62,8 +62,6 @@ private:
   friend class HostMatrixDIA<ValueType>;
 
   friend class GPUAcceleratorMatrixDENSE<ValueType>;
-  friend class OCLAcceleratorMatrixDENSE<ValueType>;
-  friend class MICAcceleratorMatrixDENSE<ValueType>;
 
 };
 

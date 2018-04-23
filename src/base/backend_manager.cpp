@@ -23,21 +23,8 @@
 #include <omp.h>
 #endif
 
-#ifdef SUPPORT_MKL
-#include <mkl.h>
-#include <mkl_spblas.h>
-#endif
-
 #ifdef SUPPORT_CUDA
 #include "gpu/backend_gpu.hpp"
-#endif
-
-#ifdef SUPPORT_OCL
-#include "ocl/backend_ocl.hpp"
-#endif
-
-#ifdef SUPPORT_MIC
-#include "mic/backend_mic.hpp"
 #endif
 
 #ifdef SUPPORT_MULTINODE
@@ -53,15 +40,7 @@ Paralution_Backend_Descriptor _Backend_Descriptor = {
 #ifdef SUPPORT_CUDA
   GPU,   // default backend
 #else
-  #ifdef SUPPORT_OCL
-  OCL,
-   #else
-     #ifdef SUPPORT_MIC
-     MIC,
-    #else
-     None,
-   #endif
-#endif
+  None,
 #endif
   false, // use accelerator
   false, // disable accelerator
@@ -79,22 +58,6 @@ Paralution_Backend_Descriptor _Backend_Descriptor = {
   65535, // Maximum threads in the block
   13,    // GPU_num_procs
   2048,  // GPU_threads_per_proc
-  // OCL section
-  NULL,  // OCL_context
-  NULL,  // OCL_command_queue
-  std::vector<void*>(), // OCL_program
-  std::map<std::string, void*>(), // OCL_kernels
-  -1,    // OCL_platform;
-  -1,    // OCL_device;
-  NULL,  // OCL_platform_id
-  NULL,  // OCL_device_id
-  256,   // OCL_block_sizes
-  32,    // OCL_warp_size
-  13,    // OCL_num_procs
-  1024,  // OCL_threads_per_proc
-  65536, // OCL_regs_per_block
-  // MIC
-  0,     // default is zero device
   // MPI rank/id
   0,
   // LOG
@@ -103,18 +66,12 @@ Paralution_Backend_Descriptor _Backend_Descriptor = {
 
 /// Host name
 const std::string _paralution_host_name [1] = 
-#ifdef SUPPORT_MKL
-  {"CPU(MKL/OpenMP)"};
-#else 
   {"CPU(OpenMP)"};
-#endif
 
 /// Backend names
-const std::string _paralution_backend_name [4] =
+const std::string _paralution_backend_name [2] =
   {"None",
-   "GPU(CUDA)",
-   "OpenCL",
-   "MIC(OpenMP)"};
+   "GPU(CUDA)"};
 
 int init_paralution(const int rank, const int dev_per_node, const int platform) {
 
@@ -161,15 +118,7 @@ int init_paralution(const int rank, const int dev_per_node, const int platform) 
 #ifdef SUPPORT_CUDA
   _get_backend_descriptor()->backend = GPU;
 #else
-  #ifdef SUPPORT_OCL
-    _get_backend_descriptor()->backend = OCL;
-  #else
-    #ifdef SUPPORT_MIC
-    _get_backend_descriptor()->backend = MIC;
-   #else
-    _get_backend_descriptor()->backend = None;
-  #endif
- #endif
+  _get_backend_descriptor()->backend = None;
 #endif
 
 #ifdef _OPENMP
@@ -191,37 +140,13 @@ int init_paralution(const int rank, const int dev_per_node, const int platform) 
   if (rank > -1) set_gpu_cuda_paralution(rank % dev_per_node);
   _get_backend_descriptor()->accelerator = paralution_init_gpu();
 #endif
-    
-#ifdef SUPPORT_OCL
-  if (rank > -1) set_ocl_paralution(platform, rank % dev_per_node);
-  _get_backend_descriptor()->accelerator = paralution_init_ocl();
-#endif
-    
-#ifdef SUPPORT_MIC
-    
-#ifdef __INTEL_OFFLOAD
-    
-    _get_backend_descriptor()->accelerator = paralution_init_mic();
-    
-#else
-
-  LOG_INFO("The MIC backend is compiled without __INTEL_OFFLOAD - Double check the compilation process!");
-  FATAL_ERROR(__FILE__, __LINE__);
-
-#endif
-
-#endif
-
   } else {
-
     LOG_INFO("Warning: the accelerator is disabled");
-
   }
 
   if (_paralution_check_if_any_obj() == false) {
     LOG_INFO("Error: PARALUTION objects have been created before calling the init_paralution()!");
     FATAL_ERROR(__FILE__, __LINE__);
-
   }
 
   LOG_DEBUG(0, "init_paralution()",
@@ -241,14 +166,6 @@ int stop_paralution(void) {
 
 #ifdef SUPPORT_CUDA
   paralution_stop_gpu();
-#endif
-
-#ifdef SUPPORT_OCL
-  paralution_stop_ocl();
-#endif
-
-#ifdef SUPPORT_MIC
-  paralution_stop_mic();
 #endif
 
 #ifdef _OPENMP
@@ -280,14 +197,6 @@ int set_device_paralution(int dev) {
 
 #ifdef SUPPORT_CUDA
   set_gpu_cuda_paralution(dev);
-#endif
-
-#ifdef SUPPORT_OCL
-  _get_backend_descriptor()->OCL_dev = dev;
-#endif
-
-#ifdef SUPPORT_MIC
-  _get_backend_descriptor()->MIC_dev = dev;
 #endif
 
   return 0;
@@ -328,31 +237,6 @@ void set_gpu_cuda_paralution(const int ngpu) {
   assert(_get_backend_descriptor()->init == false);
 
   _get_backend_descriptor()->GPU_dev = ngpu;
-
-}
-
-void set_ocl_paralution(const int nplatform, const int ndevice) {
-
-  LOG_DEBUG(0, "set_ocl_paralution()",
-            "nplatform=" << nplatform << 
-            " ndevice" << ndevice);
-
-
-  assert(_get_backend_descriptor()->init == false);
-
-  _get_backend_descriptor()->OCL_plat = nplatform;
-  _get_backend_descriptor()->OCL_dev = ndevice;
-
-}
-
-void set_ocl_platform_paralution(int platform) {
-
-  LOG_DEBUG(0, "set_ocl_platform_paralution()",
-            "platform=" << platform);
-
-  assert(_get_backend_descriptor()->init == false);
-
-  _get_backend_descriptor()->OCL_plat = platform;
 
 }
 
@@ -414,12 +298,6 @@ void info_paralution(const struct Paralution_Backend_Descriptor backend_descript
   LOG_INFO("No OpenMP support");
 #endif
 
-#ifdef SUPPORT_MKL
-  LOG_INFO("MKL threads:" << mkl_get_max_threads() );
-#else
-  LOG_VERBOSE_INFO(3, "No MKL support");
-#endif
-
   if (backend_descriptor.disable_accelerator == true) {
     LOG_INFO("The accelerator is disabled");
   }
@@ -431,24 +309,6 @@ void info_paralution(const struct Paralution_Backend_Descriptor backend_descript
     LOG_INFO("GPU is not initialized");
 #else
   LOG_VERBOSE_INFO(3, "No CUDA/GPU support");
-#endif
-
-#ifdef SUPPORT_OCL
-  if (backend_descriptor.accelerator)
-    paralution_info_ocl(backend_descriptor);
-  else
-    LOG_INFO("OpenCL is not initialized");
-#else
-  LOG_VERBOSE_INFO(3, "No OpenCL support");
-#endif
-
-#ifdef SUPPORT_MIC
-  if (backend_descriptor.accelerator)
-    paralution_info_mic(backend_descriptor);
-  else
-    LOG_INFO("MIC/OpenMP is not initialized");
-#else
-  LOG_VERBOSE_INFO(3, "No MIC/OpenMP support");
 #endif
 
 #ifdef SUPPORT_MULTINODE
@@ -536,20 +396,6 @@ AcceleratorVector<ValueType>* _paralution_init_base_backend_vector(const struct 
     break;
 #endif
 
-#ifdef SUPPORT_OCL
-  // OCL
-  case OCL:
-    return _paralution_init_base_ocl_vector<ValueType>(backend_descriptor);
-    break;
-#endif
-
-#ifdef SUPPORT_MIC
-  // GPU
-  case MIC:
-    return _paralution_init_base_mic_vector<ValueType>(backend_descriptor);
-    break;
-#endif
-
   default:
     // No backend supported!
     LOG_INFO("Paralution was not compiled with " << _paralution_backend_name[backend_descriptor.backend] << " support");
@@ -572,18 +418,6 @@ AcceleratorMatrix<ValueType>* _paralution_init_base_backend_matrix(const struct 
 #ifdef SUPPORT_CUDA      
   case GPU:
     return _paralution_init_base_gpu_matrix<ValueType>(backend_descriptor, matrix_format);
-    break;
-#endif
-
-#ifdef SUPPORT_OCL
-  case OCL:
-    return _paralution_init_base_ocl_matrix<ValueType>(backend_descriptor, matrix_format);
-    break;
-#endif
-
-#ifdef SUPPORT_MIC      
-  case MIC:
-    return _paralution_init_base_mic_matrix<ValueType>(backend_descriptor, matrix_format);
     break;
 #endif
 
@@ -652,14 +486,6 @@ void _paralution_sync(void) {
 
 #ifdef SUPPORT_CUDA
     paralution_gpu_sync();
-#endif
-    
-#ifdef SUPPORT_OCL
-    paralution_ocl_sync();
-#endif
-    
-#ifdef SUPPORT_MIC
-    //  paralution_mic_sync();
 #endif
     
   }

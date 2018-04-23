@@ -70,13 +70,6 @@ if (SUPPORT_CUDA)
 endif()
 
 # Create paralution library
-if (SUPPORT_MIC)
-  SET(CMAKE_AR "xiar")
-  SET(CMAKE_LINKER "xild")
-  SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> -qoffload-build rcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-  SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> -qoffload-build rcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-endif()
-
 add_library(${PARALUTION_LIBRARY} ${LIBRARY_TYPE} ${PARALUTION_SOURCES})
 
 #######################################################################################################################
@@ -84,16 +77,4 @@ add_library(${PARALUTION_LIBRARY} ${LIBRARY_TYPE} ${PARALUTION_SOURCES})
 # Link platform specific libraries
 if (SUPPORT_CUDA)
   target_link_libraries(${PARALUTION_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
-endif()
-
-if (SUPPORT_OCL)
-  target_link_libraries(${PARALUTION_LIBRARY} ${OPENCL_LIBRARIES})
-endif()
-
-if (SUPPORT_MIC)
-  target_link_libraries(${PARALUTION_LIBRARY} -openmp)
-endif()
-
-if (SUPPORT_MKL)
-  target_link_libraries(${PARALUTION_LIBRARY} ${MKL_LIBRARIES})
 endif()

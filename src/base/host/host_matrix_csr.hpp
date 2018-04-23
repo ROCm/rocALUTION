@@ -184,14 +184,6 @@ private:
   friend class HostMatrixBCSR<ValueType>;
 
   friend class GPUAcceleratorMatrixCSR<ValueType>;
-  friend class OCLAcceleratorMatrixCSR<ValueType>;
-  friend class MICAcceleratorMatrixCSR<ValueType>;
-
-#ifdef SUPPORT_MKL
-
-  ValueType *mkl_tmp_vec_;
-
-#endif
 
   bool L_diag_unit_;
   bool U_diag_unit_;

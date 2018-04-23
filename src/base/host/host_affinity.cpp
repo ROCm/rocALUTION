@@ -26,8 +26,6 @@ void paralution_set_omp_affinity(bool aff) {
 
   if (aff == true) {
 
-#ifndef __MIC__
-
 #ifdef _OPENMP
 
 #if defined(__gnu_linux__) || defined(linux) || defined(__linux) || defined(__linux__)
@@ -100,8 +98,6 @@ void paralution_set_omp_affinity(bool aff) {
 #else // !omp
 
 #endif // omp
-
-#endif // mic
 
   } else {
 

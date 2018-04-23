@@ -103,24 +103,6 @@ GPUAcceleratorStencil<ValueType>::~GPUAcceleratorStencil() {
 }
 
 
-template <typename ValueType>
-OCLAcceleratorStencil<ValueType>::OCLAcceleratorStencil() {
-}
-
-template <typename ValueType>
-OCLAcceleratorStencil<ValueType>::~OCLAcceleratorStencil() {
-}
-
-
-template <typename ValueType>
-MICAcceleratorStencil<ValueType>::MICAcceleratorStencil() {
-}
-
-template <typename ValueType>
-MICAcceleratorStencil<ValueType>::~MICAcceleratorStencil() {
-}
-
-
 template class BaseStencil<double>;
 template class BaseStencil<float>;
 #ifdef SUPPORT_COMPLEX
@@ -152,21 +134,5 @@ template class GPUAcceleratorStencil<std::complex<double> >;
 template class GPUAcceleratorStencil<std::complex<float> >;
 #endif
 template class GPUAcceleratorStencil<int>;
-
-template class OCLAcceleratorStencil<double>;
-template class OCLAcceleratorStencil<float>;
-#ifdef SUPPORT_COMPLEX
-template class OCLAcceleratorStencil<std::complex<double> >;
-template class OCLAcceleratorStencil<std::complex<float> >;
-#endif
-template class OCLAcceleratorStencil<int>;
-
-template class MICAcceleratorStencil<double>;
-template class MICAcceleratorStencil<float>;
-#ifdef SUPPORT_COMPLEX
-template class MICAcceleratorStencil<std::complex<double> >;
-template class MICAcceleratorStencil<std::complex<float> >;
-#endif
-template class MICAcceleratorStencil<int>;
 
 }

@@ -11,10 +11,6 @@ template <typename ValueType>
 class HostVector;
 template <typename ValueType>
 class GPUAcceleratorVector;
-template <typename ValueType>
-class OCLAcceleratorVector;
-template <typename ValueType>
-class MICAcceleratorVector;
 
 template <typename ValueType>
 class HostStencilLaplace2D;
@@ -22,10 +18,6 @@ template <typename ValueType>
 class GPUAcceleratorStencil;
 template <typename ValueType>
 class GPUAcceleratorStencilLaplace2D;
-template <typename ValueType>
-class OCLAcceleratorStencilLaplace2D;
-template <typename ValueType>
-class MICAcceleratorStencilLaplace2D;
 
 /// Base class for all host/accelerator stencils
 template <typename ValueType>
@@ -75,8 +67,6 @@ protected:
   friend class HostVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
   friend class GPUAcceleratorVector<ValueType>;
-  friend class OCLAcceleratorVector<ValueType>;
-  friend class MICAcceleratorVector<ValueType>;
 
 };
 
@@ -115,27 +105,6 @@ public:
   virtual ~GPUAcceleratorStencil();
 
 };
-
-template <typename ValueType>
-class OCLAcceleratorStencil : public AcceleratorStencil<ValueType> {
-
-public:
-
-  OCLAcceleratorStencil();
-  virtual ~OCLAcceleratorStencil();
-
-};
-
-template <typename ValueType>
-class MICAcceleratorStencil : public AcceleratorStencil<ValueType> {
-
-public:
-
-  MICAcceleratorStencil();
-  virtual ~MICAcceleratorStencil();
-
-};
-
 
 }
 

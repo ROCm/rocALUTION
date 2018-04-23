@@ -21,13 +21,6 @@
 #define omp_set_num_threads(num) ;
 #endif
 
-#ifdef SUPPORT_MKL
-#define MKL_Complex8 std::complex<float>
-#define MKL_Complex16 std::complex<double>
-#include <mkl.h>
-#include <mkl_spblas.h>
-#endif
-
 namespace paralution {
 
 template <typename ValueType>
@@ -341,110 +334,6 @@ bool HostMatrixCOO<ValueType>::WriteFileMTX(const std::string filename) const {
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-void HostMatrixCOO<double>::Apply(const BaseVector<double> &in, BaseVector<double> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<double> *cast_in = dynamic_cast<const HostVector<double>*> (&in);
-  HostVector<double> *cast_out      = dynamic_cast<      HostVector<double>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-  int nnz  = this->nnz_;
-
-  mkl_cspblas_dcoogemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row, this->mat_.col,
-                       &nnz,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCOO<float>::Apply(const BaseVector<float> &in, BaseVector<float> *out) const {
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<float> *cast_in = dynamic_cast<const HostVector<float>*> (&in);
-  HostVector<float> *cast_out      = dynamic_cast<      HostVector<float>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-  int nnz  = this->nnz_;
-
-  mkl_cspblas_scoogemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row, this->mat_.col,
-                       &nnz,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCOO<std::complex<double> >::Apply(const BaseVector<std::complex<double> > &in,
-                                                 BaseVector<std::complex<double> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<double> > *cast_in = dynamic_cast<const HostVector<std::complex<double> >*> (&in);
-  HostVector<std::complex<double> > *cast_out      = dynamic_cast<      HostVector<std::complex<double> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-  int nnz  = this->nnz_;
-
-  mkl_cspblas_zcoogemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row, this->mat_.col,
-                       &nnz,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCOO<std::complex<float> >::Apply(const BaseVector<std::complex<float> > &in,
-                                                BaseVector<std::complex<float> > *out) const {
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<float> > *cast_in = dynamic_cast<const HostVector<std::complex<float> >*> (&in);
-  HostVector<std::complex<float> > *cast_out      = dynamic_cast<      HostVector<std::complex<float> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-  int nnz  = this->nnz_;
-
-  mkl_cspblas_ccoogemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row, this->mat_.col,
-                       &nnz,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-#else
-
 template <typename ValueType>
 void HostMatrixCOO<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -469,8 +358,6 @@ void HostMatrixCOO<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
     cast_out->vec_[this->mat_.row[i] ] += this->mat_.val[i] * cast_in->vec_[ this->mat_.col[i] ];
 
 }
-
-#endif
 
 template <typename ValueType>
 void HostMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,

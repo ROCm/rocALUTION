@@ -33,13 +33,6 @@
   #define omp_set_nested(num)  ;
 #endif
 
-#ifdef SUPPORT_MKL
-  #define MKL_Complex8  std::complex<float>
-  #define MKL_Complex16 std::complex<double>
-  #include <mkl.h>
-  #include <mkl_spblas.h>
-#endif
-
 namespace paralution {
 
 template <typename ValueType>
@@ -62,10 +55,6 @@ HostMatrixCSR<ValueType>::HostMatrixCSR(const Paralution_Backend_Descriptor loca
   this->mat_.val        = NULL;
   this->set_backend(local_backend); 
   
-#ifdef SUPPORT_MKL
-  this->mkl_tmp_vec_ = NULL;
-#endif
-
   this->L_diag_unit_ = false;
   this->U_diag_unit_ = false;
 
@@ -94,13 +83,6 @@ void HostMatrixCSR<ValueType>::Clear() {
     this->ncol_ = 0;
     this->nnz_  = 0;
 
-#ifdef SUPPORT_MKL
-    if (this->mkl_tmp_vec_ != NULL) {
-      free_host(&this->mkl_tmp_vec_);
-      this->mkl_tmp_vec_ = NULL;
-    }
-#endif
-    
   }
 
 }
@@ -238,10 +220,6 @@ void HostMatrixCSR<ValueType>::AllocateCSR(const int nnz, const int nrow, const 
     this->nrow_ = nrow;
     this->ncol_ = ncol;
     this->nnz_  = nnz;
-
-#ifdef SUPPORT_MKL
-    allocate_host(nrow, &this->mkl_tmp_vec_);
-#endif
 
   }
 
@@ -445,10 +423,6 @@ void HostMatrixCSR<ValueType>::CopyFromHostCSR(const int *row_offset, const int 
     this->ncol_ = ncol;
     this->nnz_  = nnz;
 
-#ifdef SUPPORT_MKL
-    allocate_host(nrow, &this->mkl_tmp_vec_);
-#endif
-
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
 #pragma omp parallel for
@@ -622,104 +596,6 @@ bool HostMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-void HostMatrixCSR<double>::Apply(const BaseVector<double> &in, BaseVector<double> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<double> *cast_in = dynamic_cast<const HostVector<double>*> (&in);
-  HostVector<double> *cast_out      = dynamic_cast<      HostVector<double>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_dcsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCSR<float>::Apply(const BaseVector<float> &in, BaseVector<float> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<float> *cast_in = dynamic_cast<const HostVector<float>*> (&in);
-  HostVector<float> *cast_out      = dynamic_cast<      HostVector<float>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_scsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCSR<std::complex<double> >::Apply(const BaseVector<std::complex<double> > &in,
-                                                 BaseVector<std::complex<double> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<double> > *cast_in = dynamic_cast<const HostVector<std::complex<double> >*> (&in);
-  HostVector<std::complex<double> > *cast_out      = dynamic_cast<      HostVector<std::complex<double> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_zcsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCSR<std::complex<float> >::Apply(const BaseVector<std::complex<float> > &in,
-                                                BaseVector<std::complex<float> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<float> > *cast_in = dynamic_cast<const HostVector<std::complex<float> >*> (&in);
-  HostVector<std::complex<float> > *cast_out      = dynamic_cast<      HostVector<std::complex<float> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_ccsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-#else
-
 template <typename ValueType>
 void HostMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -751,8 +627,6 @@ void HostMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
   }
     
 }
-
-#endif
 
 template <typename ValueType>
 void HostMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
@@ -1091,176 +965,6 @@ bool HostMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> *L) const 
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-bool HostMatrixCSR<double>::LUSolve(const BaseVector<double> &in, BaseVector<double> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<double> *cast_in = dynamic_cast<const HostVector<double>*> (&in);
-  HostVector<double> *cast_out      = dynamic_cast<      HostVector<double>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  double one = double(1.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_dcsrsv(&transp, &nrow, &one, matdescra, 
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_dcsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-template <>
-bool HostMatrixCSR<float>::LUSolve(const BaseVector<float> &in, BaseVector<float> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<float> *cast_in = dynamic_cast<const HostVector<float>*> (&in);
-  HostVector<float> *cast_out      = dynamic_cast<      HostVector<float>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  float one = float(1.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_scsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_scsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-template <>
-bool HostMatrixCSR<std::complex<double> >::LUSolve(const BaseVector<std::complex<double> > &in,
-                                                   BaseVector<std::complex<double> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<double> > *cast_in = dynamic_cast<const HostVector<std::complex<double> >*> (&in);
-  HostVector<std::complex<double> > *cast_out      = dynamic_cast<      HostVector<std::complex<double> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  std::complex<double> one = std::complex<double>(1.0, 0.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_zcsrsv(&transp, &nrow, &one, matdescra, 
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_zcsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-template <>
-bool HostMatrixCSR<std::complex<float> >::LUSolve(const BaseVector<std::complex<float> > &in,
-                                                  BaseVector<std::complex<float> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<float> > *cast_in = dynamic_cast<const HostVector<std::complex<float> >*> (&in);
-  HostVector<std::complex<float> > *cast_out      = dynamic_cast<      HostVector<std::complex<float> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  std::complex<float> one = std::complex<float>(1.0, 0.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_ccsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_ccsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-#else
-
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -1315,8 +1019,6 @@ bool HostMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVect
   return true;
 
 }
-
-#endif
 
 template <typename ValueType>
 void HostMatrixCSR<ValueType>::LLAnalyse(void) {
@@ -1443,7 +1145,6 @@ void HostMatrixCSR<ValueType>::LAnalyseClear(void) {
   this->L_diag_unit_ = true;
 }
 
-// TODO - make mkl interface
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -1502,7 +1203,6 @@ void HostMatrixCSR<ValueType>::UAnalyseClear(void) {
   this->U_diag_unit_ = false;
 }
 
-// TODO - make mkl interface
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::USolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -1829,10 +1529,6 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 
   this->Clear();
   this->SetDataPtrCSR(&row_offset, &p_col, &p_val, nnz, nrow, ncol);
-
-#ifdef SUPPORT_MKL
-  allocate_host(nrow, &this->mkl_tmp_vec_);
-#endif
 
   return true;
 

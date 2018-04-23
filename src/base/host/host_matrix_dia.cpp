@@ -15,11 +15,6 @@
 #define omp_set_num_threads(num);
 #endif
 
-#ifdef SUPPORT_MKL
-#include <mkl.h>
-#include <mkl_spblas.h>
-#endif
-
 namespace paralution {
 
 template <typename ValueType>

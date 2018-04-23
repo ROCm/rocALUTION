@@ -50,26 +50,3 @@ if (SUPPORT_CUDA)
     list(APPEND BASE_PUBLIC_HEADERS gpu/${i})
   endforeach()
 endif()
-
-if (SUPPORT_OCL)
-  include(base/ocl/CMakeLists.txt)
-  foreach(i ${OCL_SOURCES})
-    list(APPEND BASE_SOURCES ocl/${i})
-  endforeach()
-
-  foreach(i ${OCL_PUBLIC_HEADERS})
-    list(APPEND BASE_PUBLIC_HEADERS ocl/${i})
-  endforeach()
-endif()
-
-if (SUPPORT_MIC)
-  include(base/mic/CMakeLists.txt)
-  foreach(i ${MIC_SOURCES})
-    list(APPEND BASE_SOURCES mic/${i})
-  endforeach()
-
-  foreach(i ${MIC_PUBLIC_HEADERS})
-    list(APPEND BASE_PUBLIC_HEADERS mic/${i})
-  endforeach()
-endif()
-
