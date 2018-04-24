@@ -3,6 +3,8 @@
 
 #include "hip_complex.hpp"
 
+#include <hip/hip_runtime.h>
+
 namespace paralution {
 
 template <typename ValueType, typename IndexType>
@@ -247,23 +249,13 @@ __global__ void kernel_amax(const IndexType n, const ValueType *data, ValueType 
 
 }
 
-template <typename IndexType>
-__global__ void kernel_powerd(const IndexType n, const double power, double *out) {
+template <typename ValueType, typename IndexType>
+__global__ void kernel_power(const IndexType n, const double power, ValueType *out) {
 
   IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (ind < n)
-    out[ind] = pow(out[ind], power);
-
-}
-
-template <typename IndexType>
-__global__ void kernel_powerf(const IndexType n, const double power, float *out) {
-
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (ind < n)
-    out[ind] = powf(out[ind], power);
+    out[ind] = hip_pow(out[ind], power);
 
 }
 

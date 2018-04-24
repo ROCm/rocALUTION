@@ -4,10 +4,12 @@
 #include "../matrix_formats_ind.hpp"
 #include "hip_complex.hpp"
 
+#include <hip/hip_runtime.h>
+
 namespace paralution {
 
 // Nathan Bell and Michael Garland
-// Efficient Sparse Matrix-Vector Multiplication on {CUDA}
+// Efficient Sparse Matrix-Vector Multiplication
 // NVR-2008-004 / NVIDIA Technical Report
 template <typename ValueType, typename IndexType>
 __global__ void kernel_dia_spmv(const IndexType num_rows,
@@ -42,7 +44,7 @@ __global__ void kernel_dia_spmv(const IndexType num_rows,
 }
 
 // Nathan Bell and Michael Garland
-// Efficient Sparse Matrix-Vector Multiplication on {CUDA}
+// Efficient Sparse Matrix-Vector Multiplication
 // NVR-2008-004 / NVIDIA Technical Report
 template <typename ValueType, typename IndexType>
 __global__ void kernel_dia_add_spmv(const IndexType num_rows,

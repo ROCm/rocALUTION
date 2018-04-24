@@ -3,6 +3,8 @@
 
 #include "../matrix_formats_ind.hpp"
 
+#include <hip/hip_runtime.h>
+
 namespace paralution {
 
 // Replace column vector

@@ -13,9 +13,7 @@
 #include "hip_allocate_free.hpp"
 #include "../matrix_formats_ind.hpp"
 
-#include <cuda.h>
-#include <cusparse_v2.h>
-#include <cuComplex.h>
+#include <hip/hip_runtime.h>
 
 namespace paralution {
 

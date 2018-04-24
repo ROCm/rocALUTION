@@ -14,8 +14,7 @@
 #include "../../utils/allocate_free.hpp"
 #include "../matrix_formats_ind.hpp"
 
-#include <cuda.h>
-#include <cuComplex.h>
+#include <hip/hip_runtime.h>
 
 namespace paralution {
 
@@ -125,7 +124,7 @@ void HIPAcceleratorMatrixELL<ValueType>::SetDataPtrELL(int **col, ValueType **va
 
   this->Clear();
 
-  cudaDeviceSynchronize();
+  hipDeviceSynchronize();
 
   this->mat_.max_row = max_row;
   this->nrow_ = nrow;
@@ -146,7 +145,7 @@ void HIPAcceleratorMatrixELL<ValueType>::LeaveDataPtrELL(int **col, ValueType **
   assert(this->mat_.max_row > 0);
   assert(this->mat_.max_row*this->nrow_ == this->nnz_);
 
-  cudaDeviceSynchronize();
+  hipDeviceSynchronize();
 
   // see free_host function for details
   *col = this->mat_.col;
@@ -187,16 +186,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFromHost(const HostMatrix<ValueType
 
     if (this->get_nnz() > 0) { 
 
-      cudaMemcpy(this->mat_.col,     // dst
+      hipMemcpy(this->mat_.col,     // dst
                  cast_mat->mat_.col, // src
                  this->get_nnz()*sizeof(int), // size
-                 cudaMemcpyHostToDevice);
+                 hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpy(this->mat_.val,     // dst
+      hipMemcpy(this->mat_.val,     // dst
                  cast_mat->mat_.val, // src
                  this->get_nnz()*sizeof(ValueType), // size
-                 cudaMemcpyHostToDevice);    
+                 hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
     
@@ -233,16 +232,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
 
     if (this->get_nnz() > 0) {
 
-      cudaMemcpy(cast_mat->mat_.col, // dst
+      hipMemcpy(cast_mat->mat_.col, // dst
                  this->mat_.col,     // src
                  this->get_nnz()*sizeof(int), // size
-                 cudaMemcpyDeviceToHost);
+                 hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpy(cast_mat->mat_.val, // dst
+      hipMemcpy(cast_mat->mat_.val, // dst
                  this->mat_.val,     // src
                  this->get_nnz()*sizeof(ValueType), // size
-                 cudaMemcpyDeviceToHost);    
+                 hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
     
@@ -278,16 +277,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
 
     if (this->get_nnz() > 0) {
 
-      cudaMemcpy(this->mat_.col,         // dst
+      hipMemcpy(this->mat_.col,         // dst
                  hip_cast_mat->mat_.col, // src
                  this->get_nnz()*sizeof(int), // size
-                 cudaMemcpyDeviceToDevice);
+                 hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpy(this->mat_.val,         // dst
+      hipMemcpy(this->mat_.val,         // dst
                  hip_cast_mat->mat_.val, // src
                  this->get_nnz()*sizeof(ValueType), // size
-                 cudaMemcpyDeviceToDevice);    
+                 hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
@@ -334,16 +333,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
 
     if (this->get_nnz() > 0) {
       
-      cudaMemcpy(hip_cast_mat->mat_.col, // dst
+      hipMemcpy(hip_cast_mat->mat_.col, // dst
                  this->mat_.col,         // src
                  this->get_nnz()*sizeof(int), // size
-                 cudaMemcpyDeviceToHost);
+                 hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpy(hip_cast_mat->mat_.val, // dst
+      hipMemcpy(hip_cast_mat->mat_.val, // dst
                  this->mat_.val,         // src
                  this->get_nnz()*sizeof(ValueType), // size
-                 cudaMemcpyDeviceToHost);    
+                 hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
     
@@ -388,16 +387,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
 
     if (this->get_nnz() > 0) { 
 
-      cudaMemcpyAsync(this->mat_.col,     // dst
+      hipMemcpyAsync(this->mat_.col,     // dst
                       cast_mat->mat_.col, // src
                       this->get_nnz()*sizeof(int), // size
-                      cudaMemcpyHostToDevice);
+                      hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpyAsync(this->mat_.val,     // dst
+      hipMemcpyAsync(this->mat_.val,     // dst
                       cast_mat->mat_.val, // src
                       this->get_nnz()*sizeof(ValueType), // size
-                      cudaMemcpyHostToDevice);    
+                      hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
     
@@ -434,16 +433,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
 
     if (this->get_nnz() > 0) {
 
-      cudaMemcpyAsync(cast_mat->mat_.col, // dst
+      hipMemcpyAsync(cast_mat->mat_.col, // dst
                       this->mat_.col,     // src
                       this->get_nnz()*sizeof(int), // size
-                      cudaMemcpyDeviceToHost);
+                      hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpyAsync(cast_mat->mat_.val, // dst
+      hipMemcpyAsync(cast_mat->mat_.val, // dst
                       this->mat_.val,     // src
                       this->get_nnz()*sizeof(ValueType), // size
-                      cudaMemcpyDeviceToHost);    
+                      hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
     
@@ -479,16 +478,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
 
     if (this->get_nnz() > 0) {
 
-      cudaMemcpy(this->mat_.col,         // dst
+      hipMemcpy(this->mat_.col,         // dst
                  hip_cast_mat->mat_.col, // src
                  this->get_nnz()*sizeof(int), // size
-                 cudaMemcpyDeviceToDevice);
+                 hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpy(this->mat_.val,         // dst
+      hipMemcpy(this->mat_.val,         // dst
                  hip_cast_mat->mat_.val, // src
                  this->get_nnz()*sizeof(ValueType), // size
-                 cudaMemcpyDeviceToDevice);    
+                 hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
@@ -535,16 +534,16 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
 
     if (this->get_nnz() > 0) {
       
-      cudaMemcpy(hip_cast_mat->mat_.col, // dst
+      hipMemcpy(hip_cast_mat->mat_.col, // dst
                  this->mat_.col,         // src
                  this->get_nnz()*sizeof(int), // size
-                 cudaMemcpyDeviceToHost);
+                 hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
-      cudaMemcpy(hip_cast_mat->mat_.val, // dst
+      hipMemcpy(hip_cast_mat->mat_.val, // dst
                  this->mat_.val,         // src
                  this->get_nnz()*sizeof(ValueType), // size
-                 cudaMemcpyDeviceToHost);    
+                 hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
     
@@ -614,17 +613,19 @@ bool HIPAcceleratorMatrixELL<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
                  / this->local_backend_.HIP_block_size ) + 1 ) * this->local_backend_.HIP_block_size;
     LOCAL_SIZE = GROUP_SIZE / this->local_backend_.HIP_block_size;
 
-    kernel_ell_max_row<int, int, 256> <<<GridSize, BlockSize>>> (nrow, cast_mat_csr->mat_.row_offset,
-                                                                 d_buffer, GROUP_SIZE, LOCAL_SIZE);
+    hipLaunchKernelGGL((kernel_ell_max_row<int, int, 256>),
+                       GridSize, BlockSize, 0, 0,
+                       nrow, cast_mat_csr->mat_.row_offset,
+                       d_buffer, GROUP_SIZE, LOCAL_SIZE);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     FinalReduceSize = this->local_backend_.HIP_warp * 4;
     allocate_host(FinalReduceSize, &h_buffer);
 
-    cudaMemcpy(h_buffer, // dst
+    hipMemcpy(h_buffer, // dst
                d_buffer, // src
                FinalReduceSize*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
+               hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     free_hip<int>(&d_buffer);
@@ -649,209 +650,11 @@ bool HIPAcceleratorMatrixELL<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     dim3 BlockSize2(this->local_backend_.HIP_block_size);
     dim3 GridSize2(nrow / this->local_backend_.HIP_block_size + 1);
 
-    kernel_ell_csr_to_ell<ValueType, int> <<<GridSize2, BlockSize2>>> (nrow, max_row, cast_mat_csr->mat_.row_offset,
-                                                                       cast_mat_csr->mat_.col, cast_mat_csr->mat_.val,
-                                                                       this->mat_.col, this->mat_.val);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    this->mat_.max_row = max_row;
-    this->nrow_ = cast_mat_csr->get_nrow();
-    this->ncol_ = cast_mat_csr->get_ncol();
-    this->nnz_  = max_row * nrow;
-
-    return true;
-
-  }
-
-  return false;
-
-}
-
-template <>
-bool HIPAcceleratorMatrixELL<std::complex<double> >::ConvertFrom(const BaseMatrix<std::complex<double> > &mat) {
-
-  this->Clear();
-
-  // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
-    return true;
-
-  const HIPAcceleratorMatrixELL<std::complex<double> > *cast_mat_ell;
-
-  if ((cast_mat_ell = dynamic_cast<const HIPAcceleratorMatrixELL<std::complex<double> >*> (&mat)) != NULL) {
-
-    this->CopyFrom(*cast_mat_ell);
-    return true;
-
-  }
-
-  const HIPAcceleratorMatrixCSR<std::complex<double> > *cast_mat_csr;
-  if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<std::complex<double> >*> (&mat)) != NULL) {
-
-    this->Clear();
-
-    assert(cast_mat_csr->get_nrow() > 0);
-    assert(cast_mat_csr->get_ncol() > 0);
-    assert(cast_mat_csr->get_nnz() > 0);
-
-    int max_row = 0;
-    int nrow = cast_mat_csr->get_nrow();
-
-    int *d_buffer = NULL;
-    int *h_buffer = NULL;
-    int GROUP_SIZE;
-    int LOCAL_SIZE;
-    int FinalReduceSize;
-
-    allocate_hip<int>(this->local_backend_.HIP_warp * 4, &d_buffer);
-
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->local_backend_.HIP_warp * 4);
-
-    GROUP_SIZE = ( size_t( ( size_t( nrow / ( this->local_backend_.HIP_warp * 4 ) ) + 1 ) 
-                 / this->local_backend_.HIP_block_size ) + 1 ) * this->local_backend_.HIP_block_size;
-    LOCAL_SIZE = GROUP_SIZE / this->local_backend_.HIP_block_size;
-
-    kernel_ell_max_row<int, int, 256> <<<GridSize, BlockSize>>> (nrow, cast_mat_csr->mat_.row_offset,
-                                                                 d_buffer, GROUP_SIZE, LOCAL_SIZE);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    FinalReduceSize = this->local_backend_.HIP_warp * 4;
-    allocate_host(FinalReduceSize, &h_buffer);
-
-    cudaMemcpy(h_buffer, // dst
-               d_buffer, // src
-               FinalReduceSize*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip<int>(&d_buffer);
-
-    for ( int i=0; i<FinalReduceSize; ++i )
-      if (max_row < h_buffer[i]) max_row = h_buffer[i];
-
-    free_host(&h_buffer);
-
-    int nnz_ell = max_row * nrow;
-
-    this->AllocateELL(nnz_ell, nrow, cast_mat_csr->get_ncol(), max_row);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    nnz_ell, this->mat_.val);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    nnz_ell, this->mat_.col);
-
-    dim3 BlockSize2(this->local_backend_.HIP_block_size);
-    dim3 GridSize2(nrow / this->local_backend_.HIP_block_size + 1);
-
-    kernel_ell_csr_to_ell<cuDoubleComplex, int> <<<GridSize2, BlockSize2>>> (nrow, max_row, cast_mat_csr->mat_.row_offset,
-                                                                             cast_mat_csr->mat_.col,
-                                                                             (cuDoubleComplex*)cast_mat_csr->mat_.val,
-                                                                             this->mat_.col,
-                                                                             (cuDoubleComplex*)this->mat_.val);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    this->mat_.max_row = max_row;
-    this->nrow_ = cast_mat_csr->get_nrow();
-    this->ncol_ = cast_mat_csr->get_ncol();
-    this->nnz_  = max_row * nrow;
-
-    return true;
-
-  }
-
-  return false;
-
-}
-
-template <>
-bool HIPAcceleratorMatrixELL<std::complex<float> >::ConvertFrom(const BaseMatrix<std::complex<float> > &mat) {
-
-  this->Clear();
-
-  // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
-    return true;
-
-  const HIPAcceleratorMatrixELL<std::complex<float> > *cast_mat_ell;
-
-  if ((cast_mat_ell = dynamic_cast<const HIPAcceleratorMatrixELL<std::complex<float> >*> (&mat)) != NULL) {
-
-    this->CopyFrom(*cast_mat_ell);
-    return true;
-
-  }
-
-  const HIPAcceleratorMatrixCSR<std::complex<float> > *cast_mat_csr;
-  if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<std::complex<float> >*> (&mat)) != NULL) {
-
-    this->Clear();
-
-    assert(cast_mat_csr->get_nrow() > 0);
-    assert(cast_mat_csr->get_ncol() > 0);
-    assert(cast_mat_csr->get_nnz() > 0);
-
-    int max_row = 0;
-    int nrow = cast_mat_csr->get_nrow();
-
-    int *d_buffer = NULL;
-    int *h_buffer = NULL;
-    int GROUP_SIZE;
-    int LOCAL_SIZE;
-    int FinalReduceSize;
-
-    allocate_hip<int>(this->local_backend_.HIP_warp * 4, &d_buffer);
-
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->local_backend_.HIP_warp * 4);
-
-    GROUP_SIZE = ( size_t( ( size_t( nrow / ( this->local_backend_.HIP_warp * 4 ) ) + 1 ) 
-                 / this->local_backend_.HIP_block_size ) + 1 ) * this->local_backend_.HIP_block_size;
-    LOCAL_SIZE = GROUP_SIZE / this->local_backend_.HIP_block_size;
-
-    kernel_ell_max_row<int, int, 256> <<<GridSize, BlockSize>>> (nrow, cast_mat_csr->mat_.row_offset,
-                                                                 d_buffer, GROUP_SIZE, LOCAL_SIZE);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    FinalReduceSize = this->local_backend_.HIP_warp * 4;
-    allocate_host(FinalReduceSize, &h_buffer);
-
-    cudaMemcpy(h_buffer, // dst
-               d_buffer, // src
-               FinalReduceSize*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip<int>(&d_buffer);
-
-    for ( int i=0; i<FinalReduceSize; ++i )
-      if (max_row < h_buffer[i]) max_row = h_buffer[i];
-
-    free_host(&h_buffer);
-
-    int nnz_ell = max_row * nrow;
-
-    this->AllocateELL(nnz_ell, nrow, cast_mat_csr->get_ncol(), max_row);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    nnz_ell, this->mat_.val);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    nnz_ell, this->mat_.col);
-
-    dim3 BlockSize2(this->local_backend_.HIP_block_size);
-    dim3 GridSize2(nrow / this->local_backend_.HIP_block_size + 1);
-
-    kernel_ell_csr_to_ell<cuFloatComplex, int> <<<GridSize2, BlockSize2>>> (nrow, max_row, cast_mat_csr->mat_.row_offset,
-                                                                             cast_mat_csr->mat_.col,
-                                                                             (cuFloatComplex*)cast_mat_csr->mat_.val,
-                                                                             this->mat_.col,
-                                                                             (cuFloatComplex*)this->mat_.val);
+    hipLaunchKernelGGL((kernel_ell_csr_to_ell<ValueType, int>),
+                       GridSize2, BlockSize2, 0, 0,
+                       nrow, max_row, cast_mat_csr->mat_.row_offset,
+                       cast_mat_csr->mat_.col, cast_mat_csr->mat_.val,
+                       this->mat_.col, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     this->mat_.max_row = max_row;
@@ -889,9 +692,11 @@ void HIPAcceleratorMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-    kernel_ell_spmv<<<GridSize, BlockSize>>> (nrow, ncol, max_row,
-                                              this->mat_.col, HIPPtr(this->mat_.val),
-                                              HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_ ));
+    hipLaunchKernelGGL((kernel_ell_spmv<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       nrow, ncol, max_row,
+                       this->mat_.col, HIPPtr(this->mat_.val),
+                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_ ));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -921,10 +726,12 @@ void HIPAcceleratorMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-    kernel_ell_add_spmv<<<GridSize, BlockSize>>> (nrow, ncol, max_row,
-                                                  this->mat_.col, HIPPtr(this->mat_.val),
-                                                  HIPVal(scalar),
-                                                  HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+    hipLaunchKernelGGL((kernel_ell_add_spmv<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       nrow, ncol, max_row,
+                       this->mat_.col, HIPPtr(this->mat_.val),
+                       HIPVal(scalar),
+                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }

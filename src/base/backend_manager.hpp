@@ -41,10 +41,10 @@ struct Paralution_Backend_Descriptor {
 
   // HIP section
   // handles
-  // rocblasHandle_t casted in void **
-  void *HIP_rocblas_handle;
-  // rocsparseHandle_t casted in void **
-  void *HIP_rocsparse_handle;
+  // hipblasHandle_t casted in void **
+  void *HIP_blas_handle;
+  // hipsparseHandle_t casted in void **
+  void *HIP_sparse_handle;
 
   int HIP_dev;
   int HIP_warp;

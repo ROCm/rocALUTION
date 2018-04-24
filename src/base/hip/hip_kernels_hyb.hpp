@@ -5,6 +5,8 @@
 #include "hip_kernels_coo.hpp"
 #include "../matrix_formats_ind.hpp"
 
+#include <hip/hip_runtime.h>
+
 namespace paralution {
 
 template <typename IndexType>

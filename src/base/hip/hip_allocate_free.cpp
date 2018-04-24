@@ -7,7 +7,7 @@
 #include <cmath>
 #include <complex>
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 
 namespace paralution {
 
@@ -25,7 +25,7 @@ void allocate_host(const int size, DataType **ptr) {
 
     //    *ptr = new DataType[size];
 
-    cudaMallocHost((void **)ptr, size*sizeof(DataType));
+    hipMallocHost((void **)ptr, size*sizeof(DataType));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     LOG_DEBUG(0, "allocate_host()",
@@ -46,7 +46,7 @@ void free_host(DataType **ptr) {
   assert(*ptr != NULL);
 
   //  delete[] *ptr;
-  cudaFreeHost(*ptr);
+  hipFreeHost(*ptr);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   *ptr = NULL;
@@ -65,7 +65,7 @@ void allocate_hip(const int size, DataType **ptr) {
 
     assert(*ptr == NULL);
 
-    cudaMalloc( (void **)ptr, size*sizeof(DataType));
+    hipMalloc( (void **)ptr, size*sizeof(DataType));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     assert(*ptr != NULL);
@@ -82,7 +82,7 @@ void free_hip(DataType **ptr) {
 
   assert(*ptr != NULL);
 
-  cudaFree(*ptr);
+  hipFree(*ptr);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   *ptr = NULL;
@@ -102,7 +102,7 @@ void set_to_zero_hip(const int blocksize,
 
     assert(ptr != NULL);
 
-    cudaMemset(ptr, 0, size*sizeof(DataType));
+    hipMemset(ptr, 0, size*sizeof(DataType));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 /*
@@ -113,8 +113,9 @@ void set_to_zero_hip(const int blocksize,
     dim3 BlockSize(blocksize);
     dim3 GridSize(s / blocksize + 1);
 
-    kernel_set_to_zeros<DataType, int> <<<GridSize, BlockSize>>> (size, ptr);
-
+    hipLaunchKernelGGL((kernel_set_to_zeros<DataType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, ptr);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 */
 
@@ -123,8 +124,9 @@ void set_to_zero_hip(const int blocksize,
     dim3 BlockSize(blocksize);
     dim3 GridSize(size / blocksize + 1);
 
-    kernel_set_to_zeros<DataType, int> <<<GridSize, BlockSize>>> (size, ptr);
-
+    hipLaunchKernelGGL((kernel_set_to_zeros<DataType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, ptr);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 */
 
@@ -153,8 +155,9 @@ void set_to_one_hip(const int blocksize,
     dim3 BlockSize(blocksize);
     dim3 GridSize(s / blocksize + 1);
 
-    kernel_set_to_ones<DataType, int> <<<GridSize, BlockSize>>> (size, ptr);
-
+    hipLaunchKernelGGL((kernel_set_to_ones<DataType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, ptr);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 */
 
@@ -162,12 +165,16 @@ void set_to_one_hip(const int blocksize,
     dim3 BlockSize(blocksize);
     dim3 GridSize(size / blocksize + 1);
 
-    kernel_set_to_ones<DataType, int> <<<GridSize, BlockSize>>> (size, ptr);
+    hipLaunchKernelGGL((kernel_set_to_ones<DataType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, ptr);
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
 
 }
 
+#ifdef SUPPORT_COMPLEX
 template <>
 void set_to_one_hip(const int blocksize,
                     const int max_threads,
@@ -189,8 +196,9 @@ void set_to_one_hip(const int blocksize,
     dim3 BlockSize(blocksize);
     dim3 GridSize(s / blocksize + 1);
 
-    kernel_set_to_ones<DataType, int> <<<GridSize, BlockSize>>> (size, ptr);
-
+    hipLaunchKernelGGL((kernel_set_to_ones<DataType, int>,
+                       GridSize, BlockSize, 0, 0,
+                       size, ptr);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 */
 
@@ -198,7 +206,9 @@ void set_to_one_hip(const int blocksize,
     dim3 BlockSize(blocksize);
     dim3 GridSize(size / blocksize + 1);
 
-    kernel_set_to_ones<cuDoubleComplex, int> <<<GridSize, BlockSize>>> (size, (cuDoubleComplex*)ptr);
+    hipLaunchKernelGGL(kernel_set_to_ones<cuDoubleComplex, int>,
+                       GridSize, BlockSize, 0, 0,
+                       size, (cuDoubleComplex*)ptr);
 
   }
 
@@ -239,7 +249,7 @@ void set_to_one_hip(const int blocksize,
   }
 
 }
-
+#endif
 
 #ifdef PARALUTION_HIP_PINNED_MEMORY
 

@@ -3,10 +3,12 @@
 
 #include "../matrix_formats_ind.hpp"
 
+#include <hip/hip_runtime.h>
+
 namespace paralution {
 
 // Nathan Bell and Michael Garland
-// Efficient Sparse Matrix-Vector Multiplication on {CUDA}
+// Efficient Sparse Matrix-Vector Multiplication
 // NVR-2008-004 / NVIDIA Technical Report
 template <typename ValueType, typename IndexType>
 __global__ void kernel_csr_spmv_scalar(const IndexType nrow, const IndexType *row_offset, 
@@ -28,7 +30,7 @@ __global__ void kernel_csr_spmv_scalar(const IndexType nrow, const IndexType *ro
 }
 
 // Nathan Bell and Michael Garland
-// Efficient Sparse Matrix-Vector Multiplication on {CUDA}
+// Efficient Sparse Matrix-Vector Multiplication on
 // NVR-2008-004 / NVIDIA Technical Report
 template <typename ValueType, typename IndexType>
 __global__ void kernel_csr_add_spmv_scalar(const IndexType nrow, const IndexType *row_offset, 
@@ -469,7 +471,7 @@ __global__ void kernel_csr_add_csr_same_struct(const IndexType nrow,
 
 
 // Computes the lower triangular part nnz per row
-template <typename ValueType, typename IndexType>
+template <typename IndexType>
 __global__ void kernel_csr_lower_nnz_per_row(const IndexType nrow, const IndexType *src_row_offset,
                                              const IndexType *src_col, IndexType *nnz_per_row) {
   
@@ -485,7 +487,7 @@ __global__ void kernel_csr_lower_nnz_per_row(const IndexType nrow, const IndexTy
 }
 
 // Computes the upper triangular part nnz per row
-template <typename ValueType, typename IndexType>
+template <typename IndexType>
 __global__ void kernel_csr_upper_nnz_per_row(const IndexType nrow, const IndexType *src_row_offset,
                                              const IndexType *src_col, IndexType *nnz_per_row) {
   
@@ -501,7 +503,7 @@ __global__ void kernel_csr_upper_nnz_per_row(const IndexType nrow, const IndexTy
 }
   
 // Computes the stricktly lower triangular part nnz per row
-template <typename ValueType, typename IndexType>
+template <typename IndexType>
 __global__ void kernel_csr_slower_nnz_per_row(const IndexType nrow, const IndexType *src_row_offset,
                                               const IndexType *src_col, IndexType *nnz_per_row) {
   
@@ -518,7 +520,7 @@ __global__ void kernel_csr_slower_nnz_per_row(const IndexType nrow, const IndexT
 
 
 // Computes the stricktly upper triangular part nnz per row
-template <typename ValueType, typename IndexType>
+template <typename IndexType>
 __global__ void kernel_csr_supper_nnz_per_row(const IndexType nrow, const IndexType *src_row_offset,
                                               const IndexType *src_col, IndexType *nnz_per_row) {
   

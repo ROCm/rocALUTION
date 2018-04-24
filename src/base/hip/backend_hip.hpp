@@ -14,9 +14,9 @@ class AcceleratorMatrix;
 template <typename ValueType>
 class HostMatrix;
 
-/// Initialize HIP (ROCBLAS, ROCSPARSE)
+/// Initialize HIP (rocBLAS, rocSPARSE)
 bool paralution_init_hip();
-/// Release HIP resources (ROCBLAS, ROCSPARSE)
+/// Release HIP resources (rocBLAS, rocSPARSE)
 void paralution_stop_hip();
 
 /// Print information about the HIPs in the systems

@@ -50,8 +50,8 @@ Paralution_Backend_Descriptor _Backend_Descriptor = {
   true,  // host affinity (active)
   10000, // threshold size
   // HIP section
-  NULL,  // *HIP_rocblas_handle
-  NULL,  // *HIP_rocsparse_handle
+  NULL,  // *HIP_blas_handle
+  NULL,  // *HIP_sparse_handle
   -1,    // HIP_dev;
   32,    // HIP_warp;
   256,   // HIP_blocksize;

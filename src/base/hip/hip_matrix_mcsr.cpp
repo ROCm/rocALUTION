@@ -13,9 +13,7 @@
 #include "hip_allocate_free.hpp"
 #include "../matrix_formats_ind.hpp"
 
-#include <cuda.h>
-#include <cusparse_v2.h>
-#include <cuComplex.h>
+#include <hip/hip_runtime.h>
 
 namespace paralution {
 
@@ -112,7 +110,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::SetDataPtrMCSR(int **row_offset, int *
   this->ncol_ = ncol;
   this->nnz_  = nnz;
 
-  cudaDeviceSynchronize();
+  hipDeviceSynchronize();
 
   this->mat_.row_offset = *row_offset;
   this->mat_.col = *col;
@@ -127,7 +125,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::LeaveDataPtrMCSR(int **row_offset, int
   assert(this->get_ncol() > 0);
   assert(this->get_nnz() > 0);
 
-  cudaDeviceSynchronize();
+  hipDeviceSynchronize();
 
   // see free_host function for details
   *row_offset = this->mat_.row_offset;
@@ -180,22 +178,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromHost(const HostMatrix<ValueTyp
     assert(this->get_nrow() == src.get_nrow());
     assert(this->get_ncol() == src.get_ncol());
 
-    cudaMemcpy(this->mat_.row_offset,     // dst
+    hipMemcpy(this->mat_.row_offset,     // dst
                cast_mat->mat_.row_offset, // src
                (this->get_nrow()+1)*sizeof(int), // size
-               cudaMemcpyHostToDevice);
+               hipMemcpyHostToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(this->mat_.col,     // dst
+    hipMemcpy(this->mat_.col,     // dst
                cast_mat->mat_.col, // src
                this->get_nnz()*sizeof(int), // size
-               cudaMemcpyHostToDevice);
+               hipMemcpyHostToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(this->mat_.val,     // dst
+    hipMemcpy(this->mat_.val,     // dst
                cast_mat->mat_.val, // src
                this->get_nnz()*sizeof(ValueType), // size
-               cudaMemcpyHostToDevice);    
+               hipMemcpyHostToDevice);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
     
     
@@ -230,22 +228,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToHost(HostMatrix<ValueType> *dst)
     assert(this->get_nrow() == dst->get_nrow());
     assert(this->get_ncol() == dst->get_ncol());
 
-    cudaMemcpy(cast_mat->mat_.row_offset, // dst
+    hipMemcpy(cast_mat->mat_.row_offset, // dst
                this->mat_.row_offset,     // src
                (this->get_nrow()+1)*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
+               hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(cast_mat->mat_.col, // dst
+    hipMemcpy(cast_mat->mat_.col, // dst
                this->mat_.col,     // src
                this->get_nnz()*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
+               hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(cast_mat->mat_.val, // dst
+    hipMemcpy(cast_mat->mat_.val, // dst
                this->mat_.val,     // src
                this->get_nnz()*sizeof(ValueType), // size
-               cudaMemcpyDeviceToHost);    
+               hipMemcpyDeviceToHost);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
    
     
@@ -279,22 +277,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &
     assert(this->get_nrow() == src.get_nrow());
     assert(this->get_ncol() == src.get_ncol());
 
-    cudaMemcpy(this->mat_.row_offset,         // dst
+    hipMemcpy(this->mat_.row_offset,         // dst
                hip_cast_mat->mat_.row_offset, // src
                (this->get_nrow()+1)*sizeof(int), // size
-               cudaMemcpyDeviceToDevice);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(this->mat_.col,         // dst
+    hipMemcpy(this->mat_.col,         // dst
                hip_cast_mat->mat_.col, // src
                this->get_nnz()*sizeof(int), // size
-               cudaMemcpyDeviceToDevice);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(this->mat_.val,         // dst
+    hipMemcpy(this->mat_.val,         // dst
                hip_cast_mat->mat_.val, // src
                this->get_nnz()*sizeof(ValueType), // size
-               cudaMemcpyDeviceToDevice);    
+               hipMemcpyDeviceToDevice);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
     
   } else {
@@ -338,22 +336,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) con
     assert(this->get_nrow() == dst->get_nrow());
     assert(this->get_ncol() == dst->get_ncol());
 
-    cudaMemcpy(hip_cast_mat->mat_.row_offset, // dst
+    hipMemcpy(hip_cast_mat->mat_.row_offset, // dst
                this->mat_.row_offset,         // src
                (this->get_nrow()+1)*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
+               hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(hip_cast_mat->mat_.col, // dst
+    hipMemcpy(hip_cast_mat->mat_.col, // dst
                this->mat_.col,         // src
                this->get_nnz()*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
+               hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(hip_cast_mat->mat_.val, // dst
+    hipMemcpy(hip_cast_mat->mat_.val, // dst
                this->mat_.val,         // src
                this->get_nnz()*sizeof(ValueType), // size
-               cudaMemcpyDeviceToHost);    
+               hipMemcpyDeviceToHost);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
    
     
@@ -397,22 +395,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromHostAsync(const HostMatrix<Val
     assert(this->get_nrow() == src.get_nrow());
     assert(this->get_ncol() == src.get_ncol());
 
-    cudaMemcpyAsync(this->mat_.row_offset,     // dst
+    hipMemcpyAsync(this->mat_.row_offset,     // dst
                     cast_mat->mat_.row_offset, // src
                     (this->get_nrow()+1)*sizeof(int), // size
-                    cudaMemcpyHostToDevice);
+                    hipMemcpyHostToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpyAsync(this->mat_.col,     // dst
+    hipMemcpyAsync(this->mat_.col,     // dst
                     cast_mat->mat_.col, // src
                     this->get_nnz()*sizeof(int), // size
-                    cudaMemcpyHostToDevice);
+                    hipMemcpyHostToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpyAsync(this->mat_.val,     // dst
+    hipMemcpyAsync(this->mat_.val,     // dst
                     cast_mat->mat_.val, // src
                     this->get_nnz()*sizeof(ValueType), // size
-                    cudaMemcpyHostToDevice);    
+                    hipMemcpyHostToDevice);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
     
     
@@ -447,22 +445,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToHostAsync(HostMatrix<ValueType> 
     assert(this->get_nrow() == dst->get_nrow());
     assert(this->get_ncol() == dst->get_ncol());
 
-    cudaMemcpyAsync(cast_mat->mat_.row_offset, // dst
+    hipMemcpyAsync(cast_mat->mat_.row_offset, // dst
                     this->mat_.row_offset,     // src
                     (this->get_nrow()+1)*sizeof(int), // size
-                    cudaMemcpyDeviceToHost);
+                    hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpyAsync(cast_mat->mat_.col, // dst
+    hipMemcpyAsync(cast_mat->mat_.col, // dst
                     this->mat_.col,     // src
                     this->get_nnz()*sizeof(int), // size
-                    cudaMemcpyDeviceToHost);
+                    hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpyAsync(cast_mat->mat_.val, // dst
+    hipMemcpyAsync(cast_mat->mat_.val, // dst
                     this->mat_.val,     // src
                     this->get_nnz()*sizeof(ValueType), // size
-                    cudaMemcpyDeviceToHost);    
+                    hipMemcpyDeviceToHost);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
    
     
@@ -496,22 +494,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromAsync(const BaseMatrix<ValueTy
     assert(this->get_nrow() == src.get_nrow());
     assert(this->get_ncol() == src.get_ncol());
 
-    cudaMemcpy(this->mat_.row_offset,         // dst
+    hipMemcpy(this->mat_.row_offset,         // dst
                hip_cast_mat->mat_.row_offset, // src
                (this->get_nrow()+1)*sizeof(int), // size
-               cudaMemcpyDeviceToDevice);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(this->mat_.col,         // dst
+    hipMemcpy(this->mat_.col,         // dst
                hip_cast_mat->mat_.col, // src
                this->get_nnz()*sizeof(int), // size
-               cudaMemcpyDeviceToDevice);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(this->mat_.val,         // dst
+    hipMemcpy(this->mat_.val,         // dst
                hip_cast_mat->mat_.val, // src
                this->get_nnz()*sizeof(ValueType), // size
-               cudaMemcpyDeviceToDevice);    
+               hipMemcpyDeviceToDevice);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
     
   } else {
@@ -555,22 +553,22 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst
     assert(this->get_nrow() == dst->get_nrow());
     assert(this->get_ncol() == dst->get_ncol());
 
-    cudaMemcpy(hip_cast_mat->mat_.row_offset, // dst
+    hipMemcpy(hip_cast_mat->mat_.row_offset, // dst
                this->mat_.row_offset,         // src
                (this->get_nrow()+1)*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
+               hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(hip_cast_mat->mat_.col, // dst
+    hipMemcpy(hip_cast_mat->mat_.col, // dst
                this->mat_.col,         // src
                this->get_nnz()*sizeof(int), // size
-               cudaMemcpyDeviceToHost);
+               hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
-    cudaMemcpy(hip_cast_mat->mat_.val, // dst
+    hipMemcpy(hip_cast_mat->mat_.val, // dst
                this->mat_.val,         // src
                this->get_nnz()*sizeof(ValueType), // size
-               cudaMemcpyDeviceToHost);    
+               hipMemcpyDeviceToHost);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
    
     
@@ -664,10 +662,13 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
     else if (nnz_per_row <= 128) nthreads = 32;
     else                         nthreads = 64;
 
-    kernel_mcsr_spmv<256, 32> <<<GridSize, BlockSize>>> (this->nrow_, nthreads,
-                                                         this->mat_.row_offset, this->mat_.col,
-                                                         HIPPtr(this->mat_.val),
-                                                         HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+    //TODO warpsize
+    hipLaunchKernelGGL((kernel_mcsr_spmv<256, 64, ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       this->nrow_, nthreads,
+                       this->mat_.row_offset, this->mat_.col,
+                       HIPPtr(this->mat_.val),
+                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -704,10 +705,13 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
     else if (nnz_per_row <= 128) nthreads = 32;
     else                         nthreads = 64;
 
-    kernel_mcsr_add_spmv<256, 32> <<<GridSize, BlockSize>>> (this->nrow_, nthreads,
-                                                             this->mat_.row_offset, this->mat_.col,
-                                                             HIPPtr(this->mat_.val), HIPVal(scalar),
-                                                             HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+    // TODO warpsize
+    hipLaunchKernelGGL((kernel_mcsr_add_spmv<256, 64, ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       this->nrow_, nthreads,
+                       this->mat_.row_offset, this->mat_.col,
+                       HIPPtr(this->mat_.val), HIPVal(scalar),
+                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }

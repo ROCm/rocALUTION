@@ -16,10 +16,10 @@
 #include "hip_matrix_ell.hpp"
 #include "hip_matrix_dense.hpp"
 
+#include <hip/hip_runtime_api.h>
+#include <hipblas.h>
+//#include <rocsparse.h>
 #include <complex>
-
-#include <cuda.h>
-#include <cublas_v2.h>
 
 namespace paralution {
 
@@ -28,24 +28,24 @@ bool paralution_init_hip(void) {
   LOG_DEBUG(0, "paralution_init_hip()",
             "* begin");
 
-  assert(_get_backend_descriptor()->HIP_rocblas_handle == NULL);
-  assert(_get_backend_descriptor()->HIP_rocsparse_handle == NULL);
+  assert(_get_backend_descriptor()->HIP_blas_handle == NULL);
+  assert(_get_backend_descriptor()->HIP_sparse_handle == NULL);
   //  assert(_get_backend_descriptor()->HIP_dev == -1);
 
   // create a handle
-  _get_backend_descriptor()->HIP_rocblas_handle = new cublasHandle_t;
-  _get_backend_descriptor()->HIP_rocsparse_handle = new cusparseHandle_t;
+  _get_backend_descriptor()->HIP_blas_handle = new hipblasHandle_t;
+//  _get_backend_descriptor()->HIP_sparse_handle = new rocsparse_handle;
 
-  // get last cuda error (if any)
-  cudaGetLastError();
+  // get last error (if any)
+//TODO port to hip  hipGetLastError();
 
-  cudaError_t cuda_status_t;
+  hipError_t hip_status_t;
   int num_dev;
-  cudaGetDeviceCount(&num_dev);
-  cuda_status_t = cudaGetLastError();
+  hipGetDeviceCount(&num_dev);
+  hip_status_t = hipGetLastError();
 
   // if querying for device count fails, fall back to host backend
-  if (cuda_status_t != cudaSuccess) {
+  if (hip_status_t != hipSuccess) {
     LOG_INFO("Querying for HIP devices failed - falling back to host backend");
     return false;
   }
@@ -69,27 +69,24 @@ bool paralution_init_hip(void) {
         dev = _get_backend_descriptor()->HIP_dev;
       }
 
-      cudaSetDevice(dev);
-      cuda_status_t = cudaGetLastError();
+      hipSetDevice(dev);
+      hip_status_t = hipGetLastError();
 
-      if (cuda_status_t == cudaSuccess) {
+      if (hip_status_t == hipSuccess) {
 
-        if ((cublasCreate(static_cast<cublasHandle_t*>(_get_backend_descriptor()->HIP_rocblas_handle)) == CUBLAS_STATUS_SUCCESS) &&
-            (cusparseCreate(static_cast<cusparseHandle_t*>(_get_backend_descriptor()->HIP_rocsparse_handle)) == CUSPARSE_STATUS_SUCCESS)) {
-
+        if ((hipblasCreate(static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle)) == HIPBLAS_STATUS_SUCCESS)) {// &&
+//            (rocsparse_create_handle(static_cast<rocsparse_handle*>(_get_backend_descriptor()->HIP_sparse_handle)) == rocsparse_status_success)) {
           _get_backend_descriptor()->HIP_dev = dev;
           break;
-
         } else
-          LOG_INFO("HIP device " << dev << " cannot create CUBLAS/CUSPARSE context");
-
+          LOG_INFO("HIP device " << dev << " cannot create rocBLAS/rocSPARSE context");
       }
 
-      if (cuda_status_t == cudaErrorDeviceAlreadyInUse)
-        LOG_INFO("HIP device " << dev << " is already in use");
+      if (hip_status_t == hipErrorContextAlreadyInUse)
+        LOG_INFO("HIP context of device " << dev << " is already in use");
 
-      if (cuda_status_t == cudaErrorInvalidDevice)
-        LOG_INFO("HIP device " << dev << " is invalid HIP device");
+      if (hip_status_t == hipErrorInvalidDevice)
+        LOG_INFO("HIP device " << dev << " is invalid");
 
     }
 
@@ -100,20 +97,20 @@ bool paralution_init_hip(void) {
     return false;
   }
 
+  struct hipDeviceProp_t dev_prop;      
+  hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
 
-  struct cudaDeviceProp dev_prop;      
-  cudaGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
-
+  // TODO
   if (dev_prop.major < 2) {
-    LOG_INFO("HIP device " << _get_backend_descriptor()->HIP_dev << " has low compute capability (min 2.0 is needed)");    
+    LOG_INFO("HIP device " << _get_backend_descriptor()->HIP_dev << " has low compute capability (min 2.0 is needed)");
     return false;
   }
 
-  // Get some properties from the device
+  // Get some properties from the device TODO
   _get_backend_descriptor()->HIP_warp = dev_prop.warpSize;
   _get_backend_descriptor()->HIP_num_procs = dev_prop.multiProcessorCount;
   _get_backend_descriptor()->HIP_threads_per_proc = dev_prop.maxThreadsPerMultiProcessor;
-  _get_backend_descriptor()->HIP_max_threads = dev_prop.regsPerBlock;
+  _get_backend_descriptor()->HIP_max_threads = 65536; //dev_prop.regsPerBlock;
 
   LOG_DEBUG(0, "paralution_init_hip()",
             "* end");
@@ -128,26 +125,25 @@ void paralution_stop_hip(void) {
   LOG_DEBUG(0, "paralution_stop_hip()",
             "* begin");
 
-
   if (_get_backend_descriptor()->accelerator) {
 
-    if (cublasDestroy(*(static_cast<cublasHandle_t*>(_get_backend_descriptor()->HIP_rocblas_handle))) != CUBLAS_STATUS_SUCCESS) {
-      LOG_INFO("Error in rocblasDestroy");
+    if (hipblasDestroy(*(static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle))) != HIPBLAS_STATUS_SUCCESS) {
+      LOG_INFO("Error in rocblas_destroy_handle");
     }
-
-    if (cusparseDestroy(*(static_cast<cusparseHandle_t*>(_get_backend_descriptor()->HIP_rocsparse_handle))) != CUSPARSE_STATUS_SUCCESS) {
-      LOG_INFO("Error in rocsparseDestroy");
+/*
+    if (rocsparse_destroy_handle(*(static_cast<rocsparse_handle*>(_get_backend_descriptor()->HIP_sparse_handle))) != rocsparse_status_success) {
+      LOG_INFO("Error in rocsparse_destroy_handle");
     }
-
+*/
   }
 
-    delete (static_cast<cublasHandle_t*>(_get_backend_descriptor()->HIP_rocblas_handle));
-    delete (static_cast<cusparseHandle_t*>(_get_backend_descriptor()->HIP_rocsparse_handle));
+  delete (static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle));
+//  delete (static_cast<rocsparse_handle*>(_get_backend_descriptor()->HIP_sparse_handle));
 
-    _get_backend_descriptor()->HIP_rocblas_handle = NULL; 
-    _get_backend_descriptor()->HIP_rocsparse_handle = NULL;
+  _get_backend_descriptor()->HIP_blas_handle = NULL; 
+  _get_backend_descriptor()->HIP_sparse_handle = NULL;
 
-    _get_backend_descriptor()->HIP_dev = -1;
+  _get_backend_descriptor()->HIP_dev = -1;
 
   LOG_DEBUG(0, "paralution_stop_hip()",
             "* end");
@@ -158,9 +154,9 @@ void paralution_info_hip(const struct Paralution_Backend_Descriptor backend_desc
 
     int num_dev;
 
-    cudaGetDeviceCount(&num_dev);
-    cudaGetLastError(); 
-    //  CHECK_HIP_ERROR(__FILE__, __LINE__);
+    hipGetDeviceCount(&num_dev);
+    hipGetLastError(); 
+    // TODO CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     //    LOG_INFO("Number of HIP devices in the sytem: " << num_dev);    
 
@@ -175,8 +171,8 @@ void paralution_info_hip(const struct Paralution_Backend_Descriptor backend_desc
 
     for (int dev = 0; dev < num_dev; dev++) {
 
-      struct cudaDeviceProp dev_prop;      
-      cudaGetDeviceProperties(&dev_prop, dev);
+      struct hipDeviceProp_t dev_prop;      
+      hipGetDeviceProperties(&dev_prop, dev);
      
       LOG_INFO("------------------------------------------------");        
       LOG_INFO("Device number: "               << dev);
@@ -225,9 +221,7 @@ void paralution_info_hip(const struct Paralution_Backend_Descriptor backend_desc
       LOG_INFO("maxTexture2DLayered[2]: "      << dev_prop.maxTexture2DLayered[2]);      //    int maxTexture2DLayered[2];
       LOG_INFO("surfaceAlignment: "            << dev_prop.surfaceAlignment);            //    size_t surfaceAlignment;
       LOG_INFO("concurrentKernels: "           << dev_prop.concurrentKernels);           //    int concurrentKernels;
-      */
       LOG_INFO("ECCEnabled: "                  << dev_prop.ECCEnabled);                  //    int ECCEnabled;
-      /*
       LOG_INFO("pciBusID: "                    << dev_prop.pciBusID);                    //    int pciBusID;
       LOG_INFO("pciDeviceID: "                 << dev_prop.pciDeviceID);                 //    int pciDeviceID;
       LOG_INFO("pciDomainID: "                 << dev_prop.pciDomainID);                 //    int pciDomainID;
@@ -255,7 +249,7 @@ AcceleratorMatrix<ValueType>* _paralution_init_base_hip_matrix(const struct Para
 
   case CSR:
     return new HIPAcceleratorMatrixCSR<ValueType>(backend_descriptor);
-    
+
   case COO:
     return new HIPAcceleratorMatrixCOO<ValueType>(backend_descriptor);
 
@@ -264,7 +258,7 @@ AcceleratorMatrix<ValueType>* _paralution_init_base_hip_matrix(const struct Para
 
   case DIA:
     return new HIPAcceleratorMatrixDIA<ValueType>(backend_descriptor);
-    
+
   case ELL:
     return new HIPAcceleratorMatrixELL<ValueType>(backend_descriptor);
 
@@ -281,7 +275,7 @@ AcceleratorMatrix<ValueType>* _paralution_init_base_hip_matrix(const struct Para
     LOG_INFO("This backed is not supported for Matrix types");
     FATAL_ERROR(__FILE__, __LINE__);   
     return NULL;
-  } 
+  }
 
 }
 
@@ -296,7 +290,7 @@ AcceleratorVector<ValueType>* _paralution_init_base_hip_vector(const struct Para
 
 void paralution_hip_sync(void) {
 
-  cudaDeviceSynchronize();
+  hipDeviceSynchronize();
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }

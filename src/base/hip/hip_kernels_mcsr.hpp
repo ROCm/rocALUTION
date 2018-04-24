@@ -4,6 +4,8 @@
 #include "../matrix_formats_ind.hpp"
 #include "hip_complex.hpp"
 
+#include <hip/hip_runtime.h>
+
 namespace paralution {
 
 // ----------------------------------------------------------

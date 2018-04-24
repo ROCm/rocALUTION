@@ -8,4 +8,4 @@ namespace paralution {
 
 }
 
-#endif
+#endif // PARALUTION_HIP_HIP_KERNELS_BCSR_HPP_

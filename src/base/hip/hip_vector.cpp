@@ -10,10 +10,9 @@
 #include "hip_kernels_general.hpp"
 #include "hip_kernels_vector.hpp"
 #include "hip_allocate_free.hpp"
+#include "hip_blas.hpp"
 
-#include <cuda.h>
-#include <cuComplex.h>
-#include <cublas_v2.h>
+#include <hip/hip_runtime.h>
 
 namespace paralution {
 
@@ -21,7 +20,7 @@ template <typename ValueType>
 HIPAcceleratorVector<ValueType>::HIPAcceleratorVector() {
 
   // no default constructors
-    LOG_INFO("no default constructor");
+  LOG_INFO("no default constructor");
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -44,7 +43,6 @@ HIPAcceleratorVector<ValueType>::HIPAcceleratorVector(const Paralution_Backend_D
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }
-
 
 template <typename ValueType>
 HIPAcceleratorVector<ValueType>::~HIPAcceleratorVector() {
@@ -92,7 +90,7 @@ void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType **ptr, const int size
   assert(*ptr != NULL);
   assert(size > 0);
 
-  cudaDeviceSynchronize();
+  hipDeviceSynchronize();
 
   this->vec_ = *ptr;
   this->size_ = size;
@@ -107,7 +105,7 @@ void HIPAcceleratorVector<ValueType>::LeaveDataPtr(ValueType **ptr) {
 
   assert(this->get_size() > 0);
 
-  cudaDeviceSynchronize();
+  hipDeviceSynchronize();
   *ptr = this->vec_;
   this->vec_ = NULL;
 
@@ -171,20 +169,17 @@ void HIPAcceleratorVector<ValueType>::CopyFromHost(const HostVector<ValueType> &
 
     if (this->get_size() > 0) {      
 
-      cublasStatus_t stat_t;
-      stat_t = cublasSetVector(this->get_size(), sizeof(ValueType),
-                               cast_vec->vec_, // src
-                               1,
-                               this->vec_, // dst
-                               1);
-      CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+      hipMemcpy(this->vec_,
+                cast_vec->vec_,
+                this->size_*sizeof(ValueType),
+                hipMemcpyHostToDevice);
+      CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-      stat_t = cublasSetVector(this->index_size_, sizeof(int),
-                               cast_vec->index_array_,
-                               1,
-                               this->index_array_,
-                               1);
-      CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+      hipMemcpy(this->index_array_,
+                cast_vec->index_array_,
+                this->index_size_*sizeof(int),
+                hipMemcpyHostToDevice);
+      CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     }
 
@@ -227,20 +222,17 @@ void HIPAcceleratorVector<ValueType>::CopyToHost(HostVector<ValueType> *dst) con
 
     if (this->get_size() > 0) {
 
-      cublasStatus_t stat_t;
-      stat_t = cublasGetVector(this->get_size(), sizeof(ValueType),
-                               this->vec_, // src
-                               1,
-                               cast_vec->vec_, // dst
-                               1);
-      CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+      hipMemcpy(cast_vec->vec_,
+                this->vec_,
+                this->size_*sizeof(ValueType),
+                hipMemcpyDeviceToHost);
+      CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-      stat_t = cublasGetVector(this->index_size_, sizeof(int),
-                               this->index_array_,
-                               1,
-                               cast_vec->index_array_,
-                               1);
-      CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+      hipMemcpy(cast_vec->index_array_,
+                this->index_array_,
+                this->index_size_*sizeof(int),
+                hipMemcpyDeviceToHost);
+      CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     }
 
@@ -285,16 +277,16 @@ void HIPAcceleratorVector<ValueType>::CopyFromHostAsync(const HostVector<ValueTy
 
     if (this->get_size() > 0) {
 
-      cudaMemcpyAsync(this->vec_,     // dst
+      hipMemcpyAsync(this->vec_,     // dst
                       cast_vec->vec_, // src
                       this->get_size()*sizeof(ValueType), // size
-                      cudaMemcpyHostToDevice);
+                      hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-      cudaMemcpyAsync(this->index_array_,     // dst
+      hipMemcpyAsync(this->index_array_,     // dst
                       cast_vec->index_array_, // src
                       this->index_size_*sizeof(int), // size
-                      cudaMemcpyHostToDevice);
+                      hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     }
@@ -338,16 +330,16 @@ void HIPAcceleratorVector<ValueType>::CopyToHostAsync(HostVector<ValueType> *dst
 
     if (this->get_size() > 0) {
 
-      cudaMemcpyAsync(cast_vec->vec_,  // dst
+      hipMemcpyAsync(cast_vec->vec_,  // dst
                       this->vec_,      // src
                       this->get_size()*sizeof(ValueType), // size
-                      cudaMemcpyDeviceToHost);
+                      hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-      cudaMemcpyAsync(cast_vec->index_array_,  // dst
+      hipMemcpyAsync(cast_vec->index_array_,  // dst
                       this->index_array_,      // src
                       this->index_size_*sizeof(int), // size
-                      cudaMemcpyDeviceToHost);
+                      hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     }
@@ -396,16 +388,16 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src)
 
       if (this->get_size() > 0) {
 
-        cudaMemcpy(this->vec_,         // dst
+        hipMemcpy(this->vec_,         // dst
                    hip_cast_vec->vec_, // src
                    this->get_size()*sizeof(ValueType), // size
-                   cudaMemcpyDeviceToDevice);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        cudaMemcpy(this->index_array_,            // dst
+        hipMemcpy(this->index_array_,            // dst
                    hip_cast_vec->index_array_,    // src
                    this->index_size_*sizeof(int), // size
-                   cudaMemcpyDeviceToDevice);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
       }
@@ -467,16 +459,16 @@ void HIPAcceleratorVector<ValueType>::CopyFromAsync(const BaseVector<ValueType> 
 
       if (this->get_size() > 0) {
 
-        cudaMemcpy(this->vec_,         // dst
+        hipMemcpy(this->vec_,         // dst
                    hip_cast_vec->vec_, // src
                    this->get_size()*sizeof(ValueType), // size
-                   cudaMemcpyDeviceToDevice);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        cudaMemcpy(this->index_array_,         // dst
+        hipMemcpy(this->index_array_,         // dst
                    hip_cast_vec->index_array_, // src
                    this->index_size_*sizeof(int), // size
-                   cudaMemcpyDeviceToDevice);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
       }
@@ -509,7 +501,7 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src,
                                                const int dst_offset,
                                                const int size) {
 
-  assert(&src != this);
+//TODO  assert(&src != this);
   assert(this->get_size() > 0);
   assert(src.  get_size() > 0);
   assert(size > 0);
@@ -523,9 +515,10 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src,
   dim3 BlockSize(this->local_backend_.HIP_block_size);
   dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-  kernel_copy_offset_from<ValueType, int> <<<GridSize, BlockSize>>> (size, src_offset, dst_offset,
-                                                                     cast_src->vec_, this->vec_);
-
+  hipLaunchKernelGGL((kernel_copy_offset_from<ValueType, int>),
+                     GridSize, BlockSize, 0, 0,
+                     size, src_offset, dst_offset,
+                     cast_src->vec_, this->vec_);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }
@@ -563,16 +556,16 @@ void HIPAcceleratorVector<ValueType>::CopyTo(BaseVector<ValueType> *dst) const{
 
         if (this->get_size() >0) {
 
-          cudaMemcpy(hip_cast_vec->vec_, // dst
+          hipMemcpy(hip_cast_vec->vec_, // dst
                      this->vec_,         // src
                      this->get_size()*sizeof(ValueType), // size
-                     cudaMemcpyDeviceToDevice);
+                     hipMemcpyDeviceToDevice);
           CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-          cudaMemcpy(hip_cast_vec->index_array_,    // dst
+          hipMemcpy(hip_cast_vec->index_array_,    // dst
                      this->index_array_,            // src
                      this->index_size_*sizeof(int), // size
-                     cudaMemcpyDeviceToDevice);
+                     hipMemcpyDeviceToDevice);
           CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         }
@@ -633,16 +626,16 @@ void HIPAcceleratorVector<ValueType>::CopyToAsync(BaseVector<ValueType> *dst) co
 
       if (this->get_size() > 0) {
 
-        cudaMemcpy(hip_cast_vec->vec_, // dst
+        hipMemcpy(hip_cast_vec->vec_, // dst
                    this->vec_,         // src
                    this->get_size()*sizeof(ValueType), // size
-                   cudaMemcpyDeviceToDevice);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        cudaMemcpy(hip_cast_vec->index_array_, // dst
+        hipMemcpy(hip_cast_vec->index_array_, // dst
                    this->index_array_,         // src
                    this->index_size_*sizeof(int), // size
-                   cudaMemcpyDeviceToDevice);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
       }
@@ -695,8 +688,9 @@ void HIPAcceleratorVector<double>::CopyFromFloat(const BaseVector<float> &src) {
       dim3 BlockSize(this->local_backend_.HIP_block_size);
       dim3 GridSize(this->get_size() / this->local_backend_.HIP_block_size + 1);
 
-      kernel_copy_from_float<double, int> <<<GridSize, BlockSize>>>(this->get_size(), hip_cast_vec->vec_, this->vec_);
-
+      hipLaunchKernelGGL((kernel_copy_from_float<double, int>),
+                         GridSize, BlockSize, 0, 0,
+                         this->get_size(), hip_cast_vec->vec_, this->vec_);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     }
@@ -736,8 +730,9 @@ void HIPAcceleratorVector<float>::CopyFromDouble(const BaseVector<double> &src) 
       dim3 BlockSize(this->local_backend_.HIP_block_size);
       dim3 GridSize(this->get_size() / this->local_backend_.HIP_block_size + 1);
 
-      kernel_copy_from_double<float, int> <<<GridSize, BlockSize>>>(this->get_size(), hip_cast_vec->vec_, this->vec_);
-
+      hipLaunchKernelGGL((kernel_copy_from_double<float, int>),
+                         GridSize, BlockSize, 0, 0,
+                         this->get_size(), hip_cast_vec->vec_, this->vec_);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
@@ -754,10 +749,10 @@ void HIPAcceleratorVector<ValueType>::CopyFromData(const ValueType *data) {
 
   if (this->get_size() > 0) {
 
-    cudaMemcpy(this->vec_,                         // dst
+    hipMemcpy(this->vec_,                         // dst
                data,                               // src
                this->get_size()*sizeof(ValueType), // size
-               cudaMemcpyDeviceToDevice);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -769,10 +764,10 @@ void HIPAcceleratorVector<ValueType>::CopyToData(ValueType *data) const {
 
   if (this->get_size() > 0) {
 
-    cudaMemcpy(data,                               // dst
+    hipMemcpy(data,                               // dst
                this->vec_,                         // src
                this->get_size()*sizeof(ValueType), // size
-               cudaMemcpyDeviceToDevice);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -810,95 +805,20 @@ void HIPAcceleratorVector<ValueType>::SetValues(const ValueType val) {
 
 }
 
-template <>
-void HIPAcceleratorVector<double>::AddScale(const BaseVector<double> &x, const double alpha) {
+template <typename ValueType>
+void HIPAcceleratorVector<ValueType>::AddScale(const BaseVector<ValueType> &x, const ValueType alpha) {
 
   if (this->get_size() > 0) {
 
     assert(this->get_size() == x.get_size());
     
-    const HIPAcceleratorVector<double> *cast_x = dynamic_cast<const HIPAcceleratorVector<double>*> (&x);
-    assert(cast_x != NULL);
-    
-    cublasStatus_t stat_t;
-    
-    stat_t = cublasDaxpy(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle), 
-                         this->get_size(), 
-                         &alpha, 
-                         cast_x->vec_, 1,
-                         this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<float>::AddScale(const BaseVector<float> &x, const float alpha) {
-
-  if (this->get_size() > 0) {
-
-    assert(this->get_size() == x.get_size());
-    
-    const HIPAcceleratorVector<float> *cast_x = dynamic_cast<const HIPAcceleratorVector<float>*> (&x);
-    assert(cast_x != NULL);
-    
-    cublasStatus_t stat_t;
-    
-    stat_t = cublasSaxpy(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle), 
-                         this->get_size(), 
-                         &alpha, 
-                         cast_x->vec_, 1,
-                         this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<std::complex<double> >::AddScale(const BaseVector<std::complex<double> > &x,
-                                                           const std::complex<double> alpha) {
-
-  if (this->get_size() > 0) {
-
-    assert(this->get_size() == x.get_size());
-
-    const HIPAcceleratorVector<std::complex<double> > *cast_x = dynamic_cast<const HIPAcceleratorVector<std::complex<double> >*> (&x);
+    const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     assert(cast_x != NULL);
 
-    cublasStatus_t stat_t;
-
-    stat_t = cublasZaxpy(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle), 
-                         this->get_size(),
-                         (cuDoubleComplex*)&alpha,
-                         (cuDoubleComplex*)cast_x->vec_, 1,
-                         (cuDoubleComplex*)this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<std::complex<float> >::AddScale(const BaseVector<std::complex<float> > &x,
-                                                          const std::complex<float> alpha) {
-
-  if (this->get_size() > 0) {
-
-    assert(this->get_size() == x.get_size());
-
-    const HIPAcceleratorVector<std::complex<float> > *cast_x = dynamic_cast<const HIPAcceleratorVector<std::complex<float> >*> (&x);
-    assert(cast_x != NULL);
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasCaxpy(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle), 
-                         this->get_size(),
-                         (cuFloatComplex*)&alpha,
-                         (cuFloatComplex*)cast_x->vec_, 1,
-                         (cuFloatComplex*)this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    hipblasStatus_t stat_t;
+    stat_t = hipblasTaxpy(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle), 
+                          this->get_size(), &alpha, cast_x->vec_, 1, this->vec_, 1);
+    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
@@ -907,7 +827,7 @@ void HIPAcceleratorVector<std::complex<float> >::AddScale(const BaseVector<std::
 template <>
 void HIPAcceleratorVector<int>::AddScale(const BaseVector<int> &x, const int alpha) {
 
-  LOG_INFO("No int CUBLAS axpy function");
+  LOG_INFO("No int axpy function");
   FATAL_ERROR(__FILE__, __LINE__);
  
 }
@@ -926,8 +846,9 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd(const ValueType alpha, const Base
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-    kernel_scaleadd<<<GridSize, BlockSize>>> (size, HIPVal(alpha), HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
-
+    hipLaunchKernelGGL((kernel_scaleadd<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, HIPVal(alpha), HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -948,8 +869,10 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-    kernel_scaleaddscale<<<GridSize, BlockSize>>> (size, HIPVal(alpha), HIPVal(beta), HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
-
+    hipLaunchKernelGGL((kernel_scaleaddscale<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, HIPVal(alpha), HIPVal(beta),
+                       HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -974,9 +897,11 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-    kernel_scaleaddscale_offset<<<GridSize, BlockSize>>> (size, src_offset, dst_offset,
-                                                          HIPVal(alpha), HIPVal(beta),
-                                                          HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+    hipLaunchKernelGGL((kernel_scaleaddscale_offset<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, src_offset, dst_offset,
+                       HIPVal(alpha), HIPVal(beta),
+                       HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1002,73 +927,26 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd2(const ValueType alpha, const Bas
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-    kernel_scaleadd2<<<GridSize, BlockSize>>> (size, HIPVal(alpha), HIPVal(beta), HIPVal(gamma),
-                                               HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_), HIPPtr(this->vec_));
+    hipLaunchKernelGGL((kernel_scaleadd2<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, HIPVal(alpha), HIPVal(beta), HIPVal(gamma),
+                       HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_), HIPPtr(this->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
 
 }
 
-template <>
-void HIPAcceleratorVector<double>::Scale(const double alpha) {
+template <typename ValueType>
+void HIPAcceleratorVector<ValueType>::Scale(const ValueType alpha) {
 
   if (this->get_size() > 0) {
 
-    cublasStatus_t stat_t;
-
-    stat_t = cublasDscal(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(), &alpha,
-                         this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<float>::Scale(const float alpha) {
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasSscal(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(), &alpha,
-                         this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<std::complex<double> >::Scale(const std::complex<double> alpha) {
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasZscal(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(), (cuDoubleComplex*)&alpha,
-                         (cuDoubleComplex*)this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<std::complex<float> >::Scale(const std::complex<float> alpha) {
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasCscal(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(), (cuFloatComplex*)&alpha,
-                         (cuFloatComplex*)this->vec_, 1);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    hipblasStatus_t stat_t;
+    stat_t = hipblasTscal(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+                          this->get_size(), &alpha,
+                          this->vec_, 1);
+    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
@@ -1090,103 +968,22 @@ void HIPAcceleratorVector<ValueType>::ExclusiveScan(const BaseVector<ValueType> 
 
 }
 
-template <>
-double HIPAcceleratorVector<double>::Dot(const BaseVector<double> &x) const {
+template <typename ValueType>
+ValueType HIPAcceleratorVector<ValueType>::Dot(const BaseVector<ValueType> &x) const {
 
   assert(this->get_size() == x.get_size());
 
-  const HIPAcceleratorVector<double> *cast_x = dynamic_cast<const HIPAcceleratorVector<double>*> (&x);
+  const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
   assert(cast_x != NULL);
 
-  double res = 0;
+  ValueType res = static_cast<ValueType>(0);
 
   if (this->get_size() > 0) {
 
-    cublasStatus_t stat_t;
-
-    stat_t = cublasDdot(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                        this->get_size(),
-                        this->vec_, 1,
-                        cast_x->vec_, 1, &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-float HIPAcceleratorVector<float>::Dot(const BaseVector<float> &x) const {
-
-  assert(this->get_size() == x.get_size());
-
-  const HIPAcceleratorVector<float> *cast_x = dynamic_cast<const HIPAcceleratorVector<float>*> (&x);
-  assert(cast_x != NULL);
-
-  float res = 0;
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasSdot(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                        this->get_size(),
-                        this->vec_, 1,
-                        cast_x->vec_, 1, &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-std::complex<double> HIPAcceleratorVector<std::complex<double> >::Dot(const BaseVector<std::complex<double> > &x) const {
-
-  assert(this->get_size() == x.get_size());
-
-  const HIPAcceleratorVector<std::complex<double> > *cast_x = dynamic_cast<const HIPAcceleratorVector<std::complex<double> >*> (&x);
-  assert(cast_x != NULL);
-
-  std::complex<double> res = std::complex<double>(double(0.0), double(0.0));
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasZdotc(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         (cuDoubleComplex*)this->vec_, 1,
-                         (cuDoubleComplex*)cast_x->vec_, 1, (cuDoubleComplex*)&res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-std::complex<float> HIPAcceleratorVector<std::complex<float> >::Dot(const BaseVector<std::complex<float> > &x) const {
-
-  assert(this->get_size() == x.get_size());
-
-  const HIPAcceleratorVector<std::complex<float> > *cast_x = dynamic_cast<const HIPAcceleratorVector<std::complex<float> >*> (&x);
-  assert(cast_x != NULL);
-
-  std::complex<float> res = std::complex<float>(float(0.0), float(0.0));
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasCdotc(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         (cuFloatComplex*)this->vec_, 1,
-                         (cuFloatComplex*)cast_x->vec_, 1, (cuFloatComplex*)&res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    hipblasStatus_t stat_t;
+    stat_t = hipblasTdot(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+                         this->get_size(), this->vec_, 1, cast_x->vec_, 1, &res);
+    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
@@ -1197,7 +994,7 @@ std::complex<float> HIPAcceleratorVector<std::complex<float> >::Dot(const BaseVe
 template <>
 int HIPAcceleratorVector<int>::Dot(const BaseVector<int> &x) const {
 
-  LOG_INFO("No int CUBLAS dot function");
+  LOG_INFO("No int dot function");
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -1205,55 +1002,19 @@ int HIPAcceleratorVector<int>::Dot(const BaseVector<int> &x) const {
 template <typename ValueType>
 ValueType HIPAcceleratorVector<ValueType>::DotNonConj(const BaseVector<ValueType> &x) const {
 
-  return this->Dot(x);
-
-}
-
-template <>
-std::complex<double> HIPAcceleratorVector<std::complex<double> >::DotNonConj(const BaseVector<std::complex<double> > &x) const {
-
   assert(this->get_size() == x.get_size());
 
-  const HIPAcceleratorVector<std::complex<double> > *cast_x = dynamic_cast<const HIPAcceleratorVector<std::complex<double> >*> (&x);
+  const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
   assert(cast_x != NULL);
 
-  std::complex<double> res = std::complex<double>(double(0.0), double(0.0));
+  ValueType res = static_cast<ValueType>(0);
 
   if (this->get_size() > 0) {
 
-    cublasStatus_t stat_t;
-
-    stat_t = cublasZdotu(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         (cuDoubleComplex*)this->vec_, 1,
-                         (cuDoubleComplex*)cast_x->vec_, 1, (cuDoubleComplex*)&res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-std::complex<float> HIPAcceleratorVector<std::complex<float> >::DotNonConj(const BaseVector<std::complex<float> > &x) const {
-
-  assert(this->get_size() == x.get_size());
-
-  const HIPAcceleratorVector<std::complex<float> > *cast_x = dynamic_cast<const HIPAcceleratorVector<std::complex<float> >*> (&x);
-  assert(cast_x != NULL);
-
-  std::complex<float> res = std::complex<float>(float(0.0), float(0.0));
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasCdotu(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         (cuFloatComplex*)this->vec_, 1,
-                         (cuFloatComplex*)cast_x->vec_, 1, (cuFloatComplex*)&res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+      hipblasStatus_t stat_t;
+      stat_t = hipblasTdotc(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+                            this->get_size(), this->vec_, 1, cast_x->vec_, 1, &res);
+      CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
@@ -1264,90 +1025,26 @@ std::complex<float> HIPAcceleratorVector<std::complex<float> >::DotNonConj(const
 template <>
 int HIPAcceleratorVector<int>::DotNonConj(const BaseVector<int> &x) const {
 
-  LOG_INFO("No int CUBLAS dot function");
+  LOG_INFO("No int dotc function");
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
 
-template <>
-double HIPAcceleratorVector<double>::Norm(void) const {
+template <typename ValueType>
+ValueType HIPAcceleratorVector<ValueType>::Norm(void) const {
 
-  double res = 0;
+  ValueType res = static_cast<ValueType>(0);
 
   if (this->get_size() > 0) {
 
-    cublasStatus_t stat_t;
-
-    stat_t = cublasDnrm2(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         this->vec_, 1, &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    hipblasStatus_t stat_t;
+    stat_t = hipblasTnrm2(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+                          this->get_size(), this->vec_, 1, &res);
+    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
   return res;
-
-}
-
-template <>
-float HIPAcceleratorVector<float>::Norm(void) const {
-
-  float res = 0;
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasSnrm2(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         this->vec_, 1, &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-std::complex<double> HIPAcceleratorVector<std::complex<double> >::Norm(void) const {
-
-  double res = double(0.0);
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasDznrm2(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                          this->get_size(),
-                          (cuDoubleComplex*)this->vec_, 1, &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  std::complex<double> c_res = (std::complex<double>) res;
-  return c_res;
-
-}
-
-template <>
-std::complex<float> HIPAcceleratorVector<std::complex<float> >::Norm(void) const {
-
-  float res = float(0.0);
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasScnrm2(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                          this->get_size(),
-                          (cuFloatComplex*)this->vec_, 1, &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  std::complex<float> c_res = (std::complex<float>) res;
-  return c_res;
 
 }
 
@@ -1366,7 +1063,14 @@ ValueType HIPAcceleratorVector<ValueType>::Reduce(void) const {
 
   if (this->get_size() > 0) {
 
-    reduce_hip<int, ValueType, 32, 256>(this->get_size(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
+    if (this->local_backend_.HIP_warp == 32) {
+        reduce_hip<int, ValueType, 32, 256>(this->get_size(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
+    } else if (this->local_backend_.HIP_warp == 64) {
+        reduce_hip<int, ValueType, 64, 256>(this->get_size(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
+    } else {
+        LOG_INFO("Unsupported warp size");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1383,83 +1087,17 @@ int HIPAcceleratorVector<int>::Reduce(void) const {
 
 }
 
-template <>
-double HIPAcceleratorVector<double>::Asum(void) const {
+template <typename ValueType>
+ValueType HIPAcceleratorVector<ValueType>::Asum(void) const {
 
-  double res = 0.0;
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasDasum(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         this->vec_, 1,
-                         &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-float HIPAcceleratorVector<float>::Asum(void) const {
-
-  float res = 0.0;
+  ValueType res = static_cast<ValueType>(0);
 
   if (this->get_size() > 0) {
 
-    cublasStatus_t stat_t;
-
-    stat_t = cublasSasum(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         this->vec_, 1,
-                         &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-std::complex<double> HIPAcceleratorVector<std::complex<double> >::Asum(void) const {
-
-  double res = double(0.0);
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasDzasum(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         (cuDoubleComplex*)this->vec_, 1,
-                         &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-  }
-
-  return res;
-
-}
-
-template <>
-std::complex<float> HIPAcceleratorVector<std::complex<float> >::Asum(void) const {
-
-  float res = float(0.0);
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasScasum(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                         this->get_size(),
-                         (cuFloatComplex*)this->vec_, 1,
-                         &res);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    hipblasStatus_t stat_t;
+    stat_t = hipblasTasum(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+                          this->get_size(), this->vec_, 1, &res);
+    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
@@ -1475,121 +1113,21 @@ int HIPAcceleratorVector<int>::Asum(void) const {
 
 }
 
-template <>
-int HIPAcceleratorVector<double>::Amax(double &value) const {
+template <typename ValueType>
+int HIPAcceleratorVector<ValueType>::Amax(ValueType &value) const {
 
   int index = 0;
-  value = 0.0;
+  value = static_cast<ValueType>(0.0);
 
   if (this->get_size() > 0) {
 
-    cublasStatus_t stat_t;
-
-    stat_t = cublasIdamax(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
+    hipblasStatus_t stat_t;
+    stat_t = hipblasTamax(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
                           this->get_size(),
                           this->vec_, 1, &index);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
-    // cublas returns 1-based indexing
-    --index;
-
-    cudaMemcpy(&value,
-               this->vec_+index,
-               sizeof(double),
-               cudaMemcpyDeviceToHost);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-  }
-
-  value = paralution_abs(value);
-  return index;
-
-}
-
-template <>
-int HIPAcceleratorVector<float>::Amax(float &value) const {
-
-  int index = 0;
-  value = 0.0;
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasIsamax(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                          this->get_size(),
-                          this->vec_, 1, &index);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-    // cublas returns 1-based indexing
-    --index;
-
-    cudaMemcpy(&value,
-               this->vec_+index,
-               sizeof(float),
-               cudaMemcpyDeviceToHost);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-  }
-
-  value = paralution_abs(value);
-  return index;
-
-}
-
-template <>
-int HIPAcceleratorVector<std::complex<double> >::Amax(std::complex<double> &value) const {
-
-  int index = 0;
-  value = std::complex<double>(double(0.0), double(0.0));
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasIzamax(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                          this->get_size(),
-                          (cuDoubleComplex*)this->vec_, 1, &index);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-    // cublas returns 1-based indexing
-    --index;
-
-    cudaMemcpy(&value,
-               (cuDoubleComplex*)this->vec_+index,
-               sizeof(std::complex<double>),
-               cudaMemcpyDeviceToHost);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-  }
-
-  value = paralution_abs(value);
-  return index;
-
-}
-
-template <>
-int HIPAcceleratorVector<std::complex<float> >::Amax(std::complex<float> &value) const {
-
-  int index = 0;
-  value = std::complex<float>(float(0.0), float(0.0));
-
-  if (this->get_size() > 0) {
-
-    cublasStatus_t stat_t;
-
-    stat_t = cublasIcamax(CUBLAS_HANDLE(this->local_backend_.HIP_rocblas_handle),
-                          this->get_size(),
-                          (cuFloatComplex*)this->vec_, 1, &index);
-    CHECK_CUBLAS_ERROR(stat_t, __FILE__, __LINE__);
-
-    // cublas returns 1-based indexing
-    --index;
-
-    cudaMemcpy(&value,
-               (cuFloatComplex*)this->vec_+index,
-               sizeof(std::complex<float>),
-               cudaMemcpyDeviceToHost);
+    hipMemcpy(&value, this->vec_+index, sizeof(ValueType), hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1621,8 +1159,9 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-    kernel_pointwisemult<<<GridSize, BlockSize>>> (size, HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
-
+    hipLaunchKernelGGL((kernel_pointwisemult<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1646,8 +1185,10 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-    kernel_pointwisemult2<<<GridSize, BlockSize>>> (size, HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_), HIPPtr(this->vec_));
-
+    hipLaunchKernelGGL((kernel_pointwisemult2<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_),
+                       HIPPtr(this->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1672,10 +1213,12 @@ void HIPAcceleratorVector<ValueType>::Permute(const BaseVector<int> &permutation
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
-    //    this->vec_[ cast_perm->vec_[i] ] = vec_tmp.vec_[i];  
-    kernel_permute<ValueType, int> <<<GridSize, BlockSize>>> (size, cast_perm->vec_, vec_tmp.vec_, this->vec_);
-    
-    CHECK_HIP_ERROR(__FILE__, __LINE__);      
+    // this->vec_[ cast_perm->vec_[i] ] = vec_tmp.vec_[i];  
+    hipLaunchKernelGGL((kernel_permute<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, cast_perm->vec_, vec_tmp.vec_, this->vec_);
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
+
   }
 
 }
@@ -1699,9 +1242,11 @@ void HIPAcceleratorVector<ValueType>::PermuteBackward(const BaseVector<int> &per
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
     //    this->vec_[i] = vec_tmp.vec_[ cast_perm->vec_[i] ];
-    kernel_permute_backward<ValueType, int> <<<GridSize, BlockSize>>> (size, cast_perm->vec_, vec_tmp.vec_, this->vec_);
-    
-    CHECK_HIP_ERROR(__FILE__, __LINE__);      
+    hipLaunchKernelGGL((kernel_permute_backward<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, cast_perm->vec_, vec_tmp.vec_, this->vec_);
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
+
   }
 
 }
@@ -1712,7 +1257,7 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermute(const BaseVector<ValueType
 
   if (this->get_size() > 0) {
 
-    assert(this != &src);
+//TODO    assert(this != &src);
     
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
@@ -1727,9 +1272,11 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermute(const BaseVector<ValueType
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
     //    this->vec_[ cast_perm->vec_[i] ] = cast_vec->vec_[i];
-    kernel_permute<ValueType, int> <<<GridSize, BlockSize>>> (size, cast_perm->vec_, cast_vec->vec_, this->vec_);
-    
-    CHECK_HIP_ERROR(__FILE__, __LINE__);      
+    hipLaunchKernelGGL((kernel_permute<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, cast_perm->vec_, cast_vec->vec_, this->vec_);    
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
+
   }
 
 }
@@ -1740,7 +1287,7 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermuteBackward(const BaseVector<V
 
   if (this->get_size() > 0) {
 
-    assert(this != &src);
+//TODO    assert(this != &src);
     
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
@@ -1756,9 +1303,11 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermuteBackward(const BaseVector<V
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
     //    this->vec_[i] = cast_vec->vec_[ cast_perm->vec_[i] ];
-    kernel_permute_backward<ValueType, int> <<<GridSize, BlockSize>>> (size, cast_perm->vec_, cast_vec->vec_, this->vec_);
-    
-    CHECK_HIP_ERROR(__FILE__, __LINE__);      
+    hipLaunchKernelGGL((kernel_permute_backward<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, cast_perm->vec_, cast_vec->vec_, this->vec_);
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
+
   }
 
 }
@@ -1774,10 +1323,10 @@ void HIPAcceleratorVector<ValueType>::SetIndexArray(const int size, const int *i
   allocate_hip<int>(this->index_size_, &this->index_array_);
   allocate_hip<ValueType>(this->index_size_, &this->index_buffer_);
 
-  cudaMemcpy(this->index_array_,            // dst
+  hipMemcpy(this->index_array_,            // dst
              index,                         // src
              this->index_size_*sizeof(int), // size
-             cudaMemcpyHostToDevice);
+             hipMemcpyHostToDevice);
 
 }
 
@@ -1789,14 +1338,16 @@ void HIPAcceleratorVector<ValueType>::GetIndexValues(ValueType *values) const {
   dim3 BlockSize(this->local_backend_.HIP_block_size);
   dim3 GridSize(this->index_size_ / this->local_backend_.HIP_block_size + 1);
 
-  kernel_get_index_values<ValueType, int> <<<GridSize, BlockSize>>> (this->index_size_, this->index_array_,
-                                                                     this->vec_, this->index_buffer_);
+  hipLaunchKernelGGL((kernel_get_index_values<ValueType, int>),
+                     GridSize, BlockSize, 0, 0,
+                     this->index_size_, this->index_array_,
+                     this->vec_, this->index_buffer_);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-  cudaMemcpy(values,                              // dst
-             this->index_buffer_,                 // src
-             this->index_size_*sizeof(ValueType), // size
-             cudaMemcpyDeviceToHost);
+  hipMemcpy(values,                              // dst
+            this->index_buffer_,                 // src
+            this->index_size_*sizeof(ValueType), // size
+            hipMemcpyDeviceToHost);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }
@@ -1806,17 +1357,19 @@ void HIPAcceleratorVector<ValueType>::SetIndexValues(const ValueType *values) {
 
   assert(values != NULL);
 
-  cudaMemcpy(this->index_buffer_,
-             values,
-             this->index_size_*sizeof(ValueType),
-             cudaMemcpyHostToDevice);
+  hipMemcpy(this->index_buffer_,
+            values,
+            this->index_size_*sizeof(ValueType),
+            hipMemcpyHostToDevice);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   dim3 BlockSize(this->local_backend_.HIP_block_size);
   dim3 GridSize(this->index_size_ / this->local_backend_.HIP_block_size + 1);
 
-  kernel_set_index_values<ValueType, int> <<<GridSize, BlockSize>>> (this->index_size_, this->index_array_,
-                                                                     this->index_buffer_, this->vec_);
+  hipLaunchKernelGGL((kernel_set_index_values<ValueType, int>),
+                     GridSize, BlockSize, 0, 0,
+                     this->index_size_, this->index_array_,
+                     this->index_buffer_, this->vec_);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }
@@ -1829,10 +1382,10 @@ void HIPAcceleratorVector<ValueType>::GetContinuousValues(const int start, const
   assert(end <= this->get_size());
   assert(values != NULL);
 
-  cudaMemcpy(values,                        // dst
-             this->vec_+start,              // src
-             (end-start)*sizeof(ValueType), // size
-             cudaMemcpyDeviceToHost);
+  hipMemcpy(values,                        // dst
+            this->vec_+start,              // src
+            (end-start)*sizeof(ValueType), // size
+            hipMemcpyDeviceToHost);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }
@@ -1845,10 +1398,10 @@ void HIPAcceleratorVector<ValueType>::SetContinuousValues(const int start, const
   assert(end <= this->get_size());
   assert(values != NULL);
 
-  cudaMemcpy(this->vec_+start,              // dst
-             values,                        // src
-             (end-start)*sizeof(ValueType), // size
-             cudaMemcpyHostToDevice);
+  hipMemcpy(this->vec_+start,              // dst
+            values,                        // src
+            (end-start)*sizeof(ValueType), // size
+            hipMemcpyHostToDevice);
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }
@@ -1871,8 +1424,8 @@ void HIPAcceleratorVector<ValueType>::ExtractCoarseBoundary(const int start, con
 
 }
 
-template <>
-void HIPAcceleratorVector<double>::Power(const double power) {
+template <typename ValueType>
+void HIPAcceleratorVector<ValueType>::Power(const double power) {
 
   if (this->get_size() > 0) {
 
@@ -1880,50 +1433,10 @@ void HIPAcceleratorVector<double>::Power(const double power) {
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-    kernel_powerd<int> <<<GridSize, BlockSize>>> (size, power, this->vec_);
-
+    hipLaunchKernelGGL((kernel_power<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       size, power, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<float>::Power(const double power) {
-
-  if (this->get_size() > 0) {
-
-    int size = this->get_size();
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
-
-    kernel_powerf<int> <<<GridSize, BlockSize>>> (size, power, this->vec_);
-
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<std::complex<double> >::Power(const double power) {
-
-  if (this->get_size() > 0) {
-
-    LOG_INFO("HIPAcceleratorVector::Power(), no pow() for std::complex<double> in HIP");
-    FATAL_ERROR(__FILE__, __LINE__);
-
-  }
-
-}
-
-template <>
-void HIPAcceleratorVector<std::complex<float> >::Power(const double power) {
-
-  if (this->get_size() > 0) {
-
-    LOG_INFO("HIPAcceleratorVector::Power(), no pow() for std::complex<float> in HIP");
-    FATAL_ERROR(__FILE__, __LINE__);
 
   }
 
