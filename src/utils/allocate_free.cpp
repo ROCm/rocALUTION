@@ -74,7 +74,7 @@ void allocate_host(const int size, DataType **ptr) {
 
     *ptr = new (std::nothrow) DataType[size];
 
-    if ((*ptr) == false) { // nullptr
+    if (!(*ptr)) { // nullptr
       LOG_INFO("Cannot allocate memory");
       LOG_VERBOSE_INFO(2, "Size of the requested buffer = " << size*sizeof(DataType));
       FATAL_ERROR(__FILE__, __LINE__);
