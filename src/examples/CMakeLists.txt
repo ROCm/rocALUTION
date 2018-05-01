@@ -5,7 +5,7 @@ set(EXAMPLES
   benchmark
   bicgstab
   cg
-  complex
+#  complex
   cg-amg
   cmk
   idr

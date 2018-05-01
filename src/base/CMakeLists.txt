@@ -42,11 +42,4 @@ endforeach()
 
 if (SUPPORT_HIP)
   include(base/hip/CMakeLists.txt)
-  foreach(i ${HIP_SOURCES})
-    list(APPEND BASE_SOURCES hip/${i})
-  endforeach()
-
-  foreach(i ${HIP_PUBLIC_HEADERS})
-    list(APPEND BASE_PUBLIC_HEADERS hip/${i})
-  endforeach()
 endif()

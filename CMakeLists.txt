@@ -3,7 +3,9 @@ project(PARALUTION)
 
 #######################################################################################################################
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH
+    "${CMAKE_SOURCE_DIR}/cmake"
+    "/opt/rocm/hip/cmake")
 
 if (${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})
   message(SEND_ERROR)
@@ -15,18 +17,19 @@ endif()
 #######################################################################################################################
 
 set(PARALUTION_MAJOR_VERSION 1)
-set(PARALUTION_MINOR_VERSION 2)
+set(PARALUTION_MINOR_VERSION 3)
 set(PARALUTION_BUILD_VERSION 0)
 set(PARALUTION_VERSION "${PARALUTION_MAJOR_VERSION}.${PARALUTION_MINOR_VERSION}.${PARALUTION_BUILD_VERSION}")
 
 #######################################################################################################################
 
 set(PARALUTION_LIBRARY paralution)
+set(PARALUTION_BACKEND_HIP paralution_hip)
 
 set(BIN_BUILD_DIR ${CMAKE_BINARY_DIR}/bin)
-set(INC_BUILD_DIR ${CMAKE_BINARY_DIR}/inc)
+set(INC_BUILD_DIR ${CMAKE_BINARY_DIR}/include)
 set(LIB_BUILD_DIR ${CMAKE_BINARY_DIR}/lib)
-set(PLUGINS_BUILD_DIR ${CMAKE_BINARY_DIR}/inc/plug-ins)
+set(PLUGINS_BUILD_DIR ${INC_BUILD_DIR}/plug-ins)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BIN_BUILD_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIB_BUILD_DIR})
@@ -63,14 +66,15 @@ endif()
 
 #######################################################################################################################
 # HIP
-find_package(CUDA)
-if (NOT CUDA_FOUND)
+find_package(HIP)
+if (NOT HIP_FOUND)
   message("-- HIP not found. Compiling WITHOUT HIP support.")
 else()
   option(SUPPORT_HIP "Compile WITH HIP support." ON)
   if (SUPPORT_HIP)
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3 -arch sm_35 --compiler-options -Wall -D_FORCE_INLINES")
-    set(CUDA_CXX_FLAGS -DSUPPORT_HIP)
+    find_package(HIPBLAS REQUIRED)
+    set(HIP_LIBRARY_FLAGS "${HIP_HIPCC_FLAGS} -amdgpu-target=gfx803 -amdgpu-target=gfx900")
+    set(HIP_CXX_FLAGS -DSUPPORT_HIP)
   endif()
 endif()
 
@@ -103,7 +107,7 @@ option(BUILD_EXAMPLES "Build examples." ON)
 
 #######################################################################################################################
 
-set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${OMP_CXX_FLAGS} ${CUDA_CXX_FLAGS} ${MPI_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CXX_FLAGS} ${OMP_CXX_FLAGS} ${HIP_CXX_FLAGS} ${MPI_CXX_FLAGS}")
 
 add_subdirectory(src)
 if (BUILD_EXAMPLES)
