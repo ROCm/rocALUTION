@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_COO_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_COO_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_COO_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_COO_HPP_
 
 #include "../matrix_formats_ind.hpp"
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType, typename IndexType>
 __global__ void kernel_coo_permute(const IndexType nnz, 
@@ -301,4 +301,4 @@ __global__ void kernel_coo_csr_to_coo(const IndexType nrow, const IndexType *row
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_COO_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_COO_HPP_

@@ -1,5 +1,5 @@
-#ifndef PARALUTION_UTILS_LOG_HPP_
-#define PARALUTION_UTILS_LOG_HPP_
+#ifndef ROCALUTION_UTILS_LOG_HPP_
+#define ROCALUTION_UTILS_LOG_HPP_
 
 #include "def.hpp"
 #include "../base/backend_manager.hpp"
@@ -9,10 +9,10 @@
 #include <string> 
 #include <sstream>
 
-namespace paralution {
+namespace rocalution {
 
-void _paralution_open_log_file(void);
-void _paralution_close_log_file(void);
+void _rocalution_open_log_file(void);
+void _rocalution_close_log_file(void);
 
 }
 
@@ -89,5 +89,5 @@ void _paralution_close_log_file(void);
 
 #endif // LOG_MPI_RANK
 
-#endif // PARALUTION_UTILS_LOG_HPP_
+#endif // ROCALUTION_UTILS_LOG_HPP_
 

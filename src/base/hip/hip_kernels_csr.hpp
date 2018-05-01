@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_CSR_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_CSR_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_
 
 #include "../matrix_formats_ind.hpp"
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 // Nathan Bell and Michael Garland
 // Efficient Sparse Matrix-Vector Multiplication
@@ -752,4 +752,4 @@ __global__ void kernel_csr_extract_row_vector(const IndexType *row_offset, const
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_CSR_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_

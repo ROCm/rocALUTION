@@ -6,7 +6,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 BaseMatrix<ValueType>::BaseMatrix() {
@@ -50,7 +50,7 @@ inline int BaseMatrix<ValueType>::get_nnz(void) const {
 }
 
 template <typename ValueType>
-void BaseMatrix<ValueType>::set_backend(const Paralution_Backend_Descriptor local_backend) {
+void BaseMatrix<ValueType>::set_backend(const Rocalution_Backend_Descriptor local_backend) {
 
   this->local_backend_ = local_backend;
 

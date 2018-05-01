@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -12,13 +12,13 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   if (argc > 2) {
-    set_omp_threads_paralution(atoi(argv[2]));
+    set_omp_threads_rocalution(atoi(argv[2]));
   } 
 
-  info_paralution();
+  info_rocalution();
 
   LocalVector<double> b, b_old, *b_k, *b_k1, *b_tmp;
   LocalMatrix<double> mat;
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 
   mat.info();
 
-  tick = paralution_time();
+  tick = rocalution_time();
 
   // compute lambda max
   for (int i=0; i<=iter_max; ++i) {
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   mat.Apply(*b_k, b_k1);
   plambda_max = b_k1->Dot(*b_k) ;
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Power method (lambda max) execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   mat.AddScalarDiagonal(double(-1.0)*plambda_max);
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
 
   b_k->Ones();
 
-  tick = paralution_time();
+  tick = rocalution_time();
 
   // compute lambda min
   for (int i=0; i<=iter_max; ++i) {
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
   // back to the original matrix
   mat.AddScalarDiagonal(plambda_max);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Power method (lambda min) execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
 
@@ -137,11 +137,11 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  tick = paralution_time();
+  tick = rocalution_time();
 
   ls.Solve(rhs, &x);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   // PCG + Chebyshev polynomial
@@ -159,14 +159,14 @@ int main(int argc, char* argv[]) {
 
   cg.Build();
 
-  tick = paralution_time();
+  tick = rocalution_time();
 
   cg.Solve(rhs, &x);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }

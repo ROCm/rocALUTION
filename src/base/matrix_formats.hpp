@@ -1,9 +1,9 @@
-#ifndef PARALUTION_MATRIX_FORMATS_HPP_
-#define PARALUTION_MATRIX_FORMATS_HPP_
+#ifndef ROCALUTION_MATRIX_FORMATS_HPP_
+#define ROCALUTION_MATRIX_FORMATS_HPP_
 
 #include <string>
 
-namespace paralution {
+namespace rocalution {
 
 /// Matrix Names
 const std::string _matrix_format_names [8] = {"DENSE", 
@@ -119,4 +119,4 @@ struct MatrixDENSE {
 
 }
 
-#endif // PARALUTION_MATRIX_FORMATS_HPP_
+#endif // ROCALUTION_MATRIX_FORMATS_HPP_

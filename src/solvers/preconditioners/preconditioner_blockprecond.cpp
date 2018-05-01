@@ -12,7 +12,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 BlockPreconditioner<OperatorType, VectorType, ValueType>::BlockPreconditioner() {

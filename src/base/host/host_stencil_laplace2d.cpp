@@ -13,7 +13,7 @@
 #define omp_set_num_threads(num);
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HostStencilLaplace2D<ValueType>::HostStencilLaplace2D() {
@@ -25,7 +25,7 @@ HostStencilLaplace2D<ValueType>::HostStencilLaplace2D() {
 }
 
 template <typename ValueType>
-HostStencilLaplace2D<ValueType>::HostStencilLaplace2D(const Paralution_Backend_Descriptor local_backend) {
+HostStencilLaplace2D<ValueType>::HostStencilLaplace2D(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HostStencilLaplace2D::HostStencilLaplace2D()",
             "constructor with local_backend");

@@ -7,7 +7,7 @@
 #include <fstream>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 BaseVector<ValueType>::BaseVector() {
@@ -36,7 +36,7 @@ inline int BaseVector<ValueType>::get_size(void) const {
 }
 
 template <typename ValueType>
-void BaseVector<ValueType>::set_backend(const Paralution_Backend_Descriptor local_backend) {
+void BaseVector<ValueType>::set_backend(const Rocalution_Backend_Descriptor local_backend) {
 
   this->local_backend_ = local_backend;
 

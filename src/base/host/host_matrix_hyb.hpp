@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HOST_MATRIX_HYB_HPP_
-#define PARALUTION_HOST_MATRIX_HYB_HPP_
+#ifndef ROCALUTION_HOST_MATRIX_HYB_HPP_
+#define ROCALUTION_HOST_MATRIX_HYB_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HostMatrixHYB : public HostMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HostMatrixHYB : public HostMatrix<ValueType> {
 public:
 
   HostMatrixHYB();
-  HostMatrixHYB(const Paralution_Backend_Descriptor local_backend);
+  HostMatrixHYB(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixHYB();
 
   inline int get_ell_max_row(void) const { return this->mat_.ELL.max_row; }
@@ -56,4 +56,4 @@ private:
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_HYB_HPP_
+#endif // ROCALUTION_HOST_MATRIX_HYB_HPP_

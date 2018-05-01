@@ -9,7 +9,7 @@
 #include <limits>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 IterationControl::IterationControl() {
 
@@ -80,7 +80,7 @@ bool IterationControl::InitResidual(const double res) {
   if (this->rec_ == true) 
     this->residual_history_.push_back(res);
   
-  if (( paralution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
+  if (( rocalution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
       ( res != res ) ) { // not a number (NaN)
 
     LOG_INFO("Residual = " << res << " !!!");
@@ -88,7 +88,7 @@ bool IterationControl::InitResidual(const double res) {
 
   }
 
-  if ( paralution_abs(res) <= this->absolute_tol_ ) {
+  if ( rocalution_abs(res) <= this->absolute_tol_ ) {
     
     this->reached_ = 1;
     return false;
@@ -104,15 +104,15 @@ void IterationControl::InitTolerance(const double abs, const double rel, const d
   this->relative_tol_   = rel;
   this->divergence_tol_ = div;
 
-  if (( paralution_abs(abs) == std::numeric_limits<double>::infinity()) || // infinity
+  if (( rocalution_abs(abs) == std::numeric_limits<double>::infinity()) || // infinity
       ( abs != abs ) ) // not a number (NaN)
     LOG_INFO("Abs tol = " << abs << " !!!");
 
-  if (( paralution_abs(rel) == std::numeric_limits<double>::infinity()) || // infinity
+  if (( rocalution_abs(rel) == std::numeric_limits<double>::infinity()) || // infinity
       ( rel != rel ) ) // not a number (NaN)
     LOG_INFO("Rel tol = " << rel << " !!!");
 
-  if (( paralution_abs(div) == std::numeric_limits<double>::infinity()) || // infinity
+  if (( rocalution_abs(div) == std::numeric_limits<double>::infinity()) || // infinity
       ( div != div ) ) // not a number (NaN)
     LOG_INFO("Div tol = " << div << " !!!");
 
@@ -185,7 +185,7 @@ bool IterationControl::CheckResidual(const double res) {
   if (this->rec_ == true) 
     this->residual_history_.push_back(res);
 
-  if (( paralution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
+  if (( rocalution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
       ( res != res ) ) { // not a number (NaN)
 
     LOG_INFO("Residual = " << res << " !!!");
@@ -195,7 +195,7 @@ bool IterationControl::CheckResidual(const double res) {
 
   if (this->iteration_ >= this->minimum_iter_) {
 
-    if ( paralution_abs(res) <= this->absolute_tol_ ) {
+    if ( rocalution_abs(res) <= this->absolute_tol_ ) {
 
       this->reached_ = 1;
       return true;
@@ -240,7 +240,7 @@ bool IterationControl::CheckResidualNoCount(const double res) const {
 
   assert(this->init_res_ == true);
 
-  if (( paralution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
+  if (( rocalution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
       ( res != res ) ) { // not a number (NaN)
 
     LOG_INFO("Residual = " << res << " !!!");
@@ -248,7 +248,7 @@ bool IterationControl::CheckResidualNoCount(const double res) const {
 
   }
 
-  if ( paralution_abs(res) <= this->absolute_tol_ )
+  if ( rocalution_abs(res) <= this->absolute_tol_ )
     return true;
 
   if ( res / this->initial_residual_ <= this->relative_tol_ )
@@ -329,35 +329,35 @@ void IterationControl::PrintStatus(void) {
 
   case 1:
     LOG_INFO("IterationControl ABSOLUTE criteria has been reached: "
-             << "res norm=" << paralution_abs(this->current_res_) << "; "
+             << "res norm=" << rocalution_abs(this->current_res_) << "; "
              << "rel val=" << this->current_res_ / this->initial_residual_ << "; "
              << "iter=" << this->iteration_);
     break;
 
   case 2:
     LOG_INFO("IterationControl RELATIVE criteria has been reached: "
-             << "res norm=" << paralution_abs(this->current_res_) << "; "
+             << "res norm=" << rocalution_abs(this->current_res_) << "; "
              << "rel val=" << this->current_res_ / this->initial_residual_ << "; "
              << "iter=" << this->iteration_);
     break;
 
   case 3:
     LOG_INFO("IterationControl DIVERGENCE criteria has been reached: "
-             << "res norm=" << paralution_abs(this->current_res_) << "; "
+             << "res norm=" << rocalution_abs(this->current_res_) << "; "
              << "rel val=" << this->current_res_ / this->initial_residual_ << "; "
              << "iter=" << this->iteration_);
     break;
 
   case 4:
     LOG_INFO("IterationControl MAX ITER criteria has been reached: "
-             << "res norm=" << paralution_abs(this->current_res_) << "; "
+             << "res norm=" << rocalution_abs(this->current_res_) << "; "
              << "rel val=" << this->current_res_ / this->initial_residual_ << "; "
              << "iter=" << this->iteration_);
     break;
 
   default:
     LOG_INFO("IterationControl NO criteria has been reached: "
-             << "res norm=" << paralution_abs(this->current_res_) << "; "
+             << "res norm=" << rocalution_abs(this->current_res_) << "; "
              << "rel val=" << this->current_res_ / this->initial_residual_ << "; "
              << "iter=" << this->iteration_);
 

@@ -1,12 +1,12 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_GENERAL_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_GENERAL_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_GENERAL_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_GENERAL_HPP_
 
 #include "../matrix_formats_ind.hpp"
 #include "hip_complex.hpp"
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 /*
 // 1D accessing with stride
@@ -161,4 +161,4 @@ __global__ void kernel_buffer_addscalar(const IndexType n, const ValueType scala
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_GENERAL_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_GENERAL_HPP_

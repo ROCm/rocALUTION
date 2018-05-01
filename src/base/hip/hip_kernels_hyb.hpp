@@ -1,5 +1,5 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_HYB_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_HYB_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_HYB_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_HYB_HPP_
 
 #include "hip_kernels_ell.hpp"
 #include "hip_kernels_coo.hpp"
@@ -7,7 +7,7 @@
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename IndexType>
 __global__ void kernel_ell_nnz_coo(const IndexType nrow, const IndexType max_row,
@@ -88,4 +88,4 @@ __global__ void kernel_ell_fill_coo(const IndexType nrow, const IndexType *row_o
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_HYB_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_HYB_HPP_

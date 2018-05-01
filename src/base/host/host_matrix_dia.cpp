@@ -15,7 +15,7 @@
 #define omp_set_num_threads(num);
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HostMatrixDIA<ValueType>::HostMatrixDIA() {
@@ -27,7 +27,7 @@ HostMatrixDIA<ValueType>::HostMatrixDIA() {
 }
 
 template <typename ValueType>
-HostMatrixDIA<ValueType>::HostMatrixDIA(const Paralution_Backend_Descriptor local_backend) {
+HostMatrixDIA<ValueType>::HostMatrixDIA(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HostMatrixDIA::HostMatrixDIA()",
             "constructor with local_backend");

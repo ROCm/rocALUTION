@@ -10,7 +10,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 AS<OperatorType, VectorType, ValueType>::AS() {

@@ -9,7 +9,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 LocalStencil<ValueType>::LocalStencil() {

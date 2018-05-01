@@ -13,7 +13,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 Solver<OperatorType, VectorType, ValueType>::Solver() {
@@ -622,7 +622,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const Vector
 
     ValueType res = this->Norm(this->x_res_);
 
-    if (this->iter_ctrl_.InitResidual(paralution_abs(res)) == false) {
+    if (this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false) {
 
       LOG_DEBUG(this, "FixedPoint::SolvePrecond_()",
                 " #*# end");
@@ -640,7 +640,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const Vector
     this->x_res_.ScaleAdd(ValueType(-1.0), rhs); 
 
     res = this->Norm(this->x_res_);
-    while (!this->iter_ctrl_.CheckResidual(paralution_abs(res), this->index_)) {
+    while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
 
       // Solve M x_old = x_res
       this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);

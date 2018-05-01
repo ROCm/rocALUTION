@@ -16,7 +16,7 @@
 #include <list>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::GlobalPairwiseAMG() {

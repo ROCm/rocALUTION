@@ -1,24 +1,24 @@
-#ifndef PARALUTION_UTILS_MATH_FUNCTIONS_HPP_
-#define PARALUTION_UTILS_MATH_FUNCTIONS_HPP_
+#ifndef ROCALUTION_UTILS_MATH_FUNCTIONS_HPP_
+#define ROCALUTION_UTILS_MATH_FUNCTIONS_HPP_
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 /// Return absolute float value
-float paralution_abs(const float val);
+float rocalution_abs(const float val);
 /// Return absolute double value
-double paralution_abs(const double val);
+double rocalution_abs(const double val);
 /// Return absolute float value
-float paralution_abs(const std::complex<float> val);
+float rocalution_abs(const std::complex<float> val);
 /// Return absolute double value
-double paralution_abs(const std::complex<double> val);
+double rocalution_abs(const std::complex<double> val);
 /// Return absolute int value
-int paralution_abs(const int val);
+int rocalution_abs(const int val);
 
 /// Return smallest positive floating point number
 template <typename ValueType>
-ValueType paralution_eps(void);
+ValueType rocalution_eps(void);
 
 /// Overloaded < operator for complex numbers
 template <typename ValueType>
@@ -35,4 +35,4 @@ bool operator>=(const std::complex<ValueType> &lhs, const std::complex<ValueType
 
 }
 
-#endif // PARALUTION_UTILS_MATH_FUNCTIONS_HPP_
+#endif // ROCALUTION_UTILS_MATH_FUNCTIONS_HPP_

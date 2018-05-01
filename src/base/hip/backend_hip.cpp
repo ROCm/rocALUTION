@@ -21,11 +21,11 @@
 //#include <rocsparse.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
-bool paralution_init_hip(void) {
+bool rocalution_init_hip(void) {
 
-  LOG_DEBUG(0, "paralution_init_hip()",
+  LOG_DEBUG(0, "rocalution_init_hip()",
             "* begin");
 
   assert(_get_backend_descriptor()->HIP_blas_handle == NULL);
@@ -112,7 +112,7 @@ bool paralution_init_hip(void) {
   _get_backend_descriptor()->HIP_threads_per_proc = dev_prop.maxThreadsPerMultiProcessor;
   _get_backend_descriptor()->HIP_max_threads = 65536; //dev_prop.regsPerBlock;
 
-  LOG_DEBUG(0, "paralution_init_hip()",
+  LOG_DEBUG(0, "rocalution_init_hip()",
             "* end");
 
   return true;
@@ -120,9 +120,9 @@ bool paralution_init_hip(void) {
 }
 
 
-void paralution_stop_hip(void) {
+void rocalution_stop_hip(void) {
 
-  LOG_DEBUG(0, "paralution_stop_hip()",
+  LOG_DEBUG(0, "rocalution_stop_hip()",
             "* begin");
 
   if (_get_backend_descriptor()->accelerator) {
@@ -145,12 +145,12 @@ void paralution_stop_hip(void) {
 
   _get_backend_descriptor()->HIP_dev = -1;
 
-  LOG_DEBUG(0, "paralution_stop_hip()",
+  LOG_DEBUG(0, "rocalution_stop_hip()",
             "* end");
 
 }
 
-void paralution_info_hip(const struct Paralution_Backend_Descriptor backend_descriptor) {
+void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_descriptor) {
 
     int num_dev;
 
@@ -241,7 +241,7 @@ void paralution_info_hip(const struct Paralution_Backend_Descriptor backend_desc
 }
 
 template <typename ValueType>
-AcceleratorMatrix<ValueType>* _paralution_init_base_hip_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+AcceleratorMatrix<ValueType>* _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                const unsigned int matrix_format) {
   assert(backend_descriptor.backend == HIP);
 
@@ -280,7 +280,7 @@ AcceleratorMatrix<ValueType>* _paralution_init_base_hip_matrix(const struct Para
 }
 
 template <typename ValueType>
-AcceleratorVector<ValueType>* _paralution_init_base_hip_vector(const struct Paralution_Backend_Descriptor backend_descriptor) {
+AcceleratorVector<ValueType>* _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor) {
 
   assert(backend_descriptor.backend == HIP);
 
@@ -288,29 +288,29 @@ AcceleratorVector<ValueType>* _paralution_init_base_hip_vector(const struct Para
 
 }
 
-void paralution_hip_sync(void) {
+void rocalution_hip_sync(void) {
 
   hipDeviceSynchronize();
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
 }
 
-template AcceleratorVector<float>* _paralution_init_base_hip_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
-template AcceleratorVector<double>* _paralution_init_base_hip_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<float>* _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<double>* _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 #ifdef SUPPORT_COMPLEX
-template AcceleratorVector<std::complex<float> >* _paralution_init_base_hip_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
-template AcceleratorVector<std::complex<double> >* _paralution_init_base_hip_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<std::complex<float> >* _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<std::complex<double> >* _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 #endif
-template AcceleratorVector<int>* _paralution_init_base_hip_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<int>* _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
-template AcceleratorMatrix<float>* _paralution_init_base_hip_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<float>* _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                     const unsigned int matrix_format);
-template AcceleratorMatrix<double>* _paralution_init_base_hip_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<double>* _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                      const unsigned int matrix_format);
 #ifdef SUPPORT_COMPLEX
-template AcceleratorMatrix<std::complex<float> >* _paralution_init_base_hip_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<std::complex<float> >* _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                                    const unsigned int matrix_format);
-template AcceleratorMatrix<std::complex<double> >* _paralution_init_base_hip_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<std::complex<double> >* _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                                     const unsigned int matrix_format);
 #endif
 

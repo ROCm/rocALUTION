@@ -26,7 +26,7 @@
 #include <vector>
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR() {
@@ -38,7 +38,7 @@ HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR() {
 }
 
 template <typename ValueType>
-HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR(const Paralution_Backend_Descriptor local_backend) {
+HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HIPAcceleratorMatrixCSR::HIPAcceleratorMatrixCSR()",
             "constructor with local_backend");

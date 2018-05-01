@@ -8,7 +8,7 @@
 #include <fstream>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 // ----------------------------------------------------------
 // struct matrix_market_banner

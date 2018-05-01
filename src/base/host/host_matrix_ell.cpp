@@ -15,7 +15,7 @@
 #define omp_set_num_threads(num);
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HostMatrixELL<ValueType>::HostMatrixELL() {
@@ -27,7 +27,7 @@ HostMatrixELL<ValueType>::HostMatrixELL() {
 }
 
 template <typename ValueType>
-HostMatrixELL<ValueType>::HostMatrixELL(const Paralution_Backend_Descriptor local_backend) {
+HostMatrixELL<ValueType>::HostMatrixELL(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HostMatrixELL::HostMatrixELL()",
             "constructor with local_backend");

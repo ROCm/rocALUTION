@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(PARALUTION)
+project(rocALUTION)
 
 #######################################################################################################################
 
@@ -16,15 +16,15 @@ endif()
 
 #######################################################################################################################
 
-set(PARALUTION_MAJOR_VERSION 1)
-set(PARALUTION_MINOR_VERSION 3)
-set(PARALUTION_BUILD_VERSION 0)
-set(PARALUTION_VERSION "${PARALUTION_MAJOR_VERSION}.${PARALUTION_MINOR_VERSION}.${PARALUTION_BUILD_VERSION}")
+set(rocALUTION_MAJOR_VERSION 1)
+set(rocALUTION_MINOR_VERSION 3)
+set(rocALUTION_BUILD_VERSION 0)
+set(rocALUTION_VERSION "${rocALUTION_MAJOR_VERSION}.${rocALUTION_MINOR_VERSION}.${rocALUTION_BUILD_VERSION}")
 
 #######################################################################################################################
 
-set(PARALUTION_LIBRARY paralution)
-set(PARALUTION_BACKEND_HIP paralution_hip)
+set(rocALUTION_LIBRARY rocalution)
+set(rocALUTION_BACKEND_HIP rocalution_hip)
 
 set(BIN_BUILD_DIR ${CMAKE_BINARY_DIR}/bin)
 set(INC_BUILD_DIR ${CMAKE_BINARY_DIR}/include)
@@ -39,11 +39,11 @@ set(UTILS_DIR ${PROJECT_SOURCE_DIR}/src/utils)
 
 #######################################################################################################################
 # Generate ptk file
-configure_file(${UTILS_DIR}/paralution.ptk.in ${CMAKE_BINARY_DIR}/paralution.ptk)
+configure_file(${UTILS_DIR}/rocalution.ptk.in ${CMAKE_BINARY_DIR}/rocalution.ptk)
 
 #######################################################################################################################
 # Determine if library should be build shared or static
-option(BUILD_SHARED "Build the PARALUTION library shared." ON)
+option(BUILD_SHARED "Build the rocALUTION library shared." ON)
 if(BUILD_SHARED)
   SET(LIBRARY_TYPE SHARED)
 else()

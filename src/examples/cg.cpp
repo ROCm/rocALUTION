@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -12,13 +12,13 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   if (argc > 2) {
-    set_omp_threads_paralution(atoi(argv[2]));
+    set_omp_threads_rocalution(atoi(argv[2]));
   } 
 
-  info_paralution();
+  info_rocalution();
 
   LocalVector<double> x;
   LocalVector<double> rhs;
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 
   LocalMatrix<double> mat;
 
-  mat.ReadFileMTX(std::string(argv[1]));
+  mat.ReadFileCSR(std::string(argv[1]));
   mat.MoveToAccelerator();
   x.MoveToAccelerator();
   rhs.MoveToAccelerator();
@@ -42,6 +42,8 @@ int main(int argc, char* argv[]) {
   // Preconditioner
   Jacobi<LocalMatrix<double>, LocalVector<double>, double > p;
 
+  mat.ConvertToDIA();
+
   e.Ones();
   mat.Apply(e, &rhs);
   x.Zeros(); 
@@ -51,16 +53,16 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  //  ls.Verbose(2);
+  ls.Verbose(2);
 
   mat.info();
 
   double tick, tack;
-  tick = paralution_time();
+  tick = rocalution_time();
 
   ls.Solve(rhs, &x);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   ls.Clear();
@@ -70,7 +72,7 @@ int main(int argc, char* argv[]) {
 
   std::cout << "||e - x||_2 = " << error << "\n";
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }

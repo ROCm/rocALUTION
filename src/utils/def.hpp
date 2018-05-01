@@ -1,5 +1,5 @@
-#ifndef PARALUTION_UTILS_DEF_HPP_
-#define PARALUTION_UTILS_DEF_HPP_
+#ifndef ROCALUTION_UTILS_DEF_HPP_
+#define ROCALUTION_UTILS_DEF_HPP_
 
 // Uncomment to define verbose level
 #define VERBOSE_LEVEL 2
@@ -63,4 +63,4 @@
 
 #endif
 
-#endif // PARALUTION_UTILS_DEF_HPP_
+#endif // ROCALUTION_UTILS_DEF_HPP_

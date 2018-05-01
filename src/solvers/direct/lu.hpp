@@ -1,9 +1,9 @@
-#ifndef PARALUTION_DIRECT_LU_HPP_
-#define PARALUTION_DIRECT_LU_HPP_
+#ifndef ROCALUTION_DIRECT_LU_HPP_
+#define ROCALUTION_DIRECT_LU_HPP_
 
 #include "../solver.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class LU : public DirectLinearSolver<OperatorType, VectorType, ValueType> {
@@ -37,4 +37,4 @@ private:
 
 }
 
-#endif // PARALUTION_DIRECT_LU_HPP_
+#endif // ROCALUTION_DIRECT_LU_HPP_

@@ -7,7 +7,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 Operator<ValueType>::Operator() {

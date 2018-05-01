@@ -1,5 +1,5 @@
-#ifndef PARALUTION_HIP_COMPLEX_HPP_
-#define PARALUTION_HIP_COMPLEX_HPP_
+#ifndef ROCALUTION_HIP_COMPLEX_HPP_
+#define ROCALUTION_HIP_COMPLEX_HPP_
 
 #include <hip/hip_runtime.h>
 
@@ -7,7 +7,7 @@
 #include <cuComplex.h>
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 #ifdef SUPPORT_COMPLEX
 __device__ static __inline__ cuDoubleComplex operator+(const cuDoubleComplex &lhs, const cuDoubleComplex &rhs) { return cuCadd(lhs, rhs); }
@@ -68,4 +68,4 @@ __device__ static __inline__ void atomic_add_hip(cuDoubleComplex *address, cuDou
 
 }
 
-#endif // PARALUTION_HIP_COMPLEX_HPP_
+#endif // ROCALUTION_HIP_COMPLEX_HPP_

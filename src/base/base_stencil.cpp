@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 BaseStencil<ValueType>::BaseStencil() {
@@ -57,7 +57,7 @@ int BaseStencil<ValueType>::get_ndim(void) const {
 } 
 
 template <typename ValueType>
-void BaseStencil<ValueType>::set_backend(const Paralution_Backend_Descriptor local_backend) {
+void BaseStencil<ValueType>::set_backend(const Rocalution_Backend_Descriptor local_backend) {
 
   this->local_backend_ = local_backend;
 

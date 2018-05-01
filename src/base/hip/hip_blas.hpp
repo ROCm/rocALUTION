@@ -1,9 +1,9 @@
-#ifndef PARALUTION_HIP_HIP_BLAS_HPP_
-#define PARALUTION_HIP_HIP_BLAS_HPP_
+#ifndef ROCALUTION_HIP_HIP_BLAS_HPP_
+#define ROCALUTION_HIP_HIP_BLAS_HPP_
 
 #include <hipblas.h>
 
-namespace paralution {
+namespace rocalution {
 
 // hipblas axpy
 template <typename ValueType>
@@ -75,4 +75,4 @@ hipblasStatus_t hipblasTgemm(hipblasHandle_t handle,
 
 }
 
-#endif // PARALUTION_HIP_HIP_BLAS_HPP_
+#endif // ROCALUTION_HIP_HIP_BLAS_HPP_

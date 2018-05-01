@@ -1,5 +1,5 @@
-#ifndef PARALUTION_HIP_HIP_UTILS_HPP_
-#define PARALUTION_HIP_HIP_UTILS_HPP_
+#ifndef ROCALUTION_HIP_HIP_UTILS_HPP_
+#define ROCALUTION_HIP_HIP_UTILS_HPP_
 
 #include "../backend_manager.hpp"
 #include "../../utils/log.hpp"
@@ -60,7 +60,7 @@
 }   
 */
 
-namespace paralution {
+namespace rocalution {
 
 // Type traits to cast STL types to HIP types
 template <typename ValueType>
@@ -166,4 +166,4 @@ void reduce_hip(const int size, const ValueType *src, ValueType *reduce, ValueTy
 
 }
 
-#endif // PARALUTION_HIP_HIP_UTILS_HPP_
+#endif // ROCALUTION_HIP_HIP_UTILS_HPP_

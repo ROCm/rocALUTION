@@ -21,7 +21,7 @@
 #define omp_set_nested(num)  ;
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HostVector<ValueType>::HostVector() {
@@ -33,7 +33,7 @@ HostVector<ValueType>::HostVector() {
 }
 
 template <typename ValueType>
-HostVector<ValueType>::HostVector(const Paralution_Backend_Descriptor local_backend) {
+HostVector<ValueType>::HostVector(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HostVector::HostVector()",
             "constructor with local_backend");
@@ -70,14 +70,14 @@ bool HostVector<ValueType>::Check(void) const {
   if (this->size_ > 0) {
 
     for (int i=0; i<this->size_; ++i)
-      if ((paralution_abs(this->vec_[i]) ==
+      if ((rocalution_abs(this->vec_[i]) ==
            std::numeric_limits<ValueType>::infinity()) || // inf
           (this->vec_[i] != this->vec_[i])) { // NaN
         LOG_VERBOSE_INFO(2,"*** error: Vector:Check - problems with vector data");
         return false;
       }
 
-    if ((paralution_abs(this->size_) ==
+    if ((rocalution_abs(this->size_) ==
          std::numeric_limits<int>::infinity()) || // inf
         ( this->size_ != this->size_)) { // NaN
       LOG_VERBOSE_INFO(2,"*** error: Vector:Check - problems with vector size");
@@ -750,7 +750,7 @@ ValueType HostVector<ValueType>::Asum(void) const {
 
 #pragma omp parallel for reduction(+:asum)
   for (int i=0; i<this->size_; ++i)
-    asum += paralution_abs(this->vec_[i]);
+    asum += rocalution_abs(this->vec_[i]);
 
   return asum;
 
@@ -767,8 +767,8 @@ std::complex<float> HostVector<std::complex<float> >::Asum(void) const {
 #pragma omp parallel for reduction(+:asum_real, asum_imag)
   for (int i=0; i<this->size_; ++i) {
 
-    asum_real += paralution_abs(this->vec_[i].real());
-    asum_imag += paralution_abs(this->vec_[i].imag());
+    asum_real += rocalution_abs(this->vec_[i].real());
+    asum_imag += rocalution_abs(this->vec_[i].imag());
 
   }
 
@@ -787,8 +787,8 @@ std::complex<double> HostVector<std::complex<double> >::Asum(void) const {
 #pragma omp parallel for reduction(+:asum_real, asum_imag)
   for (int i=0; i<this->size_; ++i) {
 
-    asum_real += paralution_abs(this->vec_[i].real());
-    asum_imag += paralution_abs(this->vec_[i].imag());
+    asum_real += rocalution_abs(this->vec_[i].real());
+    asum_imag += rocalution_abs(this->vec_[i].imag());
 
   }
 
@@ -806,7 +806,7 @@ int HostVector<ValueType>::Amax(ValueType &value) const {
 
 #pragma omp parallel for
   for (int i=0; i<this->size_; ++i) {
-    ValueType val = paralution_abs(this->vec_[i]);
+    ValueType val = rocalution_abs(this->vec_[i]);
     if (val > value)
 #pragma omp critical
 {

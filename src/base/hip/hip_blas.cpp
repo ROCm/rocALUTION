@@ -5,7 +5,7 @@
 #include <hipblas.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 // hipblas axpy
 template <>

@@ -15,7 +15,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 FCG<OperatorType, VectorType, ValueType>::FCG() {
@@ -261,7 +261,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
   // initial residual norm
   ValueType res = this->Norm(*r);
-  this->iter_ctrl_.InitResidual(paralution_abs(res));
+  this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
   // w = Ar
   op->Apply(*r, w);
@@ -289,7 +289,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
   res = this->Norm(*r);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
 
     // w = Ar
     op->Apply(*r, w);
@@ -359,7 +359,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
 
   // initial residual norm
   ValueType res = this->Norm(*r);
-  this->iter_ctrl_.InitResidual(paralution_abs(res));
+  this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
   // Mz = r
   this->precond_->SolveZeroSol(*r, z);
@@ -390,7 +390,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
 
   res = this->Norm(*r);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
 
     // Mz = r
     this->precond_->SolveZeroSol(*r, z);

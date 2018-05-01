@@ -5,40 +5,40 @@
 #include <math.h>
 #include <limits>
 
-namespace paralution {
+namespace rocalution {
 
-float paralution_abs(const float val) {
-
-  return std::fabs(val);
-
-}
-
-double paralution_abs(const double val) {
+float rocalution_abs(const float val) {
 
   return std::fabs(val);
 
 }
 
-float paralution_abs(const std::complex<float> val) {
+double rocalution_abs(const double val) {
+
+  return std::fabs(val);
+
+}
+
+float rocalution_abs(const std::complex<float> val) {
 
   return std::abs(val);
 
 }
 
-double paralution_abs(const std::complex<double> val) {
+double rocalution_abs(const std::complex<double> val) {
 
   return std::abs(val);
 
 }
 
-int paralution_abs(const int val) {
+int rocalution_abs(const int val) {
 
   return abs(val);
 
 }
 
 template <typename ValueType>
-ValueType paralution_eps(void) {
+ValueType rocalution_eps(void) {
 
   return std::numeric_limits<ValueType>::epsilon();
 
@@ -92,10 +92,10 @@ bool operator>=(const std::complex<ValueType> &lhs, const std::complex<ValueType
 
 }
 
-template double paralution_eps(void);
-template float  paralution_eps(void);
-template std::complex<double> paralution_eps(void);
-template std::complex<float>  paralution_eps(void);
+template double rocalution_eps(void);
+template float  rocalution_eps(void);
+template std::complex<double> rocalution_eps(void);
+template std::complex<float>  rocalution_eps(void);
 
 template bool operator<(const std::complex<float> &lhs, const std::complex<float> &rhs);
 template bool operator<(const std::complex<double> &lhs, const std::complex<double> &rhs);

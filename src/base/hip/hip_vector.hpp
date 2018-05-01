@@ -1,5 +1,5 @@
-#ifndef PARALUTION_HIP_VECTOR_HPP_
-#define PARALUTION_HIP_VECTOR_HPP_
+#ifndef ROCALUTION_HIP_VECTOR_HPP_
+#define ROCALUTION_HIP_VECTOR_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
@@ -8,7 +8,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HIPAcceleratorVector : public AcceleratorVector<ValueType> {
@@ -16,7 +16,7 @@ class HIPAcceleratorVector : public AcceleratorVector<ValueType> {
 public:
 
   HIPAcceleratorVector();
-  HIPAcceleratorVector(const Paralution_Backend_Descriptor local_backend);
+  HIPAcceleratorVector(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorVector();
 
   virtual void info(void) const;
@@ -151,4 +151,4 @@ private:
 
 }
 
-#endif // PARALUTION_BASE_VECTOR_HPP_
+#endif // ROCALUTION_BASE_VECTOR_HPP_

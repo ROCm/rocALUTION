@@ -16,7 +16,7 @@
 #include <complex>
 #include <limits>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 BiCGStab<OperatorType, VectorType, ValueType>::BiCGStab() {
@@ -287,7 +287,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
   // use for |b|
   //  ValueType init_res = rhs.Norm();
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res_norm)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
     LOG_DEBUG(this, "BiCGStab::SolveNonPrecond_()",
               " #*# end");
@@ -322,7 +322,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
   // omega = (t,r) / (t,t)
   omega = t->Dot(*r) / t->Dot(*t);
 
-  if (( paralution_abs(omega) == std::numeric_limits<double>::infinity()) ||
+  if (( rocalution_abs(omega) == std::numeric_limits<double>::infinity()) ||
       ( omega != omega ) ||
       ( omega == ValueType(0.0)) ) {
 
@@ -337,7 +337,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
 
     res_norm = this->Norm(*p);
 
-    this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_);
+    this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
     LOG_DEBUG(this, "BiCGStab::SolveNonPrecond_()",
               " #*# end");
@@ -354,7 +354,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
 
   res_norm = this->Norm(*r);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_)) {
 
     rho_old   = rho;
 
@@ -388,7 +388,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
     // omega = (t,r) / (t,t)
     omega = t->Dot(*r) / t->Dot(*t);
 
-    if (( paralution_abs(omega) == std::numeric_limits<double>::infinity()) ||
+    if (( rocalution_abs(omega) == std::numeric_limits<double>::infinity()) ||
         ( omega != omega ) ||
         ( omega == ValueType(0.0)) ) {
 
@@ -403,7 +403,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
 
       res_norm = this->Norm(*p);
 
-      this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_);
+      this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
       break;
 
@@ -466,7 +466,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
   // use for |b|
   //  ValueType init_res = rhs.Norm();
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res_norm)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
     LOG_DEBUG(this, "BiCGStab::SolvePrecond_()",
               " #*# end");
@@ -509,7 +509,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
   // omega = (t,r) / (t,t)
   omega = t->Dot(*r) / t->Dot(*t);
 
-  if (( paralution_abs(omega) == std::numeric_limits<double>::infinity()) ||
+  if (( rocalution_abs(omega) == std::numeric_limits<double>::infinity()) ||
       ( omega != omega ) ||
       ( omega == ValueType(0.0)) ) {
 
@@ -524,7 +524,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
 
     res_norm = this->Norm(*p);
 
-    this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_);
+    this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
     LOG_DEBUG(this, "BiCGStab::SolvePrecond_()",
               " #*# end");
@@ -543,7 +543,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
 
   res_norm = this->Norm(*r);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_)) {
 
     rho_old   = rho;
 
@@ -583,7 +583,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
     // omega = (t,r) / (t,t)
     omega = t->Dot(*r) / t->Dot(*t);
 
-   if (( paralution_abs(omega) == std::numeric_limits<double>::infinity()) ||
+   if (( rocalution_abs(omega) == std::numeric_limits<double>::infinity()) ||
         ( omega != omega ) ||
         ( omega == ValueType(0.0)) ) {
 
@@ -598,7 +598,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
 
       res_norm = this->Norm(*p);
 
-      this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_);
+      this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
       break;
 

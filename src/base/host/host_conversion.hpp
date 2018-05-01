@@ -1,9 +1,9 @@
-#ifndef PARALUTION_HOST_CONVERSION_HPP_
-#define PARALUTION_HOST_CONVERSION_HPP_
+#ifndef ROCALUTION_HOST_CONVERSION_HPP_
+#define ROCALUTION_HOST_CONVERSION_HPP_
 
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType, typename IndexType>
 bool csr_to_coo(const int omp_threads,
@@ -83,4 +83,4 @@ bool hyb_to_csr(const int omp_threads,
 
 }
 
-#endif // PARALUTION_HOST_CONVERSION_HPP_
+#endif // ROCALUTION_HOST_CONVERSION_HPP_

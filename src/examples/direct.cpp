@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -12,8 +12,8 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
-  info_paralution();
+  init_rocalution();
+  info_rocalution();
 
   LocalVector<double> x;
   LocalVector<double> rhs;
@@ -40,16 +40,16 @@ int main(int argc, char* argv[]) {
   mat.info();
 
   double tick, tack;
-  tick = paralution_time();
+  tick = rocalution_time();
 
   ls.Solve(rhs, &x);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   ls.Clear();
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }

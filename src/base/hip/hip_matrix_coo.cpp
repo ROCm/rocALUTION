@@ -17,7 +17,7 @@
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HIPAcceleratorMatrixCOO<ValueType>::HIPAcceleratorMatrixCOO() {
@@ -29,7 +29,7 @@ HIPAcceleratorMatrixCOO<ValueType>::HIPAcceleratorMatrixCOO() {
 }
 
 template <typename ValueType>
-HIPAcceleratorMatrixCOO<ValueType>::HIPAcceleratorMatrixCOO(const Paralution_Backend_Descriptor local_backend) {
+HIPAcceleratorMatrixCOO<ValueType>::HIPAcceleratorMatrixCOO(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HIPAcceleratorMatrixCOO::HIPAcceleratorMatrixCOO()",
             "constructor with local_backend");

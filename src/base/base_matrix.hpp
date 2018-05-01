@@ -1,10 +1,10 @@
-#ifndef PARALUTION_BASE_MATRIX_HPP_
-#define PARALUTION_BASE_MATRIX_HPP_
+#ifndef ROCALUTION_BASE_MATRIX_HPP_
+#define ROCALUTION_BASE_MATRIX_HPP_
 
 #include "matrix_formats.hpp"
 #include "backend_manager.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class BaseVector;
@@ -67,7 +67,7 @@ public:
   /// Return the matrix format id (see matrix_formats.hpp)
   virtual unsigned int get_mat_format(void) const = 0;
   /// Copy the backend descriptor information
-  virtual void set_backend(const Paralution_Backend_Descriptor local_backend);
+  virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
 
   virtual bool Check(void) const;
 
@@ -229,9 +229,9 @@ public:
   /// Write matrix to MTX (Matrix Market Format) file
   virtual bool WriteFileMTX(const std::string filename) const;
 
-  /// Read matrix from CSR (PARALUTION binary format) file
+  /// Read matrix from CSR (ROCALUTION binary format) file
   virtual bool ReadFileCSR(const std::string filename);
-  /// Write matrix to CSR (PARALUTION binary format) file
+  /// Write matrix to CSR (ROCALUTION binary format) file
   virtual bool WriteFileCSR(const std::string filename) const;
 
   /// Perform symbolic computation (structure only) of |this|^p
@@ -409,7 +409,7 @@ protected:
   int nnz_;
 
   /// Backend descriptor (local copy)
-  Paralution_Backend_Descriptor local_backend_;
+  Rocalution_Backend_Descriptor local_backend_;
 
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
@@ -462,4 +462,4 @@ public:
 
 }
 
-#endif // PARALUTION_BASE_MATRIX_HPP_
+#endif // ROCALUTION_BASE_MATRIX_HPP_

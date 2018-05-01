@@ -1,11 +1,11 @@
-#ifndef PARALUTION_GMRES_GMRES_HPP_
-#define PARALUTION_GMRES_GMRES_HPP_
+#ifndef ROCALUTION_GMRES_GMRES_HPP_
+#define ROCALUTION_GMRES_GMRES_HPP_
 
 #include "../solver.hpp"
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class GMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType> {
@@ -59,4 +59,4 @@ private:
 
 }
 
-#endif // PARALUTION_GMRES_GMRES_HPP_
+#endif // ROCALUTION_GMRES_GMRES_HPP_

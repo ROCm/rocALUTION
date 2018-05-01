@@ -14,7 +14,7 @@
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HIPAcceleratorVector<ValueType>::HIPAcceleratorVector() {
@@ -26,7 +26,7 @@ HIPAcceleratorVector<ValueType>::HIPAcceleratorVector() {
 }
 
 template <typename ValueType>
-HIPAcceleratorVector<ValueType>::HIPAcceleratorVector(const Paralution_Backend_Descriptor local_backend) {
+HIPAcceleratorVector<ValueType>::HIPAcceleratorVector(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HIPAcceleratorVector::HIPAcceleratorVector()",
             "constructor with local_backend");
@@ -1132,7 +1132,7 @@ int HIPAcceleratorVector<ValueType>::Amax(ValueType &value) const {
 
   }
 
-  value = paralution_abs(value);
+  value = rocalution_abs(value);
   return index;
 
 }

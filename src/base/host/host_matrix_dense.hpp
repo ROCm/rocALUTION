@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HOST_MATRIX_DENSE_HPP_
-#define PARALUTION_HOST_MATRIX_DENSE_HPP_
+#ifndef ROCALUTION_HOST_MATRIX_DENSE_HPP_
+#define ROCALUTION_HOST_MATRIX_DENSE_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HostMatrixDENSE : public HostMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HostMatrixDENSE : public HostMatrix<ValueType> {
 public:
 
   HostMatrixDENSE();
-  HostMatrixDENSE(const Paralution_Backend_Descriptor local_backend);
+  HostMatrixDENSE(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixDENSE();
 
   virtual void info(void) const;
@@ -68,4 +68,4 @@ private:
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_DENSE_HPP_
+#endif // ROCALUTION_HOST_MATRIX_DENSE_HPP_

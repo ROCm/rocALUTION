@@ -1,14 +1,14 @@
-<paralution.pc>
+<rocalution.pc>
 prefix=${CMAKE_BINARY_DIR}
 exec_prefix=${CMAKE_BINARY_DIR}
 libdir=${LIB_BUILD_DIR}
 includedir=${INC_BUILD_DIR}
 
-Name: libparalution
-Description: PARALUTION
-Version: ${PARALUTION_VERSION}
+Name: librocalution
+Description: rocALUTION
+Version: ${rocALUTION_VERSION}
 Requires:
-Libs: -L${LIB_BUILD_DIR} -lparalution
+Libs: -L${LIB_BUILD_DIR} -lrocalution
 Libs.private:
 Cflags: -I${INC_BUILD_DIR}
-</paralution.pc>
+</rocalution.pc>

@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_MATRIX_DIA_HPP_
-#define PARALUTION_HIP_MATRIX_DIA_HPP_
+#ifndef ROCALUTION_HIP_MATRIX_DIA_HPP_
+#define ROCALUTION_HIP_MATRIX_DIA_HPP_
 
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HIPAcceleratorMatrixDIA : public HIPAcceleratorMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HIPAcceleratorMatrixDIA : public HIPAcceleratorMatrix<ValueType> {
 public:
 
   HIPAcceleratorMatrixDIA();
-  HIPAcceleratorMatrixDIA(const Paralution_Backend_Descriptor local_backend);
+  HIPAcceleratorMatrixDIA(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorMatrixDIA();
 
   inline int get_ndiag(void) const { return mat_.num_diag; }
@@ -56,4 +56,4 @@ private:
 
 }
 
-#endif // PARALUTION_HIP_MATRIX_DIA_HPP_
+#endif // ROCALUTION_HIP_MATRIX_DIA_HPP_

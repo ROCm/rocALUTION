@@ -15,7 +15,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 GMRES<OperatorType, VectorType, ValueType>::GMRES() {
@@ -245,7 +245,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SetBasisSize(const int size_bas
 
 // GMRES implementation is based on the algorithm described in the book
 // 'Templates for the Solution of Linear Systems: Building Blocks for Iterative Methods'
-// by SIAM on page 18 and modified to fit paralution structures.
+// by SIAM on page 18 and modified to fit rocalution structures.
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType &rhs,
                                                                         VectorType *x) {
@@ -283,7 +283,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
 
   // res_norm = (v[0],v[0])
   ValueType res_norm = this->Norm(*v[0]);
-  double res = paralution_abs(res_norm);
+  double res = rocalution_abs(res_norm);
 
   if (this->iter_ctrl_.InitResidual(res) == false) {
 
@@ -333,8 +333,8 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
     this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
 
     // Get current residual
-    res_norm = paralution_abs(sq[i+1]);
-    res = paralution_abs(res_norm);
+    res_norm = rocalution_abs(sq[i+1]);
+    res = rocalution_abs(res_norm);
 
     if (this->iter_ctrl_.CheckResidual(res)) {
       this->BackSubstitute_(sq, H, i);
@@ -359,7 +359,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
     v[0]->ScaleAdd(ValueType(-1.0), rhs);
 
     res_norm = this->Norm(*v[0]);
-    res = paralution_abs(res_norm);
+    res = rocalution_abs(res_norm);
 
   }
 
@@ -406,8 +406,8 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
       this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
 
       // Get current residual
-      res_norm = paralution_abs(sq[i+1]);
-      res = paralution_abs(res_norm);
+      res_norm = rocalution_abs(sq[i+1]);
+      res = rocalution_abs(res_norm);
 
       if (this->iter_ctrl_.CheckResidual(res)) {
         this->BackSubstitute_(sq, H, i);
@@ -432,7 +432,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
       v[0]->ScaleAdd(ValueType(-1.0), rhs);
 
       res_norm = this->Norm(*v[0]);
-      res = paralution_abs(res_norm);
+      res = rocalution_abs(res_norm);
 
     }
 
@@ -445,7 +445,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
 
 // GMRES implementation is based on the algorithm described in the book
 // 'Templates for the Solution of Linear Systems: Building Blocks for Iterative Methods'
-// by SIAM on page 18 and modified to fit paralution structures.
+// by SIAM on page 18 and modified to fit rocalution structures.
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rhs,
                                                                      VectorType *x) {
@@ -484,7 +484,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType 
 
   // res_norm = (v[0],v[0])
   ValueType res_norm = this->Norm(*v[0]);
-  double res = paralution_abs(res_norm);
+  double res = rocalution_abs(res_norm);
 
   if (this->iter_ctrl_.InitResidual(res) == false) {
 
@@ -537,8 +537,8 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType 
     this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
 
     // Get current residual
-    res_norm = paralution_abs(sq[i+1]);
-    res = paralution_abs(res_norm);
+    res_norm = rocalution_abs(sq[i+1]);
+    res = rocalution_abs(res_norm);
 
     if (this->iter_ctrl_.CheckResidual(res)) {
       z->Zeros();
@@ -573,7 +573,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType 
     v[0]->ScaleAdd(ValueType(-1.0), rhs);
 
     res_norm = this->Norm(*v[0]);
-    res = paralution_abs(res_norm);
+    res = rocalution_abs(res_norm);
 
   }
 
@@ -624,8 +624,8 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType 
       this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
 
       // Get current residual
-      res_norm = paralution_abs(sq[i+1]);
-      res = paralution_abs(res_norm);
+      res_norm = rocalution_abs(sq[i+1]);
+      res = rocalution_abs(res_norm);
 
       if (this->iter_ctrl_.CheckResidual(res)) {
         z->Zeros();
@@ -660,7 +660,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType 
       v[0]->ScaleAdd(ValueType(-1.0), rhs);
 
       res_norm = this->Norm(*v[0]);
-      res = paralution_abs(res_norm);
+      res = rocalution_abs(res_norm);
 
     }
 
@@ -680,7 +680,7 @@ void GMRES<OperatorType, VectorType, ValueType>::GenerateGivensRotation_(const V
   	c = ValueType(1.0);
   	s = ValueType(0.0);
 
-  } else if (paralution_abs(y) > paralution_abs(x)) {
+  } else if (rocalution_abs(y) > rocalution_abs(x)) {
 
   	ValueType tmp = x / y;
   	s = ValueType(1.0) / sqrt(ValueType(1.0) + tmp * tmp);

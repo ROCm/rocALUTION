@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_BCSR_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_BCSR_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_BCSR_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_BCSR_HPP_
 
 #include "../matrix_formats_ind.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_BCSR_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_BCSR_HPP_

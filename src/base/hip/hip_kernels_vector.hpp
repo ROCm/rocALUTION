@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_VECTOR_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_VECTOR_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_VECTOR_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_VECTOR_HPP_
 
 #include "hip_complex.hpp"
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType, typename IndexType>
 __global__ void kernel_scaleadd(const IndexType n, const ValueType alpha, const ValueType *x, ValueType *out) {
@@ -282,4 +282,4 @@ __global__ void kernel_copy_from_double(const IndexType n, const double *in, Val
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_VECTOR_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_VECTOR_HPP_

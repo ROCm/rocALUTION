@@ -14,7 +14,7 @@
 #define omp_set_num_threads(num) ;
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType, typename IndexType>
 bool csr_to_dense(const int omp_threads,

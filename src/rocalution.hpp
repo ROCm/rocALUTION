@@ -1,5 +1,5 @@
-#ifndef PARALUTION_PARALUTION_HPP_
-#define PARALUTION_PARALUTION_HPP_
+#ifndef ROCALUTION_ROCALUTION_HPP_
+#define ROCALUTION_ROCALUTION_HPP_
 
 #include "base/version.hpp"
 #include "base/backend_manager.hpp"
@@ -58,4 +58,4 @@
 #include "utils/types.hpp"
 
 
-#endif // PARALUTION_PARALUTION_HPP_
+#endif // ROCALUTION_ROCALUTION_HPP_

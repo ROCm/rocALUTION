@@ -22,7 +22,7 @@
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HIPAcceleratorMatrixDENSE<ValueType>::HIPAcceleratorMatrixDENSE() {
@@ -34,7 +34,7 @@ HIPAcceleratorMatrixDENSE<ValueType>::HIPAcceleratorMatrixDENSE() {
 }
 
 template <typename ValueType>
-HIPAcceleratorMatrixDENSE<ValueType>::HIPAcceleratorMatrixDENSE(const Paralution_Backend_Descriptor local_backend) {
+HIPAcceleratorMatrixDENSE<ValueType>::HIPAcceleratorMatrixDENSE(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HIPAcceleratorMatrixDENSE::HIPAcceleratorMatrixDENSE()",
             "constructor with local_backend");

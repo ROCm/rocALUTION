@@ -1,14 +1,14 @@
-#ifndef PARALUTION_VECTOR_HPP_
-#define PARALUTION_VECTOR_HPP_
+#ifndef ROCALUTION_VECTOR_HPP_
+#define ROCALUTION_VECTOR_HPP_
 
 #include "../utils/types.hpp"
-#include "base_paralution.hpp"
+#include "base_rocalution.hpp"
 
 #include <iostream>
 #include <string>
 #include <cstdlib>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class GlobalVector;
@@ -17,7 +17,7 @@ class LocalVector;
 
 // Vector
 template <typename ValueType>
-class Vector : public BaseParalution<ValueType> {
+class Vector : public BaseRocalution<ValueType> {
 
 public:
 
@@ -155,4 +155,4 @@ public:
 
 }
 
-#endif // PARALUTION_VECTOR_HPP_
+#endif // ROCALUTION_VECTOR_HPP_

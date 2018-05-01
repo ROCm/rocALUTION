@@ -1,12 +1,12 @@
-#ifndef PARALUTION_LOCAL_MATRIX_HPP_
-#define PARALUTION_LOCAL_MATRIX_HPP_
+#ifndef ROCALUTION_LOCAL_MATRIX_HPP_
+#define ROCALUTION_LOCAL_MATRIX_HPP_
 
 #include "../utils/types.hpp"
 #include "operator.hpp"
 #include "backend_manager.hpp"
 #include "matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class BaseMatrix;
@@ -249,9 +249,9 @@ public:
   /// Write matrix to MTX (Matrix Market Format) file
   void WriteFileMTX(const std::string filename) const;
 
-  /// Read matrix from CSR (PARALUTION binary format) file
+  /// Read matrix from CSR (ROCALUTION binary format) file
   void ReadFileCSR(const std::string filename);
-  /// Write matrix to CSR (PARALUTION binary format) file
+  /// Write matrix to CSR (ROCALUTION binary format) file
   void WriteFileCSR(const std::string filename) const;
   
   virtual void MoveToAccelerator(void);
@@ -451,4 +451,4 @@ private:
 
 }
 
-#endif // PARALUTION_LOCAL_MATRIX_HPP_
+#endif // ROCALUTION_LOCAL_MATRIX_HPP_

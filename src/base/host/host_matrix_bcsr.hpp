@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HOST_MATRIX_BCSR_HPP_
-#define PARALUTION_HOST_MATRIX_BCSR_HPP_
+#ifndef ROCALUTION_HOST_MATRIX_BCSR_HPP_
+#define ROCALUTION_HOST_MATRIX_BCSR_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HostMatrixBCSR : public HostMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HostMatrixBCSR : public HostMatrix<ValueType> {
 public:
 
   HostMatrixBCSR();
-  HostMatrixBCSR(const Paralution_Backend_Descriptor local_backend);
+  HostMatrixBCSR(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixBCSR();
 
   virtual void info(void) const;
@@ -49,4 +49,4 @@ private:
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_BCSR_HPP_
+#endif // ROCALUTION_HOST_MATRIX_BCSR_HPP_

@@ -1,9 +1,9 @@
-#ifndef PARALUTION_MIXED_PRECISION_HPP_
-#define PARALUTION_MIXED_PRECISION_HPP_
+#ifndef ROCALUTION_MIXED_PRECISION_HPP_
+#define ROCALUTION_MIXED_PRECISION_HPP_
 
 #include "solver.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorTypeH, class VectorTypeH, typename ValueTypeH,
           class OperatorTypeL, class VectorTypeL, typename ValueTypeL>
@@ -54,4 +54,4 @@ private:
 
 }
 
-#endif // PARALUTION_MIXED_PRECISION_HPP_
+#endif // ROCALUTION_MIXED_PRECISION_HPP_

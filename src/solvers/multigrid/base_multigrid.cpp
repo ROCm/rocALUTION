@@ -14,7 +14,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 BaseMultiGrid<OperatorType, VectorType, ValueType>::BaseMultiGrid() {
@@ -573,7 +573,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Solve(const VectorType 
   this->op_->Apply(*x, this->r_level_[0]);
   this->r_level_[0]->ScaleAdd(ValueType(-1.0), rhs);
 
-  this->res_norm_ = paralution_abs(this->Norm(*this->r_level_[0]));
+  this->res_norm_ = rocalution_abs(this->Norm(*this->r_level_[0]));
 
   if (this->iter_ctrl_.InitResidual(this->res_norm_) == false) {
 
@@ -756,7 +756,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Vcycle_(const VectorTyp
       this->op_->Apply(*x, this->r_level_[this->current_level_]);
       this->r_level_[this->current_level_]->ScaleAdd(ValueType(-1.0), rhs);
 
-      this->res_norm_ = paralution_abs(this->Norm(*this->r_level_[this->current_level_]));
+      this->res_norm_ = rocalution_abs(this->Norm(*this->r_level_[this->current_level_]));
     }
 
   } else

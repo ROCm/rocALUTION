@@ -1,17 +1,17 @@
-program paralution_solver
+program rocalution_solver
 
   use, intrinsic :: ISO_C_BINDING, only : C_INT, C_PTR, C_DOUBLE, C_CHAR, C_NULL_CHAR, C_LOC
 
   implicit none
 
   interface
-    subroutine paralution_init() BIND(C)
-    end subroutine paralution_init
+    subroutine rocalution_init() BIND(C)
+    end subroutine rocalution_init
 
-    subroutine paralution_stop() BIND(C)
-    end subroutine paralution_stop
+    subroutine rocalution_stop() BIND(C)
+    end subroutine rocalution_stop
 
-    subroutine paralution_fortran_solve_coo( n, m, nnz, solver, mformat, preconditioner, pformat,    &
+    subroutine rocalution_fortran_solve_coo( n, m, nnz, solver, mformat, preconditioner, pformat,    &
     &                                        rows, cols, rval, rhs, atol, rtol, div, maxiter, basis, &
     &                                        p, q, x, iter, resnorm, ierr ) BIND(C)
 
@@ -25,7 +25,7 @@ program paralution_solver
       type(C_PTR),         value              :: x
       character(kind=C_CHAR)                  :: solver, mformat, preconditioner, pformat
 
-    end subroutine paralution_fortran_solve_coo
+    end subroutine rocalution_fortran_solve_coo
   end interface
 
   integer, parameter    :: infile = 10
@@ -97,15 +97,15 @@ program paralution_solver
   ! Print L2 norm of solution vector
   write(*,fmt='(A,F0.2)') '(Fortran) Initial L2 Norm(x) = ', sqrt( sum( x**2 ) )
 
-  ! Initialize PARALUTION backend
-  call paralution_init
+  ! Initialize rocALUTION backend
+  call rocalution_init
 
   call date_and_time(values = tbegin)
 
-  ! Run paralution C function for COO matrices
+  ! Run rocalution C function for COO matrices
   ! Doing a GMRES with MultiColored ILU(1,2) preconditioner
-  ! Check paralution documentation for a detailed argument explanation
-  call paralution_fortran_solve_coo( n, m, nnz,                                          &
+  ! Check rocalution documentation for a detailed argument explanation
+  call rocalution_fortran_solve_coo( n, m, nnz,                                          &
   &                                  'CG' // C_NULL_CHAR,                                &
   &                                  'CSR' // C_NULL_CHAR,                               &
   &                                  'MultiColoredILU' // C_NULL_CHAR,                   &
@@ -134,8 +134,8 @@ program paralution_solver
 
   deallocate( rows, cols, rval, rhs, x )
 
-  ! Stop PARALUTION backend
-  call paralution_stop
+  ! Stop rocALUTION backend
+  call rocalution_stop
 
-end program paralution_solver
+end program rocalution_solver
 

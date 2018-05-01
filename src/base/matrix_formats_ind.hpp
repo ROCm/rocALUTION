@@ -1,5 +1,5 @@
-#ifndef PARALUTION_MATRIX_FORMATS_IND_HPP_
-#define PARALUTION_MATRIX_FORMATS_IND_HPP_
+#ifndef ROCALUTION_MATRIX_FORMATS_IND_HPP_
+#define ROCALUTION_MATRIX_FORMATS_IND_HPP_
 
 // Matrix indexing
 
@@ -21,4 +21,4 @@
 #define DIA_IND_EL(row, el, nrow, ndiag) (el) + (ndiag) * (row)
 #define DIA_IND(row, el, nrow, ndiag) DIA_IND_ROW(row, el, nrow, ndiag)
 
-#endif // PARALUTION_MATRIX_FORMATS_IND_HPP_
+#endif // ROCALUTION_MATRIX_FORMATS_IND_HPP_

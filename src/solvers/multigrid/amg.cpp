@@ -9,7 +9,7 @@
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 AMG<OperatorType, VectorType, ValueType>::AMG() {

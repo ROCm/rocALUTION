@@ -1,12 +1,12 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_MCSR_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_MCSR_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_MCSR_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_MCSR_HPP_
 
 #include "../matrix_formats_ind.hpp"
 #include "hip_complex.hpp"
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 // ----------------------------------------------------------
 // function spmv_csr_vector_kernel(...)
@@ -132,4 +132,4 @@ __global__ void kernel_mcsr_add_spmv(const IndexType nrow,
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_MCSR_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_MCSR_HPP_

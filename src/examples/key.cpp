@@ -1,7 +1,7 @@
 #include <iostream>
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   LocalMatrix<double> mat;
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
             << "Col key = " << col_key << std::endl
             << "Val key = " << val_key << std::endl;
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }

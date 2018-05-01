@@ -9,9 +9,9 @@
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
-#ifdef PARALUTION_HIP_PINNED_MEMORY
+#ifdef ROCALUTION_HIP_PINNED_MEMORY
 
 template <typename DataType>
 void allocate_host(const int size, DataType **ptr) {
@@ -251,7 +251,7 @@ void set_to_one_hip(const int blocksize,
 }
 #endif
 
-#ifdef PARALUTION_HIP_PINNED_MEMORY
+#ifdef ROCALUTION_HIP_PINNED_MEMORY
 
 template void allocate_host<float                >(const int size, float                **ptr);
 template void allocate_host<double               >(const int size, double               **ptr);

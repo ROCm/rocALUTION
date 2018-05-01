@@ -28,14 +28,14 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <paralution.hpp>
+#include <rocalution.hpp>
 #include <mpi.h>
 
 // Adjust ndim for size
 #define ndim 1000
 #define n ndim*ndim
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -56,11 +56,11 @@ int main(int argc, char* argv[]) {
 
   set_omp_affinity(false);
 
-  init_paralution(rank, 2);
+  init_rocalution(rank, 1);
 
-  set_omp_threads_paralution(1);
+  set_omp_threads_rocalution(1);
 
-  info_paralution();
+  info_rocalution();
 
   // Parallel Manager
   ParallelManager *pm = new ParallelManager;
@@ -308,28 +308,28 @@ int main(int argc, char* argv[]) {
   rhs.Ones();
 
   CG<GlobalMatrix<double>, GlobalVector<double>, double> ls;
-  BlockJacobi<GlobalMatrix<double>, GlobalVector<double>, double> bj;
-  MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double> p;
-
-  bj.Init(p);
-
-  ls.SetPreconditioner(bj);
-  ls.SetOperator(mat);
-  ls.Build();
-  ls.Verbose(1);
+  Jacobi<GlobalMatrix<double>, GlobalVector<double>, double> p;
 
   mat.MoveToAccelerator();
   rhs.MoveToAccelerator();
   x.MoveToAccelerator();
   ls.MoveToAccelerator();
 
+
+  ls.SetPreconditioner(p);
+  ls.SetOperator(mat);
+  ls.Build();
+  ls.Verbose(2);
+
+  mat.ConvertToELL();
+
   mat.info();
 
-  double tick = paralution_time();
+  double tick = rocalution_time();
 
   ls.Solve(rhs, &x);
 
-  double tack = paralution_time();
+  double tack = rocalution_time();
   std::cout << "Solving:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   ls.Clear();
@@ -341,7 +341,7 @@ int main(int argc, char* argv[]) {
   delete [] sender_offset;
   delete pm;
 
-  stop_paralution();
+  stop_rocalution();
 
   MPI_Finalize();
 

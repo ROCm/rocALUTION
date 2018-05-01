@@ -1,11 +1,11 @@
-#ifndef PARALUTION_GLOBAL_MATRIX_HPP_
-#define PARALUTION_GLOBAL_MATRIX_HPP_
+#ifndef ROCALUTION_GLOBAL_MATRIX_HPP_
+#define ROCALUTION_GLOBAL_MATRIX_HPP_
 
 #include "../utils/types.hpp"
 #include "operator.hpp"
 #include "parallel_manager.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class GlobalVector;
@@ -108,9 +108,9 @@ public:
   void ReadFileMTX(const std::string filename);
   /// Write matrix to MTX (Matrix Market Format) file
   void WriteFileMTX(const std::string filename) const;
-  /// Read matrix from CSR (PARALUTION binary format) file
+  /// Read matrix from CSR (ROCALUTION binary format) file
   void ReadFileCSR(const std::string filename);
-  /// Write matrix to CSR (PARALUTION binary format) file
+  /// Write matrix to CSR (ROCALUTION binary format) file
   void WriteFileCSR(const std::string filename) const;
 
   /// Sort the matrix indices
@@ -153,4 +153,4 @@ private:
 
 }
 
-#endif // PARALUTION_GLOBAL_MATRIX_HPP_
+#endif // ROCALUTION_GLOBAL_MATRIX_HPP_

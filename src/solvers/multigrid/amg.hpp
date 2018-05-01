@@ -1,12 +1,12 @@
-#ifndef PARALUTION_AMG_HPP_
-#define PARALUTION_AMG_HPP_
+#ifndef ROCALUTION_AMG_HPP_
+#define ROCALUTION_AMG_HPP_
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 enum _interp {
   Aggregation,
@@ -68,4 +68,4 @@ private:
 
 }
 
-#endif // PARALUTION_AMG_HPP_
+#endif // ROCALUTION_AMG_HPP_

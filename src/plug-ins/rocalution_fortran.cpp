@@ -1,26 +1,26 @@
 // #######################################################################################################
 // ###                                                                                                 ###
-// ###                               PARALUTION FORTRAN PLUG-IN                                        ###
+// ###                               rocALUTION FORTRAN PLUG-IN                                        ###
 // ###                                                                                                 ###
 // ###                                                                                                 ###
 // ###     Each function listed here can be executed from Fortran code by simply calling it:           ###
 // ###                                                                                                 ###
-// ###        C function name: "void paralution_fortran_function_();"                                  ###
-// ###        Fortran syntax: "call paralution_fortran_function()"                                     ###
+// ###        C function name: "void rocalution_fortran_function_();"                                  ###
+// ###        Fortran syntax: "call rocalution_fortran_function()"                                     ###
 // ###                                                                                                 ###
 // #######################################################################################################
 // ###                                                                                                 ###
-// ###     paralution_init                                                                             ###
-// ###        Initalize the PARALUTION backend                                                         ###
+// ###     rocalution_init                                                                             ###
+// ###        Initalize the rocALUTION backend                                                         ###
 // ###                                                                                                 ###
 // #######################################################################################################
 // ###                                                                                                 ###
-// ###     paralution_stop                                                                             ###
-// ###        Stops the PARALUTION backend                                                             ###
+// ###     rocalution_stop                                                                             ###
+// ###        Stops the rocALUTION backend                                                             ###
 // ###                                                                                                 ###
 // #######################################################################################################
 // ###                                                                                                 ###
-// ###     paralution_fortran_solve_coo_                                                               ###
+// ###     rocalution_fortran_solve_coo_                                                               ###
 // ###        Solves a linear system for given COO matrix, rhs, solution vector,                       ###
 // ###        solver and preconditioner.                                                               ###
 // ###                                                                                                 ###
@@ -59,7 +59,7 @@
 // ###                                                                                                 ###
 // #######################################################################################################
 // ###                                                                                                 ###
-// ###     paralution_fortran_solve_csr_                                                               ###
+// ###     rocalution_fortran_solve_csr_                                                               ###
 // ###        Solves a linear system for given CSR matrix, rhs, solution vector,                       ###
 // ###        solver and preconditioner.                                                               ###
 // ###                                                                                                 ###
@@ -111,16 +111,16 @@
 // ###           8  -  invalid preconditioner format                                                   ###
 // ###                                                                                                 ###
 // #######################################################################################################
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
 extern "C" 
 {
-  void paralution_init(void);
-  void paralution_stop(void);
-  void paralution_fortran_solve_coo(int, int, int, char*, char*, char*, char*, const int*, const int*,
+  void rocalution_init(void);
+  void rocalution_stop(void);
+  void rocalution_fortran_solve_coo(int, int, int, char*, char*, char*, char*, const int*, const int*,
                                     const double*, const double*, double, double, double, int, int,
                                     int, int, double*, int&, double&, int&);
-  void paralution_fortran_solve_csr(int, int, int, char*, char*, char*, char*, const int*, const int*,
+  void rocalution_fortran_solve_csr(int, int, int, char*, char*, char*, char*, const int*, const int*,
                                     const double*, const double*, double, double, double, int, int,
                                     int, int, double*, int&, double&, int&);
 }
@@ -143,55 +143,55 @@ enum _precond_type{
   FSAI
 };
 
-void paralution_fortran_solve(char*, char*, char*, char*, double, double, double, int, int, int, int,
-                              paralution::LocalMatrix<double>*, paralution::LocalVector<double>*,
-                              paralution::LocalVector<double>*, int&, double&, int&);
+void rocalution_fortran_solve(char*, char*, char*, char*, double, double, double, int, int, int, int,
+                              rocalution::LocalMatrix<double>*, rocalution::LocalVector<double>*,
+                              rocalution::LocalVector<double>*, int&, double&, int&);
 
-/// Initializes the PARALUTION backend
-void paralution_init(void) {
+/// Initializes the rocALUTION backend
+void rocalution_init(void) {
 
-  paralution::init_paralution();
-  paralution::info_paralution();
+  rocalution::init_rocalution();
+  rocalution::info_rocalution();
 
 }
 
-/// Stops the PARALUTION backend
-void paralution_stop(void) {
+/// Stops the rocALUTION backend
+void rocalution_stop(void) {
 
-  paralution::stop_paralution();
+  rocalution::stop_rocalution();
 
 }
 
 /// Solves a linear system for given COO matrix, rhs, solution vector, solver and preconditioner.
-void paralution_fortran_solve_coo(int n, int m, int nnz, char *solver, char *mformat, char *precond, char *pformat,
+void rocalution_fortran_solve_coo(int n, int m, int nnz, char *solver, char *mformat, char *precond, char *pformat,
                                   const int *fortran_row, const int *fortran_col, const double *fortran_val,
                                   const double *fortran_rhs, double atol, double rtol, double div, int maxiter,
                                   int basis, int p, int q, double *fortran_x, int &iter, double &resnorm, int &err) {
 
-  paralution::LocalVector<double> paralution_x;
-  paralution::LocalVector<double> paralution_rhs;
-  paralution::LocalMatrix<double> paralution_mat;
+  rocalution::LocalVector<double> rocalution_x;
+  rocalution::LocalVector<double> rocalution_rhs;
+  rocalution::LocalMatrix<double> rocalution_mat;
 
   int *row = NULL;
   int *col = NULL;
   double *val = NULL;
 
-  paralution::allocate_host(nnz, &row);
-  paralution::allocate_host(nnz, &col);
-  paralution::allocate_host(nnz, &val);
+  rocalution::allocate_host(nnz, &row);
+  rocalution::allocate_host(nnz, &col);
+  rocalution::allocate_host(nnz, &val);
 
   double *in_rhs = NULL;
   double *in_x = NULL;
-  paralution::allocate_host(m, &in_rhs);
-  paralution::allocate_host(n, &in_x);
+  rocalution::allocate_host(m, &in_rhs);
+  rocalution::allocate_host(n, &in_x);
 
   for (int i=0; i<m; ++i)
     in_rhs[i] = fortran_rhs[i];
   for (int i=0; i<n; ++i)
     in_x[i] = fortran_x[i];
 
-  paralution_rhs.SetDataPtr(&in_rhs, "Imported Fortran rhs", m);
-  paralution_x.SetDataPtr(&in_x, "Imported Fortran x", n);
+  rocalution_rhs.SetDataPtr(&in_rhs, "Imported Fortran rhs", m);
+  rocalution_x.SetDataPtr(&in_x, "Imported Fortran x", n);
 
   // Copy matrix so we can convert it to any other format without breaking the fortran code
   for (int i=0; i<nnz; ++i) {
@@ -201,16 +201,16 @@ void paralution_fortran_solve_coo(int n, int m, int nnz, char *solver, char *mfo
     val[i] = fortran_val[i];
   }
 
-  // Allocate paralution data structures
-  paralution_mat.SetDataPtrCOO(&row, &col, &val, "Imported Fortran COO Matrix", nnz, n, m);
-  paralution_mat.ConvertToCSR();
-  paralution_mat.info();
+  // Allocate rocalution data structures
+  rocalution_mat.SetDataPtrCOO(&row, &col, &val, "Imported Fortran COO Matrix", nnz, n, m);
+  rocalution_mat.ConvertToCSR();
+  rocalution_mat.info();
 
-  paralution_fortran_solve(solver, mformat, precond, pformat, atol, rtol, div, maxiter, basis, p, q,
-                           &paralution_mat, &paralution_rhs, &paralution_x, iter, resnorm, err);
+  rocalution_fortran_solve(solver, mformat, precond, pformat, atol, rtol, div, maxiter, basis, p, q,
+                           &rocalution_mat, &rocalution_rhs, &rocalution_x, iter, resnorm, err);
 
-  paralution_x.MoveToHost();
-  paralution_x.LeaveDataPtr(&in_x);
+  rocalution_x.MoveToHost();
+  rocalution_x.LeaveDataPtr(&in_x);
 
   for (int i=0; i<n; ++i)
     fortran_x[i] = in_x[i];
@@ -221,35 +221,35 @@ void paralution_fortran_solve_coo(int n, int m, int nnz, char *solver, char *mfo
 
 
 /// Solves a linear system for given CSR matrix, rhs, solution vector, solver and preconditioner.
-void paralution_fortran_solve_csr(int n, int m, int nnz, char *solver, char *mformat, char *precond, char *pformat,
+void rocalution_fortran_solve_csr(int n, int m, int nnz, char *solver, char *mformat, char *precond, char *pformat,
                                   const int *fortran_row_offset, const int *fortran_col, const double *fortran_val,
                                   const double *fortran_rhs, double atol, double rtol, double div, int maxiter,
                                   int basis, int p, int q, double *fortran_x, int &iter, double &resnorm, int &err) {
 
-  paralution::LocalVector<double> paralution_x;
-  paralution::LocalVector<double> paralution_rhs;
-  paralution::LocalMatrix<double> paralution_mat;
+  rocalution::LocalVector<double> rocalution_x;
+  rocalution::LocalVector<double> rocalution_rhs;
+  rocalution::LocalMatrix<double> rocalution_mat;
 
   int *row_offset = NULL;
   int *col        = NULL;
   double *val     = NULL;
 
-  paralution::allocate_host(n+1, &row_offset);
-  paralution::allocate_host(nnz, &col);
-  paralution::allocate_host(nnz, &val);
+  rocalution::allocate_host(n+1, &row_offset);
+  rocalution::allocate_host(nnz, &col);
+  rocalution::allocate_host(nnz, &val);
 
   double *in_rhs = NULL;
   double *in_x = NULL;
-  paralution::allocate_host(m, &in_rhs);
-  paralution::allocate_host(n, &in_x);
+  rocalution::allocate_host(m, &in_rhs);
+  rocalution::allocate_host(n, &in_x);
 
   for (int i=0; i<m; ++i)
     in_rhs[i] = fortran_rhs[i];
   for (int i=0; i<n; ++i)
     in_x[i] = fortran_x[i];
 
-  paralution_rhs.SetDataPtr(&in_rhs, "Imported Fortran rhs", m);
-  paralution_x.SetDataPtr(&in_x, "Imported Fortran x", n);
+  rocalution_rhs.SetDataPtr(&in_rhs, "Imported Fortran rhs", m);
+  rocalution_x.SetDataPtr(&in_x, "Imported Fortran x", n);
 
   // Copy matrix so we can convert it to any other format without breaking the fortran code
   // Shift since Fortran arrays start at 1
@@ -261,15 +261,15 @@ void paralution_fortran_solve_csr(int n, int m, int nnz, char *solver, char *mfo
     val[i] = fortran_val[i];
   }
 
-  // Allocate paralution data structures
-  paralution_mat.SetDataPtrCSR(&row_offset, &col, &val, "Imported Fortran CSR Matrix", nnz, n, m);
-  paralution_mat.info();
+  // Allocate rocalution data structures
+  rocalution_mat.SetDataPtrCSR(&row_offset, &col, &val, "Imported Fortran CSR Matrix", nnz, n, m);
+  rocalution_mat.info();
 
-  paralution_fortran_solve(solver, mformat, precond, pformat, atol, rtol, div, maxiter, basis, p, q,
-                           &paralution_mat, &paralution_rhs, &paralution_x, iter, resnorm, err);
+  rocalution_fortran_solve(solver, mformat, precond, pformat, atol, rtol, div, maxiter, basis, p, q,
+                           &rocalution_mat, &rocalution_rhs, &rocalution_x, iter, resnorm, err);
 
-  paralution_x.MoveToHost();
-  paralution_x.LeaveDataPtr(&in_x);
+  rocalution_x.MoveToHost();
+  rocalution_x.LeaveDataPtr(&in_x);
 
   for (int i=0; i<n; ++i)
     fortran_x[i] = in_x[i];
@@ -279,19 +279,19 @@ void paralution_fortran_solve_csr(int n, int m, int nnz, char *solver, char *mfo
 }
 
 
-void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *pformat, double atol, double rtol,
-                              double div, int maxiter, int basis, int p, int q, paralution::LocalMatrix<double> *mat,
-                              paralution::LocalVector<double> *rhs, paralution::LocalVector<double> *x,
+void rocalution_fortran_solve(char *solver, char *mformat, char *precond, char *pformat, double atol, double rtol,
+                              double div, int maxiter, int basis, int p, int q, rocalution::LocalMatrix<double> *mat,
+                              rocalution::LocalVector<double> *rhs, rocalution::LocalVector<double> *x,
                               int &iter, double &resnorm, int &err) {
 
   // Iterative Linear Solver and Preconditioner
-  paralution::IterativeLinearSolver<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *ls = NULL;
-  paralution::Preconditioner<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >        *pr = NULL;
+  rocalution::IterativeLinearSolver<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *ls = NULL;
+  rocalution::Preconditioner<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >        *pr = NULL;
 
   _solver_type psolver;
   _precond_type pprecond;
-  paralution::_matrix_format matformat;
-  paralution::_matrix_format preformat;
+  rocalution::_matrix_format matformat;
+  rocalution::_matrix_format preformat;
 
   // Prepare solver type
   if      (std::string(solver) == "BiCGStab")   psolver = BiCGStab;
@@ -319,28 +319,28 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
   }
 
   // Prepare matrix format for solving
-  if      (std::string(mformat) == "CSR")   matformat = paralution::CSR;
-  else if (std::string(mformat) == "MCSR")  matformat = paralution::MCSR;
-  else if (std::string(mformat) == "BCSR")  matformat = paralution::BCSR;
-  else if (std::string(mformat) == "COO")   matformat = paralution::COO;
-  else if (std::string(mformat) == "DIA")   matformat = paralution::DIA;
-  else if (std::string(mformat) == "ELL")   matformat = paralution::ELL;
-  else if (std::string(mformat) == "HYB")   matformat = paralution::HYB;
-  else if (std::string(mformat) == "DENSE") matformat = paralution::DENSE;
+  if      (std::string(mformat) == "CSR")   matformat = rocalution::CSR;
+  else if (std::string(mformat) == "MCSR")  matformat = rocalution::MCSR;
+  else if (std::string(mformat) == "BCSR")  matformat = rocalution::BCSR;
+  else if (std::string(mformat) == "COO")   matformat = rocalution::COO;
+  else if (std::string(mformat) == "DIA")   matformat = rocalution::DIA;
+  else if (std::string(mformat) == "ELL")   matformat = rocalution::ELL;
+  else if (std::string(mformat) == "HYB")   matformat = rocalution::HYB;
+  else if (std::string(mformat) == "DENSE") matformat = rocalution::DENSE;
   else {
     err = 7;
     return;
   }
 
   // Prepare preconditioner format
-  if      (std::string(pformat) == "CSR")   preformat = paralution::CSR;
-  else if (std::string(pformat) == "MCSR")  preformat = paralution::MCSR;
-  else if (std::string(pformat) == "BCSR")  preformat = paralution::BCSR;
-  else if (std::string(pformat) == "COO")   preformat = paralution::COO;
-  else if (std::string(pformat) == "DIA")   preformat = paralution::DIA;
-  else if (std::string(pformat) == "ELL")   preformat = paralution::ELL;
-  else if (std::string(pformat) == "HYB")   preformat = paralution::HYB;
-  else if (std::string(pformat) == "DENSE") preformat = paralution::DENSE;
+  if      (std::string(pformat) == "CSR")   preformat = rocalution::CSR;
+  else if (std::string(pformat) == "MCSR")  preformat = rocalution::MCSR;
+  else if (std::string(pformat) == "BCSR")  preformat = rocalution::BCSR;
+  else if (std::string(pformat) == "COO")   preformat = rocalution::COO;
+  else if (std::string(pformat) == "DIA")   preformat = rocalution::DIA;
+  else if (std::string(pformat) == "ELL")   preformat = rocalution::ELL;
+  else if (std::string(pformat) == "HYB")   preformat = rocalution::HYB;
+  else if (std::string(pformat) == "DENSE") preformat = rocalution::DENSE;
   else if (pprecond != None) {
     err = 8;
     return;
@@ -349,23 +349,23 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
   // Switch for solver selection
   switch(psolver) {
     case BiCGStab:
-      ls = new paralution::BiCGStab<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      ls = new rocalution::BiCGStab<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       break;
     case CG:
-      ls = new paralution::CG<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      ls = new rocalution::CG<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       break;
     case FixedPoint:
-      ls = new paralution::FixedPoint<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      ls = new rocalution::FixedPoint<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       break;
     case GMRES:
-      paralution::GMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *ls_gmres;
-      ls_gmres = new paralution::GMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      rocalution::GMRES<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *ls_gmres;
+      ls_gmres = new rocalution::GMRES<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       ls_gmres->SetBasisSize(basis);
       ls = ls_gmres;
       break;
     case FGMRES:
-      paralution::FGMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *ls_fgmres;
-      ls_fgmres = new paralution::FGMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      rocalution::FGMRES<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *ls_fgmres;
+      ls_fgmres = new rocalution::FGMRES<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       ls_fgmres->SetBasisSize(basis);
       ls = ls_fgmres;
       break;
@@ -376,41 +376,41 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
     case None:
       break;
     case Jacobi:
-      pr = new paralution::Jacobi<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      pr = new rocalution::Jacobi<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       ls->SetPreconditioner(*pr);
       break;
     case MultiColoredGS:
-      paralution::MultiColoredGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_mcgs;
-      p_mcgs = new paralution::MultiColoredGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      rocalution::MultiColoredGS<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *p_mcgs;
+      p_mcgs = new rocalution::MultiColoredGS<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       p_mcgs->SetPrecondMatrixFormat(preformat);
       pr = p_mcgs;
       ls->SetPreconditioner(*pr);
       break;
     case MultiColoredSGS:
-      paralution::MultiColoredSGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_mcsgs;
-      p_mcsgs = new paralution::MultiColoredSGS<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      rocalution::MultiColoredSGS<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *p_mcsgs;
+      p_mcsgs = new rocalution::MultiColoredSGS<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       p_mcsgs->SetPrecondMatrixFormat(preformat);
       pr = p_mcsgs;
       ls->SetPreconditioner(*pr);
       break;
     case ILU:
-      paralution::ILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_ilu;
-      p_ilu = new paralution::ILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      rocalution::ILU<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *p_ilu;
+      p_ilu = new rocalution::ILU<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       p_ilu->Set(p);
       pr = p_ilu;
       ls->SetPreconditioner(*pr);
       break;
     case MultiColoredILU:
-      paralution::MultiColoredILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_mcilu;
-      p_mcilu = new paralution::MultiColoredILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      rocalution::MultiColoredILU<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *p_mcilu;
+      p_mcilu = new rocalution::MultiColoredILU<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       p_mcilu->Set(p,q);
       p_mcilu->SetPrecondMatrixFormat(preformat);
       pr = p_mcilu;
       ls->SetPreconditioner(*pr);
       break;
     case FSAI:
-      paralution::FSAI<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > *p_fsai;
-      p_fsai = new paralution::FSAI<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double >;
+      rocalution::FSAI<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double > *p_fsai;
+      p_fsai = new rocalution::FSAI<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double >;
       p_fsai->Set(q);
       p_fsai->SetPrecondMatrixFormat(preformat);
       pr = p_fsai;
@@ -429,28 +429,28 @@ void paralution_fortran_solve(char *solver, char *mformat, char *precond, char *
   ls->Build();
 
   switch(matformat) {
-    case paralution::CSR:
+    case rocalution::CSR:
       mat->ConvertToCSR();
       break;
-    case paralution::MCSR:
+    case rocalution::MCSR:
       mat->ConvertToMCSR();
       break;
-    case paralution::BCSR:
+    case rocalution::BCSR:
       mat->ConvertToBCSR();
       break;
-    case paralution::COO:
+    case rocalution::COO:
       mat->ConvertToCOO();
       break;
-    case paralution::DIA:
+    case rocalution::DIA:
       mat->ConvertToDIA();
       break;
-    case paralution::ELL:
+    case rocalution::ELL:
       mat->ConvertToELL();
       break;
-    case paralution::HYB:
+    case rocalution::HYB:
       mat->ConvertToHYB();
       break;
-    case paralution::DENSE:
+    case rocalution::DENSE:
       mat->ConvertToDENSE();
       break;
   }

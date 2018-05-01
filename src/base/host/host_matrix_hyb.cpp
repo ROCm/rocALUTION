@@ -15,7 +15,7 @@
 #define omp_set_num_threads(num) ;
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HostMatrixHYB<ValueType>::HostMatrixHYB() {
@@ -27,7 +27,7 @@ HostMatrixHYB<ValueType>::HostMatrixHYB() {
 }
 
 template <typename ValueType>
-HostMatrixHYB<ValueType>::HostMatrixHYB(const Paralution_Backend_Descriptor local_backend) {
+HostMatrixHYB<ValueType>::HostMatrixHYB(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HostMatrixHYB::HostMatrixHYB()",
             "constructor with local_backend");

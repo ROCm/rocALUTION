@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_MATRIX_ELL_HPP_
-#define PARALUTION_HIP_MATRIX_ELL_HPP_
+#ifndef ROCALUTION_HIP_MATRIX_ELL_HPP_
+#define ROCALUTION_HIP_MATRIX_ELL_HPP_
 
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HIPAcceleratorMatrixELL : public HIPAcceleratorMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HIPAcceleratorMatrixELL : public HIPAcceleratorMatrix<ValueType> {
 public:
 
   HIPAcceleratorMatrixELL();
-  HIPAcceleratorMatrixELL(const Paralution_Backend_Descriptor local_backend);
+  HIPAcceleratorMatrixELL(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorMatrixELL();
 
   inline int get_max_row(void) const { return mat_.max_row; }
@@ -57,4 +57,4 @@ private:
 
 }
 
-#endif // PARALUTION_HIP_MATRIX_ELL_HPP_
+#endif // ROCALUTION_HIP_MATRIX_ELL_HPP_

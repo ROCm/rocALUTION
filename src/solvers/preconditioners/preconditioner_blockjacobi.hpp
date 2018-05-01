@@ -1,9 +1,9 @@
-#ifndef PARALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
-#define PARALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
+#ifndef ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
+#define ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
 
 #include "preconditioner.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 //// BlockJacobi preconditioner for GlobalMatrix
 template <class OperatorType, class VectorType, typename ValueType>
@@ -41,4 +41,4 @@ private:
 
 };
 
-#endif // PARALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
+#endif // ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_

@@ -16,7 +16,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 QMRCGStab<OperatorType, VectorType, ValueType>::QMRCGStab() {
@@ -283,7 +283,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
   // initial residual
   tau2 = this->Norm(*r0);
-  double res_norm = paralution_abs(tau2);
+  double res_norm = rocalution_abs(tau2);
 
   this->iter_ctrl_.InitResidual(res_norm);
 
@@ -362,7 +362,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
   x->AddScale(*d, eta2);
 
   // residual <= sqrt(#iter+1) * |tau2|
-  res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * paralution_abs(tau2);
+  res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * rocalution_abs(tau2);
 
   while (!this->iter_ctrl_.CheckResidual(res_norm, this->index_)) {
 
@@ -459,7 +459,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     x->AddScale(*d, eta2);
 
     // residual <= sqrt(#iter+1) * |tau2|
-    res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * paralution_abs(tau2);
+    res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * rocalution_abs(tau2);
 
   }
 
@@ -467,7 +467,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
   op->Apply(*x, r0);
   r0->ScaleAdd(ValueType(-1.0), rhs);
 
-  this->iter_ctrl_.CheckResidual(paralution_abs(this->Norm(*r0)));
+  this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm(*r0)));
 
   LOG_DEBUG(this, "QMRCGStab::SolveNonPrecond_()",
             " #*# end");
@@ -511,7 +511,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   // initial residual
   tau2 = this->Norm(*r0);
-  double res_norm = paralution_abs(tau2);
+  double res_norm = rocalution_abs(tau2);
 
   this->iter_ctrl_.InitResidual(res_norm);
 
@@ -596,7 +596,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
   x->AddScale(*d, eta2);
 
   // residual <= sqrt(#iter+1) * |tau2|
-  res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * paralution_abs(tau2);
+  res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * rocalution_abs(tau2);
 
   while (!this->iter_ctrl_.CheckResidual(res_norm, this->index_)) {
 
@@ -699,7 +699,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     x->AddScale(*d, eta2);
 
     // residual <= sqrt(#iter+1) * |tau2|
-    res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * paralution_abs(tau2);
+    res_norm = sqrt(double(this->iter_ctrl_.GetIterationCount()+1)) * rocalution_abs(tau2);
 
   }
 
@@ -707,7 +707,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
   op->Apply(*x, r0);
   r0->ScaleAdd(ValueType(-1.0), rhs);
 
-  this->iter_ctrl_.CheckResidual(paralution_abs(this->Norm(*r0)));
+  this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm(*r0)));
 
   LOG_DEBUG(this, "QMRCGStab::SolvePrecond_()",
             " #*# end");

@@ -1,5 +1,5 @@
-#ifndef PARALUTION_UTILS_TYPES_HPP_
-#define PARALUTION_UTILS_TYPES_HPP_
+#ifndef ROCALUTION_UTILS_TYPES_HPP_
+#define ROCALUTION_UTILS_TYPES_HPP_
 
 #include <assert.h>
 #include <limits>
@@ -16,4 +16,4 @@ inline static int IndexTypeToInt(const IndexType2 idx) {
 
 }
 
-#endif // PARALUTION_UTILS_TYPES_HPP_
+#endif // ROCALUTION_UTILS_TYPES_HPP_

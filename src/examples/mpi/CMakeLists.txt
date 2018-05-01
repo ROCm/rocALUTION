@@ -15,6 +15,6 @@ set(MPI_EXAMPLES
 
 foreach(example ${MPI_EXAMPLES})
   add_executable(${example} ${example}.cpp)
-  target_link_libraries(${example} ${PARALUTION_LIBRARY})
+  target_link_libraries(${example} ${rocALUTION_LIBRARY})
   install(PROGRAMS ${example} DESTINATION bin/mpi)
 endforeach()

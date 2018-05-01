@@ -1,5 +1,5 @@
-#ifndef PARALUTION_PRECONDITIONER_MULTICOLORED_ILU_HPP_
-#define PARALUTION_PRECONDITIONER_MULTICOLORED_ILU_HPP_
+#ifndef ROCALUTION_PRECONDITIONER_MULTICOLORED_ILU_HPP_
+#define ROCALUTION_PRECONDITIONER_MULTICOLORED_ILU_HPP_
 
 #include "../solver.hpp"
 #include "preconditioner.hpp"
@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 /// ILU(p,q) preconditioner (see power(q)-pattern method, D. Lukarski "Parallel Sparse Linear 
 /// Algebra for Multi-core and Many-core Platforms - Parallel Solvers and Preconditioners", 
@@ -55,4 +55,4 @@ protected:
 
 }
 
-#endif // PARALUTION_PRECONDITIONER_MULTICOLORED_ILU_HPP_
+#endif // ROCALUTION_PRECONDITIONER_MULTICOLORED_ILU_HPP_

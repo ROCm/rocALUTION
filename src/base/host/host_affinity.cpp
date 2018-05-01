@@ -20,9 +20,9 @@
 
 #include "../../utils/log.hpp"
 
-namespace paralution {
+namespace rocalution {
 
-void paralution_set_omp_affinity(bool aff) {
+void rocalution_set_omp_affinity(bool aff) {
 
   if (aff == true) {
 

@@ -16,7 +16,7 @@
 #include <omp.h>
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 LocalVector<ValueType>::LocalVector() {
@@ -78,7 +78,7 @@ void LocalVector<ValueType>::Allocate(std::string name, const IndexType2 size) {
 
   if (size > 0) {
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
 
     // init host vector
     if (this->vector_ == this->vector_host_) {
@@ -96,7 +96,7 @@ void LocalVector<ValueType>::Allocate(std::string name, const IndexType2 size) {
 
       delete this->vector_accel_;
 
-      this->vector_accel_ = _paralution_init_base_backend_vector<ValueType>(backend);
+      this->vector_accel_ = _rocalution_init_base_backend_vector<ValueType>(backend);
       assert(this->vector_accel_ != NULL);
       this->vector_accel_->Allocate(IndexTypeToInt(size));
       this->vector_ = this->vector_accel_;
@@ -316,13 +316,13 @@ void LocalVector<ValueType>::MoveToAccelerator(void) {
   LOG_DEBUG(this, "LocalVector::MoveToAccelerator()",
             "");
 
-  if (_paralution_available_accelerator() == false)
+  if (_rocalution_available_accelerator() == false)
     LOG_VERBOSE_INFO(4,"*** info: LocalVector::MoveToAccelerator() no accelerator available - doing nothing");
 
-  if ( (_paralution_available_accelerator() == true) &&
+  if ( (_rocalution_available_accelerator() == true) &&
        (this->vector_ == this->vector_host_)) {
 
-    this->vector_accel_ = _paralution_init_base_backend_vector<ValueType>(this->local_backend_);
+    this->vector_accel_ = _rocalution_init_base_backend_vector<ValueType>(this->local_backend_);
 
     // Copy to accel
     this->vector_accel_->CopyFrom(*this->vector_host_);
@@ -343,10 +343,10 @@ void LocalVector<ValueType>::MoveToHost(void) {
   LOG_DEBUG(this, "LocalVector::MoveToHost()",
             "");
 
-  if (_paralution_available_accelerator() == false)
+  if (_rocalution_available_accelerator() == false)
     LOG_VERBOSE_INFO(4,"*** info: LocalVector::MoveToHost() no accelerator available - doing nothing");
 
-  if ( (_paralution_available_accelerator() == true) &&
+  if ( (_rocalution_available_accelerator() == true) &&
        (this->vector_ == this->vector_accel_)) {
 
     this->vector_host_ = new HostVector<ValueType>(this->local_backend_);
@@ -372,13 +372,13 @@ void LocalVector<ValueType>::MoveToAcceleratorAsync(void) {
 
   assert(this->asyncf == false);
 
-  if (_paralution_available_accelerator() == false)
+  if (_rocalution_available_accelerator() == false)
     LOG_VERBOSE_INFO(4,"*** info: LocalVector::MoveToAcceleratorAsync() no accelerator available - doing nothing");
 
-  if ( (_paralution_available_accelerator() == true) &&
+  if ( (_rocalution_available_accelerator() == true) &&
        (this->vector_ == this->vector_host_)) {
 
-    this->vector_accel_ = _paralution_init_base_backend_vector<ValueType>(this->local_backend_);
+    this->vector_accel_ = _rocalution_init_base_backend_vector<ValueType>(this->local_backend_);
 
     // Copy to accel
     this->vector_accel_->CopyFromAsync(*this->vector_host_);
@@ -399,10 +399,10 @@ void LocalVector<ValueType>::MoveToHostAsync(void) {
 
   assert(this->asyncf == false);
 
-  if (_paralution_available_accelerator() == false)
+  if (_rocalution_available_accelerator() == false)
     LOG_VERBOSE_INFO(4,"*** info: LocalVector::MoveToAcceleratorAsync() no accelerator available - doing nothing");
 
-  if ( (_paralution_available_accelerator() == true) &&
+  if ( (_rocalution_available_accelerator() == true) &&
        (this->vector_ == this->vector_accel_)) {
 
     this->vector_host_ = new HostVector<ValueType>(this->local_backend_);
@@ -432,10 +432,10 @@ void LocalVector<ValueType>::Sync(void) {
          (this->vector_host_  != NULL)) {
 
       // MoveToHostAsync();
-      if ( (_paralution_available_accelerator() == true) &&
+      if ( (_rocalution_available_accelerator() == true) &&
            (this->vector_ == this->vector_accel_)) {
 
-        _paralution_sync();
+        _rocalution_sync();
 
         this->vector_ = this->vector_host_;
         delete this->vector_accel_;
@@ -446,10 +446,10 @@ void LocalVector<ValueType>::Sync(void) {
       }
 
       // MoveToAcceleratorAsync();
-      if ( (_paralution_available_accelerator() == true) &&
+      if ( (_rocalution_available_accelerator() == true) &&
            (this->vector_ == this->vector_host_)) {
 
-        _paralution_sync();
+        _rocalution_sync();
 
         this->vector_ = this->vector_accel_;
         delete this->vector_host_;
@@ -461,7 +461,7 @@ void LocalVector<ValueType>::Sync(void) {
     } else {
 
       // The Copy*Async function is active
-      _paralution_sync();
+      _rocalution_sync();
       LOG_VERBOSE_INFO(4, "*** info: LocalVector::Copy*Async() transfer (synced)");
 
     }
@@ -504,18 +504,18 @@ void LocalVector<ValueType>::info(void) const {
   std::string current_backend_name;
 
   if (this->vector_ == this->vector_host_) {
-    current_backend_name = _paralution_host_name[0];
+    current_backend_name = _rocalution_host_name[0];
   } else {
     assert(this->vector_ == this->vector_accel_);
-    current_backend_name = _paralution_backend_name[this->local_backend_.backend];
+    current_backend_name = _rocalution_backend_name[this->local_backend_.backend];
   }
 
   LOG_INFO("LocalVector"
            << " name=" << this->object_name_  << ";"
            << " size=" << this->get_size() << ";"
            << " prec=" << 8*sizeof(ValueType) << "bit;"
-           << " host backend={" << _paralution_host_name[0] << "};"
-           << " accelerator backend={" << _paralution_backend_name[this->local_backend_.backend] << "};"
+           << " host backend={" << _rocalution_host_name[0] << "};"
+           << " accelerator backend={" << _rocalution_backend_name[this->local_backend_.backend] << "};"
            << " current=" << current_backend_name);
 
 }

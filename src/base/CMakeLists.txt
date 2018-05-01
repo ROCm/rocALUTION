@@ -1,5 +1,5 @@
 set(BASE_SOURCES
-  base_paralution.cpp
+  base_rocalution.cpp
   operator.cpp
   vector.cpp
   local_matrix.cpp
@@ -18,7 +18,7 @@ set(BASE_PUBLIC_HEADERS
   version.hpp
   matrix_formats.hpp
   matrix_formats_ind.hpp
-  base_paralution.hpp
+  base_rocalution.hpp
   operator.hpp
   vector.hpp
   local_matrix.hpp

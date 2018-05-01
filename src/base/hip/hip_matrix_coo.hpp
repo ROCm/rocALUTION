@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_MATRIX_COO_HPP_
-#define PARALUTION_HIP_MATRIX_COO_HPP_
+#ifndef ROCALUTION_HIP_MATRIX_COO_HPP_
+#define ROCALUTION_HIP_MATRIX_COO_HPP_
 
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HIPAcceleratorMatrixCOO : public HIPAcceleratorMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HIPAcceleratorMatrixCOO : public HIPAcceleratorMatrix<ValueType> {
 public:
 
   HIPAcceleratorMatrixCOO();
-  HIPAcceleratorMatrixCOO(const Paralution_Backend_Descriptor local_backend);
+  HIPAcceleratorMatrixCOO(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorMatrixCOO();
 
   virtual void info(void) const;
@@ -61,4 +61,4 @@ private:
 
 }
 
-#endif // PARALUTION_HIP_MATRIX_COO_HPP_
+#endif // ROCALUTION_HIP_MATRIX_COO_HPP_

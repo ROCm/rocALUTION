@@ -1,9 +1,9 @@
-#ifndef PARALUTION_PRECONDITIONER_HPP_
-#define PARALUTION_PRECONDITIONER_HPP_
+#ifndef ROCALUTION_PRECONDITIONER_HPP_
+#define ROCALUTION_PRECONDITIONER_HPP_
 
 #include "../solver.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 /// Base preconditioner class
 template <class OperatorType, class VectorType, typename ValueType>
@@ -255,4 +255,4 @@ private:
 
 }
 
-#endif // PARALUTION_PRECONDITIONER_HPP_
+#endif // ROCALUTION_PRECONDITIONER_HPP_

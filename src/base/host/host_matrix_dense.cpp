@@ -17,7 +17,7 @@
 #define omp_set_num_threads(num) ;
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HostMatrixDENSE<ValueType>::HostMatrixDENSE() {
@@ -29,7 +29,7 @@ HostMatrixDENSE<ValueType>::HostMatrixDENSE() {
 }
 
 template <typename ValueType>
-HostMatrixDENSE<ValueType>::HostMatrixDENSE(const Paralution_Backend_Descriptor local_backend) {
+HostMatrixDENSE<ValueType>::HostMatrixDENSE(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HostMatrixDENSE::HostMatrixDENSE()",
             "constructor with local_backend");

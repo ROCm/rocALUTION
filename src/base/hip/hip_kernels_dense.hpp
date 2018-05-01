@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HIP_HIP_KERNELS_DENSE_HPP_
-#define PARALUTION_HIP_HIP_KERNELS_DENSE_HPP_
+#ifndef ROCALUTION_HIP_HIP_KERNELS_DENSE_HPP_
+#define ROCALUTION_HIP_HIP_KERNELS_DENSE_HPP_
 
 #include "../matrix_formats_ind.hpp"
 
 #include <hip/hip_runtime.h>
 
-namespace paralution {
+namespace rocalution {
 
 // Replace column vector
 template <typename ValueType, typename IndexType>
@@ -58,4 +58,4 @@ __global__ void kernel_dense_extract_row_vector(ValueType *vec, const IndexType 
 
 }
 
-#endif // PARALUTION_HIP_HIP_KERNELS_DENSE_HPP_
+#endif // ROCALUTION_HIP_HIP_KERNELS_DENSE_HPP_

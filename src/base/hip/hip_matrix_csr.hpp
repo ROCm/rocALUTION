@@ -1,12 +1,12 @@
 
-#ifndef PARALUTION_HIP_MATRIX_CSR_HPP_
-#define PARALUTION_HIP_MATRIX_CSR_HPP_
+#ifndef ROCALUTION_HIP_MATRIX_CSR_HPP_
+#define ROCALUTION_HIP_MATRIX_CSR_HPP_
 
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType> {
@@ -14,7 +14,7 @@ class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType> {
 public:
 
   HIPAcceleratorMatrixCSR();
-  HIPAcceleratorMatrixCSR(const Paralution_Backend_Descriptor local_backend);
+  HIPAcceleratorMatrixCSR(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorMatrixCSR();
 
   virtual void info(void) const;
@@ -148,4 +148,4 @@ private:
 
 }
 
-#endif // PARALUTION_HIP_MATRIX_CSR_HPP_
+#endif // ROCALUTION_HIP_MATRIX_CSR_HPP_

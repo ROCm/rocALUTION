@@ -1,9 +1,9 @@
-#ifndef PARALUTION_HIP_ALLOCATE_FREE_HPP_
-#define PARALUTION_HIP_ALLOCATE_FREE_HPP_
+#ifndef ROCALUTION_HIP_ALLOCATE_FREE_HPP_
+#define ROCALUTION_HIP_ALLOCATE_FREE_HPP_
 
 #include <iostream>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename DataType>
 void allocate_hip(const int size, DataType **ptr);
@@ -24,4 +24,4 @@ void set_to_one_hip(const int blocksize,
 
 }
 
-#endif // PARALUTION_HIP_ALLOCATE_FREE_HPP_
+#endif // ROCALUTION_HIP_ALLOCATE_FREE_HPP_

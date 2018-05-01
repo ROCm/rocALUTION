@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 GlobalVector<ValueType>::GlobalVector() {
@@ -339,12 +339,12 @@ void GlobalVector<ValueType>::info(void) const {
 
   if (this->is_host() == true) {
 
-    current_backend_name = _paralution_host_name[0];
+    current_backend_name = _rocalution_host_name[0];
 
   } else {
 
     assert (this->is_accel() == true);
-    current_backend_name = _paralution_backend_name[this->local_backend_.backend];
+    current_backend_name = _rocalution_backend_name[this->local_backend_.backend];
 
   }
 
@@ -353,8 +353,8 @@ void GlobalVector<ValueType>::info(void) const {
            " size=" << this->get_size() << ";" <<
            " prec=" << 8*sizeof(ValueType) << "bit;" <<
            " subdomains=" << this->pm_->num_procs_ << ";" <<
-           " host backend={" << _paralution_host_name[0] << "};" <<
-           " accelerator backend={" << _paralution_backend_name[this->local_backend_.backend] << "};" <<
+           " host backend={" << _rocalution_host_name[0] << "};" <<
+           " accelerator backend={" << _rocalution_backend_name[this->local_backend_.backend] << "};" <<
            " current=" << current_backend_name);
 
 }

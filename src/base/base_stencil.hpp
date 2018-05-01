@@ -1,9 +1,9 @@
-#ifndef PARALUTION_BASE_STENCIL_HPP_
-#define PARALUTION_BASE_STENCIL_HPP_
+#ifndef ROCALUTION_BASE_STENCIL_HPP_
+#define ROCALUTION_BASE_STENCIL_HPP_
 
-#include "base_paralution.hpp"
+#include "base_rocalution.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class BaseVector;
@@ -42,7 +42,7 @@ public:
   /// Return the stencil format id (see stencil_formats.hpp)
   virtual unsigned int get_stencil_id(void) const = 0 ;
   /// Copy the backend descriptor information
-  virtual void set_backend(const Paralution_Backend_Descriptor local_backend);
+  virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
   // Set the grid size
   virtual void SetGrid(const int size);
 
@@ -61,7 +61,7 @@ protected:
 
 
   /// Backend descriptor (local copy)
-  Paralution_Backend_Descriptor local_backend_;
+  Rocalution_Backend_Descriptor local_backend_;
 
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
@@ -108,4 +108,4 @@ public:
 
 }
 
-#endif // PARALUTION_BASE_STENCIL_HPP_
+#endif // ROCALUTION_BASE_STENCIL_HPP_

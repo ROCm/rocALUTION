@@ -1,5 +1,5 @@
 #include "../utils/def.hpp"
-#include "base_paralution.hpp"
+#include "base_rocalution.hpp"
 #include "parallel_manager.hpp"
 
 #include "../utils/log.hpp"
@@ -15,7 +15,7 @@
 #include <mpi.h>
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 ParallelManager::ParallelManager() {
 
@@ -299,7 +299,7 @@ void ParallelManager::WriteFileASCII(const std::string filename) const {
   }
 
   file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
-  file << "%% PARALUTION MPI ParallelManager output %%" << std::endl;
+  file << "%% ROCALUTION MPI ParallelManager output %%" << std::endl;
   file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
   file << "#RANK\n" << this->rank_ << std::endl;
   file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
