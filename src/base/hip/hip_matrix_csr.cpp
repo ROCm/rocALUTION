@@ -1079,8 +1079,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, 
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-    const ValueType scalar = 1.0;
-    const ValueType beta = 0.0;
+//    const ValueType scalar = 1.0;
+//    const ValueType beta = 0.0;
 /*
     rocsparseStatus_t stat_t;
     stat_t = rocsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
@@ -1093,6 +1093,16 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, 
                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 */
+
+    dim3 BlockSize(this->local_backend_.HIP_block_size);
+    dim3 GridSize(this->get_nrow() / this->local_backend_.HIP_block_size + 1);
+
+    hipLaunchKernelGGL((kernel_csr_spmv_scalar<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       this->get_nrow(), this->mat_.row_offset, this->mat_.col,
+                       this->mat_.val, cast_in->vec_, cast_out->vec_);
+    CHECK_HIP_ERROR(__FILE__,__LINE__);
+
   }
     
 }
@@ -1126,6 +1136,15 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 */
+    dim3 BlockSize(this->local_backend_.HIP_block_size);
+    dim3 GridSize(this->get_nrow() / this->local_backend_.HIP_block_size + 1);
+
+    hipLaunchKernelGGL((kernel_csr_add_spmv_scalar<ValueType, int>),
+                       GridSize, BlockSize, 0, 0,
+                       this->get_nrow(), this->mat_.row_offset, this->mat_.col,
+                       this->mat_.val, scalar, cast_in->vec_, cast_out->vec_);
+    CHECK_HIP_ERROR(__FILE__,__LINE__);
+
   }
 
 }
