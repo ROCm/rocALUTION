@@ -8,19 +8,19 @@
 #include <complex>
 #include <cstddef>
 
-namespace paralution {
+namespace rocalution {
 
 // Check -- if there is no CUDA support 
 // pinned memory is disabled
 #ifndef SUPPORT_CUDA
-#undef PARALUTION_CUDA_PINNED_MEMORY
+#undef ROCALUTION_CUDA_PINNED_MEMORY
 #endif
 
 //#define MEM_ALIGNMENT 64
 //#define LONG_PTR size_t
 //#define LONG_PTR long
 
-#ifndef PARALUTION_CUDA_PINNED_MEMORY
+#ifndef ROCALUTION_CUDA_PINNED_MEMORY
 
 template <typename DataType>
 void allocate_host(const int size, DataType **ptr) {
@@ -74,7 +74,7 @@ void allocate_host(const int size, DataType **ptr) {
 
     *ptr = new (std::nothrow) DataType[size];
 
-    if ((*ptr) == false) { // nullptr
+    if (!(*ptr)) { // nullptr
       LOG_INFO("Cannot allocate memory");
       LOG_VERBOSE_INFO(2, "Size of the requested buffer = " << size*sizeof(DataType));
       FATAL_ERROR(__FILE__, __LINE__);
@@ -142,7 +142,7 @@ void set_to_zero_host(const int size, DataType *ptr) {
 
 }
 
-#ifndef PARALUTION_CUDA_PINNED_MEMORY
+#ifndef ROCALUTION_CUDA_PINNED_MEMORY
 
 template void allocate_host<float                >(const int size, float                **ptr);
 template void allocate_host<double               >(const int size, double               **ptr);

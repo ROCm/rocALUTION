@@ -1,9 +1,9 @@
-#ifndef PARALUTION_MULTIGRID_HPP_
-#define PARALUTION_MULTIGRID_HPP_
+#ifndef ROCALUTION_MULTIGRID_HPP_
+#define ROCALUTION_MULTIGRID_HPP_
 
 #include "base_multigrid.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType> {
@@ -27,4 +27,4 @@ public:
 
 }
 
-#endif // PARALUTION_MULTIGRID_HPP_
+#endif // ROCALUTION_MULTIGRID_HPP_

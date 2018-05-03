@@ -1,11 +1,11 @@
-#ifndef PARALUTION_GLOBAL_VECTOR_HPP_
-#define PARALUTION_GLOBAL_VECTOR_HPP_
+#ifndef ROCALUTION_GLOBAL_VECTOR_HPP_
+#define ROCALUTION_GLOBAL_VECTOR_HPP_
 
 #include "../utils/types.hpp"
 #include "vector.hpp"
 #include "parallel_manager.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class LocalVector;
@@ -119,11 +119,11 @@ private:
   friend class LocalMatrix<ValueType>;
   friend class GlobalMatrix<ValueType>;
 
-  friend class BaseParalution<ValueType>;
+  friend class BaseRocalution<ValueType>;
 
 };
 
 
 }
 
-#endif // PARALUTION_GLOBAL_VECTOR_HPP_
+#endif // ROCALUTION_GLOBAL_VECTOR_HPP_

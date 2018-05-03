@@ -16,13 +16,13 @@
 
 #endif
 
-namespace paralution {
+namespace rocalution {
 
-double paralution_time(void) {
+double rocalution_time(void) {
 
   double the_time_now = 0.0;
 
-  _paralution_sync();
+  _rocalution_sync();
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN64) && !defined(__CYGWIN__)
   // Windows
 

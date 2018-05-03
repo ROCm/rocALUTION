@@ -1,21 +1,17 @@
-#ifndef PARALUTION_BASE_MATRIX_HPP_
-#define PARALUTION_BASE_MATRIX_HPP_
+#ifndef ROCALUTION_BASE_MATRIX_HPP_
+#define ROCALUTION_BASE_MATRIX_HPP_
 
 #include "matrix_formats.hpp"
 #include "backend_manager.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class BaseVector;
 template <typename ValueType>
 class HostVector;
 template <typename ValueType>
-class GPUAcceleratorVector;
-template <typename ValueType>
-class OCLAcceleratorVector;
-template <typename ValueType>
-class MICAcceleratorVector;
+class HIPAcceleratorVector;
 
 template <typename ValueType>
 class HostMatrixCSR;
@@ -35,55 +31,21 @@ template <typename ValueType>
 class HostMatrixBCSR;
 
 template <typename ValueType>
-class GPUAcceleratorMatrixCSR;
+class HIPAcceleratorMatrixCSR;
 template <typename ValueType>
-class GPUAcceleratorMatrixMCSR;
+class HIPAcceleratorMatrixMCSR;
 template <typename ValueType>
-class GPUAcceleratorMatrixBCSR;
+class HIPAcceleratorMatrixBCSR;
 template <typename ValueType>
-class GPUAcceleratorMatrixCOO;
+class HIPAcceleratorMatrixCOO;
 template <typename ValueType>
-class GPUAcceleratorMatrixDIA;
+class HIPAcceleratorMatrixDIA;
 template <typename ValueType>
-class GPUAcceleratorMatrixELL;
+class HIPAcceleratorMatrixELL;
 template <typename ValueType>
-class GPUAcceleratorMatrixHYB;
+class HIPAcceleratorMatrixHYB;
 template <typename ValueType>
-class GPUAcceleratorMatrixDENSE;
-
-template <typename ValueType>
-class OCLAcceleratorMatrixCSR;
-template <typename ValueType>
-class OCLAcceleratorMatrixMCSR;
-template <typename ValueType>
-class OCLAcceleratorMatrixBCSR;
-template <typename ValueType>
-class OCLAcceleratorMatrixCOO;
-template <typename ValueType>
-class OCLAcceleratorMatrixDIA;
-template <typename ValueType>
-class OCLAcceleratorMatrixELL;
-template <typename ValueType>
-class OCLAcceleratorMatrixHYB;
-template <typename ValueType>
-class OCLAcceleratorMatrixDENSE;
-
-template <typename ValueType>
-class MICAcceleratorMatrixCSR;
-template <typename ValueType>
-class MICAcceleratorMatrixMCSR;
-template <typename ValueType>
-class MICAcceleratorMatrixBCSR;
-template <typename ValueType>
-class MICAcceleratorMatrixCOO;
-template <typename ValueType>
-class MICAcceleratorMatrixDIA;
-template <typename ValueType>
-class MICAcceleratorMatrixELL;
-template <typename ValueType>
-class MICAcceleratorMatrixHYB;
-template <typename ValueType>
-class MICAcceleratorMatrixDENSE;
+class HIPAcceleratorMatrixDENSE;
 
 /// Base class for all host/accelerator matrices
 template <typename ValueType>
@@ -105,7 +67,7 @@ public:
   /// Return the matrix format id (see matrix_formats.hpp)
   virtual unsigned int get_mat_format(void) const = 0;
   /// Copy the backend descriptor information
-  virtual void set_backend(const Paralution_Backend_Descriptor local_backend);
+  virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
 
   virtual bool Check(void) const;
 
@@ -267,9 +229,9 @@ public:
   /// Write matrix to MTX (Matrix Market Format) file
   virtual bool WriteFileMTX(const std::string filename) const;
 
-  /// Read matrix from CSR (PARALUTION binary format) file
+  /// Read matrix from CSR (ROCALUTION binary format) file
   virtual bool ReadFileCSR(const std::string filename);
-  /// Write matrix to CSR (PARALUTION binary format) file
+  /// Write matrix to CSR (ROCALUTION binary format) file
   virtual bool WriteFileCSR(const std::string filename) const;
 
   /// Perform symbolic computation (structure only) of |this|^p
@@ -447,14 +409,12 @@ protected:
   int nnz_;
 
   /// Backend descriptor (local copy)
-  Paralution_Backend_Descriptor local_backend_;
+  Rocalution_Backend_Descriptor local_backend_;
 
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
-  friend class GPUAcceleratorVector<ValueType>;
-  friend class OCLAcceleratorVector<ValueType>;
-  friend class MICAcceleratorVector<ValueType>;
+  friend class HIPAcceleratorVector<ValueType>;
 
 };
 
@@ -491,36 +451,15 @@ public:
 };
 
 template <typename ValueType>
-class GPUAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
+class HIPAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
 
 public:
 
-  GPUAcceleratorMatrix();
-  virtual ~GPUAcceleratorMatrix();
+  HIPAcceleratorMatrix();
+  virtual ~HIPAcceleratorMatrix();
 
 };
-
-template <typename ValueType>
-class OCLAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
-
-public:
-
-  OCLAcceleratorMatrix();
-  virtual ~OCLAcceleratorMatrix();
-
-};
-
-template <typename ValueType>
-class MICAcceleratorMatrix : public AcceleratorMatrix<ValueType> {
-
-public:
-
-  MICAcceleratorMatrix();
-  virtual ~MICAcceleratorMatrix();
-
-};
-
 
 }
 
-#endif // PARALUTION_BASE_MATRIX_HPP_
+#endif // ROCALUTION_BASE_MATRIX_HPP_

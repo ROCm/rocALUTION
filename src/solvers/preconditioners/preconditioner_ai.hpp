@@ -1,10 +1,10 @@
-#ifndef PARALUTION_PRECONDITIONER_AI_HPP_
-#define PARALUTION_PRECONDITIONER_AI_HPP_
+#ifndef ROCALUTION_PRECONDITIONER_AI_HPP_
+#define ROCALUTION_PRECONDITIONER_AI_HPP_
 
 #include "../solver.hpp"
 #include "preconditioner.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 /// Approximate Inverse - Chebyshev preconditioner
 /// see IEEE TRANSACTIONS ON POWER SYSTEMS, VOL. 18, NO. 4, NOVEMBER 2003;
@@ -164,4 +164,4 @@ private:
 
 }
 
-#endif // PARALUTION_PRECONDITIONER_AI_HPP_
+#endif // ROCALUTION_PRECONDITIONER_AI_HPP_

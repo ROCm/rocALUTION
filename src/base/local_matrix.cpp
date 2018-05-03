@@ -20,7 +20,7 @@
 #include <omp.h>
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 LocalMatrix<ValueType>::LocalMatrix() {
@@ -165,14 +165,14 @@ void LocalMatrix<ValueType>::AllocateCSR(const std::string name, const int nnz, 
     assert(nrow > 0);
     assert(ncol > 0);
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, mat);
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_host_;
 
     } else {
@@ -180,7 +180,7 @@ void LocalMatrix<ValueType>::AllocateCSR(const std::string name, const int nnz, 
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -214,14 +214,14 @@ void LocalMatrix<ValueType>::AllocateCOO(const std::string name, const int nnz, 
     assert(nrow > 0);
     assert(ncol > 0);
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend,
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend,
                                                                         mat);
       this->matrix_ = this->matrix_host_;
 
@@ -230,7 +230,7 @@ void LocalMatrix<ValueType>::AllocateCOO(const std::string name, const int nnz, 
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -264,14 +264,14 @@ void LocalMatrix<ValueType>::AllocateDIA(const std::string name, const int nnz, 
     assert(nrow > 0);
     assert(ncol > 0);
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, mat);
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_host_;
 
     } else {
@@ -279,7 +279,7 @@ void LocalMatrix<ValueType>::AllocateDIA(const std::string name, const int nnz, 
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -313,14 +313,14 @@ void LocalMatrix<ValueType>::AllocateMCSR(const std::string name, const int nnz,
     assert(nrow > 0);
     assert(ncol > 0);
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, mat);
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_host_;
 
     } else {
@@ -328,7 +328,7 @@ void LocalMatrix<ValueType>::AllocateMCSR(const std::string name, const int nnz,
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -362,14 +362,14 @@ void LocalMatrix<ValueType>::AllocateELL(const std::string name, const int nnz, 
     assert(nrow > 0);
     assert(ncol > 0);
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, mat);
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_host_;
 
     } else {
@@ -377,7 +377,7 @@ void LocalMatrix<ValueType>::AllocateELL(const std::string name, const int nnz, 
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -415,14 +415,14 @@ void LocalMatrix<ValueType>::AllocateHYB(const std::string name, const int ell_n
     assert(nrow > 0);
     assert(ncol > 0);
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, mat);
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_host_;
 
     } else {
@@ -430,7 +430,7 @@ void LocalMatrix<ValueType>::AllocateHYB(const std::string name, const int ell_n
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -460,14 +460,14 @@ void LocalMatrix<ValueType>::AllocateDENSE(const std::string name, const int nro
 
   if (nrow*ncol > 0) {
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, mat);
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_host_;
 
     } else {
@@ -475,7 +475,7 @@ void LocalMatrix<ValueType>::AllocateDENSE(const std::string name, const int nro
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -990,14 +990,14 @@ void LocalMatrix<ValueType>::CopyFromHostCSR(const int *row_offset, const int *c
     assert(nrow > 0);
     assert(ncol > 0);
 
-    Paralution_Backend_Descriptor backend = this->local_backend_;
+    Rocalution_Backend_Descriptor backend = this->local_backend_;
     unsigned int mat = this->get_format();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
 
       delete this->matrix_host_;
-      this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, mat);
+      this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_host_;
 
     } else {
@@ -1005,7 +1005,7 @@ void LocalMatrix<ValueType>::CopyFromHostCSR(const int *row_offset, const int *c
       assert(this->matrix_ == this->matrix_accel_);
 
       delete this->matrix_accel_;
-      this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, mat);
+      this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
       this->matrix_ = this->matrix_accel_;
 
     }
@@ -1236,13 +1236,13 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
   this->object_name_  += src.object_name_ + ")";
   this->local_backend_ = src.local_backend_; 
 
-  Paralution_Backend_Descriptor backend = this->local_backend_;
+  Rocalution_Backend_Descriptor backend = this->local_backend_;
 
   if (src.matrix_ == src.matrix_host_) {
 
     // host
     delete this->matrix_host_;
-    this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(backend, src.get_format());
+    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, src.get_format());
     this->matrix_ = this->matrix_host_;
 
   } else {
@@ -1250,7 +1250,7 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
     // accel
     delete this->matrix_accel_;
 
-    this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(backend, src.get_format());
+    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, src.get_format());
     this->matrix_ = this->matrix_accel_;
 
   }
@@ -1334,10 +1334,10 @@ void LocalMatrix<ValueType>::info(void) const {
   std::string current_backend_name;
 
   if (this->matrix_ == this->matrix_host_) {
-    current_backend_name = _paralution_host_name[0];
+    current_backend_name = _rocalution_host_name[0];
   } else {
     assert(this->matrix_ == this->matrix_accel_);
-    current_backend_name = _paralution_backend_name[this->local_backend_.backend];
+    current_backend_name = _rocalution_backend_name[this->local_backend_.backend];
   }
 
   LOG_INFO("LocalMatrix"
@@ -1347,8 +1347,8 @@ void LocalMatrix<ValueType>::info(void) const {
            << " nnz=" << this->get_nnz() << ";"
            << " prec=" << 8*sizeof(ValueType) << "bit;"
            << " format=" << _matrix_format_names[this->get_format()] << ";"
-           << " host backend={" << _paralution_host_name[0] << "};"
-           << " accelerator backend={" << _paralution_backend_name[this->local_backend_.backend] << "};"
+           << " host backend={" << _rocalution_host_name[0] << "};"
+           << " accelerator backend={" << _rocalution_backend_name[this->local_backend_.backend] << "};"
            << " current=" << current_backend_name);
 
   // this->matrix_->info();
@@ -1365,12 +1365,12 @@ void LocalMatrix<ValueType>::MoveToAccelerator(void) {
   this->Check();
 #endif
 
-  if (_paralution_available_accelerator() == false)
+  if (_rocalution_available_accelerator() == false)
     LOG_VERBOSE_INFO(4,"*** info: LocalMatrix::MoveToAccelerator() no accelerator available - doing nothing");
 
-  if ( (_paralution_available_accelerator()) && (this->matrix_ == this->matrix_host_)) {
+  if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_host_)) {
 
-    this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_, this->get_format());
     this->matrix_accel_->CopyFrom(*this->matrix_host_);
 
     this->matrix_ = this->matrix_accel_;
@@ -1391,9 +1391,9 @@ void LocalMatrix<ValueType>::MoveToHost(void) {
   LOG_DEBUG(this, "LocalMatrix::MoveToHost()",
             "");
 
-  if ( (_paralution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
+  if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
 
-    this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, this->get_format());
     this->matrix_host_->CopyFrom(*this->matrix_accel_);
 
     this->matrix_ = this->matrix_host_;
@@ -1422,12 +1422,12 @@ void LocalMatrix<ValueType>::MoveToAcceleratorAsync(void) {
   this->Check();
 #endif
 
-  if (_paralution_available_accelerator() == false)
+  if (_rocalution_available_accelerator() == false)
     LOG_VERBOSE_INFO(4,"*** info: LocalMatrix::MoveToAcceleratorAsync() no accelerator available - doing nothing");
 
-  if ( (_paralution_available_accelerator()) && (this->matrix_ == this->matrix_host_)) {
+  if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_host_)) {
 
-    this->matrix_accel_ = _paralution_init_base_backend_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_, this->get_format());
     this->matrix_accel_->CopyFromAsync(*this->matrix_host_);
     this->asyncf = true;
 
@@ -1445,9 +1445,9 @@ void LocalMatrix<ValueType>::MoveToHostAsync(void) {
   LOG_DEBUG(this, "LocalMatrix::MoveToHostAsync()",
             "");
 
-  if ( (_paralution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
+  if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
 
-    this->matrix_host_ = _paralution_init_base_host_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, this->get_format());
     this->matrix_host_->CopyFromAsync(*this->matrix_accel_);
     this->asyncf = true;
 
@@ -1477,9 +1477,9 @@ void LocalMatrix<ValueType>::Sync(void) {
          (this->matrix_host_  != NULL)) {
 
       // MoveToHostAsync();
-      if ( (_paralution_available_accelerator() == true) && (this->matrix_ == this->matrix_accel_)) {
+      if ( (_rocalution_available_accelerator() == true) && (this->matrix_ == this->matrix_accel_)) {
 
-        _paralution_sync();
+        _rocalution_sync();
 
         this->matrix_ = this->matrix_host_;
         delete this->matrix_accel_;
@@ -1490,9 +1490,9 @@ void LocalMatrix<ValueType>::Sync(void) {
       }
 
       // MoveToAcceleratorAsync();
-      if ( (_paralution_available_accelerator() == true) && (this->matrix_ == this->matrix_host_)) {
+      if ( (_rocalution_available_accelerator() == true) && (this->matrix_ == this->matrix_host_)) {
 
-        _paralution_sync();
+        _rocalution_sync();
 
         this->matrix_ = this->matrix_accel_;
         delete this->matrix_host_;
@@ -1504,7 +1504,7 @@ void LocalMatrix<ValueType>::Sync(void) {
     } else {
 
       // The Copy*Async function is active
-      _paralution_sync();
+      _rocalution_sync();
       LOG_VERBOSE_INFO(4, "*** info: LocalMatrix::Copy*Async() transfer (synced)");
 
     }
@@ -1598,14 +1598,14 @@ void LocalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
       assert(this->matrix_host_ != NULL);
 
       HostMatrix<ValueType> *new_mat;
-      new_mat = _paralution_init_base_host_matrix<ValueType>(this->local_backend_, matrix_format);
+      new_mat = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, matrix_format);
       assert(new_mat != NULL);
 
       // If conversion fails, try CSR before we give up
       if (new_mat->ConvertFrom(*this->matrix_host_) == false) {
         LOG_VERBOSE_INFO(2, "*** warning: Matrix conversion to " << _matrix_format_names[matrix_format] << " failed, falling back to CSR format");
         delete new_mat;
-        new_mat = _paralution_init_base_host_matrix<ValueType>(this->local_backend_, CSR);
+        new_mat = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, CSR);
         assert (new_mat != NULL);
 
         // If CSR conversion fails too, exit with error
@@ -1628,7 +1628,7 @@ void LocalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
       assert(this->matrix_accel_ != NULL);
 
       AcceleratorMatrix<ValueType> *new_mat;
-      new_mat = _paralution_init_base_backend_matrix<ValueType>(this->local_backend_, matrix_format);
+      new_mat = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_, matrix_format);
       assert(new_mat != NULL);
 
       if (new_mat->ConvertFrom(*this->matrix_accel_) == false) {
@@ -1960,7 +1960,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrices(const int row_num_blocks,
   if (this->get_nnz() > 0) {
 
     // implementation via ExtractSubMatrix() calls
-    //OMP not working with OpenCL
+    //TODO OMP
     //#pragma omp parallel for schedule(dynamic,1) collapse(2)
     for (int i=0; i<row_num_blocks; ++i)
       for (int j=0; j<col_num_blocks; ++j)
@@ -4408,7 +4408,7 @@ void LocalMatrix<ValueType>::Compress(const double drop_off) {
   LOG_DEBUG(this, "LocalMatrix::Compress()",
             "");
 
-  assert(paralution_abs(drop_off) >= double(0.0));
+  assert(rocalution_abs(drop_off) >= double(0.0));
 
 #ifdef DEBUG_MODE
   this->Check();

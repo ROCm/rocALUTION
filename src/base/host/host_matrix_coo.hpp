@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HOST_MATRIX_COO_HPP_
-#define PARALUTION_HOST_MATRIX_COO_HPP_
+#ifndef ROCALUTION_HOST_MATRIX_COO_HPP_
+#define ROCALUTION_HOST_MATRIX_COO_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HostMatrixCOO : public HostMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HostMatrixCOO : public HostMatrix<ValueType> {
 public:
 
   HostMatrixCOO();
-  HostMatrixCOO(const Paralution_Backend_Descriptor local_backend);
+  HostMatrixCOO(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixCOO();
 
   virtual void info(void) const;
@@ -63,13 +63,11 @@ private:
   friend class HostMatrixHYB<ValueType>;
   friend class HostMatrixDENSE<ValueType>;
 
-  friend class GPUAcceleratorMatrixCOO<ValueType>;
-  friend class OCLAcceleratorMatrixCOO<ValueType>;
-  friend class MICAcceleratorMatrixCOO<ValueType>;
+  friend class HIPAcceleratorMatrixCOO<ValueType>;
 
 };
 
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_COO_HPP_
+#endif // ROCALUTION_HOST_MATRIX_COO_HPP_

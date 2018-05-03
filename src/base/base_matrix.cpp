@@ -6,7 +6,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 BaseMatrix<ValueType>::BaseMatrix() {
@@ -50,7 +50,7 @@ inline int BaseMatrix<ValueType>::get_nnz(void) const {
 }
 
 template <typename ValueType>
-void BaseMatrix<ValueType>::set_backend(const Paralution_Backend_Descriptor local_backend) {
+void BaseMatrix<ValueType>::set_backend(const Rocalution_Backend_Descriptor local_backend) {
 
   this->local_backend_ = local_backend;
 
@@ -882,31 +882,11 @@ void AcceleratorMatrix<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *dst) c
 
 
 template <typename ValueType>
-GPUAcceleratorMatrix<ValueType>::GPUAcceleratorMatrix() {
+HIPAcceleratorMatrix<ValueType>::HIPAcceleratorMatrix() {
 }
 
 template <typename ValueType>
-GPUAcceleratorMatrix<ValueType>::~GPUAcceleratorMatrix() {
-}
-
-
-
-
-template <typename ValueType>
-OCLAcceleratorMatrix<ValueType>::OCLAcceleratorMatrix() {
-}
-
-template <typename ValueType>
-OCLAcceleratorMatrix<ValueType>::~OCLAcceleratorMatrix() {
-}
-
-
-template <typename ValueType>
-MICAcceleratorMatrix<ValueType>::MICAcceleratorMatrix() {
-}
-
-template <typename ValueType>
-MICAcceleratorMatrix<ValueType>::~MICAcceleratorMatrix() {
+HIPAcceleratorMatrix<ValueType>::~HIPAcceleratorMatrix() {
 }
 
 
@@ -934,28 +914,12 @@ template class AcceleratorMatrix<std::complex<float> >;
 #endif
 template class AcceleratorMatrix<int>;
 
-template class GPUAcceleratorMatrix<double>;
-template class GPUAcceleratorMatrix<float>;
+template class HIPAcceleratorMatrix<double>;
+template class HIPAcceleratorMatrix<float>;
 #ifdef SUPPORT_COMPLEX
-template class GPUAcceleratorMatrix<std::complex<double> >;
-template class GPUAcceleratorMatrix<std::complex<float> >;
+template class HIPAcceleratorMatrix<std::complex<double> >;
+template class HIPAcceleratorMatrix<std::complex<float> >;
 #endif
-template class GPUAcceleratorMatrix<int>;
-
-template class OCLAcceleratorMatrix<double>;
-template class OCLAcceleratorMatrix<float>;
-#ifdef SUPPORT_COMPLEX
-template class OCLAcceleratorMatrix<std::complex<double> >;
-template class OCLAcceleratorMatrix<std::complex<float> >;
-#endif
-template class OCLAcceleratorMatrix<int>;
-
-template class MICAcceleratorMatrix<double>;
-template class MICAcceleratorMatrix<float>;
-#ifdef SUPPORT_COMPLEX
-template class MICAcceleratorMatrix<std::complex<double> >;
-template class MICAcceleratorMatrix<std::complex<float> >;
-#endif
-template class MICAcceleratorMatrix<int>;
+template class HIPAcceleratorMatrix<int>;
 
 }

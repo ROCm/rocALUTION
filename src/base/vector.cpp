@@ -6,7 +6,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 Vector<ValueType>::Vector() {

@@ -1,9 +1,9 @@
-#ifndef PARALUTION_UTILS_COMMUNICATOR_HPP_
-#define PARALUTION_UTILS_COMMUNICATOR_HPP_
+#ifndef RCOALUTION_UTILS_COMMUNICATOR_HPP_
+#define ROCALUTION_UTILS_COMMUNICATOR_HPP_
 
 #include <mpi.h>
 
-namespace paralution {
+namespace rocalution {
 
 struct MRequest {
   MPI_Request req;
@@ -24,4 +24,4 @@ void communication_syncall(int count, MRequest *requests);
 
 }
 
-#endif // PARALUTION_UTILS_COMMUNICATOR_HPP_
+#endif // ROCALUTION_UTILS_COMMUNICATOR_HPP_

@@ -1,14 +1,14 @@
-#ifndef PARALUTION_OPERATOR_HPP_
-#define PARALUTION_OPERATOR_HPP_
+#ifndef ROCALUTION_OPERATOR_HPP_
+#define ROCALUTION_OPERATOR_HPP_
 
 #include "../utils/types.hpp"
-#include "base_paralution.hpp"
+#include "base_rocalution.hpp"
 
 #include <iostream>
 #include <string>
 #include <cstdlib>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class GlobalVector;
@@ -19,7 +19,7 @@ class LocalVector;
 /// for applying an operator (e.g. matrix, stencil)
 /// from/to global and local vectors
 template <typename ValueType>
-class Operator : public BaseParalution<ValueType> {
+class Operator : public BaseRocalution<ValueType> {
 
 public:
 
@@ -66,4 +66,4 @@ public:
 
 }
 
-#endif // PARALUTION_OPERTOR_HPP_
+#endif // ROCALUTION_OPERTOR_HPP_

@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HOST_MATRIX_DIA_HPP_
-#define PARALUTION_HOST_MATRIX_DIA_HPP_
+#ifndef ROCALUTION_HOST_MATRIX_DIA_HPP_
+#define ROCALUTION_HOST_MATRIX_DIA_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HostMatrixDIA : public HostMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HostMatrixDIA : public HostMatrix<ValueType> {
 public:
 
   HostMatrixDIA();
-  HostMatrixDIA(const Paralution_Backend_Descriptor local_backend);
+  HostMatrixDIA(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixDIA();
 
   inline int get_ndiag(void) const { return mat_.num_diag; }
@@ -48,13 +48,11 @@ private:
   friend class HostMatrixHYB<ValueType>;
   friend class HostMatrixDENSE<ValueType>;
 
-  friend class GPUAcceleratorMatrixDIA<ValueType>;
-  friend class OCLAcceleratorMatrixDIA<ValueType>;
-  friend class MICAcceleratorMatrixDIA<ValueType>;
+  friend class HIPAcceleratorMatrixDIA<ValueType>;
 
 };
 
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_DIA_HPP_
+#endif // ROCALUTION_HOST_MATRIX_DIA_HPP_

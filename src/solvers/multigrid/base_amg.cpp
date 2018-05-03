@@ -15,7 +15,7 @@
 
 #include <list>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 BaseAMG<OperatorType, VectorType, ValueType>::BaseAMG() {

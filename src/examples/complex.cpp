@@ -1,16 +1,10 @@
-#if defined(SUPPORT_MIC)
-#undef SUPPORT_COMPLEX
-#else
-#define SUPPORT_COMPLEX
-#endif
-
 #include <iostream>
 #include <cstdlib>
 #include <complex>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -19,15 +13,13 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   if (argc > 2) {
-    set_omp_threads_paralution(atoi(argv[2]));
+    set_omp_threads_rocalution(atoi(argv[2]));
   } 
 
-  info_paralution();
-
-#ifdef SUPPORT_COMPLEX
+  info_rocalution();
 
   LocalVector<std::complex<double> > x;
   LocalVector<std::complex<double> > rhs;
@@ -62,22 +54,16 @@ int main(int argc, char* argv[]) {
   mat.info();
 
   double tick, tack;
-  tick = paralution_time();
+  tick = rocalution_time();
 
   ls.Solve(rhs, &x);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   ls.Clear();
 
-#else
-
-  std::cout << "The basic version does not support complex on CUDA/OpenCL/MIC" << std::endl;
-
-#endif
-
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 

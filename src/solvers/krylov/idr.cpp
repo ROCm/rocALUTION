@@ -19,7 +19,7 @@
 #include <math.h>
 #include <time.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 IDR<OperatorType, VectorType, ValueType>::IDR() {
@@ -367,7 +367,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
   // use for |b-Ax0|
   ValueType res_norm = this->Norm(*r);
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res_norm)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
       LOG_DEBUG(this, "::SolveNonPrecond_()",
             " #*# end");
@@ -480,7 +480,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
     res_norm = this->Norm(*r);
 
     // Check inner loop for convergence
-    if (this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_))
+    if (this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
       break;
 
     // f_i = f_i - beta * M_i_k
@@ -498,7 +498,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
   rt /= nt;
 
-  rho = paralution_abs(rt / res_norm);
+  rho = rocalution_abs(rt / res_norm);
   omega = rt / nt;
 
   if (rho < kappa)
@@ -519,7 +519,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
   // Residual norm to check outer loop convergence
   res_norm = this->Norm(*r);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_)) {
 
     // f = P^T * r
     for (int i=0; i<s; ++i)
@@ -619,7 +619,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
       res_norm = this->Norm(*r);
 
       // Check inner loop for convergence
-      if (this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_))
+      if (this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         break;
 
       // f_i = f_i - beta * M_i_k
@@ -637,7 +637,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
     rt /= nt;
 
-    rho = paralution_abs(rt / res_norm);
+    rho = rocalution_abs(rt / res_norm);
     omega = rt / nt;
 
     if (rho < kappa)
@@ -707,7 +707,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
   // use for |b-Ax0|
   ValueType res_norm = this->Norm(*r);
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res_norm)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
       LOG_DEBUG(this, "::SolvePrecond_()",
             " #*# end");
@@ -823,7 +823,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
     res_norm = this->Norm(*r);
 
     // Check inner loop for convergence
-    if (this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_))
+    if (this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
       break;
 
     // f_i = f_i - beta * M_i_k
@@ -844,7 +844,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
 
   rt /= nt;
 
-  rho = paralution_abs(rt / res_norm);
+  rho = rocalution_abs(rt / res_norm);
   omega = rt / nt;
 
   if (rho < kappa)
@@ -864,7 +864,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
   // Residual norm to check outer loop convergence
   res_norm = this->Norm(*r);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_)) {
 
     // f = P^T * r
     for (int i=0; i<s; ++i)
@@ -967,7 +967,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
       res_norm = this->Norm(*r);
 
       // Check inner loop for convergence
-      if (this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_))
+      if (this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         break;
 
       // f_i = f_i - beta * M_i_k
@@ -988,7 +988,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
 
     rt /= nt;
 
-    rho = paralution_abs(rt / res_norm);
+    rho = rocalution_abs(rt / res_norm);
     omega = rt / nt;
 
     if (rho < kappa)

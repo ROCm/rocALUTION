@@ -1,99 +1,98 @@
-set(PARALUTION_SOURCES)
-set(PARALUTION_PUBLIC_HEADERS
-  paralution.hpp
+set(rocALUTION_SOURCES)
+set(rocALUTION_PUBLIC_HEADERS
+  rocalution.hpp
 )
 
 # Copy headers to binary include dir
-foreach(i ${PARALUTION_PUBLIC_HEADERS})
+foreach(i ${rocALUTION_PUBLIC_HEADERS})
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${i}" "${INC_BUILD_DIR}/${i}" COPYONLY)
 endforeach()
 
-# Fill PARALUTION lists with sources and headers for each subdirectory
+# Fill rocALUTION lists with sources and headers for each subdirectory
 # base
 include(base/CMakeLists.txt)
 foreach(i ${BASE_SOURCES})
-  list(APPEND PARALUTION_SOURCES base/${i})
+  list(APPEND rocALUTION_SOURCES base/${i})
 endforeach()
 foreach(i ${BASE_PUBLIC_HEADERS})
-  list(APPEND PARALUTION_PUBLIC_HEADERS base/${i})
+  list(APPEND rocALUTION_PUBLIC_HEADERS base/${i})
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/${i}" "${INC_BUILD_DIR}/base/${i}" COPYONLY)
 endforeach()
 
 # solvers
 include(solvers/CMakeLists.txt)
 foreach(i ${SOLVERS_SOURCES})
-  list(APPEND PARALUTION_SOURCES solvers/${i})
+  list(APPEND rocALUTION_SOURCES solvers/${i})
 endforeach()
 foreach(i ${SOLVERS_PUBLIC_HEADERS})
-  list(APPEND PARALUTION_PUBLIC_HEADERS solvers/${i})
+  list(APPEND rocALUTION_PUBLIC_HEADERS solvers/${i})
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/solvers/${i}" "${INC_BUILD_DIR}/solvers/${i}" COPYONLY)
 endforeach()
 
 # utils
 include(utils/CMakeLists.txt)
 foreach(i ${UTILS_SOURCES})
-  list(APPEND PARALUTION_SOURCES utils/${i})
+  list(APPEND rocALUTION_SOURCES utils/${i})
 endforeach()
 foreach(i ${UTILS_PUBLIC_HEADERS})
-  list(APPEND PARALUTION_PUBLIC_HEADERS utils/${i})
+  list(APPEND rocALUTION_PUBLIC_HEADERS utils/${i})
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/utils/${i}" "${INC_BUILD_DIR}/utils/${i}" COPYONLY)
 endforeach()
 if (SUPPORT_MPI)
   foreach(i ${UTILS_MPI_SOURCES})
-    list(APPEND PARALUTION_SOURCES utils/${i})
+    list(APPEND rocALUTION_SOURCES utils/${i})
   endforeach()
 endif()
 
 # plug-ins
 include(plug-ins/CMakeLists.txt)
 foreach(i ${PLUG-INS_SOURCES})
-  list(APPEND PARALUTION_SOURCES plug-ins/${i})
+  list(APPEND rocALUTION_SOURCES plug-ins/${i})
 endforeach()
 foreach(i ${PLUG-INS_PUBLIC_HEADERS})
-  list(APPEND PARALUTION_PUBLIC_HEADERS plug-ins/${i})
+  list(APPEND rocALUTION_PUBLIC_HEADERS plug-ins/${i})
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/plug-ins/${i}" "${PLUGINS_BUILD_DIR}/${i}" COPYONLY)
 endforeach()
 
 #######################################################################################################################
 
-# Replace CUDA files in PARALUTION list since it is compiled by NVCC
-if (SUPPORT_CUDA)
-  foreach(i ${PARALUTION_SOURCES})
+if(SUPPORT_HIP)
+  set(CMAKE_SHARED_LIBRARY_CREATE_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS})
+  set(CMAKE_HIP_COMPILE_OPTIONS_PIC ${CMAKE_C_COMPILE_OPTIONS_PIC})
+  set(CMAKE_HIP_COMPILE_OPTIONS_PIE ${CMAKE_C_COMPILE_OPTIONS_PIE})
+  set(CMAKE_HIP_COMPILE_OPTIONS_DLL ${CMAKE_C_COMPILE_OPTIONS_DLL})
+  set(CMAKE_SHARED_LIBRARY_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_C_FLAGS})
+  set(CMAKE_SHARED_LIBRARY_LINK_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS})
+  set(CMAKE_SHARED_LIBRARY_RUNTIME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG})
+  set(CMAKE_SHARED_LIBRARY_RUNTIME_HIP_FLAG_SEP ${CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG_SEP})
+  set(CMAKE_SHARED_LIBRARY_RPATH_LINK_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RPATH_LINK_C_FLAG})
+  set(CMAKE_EXE_EXPORTS_HIP_FLAG ${CMAKE_EXE_EXPORTS_C_FLAG})
+  set(CMAKE_SHARED_LIBRARY_SONAME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_SONAME_C_FLAG})
+  set(CMAKE_EXECUTABLE_RUNTIME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RUNTIME_CXX_FLAG})
+  set(CMAKE_EXECUTABLE_RUNTIME_HIP_FLAG_SEP ${CMAKE_SHARED_LIBRARY_RUNTIME_CXX_FLAG_SEP})
+  set(CMAKE_EXECUTABLE_RPATH_LINK_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RPATH_LINK_CXX_FLAG})
+  set(CMAKE_SHARED_LIBRARY_LINK_HIP_WITH_RUNTIME_PATH ${CMAKE_SHARED_LIBRARY_LINK_C_WITH_RUNTIME_PATH})
+  set(CMAKE_INCLUDE_FLAG_HIP ${CMAKE_INCLUDE_FLAG_C})
+  set(CMAKE_INCLUDE_FLAG_SEP_HIP ${CMAKE_INCLUDE_FLAG_SEP_C})
+  set(CMAKE_HIP_CREATE_SHARED_LIBRARY
+      "${HIP_HIPCC_EXECUTABLE} ${HIP_LIBRARY_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
-    if (${i} MATCHES ".cu")
-      CUDA_COMPILE(cu ${i})
-      list(REMOVE_ITEM PARALUTION_SOURCES ${i})
-      list(APPEND PARALUTION_SOURCES ${cu})
-    endif()
-    
+  foreach(i ${HIP_SOURCES})
+    set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
   endforeach()
+
+  HIP_PREPARE_TARGET_COMMANDS(${rocALUTION_BACKEND_HIP} OBJ _generated_files _source_files ${HIP_SOURCES} SHARED)
+  list(REMOVE_ITEM HIP_SOURCES ${_source_files})
+  list(APPEND HIP_SOURCES ${_generated_files})
+  set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
+
+  add_library(${rocALUTION_BACKEND_HIP} SHARED ${HIP_SOURCES})
+  target_link_libraries(${rocALUTION_BACKEND_HIP} hip_hcc hipblas)
 endif()
 
-# Create paralution library
-if (SUPPORT_MIC)
-  SET(CMAKE_AR "xiar")
-  SET(CMAKE_LINKER "xild")
-  SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> -qoffload-build rcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-  SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> -qoffload-build rcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-endif()
+# Create rocalution library
+add_library(${rocALUTION_LIBRARY} ${LIBRARY_TYPE} ${rocALUTION_SOURCES})
 
-add_library(${PARALUTION_LIBRARY} ${LIBRARY_TYPE} ${PARALUTION_SOURCES})
-
-#######################################################################################################################
-
-# Link platform specific libraries
-if (SUPPORT_CUDA)
-  target_link_libraries(${PARALUTION_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_cusparse_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
-endif()
-
-if (SUPPORT_OCL)
-  target_link_libraries(${PARALUTION_LIBRARY} ${OPENCL_LIBRARIES})
-endif()
-
-if (SUPPORT_MIC)
-  target_link_libraries(${PARALUTION_LIBRARY} -openmp)
-endif()
-
-if (SUPPORT_MKL)
-  target_link_libraries(${PARALUTION_LIBRARY} ${MKL_LIBRARIES})
+if(SUPPORT_HIP)
+  target_link_libraries(${rocALUTION_LIBRARY} LINK_INTERFACE_LIBRARIES ${rocALUTION_BACKEND_HIP})
 endif()

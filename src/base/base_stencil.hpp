@@ -1,31 +1,23 @@
-#ifndef PARALUTION_BASE_STENCIL_HPP_
-#define PARALUTION_BASE_STENCIL_HPP_
+#ifndef ROCALUTION_BASE_STENCIL_HPP_
+#define ROCALUTION_BASE_STENCIL_HPP_
 
-#include "base_paralution.hpp"
+#include "base_rocalution.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class BaseVector;
 template <typename ValueType>
 class HostVector;
 template <typename ValueType>
-class GPUAcceleratorVector;
-template <typename ValueType>
-class OCLAcceleratorVector;
-template <typename ValueType>
-class MICAcceleratorVector;
+class HIPAcceleratorVector;
 
 template <typename ValueType>
 class HostStencilLaplace2D;
 template <typename ValueType>
-class GPUAcceleratorStencil;
+class HIPAcceleratorStencil;
 template <typename ValueType>
-class GPUAcceleratorStencilLaplace2D;
-template <typename ValueType>
-class OCLAcceleratorStencilLaplace2D;
-template <typename ValueType>
-class MICAcceleratorStencilLaplace2D;
+class HIPAcceleratorStencilLaplace2D;
 
 /// Base class for all host/accelerator stencils
 template <typename ValueType>
@@ -50,7 +42,7 @@ public:
   /// Return the stencil format id (see stencil_formats.hpp)
   virtual unsigned int get_stencil_id(void) const = 0 ;
   /// Copy the backend descriptor information
-  virtual void set_backend(const Paralution_Backend_Descriptor local_backend);
+  virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
   // Set the grid size
   virtual void SetGrid(const int size);
 
@@ -69,14 +61,12 @@ protected:
 
 
   /// Backend descriptor (local copy)
-  Paralution_Backend_Descriptor local_backend_;
+  Rocalution_Backend_Descriptor local_backend_;
 
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
-  friend class GPUAcceleratorVector<ValueType>;
-  friend class OCLAcceleratorVector<ValueType>;
-  friend class MICAcceleratorVector<ValueType>;
+  friend class HIPAcceleratorVector<ValueType>;
 
 };
 
@@ -107,36 +97,15 @@ public:
 };
 
 template <typename ValueType>
-class GPUAcceleratorStencil : public AcceleratorStencil<ValueType> {
+class HIPAcceleratorStencil : public AcceleratorStencil<ValueType> {
 
 public:
 
-  GPUAcceleratorStencil();
-  virtual ~GPUAcceleratorStencil();
+  HIPAcceleratorStencil();
+  virtual ~HIPAcceleratorStencil();
 
 };
-
-template <typename ValueType>
-class OCLAcceleratorStencil : public AcceleratorStencil<ValueType> {
-
-public:
-
-  OCLAcceleratorStencil();
-  virtual ~OCLAcceleratorStencil();
-
-};
-
-template <typename ValueType>
-class MICAcceleratorStencil : public AcceleratorStencil<ValueType> {
-
-public:
-
-  MICAcceleratorStencil();
-  virtual ~MICAcceleratorStencil();
-
-};
-
 
 }
 
-#endif // PARALUTION_BASE_STENCIL_HPP_
+#endif // ROCALUTION_BASE_STENCIL_HPP_

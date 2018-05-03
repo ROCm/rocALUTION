@@ -4,7 +4,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <>
 void communication_allreduce_single_sum(double local, double *global, const void *comm) {

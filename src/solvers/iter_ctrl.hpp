@@ -1,10 +1,10 @@
-#ifndef PARALUTION_ITER_CTRL_HPP_
-#define PARALUTION_ITER_CTRL_HPP_
+#ifndef ROCALUTION_ITER_CTRL_HPP_
+#define ROCALUTION_ITER_CTRL_HPP_
 
 #include <vector>
 #include <string>
 
-namespace paralution {
+namespace rocalution {
 
 /// Iteration control for iterative solvers, monitor the 
 /// residual (L2 norm) behavior
@@ -143,4 +143,4 @@ private:
 
 }
 
-#endif // PARALUTION_ITER_CTRL_HPP_
+#endif // ROCALUTION_ITER_CTRL_HPP_

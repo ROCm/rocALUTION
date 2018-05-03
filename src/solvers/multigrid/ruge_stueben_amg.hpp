@@ -1,12 +1,12 @@
-#ifndef PARALUTION_MULTIGRID_RUGE_STUEBEN_AMG_HPP_
-#define PARALUTION_MULTIGRID_RUGE_STUEBEN_AMG_HPP_
+#ifndef ROCALUTION_MULTIGRID_RUGE_STUEBEN_AMG_HPP_
+#define ROCALUTION_MULTIGRID_RUGE_STUEBEN_AMG_HPP_
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class RugeStuebenAMG : public BaseAMG<OperatorType, VectorType, ValueType> {
@@ -48,4 +48,4 @@ private:
 
 }
 
-#endif // PARALUTION_MULTIGRID_RUGE_STUEBEN_AMG_HPP_
+#endif // ROCALUTION_MULTIGRID_RUGE_STUEBEN_AMG_HPP_

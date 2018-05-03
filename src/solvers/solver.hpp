@@ -1,15 +1,15 @@
-#ifndef PARALUTION_SOLVER_HPP_
-#define PARALUTION_SOLVER_HPP_
+#ifndef ROCALUTION_SOLVER_HPP_
+#define ROCALUTION_SOLVER_HPP_
 
 #include "iter_ctrl.hpp"
-#include "../base/base_paralution.hpp"
+#include "../base/base_rocalution.hpp"
 #include "../base/local_vector.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 /// The base class for all solvers and preconditioners
 template <class OperatorType, class VectorType, typename ValueType>
-class Solver : public ParalutionObj {
+class Solver : public RocalutionObj {
 
 public:
 
@@ -251,4 +251,4 @@ protected:
 
 }
 
-#endif // PARALUTION_SOLVER_HPP_
+#endif // ROCALUTION_SOLVER_HPP_

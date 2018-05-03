@@ -15,7 +15,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 CR<OperatorType, VectorType, ValueType>::CR() {
@@ -267,7 +267,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType 
   // use for |b-Ax0|
   ValueType res_norm = this->Norm(*r);
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res_norm)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
     LOG_DEBUG(this, "CR::SolveNonPrecond_()",
               " #*# end");
@@ -298,7 +298,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType 
 
   res_norm = this->Norm(*r);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_)) {
 
     rho_old = rho;
 
@@ -375,7 +375,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rh
   // use for |b-Ax0|
   ValueType res_norm = this->Norm(*t);
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res_norm)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
     LOG_DEBUG(this, "CR::SolvePrecond_()",
               " #*# end");
@@ -413,7 +413,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rh
 
   res_norm = this->Norm(*t);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res_norm), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_)) {
 
     rho_old = rho;
 

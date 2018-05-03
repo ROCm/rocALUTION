@@ -1,7 +1,7 @@
 #include "../utils/def.hpp"
 #include "version.hpp" 
 #include "backend_manager.hpp" 
-#include "base_paralution.hpp"
+#include "base_rocalution.hpp"
 #include "base_vector.hpp"
 #include "base_matrix.hpp"
 #include "host/host_affinity.hpp"
@@ -23,21 +23,8 @@
 #include <omp.h>
 #endif
 
-#ifdef SUPPORT_MKL
-#include <mkl.h>
-#include <mkl_spblas.h>
-#endif
-
-#ifdef SUPPORT_CUDA
-#include "gpu/backend_gpu.hpp"
-#endif
-
-#ifdef SUPPORT_OCL
-#include "ocl/backend_ocl.hpp"
-#endif
-
-#ifdef SUPPORT_MIC
-#include "mic/backend_mic.hpp"
+#ifdef SUPPORT_HIP
+#include "hip/backend_hip.hpp"
 #endif
 
 #ifdef SUPPORT_MULTINODE
@@ -45,23 +32,15 @@
 #include <mpi.h>
 #endif
 
-namespace paralution {
+namespace rocalution {
 
 // Global backend descriptor and default values
-Paralution_Backend_Descriptor _Backend_Descriptor = {
+Rocalution_Backend_Descriptor _Backend_Descriptor = {
   false, // Init
-#ifdef SUPPORT_CUDA
-  GPU,   // default backend
+#ifdef SUPPORT_HIP
+  HIP,   // default backend
 #else
-  #ifdef SUPPORT_OCL
-  OCL,
-   #else
-     #ifdef SUPPORT_MIC
-     MIC,
-    #else
-     None,
-   #endif
-#endif
+  None,
 #endif
   false, // use accelerator
   false, // disable accelerator
@@ -70,31 +49,15 @@ Paralution_Backend_Descriptor _Backend_Descriptor = {
   0,    // pre-init OpenMP threads
   true,  // host affinity (active)
   10000, // threshold size
-  // GPU section
-  NULL,  // *GPU_cublas_handle
-  NULL,  // *GPU_cusparse_handle
-  -1,    // GPU_dev;
-  32,    // GPU_warp;
-  256,   // GPU_blocksize;
+  // HIP section
+  NULL,  // *HIP_blas_handle
+  NULL,  // *HIP_sparse_handle
+  -1,    // HIP_dev;
+  32,    // HIP_warp;
+  256,   // HIP_blocksize;
   65535, // Maximum threads in the block
-  13,    // GPU_num_procs
-  2048,  // GPU_threads_per_proc
-  // OCL section
-  NULL,  // OCL_context
-  NULL,  // OCL_command_queue
-  std::vector<void*>(), // OCL_program
-  std::map<std::string, void*>(), // OCL_kernels
-  -1,    // OCL_platform;
-  -1,    // OCL_device;
-  NULL,  // OCL_platform_id
-  NULL,  // OCL_device_id
-  256,   // OCL_block_sizes
-  32,    // OCL_warp_size
-  13,    // OCL_num_procs
-  1024,  // OCL_threads_per_proc
-  65536, // OCL_regs_per_block
-  // MIC
-  0,     // default is zero device
+  13,    // HIP_num_procs
+  2048,  // HIP_threads_per_proc
   // MPI rank/id
   0,
   // LOG
@@ -102,21 +65,15 @@ Paralution_Backend_Descriptor _Backend_Descriptor = {
 };
 
 /// Host name
-const std::string _paralution_host_name [1] = 
-#ifdef SUPPORT_MKL
-  {"CPU(MKL/OpenMP)"};
-#else 
+const std::string _rocalution_host_name [1] = 
   {"CPU(OpenMP)"};
-#endif
 
 /// Backend names
-const std::string _paralution_backend_name [4] =
+const std::string _rocalution_backend_name [2] =
   {"None",
-   "GPU(CUDA)",
-   "OpenCL",
-   "MIC(OpenMP)"};
+   "HIP"};
 
-int init_paralution(const int rank, const int dev_per_node, const int platform) {
+int init_rocalution(const int rank, const int dev_per_node, const int platform) {
 
 
   // please note your MPI communicator
@@ -148,28 +105,20 @@ int init_paralution(const int rank, const int dev_per_node, const int platform) 
 
   }
 
-  _paralution_open_log_file();
+  _rocalution_open_log_file();
 
-  LOG_DEBUG(0, "init_paralution()",
+  LOG_DEBUG(0, "init_rocalution()",
             "* begin");
 
   if (_get_backend_descriptor()->init == true) {
-    LOG_INFO("PARALUTION platform has been initialized - restarting");
-    stop_paralution();
+    LOG_INFO("rocALUTION platform has been initialized - restarting");
+    stop_rocalution();
   }
 
-#ifdef SUPPORT_CUDA
-  _get_backend_descriptor()->backend = GPU;
+#ifdef SUPPORT_HIP
+  _get_backend_descriptor()->backend = HIP;
 #else
-  #ifdef SUPPORT_OCL
-    _get_backend_descriptor()->backend = OCL;
-  #else
-    #ifdef SUPPORT_MIC
-    _get_backend_descriptor()->backend = MIC;
-   #else
-    _get_backend_descriptor()->backend = None;
-  #endif
- #endif
+  _get_backend_descriptor()->backend = None;
 #endif
 
 #ifdef _OPENMP
@@ -177,54 +126,30 @@ int init_paralution(const int rank, const int dev_per_node, const int platform) 
   _get_backend_descriptor()->OpenMP_threads = omp_get_max_threads();
   _get_backend_descriptor()->OpenMP_def_nested = omp_get_nested();
 
-  // the default in PARALUTION is 0
+  // the default in rocALUTION is 0
   omp_set_nested(0);
 
-  paralution_set_omp_affinity(_get_backend_descriptor()->OpenMP_affinity);
+  rocalution_set_omp_affinity(_get_backend_descriptor()->OpenMP_affinity);
 #else 
   _get_backend_descriptor()->OpenMP_threads = 1;
 #endif
 
   if (_get_backend_descriptor()->disable_accelerator == false) {
 
-#ifdef SUPPORT_CUDA
-  if (rank > -1) set_gpu_cuda_paralution(rank % dev_per_node);
-  _get_backend_descriptor()->accelerator = paralution_init_gpu();
+#ifdef SUPPORT_HIP
+  if (rank > -1) set_hip_gpu_rocalution(rank % dev_per_node);
+  _get_backend_descriptor()->accelerator = rocalution_init_hip();
 #endif
-    
-#ifdef SUPPORT_OCL
-  if (rank > -1) set_ocl_paralution(platform, rank % dev_per_node);
-  _get_backend_descriptor()->accelerator = paralution_init_ocl();
-#endif
-    
-#ifdef SUPPORT_MIC
-    
-#ifdef __INTEL_OFFLOAD
-    
-    _get_backend_descriptor()->accelerator = paralution_init_mic();
-    
-#else
-
-  LOG_INFO("The MIC backend is compiled without __INTEL_OFFLOAD - Double check the compilation process!");
-  FATAL_ERROR(__FILE__, __LINE__);
-
-#endif
-
-#endif
-
   } else {
-
     LOG_INFO("Warning: the accelerator is disabled");
-
   }
 
-  if (_paralution_check_if_any_obj() == false) {
-    LOG_INFO("Error: PARALUTION objects have been created before calling the init_paralution()!");
+  if (_rocalution_check_if_any_obj() == false) {
+    LOG_INFO("Error: rocALUTION objects have been created before calling the init_rocalution()!");
     FATAL_ERROR(__FILE__, __LINE__);
-
   }
 
-  LOG_DEBUG(0, "init_paralution()",
+  LOG_DEBUG(0, "init_rocalution()",
             "* end");
 
   _get_backend_descriptor()->init = true ;
@@ -232,23 +157,15 @@ int init_paralution(const int rank, const int dev_per_node, const int platform) 
 
 }
 
-int stop_paralution(void) {
+int stop_rocalution(void) {
 
-  LOG_DEBUG(0, "stop_paralution()",
+  LOG_DEBUG(0, "stop_rocalution()",
             "* begin");
 
-  _paralution_delete_all_obj();
+  _rocalution_delete_all_obj();
 
-#ifdef SUPPORT_CUDA
-  paralution_stop_gpu();
-#endif
-
-#ifdef SUPPORT_OCL
-  paralution_stop_ocl();
-#endif
-
-#ifdef SUPPORT_MIC
-  paralution_stop_mic();
+#ifdef SUPPORT_HIP
+  rocalution_stop_hip();
 #endif
 
 #ifdef _OPENMP
@@ -263,40 +180,32 @@ int stop_paralution(void) {
 
   _get_backend_descriptor()->init = false;
 
-  LOG_DEBUG(0, "stop_paralution()",
+  LOG_DEBUG(0, "stop_rocalution()",
             "* end");
 
-  _paralution_close_log_file();
+  _rocalution_close_log_file();
 
   return 0;
 }
 
-int set_device_paralution(int dev) {
+int set_device_rocalution(int dev) {
 
-  LOG_DEBUG(0, "set_device_paralution()",
+  LOG_DEBUG(0, "set_device_rocalution()",
             dev);
 
   assert(_get_backend_descriptor()->init == false);
 
-#ifdef SUPPORT_CUDA
-  set_gpu_cuda_paralution(dev);
-#endif
-
-#ifdef SUPPORT_OCL
-  _get_backend_descriptor()->OCL_dev = dev;
-#endif
-
-#ifdef SUPPORT_MIC
-  _get_backend_descriptor()->MIC_dev = dev;
+#ifdef SUPPORT_HIP
+  set_hip_gpu_rocalution(dev);
 #endif
 
   return 0;
 
 }
 
-void set_omp_threads_paralution(int nthreads) {
+void set_omp_threads_rocalution(int nthreads) {
 
-  LOG_DEBUG(0, "set_omp_threads_paralution()",
+  LOG_DEBUG(0, "set_omp_threads_rocalution()",
             nthreads);
 
   assert(_get_backend_descriptor()->init == true);
@@ -308,7 +217,7 @@ void set_omp_threads_paralution(int nthreads) {
 
  #if defined(__gnu_linux__) || defined(linux) || defined(__linux) || defined(__linux__)
 
-  paralution_set_omp_affinity(_get_backend_descriptor()->OpenMP_affinity);
+  rocalution_set_omp_affinity(_get_backend_descriptor()->OpenMP_affinity);
 
 #endif // linux
 
@@ -320,50 +229,25 @@ void set_omp_threads_paralution(int nthreads) {
 
 }
 
-void set_gpu_cuda_paralution(const int ngpu) {
+void set_hip_gpu_rocalution(const int ngpu) {
 
-  LOG_DEBUG(0, "set_gpu_cuda_paralution()",
+  LOG_DEBUG(0, "set_hip_gpu_rocalution()",
             ngpu);
 
   assert(_get_backend_descriptor()->init == false);
 
-  _get_backend_descriptor()->GPU_dev = ngpu;
+  _get_backend_descriptor()->HIP_dev = ngpu;
 
 }
 
-void set_ocl_paralution(const int nplatform, const int ndevice) {
+void info_rocalution(void) {
 
-  LOG_DEBUG(0, "set_ocl_paralution()",
-            "nplatform=" << nplatform << 
-            " ndevice" << ndevice);
-
-
-  assert(_get_backend_descriptor()->init == false);
-
-  _get_backend_descriptor()->OCL_plat = nplatform;
-  _get_backend_descriptor()->OCL_dev = ndevice;
-
-}
-
-void set_ocl_platform_paralution(int platform) {
-
-  LOG_DEBUG(0, "set_ocl_platform_paralution()",
-            "platform=" << platform);
-
-  assert(_get_backend_descriptor()->init == false);
-
-  _get_backend_descriptor()->OCL_plat = platform;
-
-}
-
-void info_paralution(void) {
-
-  LOG_INFO("PARALUTION ver " <<
-           __PARALUTION_VER_TYPE <<
-           __PARALUTION_VER_MAJOR << "." <<
-           __PARALUTION_VER_MINOR << "." <<
-           __PARALUTION_VER_REV << 
-           __PARALUTION_VER_PRE);
+  LOG_INFO("rocALUTION ver " <<
+           __ROCALUTION_VER_TYPE <<
+           __ROCALUTION_VER_MAJOR << "." <<
+           __ROCALUTION_VER_MINOR << "." <<
+           __ROCALUTION_VER_REV << 
+           __ROCALUTION_VER_PRE);
 
 #if defined(__gnu_linux__) || defined(linux) || defined(__linux) || defined(__linux__)
 
@@ -394,19 +278,19 @@ void info_paralution(void) {
 #endif // Linux
 
 
-  info_paralution(_Backend_Descriptor);
+  info_rocalution(_Backend_Descriptor);
 
 }
 
-void info_paralution(const struct Paralution_Backend_Descriptor backend_descriptor) {
+void info_rocalution(const struct Rocalution_Backend_Descriptor backend_descriptor) {
 
   if (backend_descriptor.init == true) {
-    LOG_INFO("PARALUTION platform is initialized");
+    LOG_INFO("rocALUTION platform is initialized");
   } else {
-    LOG_INFO("PARALUTION platform is NOT initialized");
+    LOG_INFO("rocALUTION platform is NOT initialized");
   }
 
-  LOG_INFO("Accelerator backend: " << _paralution_backend_name[backend_descriptor.backend]);
+  LOG_INFO("Accelerator backend: " << _rocalution_backend_name[backend_descriptor.backend]);
 
 #ifdef _OPENMP
   LOG_INFO("OpenMP threads:" << backend_descriptor.OpenMP_threads);
@@ -414,41 +298,17 @@ void info_paralution(const struct Paralution_Backend_Descriptor backend_descript
   LOG_INFO("No OpenMP support");
 #endif
 
-#ifdef SUPPORT_MKL
-  LOG_INFO("MKL threads:" << mkl_get_max_threads() );
-#else
-  LOG_VERBOSE_INFO(3, "No MKL support");
-#endif
-
   if (backend_descriptor.disable_accelerator == true) {
     LOG_INFO("The accelerator is disabled");
   }
 
-#ifdef SUPPORT_CUDA
+#ifdef SUPPORT_HIP
   if (backend_descriptor.accelerator)
-    paralution_info_gpu(backend_descriptor);
+    rocalution_info_hip(backend_descriptor);
   else
-    LOG_INFO("GPU is not initialized");
+    LOG_INFO("HIP is not initialized");
 #else
-  LOG_VERBOSE_INFO(3, "No CUDA/GPU support");
-#endif
-
-#ifdef SUPPORT_OCL
-  if (backend_descriptor.accelerator)
-    paralution_info_ocl(backend_descriptor);
-  else
-    LOG_INFO("OpenCL is not initialized");
-#else
-  LOG_VERBOSE_INFO(3, "No OpenCL support");
-#endif
-
-#ifdef SUPPORT_MIC
-  if (backend_descriptor.accelerator)
-    paralution_info_mic(backend_descriptor);
-  else
-    LOG_INFO("MIC/OpenMP is not initialized");
-#else
-  LOG_VERBOSE_INFO(3, "No MIC/OpenMP support");
+  LOG_VERBOSE_INFO(3, "No HIP support");
 #endif
 
 #ifdef SUPPORT_MULTINODE
@@ -493,13 +353,13 @@ void set_omp_threshold(const int threshold) {
 }
 
 
-bool _paralution_available_accelerator(void) {
+bool _rocalution_available_accelerator(void) {
 
   return _get_backend_descriptor()->accelerator;
 
 }
 
-void disable_accelerator_paralution(const bool onoff) {
+void disable_accelerator_rocalution(const bool onoff) {
 
   assert(_get_backend_descriptor()->init == false);
 
@@ -507,14 +367,14 @@ void disable_accelerator_paralution(const bool onoff) {
  
 }
 
-struct Paralution_Backend_Descriptor *_get_backend_descriptor(void) {
+struct Rocalution_Backend_Descriptor *_get_backend_descriptor(void) {
 
   return &_Backend_Descriptor;
 
 }
 
 
-void _set_backend_descriptor(const struct Paralution_Backend_Descriptor backend_descriptor) {
+void _set_backend_descriptor(const struct Rocalution_Backend_Descriptor backend_descriptor) {
 
   *(_get_backend_descriptor()) = backend_descriptor;
 
@@ -522,38 +382,24 @@ void _set_backend_descriptor(const struct Paralution_Backend_Descriptor backend_
 
 
 template <typename ValueType>
-AcceleratorVector<ValueType>* _paralution_init_base_backend_vector(const struct Paralution_Backend_Descriptor backend_descriptor) {
+AcceleratorVector<ValueType>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor) {
 
-  LOG_DEBUG(0, "_paralution_init_base_backend_vector()",
+  LOG_DEBUG(0, "_rocalution_init_base_backend_vector()",
             "");
 
   switch (backend_descriptor.backend) {
 
-#ifdef SUPPORT_CUDA
-  // GPU
-  case GPU:
-    return _paralution_init_base_gpu_vector<ValueType>(backend_descriptor);
-    break;
-#endif
-
-#ifdef SUPPORT_OCL
-  // OCL
-  case OCL:
-    return _paralution_init_base_ocl_vector<ValueType>(backend_descriptor);
-    break;
-#endif
-
-#ifdef SUPPORT_MIC
-  // GPU
-  case MIC:
-    return _paralution_init_base_mic_vector<ValueType>(backend_descriptor);
+#ifdef SUPPORT_HIP
+  // HIP
+  case HIP:
+    return _rocalution_init_base_hip_vector<ValueType>(backend_descriptor);
     break;
 #endif
 
   default:
     // No backend supported!
-    LOG_INFO("Paralution was not compiled with " << _paralution_backend_name[backend_descriptor.backend] << " support");
-    LOG_INFO("Building Vector on " << _paralution_backend_name[backend_descriptor.backend] << " failed"); 
+    LOG_INFO("Rocalution was not compiled with " << _rocalution_backend_name[backend_descriptor.backend] << " support");
+    LOG_INFO("Building Vector on " << _rocalution_backend_name[backend_descriptor.backend] << " failed"); 
     FATAL_ERROR(__FILE__, __LINE__);
     return NULL;
   }
@@ -561,35 +407,23 @@ AcceleratorVector<ValueType>* _paralution_init_base_backend_vector(const struct 
 }
   
 template <typename ValueType>
-AcceleratorMatrix<ValueType>* _paralution_init_base_backend_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+AcceleratorMatrix<ValueType>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                    const unsigned int matrix_format) {
 
-  LOG_DEBUG(0, "_paralution_init_base_backend_matrix()",
+  LOG_DEBUG(0, "_rocalution_init_base_backend_matrix()",
             matrix_format);
 
   switch (backend_descriptor.backend) {
 
-#ifdef SUPPORT_CUDA      
-  case GPU:
-    return _paralution_init_base_gpu_matrix<ValueType>(backend_descriptor, matrix_format);
-    break;
-#endif
-
-#ifdef SUPPORT_OCL
-  case OCL:
-    return _paralution_init_base_ocl_matrix<ValueType>(backend_descriptor, matrix_format);
-    break;
-#endif
-
-#ifdef SUPPORT_MIC      
-  case MIC:
-    return _paralution_init_base_mic_matrix<ValueType>(backend_descriptor, matrix_format);
+#ifdef SUPPORT_HIP
+  case HIP:
+    return _rocalution_init_base_hip_matrix<ValueType>(backend_descriptor, matrix_format);
     break;
 #endif
 
   default:
-    LOG_INFO("Paralution was not compiled with " << _paralution_backend_name[backend_descriptor.backend] << " support");
-    LOG_INFO("Building " << _matrix_format_names[matrix_format] << " Matrix on " << _paralution_backend_name[backend_descriptor.backend] << " failed"); 
+    LOG_INFO("Rocalution was not compiled with " << _rocalution_backend_name[backend_descriptor.backend] << " support");
+    LOG_INFO("Building " << _matrix_format_names[matrix_format] << " Matrix on " << _rocalution_backend_name[backend_descriptor.backend] << " failed"); 
     
     FATAL_ERROR(__FILE__, __LINE__);
     return NULL;
@@ -599,10 +433,10 @@ AcceleratorMatrix<ValueType>* _paralution_init_base_backend_matrix(const struct 
 
 
 template <typename ValueType>
-HostMatrix<ValueType>* _paralution_init_base_host_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+HostMatrix<ValueType>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                          const unsigned int matrix_format) {
 
-  LOG_DEBUG(0, "_paralution_init_base_host_matrix()",
+  LOG_DEBUG(0, "_rocalution_init_base_host_matrix()",
             matrix_format);
 
   switch (matrix_format) {
@@ -646,27 +480,19 @@ HostMatrix<ValueType>* _paralution_init_base_host_matrix(const struct Paralution
 }
 
 
-void _paralution_sync(void) {
+void _rocalution_sync(void) {
 
-  if (_paralution_available_accelerator() == true) {
+  if (_rocalution_available_accelerator() == true) {
 
-#ifdef SUPPORT_CUDA
-    paralution_gpu_sync();
-#endif
-    
-#ifdef SUPPORT_OCL
-    paralution_ocl_sync();
-#endif
-    
-#ifdef SUPPORT_MIC
-    //  paralution_mic_sync();
+#ifdef SUPPORT_HIP
+    rocalution_hip_sync();
 #endif
     
   }
 
 }
 
-void _set_omp_backend_threads(const struct Paralution_Backend_Descriptor backend_descriptor,
+void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor backend_descriptor,
                               const int size) {
 
   // if the threshold is disabled or if the size is not in the threshold limit
@@ -684,19 +510,19 @@ void _set_omp_backend_threads(const struct Paralution_Backend_Descriptor backend
 
 }
 
-size_t _paralution_add_obj(class ParalutionObj* ptr) {
+size_t _rocalution_add_obj(class RocalutionObj* ptr) {
 
 #ifndef OBJ_TRACKING_OFF
   
-  LOG_DEBUG(0, "Creating new PARALUTION object, ptr=",
+  LOG_DEBUG(0, "Creating new rocALUTION object, ptr=",
             ptr);
   
-  Paralution_Object_Data_Tracking.all_obj.push_back(ptr);
+  Rocalution_Object_Data_Tracking.all_obj.push_back(ptr);
   
-    LOG_DEBUG(0, "Creating new PARALUTION object, id=",
-              Paralution_Object_Data_Tracking.all_obj.size()-1);
+    LOG_DEBUG(0, "Creating new rocALUTION object, id=",
+              Rocalution_Object_Data_Tracking.all_obj.size()-1);
 
-  return (Paralution_Object_Data_Tracking.all_obj.size()-1);
+  return (Rocalution_Object_Data_Tracking.all_obj.size()-1);
 
 #else 
 
@@ -706,22 +532,22 @@ size_t _paralution_add_obj(class ParalutionObj* ptr) {
 
 };
 
-bool _paralution_del_obj(class ParalutionObj* ptr,
+bool _rocalution_del_obj(class RocalutionObj* ptr,
                          size_t id) {
   bool ok = false;
 
 #ifndef OBJ_TRACKING_OFF
 
-  LOG_DEBUG(0, "Deleting PARALUTION object, ptr=",
+  LOG_DEBUG(0, "Deleting rocALUTION object, ptr=",
             ptr);
 
-  LOG_DEBUG(0, "Deleting PARALUTION object, id=",
+  LOG_DEBUG(0, "Deleting rocALUTION object, id=",
             id);
   
-  if (Paralution_Object_Data_Tracking.all_obj[id] == ptr)
+  if (Rocalution_Object_Data_Tracking.all_obj[id] == ptr)
     ok = true;
 
-  Paralution_Object_Data_Tracking.all_obj[id] = NULL;
+  Rocalution_Object_Data_Tracking.all_obj[id] = NULL;
 
   return ok;
 
@@ -735,38 +561,38 @@ bool _paralution_del_obj(class ParalutionObj* ptr,
 
 };
 
-void _paralution_delete_all_obj(void) {
+void _rocalution_delete_all_obj(void) {
 
 #ifndef OBJ_TRACKING_OFF
 
-  LOG_DEBUG(0, "_paralution_delete_all_obj()",
+  LOG_DEBUG(0, "_rocalution_delete_all_obj()",
             "* begin");
 
   for (unsigned int i=0; 
-       i<Paralution_Object_Data_Tracking.all_obj.size(); 
+       i<Rocalution_Object_Data_Tracking.all_obj.size(); 
        ++i) {
 
-    if (Paralution_Object_Data_Tracking.all_obj[i] != NULL)
-      Paralution_Object_Data_Tracking.all_obj[i]->Clear();
+    if (Rocalution_Object_Data_Tracking.all_obj[i] != NULL)
+      Rocalution_Object_Data_Tracking.all_obj[i]->Clear();
     
-    LOG_DEBUG(0, "clearing PARALUTION obj ptr=",
-              Paralution_Object_Data_Tracking.all_obj[i]);
+    LOG_DEBUG(0, "clearing rocALUTION obj ptr=",
+              Rocalution_Object_Data_Tracking.all_obj[i]);
 
   }
 
-  Paralution_Object_Data_Tracking.all_obj.clear();
+  Rocalution_Object_Data_Tracking.all_obj.clear();
       
-  LOG_DEBUG(0, "_paralution_delete_all_obj()",
+  LOG_DEBUG(0, "_rocalution_delete_all_obj()",
             "* end");
 #endif
 
 };
 
-bool _paralution_check_if_any_obj(void) {
+bool _rocalution_check_if_any_obj(void) {
 
 #ifndef OBJ_TRACKING_OFF
 
-  if (Paralution_Object_Data_Tracking.all_obj.size() > 0) {
+  if (Rocalution_Object_Data_Tracking.all_obj.size() > 0) {
     return false;
   } 
 
@@ -777,32 +603,32 @@ bool _paralution_check_if_any_obj(void) {
 };
 
 
-template AcceleratorVector<float>* _paralution_init_base_backend_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
-template AcceleratorVector<double>* _paralution_init_base_backend_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<float>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<double>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 #ifdef SUPPORT_COMPLEX
-template AcceleratorVector<std::complex<float> >* _paralution_init_base_backend_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
-template AcceleratorVector<std::complex<double> >* _paralution_init_base_backend_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<std::complex<float> >* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<std::complex<double> >* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 #endif
-template AcceleratorVector<int>* _paralution_init_base_backend_vector(const struct Paralution_Backend_Descriptor backend_descriptor);
+template AcceleratorVector<int>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
-template AcceleratorMatrix<float>* _paralution_init_base_backend_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<float>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                         const unsigned int matrix_format);
-template AcceleratorMatrix<double>* _paralution_init_base_backend_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<double>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                          const unsigned int matrix_format);
 #ifdef SUPPORT_COMPLEX
-template AcceleratorMatrix<std::complex<float> >* _paralution_init_base_backend_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<std::complex<float> >* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                                        const unsigned int matrix_format);
-template AcceleratorMatrix<std::complex<double> >* _paralution_init_base_backend_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template AcceleratorMatrix<std::complex<double> >* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                                         const unsigned int matrix_format);
 #endif
-template HostMatrix<float>* _paralution_init_base_host_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template HostMatrix<float>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                               const unsigned int matrix_format);
-template HostMatrix<double>* _paralution_init_base_host_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template HostMatrix<double>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                const unsigned int matrix_format);
 #ifdef SUPPORT_COMPLEX
-template HostMatrix<std::complex<float> >* _paralution_init_base_host_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template HostMatrix<std::complex<float> >* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                              const unsigned int matrix_format);
-template HostMatrix<std::complex<double> >* _paralution_init_base_host_matrix(const struct Paralution_Backend_Descriptor backend_descriptor,
+template HostMatrix<std::complex<double> >* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                               const unsigned int matrix_format);
 #endif
 }

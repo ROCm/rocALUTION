@@ -1,9 +1,9 @@
-#ifndef PARALUTION_BASE_VECTOR_HPP_
-#define PARALUTION_BASE_VECTOR_HPP_
+#ifndef ROCALUTION_BASE_VECTOR_HPP_
+#define ROCALUTION_BASE_VECTOR_HPP_
 
 #include "backend_manager.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 // Forward declarations
 template <typename ValueType>
@@ -13,13 +13,7 @@ template <typename ValueType>
 class AcceleratorVector;
 
 template <typename ValueType>
-class GPUAcceleratorVector;
-
-template <typename ValueType>
-class OCLAcceleratorVector;
-
-template <typename ValueType>
-class MICAcceleratorVector;
+class HIPAcceleratorVector;
 
 /// Base class for all host/accelerator vectors
 template <typename ValueType>
@@ -37,7 +31,7 @@ public:
   int get_size(void) const;
 
   /// Copy the backend descriptor information
-  void set_backend(const Paralution_Backend_Descriptor local_backend);
+  void set_backend(const Rocalution_Backend_Descriptor local_backend);
 
   /// Check if everything is ok
   virtual bool Check(void) const;
@@ -168,7 +162,7 @@ protected:
   int index_size_;
 
   /// Backend descriptor (local copy)
-  Paralution_Backend_Descriptor local_backend_;
+  Rocalution_Backend_Descriptor local_backend_;
 
 };
 
@@ -195,4 +189,4 @@ public:
 
 }
 
-#endif // PARALUTION_BASE_VECTOR_HPP_
+#endif // ROCALUTION_BASE_VECTOR_HPP_

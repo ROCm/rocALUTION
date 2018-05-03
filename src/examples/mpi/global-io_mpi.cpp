@@ -1,8 +1,8 @@
 #include <iostream>
-#include <paralution.hpp>
+#include <rocalution.hpp>
 #include <mpi.h>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -28,11 +28,11 @@ int main(int argc, char* argv[]) {
 
   set_omp_affinity(false);
 
-  init_paralution(rank, 2);
+  init_rocalution(rank, 2);
 
-  set_omp_threads_paralution(1);
+  set_omp_threads_rocalution(1);
 
-  info_paralution();
+  info_rocalution();
 
   // Parallel Manager
   ParallelManager *pm = new ParallelManager;
@@ -71,16 +71,16 @@ int main(int argc, char* argv[]) {
 
   mat.info();
 
-  double tick = paralution_time();
+  double tick = rocalution_time();
 
   ls.Solve(rhs, &x);
 
-  double tack = paralution_time();
+  double tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   ls.Clear();
 
-  stop_paralution();
+  stop_rocalution();
 
   MPI_Finalize();
 

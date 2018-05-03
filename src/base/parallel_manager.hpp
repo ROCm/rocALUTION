@@ -1,13 +1,13 @@
-#ifndef PARALUTION_PARALLEL_MANAGER_HPP_
-#define PARALUTION_PARALLEL_MANAGER_HPP_
+#ifndef ROCALUTION_PARALLEL_MANAGER_HPP_
+#define ROCALUTION_PARALLEL_MANAGER_HPP_
 
-#include "base_paralution.hpp"
+#include "base_rocalution.hpp"
 #include "../utils/types.hpp"
 
 #include <string>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class GlobalMatrix;
@@ -15,7 +15,7 @@ template <typename ValueType>
 class GlobalVector;
 
 // ParallelManager
-class ParallelManager : public ParalutionObj {
+class ParallelManager : public RocalutionObj {
 
 public:
 
@@ -92,4 +92,4 @@ private:
 
 }
 
-#endif // PARALUTION_PARALLEL_MANAGER_HPP_
+#endif // ROCALUTION_PARALLEL_MANAGER_HPP_

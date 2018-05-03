@@ -1,10 +1,10 @@
-#ifndef PARALUTION_LOCAL_VECTOR_HPP_
-#define PARALUTION_LOCAL_VECTOR_HPP_
+#ifndef ROCALUTION_LOCAL_VECTOR_HPP_
+#define ROCALUTION_LOCAL_VECTOR_HPP_
 
 #include "../utils/types.hpp"
 #include "vector.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class BaseVector;
@@ -187,4 +187,4 @@ private:
 
 }
 
-#endif // PARALUTION_LOCAL_VECTOR_HPP_
+#endif // ROCALUTION_LOCAL_VECTOR_HPP_

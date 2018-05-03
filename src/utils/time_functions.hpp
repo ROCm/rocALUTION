@@ -1,12 +1,12 @@
-#ifndef PARALUTION_UTILS_TIME_FUNCTIONS_HPP_
-#define PARALUTION_UTILS_TIME_FUNCTIONS_HPP_
+#ifndef ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
+#define ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
 
-namespace paralution {
+namespace rocalution {
 
 /// Return current time in microseconds
-double paralution_time(void);
+double rocalution_time(void);
 
 
 }
 
-#endif // PARALUTION_UTILS_TIME_FUNCTIONS_HPP_
+#endif // ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -14,12 +14,12 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   if (argc > 2)
-    set_omp_threads_paralution(atoi(argv[2]));
+    set_omp_threads_rocalution(atoi(argv[2]));
 
-  info_paralution();
+  info_rocalution();
 
   LocalVector<double> x;
   LocalVector<double> rhs;
@@ -34,8 +34,8 @@ int main(int argc, char* argv[]) {
   rhs.Ones();
   x.Zeros(); 
 
-  tick = paralution_time();
-  start = paralution_time();
+  tick = rocalution_time();
+  start = rocalution_time();
 
   // Linear Solver
   AMG<LocalMatrix<double>, LocalVector<double>, double > ls;
@@ -106,14 +106,14 @@ int main(int argc, char* argv[]) {
 
   mat.info();
   
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Building time:" << (tack-tick)/1000000 << " sec" << std::endl;
   
-  tick = paralution_time();
+  tick = rocalution_time();
   
   ls.Solve(rhs, &x);
   
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
   
   ls.Clear();
@@ -128,10 +128,10 @@ int main(int argc, char* argv[]) {
 
   ls.Clear();
 
-  end = paralution_time();
+  end = rocalution_time();
   std::cout << "Total runtime:" << (end-start)/1000000 << " sec" << std::endl;
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }

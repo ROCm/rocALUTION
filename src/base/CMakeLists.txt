@@ -1,5 +1,5 @@
 set(BASE_SOURCES
-  base_paralution.cpp
+  base_rocalution.cpp
   operator.cpp
   vector.cpp
   local_matrix.cpp
@@ -18,7 +18,7 @@ set(BASE_PUBLIC_HEADERS
   version.hpp
   matrix_formats.hpp
   matrix_formats_ind.hpp
-  base_paralution.hpp
+  base_rocalution.hpp
   operator.hpp
   vector.hpp
   local_matrix.hpp
@@ -40,36 +40,6 @@ foreach(i ${HOST_PUBLIC_HEADERS})
   list(APPEND BASE_PUBLIC_HEADERS host/${i})
 endforeach()
 
-if (SUPPORT_CUDA)
-  include(base/gpu/CMakeLists.txt)
-  foreach(i ${GPU_SOURCES})
-    list(APPEND BASE_SOURCES gpu/${i})
-  endforeach()
-
-  foreach(i ${GPU_PUBLIC_HEADERS})
-    list(APPEND BASE_PUBLIC_HEADERS gpu/${i})
-  endforeach()
+if (SUPPORT_HIP)
+  include(base/hip/CMakeLists.txt)
 endif()
-
-if (SUPPORT_OCL)
-  include(base/ocl/CMakeLists.txt)
-  foreach(i ${OCL_SOURCES})
-    list(APPEND BASE_SOURCES ocl/${i})
-  endforeach()
-
-  foreach(i ${OCL_PUBLIC_HEADERS})
-    list(APPEND BASE_PUBLIC_HEADERS ocl/${i})
-  endforeach()
-endif()
-
-if (SUPPORT_MIC)
-  include(base/mic/CMakeLists.txt)
-  foreach(i ${MIC_SOURCES})
-    list(APPEND BASE_SOURCES mic/${i})
-  endforeach()
-
-  foreach(i ${MIC_PUBLIC_HEADERS})
-    list(APPEND BASE_PUBLIC_HEADERS mic/${i})
-  endforeach()
-endif()
-

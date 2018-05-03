@@ -1,5 +1,5 @@
-#ifndef PARALUTION_PRECONDITIONER_SADDLEPOINT_HPP_
-#define PARALUTION_PRECONDITIONER_SADDLEPOINT_HPP_
+#ifndef ROCALUTION_PRECONDITIONER_SADDLEPOINT_HPP_
+#define ROCALUTION_PRECONDITIONER_SADDLEPOINT_HPP_
 
 #include "../solver.hpp"
 #include "preconditioner.hpp"
@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class DiagJacobiSaddlePointPrecond : public Preconditioner<OperatorType, VectorType, ValueType> {
@@ -66,4 +66,4 @@ protected:
 
 }
 
-#endif // PARALUTION_PRECONDITIONER_SADDLEPOINT_HPP_
+#endif // ROCALUTION_PRECONDITIONER_SADDLEPOINT_HPP_

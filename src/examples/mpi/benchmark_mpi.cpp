@@ -4,11 +4,11 @@
 #include <vector>
 #include <map>
 #include <mpi.h>
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
 #define ValueType double
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -34,17 +34,17 @@ int main(int argc, char* argv[]) {
   // Initialize platform with rank and # of accelerator devices in the node
   set_omp_affinity(false);
 
-  init_paralution(rank, 2);
+  init_rocalution(rank, 1);
 
   // Disable OpenMP
-  set_omp_threads_paralution(1);
+  set_omp_threads_rocalution(1);
 
   // Print platform
-  info_paralution();
+  info_rocalution();
 
   // Load undistributed matrix
   LocalMatrix<ValueType> undis_mat;
-  undis_mat.ReadFileMTX(argv[1]);
+  undis_mat.ReadFileCSR(argv[1]);
 
   size_t global_nrow = undis_mat.get_nrow();
 
@@ -371,16 +371,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per element
   v1.Dot(v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     v1.Dot(v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "Dot execution: " << time/1e3/tests << " msec" << "; " <<
@@ -393,16 +393,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per element
   v1.Norm();
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     v1.Norm();
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "Norm2 execution: " << time/1e3/tests << " msec" << "; "
@@ -415,16 +415,16 @@ int main(int argc, char* argv[]) {
   // Flop = 1 per element
   v1.Reduce();
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     v1.Reduce();
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "Reduce execution: " << time/1e3/tests << " msec" << "; "
@@ -441,16 +441,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per element
   v1.ScaleAdd((ValueType) 3.1, v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     v1.ScaleAdd((ValueType) 3.1, v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "Vector update (ScaleAdd) execution: " << time/1e3/tests << " msec" << "; "
@@ -462,17 +462,17 @@ int main(int argc, char* argv[]) {
   // Size = 3*size
   // Flop = 2 per element
   v1.AddScale(v2, (ValueType) 3.1);
-  _paralution_sync();
+  _rocalution_sync();
 
-  time = paralution_time();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     v1.AddScale(v2, (ValueType) 3.1);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "Vector update (AddScale) execution: " << time/1e3/tests << " msec" << "; "
@@ -495,16 +495,16 @@ int main(int argc, char* argv[]) {
 
   mat.Apply(v1, &v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     mat.Apply(v1, &v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "CSR SpMV execution: " << time/1e3/tests << " msec" << "; "
@@ -527,16 +527,16 @@ int main(int argc, char* argv[]) {
 
   mat.Apply(v1, &v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     mat.Apply(v1, &v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "MCSR SpMV execution: " << time/1e3/tests << " msec" << "; "
@@ -559,16 +559,16 @@ int main(int argc, char* argv[]) {
 
   mat.Apply(v1, &v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     mat.Apply(v1, &v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "ELL SpMV execution: " << time/1e3/tests << " msec" << "; "
@@ -591,16 +591,16 @@ int main(int argc, char* argv[]) {
 
   mat.Apply(v1, &v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     mat.Apply(v1, &v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "COO SpMV execution: " << time/1e3/tests << " msec" << "; "
@@ -623,16 +623,16 @@ int main(int argc, char* argv[]) {
 
   mat.Apply(v1, &v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     mat.Apply(v1, &v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "HYB SpMV execution: " << time/1e3/tests << " msec" << "; "
@@ -655,16 +655,16 @@ int main(int argc, char* argv[]) {
 
   mat.Apply(v1, &v2);
 
-  _paralution_sync();
-  time = paralution_time();
+  _rocalution_sync();
+  time = rocalution_time();
 
   for (int i=0; i<tests; ++i) {
     mat.Apply(v1, &v2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  time = paralution_time() - time;
+  _rocalution_sync();
+  time = rocalution_time() - time;
 
   if (rank == 0) {
     std::cout << "DIA SpMV execution: " << time/1e3/tests << " msec" << "; "
@@ -702,11 +702,11 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     v1.Dot(v2);
     
-    dot_tick += paralution_time();
+    dot_tick += rocalution_time();
     
       v1.Dot(v2);
     
-    dot_tack += paralution_time();
+    dot_tack += rocalution_time();
     
 
     v1.Ones();
@@ -718,11 +718,11 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     v1.Norm();
     
-    norm_tick += paralution_time();
+    norm_tick += rocalution_time();
     
       v1.Norm();
     
-    norm_tack += paralution_time();
+    norm_tack += rocalution_time();
     
     
     v1.Ones();
@@ -734,11 +734,11 @@ int main(int argc, char* argv[]) {
     // Flop = 1 per element
     v1.Reduce();
     
-    red_tick += paralution_time();
+    red_tick += rocalution_time();
     
       v1.Reduce();
     
-    red_tack += paralution_time();
+    red_tack += rocalution_time();
     
     
     v1.Ones();
@@ -750,11 +750,11 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     v1.ScaleAdd(double(5.5), v2);
     
-    updatev1_tick += paralution_time();
+    updatev1_tick += rocalution_time();
     
       v1.ScaleAdd(double(5.5), v2);
     
-    updatev1_tack += paralution_time(); 
+    updatev1_tack += rocalution_time(); 
     
     
     v1.Ones();
@@ -766,11 +766,11 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     v1.AddScale(v2, double(5.5));
     
-    updatev2_tick += paralution_time();
+    updatev2_tick += rocalution_time();
     
       v1.AddScale(v2, double(5.5));
     
-    updatev2_tack += paralution_time();
+    updatev2_tack += rocalution_time();
    
     v1.Ones();
     v2.Zeros();
@@ -781,11 +781,11 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per entry (nnz)
     mat.Apply(v1, &v2);
     
-    spmv_tick += paralution_time();
+    spmv_tick += rocalution_time();
     
       mat.Apply(v1, &v2);    
     
-    spmv_tack += paralution_time();
+    spmv_tack += rocalution_time();
 
   }
 
@@ -815,7 +815,7 @@ int main(int argc, char* argv[]) {
 	      << tests*double((2*nnz)/(spmv_tack-spmv_tick))/1e3 << " GFlop/sec" << std::endl;
   }
 
-  stop_paralution();
+  stop_rocalution();
 
   MPI_Finalize();
 

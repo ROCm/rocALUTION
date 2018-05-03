@@ -1,10 +1,10 @@
-#ifndef PARALUTION_MULTIGRID_PAIRWISE_AMG_HPP_
-#define PARALUTION_MULTIGRID_PAIRWISE_AMG_HPP_
+#ifndef ROCALUTION_MULTIGRID_PAIRWISE_AMG_HPP_
+#define ROCALUTION_MULTIGRID_PAIRWISE_AMG_HPP_
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 enum _aggregation_ordering {
   NoOrdering = 0,
@@ -84,4 +84,4 @@ private:
 
 }
 
-#endif // PARALUTION_MULTIGRID_PAIRWISE_AMG_HPP_
+#endif // ROCALUTION_MULTIGRID_PAIRWISE_AMG_HPP_

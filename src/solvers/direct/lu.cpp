@@ -9,7 +9,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 LU<OperatorType, VectorType, ValueType>::LU() {

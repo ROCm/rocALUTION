@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HOST_MATRIX_CSR_HPP_
-#define PARALUTION_HOST_MATRIX_CSR_HPP_
+#ifndef ROCALUTION_HOST_MATRIX_CSR_HPP_
+#define ROCALUTION_HOST_MATRIX_CSR_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_matrix.hpp"
 #include "../matrix_formats.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HostMatrixCSR : public HostMatrix<ValueType> {
@@ -13,7 +13,7 @@ class HostMatrixCSR : public HostMatrix<ValueType> {
 public:
 
   HostMatrixCSR();
-  HostMatrixCSR(const Paralution_Backend_Descriptor local_backend);
+  HostMatrixCSR(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixCSR();
 
   virtual void info(void) const;
@@ -183,15 +183,7 @@ private:
   friend class HostMatrixMCSR<ValueType>;
   friend class HostMatrixBCSR<ValueType>;
 
-  friend class GPUAcceleratorMatrixCSR<ValueType>;
-  friend class OCLAcceleratorMatrixCSR<ValueType>;
-  friend class MICAcceleratorMatrixCSR<ValueType>;
-
-#ifdef SUPPORT_MKL
-
-  ValueType *mkl_tmp_vec_;
-
-#endif
+  friend class HIPAcceleratorMatrixCSR<ValueType>;
 
   bool L_diag_unit_;
   bool U_diag_unit_;
@@ -201,4 +193,4 @@ private:
 
 }
 
-#endif // PARALUTION_HOST_MATRIX_CSR_HPP_
+#endif // ROCALUTION_HOST_MATRIX_CSR_HPP_

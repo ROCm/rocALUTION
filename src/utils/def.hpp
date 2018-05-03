@@ -1,5 +1,5 @@
-#ifndef PARALUTION_UTILS_DEF_HPP_
-#define PARALUTION_UTILS_DEF_HPP_
+#ifndef ROCALUTION_UTILS_DEF_HPP_
+#define ROCALUTION_UTILS_DEF_HPP_
 
 // Uncomment to define verbose level
 #define VERBOSE_LEVEL 2
@@ -21,9 +21,6 @@
 // e.g. LOG_MPI_RANK 0 will log on rank=0 only;
 // When logging into a file, this will be unset
 #define LOG_MPI_RANK 0
-
-// Uncomment to enable encryption for the OpenCL kernels
-// #define OCL_ENC
 
 // Uncomment to disable automatic object tracking
 // #define OBJ_TRACKING_OFF
@@ -58,15 +55,7 @@
 
 #endif
 
-#if defined(SUPPORT_MIC)
-
-#undef SUPPORT_COMPLEX
-
-#else
-
-#define SUPPORT_COMPLEX
-
-#endif
+//TODO #define SUPPORT_COMPLEX
 
 #ifdef LOG_FILE
 
@@ -74,4 +63,4 @@
 
 #endif
 
-#endif // PARALUTION_UTILS_DEF_HPP_
+#endif // ROCALUTION_UTILS_DEF_HPP_

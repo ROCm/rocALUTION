@@ -33,14 +33,7 @@
   #define omp_set_nested(num)  ;
 #endif
 
-#ifdef SUPPORT_MKL
-  #define MKL_Complex8  std::complex<float>
-  #define MKL_Complex16 std::complex<double>
-  #include <mkl.h>
-  #include <mkl_spblas.h>
-#endif
-
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 HostMatrixCSR<ValueType>::HostMatrixCSR() {
@@ -52,7 +45,7 @@ HostMatrixCSR<ValueType>::HostMatrixCSR() {
 }
 
 template <typename ValueType>
-HostMatrixCSR<ValueType>::HostMatrixCSR(const Paralution_Backend_Descriptor local_backend) {
+HostMatrixCSR<ValueType>::HostMatrixCSR(const Rocalution_Backend_Descriptor local_backend) {
 
   LOG_DEBUG(this, "HostMatrixCSR::HostMatrixCSR()",
             "constructor with local_backend");
@@ -62,10 +55,6 @@ HostMatrixCSR<ValueType>::HostMatrixCSR(const Paralution_Backend_Descriptor loca
   this->mat_.val        = NULL;
   this->set_backend(local_backend); 
   
-#ifdef SUPPORT_MKL
-  this->mkl_tmp_vec_ = NULL;
-#endif
-
   this->L_diag_unit_ = false;
   this->U_diag_unit_ = false;
 
@@ -94,13 +83,6 @@ void HostMatrixCSR<ValueType>::Clear() {
     this->ncol_ = 0;
     this->nnz_  = 0;
 
-#ifdef SUPPORT_MKL
-    if (this->mkl_tmp_vec_ != NULL) {
-      free_host(&this->mkl_tmp_vec_);
-      this->mkl_tmp_vec_ = NULL;
-    }
-#endif
-    
   }
 
 }
@@ -131,7 +113,7 @@ bool HostMatrixCSR<ValueType>::Check(void) const {
   if (this->nnz_ > 0) {
 
     // check nnz
-    if ((paralution_abs(this->nnz_) == 
+    if ((rocalution_abs(this->nnz_) == 
          std::numeric_limits<int>::infinity()) || // inf
         ( this->nnz_ != this->nnz_)) { // NaN
       LOG_VERBOSE_INFO(2,"*** error: Matrix CSR:Check - problems with matrix nnz"); 
@@ -139,7 +121,7 @@ bool HostMatrixCSR<ValueType>::Check(void) const {
     }
     
     // nrow
-    if ((paralution_abs(this->nrow_) == 
+    if ((rocalution_abs(this->nrow_) == 
          std::numeric_limits<int>::infinity()) || // inf
         ( this->nrow_ != this->nrow_)) { // NaN
       LOG_VERBOSE_INFO(2,"*** error: Matrix CSR:Check - problems with matrix nrow"); 
@@ -147,7 +129,7 @@ bool HostMatrixCSR<ValueType>::Check(void) const {
     }
     
     // ncol
-    if ((paralution_abs(this->ncol_) == 
+    if ((rocalution_abs(this->ncol_) == 
          std::numeric_limits<int>::infinity()) || // inf
         ( this->ncol_ != this->ncol_)) { // NaN
       LOG_VERBOSE_INFO(2,"*** error: Matrix CSR:Check - problems with matrix ncol"); 
@@ -238,10 +220,6 @@ void HostMatrixCSR<ValueType>::AllocateCSR(const int nnz, const int nrow, const 
     this->nrow_ = nrow;
     this->ncol_ = ncol;
     this->nnz_  = nnz;
-
-#ifdef SUPPORT_MKL
-    allocate_host(nrow, &this->mkl_tmp_vec_);
-#endif
 
   }
 
@@ -445,10 +423,6 @@ void HostMatrixCSR<ValueType>::CopyFromHostCSR(const int *row_offset, const int 
     this->ncol_ = ncol;
     this->nnz_  = nnz;
 
-#ifdef SUPPORT_MKL
-    allocate_host(nrow, &this->mkl_tmp_vec_);
-#endif
-
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
 #pragma omp parallel for
@@ -622,104 +596,6 @@ bool HostMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-void HostMatrixCSR<double>::Apply(const BaseVector<double> &in, BaseVector<double> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<double> *cast_in = dynamic_cast<const HostVector<double>*> (&in);
-  HostVector<double> *cast_out      = dynamic_cast<      HostVector<double>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_dcsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCSR<float>::Apply(const BaseVector<float> &in, BaseVector<float> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<float> *cast_in = dynamic_cast<const HostVector<float>*> (&in);
-  HostVector<float> *cast_out      = dynamic_cast<      HostVector<float>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_scsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCSR<std::complex<double> >::Apply(const BaseVector<std::complex<double> > &in,
-                                                 BaseVector<std::complex<double> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<double> > *cast_in = dynamic_cast<const HostVector<std::complex<double> >*> (&in);
-  HostVector<std::complex<double> > *cast_out      = dynamic_cast<      HostVector<std::complex<double> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_zcsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-template <>
-void HostMatrixCSR<std::complex<float> >::Apply(const BaseVector<std::complex<float> > &in,
-                                                BaseVector<std::complex<float> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<float> > *cast_in = dynamic_cast<const HostVector<std::complex<float> >*> (&in);
-  HostVector<std::complex<float> > *cast_out      = dynamic_cast<      HostVector<std::complex<float> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp='N';
-  int nrow = this->nrow_;
-
-  mkl_cspblas_ccsrgemv(&transp, &nrow,
-                       this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                       cast_in->vec_, cast_out->vec_);
-
-}
-
-#else
-
 template <typename ValueType>
 void HostMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -751,8 +627,6 @@ void HostMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
   }
     
 }
-
-#endif
 
 template <typename ValueType>
 void HostMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
@@ -1091,176 +965,6 @@ bool HostMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> *L) const 
 
 }
 
-#ifdef SUPPORT_MKL
-
-template <>
-bool HostMatrixCSR<double>::LUSolve(const BaseVector<double> &in, BaseVector<double> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<double> *cast_in = dynamic_cast<const HostVector<double>*> (&in);
-  HostVector<double> *cast_out      = dynamic_cast<      HostVector<double>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  double one = double(1.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_dcsrsv(&transp, &nrow, &one, matdescra, 
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_dcsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-template <>
-bool HostMatrixCSR<float>::LUSolve(const BaseVector<float> &in, BaseVector<float> *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<float> *cast_in = dynamic_cast<const HostVector<float>*> (&in);
-  HostVector<float> *cast_out      = dynamic_cast<      HostVector<float>*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  float one = float(1.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_scsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_scsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-template <>
-bool HostMatrixCSR<std::complex<double> >::LUSolve(const BaseVector<std::complex<double> > &in,
-                                                   BaseVector<std::complex<double> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<double> > *cast_in = dynamic_cast<const HostVector<std::complex<double> >*> (&in);
-  HostVector<std::complex<double> > *cast_out      = dynamic_cast<      HostVector<std::complex<double> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  std::complex<double> one = std::complex<double>(1.0, 0.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_zcsrsv(&transp, &nrow, &one, matdescra, 
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_zcsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-template <>
-bool HostMatrixCSR<std::complex<float> >::LUSolve(const BaseVector<std::complex<float> > &in,
-                                                  BaseVector<std::complex<float> > *out) const {
-
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-
-  const HostVector<std::complex<float> > *cast_in = dynamic_cast<const HostVector<std::complex<float> >*> (&in);
-  HostVector<std::complex<float> > *cast_out      = dynamic_cast<      HostVector<std::complex<float> >*> (out);
-
-  assert(cast_in != NULL);
-  assert(cast_out!= NULL);
-
-  char transp = 'N';
-  char matdescra[6];
-  std::complex<float> one = std::complex<float>(1.0, 0.0);
-  int nrow = this->nrow_;
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'L'; // L or U
-  matdescra[2] = 'U'; // non-unit ot unit
-  matdescra[3] = 'C'; // zero base
-
-  mkl_ccsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             cast_in->vec_, this->mkl_tmp_vec_);
-
-  matdescra[0] = 'T';
-  matdescra[1] = 'U';
-  matdescra[2] = 'N';
-  matdescra[3] = 'C';
-
-  mkl_ccsrsv(&transp, &nrow, &one, matdescra,
-             this->mat_.val, this->mat_.col, this->mat_.row_offset, &this->mat_.row_offset[1],
-             this->mkl_tmp_vec_, cast_out->vec_);
-
-  return true;
-
-}
-
-#else
-
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -1315,8 +1019,6 @@ bool HostMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVect
   return true;
 
 }
-
-#endif
 
 template <typename ValueType>
 void HostMatrixCSR<ValueType>::LLAnalyse(void) {
@@ -1443,7 +1145,6 @@ void HostMatrixCSR<ValueType>::LAnalyseClear(void) {
   this->L_diag_unit_ = true;
 }
 
-// TODO - make mkl interface
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -1502,7 +1203,6 @@ void HostMatrixCSR<ValueType>::UAnalyseClear(void) {
   this->U_diag_unit_ = false;
 }
 
-// TODO - make mkl interface
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::USolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
@@ -1675,7 +1375,7 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(const double t, const int maxrow) {
       nnz_entries[m] = idx;
       nnz_pos[idx] = true;
 
-      row_norm += paralution_abs(this->mat_.val[aj]);
+      row_norm += rocalution_abs(this->mat_.val[aj]);
       ++m;
     }
 
@@ -1726,7 +1426,7 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 
           // drop off strategy for fill in
           if (nnz_pos[idx] == false) {
-            if (paralution_abs(fillin) >= threshold) {
+            if (rocalution_abs(fillin) >= threshold) {
 
               nnz_entries[m] = idx;
               nnz_pos[idx] = true;
@@ -1829,10 +1529,6 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 
   this->Clear();
   this->SetDataPtrCSR(&row_offset, &p_col, &p_val, nnz, nrow, ncol);
-
-#ifdef SUPPORT_MKL
-  allocate_host(nrow, &this->mkl_tmp_vec_);
-#endif
 
   return true;
 
@@ -2717,7 +2413,7 @@ bool HostMatrixCSR<ValueType>::Gershgorin(ValueType &lambda_min,
     
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj) 
       if (ai != this->mat_.col[aj]) {
-        sum += paralution_abs(this->mat_.val[aj]);
+        sum += rocalution_abs(this->mat_.val[aj]);
       } else {
         diag = this->mat_.val[aj];
       }
@@ -2889,7 +2585,7 @@ bool HostMatrixCSR<ValueType>::Compress(const double drop_off) {
       row_offset[i+1] = 0;
 
       for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j)
-        if (( paralution_abs(this->mat_.val[j]) > drop_off )  ||
+        if (( rocalution_abs(this->mat_.val[j]) > drop_off )  ||
             ( this->mat_.col[j] == i))
           row_offset[i+1] += 1;
     }
@@ -2909,7 +2605,7 @@ bool HostMatrixCSR<ValueType>::Compress(const double drop_off) {
       int jj = this->mat_.row_offset[i];
       
       for (int j=tmp.mat_.row_offset[i]; j<tmp.mat_.row_offset[i+1]; ++j)
-       if (( paralution_abs(tmp.mat_.val[j]) > drop_off )  ||
+       if (( rocalution_abs(tmp.mat_.val[j]) > drop_off )  ||
            ( tmp.mat_.col[j] == i)) {
          this->mat_.col[jj] = tmp.mat_.col[j];
          this->mat_.val[jj] = tmp.mat_.val[j];
@@ -3825,7 +3521,7 @@ bool HostMatrixCSR<ValueType>::FSAI(const int power, const BaseMatrix<ValueType>
   // Scaling
 #pragma omp parallel for
   for (int ai=0; ai<nrow; ++ai) {
-    ValueType fac = sqrt(ValueType(1.0) / paralution_abs(val[row_offset[ai+1]-1]));
+    ValueType fac = sqrt(ValueType(1.0) / rocalution_abs(val[row_offset[ai+1]-1]));
     for (int aj=row_offset[ai]; aj<row_offset[ai+1]; ++aj)
       val[aj] *= fac;
   }
@@ -4250,16 +3946,16 @@ bool HostMatrixCSR<ValueType>::RugeStueben(const ValueType eps, BaseMatrix<Value
     ValueType cf_neg = ValueType(1.0);
     ValueType cf_pos = ValueType(1.0);
 
-    if (paralution_abs(a_den - d_neg) > 1e-32)
+    if (rocalution_abs(a_den - d_neg) > 1e-32)
       cf_neg = a_den / (a_den - d_neg);
-    if (paralution_abs(b_den - d_pos) > 1e-32)
+    if (rocalution_abs(b_den - d_pos) > 1e-32)
       cf_pos = b_den / (b_den - d_pos);
 
-    if (b_num > ValueType(0.0) && paralution_abs(b_den) < 1e-32)
+    if (b_num > ValueType(0.0) && rocalution_abs(b_den) < 1e-32)
       diag += b_num;
 
-    ValueType alpha = paralution_abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : ValueType(0.0);
-    ValueType beta  = paralution_abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : ValueType(0.0);
+    ValueType alpha = rocalution_abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : ValueType(0.0);
+    ValueType beta  = rocalution_abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : ValueType(0.0);
 
     for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j) {
       int c = this->mat_.col[j];
@@ -4333,7 +4029,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const ValueType beta, 
     for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j) {
 
       if (i != this->mat_.col[j])
-        sum += paralution_abs(this->mat_.val[j]);
+        sum += rocalution_abs(this->mat_.val[j]);
       else
         ind_diag[i] = j;
 
@@ -4506,14 +4202,14 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
     for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j) {
 
       if (i != this->mat_.col[j])
-        sum += paralution_abs(this->mat_.val[j]);
+        sum += rocalution_abs(this->mat_.val[j]);
       else
         ind_diag[i] = j;
 
     }
 
     for (int j=cast_mat->mat_.row_offset[i]; j<cast_mat->mat_.row_offset[i+1]; ++j)
-      sum += paralution_abs(cast_mat->mat_.val[j]);
+      sum += rocalution_abs(cast_mat->mat_.val[j]);
 
     sum *= ValueType(5.0);
 
@@ -5196,7 +4892,7 @@ bool HostMatrixCSR<ValueType>::Key(long int &row_key,
       col_sign = sgn(row_tmp - (col_mask | this->mat_.col[aj]));
       col_tmp  = col_mask | this->mat_.col[aj];
 
-      double double_val = double(paralution_abs(this->mat_.val[aj]));
+      double double_val = double(rocalution_abs(this->mat_.val[aj]));
       long int val = 0;
 
       assert(sizeof(long int) == sizeof(double));

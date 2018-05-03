@@ -1,9 +1,9 @@
-#ifndef PARALUTION_HOST_IO_HPP_
-#define PARALUTION_HOST_IO_HPP_
+#ifndef ROCALUTION_HOST_IO_HPP_
+#define ROCALUTION_HOST_IO_HPP_
 
 #include <string>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, ValueType **val,
@@ -16,4 +16,4 @@ bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
 
 }
 
-#endif // PARALUTION_HOST_IO_HPP_
+#endif // ROCALUTION_HOST_IO_HPP_

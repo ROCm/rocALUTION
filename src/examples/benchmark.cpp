@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -12,13 +12,13 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   if (argc > 2) {
-    set_omp_threads_paralution(atoi(argv[2]));
+    set_omp_threads_rocalution(atoi(argv[2]));
   } 
 
-  info_paralution();
+  info_rocalution();
 
   LocalVector<double> vec1;
   LocalVector<double> vec2;
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 
   const int max_tests = 200;
 
-  mat.ReadFileMTX(std::string(argv[1]));
+  mat.ReadFileCSR(std::string(argv[1]));
 
   vec1.Allocate("x", mat.get_nrow());
   vec2.Allocate("rhs", mat.get_nrow());
@@ -62,16 +62,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per element
   vec1.Dot(vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     vec1.Dot(vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "Dot execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double(sizeof(double)*(size+size))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*size))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -81,16 +81,16 @@ int main(int argc, char* argv[]) {
   // Flop = 1 per element
   vec1.Reduce();
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     vec1.Reduce();
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "Reduce execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double(sizeof(double)*(size))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((size-1))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -100,16 +100,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per element
   vec1.Norm();
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     vec1.Norm();
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "Norm execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double(sizeof(double)*(size))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*size))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -119,16 +119,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per element
   vec1.ScaleAdd(double(5.5), vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     vec1.ScaleAdd(double(5.5), vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "Vector update (scaleadd) execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double(sizeof(double)*(size+size+size))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*size))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -140,16 +140,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per element
   vec1.AddScale(vec2, double(5.5));
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     vec1.AddScale(vec2, double(5.5));
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "Vector update (addscale) execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double(sizeof(double)*(size+size+size))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*size))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -165,16 +165,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per entry (nnz)
   mat.Apply(vec1, &vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     mat.Apply(vec1, &vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "CSR SpMV execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double((sizeof(double)*(size+size+nnz)+sizeof(int)*(size+nnz)))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*nnz))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -188,16 +188,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per entry (nnz)
   mat.Apply(vec1, &vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     mat.Apply(vec1, &vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "MCSR SpMV execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double((sizeof(double)*(size+size+nnz-size)+sizeof(int)*(size+nnz)))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*nnz))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -212,16 +212,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per entry (nnz)
   mat.Apply(vec1, &vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     mat.Apply(vec1, &vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "ELL SpMV execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double((sizeof(double)*(size+size+nnz)+sizeof(int)*(nnz)))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*nnz))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -236,16 +236,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per entry (nnz)
   mat.Apply(vec1, &vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     mat.Apply(vec1, &vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "COO SpMV execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
             << max_tests*double((sizeof(double)*(size+size+nnz)+sizeof(int)*(2*nnz)))/(tack-tick)/1000 << " Gbyte/sec; "
             << max_tests*double((2*nnz))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
@@ -260,16 +260,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per entry (nnz)
   mat.Apply(vec1, &vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     mat.Apply(vec1, &vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "HYB SpMV execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
     // like O(ELL)
             << max_tests*double((sizeof(double)*(size+size+nnz)+sizeof(int)*(nnz)))/(tack-tick)/1000 << " Gbyte/sec; "
@@ -286,16 +286,16 @@ int main(int argc, char* argv[]) {
   // Flop = 2 per entry (nnz)
   mat.Apply(vec1, &vec2);
 
-  _paralution_sync();
-  tick = paralution_time();
+  _rocalution_sync();
+  tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
     mat.Apply(vec1, &vec2);
-    _paralution_sync();
+    _rocalution_sync();
   }
 
-  _paralution_sync();
-  tack = paralution_time();
+  _rocalution_sync();
+  tack = rocalution_time();
   std::cout << "DIA SpMV execution: " << (tack-tick)/max_tests/1e3 << " msec" << "; "
     // assuming ndiag << size
             << max_tests*double((sizeof(double)*(nnz)))/(tack-tick)/1000 << " Gbyte/sec; "
@@ -327,13 +327,13 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     vec1.Dot(vec2);
 
-    _paralution_sync();
-    dot_tick += paralution_time();
+    _rocalution_sync();
+    dot_tick += rocalution_time();
 
       vec1.Dot(vec2);
 
-    _paralution_sync();    
-    dot_tack += paralution_time();
+    _rocalution_sync();    
+    dot_tack += rocalution_time();
     
 
     vec1.Ones();
@@ -345,13 +345,13 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     vec1.Norm();
     
-    _paralution_sync();
-    norm_tick += paralution_time();
+    _rocalution_sync();
+    norm_tick += rocalution_time();
 
       vec1.Norm();
 
-    _paralution_sync();
-    norm_tack += paralution_time();
+    _rocalution_sync();
+    norm_tack += rocalution_time();
     
     
     vec1.Ones();
@@ -363,13 +363,13 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     vec1.ScaleAdd(double(5.5), vec2);
 
-    _paralution_sync();
-    updatev1_tick += paralution_time();
+    _rocalution_sync();
+    updatev1_tick += rocalution_time();
     
       vec1.ScaleAdd(double(5.5), vec2);
 
-    _paralution_sync();
-    updatev1_tack += paralution_time(); 
+    _rocalution_sync();
+    updatev1_tack += rocalution_time(); 
     
     
     vec1.Ones();
@@ -381,13 +381,13 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per element
     vec1.AddScale(vec2, double(5.5));
 
-    _paralution_sync();
-    updatev2_tick += paralution_time();
+    _rocalution_sync();
+    updatev2_tick += rocalution_time();
     
       vec1.AddScale(vec2, double(5.5));
 
-    _paralution_sync();
-    updatev2_tack += paralution_time();
+    _rocalution_sync();
+    updatev2_tack += rocalution_time();
    
     vec1.Ones();
     vec2.Zeros();
@@ -398,13 +398,13 @@ int main(int argc, char* argv[]) {
     // Flop = 2 per entry (nnz)
     mat.Apply(vec1, &vec2);
 
-    _paralution_sync();
-    spmv_tick += paralution_time();
+    _rocalution_sync();
+    spmv_tick += rocalution_time();
     
       mat.Apply(vec1, &vec2);    
 
-    _paralution_sync();
-    spmv_tack += paralution_time();
+    _rocalution_sync();
+    spmv_tack += rocalution_time();
 
   }
 
@@ -429,7 +429,7 @@ int main(int argc, char* argv[]) {
 	      << max_tests*double((2*nnz)/(spmv_tack-spmv_tick))/1000 << " GFlop/sec" << std::endl;
 
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }

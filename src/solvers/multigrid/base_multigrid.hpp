@@ -1,10 +1,10 @@
-#ifndef PARALUTION_BASE_MULTIGRID_HPP_
-#define PARALUTION_BASE_MULTIGRID_HPP_
+#ifndef ROCALUTION_BASE_MULTIGRID_HPP_
+#define ROCALUTION_BASE_MULTIGRID_HPP_
 
 #include "../solver.hpp"
 #include "../../base/operator.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 enum _cycle {
   Vcycle = 0,
@@ -131,4 +131,4 @@ protected:
 
 }
 
-#endif // PARALUTION_BASE_MULTIGRID_HPP_
+#endif // ROCALUTION_BASE_MULTIGRID_HPP_

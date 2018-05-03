@@ -9,14 +9,14 @@
 #include <string>
 #include <sstream>
 
-namespace paralution {
+namespace rocalution {
 
-void _paralution_open_log_file(void) {
+void _rocalution_open_log_file(void) {
 
 #ifdef LOG_FILE
 
   if (_get_backend_descriptor()->log_file != NULL) {
-    _paralution_close_log_file();
+    _rocalution_close_log_file();
   }
 
 #endif
@@ -29,7 +29,7 @@ void _paralution_open_log_file(void) {
 
   std::ostringstream str_double;
   str_double.precision(20);
-  str_double << paralution_time();
+  str_double << rocalution_time();
   std::string mid_name= str_double.str();
  
   std::ostringstream rank;
@@ -38,7 +38,7 @@ void _paralution_open_log_file(void) {
 
   std::string str_name;
 
-  str_name = "paralution-rank-"
+  str_name = "rocalution-rank-"
     + rank_name
     + "-"
     + mid_name 
@@ -51,7 +51,7 @@ void _paralution_open_log_file(void) {
 }
 
 
-void _paralution_close_log_file(void) {
+void _rocalution_close_log_file(void) {
 
 #ifdef LOG_FILE
 

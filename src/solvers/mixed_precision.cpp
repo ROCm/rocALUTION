@@ -12,7 +12,7 @@
 
 #include <math.h>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorTypeH, class VectorTypeH, typename ValueTypeH,
           class OperatorTypeL, class VectorTypeL, typename ValueTypeL>

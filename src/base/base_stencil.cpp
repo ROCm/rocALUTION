@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 BaseStencil<ValueType>::BaseStencil() {
@@ -57,7 +57,7 @@ int BaseStencil<ValueType>::get_ndim(void) const {
 } 
 
 template <typename ValueType>
-void BaseStencil<ValueType>::set_backend(const Paralution_Backend_Descriptor local_backend) {
+void BaseStencil<ValueType>::set_backend(const Rocalution_Backend_Descriptor local_backend) {
 
   this->local_backend_ = local_backend;
 
@@ -95,29 +95,11 @@ AcceleratorStencil<ValueType>::~AcceleratorStencil() {
 
 
 template <typename ValueType>
-GPUAcceleratorStencil<ValueType>::GPUAcceleratorStencil() {
+HIPAcceleratorStencil<ValueType>::HIPAcceleratorStencil() {
 }
 
 template <typename ValueType>
-GPUAcceleratorStencil<ValueType>::~GPUAcceleratorStencil() {
-}
-
-
-template <typename ValueType>
-OCLAcceleratorStencil<ValueType>::OCLAcceleratorStencil() {
-}
-
-template <typename ValueType>
-OCLAcceleratorStencil<ValueType>::~OCLAcceleratorStencil() {
-}
-
-
-template <typename ValueType>
-MICAcceleratorStencil<ValueType>::MICAcceleratorStencil() {
-}
-
-template <typename ValueType>
-MICAcceleratorStencil<ValueType>::~MICAcceleratorStencil() {
+HIPAcceleratorStencil<ValueType>::~HIPAcceleratorStencil() {
 }
 
 
@@ -145,28 +127,12 @@ template class AcceleratorStencil<std::complex<float> >;
 #endif
 template class AcceleratorStencil<int>;
 
-template class GPUAcceleratorStencil<double>;
-template class GPUAcceleratorStencil<float>;
+template class HIPAcceleratorStencil<double>;
+template class HIPAcceleratorStencil<float>;
 #ifdef SUPPORT_COMPLEX
-template class GPUAcceleratorStencil<std::complex<double> >;
-template class GPUAcceleratorStencil<std::complex<float> >;
+template class HIPAcceleratorStencil<std::complex<double> >;
+template class HIPAcceleratorStencil<std::complex<float> >;
 #endif
-template class GPUAcceleratorStencil<int>;
-
-template class OCLAcceleratorStencil<double>;
-template class OCLAcceleratorStencil<float>;
-#ifdef SUPPORT_COMPLEX
-template class OCLAcceleratorStencil<std::complex<double> >;
-template class OCLAcceleratorStencil<std::complex<float> >;
-#endif
-template class OCLAcceleratorStencil<int>;
-
-template class MICAcceleratorStencil<double>;
-template class MICAcceleratorStencil<float>;
-#ifdef SUPPORT_COMPLEX
-template class MICAcceleratorStencil<std::complex<double> >;
-template class MICAcceleratorStencil<std::complex<float> >;
-#endif
-template class MICAcceleratorStencil<int>;
+template class HIPAcceleratorStencil<int>;
 
 }

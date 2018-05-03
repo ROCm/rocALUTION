@@ -1,9 +1,9 @@
-#ifndef PARALUTION_STENCIL_TYPES_HPP_
-#define PARALUTION_STENCIL_TYPES_HPP_
+#ifndef ROCALUTION_STENCIL_TYPES_HPP_
+#define ROCALUTION_STENCIL_TYPES_HPP_
 
 #include <string>
 
-namespace paralution {
+namespace rocalution {
 
 /// Stencil Names
 const std::string _stencil_type_names [1] = {"Laplace2D"};
@@ -13,4 +13,4 @@ enum _stencil_type {Laplace2D = 0};
   
 }
 
-#endif // PARALUTION_STENCIL_TYPES_HPP_
+#endif // ROCALUTION_STENCIL_TYPES_HPP_

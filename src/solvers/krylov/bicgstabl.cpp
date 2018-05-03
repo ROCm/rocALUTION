@@ -15,7 +15,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 BiCGStabl<OperatorType, VectorType, ValueType>::BiCGStabl() {
@@ -329,7 +329,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
   r0->ScaleAdd(ValueType(-1.0), rhs);
 
   ValueType res = this->Norm(*r0);
-  this->iter_ctrl_.InitResidual(paralution_abs(res));
+  this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
   // r_0 = r0
   r[0]->CopyFrom(*r0);
@@ -434,7 +434,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
   }
 
   res = this->Norm(*r[0]);
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
 
     rho_old *= ValueType(-1.0) * omega;
 
@@ -583,7 +583,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   ValueType res = this->Norm(*z);
 
-  this->iter_ctrl_.InitResidual(paralution_abs(res));
+  this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
   // M r0 = z
   this->precond_->SolveZeroSol(*z, r0);
@@ -698,7 +698,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   res = this->Norm(*r[0]);
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
 
     rho_old *= ValueType(-1.0) * omega;
 

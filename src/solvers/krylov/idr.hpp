@@ -1,11 +1,11 @@
-#ifndef PARALUTION_KRYLOV_IDR_HPP_
-#define PARALUTION_KRYLOV_IDR_HPP_
+#ifndef ROCALUTION_KRYLOV_IDR_HPP_
+#define ROCALUTION_KRYLOV_IDR_HPP_
 
 #include "../solver.hpp"
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 /// IDR(s) - Induced Dimension Reduction method, taken from "An Elegant IDR(s)
 /// Variant that Efficiently Exploits Biorthogonality Properties" by Martin B.
@@ -56,4 +56,4 @@ private:
 
 }
 
-#endif // PARALUTION_KRYLOV_IDR_HPP_
+#endif // ROCALUTION_KRYLOV_IDR_HPP_

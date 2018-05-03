@@ -1,5 +1,5 @@
-#ifndef PARALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_
-#define PARALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_
+#ifndef ROCALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_
+#define ROCALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_
 
 #include "../solver.hpp"
 #include "preconditioner.hpp"
@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 /// MultiElimination (I)LU factorization (see 12.5.1 Multi-Elimination ILU from 
 /// "Iterative Methods for Sparse Linear Systems", 2nd Edition, Yousef Saad);
@@ -92,4 +92,4 @@ protected:
 
 }
 
-#endif // PARALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_
+#endif // ROCALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_

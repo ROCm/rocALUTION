@@ -4,11 +4,11 @@
 #include <vector>
 #include <map>
 #include <mpi.h>
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
 #define ValueType double
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -34,13 +34,13 @@ int main(int argc, char* argv[]) {
   // Initialize platform with rank and # of accelerator devices in the node
   set_omp_affinity(false);
 
-  init_paralution(rank, 2);
+  init_rocalution(rank, 2);
 
   // Disable OpenMP
-  set_omp_threads_paralution(1);
+  set_omp_threads_rocalution(1);
 
   // Print platform
-  info_paralution();
+  info_rocalution();
 
   // Load undistributed matrix
   LocalMatrix<ValueType> undis_mat;
@@ -370,12 +370,12 @@ int main(int argc, char* argv[]) {
   mat.ConvertToELL();
   mat.info();
 
-  double time = paralution_time();
+  double time = rocalution_time();
 
   ls.Solve(b, &x);
 
   if (rank == 0) {
-    std::cout << "Solve took: " << (paralution_time()-time)/1e6 << " sec" << std::endl;
+    std::cout << "Solve took: " << (rocalution_time()-time)/1e6 << " sec" << std::endl;
   }
 
   e.ScaleAdd(-1.0, x);
@@ -385,7 +385,7 @@ int main(int argc, char* argv[]) {
     std::cout << "||e - x||_2 = " << error << "\n";
   }
 
-  stop_paralution();
+  stop_rocalution();
 
   MPI_Finalize();
 

@@ -1,11 +1,11 @@
-#ifndef PARALUTION_HOST_STENCIL_LAPLACE2D_HPP_
-#define PARALUTION_HOST_STENCIL_LAPLACE2D_HPP_
+#ifndef ROCALUTION_HOST_STENCIL_LAPLACE2D_HPP_
+#define ROCALUTION_HOST_STENCIL_LAPLACE2D_HPP_
 
 #include "../base_vector.hpp"
 #include "../base_stencil.hpp"
 #include "../stencil_types.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class HostStencilLaplace2D : public HostStencil<ValueType> {
@@ -13,7 +13,7 @@ class HostStencilLaplace2D : public HostStencil<ValueType> {
 public:
 
   HostStencilLaplace2D();
-  HostStencilLaplace2D(const Paralution_Backend_Descriptor local_backend);
+  HostStencilLaplace2D(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostStencilLaplace2D();
 
   virtual int get_nnz(void) const;
@@ -30,13 +30,11 @@ private:
   friend class BaseVector<ValueType>;
   friend class HostVector<ValueType>;
 
-  //  friend class GPUAcceleratorStencilLaplace2D<ValueType>;
-  //  friend class OCLAcceleratorStencilLaplace2D<ValueType>;
-  //  friend class MICAcceleratorStencilLaplace2D<ValueType>;
+  //  friend class HIPAcceleratorStencilLaplace2D<ValueType>;
 
 };
 
 
 }
 
-#endif // PARALUTION_HOST_STENCIL_LAPLACE2D_HPP_
+#endif // ROCALUTION_HOST_STENCIL_LAPLACE2D_HPP_

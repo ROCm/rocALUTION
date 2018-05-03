@@ -1,5 +1,5 @@
-#ifndef PARALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_
-#define PARALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_
+#ifndef ROCALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_
+#define ROCALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_
 
 #include "../solver.hpp"
 #include "preconditioner.hpp"
@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType> {
@@ -64,4 +64,4 @@ protected:
 
 }
 
-#endif // PARALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_
+#endif // ROCALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_

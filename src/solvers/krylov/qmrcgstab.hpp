@@ -1,11 +1,11 @@
-#ifndef PARALUTION_KRYLOV_QMRCGSTAB_HPP_
-#define PARALUTION_KRYLOV_QMRCGSTAB_HPP_
+#ifndef ROCALUTION_KRYLOV_QMRCGSTAB_HPP_
+#define ROCALUTION_KRYLOV_QMRCGSTAB_HPP_
 
 #include "../solver.hpp"
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class QMRCGStab : public IterativeLinearSolver<OperatorType, VectorType, ValueType> {
@@ -46,4 +46,4 @@ private:
 
 }
 
-#endif // PARALUTION_KRYLOV_QMRCGSTAB_HPP_
+#endif // ROCALUTION_KRYLOV_QMRCGSTAB_HPP_

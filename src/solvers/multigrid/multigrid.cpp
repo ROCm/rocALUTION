@@ -11,7 +11,7 @@
 
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 MultiGrid<OperatorType, VectorType, ValueType>::MultiGrid() {

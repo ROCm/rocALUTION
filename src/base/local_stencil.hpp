@@ -1,12 +1,12 @@
-#ifndef PARALUTION_LOCAL_STENCIL_HPP_
-#define PARALUTION_LOCAL_STENCIL_HPP_
+#ifndef ROCALUTION_LOCAL_STENCIL_HPP_
+#define ROCALUTION_LOCAL_STENCIL_HPP_
 
 #include "../utils/types.hpp"
 #include "operator.hpp"
 #include "local_vector.hpp"
 #include "stencil_types.hpp"
 
-namespace paralution {
+namespace rocalution {
 
 template <typename ValueType>
 class BaseStencil;
@@ -71,4 +71,4 @@ private:
 
 }
 
-#endif // PARALUTION_LOCAL_STENCIL_HPP_
+#endif // ROCALUTION_LOCAL_STENCIL_HPP_

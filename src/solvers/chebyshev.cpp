@@ -15,7 +15,7 @@
 #include <math.h>
 #include <complex>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 Chebyshev<OperatorType, VectorType, ValueType>::Chebyshev() {
@@ -261,7 +261,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
   ValueType res = this->Norm(*r);
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false) {
 
     LOG_DEBUG(this, "Chebyshev::SolveNonPrecond_()",
               " #*# end");
@@ -282,7 +282,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
   r->ScaleAdd(ValueType(-1.0), rhs);
 
   res = this->Norm(*r);
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
 
     beta = (c*alpha/ValueType(2.0))*(c*alpha/ValueType(2.0));
 
@@ -335,7 +335,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   ValueType res = this->Norm(*r); 
 
-  if (this->iter_ctrl_.InitResidual(paralution_abs(res)) == false) {
+  if (this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false) {
 
     LOG_DEBUG(this, "Chebyshev::SolvePrecond_()",
               " #*# end");
@@ -359,7 +359,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
   r->ScaleAdd(ValueType(-1.0), rhs);
   res = this->Norm(*r); 
 
-  while (!this->iter_ctrl_.CheckResidual(paralution_abs(res), this->index_)) {
+  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
 
     // Solve Mz=r
     this->precond_->SolveZeroSol(*r, z);

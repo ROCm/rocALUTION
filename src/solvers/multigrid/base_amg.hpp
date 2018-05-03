@@ -1,12 +1,12 @@
-#ifndef PARALUTION_BASE_AMG_HPP_
-#define PARALUTION_BASE_AMG_HPP_
+#ifndef ROCALUTION_BASE_AMG_HPP_
+#define ROCALUTION_BASE_AMG_HPP_
 
 #include "../solver.hpp"
 #include "base_multigrid.hpp"
 
 #include <vector>
 
-namespace paralution {
+namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
 class BaseAMG : public BaseMultiGrid<OperatorType, VectorType, ValueType> {
@@ -81,4 +81,4 @@ protected:
 
 }
 
-#endif // PARALUTION_BASE_AMG_HPP_
+#endif // ROCALUTION_BASE_AMG_HPP_

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -12,13 +12,13 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   if (argc > 2) {
-    set_omp_threads_paralution(atoi(argv[2]));
+    set_omp_threads_rocalution(atoi(argv[2]));
   } 
 
-  info_paralution();
+  info_rocalution();
 
   LocalVector<double> x, y;
   LocalMatrix<double> mat;
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 
 
   // No Async
-  tickg = paralution_time();
+  tickg = rocalution_time();
 
   y.Zeros();
 
@@ -44,19 +44,19 @@ int main(int argc, char* argv[]) {
   y.info();
 
   // CPU
-  tick = paralution_time();
+  tick = rocalution_time();
 
 
   for (int i=0; i<100; ++i)
     mat.ApplyAdd(x, 1.0, &y);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "CPU Execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   std::cout << "Dot product = " << x.Dot(y) << std::endl;
 
 
-  tick = paralution_time();
+  tick = rocalution_time();
 
   // Memory transfer
   mat.MoveToAccelerator();
@@ -67,23 +67,23 @@ int main(int argc, char* argv[]) {
   x.info();
   y.info();
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Sync Transfer:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   y.Zeros();
 
   // Accelerator
-  tick = paralution_time();
+  tick = rocalution_time();
 
   for (int i=0; i<100; ++i)
     mat.ApplyAdd(x, 1.0, &y);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Accelerator Execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   std::cout << "Dot product = " << x.Dot(y) << std::endl;
 
-  tackg = paralution_time();
+  tackg = rocalution_time();
   std::cout << "Total execution + transfers (no async):" << (tackg-tickg)/1000000 << " sec" << std::endl;
 
 
@@ -99,9 +99,9 @@ int main(int argc, char* argv[]) {
 
   // Async
 
-  tickg = paralution_time();
+  tickg = rocalution_time();
 
-  tick = paralution_time();
+  tick = rocalution_time();
 
   // Memory transfer
   mat.MoveToAcceleratorAsync();
@@ -112,16 +112,16 @@ int main(int argc, char* argv[]) {
   y.info();
 
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Async Transfer:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   // CPU
-  tick = paralution_time();
+  tick = rocalution_time();
 
   for (int i=0; i<100; ++i)
     mat.ApplyAdd(x, 1.0, &y);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "CPU Execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   std::cout << "Dot product = " << x.Dot(y) << std::endl;
@@ -138,22 +138,22 @@ int main(int argc, char* argv[]) {
   y.Zeros();
 
   // Accelerator
-  tick = paralution_time();
+  tick = rocalution_time();
 
   for (int i=0; i<100; ++i)
     mat.ApplyAdd(x, 1.0, &y);
 
-  tack = paralution_time();
+  tack = rocalution_time();
   std::cout << "Accelerator Execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
   std::cout << "Dot product = " << x.Dot(y) << std::endl;
 
-  tackg = paralution_time();
+  tackg = rocalution_time();
   std::cout << "Total execution + transfers (async):" << (tackg-tickg)/1000000 << " sec" << std::endl;
 
 
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }
