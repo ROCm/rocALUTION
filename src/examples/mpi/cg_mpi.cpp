@@ -1,39 +1,12 @@
-// *************************************************************************
-//
-// This example runs with 2 MPI processes (only).
-//
-// It constructs a 2D unit square with 2 sub-domains.
-// The program distributes each domain (P1 and P2) by:
-//
-//        P1   |    P2
-//  0  1  2  3 |  4  5  6  7
-//  8  9 10 11 | 12 13 14 15
-// 16 17 18 19 | 20 21 22 23
-// 24 25 26 27 | 28 29 30 31
-// 32 33 34 35 | 36 37 38 39
-// 40 41 42 43 | 44 45 46 47
-// 48 49 50 51 | 52 53 54 55
-// 56 57 58 59 | 60 61 62 63
-//
-// Then, it constructs a 2D laplace operator and solves Lu=1,
-// with initial guess 0. 
-//
-// The operator L has the following form:
-//
-//      -1
-//   -1  4 -1
-//      -1
-//
-// *************************************************************************
-
 #include <iostream>
-#include <cstdlib>
-#include <rocalution.hpp>
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <map>
 #include <mpi.h>
+#include <rocalution.hpp>
 
-// Adjust ndim for size
-#define ndim 1000
-#define n ndim*ndim
+#define ValueType double
 
 using namespace rocalution;
 
@@ -42,304 +15,367 @@ int main(int argc, char* argv[]) {
   MPI_Init(&argc, &argv);
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  int num_processes;
   int rank;
+  int num_procs;
 
-  MPI_Comm_size(comm, &num_processes);
   MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &num_procs);
 
-  if (num_processes != 2) {
-    std::cerr << "Expecting two MPI ranks\n";
-    MPI_Finalize();
-    exit(1);
+  if (num_procs < 2) {
+    std::cerr << "Expecting at least 2 MPI processes" << std::endl;
+    return -1;
   }
 
+  if (argc < 2) { 
+    std::cerr << argv[0] << " <global_matrix>" << std::endl;
+    return -1;
+  }
+
+  // Initialize platform with rank and # of accelerator devices in the node
   set_omp_affinity(false);
 
   init_rocalution(rank, 1);
 
+  // Disable OpenMP
   set_omp_threads_rocalution(1);
 
+  // Print platform
   info_rocalution();
 
-  // Parallel Manager
-  ParallelManager *pm = new ParallelManager;
+  // Load undistributed matrix
+  LocalMatrix<ValueType> undis_mat;
+  undis_mat.ReadFileCSR(argv[1]);
 
-  // Initialize Parallel Manager
-  pm->SetMPICommunicator(&comm);
+  size_t global_nrow = undis_mat.get_nrow();
 
-  // Determine global and local matrix and vector sizes
-  int nboundary = sqrt(n);
-  pm->SetGlobalSize(n);
-  pm->SetLocalSize(n/num_processes);
+  int *global_row_offset = NULL;
+  int *global_col = NULL;
+  ValueType *global_val = NULL;
 
-  // Fill the boundary indices of the 2D domain
-  int *BoundaryIndex = new int[nboundary];
+  undis_mat.LeaveDataPtrCSR(&global_row_offset, &global_col, &global_val);
 
-  for (int i=0; i<nboundary; ++i) {
-    if(rank==0) BoundaryIndex[i] = (i+1)*nboundary/num_processes-1;
-    if(rank==1) BoundaryIndex[i] = (i+1)*nboundary/num_processes-nboundary/num_processes;
+  // Compute local matrix sizes
+  std::vector<int> local_size(num_procs);
+
+  for (int i=0; i<num_procs; ++i) {
+    local_size[i] = global_nrow / num_procs;
   }
 
-  // Pass the boundary indices to the parallel manager
-  pm->SetBoundaryIndex(nboundary, BoundaryIndex);
-
-  // Specify senders and receivers for the communication pattern
-  int *recv = new int[num_processes-1];
-  int *sender = new int[num_processes-1];
-  if (rank == 0) {
-    recv[0] = 1;
-    sender[0] = 1;
-  }
-  if (rank == 1) {
-    recv[0] = 0;
-    sender[0] = 0;
+  if (global_nrow % num_procs != 0) {
+    for (size_t i=0; i<global_nrow % num_procs; ++i) {
+      ++local_size[i];
+    }
   }
 
-  // Determine the offsets for each rank
-  int *recv_offset = new int[num_processes];
-  int *sender_offset = new int[num_processes];
+  // Compute index offsets
+  std::vector<int> index_offset(num_procs+1);
+  index_offset[0] = 0;
+  for (int i=0; i<num_procs; ++i) {
+    index_offset[i+1] = index_offset[i] + local_size[i];
+  }
 
-  recv_offset[0] = 0;
-  recv_offset[1] = nboundary;
-  sender_offset[0] = 0;
-  sender_offset[1] = nboundary;
+  // Read sub matrix - row_offset
+  int local_nrow = local_size[rank];
+  std::vector<int> local_row_offset(local_nrow+1);
 
-  // Pass the boundary and ghost communication pattern to the parallel manager
-  pm->SetReceivers(num_processes-1, recv, recv_offset);
-  pm->SetSenders(num_processes-1, sender, sender_offset);
+  for (int i=index_offset[rank], k=0; k<local_nrow+1; ++i, ++k) {
+    local_row_offset[k] = global_row_offset[i];
+  }
 
-  GlobalMatrix<double> mat(*pm);
-  GlobalVector<double> rhs(*pm);
-  GlobalVector<double> x(*pm);
+  // Read sub matrix - col and val
+  int local_nnz = local_row_offset[local_nrow] - local_row_offset[0];
+  std::vector<int> local_col(local_nnz);
+  std::vector<ValueType> local_val(local_nnz);
 
-  // Compute the local and ghost non-zero entries
-  int local_nnz = n/num_processes*5-nboundary*2-nboundary/num_processes*2;
-  int ghost_nnz = nboundary;
+  for (int i=local_row_offset[0], k=0; k<local_nnz; ++i, ++k) {
+    local_col[k] = global_col[i];
+    local_val[k] = global_val[i];
+  }
 
-  rhs.Allocate("rhs", n);
-  x.Allocate("x", n);
+  // Shift row_offset entries
+  int shift = local_row_offset[0];
+  for (int i=0; i<local_nrow+1; ++i) {
+    local_row_offset[i] -= shift;
+  }
 
-  rhs.Ones();
-  x.Zeros();
+  int interior_nnz = 0;
+  int ghost_nnz = 0;
+  int boundary_nnz = 0;
+  int neighbors = 0;
 
-  int *local_row_offset = NULL;
-  int *local_col = NULL;
-  double *local_val = NULL;
+  std::vector<std::vector<int> > boundary(num_procs, std::vector<int>());
+  std::vector<bool> neighbor(num_procs, false);
+  std::vector<std::map<int, bool> > checked(num_procs, std::map<int, bool>());
 
-  allocate_host(n/num_processes+1, &local_row_offset);
-  allocate_host(local_nnz, &local_col);
-  allocate_host(local_nnz, &local_val);
+  for (int i=0; i<local_nrow; ++i) {
+    for (int j=local_row_offset[i]; j<local_row_offset[i+1]; ++j) {
 
-  int *ghost_row_offset = NULL;
-  int *ghost_col = NULL;
-  double *ghost_val = NULL;
+      // Interior point
+      if (local_col[j] >= index_offset[rank] && local_col[j] < index_offset[rank+1]) {
+        ++interior_nnz;
+      } else {
+        // Boundary point above current process
+        if (local_col[j] < index_offset[rank]) {
+          // Loop over ranks above current process
+          for (int r=rank-1; r>=0; --r) {
+            // Check if boundary belongs to rank r
+            if (local_col[j] >= index_offset[r] && local_col[j] < index_offset[r+1]) {
+              // Add boundary point to rank r if it has not been added yet
+              if (!checked[r][i+index_offset[rank]]) {
+                boundary[r].push_back(i+index_offset[rank]);
+                neighbor[r] = true;
+                ++boundary_nnz;
+                checked[r][i+index_offset[rank]] = true;
+              }
+              ++ghost_nnz;
+              // Rank for current boundary point local_col[j] has been found -- continue with next boundary point
+              break;
+            }
+          }
+        }
 
-  allocate_host(n/num_processes+1, &ghost_row_offset);
-  allocate_host(ghost_nnz, &ghost_col);
-  allocate_host(ghost_nnz, &ghost_val);
+        // boundary point below current process
+        if (local_col[j] >= index_offset[rank+1]) {
+          // Loop over ranks above current process
+          for (int r=rank+1; r<num_procs; ++r) {
+            // Check if boundary belongs to rank r
+            if (local_col[j] >= index_offset[r] && local_col[j] < index_offset[r+1]) {
+              // Add boundary point to rank r if it has not been added yet
+              if (!checked[r][i+index_offset[rank]]) {
+                boundary[r].push_back(i+index_offset[rank]);
+                neighbor[r] = true;
+                ++boundary_nnz;
+                checked[r][i+index_offset[rank]] = true;
+              }
+              ++ghost_nnz;
+              // Rank for current boundary point local_col[j] has been found -- continue with next boundary point
+              break;
+            }
+          }
+        }
+      }
 
-  // Assembly
+    }
+  }
 
-  // Mesh example for n = 64:
-  //        P1   |    P2
-  //  0  1  2  3 |  4  5  6  7
-  //  8  9 10 11 | 12 13 14 15
-  // 16 17 18 19 | 20 21 22 23
-  // 24 25 26 27 | 28 29 30 31
-  // 32 33 34 35 | 36 37 38 39
-  // 40 41 42 43 | 44 45 46 47
-  // 48 49 50 51 | 52 53 54 55
-  // 56 57 58 59 | 60 61 62 63
+  for (int i=0; i<num_procs; ++i) {
+    if (neighbor[i] == true) {
+      ++neighbors;
+    }
+  }
 
-  int dim = sqrt(n);
-  int nnz = 0;
+  std::vector<MPI_Request> mpi_req(neighbors*2);
+  int n = 0;
+  // Array to hold boundary size for each interface
+  std::vector<int> boundary_size(neighbors);
+
+  // MPI receive boundary sizes
+  for (int i=0; i<num_procs; ++i) {
+    // If neighbor receive from rank i is expected...
+    if (neighbor[i] == true) {
+      // Receive size of boundary from rank i to current rank
+      MPI_Irecv(&(boundary_size[n]), 1, MPI_INT, i, 0, comm, &mpi_req[n]);
+      ++n;
+    }
+  }
+
+  // MPI send boundary sizes
+  for (int i=0; i<num_procs; ++i) {
+    // Send required if boundary for rank i available
+    if (boundary[i].size() > 0) {
+      int size = boundary[i].size();
+      // Send size of boundary from current rank to rank i
+      MPI_Isend(&size, 1, MPI_INT, i, 0, comm, &mpi_req[n]);
+      ++n;
+    }
+  }
+  // Wait to finish communication
+  MPI_Waitall(n-1, &(mpi_req[0]), MPI_STATUSES_IGNORE);
+
+  n = 0;
+  // Array to hold boundary offset for each interface
   int k = 0;
+  std::vector<int> recv_offset(neighbors+1);
+  std::vector<int> send_offset(neighbors+1);
+  recv_offset[0] = 0;
+  send_offset[0] = 0;
+  for (int i=0; i<neighbors; ++i) {
+    recv_offset[i+1] = recv_offset[i] + boundary_size[i];
+  }
 
-  // Fill local arrays
-  if (rank == 0) {
-    for (int i=0; i<dim; ++i) {
-      for (int j=0; j<dim/num_processes; ++j) {
+  for (int i=0; i<num_procs; ++i) {
+    if (neighbor[i] == true) {
+      send_offset[k+1] = send_offset[k] + boundary[i].size();
+      ++k;
+    }
+  }
 
-        int idx = i*dim/num_processes+j;
-        local_row_offset[k] = nnz;
+  // Array to hold boundary for each interface
+  std::vector<std::vector<int> > local_boundary(neighbors);
+  for (int i=0; i<neighbors; ++i) {
+    local_boundary[i].resize(boundary_size[i]);
+  }
+
+  // MPI receive boundary
+  for (int i=0; i<num_procs; ++i) {
+    // If neighbor receive from rank i is expected...
+    if (neighbor[i] == true) {
+      // Receive boundary from rank i to current rank
+      MPI_Irecv(local_boundary[n].data(), boundary_size[n], MPI_INT, i, 0, comm, &mpi_req[n]);
+      ++n;
+    }
+  }
+
+  // MPI send boundary
+  for (int i=0; i<num_procs; ++i) {
+    // Send required if boundary for rank i is available
+    if (boundary[i].size() > 0) {
+      // Send boundary from current rank to rank i
+      MPI_Isend(&(boundary[i][0]), boundary[i].size(), MPI_INT, i, 0, comm, &mpi_req[n]);
+      ++n;
+    }
+  }
+
+  // Wait to finish communication
+  MPI_Waitall(n-1, &(mpi_req[0]), MPI_STATUSES_IGNORE);
+
+  // Total boundary size
+  int nnz_boundary = 0;
+  for (int i=0; i<neighbors; ++i) {
+    nnz_boundary += boundary_size[i];
+  }
+
+  // Create local boundary index array
+  k = 0;
+  std::vector<int> bnd(boundary_nnz);
+
+  for (int i=0; i<num_procs; ++i) {
+    for (unsigned int j=0; j<boundary[i].size(); ++j) {
+      bnd[k] = boundary[i][j]-index_offset[rank];
+      ++k;
+    }
+  }
+
+  // Create boundary index array
+  std::vector<int> boundary_index(nnz_boundary);
+
+  k = 0;
+  for (int i=0; i<neighbors; ++i) {
+    for (int j=0; j<boundary_size[i]; ++j) {
+      boundary_index[k] = local_boundary[i][j];
+      ++k;
+    }
+  }
+
+  // Create map with boundary index relations
+  std::map<int, int> boundary_map;
+
+  for (int i=0; i<nnz_boundary; ++i) {
+    boundary_map[boundary_index[i]] = i;
+  }
+
+  // Build up ghost and interior matrix
+  int *ghost_row = new int[ghost_nnz];
+  int *ghost_col = new int[ghost_nnz];
+  ValueType *ghost_val = new ValueType[ghost_nnz];
+
+  int *row_offset = new int[local_nrow+1];
+  int *col = new int[interior_nnz];
+  ValueType *val = new ValueType[interior_nnz];
+
+  row_offset[0] = 0;
+  k = 0;
+  int l = 0;
+  for (int i=0; i<local_nrow; ++i) {
+    for (int j=local_row_offset[i]; j<local_row_offset[i+1]; ++j) {
+
+      // Boundary point -- create ghost part
+      if (local_col[j] < index_offset[rank] || local_col[j] >= index_offset[rank+1]) {
+
+        ghost_row[k] = i;
+        ghost_col[k] = boundary_map[local_col[j]];
+        ghost_val[k] = local_val[j];
         ++k;
 
-        // if no upper boundary element, connect with upper neighbor
-        if (i != 0) {
-          local_col[nnz] = idx - dim/num_processes;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
+      } else {
+        // Interior point -- create interior part
+        int c = local_col[j] - index_offset[rank];
 
-        // if no left boundary element, connect with left neighbor
-        if (j != 0) {
-          local_col[nnz] = idx - 1;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
-
-        // element itself
-        local_col[nnz] = idx;
-        local_val[nnz] = 4.0;
-        ++nnz;
-
-        // if no right boundary element, connect with right neighbor
-        if (j != dim/num_processes - 1) {
-          local_col[nnz] = idx + 1;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
-
-        // if no lower boundary element, connect with lower neighbor
-        if (i != dim - 1) {
-          local_col[nnz] = idx + dim/num_processes;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
-
+        col[l] = c;
+        val[l] = local_val[j];
+        ++l;
       }
+
     }
 
-    local_row_offset[k] = nnz;
-
-    nnz = 0;
-    k = 0;
-
-    // Fill ghost arrays
-    for (int i=0; i<dim; ++i) {
-      for (int j=0; j<dim/num_processes; ++j) {
-
-        int idx = i*dim/num_processes+j;
-        ghost_row_offset[k] = nnz;
-        ++k;
-
-        // Boundary Values
-        if (idx == BoundaryIndex[i]) {
-          ghost_col[nnz] = i;
-          ghost_val[nnz] = -1;
-          ++nnz;
-        }
-
-      }
-    }
-
-    ghost_row_offset[n/num_processes] = nnz;
+    row_offset[i+1] = l;
 
   }
 
-  if (rank == 1) {
-    for (int i=0; i<dim; ++i) {
-      for (int j=dim/num_processes; j<dim; ++j) {
+  std::vector<int> recv(neighbors);
+  std::vector<int> sender(neighbors);
 
-        int idx = i*dim/num_processes+j-dim/num_processes;
-        local_row_offset[k] = nnz;
-        ++k;
-
-        // if no upper boundary element, connect with upper neighbor
-        if (i != 0) {
-          local_col[nnz] = idx - dim/num_processes;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
-
-        // if no left boundary element, connect with left neighbor
-        if (j != dim/num_processes) {
-          local_col[nnz] = idx - 1;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
-
-        // element itself
-        local_col[nnz] = idx;
-        local_val[nnz] = 4.0;
-        ++nnz;
-
-        // if no right boundary element, connect with right neighbor
-        if (j != dim - 1) {
-          local_col[nnz] = idx + 1;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
-
-        // if no lower boundary element, connect with lower neighbor
-        if (i != dim - 1) {
-          local_col[nnz] = idx + dim/num_processes;
-          local_val[nnz] = -1.0;
-          ++nnz;
-        }
-
-      }
+  int nbc = 0;
+  for (int i=0; i<num_procs; ++i) {
+    if (neighbor[i] == true) {
+      recv[nbc] = i;
+      sender[nbc] = i;
+      ++nbc;
     }
-
-    local_row_offset[n/num_processes] = nnz;
-
-    nnz = 0;
-    k = 0;
-
-    // Fill ghost arrays
-    for (int i=0; i<dim; ++i) {
-      for (int j=dim/num_processes; j<dim; ++j) {
-
-        int idx = i*dim/num_processes+j-dim/num_processes;
-        ghost_row_offset[k] = nnz;
-        ++k;
-
-        // Boundary Values
-        if (idx == BoundaryIndex[i]) {
-          ghost_col[nnz] = i;
-          ghost_val[nnz] = -1;
-          ++nnz;
-        }
-
-      }
-    }
-
-    ghost_row_offset[n/num_processes] = nnz;
-
   }
 
-  // Set Matrix
-  mat.SetDataPtrCSR(&local_row_offset, &local_col, &local_val,
-                    &ghost_row_offset, &ghost_col, &ghost_val,
-                    "mat", local_nnz, ghost_nnz);
+  ParallelManager manager;
 
-  x.Zeros();
-  rhs.Ones();
+  manager.SetMPICommunicator(&comm);
+  manager.SetGlobalSize(global_nrow);
+  manager.SetLocalSize(local_size[rank]);
+  manager.SetBoundaryIndex(boundary_nnz, bnd.data());
+  manager.SetReceivers(neighbors, recv.data(), recv_offset.data());
+  manager.SetSenders(neighbors, sender.data(), send_offset.data());
 
-  CG<GlobalMatrix<double>, GlobalVector<double>, double> ls;
-  Jacobi<GlobalMatrix<double>, GlobalVector<double>, double> p;
+  GlobalMatrix<ValueType> mat(manager);
+  GlobalVector<ValueType> rhs(manager);
+  GlobalVector<ValueType> x(manager);
+  GlobalVector<ValueType> e(manager);
+
+  mat.SetLocalDataPtrCSR(&row_offset, &col, &val, "mat", interior_nnz);
+  mat.SetGhostDataPtrCOO(&ghost_row, &ghost_col, &ghost_val, "ghost", ghost_nnz);
 
   mat.MoveToAccelerator();
   rhs.MoveToAccelerator();
   x.MoveToAccelerator();
-  ls.MoveToAccelerator();
+  e.MoveToAccelerator();
 
+  rhs.Allocate("rhs", mat.get_ncol());
+  x.Allocate("x", mat.get_nrow());
+  e.Allocate("sol", mat.get_nrow());
+
+  e.Ones();
+  mat.Apply(e, &rhs);
+  x.Zeros();
+
+  CG<GlobalMatrix<double>, GlobalVector<double>, double> ls;
+  Jacobi<GlobalMatrix<double>, GlobalVector<double>, double> p;
 
   ls.SetPreconditioner(p);
   ls.SetOperator(mat);
   ls.Build();
-  ls.Verbose(2);
 
-  mat.ConvertToELL();
+  ls.Verbose(1);
 
   mat.info();
 
-  double tick = rocalution_time();
+  double time = rocalution_time();
 
   ls.Solve(rhs, &x);
 
-  double tack = rocalution_time();
-  std::cout << "Solving:" << (tack-tick)/1000000 << " sec" << std::endl;
+  time = rocalution_time() - time;
+  std::cout << "Solving: " << time/1e6 << " sec" << std::endl;
+
+  e.ScaleAdd(-1.0, x);
+  std::cout << "||e - x||_2 = " << e.Norm() << std::endl;
 
   ls.Clear();
-
-  delete [] recv;
-  delete [] sender;
-  delete [] BoundaryIndex;
-  delete [] recv_offset;
-  delete [] sender_offset;
-  delete pm;
 
   stop_rocalution();
 
@@ -348,4 +384,3 @@ int main(int argc, char* argv[]) {
   return 0;
 
 }
-

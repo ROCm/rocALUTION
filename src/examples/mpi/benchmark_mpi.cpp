@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
   undis_mat.LeaveDataPtrCSR(&global_row_offset, &global_col, &global_val);
 
   // Compute local matrix sizes
-  int *local_size = new int[num_procs];
+  std::vector<int> local_size(num_procs);
 
   for (int i=0; i<num_procs; ++i) {
     local_size[i] = global_nrow / num_procs;
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Compute index offsets
-  int *index_offset = new int[num_procs+1];
+  std::vector<int> index_offset(num_procs+1);
   index_offset[0] = 0;
   for (int i=0; i<num_procs; ++i) {
     index_offset[i+1] = index_offset[i] + local_size[i];
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
 
   // Read sub matrix - row_offset
   int local_nrow = local_size[rank];
-  int *local_row_offset = new int[local_nrow+1];
+  std::vector<int> local_row_offset(local_nrow+1);
 
   for (int i=index_offset[rank], k=0; k<local_nrow+1; ++i, ++k) {
     local_row_offset[k] = global_row_offset[i];
@@ -84,8 +84,8 @@ int main(int argc, char* argv[]) {
 
   // Read sub matrix - col and val
   int local_nnz = local_row_offset[local_nrow] - local_row_offset[0];
-  int *local_col = new int[local_nnz];
-  ValueType *local_val = new ValueType[local_nnz];
+  std::vector<int> local_col(local_nnz);
+  std::vector<ValueType> local_val(local_nnz);
 
   for (int i=local_row_offset[0], k=0; k<local_nnz; ++i, ++k) {
     local_col[k] = global_col[i];
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
   std::vector<MPI_Request> mpi_req(neighbors*2);
   int n = 0;
   // Array to hold boundary size for each interface
-  int *boundary_size = new int[neighbors];
+  std::vector<int> boundary_size(neighbors);
 
   // MPI receive boundary sizes
   for (int i=0; i<num_procs; ++i) {
@@ -195,8 +195,8 @@ int main(int argc, char* argv[]) {
   n = 0;
   // Array to hold boundary offset for each interface
   int k = 0;
-  int *recv_offset = new int[neighbors+1];
-  int *send_offset = new int[neighbors+1];
+  std::vector<int> recv_offset(neighbors+1);
+  std::vector<int> send_offset(neighbors+1);
   recv_offset[0] = 0;
   send_offset[0] = 0;
   for (int i=0; i<neighbors; ++i) {
@@ -211,9 +211,9 @@ int main(int argc, char* argv[]) {
   }
 
   // Array to hold boundary for each interface
-  int **local_boundary = new int*[neighbors];
+  std::vector<std::vector<int> > local_boundary(neighbors);
   for (int i=0; i<neighbors; ++i) {
-    local_boundary[i] = new int[boundary_size[i]];
+    local_boundary[i].resize(boundary_size[i]);
   }
 
   // MPI receive boundary
@@ -221,7 +221,7 @@ int main(int argc, char* argv[]) {
     // If neighbor receive from rank i is expected...
     if (neighbor[i] == true) {
       // Receive boundary from rank i to current rank
-      MPI_Irecv(local_boundary[n], boundary_size[n], MPI_INT, i, 0, comm, &mpi_req[n]);
+      MPI_Irecv(local_boundary[n].data(), boundary_size[n], MPI_INT, i, 0, comm, &mpi_req[n]);
       ++n;
     }
   }
@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
 
   // Create local boundary index array
   k = 0;
-  int *bnd = new int[boundary_nnz];
+  std::vector<int> bnd(boundary_nnz);
 
   for (int i=0; i<num_procs; ++i) {
     for (unsigned int j=0; j<boundary[i].size(); ++j) {
@@ -257,7 +257,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Create boundary index array
-  int *boundary_index = new int[nnz_boundary];
+  std::vector<int> boundary_index(nnz_boundary);
 
   k = 0;
   for (int i=0; i<neighbors; ++i) {
@@ -312,8 +312,8 @@ int main(int argc, char* argv[]) {
 
   }
 
-  int *recv = new int[neighbors];
-  int *sender = new int[neighbors];
+  std::vector<int> recv(neighbors);
+  std::vector<int> sender(neighbors);
 
   int nbc = 0;
   for (int i=0; i<num_procs; ++i) {
@@ -329,9 +329,9 @@ int main(int argc, char* argv[]) {
   manager.SetMPICommunicator(&comm);
   manager.SetGlobalSize(global_nrow);
   manager.SetLocalSize(local_size[rank]);
-  manager.SetBoundaryIndex(boundary_nnz, bnd);
-  manager.SetReceivers(neighbors, recv, recv_offset);
-  manager.SetSenders(neighbors, sender, send_offset);
+  manager.SetBoundaryIndex(boundary_nnz, bnd.data());
+  manager.SetReceivers(neighbors, recv.data(), recv_offset.data());
+  manager.SetSenders(neighbors, sender.data(), send_offset.data());
 
   GlobalMatrix<ValueType> mat(manager);
   GlobalVector<ValueType> v1(manager);
