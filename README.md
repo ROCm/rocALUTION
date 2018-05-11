@@ -15,8 +15,8 @@ cd rocALUTION; mkdir build; cd build
 # Configure rocALUTION
 # Build options:
 #   SUPPORT_HIP    - build rocALUTION with HIP support (ON)
-#   SUPPORT_OMP    - build rocALUTION with [OpenMP][] support (ON)
-#   SUPPORT_MPI    - build rocALUTION with [MPI][] (multi-node) support (OFF)
+#   SUPPORT_OMP    - build rocALUTION with OpenMP support (ON)
+#   SUPPORT_MPI    - build rocALUTION with MPI (multi-node) support (OFF)
 #   BUILD_SHARED   - build rocALUTION as shared library (ON, recommended)
 #   BUILD_EXAMPLES - build rocALUTION examples (ON)
 cmake .. -DSUPPORT_HIP=ON
@@ -39,9 +39,9 @@ gzip -d gr_30_30.mtx.gz
 #### Backends
 rocALUTION offers various backends for different (parallel) hardware.
 *  Host
-*  OpenMP - designed for multi-core CPUs
-*  HIP    - designed for ROCm compatible devices
-*  MPI    - designed for multi-node clusters and multi-GPU setups
+*  [OpenMP][] - designed for multi-core CPUs
+*  [HIP][]    - designed for ROCm compatible devices
+*  [MPI][]    - designed for multi-node clusters and multi-GPU setups
 
 #### Easy to use
 Syntax and structure of the library provide fast learning curves. With the help of the examples, anyone can try out the library - no knowledge in multi-core or GPU programming is required.
@@ -51,14 +51,14 @@ There are no hardware or library requirements to install and run rocALUTION. If 
 
 #### Iterative solvers
 *  Fixed-Point iteration schemes - Jacobi, (Symmetric) Gauss-Seidel, SOR, SSOR
-*  Krylov subspace methods - CR, CG, BiCGStab, BiCGStab(l), GMRES, IDR, QMRCGSTAB, Flexible CG/GMRES
+*  Krylov subspace methods - CR, CG, BiCGStab, BiCGStab(*l*), GMRES, IDR, QMRCGSTAB, Flexible CG/GMRES
 *  Mixed-precision defect-correction scheme
 *  Chebyshev iteration scheme
 *  Multigrid - geometric and algebraic
 
 #### Preconditioners
 *  Matrix splitting schemes - Jacobi, (multi-colored) (symmetric) Gauss-Seidel, SOR, SSOR
-*  Factorization schemes    - ILU(0), ILU(p) (based on levels), ILU(p,q) (power(q)-pattern method), multi-elimination ILU (nested/recursive), ILUT (based on threshold), IC(0)
+*  Factorization schemes    - ILU(*0*), ILU(*p*) (based on levels), ILU(*p,q*) (power(*q*)-pattern method), multi-elimination ILU (nested/recursive), ILUT (based on threshold), IC(*0*)
 *  Approximate Inverses - Chebyshev matrix-valued polynomial, SPAI, FSAI, TNS
 *  Diagonal-based preconditioner for Saddle-point problems
 *  Block-type of sub-preconditioners/solvers
@@ -84,3 +84,5 @@ All code based on rocALUTION is portable and independent of the hardware, it wil
 
 [ROCm]: https://github.com/RadeonOpenCompute/ROCm
 [HIP]: https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/
+[OpenMP]: http://www.openmp.org/
+[MPI]: https://www.open-mpi.org/
