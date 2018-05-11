@@ -969,6 +969,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
+/* TODO
     // If matrix is very sparse, we do COO via atomics
     if (this->nnz_ / this->nrow_ < 2) {
 
@@ -983,7 +984,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     } else {
-
+*/
+    {
       // If nnz < warpsize, perform sequential spmv
       if (this->get_nnz() < this->local_backend_.HIP_warp) {
 

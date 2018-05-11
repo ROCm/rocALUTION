@@ -76,38 +76,28 @@ __global__ void kernel_spmv_coo_flat(const IndexType nnz,
                                            IndexType *temp_rows,
                                            ValueType *temp_vals) {
 
-  __shared__ volatile IndexType rows[48 *(BLOCK_SIZE/32)];
+  __shared__ volatile IndexType rows[48*(BLOCK_SIZE/32) + WARP_SIZE/2];
   __shared__ volatile ValueType vals[BLOCK_SIZE];
 
-  // global thread index
   const IndexType thread_id   = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-  // thread index within the warp
   const IndexType thread_lane = threadIdx.x & (WARP_SIZE-1);
-  // global warp index
   const IndexType warp_id     = thread_id   / WARP_SIZE;
-  // warp's offset into I,J,V
   const IndexType interval_begin = warp_id * interval_size;
-  // end of warps's work
   const IndexType interval_end   = (interval_begin+interval_size < nnz) ? interval_begin+interval_size : nnz;
   // thread's index into padded rows array
-  const IndexType idx = 16 * (threadIdx.x/32 + 1) + threadIdx.x;
+  const IndexType idx = WARP_SIZE/2 * (threadIdx.x/WARP_SIZE+1) + threadIdx.x;
   // fill padding with invalid row index
-  rows[idx - 16] = -1;
+  rows[idx - WARP_SIZE/2] = -1;
 
   // warp has no work to do
   if(interval_begin >= interval_end) {
     return;
   }
 
-  ValueType zero;
-  ValueType one;
-  make_ValueType(zero, 0.0);
-  make_ValueType(one, 1.0);
-
   // initialize the carry in values
-  if (thread_lane == 31) {
+  if (thread_lane == WARP_SIZE-1) {
     rows[idx] = I[interval_begin];
-    assign_volatile_ValueType(&zero, &vals[threadIdx.x]);
+    vals[threadIdx.x] = (ValueType) 0;
   }
 
   for(IndexType n=interval_begin+thread_lane; n<interval_end; n+=WARP_SIZE) {
@@ -115,55 +105,40 @@ __global__ void kernel_spmv_coo_flat(const IndexType nnz,
     // row index (i)
     IndexType row = I[n];
     // A(i,j) * x(j)
-    ValueType val = scalar * V[n] * x[J[n]];
+    ValueType val = V[n] * x[J[n]];
 
     if (thread_lane == 0) {
-      if(row == rows[idx + 31]) {
+      if(row == rows[idx + WARP_SIZE-1]) {
         // row continues
-        val = add_volatile_ValueType(&vals[threadIdx.x+31], &val);
+        val += vals[threadIdx.x+WARP_SIZE-1];
       } else {
         // row terminated
-        y[rows[idx+31]] = add_volatile_ValueType(&vals[threadIdx.x+31], &y[rows[idx+31]]);
+        y[rows[idx+WARP_SIZE-1]] += vals[threadIdx.x+WARP_SIZE-1];
       }
     }
 
     rows[idx]         = row;
-    assign_volatile_ValueType(&val, &vals[threadIdx.x]);
+    vals[threadIdx.x] = val;
 
-    if(row == rows[idx -  1]) {
-      val = add_volatile_ValueType(&vals[threadIdx.x -  1], &val);
-      assign_volatile_ValueType(&val, &vals[threadIdx.x]);
-    }
-    if(row == rows[idx -  2]) {
-      val = add_volatile_ValueType(&vals[threadIdx.x -  2], &val);
-      assign_volatile_ValueType(&val, &vals[threadIdx.x]);
-    }
-    if(row == rows[idx -  4]) {
-      val = add_volatile_ValueType(&vals[threadIdx.x -  4], &val);
-      assign_volatile_ValueType(&val, &vals[threadIdx.x]);
-    }
-    if(row == rows[idx -  8]) {
-      val = add_volatile_ValueType(&vals[threadIdx.x -  8], &val);
-      assign_volatile_ValueType(&val, &vals[threadIdx.x]);
-    }
-    if(row == rows[idx - 16]) {
-      val = add_volatile_ValueType(&vals[threadIdx.x - 16], &val);
-      assign_volatile_ValueType(&val, &vals[threadIdx.x]);
-    }
+    if(row == rows[idx -  1]) vals[threadIdx.x] = val = val + vals[threadIdx.x- 1];
+    if(row == rows[idx -  2]) vals[threadIdx.x] = val = val + vals[threadIdx.x- 2];
+    if(row == rows[idx -  4]) vals[threadIdx.x] = val = val + vals[threadIdx.x- 4];
+    if(row == rows[idx -  8]) vals[threadIdx.x] = val = val + vals[threadIdx.x- 8];
+    if(row == rows[idx - 16]) vals[threadIdx.x] = val = val + vals[threadIdx.x-16];
+    if (WARP_SIZE > 32) if(row == rows[idx - 32]) vals[threadIdx.x] = val = val + vals[threadIdx.x-32];
 
     // row terminated
-    if(thread_lane < 31 && row != rows[idx + 1]) {
-      y[row] = add_volatile_ValueType(&vals[threadIdx.x], &y[row]);
+    if(thread_lane < WARP_SIZE-1 && row != rows[idx + 1]) {
+      y[row] += vals[threadIdx.x];
     }
 
   }
 
   // write the carry out values
-  if(thread_lane == 31) {
+  if(thread_lane == WARP_SIZE-1) {
     temp_rows[warp_id] = rows[idx];
-    assign_volatile_ValueType(&vals[threadIdx.x], &temp_vals[warp_id]);
+    temp_vals[warp_id] = vals[threadIdx.x];
   }
-
 }
 
 // ----------------------------------------------------------
