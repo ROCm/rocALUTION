@@ -84,10 +84,20 @@ if(SUPPORT_HIP)
   HIP_PREPARE_TARGET_COMMANDS(${rocALUTION_BACKEND_HIP} OBJ _generated_files _source_files ${HIP_SOURCES} SHARED)
   list(REMOVE_ITEM HIP_SOURCES ${_source_files})
   list(APPEND HIP_SOURCES ${_generated_files})
-  set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
+
+  if (HIP_PLATFORM STREQUAL "hcc")
+    set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
+  else()
+    set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE CXX)
+  endif()
 
   add_library(${rocALUTION_BACKEND_HIP} SHARED ${HIP_SOURCES})
-  target_link_libraries(${rocALUTION_BACKEND_HIP} hip_hcc hipblas)
+
+  if (HIP_PLATFORM STREQUAL "hcc")
+    target_link_libraries(${rocALUTION_BACKEND_HIP} hip_hcc hipblas)
+  else()
+    target_link_libraries(${rocALUTION_BACKEND_HIP} cudart hipblas)
+  endif()
 endif()
 
 # Create rocalution library
