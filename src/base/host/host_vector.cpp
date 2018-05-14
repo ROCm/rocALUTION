@@ -147,7 +147,9 @@ void HostVector<ValueType>::CopyFromData(const ValueType *data) {
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->size_; ++i)
       this->vec_[i] = data[i];
 
@@ -162,7 +164,9 @@ void HostVector<ValueType>::CopyToData(ValueType *data) const {
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->size_; ++i)
       data[i] = this->vec_[i];
 
@@ -217,11 +221,15 @@ void HostVector<ValueType>::CopyFrom(const BaseVector<ValueType> &vec) {
 
       _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int i=0; i<this->size_; ++i)
         this->vec_[i] = cast_vec->vec_[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int i=0; i<this->index_size_; ++i)
         this->index_array_[i] = cast_vec->index_array_[i];
 
@@ -278,7 +286,9 @@ void HostVector<double>::CopyFromFloat(const BaseVector<float> &vec) {
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->size_; ++i)
       this->vec_[i] = double(cast_vec->vec_[i]);
 
@@ -325,7 +335,9 @@ void HostVector<float>::CopyFromDouble(const BaseVector<double> &vec) {
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->size_; ++i)
       this->vec_[i] = float(cast_vec->vec_[i]);
 
@@ -343,7 +355,9 @@ void HostVector<ValueType>::Zeros(void) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = ValueType(0.0);
 
@@ -354,7 +368,9 @@ void HostVector<ValueType>::Ones(void) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = ValueType(1.0);
 
@@ -365,7 +381,9 @@ void HostVector<ValueType>::SetValues(const ValueType val) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = val;
 
@@ -378,7 +396,9 @@ void HostVector<ValueType>::SetRandom(const ValueType a, const ValueType b, cons
 
   // Fill this with random data from interval [a,b]
   srand(seed | 0x67854903);
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = a + (ValueType)rand() / (ValueType)RAND_MAX * (b - a);
 
@@ -392,7 +412,9 @@ void HostVector<std::complex<float> >::SetRandom(const std::complex<float> a, co
 
   // Fill this with random data from interval [a,b]
   srand(seed);
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = a + (float)rand() / (float)RAND_MAX * (b - a);
 
@@ -508,7 +530,9 @@ void HostVector<ValueType>::AddScale(const BaseVector<ValueType> &x, const Value
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = this->vec_[i] + alpha*cast_x->vec_[i];
 
@@ -524,7 +548,9 @@ void HostVector<ValueType>::ScaleAdd(const ValueType alpha, const BaseVector<Val
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = alpha*this->vec_[i] + cast_x->vec_[i];
 
@@ -540,7 +566,9 @@ void HostVector<ValueType>::ScaleAddScale(const ValueType alpha, const BaseVecto
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = alpha*this->vec_[i] + beta*cast_x->vec_[i];
 
@@ -561,7 +589,9 @@ void HostVector<ValueType>::ScaleAddScale(const ValueType alpha, const BaseVecto
 
   _set_omp_backend_threads(this->local_backend_, size);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<size; ++i)
     this->vec_[i+dst_offset] = alpha*this->vec_[i+dst_offset] + beta*cast_x->vec_[i+src_offset];
 
@@ -581,7 +611,9 @@ void HostVector<ValueType>::ScaleAdd2(const ValueType alpha, const BaseVector<Va
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = alpha*this->vec_[i] + beta*cast_x->vec_[i] + gamma*cast_y->vec_[i];
 
@@ -592,7 +624,9 @@ void HostVector<ValueType>::Scale(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] *= alpha;
 
@@ -608,7 +642,9 @@ void HostVector<ValueType>::ExclusiveScan(const BaseVector<ValueType> &x) {
 
   this->vec_[0] = cast_x->vec_[0];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=1; i<this->size_; ++i)
     this->vec_[i] = cast_x->vec_[i] + this->vec_[i-1];
 
@@ -626,7 +662,9 @@ ValueType HostVector<ValueType>::Dot(const BaseVector<ValueType> &x) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:dot)
+#endif
   for (int i=0; i<this->size_; ++i)
     dot += this->vec_[i]*cast_x->vec_[i];
 
@@ -647,7 +685,9 @@ std::complex<float> HostVector<std::complex<float> >::Dot(const BaseVector<std::
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:dot_real, dot_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     dot_real += this->vec_[i].real() * cast_x->vec_[i].real() + this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -672,7 +712,9 @@ std::complex<double> HostVector<std::complex<double> >::Dot(const BaseVector<std
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:dot_real, dot_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     dot_real += this->vec_[i].real() * cast_x->vec_[i].real() + this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -704,7 +746,9 @@ std::complex<float> HostVector<std::complex<float> >::DotNonConj(const BaseVecto
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:dot_real, dot_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     dot_real += this->vec_[i].real() * cast_x->vec_[i].real() - this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -729,7 +773,9 @@ std::complex<double> HostVector<std::complex<double> >::DotNonConj(const BaseVec
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:dot_real, dot_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     dot_real += this->vec_[i].real() * cast_x->vec_[i].real() - this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -748,7 +794,9 @@ ValueType HostVector<ValueType>::Asum(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:asum)
+#endif
   for (int i=0; i<this->size_; ++i)
     asum += rocalution_abs(this->vec_[i]);
 
@@ -764,7 +812,9 @@ std::complex<float> HostVector<std::complex<float> >::Asum(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:asum_real, asum_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     asum_real += rocalution_abs(this->vec_[i].real());
@@ -784,7 +834,9 @@ std::complex<double> HostVector<std::complex<double> >::Asum(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:asum_real, asum_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     asum_real += rocalution_abs(this->vec_[i].real());
@@ -804,11 +856,15 @@ int HostVector<ValueType>::Amax(ValueType &value) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i) {
     ValueType val = rocalution_abs(this->vec_[i]);
     if (val > value)
+#ifdef _OPENMP
 #pragma omp critical
+#endif
 {
       if (val > value) {
         value = val;
@@ -828,7 +884,9 @@ ValueType HostVector<ValueType>::Norm(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:norm2)
+#endif
   for (int i=0; i<this->size_; ++i)
     norm2 += this->vec_[i] * this->vec_[i];
 
@@ -843,7 +901,9 @@ std::complex<float> HostVector<std::complex<float> >::Norm(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:norm2)
+#endif
   for (int i=0; i<this->size_; ++i)
     norm2 += this->vec_[i].real() * this->vec_[i].real() + this->vec_[i].imag() * this->vec_[i].imag();
 
@@ -860,7 +920,9 @@ std::complex<double> HostVector<std::complex<double> >::Norm(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:norm2)
+#endif
   for (int i=0; i<this->size_; ++i)
     norm2 += this->vec_[i].real() * this->vec_[i].real() + this->vec_[i].imag() * this->vec_[i].imag();
 
@@ -885,7 +947,9 @@ ValueType HostVector<ValueType>::Reduce(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:reduce)
+#endif
   for (int i=0; i<this->size_; ++i)
     reduce += this->vec_[i];
 
@@ -901,7 +965,9 @@ std::complex<float> HostVector<std::complex<float> >::Reduce(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:reduce_real, reduce_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     reduce_real += this->vec_[i].real();
@@ -921,7 +987,9 @@ std::complex<double> HostVector<std::complex<double> >::Reduce(void) const {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:reduce_real, reduce_imag)
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     reduce_real += this->vec_[i].real();
@@ -943,7 +1011,9 @@ void HostVector<ValueType>::PointWiseMult(const BaseVector<ValueType> &x) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = this->vec_[i]*cast_x->vec_[i];
 
@@ -962,7 +1032,9 @@ void HostVector<ValueType>::PointWiseMult(const BaseVector<ValueType> &x, const 
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = cast_y->vec_[i]*cast_x->vec_[i];
 
@@ -987,7 +1059,9 @@ void HostVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src,
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<size; ++i)
     this->vec_[i+dst_offset] = cast_src->vec_[i+src_offset];
 
@@ -1007,7 +1081,9 @@ void HostVector<ValueType>::Permute(const BaseVector<int> &permutation) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i) {
     assert_dbg(cast_perm->vec_[i] >= 0);
     assert_dbg(cast_perm->vec_[i] < this->size_);
@@ -1030,7 +1106,9 @@ void HostVector<ValueType>::PermuteBackward(const BaseVector<int> &permutation) 
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i) {
     assert_dbg(cast_perm->vec_[i] >= 0);
     assert_dbg(cast_perm->vec_[i] < this->size_);
@@ -1054,7 +1132,9 @@ void HostVector<ValueType>::CopyFromPermute(const BaseVector<ValueType> &src,
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[ cast_perm->vec_[i] ] = cast_vec->vec_[i];
 
@@ -1076,7 +1156,9 @@ void HostVector<ValueType>::CopyFromPermuteBackward(const BaseVector<ValueType> 
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = cast_vec->vec_[ cast_perm->vec_[i] ];
 
@@ -1268,7 +1350,9 @@ void HostVector<ValueType>::Power(const double power) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = pow(this->vec_[i], ValueType(power));
 
@@ -1279,7 +1363,9 @@ void HostVector<std::complex<float> >::Power(const double power) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i)
     this->vec_[i] = pow(this->vec_[i], std::complex<float>(float(power)));
 
@@ -1290,7 +1376,9 @@ void HostVector<int>::Power(const double power) {
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->size_; ++i) {
 
     int value = 1;

@@ -160,15 +160,21 @@ void HostMatrixCOO<ValueType>::CopyFromCOO(const int *row, const int *col, const
 
     _set_omp_backend_threads(this->local_backend_, this->nnz_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nnz_; ++i)
       this->mat_.row[i] = row[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int j=0; j<this->nnz_; ++j)
       this->mat_.col[j] = col[j];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int j=0; j<this->nnz_; ++j)
       this->mat_.val[j] = val[j];
 
@@ -186,15 +192,21 @@ void HostMatrixCOO<ValueType>::CopyToCOO(int *row, int *col, ValueType *val) con
 
     _set_omp_backend_threads(this->local_backend_, this->nnz_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nnz_; ++i)
       row[i] = this->mat_.row[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int j=0; j<this->nnz_; ++j)
       col[j] = this->mat_.col[j];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int j=0; j<this->nnz_; ++j)
       val[j] = this->mat_.val[j];
 
@@ -221,15 +233,21 @@ void HostMatrixCOO<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
       
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
       for (int j=0; j<this->nnz_; ++j)
         this->mat_.row[j] = cast_mat->mat_.row[j];
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
       for (int j=0; j<this->nnz_; ++j)
         this->mat_.col[j] = cast_mat->mat_.col[j];
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
       for (int j=0; j<this->nnz_; ++j)
         this->mat_.val[j] = cast_mat->mat_.val[j];
 
@@ -350,7 +368,9 @@ void HostMatrixCOO<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
   for (int i=0; i<this->nrow_; ++i)
     cast_out->vec_[i] = ValueType(0.0);  
 
@@ -398,7 +418,9 @@ bool HostMatrixCOO<ValueType>::Permute(const BaseVector<int> &permutation) {
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nnz_; ++i) {
  
     this->mat_.row[i] = cast_perm->vec_[ src.mat_.row[i] ];
@@ -431,11 +453,15 @@ bool HostMatrixCOO<ValueType>::PermuteBackward(const BaseVector<int> &permutatio
   int *pb = NULL;
   allocate_host(this->nrow_, &pb);
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
   for (int i=0; i<this->nrow_; ++i)
     pb [ cast_perm->vec_[i] ] = i;
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
   for (int i=0; i<this->nnz_; ++i) {
 
     this->mat_.row[i] = pb[src.mat_.row[i]];
@@ -454,7 +480,9 @@ bool HostMatrixCOO<ValueType>::Scale(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nnz_; ++i)
       this->mat_.val[i] *= alpha;
 
@@ -467,7 +495,9 @@ bool HostMatrixCOO<ValueType>::ScaleDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nnz_; ++i)
     if (this->mat_.row[i] == this->mat_.col[i])
       this->mat_.val[i] *= alpha;
@@ -481,7 +511,9 @@ bool HostMatrixCOO<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nnz_; ++i)
     if (this->mat_.row[i] != this->mat_.col[i])
       this->mat_.val[i] *= alpha;
@@ -495,7 +527,9 @@ bool HostMatrixCOO<ValueType>::AddScalar(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nnz_; ++i)
     this->mat_.val[i] += alpha;
 
@@ -508,7 +542,9 @@ bool HostMatrixCOO<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nnz_; ++i)
     if (this->mat_.row[i] == this->mat_.col[i])
       this->mat_.val[i] += alpha;
@@ -522,7 +558,9 @@ bool HostMatrixCOO<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nnz_; ++i)
     if (this->mat_.row[i] != this->mat_.col[i])
       this->mat_.val[i] += alpha;

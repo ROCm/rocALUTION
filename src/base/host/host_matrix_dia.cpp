@@ -179,7 +179,9 @@ void HostMatrixDIA<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
       _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int j=0; j<this->nnz_; ++j)
         this->mat_.val[j] = cast_mat->mat_.val[j];
 
@@ -262,7 +264,9 @@ void HostMatrixDIA<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i) {
 
       ValueType sum = ValueType(0.0);
@@ -317,7 +321,9 @@ void HostMatrixDIA<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i) {
 
       for (int j=0; j<this->mat_.num_diag; ++j) {

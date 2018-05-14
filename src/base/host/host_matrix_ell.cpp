@@ -172,11 +172,15 @@ void HostMatrixELL<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
       int nnz  = this->nnz_;
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int i=0; i<nnz; ++i)
         this->mat_.val[i] = cast_mat->mat_.val[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int i=0; i<nnz; ++i)
         this->mat_.col[i] = cast_mat->mat_.col[i];
 
@@ -256,7 +260,9 @@ void HostMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ai=0; ai<this->nrow_; ++ai) {
       ValueType sum = ValueType(0.0);
 
@@ -299,7 +305,9 @@ void HostMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ai=0; ai<this->nrow_; ++ai) {
       for (int n=0; n<this->mat_.max_row; ++n) {
 

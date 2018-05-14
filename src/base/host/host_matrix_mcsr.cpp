@@ -165,15 +165,21 @@ void HostMatrixMCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
       _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int i=0; i<this->nrow_+1; ++i)
         this->mat_.row_offset[i] = cast_mat->mat_.row_offset[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int j=0; j<this->nnz_; ++j)
         this->mat_.col[j] = cast_mat->mat_.col[j];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int j=0; j<this->nnz_; ++j)
         this->mat_.val[j] = cast_mat->mat_.val[j];
 
@@ -372,7 +378,9 @@ void HostMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVecto
 
     assert(this->nrow_ == this->ncol_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ai=0; ai<this->nrow_; ++ai) {
 
       ValueType sum = this->mat_.val[ai] * cast_in->vec_[ai];
@@ -409,7 +417,9 @@ void HostMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const 
 
     assert(this->nrow_ == this->ncol_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ai=0; ai<this->nrow_; ++ai) {
 
       cast_out->vec_[ai] += scalar*this->mat_.val[ai] * cast_in->vec_[ai];

@@ -157,7 +157,9 @@ void HostMatrixDENSE<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
       _set_omp_backend_threads(this->local_backend_, this->nnz_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int j=0; j<this->nnz_; ++j)
         this->mat_.val[j] = cast_mat->mat_.val[j];
 
@@ -233,7 +235,9 @@ void HostMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVect
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) {
     cast_out->vec_[ai] = ValueType(0.0);
       for (int aj=0; aj<this->ncol_; ++aj)
@@ -261,7 +265,9 @@ void HostMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const
 
   _set_omp_backend_threads(this->local_backend_, this->nnz_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai)
     for (int aj=0; aj<this->ncol_; ++aj)
       cast_out->vec_[ai] += scalar * this->mat_.val[DENSE_IND(ai,aj,this->nrow_,this->ncol_)] * cast_in->vec_[aj];
@@ -282,7 +288,9 @@ bool HostMatrixDENSE<ValueType>::MatMatMult(const BaseMatrix<ValueType> &A, cons
   assert(cast_mat_B != NULL);
   assert(cast_mat_A->ncol_ == cast_mat_B->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat_A->nrow_; ++i) {
 
     for (int j=0; j<cast_mat_B->ncol_; ++j) {
@@ -461,7 +469,9 @@ bool HostMatrixDENSE<ValueType>::Invert(void) {
 
   this->QRDecompose();
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nrow_; ++i) {
 
     HostVector<ValueType> sol(this->local_backend_);
@@ -557,7 +567,9 @@ bool HostMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, const BaseVe
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i)
       this->mat_.val[DENSE_IND(i, idx, this->nrow_, this->ncol_)] = cast_vec->vec_[i];
 
@@ -579,7 +591,9 @@ bool HostMatrixDENSE<ValueType>::ReplaceRowVector(const int idx, const BaseVecto
 
     _set_omp_backend_threads(this->local_backend_, this->ncol_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->ncol_; ++i)
       this->mat_.val[DENSE_IND(idx, i, this->nrow_, this->ncol_)] = cast_vec->vec_[i];
 
@@ -602,7 +616,9 @@ bool HostMatrixDENSE<ValueType>::ExtractColumnVector(const int idx, BaseVector<V
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i)
       cast_vec->vec_[i] = this->mat_.val[DENSE_IND(i, idx, this->nrow_, this->ncol_)];
 
@@ -625,7 +641,9 @@ bool HostMatrixDENSE<ValueType>::ExtractRowVector(const int idx, BaseVector<Valu
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i)
       cast_vec->vec_[i] = this->mat_.val[DENSE_IND(idx, i, this->nrow_, this->ncol_)];
 
