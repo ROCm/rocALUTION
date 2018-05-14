@@ -9,7 +9,6 @@ set(MPI_EXAMPLES
   idr_mpi
   qmrcgstab_mpi
   fcg_mpi
-  distributor_mpi
   benchmark_mpi
 )
 
