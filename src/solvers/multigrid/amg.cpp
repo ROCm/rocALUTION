@@ -133,29 +133,23 @@ void AMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
             " #*# begin");
 
   // Smoother for each level
-  FixedPoint<OperatorType, VectorType, ValueType > **sm = NULL;
-  sm = new FixedPoint<OperatorType, VectorType, ValueType >* [this->levels_-1];
-
   this->smoother_level_ = new IterativeLinearSolver<OperatorType, VectorType, ValueType>*[this->levels_-1];
   this->sm_default_ = new Solver<OperatorType, VectorType, ValueType>*[this->levels_-1];
 
-  MultiColoredGS<OperatorType, VectorType, ValueType > **gs = NULL;
-  gs = new MultiColoredGS<OperatorType, VectorType, ValueType >* [this->levels_-1];
-
   for (int i=0; i<this->levels_-1; ++i) {
-    sm[i] = new FixedPoint<OperatorType, VectorType, ValueType >;
-    gs[i] = new MultiColoredGS<OperatorType, VectorType, ValueType >;
+    FixedPoint<OperatorType, VectorType, ValueType> *sm =
+        new FixedPoint<OperatorType, VectorType, ValueType>;
+    MultiColoredGS<OperatorType, VectorType, ValueType> *gs =
+        new MultiColoredGS<OperatorType, VectorType, ValueType>;
 
-    gs[i]->SetPrecondMatrixFormat(this->sm_format_);
-    sm[i]->SetRelaxation(ValueType(1.3f));
-    sm[i]->SetPreconditioner(*gs[i]);
-    sm[i]->Verbose(0);
-    this->smoother_level_[i] = sm[i];
-    this->sm_default_[i] = gs[i];
+    gs->SetPrecondMatrixFormat(this->sm_format_);
+    sm->SetRelaxation(ValueType(1.3f));
+    sm->SetPreconditioner(*gs);
+    sm->Verbose(0);
+
+    this->smoother_level_[i] = sm;
+    this->sm_default_[i] = gs;
   }
-
-  delete[] gs;
-  delete[] sm;
 
 }
 
