@@ -31,7 +31,9 @@ bool csr_to_dense(const int omp_threads,
   allocate_host(nrow*ncol, &dst->val);
   set_to_zero_host(nrow*ncol, dst->val);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i = 0; i < nrow; ++i)
     for(IndexType j = src.row_offset[i]; j < src.row_offset[i+1]; ++j)
       dst->val[DENSE_IND(i,src.col[j],nrow,ncol)] = src.val[j];
@@ -55,7 +57,9 @@ bool dense_to_csr(const int omp_threads,
   allocate_host(nrow+1, &dst->row_offset);
   set_to_zero_host(nrow+1, dst->row_offset);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i = 0; i < nrow; ++i)
     for(IndexType j = 0;  j < ncol; ++j)
       if (src.val[DENSE_IND(i,j,nrow,ncol)] != ValueType(0.0))
@@ -76,7 +80,9 @@ bool dense_to_csr(const int omp_threads,
   set_to_zero_host(*nnz, dst->col);
   set_to_zero_host(*nnz, dst->val);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i = 0; i < nrow; ++i) {
 
     IndexType ind = dst->row_offset[i];
@@ -135,7 +141,9 @@ bool csr_to_mcsr(const int omp_threads,
   for (IndexType ai = 0; ai < nrow+1; ++ai)
     dst->row_offset[ai] = nrow + src.row_offset[ai] - ai;
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType ai=0; ai<nrow; ++ai) {
 
     IndexType correction = ai;
@@ -192,7 +200,9 @@ bool mcsr_to_csr(const int omp_threads,
   for (IndexType ai = 0; ai < nrow+1; ++ai)
     dst->row_offset[ai] = src.row_offset[ai] - nrow + ai;
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType ai=0; ai<nrow; ++ai) {
 
     for (IndexType aj=src.row_offset[ai]; aj<src.row_offset[ai+1]; ++aj) {
@@ -219,7 +229,9 @@ bool mcsr_to_csr(const int omp_threads,
   // Sorting the col (per row)
   // Bubble sort algorithm
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i=0; i<nrow; ++i)
     for (IndexType j=dst->row_offset[i]; j<dst->row_offset[i+1]; ++j)
       for (IndexType jj=dst->row_offset[i]; jj<dst->row_offset[i+1]-1; ++jj)
@@ -261,16 +273,22 @@ bool csr_to_coo(const int omp_threads,
   set_to_zero_host(nnz, dst->col);
   set_to_zero_host(nnz, dst->val);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i = 0; i < nrow; ++i)
     for(IndexType j = src.row_offset[i]; j < src.row_offset[i+1]; ++j)
       dst->row[j] = i;
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i = 0; i < nnz; ++i)
     dst->col[i] = src.col[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i = 0; i < nnz; ++i)
     dst->val[i] = src.val[i];
 
@@ -305,7 +323,9 @@ bool csr_to_ell(const int omp_threads,
   set_to_zero_host(*nnz_ell, dst->val);
   set_to_zero_host(*nnz_ell, dst->col);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i = 0; i < nrow; ++i) {
 
     IndexType n = 0;
@@ -351,7 +371,9 @@ bool ell_to_csr(const int omp_threads,
   allocate_host(nrow+1, &dst->row_offset);
   set_to_zero_host(nrow+1, dst->row_offset);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType ai=0; ai<nrow; ++ai) {
 
     for (IndexType n=0; n<src.max_row; ++n) {
@@ -380,7 +402,9 @@ bool ell_to_csr(const int omp_threads,
   set_to_zero_host(*nnz_csr, dst->col);
   set_to_zero_host(*nnz_csr, dst->val);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType ai=0; ai<nrow; ++ai) {
 
     IndexType ind = dst->row_offset[ai];
@@ -426,7 +450,9 @@ bool hyb_to_csr(const int omp_threads,
   start = 0;
 
   // TODO
-  // #pragma omp parallel for private(start)
+//#ifdef _OPENMP
+// #pragma omp parallel for private(start)
+//#endif
   for (IndexType ai=0 ; ai<nrow; ++ai) {
 
     // ELL
@@ -469,7 +495,9 @@ bool hyb_to_csr(const int omp_threads,
   start = 0 ;
 
   // TODO
-  //#pragma omp parallel for private(start)
+//#ifdef _OPENMP
+//#pragma omp parallel for private(start)
+//#endif
   for (IndexType ai=0; ai<nrow; ++ai) {
 
     IndexType ind = dst->row_offset[ai];
@@ -572,7 +600,9 @@ bool coo_to_csr(const int omp_threads,
   // Sorting the col (per row)
   // Bubble sort algorithm
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (IndexType i=0; i<nrow; ++i)
     for (IndexType j=dst->row_offset[i]; j<dst->row_offset[i+1]; ++j)
       for (IndexType jj=dst->row_offset[i]; jj<dst->row_offset[i+1]-1; ++jj)
@@ -665,7 +695,9 @@ bool csr_to_dia(const int omp_threads,
     }
   }
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for(IndexType i = 0; i < nrow; i++) {
     for(IndexType jj = src.row_offset[i]; jj < src.row_offset[i+1]; jj++) {
       IndexType j = src.col[jj];
@@ -808,7 +840,9 @@ bool csr_to_hyb(const int omp_threads,
 
   set_to_zero_host(*nnz_ell, dst->ELL.val);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for(IndexType i = 0; i < *nnz_ell; i++) 
     dst->ELL.col[i] = IndexType(-1);
 
@@ -826,7 +860,9 @@ bool csr_to_hyb(const int omp_threads,
   allocate_host(nrow, &nnzcoo);
   allocate_host(nrow, &nnzell);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   // copy up to num_cols_per_row values of row i into the ELL
   for (IndexType i=0; i<nrow; ++i) {
 
@@ -855,7 +891,9 @@ bool csr_to_hyb(const int omp_threads,
   for (int i=1; i<nrow; ++i)
     nnzell[i] += nnzell[i-1];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   // copy any remaining values in row i into the COO
   for (IndexType i=0; i<nrow; ++i) {
 

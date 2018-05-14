@@ -33,6 +33,11 @@ GlobalVector<ValueType>::GlobalVector() {
   this->recv_boundary_ = NULL;
   this->send_boundary_ = NULL;
 
+#ifdef SUPPORT_MULTINODE
+  this->recv_event_ = NULL;
+  this->send_event_ = NULL;
+#endif
+
 }
 
 template <typename ValueType>
@@ -50,6 +55,11 @@ GlobalVector<ValueType>::GlobalVector(const ParallelManager &pm) {
   this->recv_boundary_ = NULL;
   this->send_boundary_ = NULL;
 
+#ifdef SUPPORT_MULTINODE
+  this->recv_event_ = new MRequest[pm.nrecv_];
+  this->send_event_ = new MRequest[pm.nsend_];
+#endif
+
 }
 
 template <typename ValueType>
@@ -59,6 +69,18 @@ GlobalVector<ValueType>::~GlobalVector() {
             "default destructor");
 
   this->Clear();
+
+#ifdef SUPPORT_MULTINODE
+  if (this->recv_event_ != NULL) {
+      delete[] this->recv_event_;
+      this->recv_event_ = NULL;
+  }
+
+  if (this->send_event_ != NULL) {
+      delete[] this->send_event_;
+      this->send_event_ = NULL;
+  }
+#endif
 
 }
 
@@ -158,8 +180,12 @@ void GlobalVector<ValueType>::Allocate(std::string name, const IndexType2 size) 
   std::string ghost_name = "Ghost of " + name;
 
 #ifdef SUPPORT_MULTINODE
-  this->recv_event_ = new MRequest[this->pm_->nrecv_];
-  this->send_event_ = new MRequest[this->pm_->nsend_];
+  if (this->recv_event_ == NULL) {
+    this->recv_event_ = new MRequest[this->pm_->nrecv_];
+  }
+  if (this->send_event_ == NULL) {
+    this->send_event_ = new MRequest[this->pm_->nsend_];
+  }
 #endif
 
   this->object_name_ = name;
@@ -222,8 +248,12 @@ void GlobalVector<ValueType>::SetDataPtr(ValueType **ptr, std::string name, cons
   std::string ghost_name = "Ghost of " + name;
 
 #ifdef SUPPORT_MULTINODE
-  this->recv_event_ = new MRequest[this->pm_->nrecv_];
-  this->send_event_ = new MRequest[this->pm_->nsend_];
+  if (this->recv_event_ == NULL) {
+    this->recv_event_ = new MRequest[this->pm_->nrecv_];
+  }
+  if (this->send_event_ == NULL) {
+    this->send_event_ = new MRequest[this->pm_->nsend_];
+  }
 #endif
 
   this->object_name_ = name;
@@ -406,8 +436,12 @@ void GlobalVector<ValueType>::ReadFileASCII(const std::string filename) {
   this->vector_interior_.ReadFileASCII(path + name);
 
 #ifdef SUPPORT_MULTINODE
-  this->recv_event_ = new MRequest[this->pm_->nrecv_];
-  this->send_event_ = new MRequest[this->pm_->nsend_];
+  if (this->recv_event_ == NULL) {
+    this->recv_event_ = new MRequest[this->pm_->nrecv_];
+  }
+  if (this->send_event_ == NULL) {
+    this->send_event_ = new MRequest[this->pm_->nsend_];
+  }
 #endif
 
   this->object_name_ = filename;
@@ -496,8 +530,12 @@ void GlobalVector<ValueType>::ReadFileBinary(const std::string filename) {
   this->vector_interior_.ReadFileBinary(path + name);
 
 #ifdef SUPPORT_MULTINODE
-  this->recv_event_ = new MRequest[this->pm_->nrecv_];
-  this->send_event_ = new MRequest[this->pm_->nsend_];
+  if (this->recv_event_ == NULL) {
+    this->recv_event_ = new MRequest[this->pm_->nrecv_];
+  }
+  if (this->send_event_ == NULL) {
+    this->send_event_ = new MRequest[this->pm_->nsend_];
+  }
 #endif
 
   this->object_name_ = filename;

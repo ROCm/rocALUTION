@@ -79,7 +79,9 @@ void HostStencilLaplace2D<ValueType>::Apply(const BaseVector<ValueType> &in, Bas
     int idx = 0;
 
     // interior
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=1; i<this->size_-1; ++i)
       for (int j=1; j<this->size_-1; ++j) {
         idx = i*this->size_ + j;
@@ -95,7 +97,9 @@ void HostStencilLaplace2D<ValueType>::Apply(const BaseVector<ValueType> &in, Bas
     
     // boundary layers
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int j=1; j<this->size_-1; ++j) {
         idx = 0*this->size_ + j;
 
@@ -114,7 +118,9 @@ void HostStencilLaplace2D<ValueType>::Apply(const BaseVector<ValueType> &in, Bas
         
       }
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int i=1; i<this->size_-1; ++i) {
         idx = i*this->size_ + 0;
 
@@ -185,7 +191,9 @@ void HostStencilLaplace2D<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, 
     int idx = 0;
 
     // interior
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=1; i<this->size_-1; ++i)
       for (int j=1; j<this->size_-1; ++j) {
         idx = i*this->size_ + j;
@@ -201,7 +209,9 @@ void HostStencilLaplace2D<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, 
     
     // boundary layers
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int j=1; j<this->size_-1; ++j) {
         idx = 0*this->size_ + j;
 
@@ -220,7 +230,9 @@ void HostStencilLaplace2D<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, 
         
       }
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int i=1; i<this->size_-1; ++i) {
         idx = i*this->size_ + 0;
 

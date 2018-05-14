@@ -264,7 +264,9 @@ void HostMatrixHYB<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
     // ELL
     if (this->ell_nnz_ > 0) {
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int ai=0; ai<this->nrow_; ++ai) {
         cast_out->vec_[ai] = ValueType(0.0);
 
@@ -315,7 +317,9 @@ void HostMatrixHYB<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
     // ELL
     if (this->ell_nnz_ > 0) {
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int ai=0; ai<this->nrow_; ++ai) {
 
         for (int n=0; n<this->mat_.ELL.max_row; ++n) {

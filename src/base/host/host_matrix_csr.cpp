@@ -280,11 +280,15 @@ void HostMatrixCSR<ValueType>::CopyFromCSR(const int *row_offsets, const int *co
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_+1; ++i)
       this->mat_.row_offset[i] = row_offsets[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int j=0; j<this->nnz_; ++j) {
       this->mat_.col[j] = col[j];
       this->mat_.val[j] = val[j];
@@ -304,11 +308,15 @@ void HostMatrixCSR<ValueType>::CopyToCSR(int *row_offsets, int *col, ValueType *
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_+1; ++i)
       row_offsets[i] = this->mat_.row_offset[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int j=0; j<this->nnz_; ++j) {
       col[j] = this->mat_.col[j];
       val[j] = this->mat_.val[j];
@@ -337,11 +345,15 @@ void HostMatrixCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
       _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
       for (int i=0; i<this->nrow_+1; ++i)
         this->mat_.row_offset[i] = cast_mat->mat_.row_offset[i] ;
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
       for (int j=0; j<this->nnz_; ++j) {
         this->mat_.col[j] = cast_mat->mat_.col[j];
         this->mat_.val[j] = cast_mat->mat_.val[j];
@@ -425,11 +437,15 @@ void HostMatrixCSR<ValueType>::CopyFromHostCSR(const int *row_offset, const int 
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_+1; ++i)
       this->mat_.row_offset[i] = row_offset[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int j=0; j<this->nnz_; ++j) {
       this->mat_.col[j] = col[j];
       this->mat_.val[j] = val[j];
@@ -612,7 +628,9 @@ void HostMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) {
 
     ValueType sum = ValueType(0.0);
@@ -647,7 +665,9 @@ void HostMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
     
     _set_omp_backend_threads(this->local_backend_, this->nrow_);  
     
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ai=0; ai<this->nrow_; ++ai)
       for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
         cast_out->vec_[ai] += scalar*this->mat_.val[aj] * cast_in->vec_[ this->mat_.col[aj] ];
@@ -665,7 +685,9 @@ bool HostMatrixCSR<ValueType>::ExtractDiagonal(BaseVector<ValueType> *vec_diag) 
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai)
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj) {
       
@@ -691,7 +713,9 @@ bool HostMatrixCSR<ValueType>::ExtractInverseDiagonal(BaseVector<ValueType> *vec
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai)
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj) {
       
@@ -731,7 +755,9 @@ bool HostMatrixCSR<ValueType>::ExtractSubMatrix(const int row_offset,
 
   //  _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
-  // #pragma omp parallel for reduction(+:mat_nnz)
+//#ifdef _OPENMP
+//#pragma omp parallel for reduction(+:mat_nnz)
+//#endif
   for (int ai=row_offset; ai<row_offset+row_size; ++ai)
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if ((this->mat_.col[aj] >= col_offset) &&
@@ -783,7 +809,9 @@ bool HostMatrixCSR<ValueType>::ExtractU(BaseMatrix<ValueType> *U) const {
 
   // count nnz of upper triangular part
   int nnz_U = 0;
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:nnz_U)
+#endif
   for (int ai=0; ai<this->nrow_; ++ai)
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (this->mat_.col[aj] > ai)
@@ -832,7 +860,9 @@ bool HostMatrixCSR<ValueType>::ExtractUDiagonal(BaseMatrix<ValueType> *U) const 
 
   // count nnz of upper triangular part
   int nnz_U = 0;
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:nnz_U)
+#endif
   for (int ai=0; ai<this->nrow_; ++ai)
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (this->mat_.col[aj] >= ai)
@@ -881,7 +911,9 @@ bool HostMatrixCSR<ValueType>::ExtractL(BaseMatrix<ValueType> *L) const {
 
   // count nnz of lower triangular part
   int nnz_L = 0;
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:nnz_L)
+#endif
   for (int ai=0; ai<this->nrow_; ++ai)
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (this->mat_.col[aj] < ai)
@@ -930,7 +962,9 @@ bool HostMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> *L) const 
 
   // count nnz of lower triangular part
   int nnz_L = 0;
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:nnz_L)
+#endif
   for (int ai=0; ai<this->nrow_; ++ai)
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (this->mat_.col[aj] <= ai)
@@ -1774,7 +1808,9 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType> &s
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nrow_; ++i) {
 
     // loop over the row
@@ -1799,11 +1835,15 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType> &s
 
   this->AllocateCSR(row_offset[this->nrow_], this->nrow_, this->ncol_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nrow_+1; ++i)
     this->mat_.row_offset[i] = row_offset[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nrow_; ++i) {
     int jj=0;
     for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j) {
@@ -1812,7 +1852,9 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType> &s
     }
   }
 
-  //#pragma omp parallel for
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
   //  for (unsigned int i=0; i<this->nnz_; ++i)
   //    this->mat_.val[i] = ValueType(1.0);
 
@@ -1862,7 +1904,9 @@ bool HostMatrixCSR<ValueType>::MatMatMult(const BaseMatrix<ValueType> &A, const 
   for (int i=0; i<n+1; ++i)
     row_offset[i] = 0;
 
+#ifdef _OPENMP
 #pragma omp parallel
+#endif
   {
     std::vector<int> marker(m, -1);
 
@@ -1894,8 +1938,12 @@ bool HostMatrixCSR<ValueType>::MatMatMult(const BaseMatrix<ValueType> &A, const 
 
     std::fill(marker.begin(), marker.end(), -1);
 
+#ifdef _OPENMP
 #pragma omp barrier
+#endif
+#ifdef _OPENMP
 #pragma omp single
+#endif
     {
       for (int i=1; i<n+1; ++i)
         row_offset[i] += row_offset[i-1];
@@ -1934,7 +1982,9 @@ bool HostMatrixCSR<ValueType>::MatMatMult(const BaseMatrix<ValueType> &A, const 
   // Sorting the col (per row)
   // Bubble sort algorithm
 
- #pragma omp parallel for      
+#ifdef _OPENMP
+#pragma omp parallel for      
+#endif
   for (int i=0; i<this->nrow_; ++i)
     for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j)
       for (int jj=this->mat_.row_offset[i]; jj<this->mat_.row_offset[i+1]-1; ++jj)
@@ -1977,7 +2027,9 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType> &A
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat_A->nrow_; ++i) {
 
     // loop over the row
@@ -2003,11 +2055,15 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType> &A
 
   this->AllocateCSR(row_offset[cast_mat_A->nrow_], cast_mat_A->nrow_, cast_mat_B->ncol_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat_A->nrow_+1; ++i)
     this->mat_.row_offset[i] = row_offset[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat_A->nrow_; ++i) {
     int jj=0;
     for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j) {
@@ -2016,7 +2072,9 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType> &A
     }
   }
 
-  //#pragma omp parallel for
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
   //      for (unsigned int i=0; i<this->nnz_; ++i)
   //      this->mat_.val[i] = ValueType(1.0);
 
@@ -2040,7 +2098,9 @@ bool HostMatrixCSR<ValueType>::NumericMatMatMult(const BaseMatrix<ValueType> &A,
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat_A->nrow_; ++i) {
 
     // loop over the row
@@ -2161,7 +2221,9 @@ bool HostMatrixCSR<ValueType>::ILUpFactorizeNumeric(const int p, const BaseMatri
   _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
   // find diagonals
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<cast_mat->nrow_; ++ai)
     for (int aj=cast_mat->mat_.row_offset[ai]; aj<cast_mat->mat_.row_offset[ai+1]; ++aj)
       if (ai == cast_mat->mat_.col[aj]) {
@@ -2170,21 +2232,29 @@ bool HostMatrixCSR<ValueType>::ILUpFactorizeNumeric(const int p, const BaseMatri
       }
 
   // init row_offset
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat->nrow_+1; ++i)
     row_offset[i] = 0;
 
   // init inf levels 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat->nnz_; ++i)
     levels[i] = inf_level;
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<cast_mat->nnz_; ++i)
     val[i] = ValueType(0.0);
 
   // fill levels and values
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<cast_mat->nrow_; ++ai)
     for (int aj=cast_mat->mat_.row_offset[ai]; aj<cast_mat->mat_.row_offset[ai+1]; ++aj)
       for (int ajj=this->mat_.row_offset[ai]; ajj<this->mat_.row_offset[ai+1]; ++ajj)
@@ -2262,7 +2332,9 @@ bool HostMatrixCSR<ValueType>::ILUpFactorizeNumeric(const int p, const BaseMatri
 
   assert(jj==nnz);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nrow_+1; ++i)
    this->mat_.row_offset[i] = row_offset[i];
 
@@ -2293,7 +2365,9 @@ bool HostMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType> &mat, const
   if (structure == false) {
 
     // CSR should be sorted  
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ai=0; ai<cast_mat->nrow_; ++ai) {
       
       int first_col = cast_mat->mat_.row_offset[ai];
@@ -2322,7 +2396,9 @@ bool HostMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType> &mat, const
     
     row_offset[0] = 0;
     
+#ifdef _OPENMP
 #pragma omp parallel for  
+#endif
     for (int i=0; i<this->nrow_; ++i) {
       
       for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j) {
@@ -2346,11 +2422,15 @@ bool HostMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType> &mat, const
     this->AllocateCSR(row_offset[this->nrow_], this->nrow_, this->ncol_);
 
     // copy structure    
+#ifdef _OPENMP
 #pragma omp parallel for  
+#endif
     for (int i=0; i<this->nrow_+1; ++i)
       this->mat_.row_offset[i] = row_offset[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<this->nrow_; ++i) {
     int jj=0;
     for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j) {
@@ -2360,7 +2440,9 @@ bool HostMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType> &mat, const
   }
     
   // add values
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i) {
 
       int Aj = tmp.mat_.row_offset[i];
@@ -2403,8 +2485,10 @@ bool HostMatrixCSR<ValueType>::Gershgorin(ValueType &lambda_min,
   lambda_min = ValueType(0.0);
   lambda_max = ValueType(0.0);
 
-  // TODO (parallel max, min)
-  // #pragma omp parallel for
+// TODO (parallel max, min)
+//#ifdef _OPENMP
+// #pragma omp parallel for
+//#endif
 
   for (int ai=0; ai<this->nrow_; ++ai) {
 
@@ -2435,7 +2519,9 @@ bool HostMatrixCSR<ValueType>::Scale(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nnz_; ++ai) 
     this->mat_.val[ai] *= alpha;
 
@@ -2448,7 +2534,9 @@ bool HostMatrixCSR<ValueType>::ScaleDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) 
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (ai == this->mat_.col[aj]) {
@@ -2465,7 +2553,9 @@ bool HostMatrixCSR<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) 
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (ai != this->mat_.col[aj])
@@ -2480,7 +2570,9 @@ bool HostMatrixCSR<ValueType>::AddScalar(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nnz_; ++ai) 
     this->mat_.val[ai] += alpha;
 
@@ -2494,7 +2586,9 @@ bool HostMatrixCSR<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) 
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (ai == this->mat_.col[aj]) {
@@ -2511,7 +2605,9 @@ bool HostMatrixCSR<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) 
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       if (ai != this->mat_.col[aj])
@@ -2532,7 +2628,9 @@ bool HostMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<ValueType> &
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) {
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       this->mat_.val[aj] *= cast_diag->vec_[this->mat_.col[aj]];
@@ -2552,7 +2650,9 @@ bool HostMatrixCSR<ValueType>::DiagonalMatrixMultL(const BaseVector<ValueType> &
 
   _set_omp_backend_threads(this->local_backend_, this->nrow_);  
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) {
     for (int aj=this->mat_.row_offset[ai]; aj<this->mat_.row_offset[ai+1]; ++aj)
       this->mat_.val[aj] *= cast_diag->vec_[ai];
@@ -2579,7 +2679,9 @@ bool HostMatrixCSR<ValueType>::Compress(const double drop_off) {
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i) {
 
       row_offset[i+1] = 0;
@@ -2595,11 +2697,15 @@ bool HostMatrixCSR<ValueType>::Compress(const double drop_off) {
 
     this->AllocateCSR(row_offset[this->nrow_], this->nrow_, this->ncol_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_+1; ++i)
       this->mat_.row_offset[i] = row_offset[i];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<this->nrow_; ++i) {
 
       int jj = this->mat_.row_offset[i];
@@ -2672,7 +2778,9 @@ bool HostMatrixCSR<ValueType>::Sort(void) {
 
   if (this->nnz_ > 0) {
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
     for (int i=0; i<this->nrow_; ++i)
       for (int j=this->mat_.row_offset[i]; j<this->mat_.row_offset[i+1]; ++j)
         for (int jj=this->mat_.row_offset[i]; jj<this->mat_.row_offset[i+1]-1; ++jj)
@@ -2713,7 +2821,9 @@ bool HostMatrixCSR<ValueType>::Permute(const BaseVector<int> &permutation) {
     int* row_nnz = NULL;
     allocate_host<int>(this->nrow_, &row_nnz);
 
+#ifdef _OPENMP
 #pragma omp parallel for  		
+#endif
     for(int i = 0; i < this->nrow_; ++i) {
       row_nnz[i] = this->mat_.row_offset[i+1] - this->mat_.row_offset[i];
     }
@@ -2722,7 +2832,9 @@ bool HostMatrixCSR<ValueType>::Permute(const BaseVector<int> &permutation) {
     int* perm_row_nnz = NULL;
     allocate_host<int>(this->nrow_, &perm_row_nnz);
 
+#ifdef _OPENMP
 #pragma omp parallel for  
+#endif
     for(int i = 0; i < this->nrow_; ++i) {
       perm_row_nnz[cast_perm->vec_[i]] = row_nnz[i];
     }	
@@ -2744,7 +2856,9 @@ bool HostMatrixCSR<ValueType>::Permute(const BaseVector<int> &permutation) {
     allocate_host<int>(this->nnz_, &col);
     allocate_host<ValueType>(this->nnz_, &val);
 
+#ifdef _OPENMP
 #pragma omp parallel for  
+#endif
     for(int i = 0; i < this->nrow_; ++i) {
 
       int permIndex = perm_nnz[cast_perm->vec_[i]];
@@ -2758,7 +2872,9 @@ bool HostMatrixCSR<ValueType>::Permute(const BaseVector<int> &permutation) {
     }
     
     //Permute columns
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for(int i = 0; i < this->nrow_; ++i) {
 
       int row_index = perm_nnz[i];
@@ -3076,7 +3192,9 @@ bool HostMatrixCSR<ValueType>::AMGConnect(const ValueType eps, BaseVector<int> *
   vec_diag.Allocate(this->nrow_);
   this->ExtractDiagonal(&vec_diag);
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
+#endif
   for (int i=0; i<this->nrow_; ++i) {
 
     ValueType eps_dia_i = eps2 * vec_diag.vec_[i];
@@ -3226,7 +3344,9 @@ bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(const ValueType relax,
 
   ++ncol;
 
+#ifdef _OPENMP
 #pragma omp parallel
+#endif
   {
     std::vector<int> marker(ncol, -1);
 
@@ -3238,7 +3358,6 @@ bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(const ValueType relax,
     int chunk_start = tid * chunk_size;
     int chunk_end   = std::min(this->nrow_, chunk_start + chunk_size);
 #else
-
     int chunk_start = 0;
     int chunk_end   = this->nrow_;
 #endif
@@ -3261,8 +3380,10 @@ bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(const ValueType relax,
 
     std::fill(marker.begin(), marker.end(), -1);
 
+#ifdef _OPENMP
 #pragma omp barrier
 #pragma omp single
+#endif
     {
       int *row_offset = NULL;
       allocate_host(cast_prolong->nrow_+1, &row_offset);
@@ -3444,7 +3565,9 @@ bool HostMatrixCSR<ValueType>::FSAI(const int power, const BaseMatrix<ValueType>
 
   L.LeaveDataPtrCSR(&row_offset, &col, &val);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<this->nrow_; ++ai) {
 
     // entries of ai-th row
@@ -3519,7 +3642,9 @@ bool HostMatrixCSR<ValueType>::FSAI(const int power, const BaseMatrix<ValueType>
   }
 
   // Scaling
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int ai=0; ai<nrow; ++ai) {
     ValueType fac = sqrt(ValueType(1.0) / rocalution_abs(val[row_offset[ai+1]-1]));
     for (int aj=row_offset[ai]; aj<row_offset[ai+1]; ++aj)
@@ -3547,7 +3672,9 @@ bool HostMatrixCSR<ValueType>::SPAI(void) {
   this->Transpose();
 
   // Loop over each row to get J indexing vector
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<nrow; ++i) {
 
     int *J = NULL;
@@ -3674,7 +3801,9 @@ bool HostMatrixCSR<ValueType>::RugeStueben(const ValueType eps, BaseMatrix<Value
   set_to_zero_host(this->nnz_, S_val);
 
   // Determine strong influences in matrix (Ruge Stüben approach)
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
+#endif
   for (int i=0; i<this->nrow_; ++i) {
 
     int sign_diag = -1;
@@ -3859,7 +3988,9 @@ bool HostMatrixCSR<ValueType>::RugeStueben(const ValueType eps, BaseMatrix<Value
   std::vector<ValueType> Amin(this->nrow_);
   std::vector<ValueType> Amax(this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
+#endif
   for (int i=0; i<this->nrow_; ++i) {
     if (connect[i] == 1) {
       ++cast_prolong->mat_.row_offset[i+1];
@@ -3900,7 +4031,9 @@ bool HostMatrixCSR<ValueType>::RugeStueben(const ValueType eps, BaseMatrix<Value
   cast_prolong->nnz_ = cast_prolong->mat_.row_offset[this->nrow_];
   cast_prolong->ncol_ = nc;
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
+#endif
   for (int i=0; i<this->nrow_; ++i) {
 
     int row_head = cast_prolong->mat_.row_offset[i];
@@ -3979,7 +4112,9 @@ bool HostMatrixCSR<ValueType>::RugeStueben(const ValueType eps, BaseMatrix<Value
   free_host(&S_col);
   free_host(&S_val);
 
+#ifdef _OPENMP
 #pragma omp parallel for      
+#endif
   for (int i=0; i<cast_prolong->get_nrow(); ++i)
     for (int j=cast_prolong->mat_.row_offset[i]; j<cast_prolong->mat_.row_offset[i+1]; ++j)
       for (int jj=cast_prolong->mat_.row_offset[i]; jj<cast_prolong->mat_.row_offset[i+1]-1; ++jj)
@@ -4941,7 +5076,9 @@ bool HostMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, const BaseVect
     allocate_host(nrow+1, &row_offset);
     row_offset[0] = 0;
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<nrow; ++i) {
 
       bool add = true;
@@ -4972,7 +5109,9 @@ bool HostMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, const BaseVect
     allocate_host(nnz, &val);
 
     // Fill new CSR matrix
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<nrow; ++i) {
 
       int k = row_offset[i];
@@ -5027,7 +5166,9 @@ bool HostMatrixCSR<ValueType>::ExtractColumnVector(const int idx, BaseVector<Val
 
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ai=0; ai<this->nrow_; ++ai) {
 
       // Initialize with zero
@@ -5080,7 +5221,9 @@ bool HostMatrixCSR<ValueType>::ReplaceRowVector(const int idx, const BaseVector<
     // Fill row_offset
     int shift = nnz_idx - this->mat_.row_offset[idx+1] + this->mat_.row_offset[idx];
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<nrow+1; ++i) {
       if (i < idx+1) {
         row_offset[i] = this->mat_.row_offset[i];
@@ -5095,7 +5238,9 @@ bool HostMatrixCSR<ValueType>::ReplaceRowVector(const int idx, const BaseVector<
     allocate_host(nnz, &col);
     allocate_host(nnz, &val);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int i=0; i<nrow; ++i) {
 
       // Rows before idx

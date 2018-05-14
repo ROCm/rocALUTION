@@ -226,28 +226,21 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
             " #*# begin");
 
   // Smoother for each level
-  FixedPoint<OperatorType, VectorType, ValueType > **sm = NULL;
-  sm = new FixedPoint<OperatorType, VectorType, ValueType >* [this->levels_-1];
-
   this->smoother_level_ = new IterativeLinearSolver<OperatorType, VectorType, ValueType>*[this->levels_-1];
   this->sm_default_ = new Solver<OperatorType, VectorType, ValueType>*[this->levels_-1];
 
-  Jacobi<OperatorType, VectorType, ValueType > **jac = NULL;
-  jac = new Jacobi<OperatorType, VectorType, ValueType >* [this->levels_-1];
-
   for (int i=0; i<this->levels_-1; ++i) {
-    sm[i] = new FixedPoint<OperatorType, VectorType, ValueType >;
-    jac[i] = new Jacobi<OperatorType, VectorType, ValueType >;
+    FixedPoint<OperatorType, VectorType, ValueType > *sm =
+        new FixedPoint<OperatorType, VectorType, ValueType>;
+    Jacobi<OperatorType, VectorType, ValueType > *jac =
+        new Jacobi<OperatorType, VectorType, ValueType>;
 
-    sm[i]->SetRelaxation(ValueType(0.67f));
-    sm[i]->SetPreconditioner(*jac[i]);
-    sm[i]->Verbose(0);
-    this->smoother_level_[i] = sm[i];
-    this->sm_default_[i] = jac[i];
+    sm->SetRelaxation(ValueType(0.67f));
+    sm->SetPreconditioner(*jac);
+    sm->Verbose(0);
+    this->smoother_level_[i] = sm;
+    this->sm_default_[i] = jac;
   }
-
-  delete[] jac;
-  delete[] sm;
 
 }
 
