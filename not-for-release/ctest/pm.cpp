@@ -1,11 +1,11 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <paralution.hpp>
+#include <rocalution.hpp>
 
 #define ValueType double
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  init_paralution();
+  init_rocalution();
 
   LocalVector<ValueType> b, b_old, *b_k, *b_k1, *b_tmp, compare;
   LocalMatrix<ValueType> mat;
@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
     exit(-1);
   }
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 }

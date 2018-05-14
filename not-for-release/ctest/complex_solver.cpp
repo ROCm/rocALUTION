@@ -1,10 +1,10 @@
 #include <iostream>
-#include <paralution.hpp>
+#include <rocalution.hpp>
 #include <complex>
 
 #define ValueType std::complex<double>
 
-using namespace paralution;
+using namespace rocalution;
 
 int main(int argc, char* argv[]) {
 
@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
   return 0;
 #endif
 
-  init_paralution();
+  init_rocalution();
 
   LocalVector<ValueType> x;
   LocalVector<ValueType> rhs;
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
     exit(-1);
   }
 
-  stop_paralution();
+  stop_rocalution();
 
   return 0;
 

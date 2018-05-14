@@ -58,7 +58,7 @@ set(TESTS
   fsai_solver
   ilu_solver
   mcilu_solver
-  complex_solver
+#  complex_solver
   amg_solver
 )
 
@@ -170,7 +170,7 @@ endif()
 ### TESTS FOR SOLVER
 foreach (test ${TESTS})
   add_executable(${test} ${test}.cpp)
-  target_link_libraries(${test} ${PARALUTION_LIBRARY})
+  target_link_libraries(${test} ${rocALUTION_LIBRARY})
 endforeach()
 
 
