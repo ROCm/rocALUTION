@@ -65,8 +65,12 @@ Rocalution_Backend_Descriptor _Backend_Descriptor = {
 };
 
 /// Host name
-const std::string _rocalution_host_name [1] = 
+const std::string _rocalution_host_name [1] =
+#ifdef _OPENMP
   {"CPU(OpenMP)"};
+#else
+  {"CPU"};
+#endif
 
 /// Backend names
 const std::string _rocalution_backend_name [2] =
