@@ -8,10 +8,9 @@
 #include "../backend_manager.hpp"
 #include "../../utils/log.hpp"
 #include "hip_utils.hpp"
-#include "hip_kernels_general.hpp"
-#include "hip_kernels_ell.hpp"
 #include "hip_allocate_free.hpp"
 #include "../../utils/allocate_free.hpp"
+#include "hip_sparse.hpp"
 #include "../matrix_formats_ind.hpp"
 
 #include <hip/hip_runtime.h>
@@ -38,7 +37,20 @@ HIPAcceleratorMatrixELL<ValueType>::HIPAcceleratorMatrixELL(const Rocalution_Bac
   this->mat_.max_row = 0;
   this->set_backend(local_backend); 
 
+  this->mat_descr_ = 0;
+
   CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+  hipsparseStatus_t stat_t;
+  
+  stat_t = hipsparseCreateMatDescr(&this->mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  
+  stat_t = hipsparseSetMatIndexBase(this->mat_descr_, HIPSPARSE_INDEX_BASE_ZERO);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  
+  stat_t = hipsparseSetMatType(this->mat_descr_, HIPSPARSE_MATRIX_TYPE_GENERAL);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
 }
 
@@ -50,6 +62,11 @@ HIPAcceleratorMatrixELL<ValueType>::~HIPAcceleratorMatrixELL() {
             "destructor");
 
   this->Clear();
+
+  hipsparseStatus_t stat_t;
+
+  stat_t = hipsparseDestroyMatDescr(this->mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
 }
 
@@ -63,10 +80,10 @@ void HIPAcceleratorMatrixELL<ValueType>::info(void) const {
 template <typename ValueType>
 void HIPAcceleratorMatrixELL<ValueType>::AllocateELL(const int nnz, const int nrow, const int ncol, const int max_row) {
 
-  assert( nnz   >= 0);
-  assert( ncol  >= 0);
-  assert( nrow  >= 0);
-  assert( max_row >= 0);
+  assert(nnz   >= 0);
+  assert(ncol  >= 0);
+  assert(nrow  >= 0);
+  assert(max_row >= 0);
 
   if (this->get_nnz() > 0)
     this->Clear();
@@ -595,72 +612,36 @@ bool HIPAcceleratorMatrixELL<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     assert(cast_mat_csr->get_ncol() > 0);
     assert(cast_mat_csr->get_nnz() > 0);
 
-    int max_row = 0;
     int nrow = cast_mat_csr->get_nrow();
 
-    int *d_buffer = NULL;
-    int *h_buffer = NULL;
-    int GROUP_SIZE;
-    int LOCAL_SIZE;
-    int FinalReduceSize;
+    hipsparseStatus_t stat_t;
 
-    allocate_hip<int>(this->local_backend_.HIP_warp * 4, &d_buffer);
+    stat_t = hipsparseXcsr2ellWidth(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                                    nrow,
+                                    cast_mat_csr->mat_descr_,
+                                    cast_mat_csr->mat_.row_offset,
+                                    this->mat_descr_,
+                                    &this->mat_.max_row);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->local_backend_.HIP_warp * 4);
+    int ell_nnz = this->mat_.max_row * nrow;
+    this->AllocateELL(ell_nnz, nrow, cast_mat_csr->get_ncol(), this->mat_.max_row);
 
-    GROUP_SIZE = ( size_t( ( size_t( nrow / ( this->local_backend_.HIP_warp * 4 ) ) + 1 ) 
-                 / this->local_backend_.HIP_block_size ) + 1 ) * this->local_backend_.HIP_block_size;
-    LOCAL_SIZE = GROUP_SIZE / this->local_backend_.HIP_block_size;
+    stat_t = hipsparseTcsr2ell(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                               nrow,
+                               cast_mat_csr->mat_descr_,
+                               cast_mat_csr->mat_.val,
+                               cast_mat_csr->mat_.row_offset,
+                               cast_mat_csr->mat_.col,
+                               this->mat_descr_,
+                               this->mat_.max_row,
+                               this->mat_.val,
+                               this->mat_.col);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
-    hipLaunchKernelGGL((kernel_ell_max_row<int, int, 256>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, cast_mat_csr->mat_.row_offset,
-                       d_buffer, GROUP_SIZE, LOCAL_SIZE);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    FinalReduceSize = this->local_backend_.HIP_warp * 4;
-    allocate_host(FinalReduceSize, &h_buffer);
-
-    hipMemcpy(h_buffer, // dst
-               d_buffer, // src
-               FinalReduceSize*sizeof(int), // size
-               hipMemcpyDeviceToHost);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip<int>(&d_buffer);
-
-    for ( int i=0; i<FinalReduceSize; ++i )
-      if (max_row < h_buffer[i]) max_row = h_buffer[i];
-
-    free_host(&h_buffer);
-
-    int nnz_ell = max_row * nrow;
-
-    this->AllocateELL(nnz_ell, nrow, cast_mat_csr->get_ncol(), max_row);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    nnz_ell, this->mat_.val);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    nnz_ell, this->mat_.col);
-
-    dim3 BlockSize2(this->local_backend_.HIP_block_size);
-    dim3 GridSize2(nrow / this->local_backend_.HIP_block_size + 1);
-
-    hipLaunchKernelGGL((kernel_ell_csr_to_ell<ValueType, int>),
-                       GridSize2, BlockSize2, 0, 0,
-                       nrow, max_row, cast_mat_csr->mat_.row_offset,
-                       cast_mat_csr->mat_.col, cast_mat_csr->mat_.val,
-                       this->mat_.col, this->mat_.val);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    this->mat_.max_row = max_row;
     this->nrow_ = cast_mat_csr->get_nrow();
     this->ncol_ = cast_mat_csr->get_ncol();
-    this->nnz_  = max_row * nrow;
+    this->nnz_  = ell_nnz;
 
     return true;
 
@@ -686,18 +667,19 @@ void HIPAcceleratorMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, 
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-    int nrow = this->get_nrow();
-    int ncol = this->get_ncol();
-    int max_row = this->get_max_row();
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+    ValueType alpha = 1.0;
+    ValueType beta = 0.0;
 
-    hipLaunchKernelGGL((kernel_ell_spmv<ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, ncol, max_row,
-                       this->mat_.col, HIPPtr(this->mat_.val),
-                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_ ));
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
+    hipsparseStatus_t stat_t;
+    stat_t = hipsparseTellmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                             this->get_nrow(), this->get_ncol(), &alpha,
+                             this->mat_descr_,
+                             this->mat_.val, this->mat_.col,
+                             this->get_max_row(),
+                             cast_in->vec_, &beta,
+                             cast_out->vec_);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
@@ -720,19 +702,18 @@ void HIPAcceleratorMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-    int nrow = this->get_nrow();
-    int ncol = this->get_ncol();
-    int max_row = this->get_max_row();
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+    ValueType beta = 1.0;
 
-    hipLaunchKernelGGL((kernel_ell_add_spmv<ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, ncol, max_row,
-                       this->mat_.col, HIPPtr(this->mat_.val),
-                       HIPVal(scalar),
-                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
+    hipsparseStatus_t stat_t;
+    stat_t = hipsparseTellmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                             this->get_nrow(), this->get_ncol(), &scalar,
+                             this->mat_descr_,
+                             this->mat_.val, this->mat_.col,
+                             this->get_max_row(),
+                             cast_in->vec_, &beta,
+                             cast_out->vec_);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
   }
 
