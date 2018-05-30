@@ -20,7 +20,7 @@
 #include "hip_kernels_vector.hpp"
 #include "hip_allocate_free.hpp"
 #include "hip_blas.hpp"
-//#include "hip_sparse.hpp"
+#include "hip_sparse.hpp"
 #include "../matrix_formats_ind.hpp"
 
 #include <vector>
@@ -47,30 +47,31 @@ HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR(const Rocalution_Bac
   this->mat_.col        = NULL;
   this->mat_.val        = NULL;
   this->set_backend(local_backend);
-/*
+
   this->L_mat_descr_ = 0;
   this->U_mat_descr_ = 0;
 
-  this->L_mat_info_ = 0;
-  this->U_mat_info_ = 0;
+// TODO
+//  this->L_mat_info_ = 0;
+//  this->U_mat_info_ = 0;
 
   this->mat_descr_ = 0;
-*/
+
   this->tmp_vec_ = NULL;
 
   CHECK_HIP_ERROR(__FILE__, __LINE__);
-/*
-  cusparseStatus_t stat_t;
+
+  hipsparseStatus_t stat_t;
   
-  stat_t = cusparseCreateMatDescr(&this->mat_descr_);
-  CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  stat_t = hipsparseCreateMatDescr(&this->mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
   
-  stat_t = cusparseSetMatIndexBase(this->mat_descr_, CUSPARSE_INDEX_BASE_ZERO);
-  CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  stat_t = hipsparseSetMatIndexBase(this->mat_descr_, HIPSPARSE_INDEX_BASE_ZERO);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
   
-  stat_t = cusparseSetMatType(this->mat_descr_, CUSPARSE_MATRIX_TYPE_GENERAL);
-  CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-*/
+  stat_t = hipsparseSetMatType(this->mat_descr_, HIPSPARSE_MATRIX_TYPE_GENERAL);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
 }
 
 template <typename ValueType>
@@ -80,12 +81,12 @@ HIPAcceleratorMatrixCSR<ValueType>::~HIPAcceleratorMatrixCSR() {
             "destructor");
 
   this->Clear();
-/*
-  cusparseStatus_t stat_t;
 
-  stat_t = cusparseDestroyMatDescr(this->mat_descr_);
-  CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-*/
+  hipsparseStatus_t stat_t;
+
+  stat_t = hipsparseDestroyMatDescr(this->mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
 }
 
 template <typename ValueType>
@@ -1079,29 +1080,19 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, 
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-//    const ValueType scalar = 1.0;
-//    const ValueType beta = 0.0;
-/*
-    rocsparseStatus_t stat_t;
-    stat_t = rocsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                             rocsparse_operation_none,
-                             this->get_nrow(), this->get_ncol(), this->get_nnz(), &scalar,
+    const ValueType alpha = 1.0;
+    const ValueType beta = 0.0;
+
+    hipsparseStatus_t stat_t;
+    stat_t = hipsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                             this->get_nrow(), this->get_ncol(), this->get_nnz(), &alpha,
                              this->mat_descr_,
                              this->mat_.val, 
                              this->mat_.row_offset, this->mat_.col,
                              cast_in->vec_, &beta,
                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-*/
-
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->get_nrow() / this->local_backend_.HIP_block_size + 1);
-
-    hipLaunchKernelGGL((kernel_csr_spmv_scalar<ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       this->get_nrow(), this->mat_.row_offset, this->mat_.col,
-                       this->mat_.val, cast_in->vec_, cast_out->vec_);
-    CHECK_HIP_ERROR(__FILE__,__LINE__);
 
   }
     
@@ -1125,25 +1116,16 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     assert(cast_out!= NULL);
 
     const ValueType beta = 1.0;
-/*
-    rocsparseStatus_t stat_t;
-    stat_t = rocsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                             rocsparse_operation_non,
+
+    hipsparseStatus_t stat_t;
+    stat_t = hipsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
                              this->get_nrow(), this->get_ncol(), this->get_nnz(), &scalar,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.row_offset, this->mat_.col,
                              cast_in->vec_, &beta,
                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-*/
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->get_nrow() / this->local_backend_.HIP_block_size + 1);
-
-    hipLaunchKernelGGL((kernel_csr_add_spmv_scalar<ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       this->get_nrow(), this->mat_.row_offset, this->mat_.col,
-                       this->mat_.val, scalar, cast_in->vec_, cast_out->vec_);
-    CHECK_HIP_ERROR(__FILE__,__LINE__);
 
   }
 
@@ -1151,7 +1133,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ILU0Factorize(void) {
-
+return false;
   if (this->get_nnz() > 0) {
 /*
     cusparseStatus_t stat_t;
@@ -1188,7 +1170,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ILU0Factorize(void) {
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ICFactorize(BaseVector<ValueType> *inv_diag) {
-
+return false;
   if (this->get_nnz() > 0) {
 /*
     cusparseStatus_t stat_t;
@@ -1341,6 +1323,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::LUAnalyseClear(void) {
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
+return false;
   if (this->get_nnz() > 0) {
 /*
     assert(this->L_mat_descr_ != 0);
@@ -1507,6 +1490,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::LLAnalyseClear(void) {
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::LLSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
+return false;
 
   if (this->get_nnz() > 0) {
 /*
@@ -1699,6 +1683,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::UAnalyseClear(void) {
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::LSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
+return false;
 
   if (this->get_nnz() > 0) {
 /*
@@ -1743,6 +1728,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::LSolve(const BaseVector<ValueType> &in,
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::USolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
+return false;
 
   if (this->get_nnz() > 0) {
 /*
@@ -2568,6 +2554,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultL(const BaseVector<Va
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::MatMatMult(const BaseMatrix<ValueType> &A, const BaseMatrix<ValueType> &B) {
+return false;
 
   assert(A.get_ncol() == B.get_nrow());
   assert(A.get_nrow() > 0);
@@ -2648,6 +2635,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Gershgorin(ValueType &lambda_min,
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType> &mat, const ValueType alpha,
                                                    const ValueType beta, const bool structure) {
+return false;
 
   if (this->get_nnz() > 0) {
 
@@ -2822,6 +2810,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::Transpose(void) {
+return false;
 
   if (this->get_nnz() > 0) {
 
