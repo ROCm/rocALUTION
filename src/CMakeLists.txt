@@ -94,9 +94,9 @@ if(SUPPORT_HIP)
   add_library(${rocALUTION_BACKEND_HIP} SHARED ${HIP_SOURCES})
 
   if (HIP_PLATFORM STREQUAL "hcc")
-    target_link_libraries(${rocALUTION_BACKEND_HIP} hip_hcc hipblas)
+    target_link_libraries(${rocALUTION_BACKEND_HIP} hip_hcc hipblas hipsparse rocsparse)
   else()
-    target_link_libraries(${rocALUTION_BACKEND_HIP} cudart hipblas)
+    target_link_libraries(${rocALUTION_BACKEND_HIP} cudart hipblas hipsparse cusparse)
   endif()
 endif()
 
