@@ -72,41 +72,48 @@ void HostMatrixHYB<ValueType>::Clear() {
 
   if (this->nnz_ > 0) {
 
-    free_host(&this->mat_.COO.row);
-    free_host(&this->mat_.COO.col);
-    free_host(&this->mat_.COO.val);
+    if (this->ell_nnz_ > 0)
+    {
+      free_host(&this->mat_.ELL.val);
+      free_host(&this->mat_.ELL.col);
 
-    free_host(&this->mat_.ELL.val);
-    free_host(&this->mat_.ELL.col);
+      this->mat_.ELL.max_row = 0;
+      this->ell_nnz_ = 0;
+    }
 
-    this->ell_nnz_ = 0;
-    this->coo_nnz_ = 0;
-    this->mat_.ELL.max_row = 0;
+    if (this->coo_nnz_ > 0)
+    {
+      free_host(&this->mat_.COO.row);
+      free_host(&this->mat_.COO.col);
+      free_host(&this->mat_.COO.val);
 
-    this->nrow_ = 0;
-    this->ncol_ = 0;
-    this->nnz_  = 0;
-
+      this->coo_nnz_ = 0;
+    }
   }
 
+  this->nrow_ = 0;
+  this->ncol_ = 0;
+  this->nnz_  = 0;
 }
 
 template <typename ValueType>
 void HostMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const int coo_nnz, const int ell_max_row,
                                            const int nrow, const int ncol) {
 
-  assert( ell_nnz   >= 0);
-  assert( coo_nnz   >= 0);
-  assert( ell_max_row >= 0);
+  assert(ell_nnz   >= 0);
+  assert(coo_nnz   >= 0);
+  assert(ell_max_row >= 0);
 
-  assert( ncol  >= 0);
-  assert( nrow  >= 0);
+  assert(ncol  >= 0);
+  assert(nrow  >= 0);
 
   if (this->nnz_ > 0)
     this->Clear();
 
-  if (ell_nnz + coo_nnz > 0) {
+  this->nnz_ = 0;
 
+  if (ell_nnz > 0)
+  {
     // ELL
     assert(ell_nnz == ell_max_row*nrow);
 
@@ -118,7 +125,11 @@ void HostMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const int coo_nnz,
 
     this->mat_.ELL.max_row = ell_max_row;
     this->ell_nnz_ = ell_nnz;
+    this->nnz_ += ell_nnz;
+  }
 
+  if (coo_nnz > 0)
+  {
     // COO
     allocate_host(coo_nnz, &this->mat_.COO.row);
     allocate_host(coo_nnz, &this->mat_.COO.col);
@@ -127,14 +138,13 @@ void HostMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const int coo_nnz,
     set_to_zero_host(coo_nnz, this->mat_.COO.row);
     set_to_zero_host(coo_nnz, this->mat_.COO.col);
     set_to_zero_host(coo_nnz, this->mat_.COO.val);
+
     this->coo_nnz_ = coo_nnz;
-
-    this->nrow_ = nrow;
-    this->ncol_ = ncol;
-    this->nnz_  = ell_nnz + coo_nnz;
-
+    this->nnz_ += coo_nnz;
   }
 
+  this->nrow_ = nrow;
+  this->ncol_ = ncol;
 }
 
 template <typename ValueType>
@@ -216,11 +226,10 @@ bool HostMatrixHYB<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
   if (const HostMatrixCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&mat)) {
 
     this->Clear();
+
     int nnz = 0;
     int coo_nnz = 0;
     int ell_nnz = 0;
-
-    // this->mat_.ELL.max_row = ( cast_mat->nnz_ / cast_mat->nrow_ );
 
     if (csr_to_hyb(this->local_backend_.OpenMP_threads,
                    cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_,

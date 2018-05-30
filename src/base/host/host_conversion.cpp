@@ -815,123 +815,107 @@ bool csr_to_hyb(const int omp_threads,
 
   omp_set_num_threads(omp_threads);
 
+  // Determine ELL width by average nnz per row
   if (dst->ELL.max_row == 0)
-    dst->ELL.max_row = (nnz / nrow);
+    dst->ELL.max_row = (nnz - 1) / nrow + 1;
 
-  *nnz_coo = 0;
-  for (IndexType i=0; i<nrow; ++i) {
-
-    IndexType nnz_per_row = src.row_offset[i+1] - src.row_offset[i];
-
-    if (nnz_per_row > dst->ELL.max_row)
-      *nnz_coo += nnz_per_row - dst->ELL.max_row;
-
-  }
-
+  // ELL nnz is ELL width times nrow
   *nnz_ell = dst->ELL.max_row * nrow;
-  *nnz_hyb = *nnz_coo + *nnz_ell;
+  *nnz_coo = 0;
 
-  if (*nnz_coo <= 0 || *nnz_ell <= 0 || *nnz_hyb <= 0)
-    return false;
+  // Array to hold COO part nnz per row
+  IndexType *coo_row_ptr = NULL;
+  allocate_host(nrow+1, &coo_row_ptr);
 
-  // ELL
-  allocate_host(*nnz_ell, &dst->ELL.val);
-  allocate_host(*nnz_ell, &dst->ELL.col);
-
-  set_to_zero_host(*nnz_ell, dst->ELL.val);
-
+  // If there is no ELL part, its easy...
+  if (*nnz_ell == 0)
+  {
+      *nnz_coo = nnz;
+      // copy rowoffset to coorownnz
+  }
+  else
+  {
+      // Compute COO nnz per row and COO nnz
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  for(IndexType i = 0; i < *nnz_ell; i++) 
-    dst->ELL.col[i] = IndexType(-1);
-
-  // COO
-  allocate_host(*nnz_coo, &dst->COO.row);
-  allocate_host(*nnz_coo, &dst->COO.col);
-  allocate_host(*nnz_coo, &dst->COO.val);
-
-  set_to_zero_host(*nnz_coo, dst->COO.row);
-  set_to_zero_host(*nnz_coo, dst->COO.col);
-  set_to_zero_host(*nnz_coo, dst->COO.val);
-
-  IndexType *nnzcoo = NULL;
-  IndexType *nnzell = NULL;
-  allocate_host(nrow, &nnzcoo);
-  allocate_host(nrow, &nnzell);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-  // copy up to num_cols_per_row values of row i into the ELL
-  for (IndexType i=0; i<nrow; ++i) {
-
-    IndexType n = 0;
-
-    nnzcoo[i] = 0;
-
-    for (IndexType j=src.row_offset[i]; j<src.row_offset[i+1]; ++j) {
-
-      if (n >= dst->ELL.max_row) {
-        nnzcoo[i] = src.row_offset[i+1] - j;
-        break;
+      for (IndexType i=0; i<nrow; ++i)
+      {
+          IndexType row_nnz = src.row_offset[i+1] - src.row_offset[i] - dst->ELL.max_row;
+          coo_row_ptr[i+1] = (row_nnz > 0) ? row_nnz : 0;
       }
 
-      IndexType ind = ELL_IND(i, n, nrow, dst->ELL.max_row);
-      dst->ELL.col[ind] = src.col[j];
-      dst->ELL.val[ind] = src.val[j];
-      ++n;
+      // Exclusive scan
+      coo_row_ptr[0] = 0;
+      for (IndexType i=0; i<nrow; ++i)
+      {
+          coo_row_ptr[i+1] += coo_row_ptr[i];
+      }
 
-    }
-
-    nnzell[i] = n;
-
+      *nnz_coo = coo_row_ptr[nrow];
   }
 
-  for (int i=1; i<nrow; ++i)
-    nnzell[i] += nnzell[i-1];
+  *nnz_hyb = *nnz_coo + *nnz_ell;
+
+  if (*nnz_hyb <= 0)
+  {
+      return false;
+  }
+
+  // ELL
+  if (*nnz_ell > 0)
+  {
+      allocate_host(*nnz_ell, &dst->ELL.val);
+      allocate_host(*nnz_ell, &dst->ELL.col);
+  }
+
+  // COO
+  if (*nnz_coo > 0)
+  {
+    allocate_host(*nnz_coo, &dst->COO.row);
+    allocate_host(*nnz_coo, &dst->COO.col);
+    allocate_host(*nnz_coo, &dst->COO.val);
+  }
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  // copy any remaining values in row i into the COO
-  for (IndexType i=0; i<nrow; ++i) {
+  for (IndexType i=0; i<nrow; ++i)
+  {
+      IndexType p = 0;
+      IndexType row_begin = src.row_offset[i];
+      IndexType row_end = src.row_offset[i+1];
+      IndexType coo_idx = dst->COO.row ? coo_row_ptr[i] : 0;
 
-    for (IndexType j=src.row_offset[i+1] - nnzcoo[i]; j<src.row_offset[i+1]; ++j) {
+      // Fill HYB matrix
+      for(IndexType j=row_begin; j<row_end; ++j)
+      {
+          if(p < dst->ELL.max_row)
+          {
+              // Fill ELL part
+              IndexType idx = ELL_IND(i, p++, nrow, dst->ELL.max_row);
+              dst->ELL.col[idx] = src.col[j];
+              dst->ELL.val[idx] = src.val[j];
+          }
+          else
+          {
+              dst->COO.row[coo_idx] = i;
+              dst->COO.col[coo_idx] = src.col[j];
+              dst->COO.val[coo_idx] = src.val[j];
+              ++coo_idx;
+          }
+      }
 
-      dst->COO.row[j-nnzell[i]] = i;
-      dst->COO.col[j-nnzell[i]] = src.col[j];
-      dst->COO.val[j-nnzell[i]] = src.val[j];
-
-    }
-
+      // Pad remaining ELL structure
+      for(IndexType j=row_end-row_begin; j<dst->ELL.max_row; ++j)
+      {
+          IndexType idx = ELL_IND(i, p++, nrow, dst->ELL.max_row);
+          dst->ELL.col[idx] = -1;
+          dst->ELL.val[idx] = static_cast<ValueType>(0);
+      }
   }
 
-  free_host(&nnzcoo);
-  free_host(&nnzell);
-
-/*
-  for(IndexType i = 0, coo_nnz = 0; i < nrow; i++) {
-    IndexType n = 0;
-    IndexType jj = src.row_offset[i];
-    
-    // copy up to num_cols_per_row values of row i into the ELL
-    while(jj < src.row_offset[i+1] && n < dst->ELL.max_row) {
-      IndexType ind = ELL_IND(i, n, nrow, dst->ELL.max_row);
-      dst->ELL.col[ind] = src.col[jj];
-      dst->ELL.val[ind] = src.val[jj];
-      jj++, n++;
-    }
-
-    // copy any remaining values in row i into the COO
-    while(jj < src.row_offset[i+1]) {
-      dst->COO.row[coo_nnz] = i;
-      dst->COO.col[coo_nnz] = src.col[jj];
-      dst->COO.val[coo_nnz] = src.val[jj];
-      jj++; coo_nnz++;
-    }
-  }
-*/
+  free_host(&coo_row_ptr);
 
   return true;
 

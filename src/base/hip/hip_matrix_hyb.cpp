@@ -889,6 +889,8 @@ bool HIPAcceleratorMatrixHYB<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
         hipMemcpy(&coo_nnz, workspace, sizeof(int), hipMemcpyDeviceToHost);
 
+        // TODO coo nnz can be extracted from exclusive scan array instead of reducing...
+
         // Perform exclusive scan on workspace TODO use rocPRIM
         int *hbuf = NULL;
         allocate_host(nrow+1, &hbuf);
