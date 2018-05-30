@@ -123,6 +123,9 @@ void HIPAcceleratorVector<ValueType>::Clear(void) {
   if (this->get_size() > 0) {
 
     free_hip(&this->vec_);
+    free_hip(&this->device_buffer_);
+    free_host(&this->host_buffer_);
+
     this->size_ = 0;
 
   }
@@ -132,9 +135,6 @@ void HIPAcceleratorVector<ValueType>::Clear(void) {
     free_hip(&this->index_buffer_);
     free_hip(&this->index_array_);
     this->index_size_ = 0;
-
-    free_host(&this->host_buffer_);
-    free_hip(&this->device_buffer_);
 
   }
 
