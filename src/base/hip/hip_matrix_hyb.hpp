@@ -5,6 +5,8 @@
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
+#include <hipsparse.h>
+
 namespace rocalution {
 
 template <typename ValueType>
@@ -46,8 +48,12 @@ public:
 private:
 
   MatrixHYB<ValueType, int> mat_;
+
   int ell_nnz_;
   int coo_nnz_;
+
+  hipsparseMatDescr_t ell_mat_descr_;
+  hipsparseMatDescr_t coo_mat_descr_;
 
   friend class BaseVector<ValueType>;
   friend class AcceleratorVector<ValueType>;

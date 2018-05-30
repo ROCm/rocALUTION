@@ -15,6 +15,7 @@
 #include "hip_kernels_hyb.hpp"
 #include "hip_kernels_vector.hpp"
 #include "hip_allocate_free.hpp"
+#include "hip_sparse.hpp"
 #include "../matrix_formats_ind.hpp"
 
 #include <algorithm>
@@ -51,7 +52,30 @@ HIPAcceleratorMatrixHYB<ValueType>::HIPAcceleratorMatrixHYB(const Rocalution_Bac
 
   this->set_backend(local_backend); 
 
+  this->ell_mat_descr_ = 0;
+  this->coo_mat_descr_ = 0;
+
   CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+  hipsparseStatus_t stat_t;
+  
+  stat_t = hipsparseCreateMatDescr(&this->ell_mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  
+  stat_t = hipsparseSetMatIndexBase(this->ell_mat_descr_, HIPSPARSE_INDEX_BASE_ZERO);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  
+  stat_t = hipsparseSetMatType(this->ell_mat_descr_, HIPSPARSE_MATRIX_TYPE_GENERAL);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
+  stat_t = hipsparseCreateMatDescr(&this->coo_mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  
+  stat_t = hipsparseSetMatIndexBase(this->coo_mat_descr_, HIPSPARSE_INDEX_BASE_ZERO);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  
+  stat_t = hipsparseSetMatType(this->coo_mat_descr_, HIPSPARSE_MATRIX_TYPE_GENERAL);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
 }
 
@@ -63,6 +87,14 @@ HIPAcceleratorMatrixHYB<ValueType>::~HIPAcceleratorMatrixHYB() {
             "destructor");
 
   this->Clear();
+
+  hipsparseStatus_t stat_t;
+
+  stat_t = hipsparseDestroyMatDescr(this->ell_mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
+  stat_t = hipsparseDestroyMatDescr(this->coo_mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
 }
 
@@ -77,18 +109,22 @@ template <typename ValueType>
 void HIPAcceleratorMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const int coo_nnz, const int ell_max_row, 
                                                      const int nrow, const int ncol) {
 
-  assert( ell_nnz   >= 0);
-  assert( coo_nnz   >= 0);
-  assert( ell_max_row >= 0);
+  assert(ell_nnz   >= 0);
+  assert(coo_nnz   >= 0);
+  assert(ell_max_row >= 0);
 
-  assert( ncol  >= 0);
-  assert( nrow  >= 0);
+  assert(ncol  >= 0);
+  assert(nrow  >= 0);
   
   if (this->get_nnz() > 0)
     this->Clear();
 
-  if (ell_nnz + coo_nnz > 0) {
-    
+  this->nrow_ = nrow;
+  this->ncol_ = ncol;
+  this->nnz_ = 0;
+
+  if (ell_nnz > 0)
+  {
     // ELL
     assert(ell_nnz == ell_max_row*nrow);
 
@@ -104,7 +140,11 @@ void HIPAcceleratorMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const in
 
     this->mat_.ELL.max_row = ell_max_row;
     this->ell_nnz_ = ell_nnz;
+    this->nnz_ += ell_nnz;
+  }
 
+  if(coo_nnz > 0)
+  {
     // COO
     allocate_hip(coo_nnz, &this->mat_.COO.row);
     allocate_hip(coo_nnz, &this->mat_.COO.col);
@@ -121,10 +161,7 @@ void HIPAcceleratorMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const in
                     coo_nnz, this->mat_.COO.val);
     this->coo_nnz_ = coo_nnz;
 
-    this->nrow_ = nrow;
-    this->ncol_ = ncol;
-    this->nnz_  = ell_nnz + coo_nnz;
-
+    this->nnz_ += coo_nnz;
   }
 
 }
@@ -134,24 +171,30 @@ template <typename ValueType>
 void HIPAcceleratorMatrixHYB<ValueType>::Clear() {
 
   if (this->get_nnz() > 0) {
-    
-    free_hip(&this->mat_.COO.row);
-    free_hip(&this->mat_.COO.col);
-    free_hip(&this->mat_.COO.val);
-    
-    free_hip(&this->mat_.ELL.val);
-    free_hip(&this->mat_.ELL.col);
-    
-    this->ell_nnz_ = 0;
-    this->coo_nnz_ = 0;
-    this->mat_.ELL.max_row = 0;
-    
+
+    if(this->ell_nnz_ > 0)
+    {
+        free_hip(&this->mat_.ELL.val);
+        free_hip(&this->mat_.ELL.col);
+
+        this->ell_nnz_ = 0;
+        this->mat_.ELL.max_row = 0;
+    }
+
+    if(this->coo_nnz_ > 0)
+    {
+        free_hip(&this->mat_.COO.row);
+        free_hip(&this->mat_.COO.col);
+        free_hip(&this->mat_.COO.val);
+
+        this->coo_nnz_ = 0;
+    }
+
     this->nrow_ = 0;
     this->ncol_ = 0;
     this->nnz_  = 0;
     
-  }
-  
+  }  
 
 }
 
@@ -789,111 +832,114 @@ bool HIPAcceleratorMatrixHYB<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     int nrow = cast_mat_csr->get_nrow();
     int ncol = cast_mat_csr->get_ncol();
-    int max_row = cast_mat_csr->get_nnz() / nrow;
+    int nnz  = cast_mat_csr->get_nnz();
 
-    // get nnz per row for COO part
-    int *nnz_coo = NULL;
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+    assert(nrow > 0);
+    assert(ncol > 0);
+    assert(nnz > 0);
 
-    allocate_hip<int>(nrow, &nnz_coo);
+    // Determine ELL width by average nnz per row
+    int max_row = (nnz - 1) / nrow + 1;
 
-    hipLaunchKernelGGL((kernel_ell_nnz_coo<int>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, max_row,
-                       cast_mat_csr->mat_.row_offset,
-                       nnz_coo);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
+    // ELL nnz is ELL width times nrow
+    int ell_nnz = max_row * nrow;
+    int coo_nnz = 0;
 
-    // get nnz for COO part by summing up nnz per row array
-    int num_nnz_coo = 0;
-    int *d_buffer = NULL;
-    int *h_buffer = NULL;
+    // Array to hold COO part nnz per row
+    int *coo_row_nnz = NULL;
+    allocate_hip(nrow+1, &coo_row_nnz);
 
-    allocate_hip<int>(this->local_backend_.HIP_warp, &d_buffer);
-    allocate_host(this->local_backend_.HIP_warp, &h_buffer);
+    int blocks = (nrow - 1) / this->local_backend_.HIP_block_size + 1;
 
-    if (this->local_backend_.HIP_warp == 32) {
-        reduce_hip<int, int, 32, 256>(nrow, nnz_coo, &num_nnz_coo, h_buffer, d_buffer);
-    } else if(this->local_backend_.HIP_warp == 64) {
-        reduce_hip<int, int, 64, 256>(nrow, nnz_coo, &num_nnz_coo, h_buffer, d_buffer);
-    } else {
-        //TODO
-        FATAL_ERROR(__FILE__, __LINE__);
+    // If there is no ELL part, its easy...
+    if(ell_nnz == 0)
+    {
+        coo_nnz = nnz;
+        hipMemcpy(coo_row_nnz, cast_mat_csr->mat_.row_offset, sizeof(int)*(nrow+1), hipMemcpyDeviceToDevice);
     }
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
+    else
+    {
+        // Allocate workspace
+        int *workspace = NULL;
+        allocate_hip(blocks, &workspace);
 
-    free_hip<int>(&d_buffer);
-    free_host(&h_buffer);
+        dim3 csr2hyb_blocks(blocks);
+        dim3 csr2hyb_threads(this->local_backend_.HIP_block_size);
 
-    // allocate ELL and COO matrices
-    int num_nnz_ell = max_row * nrow;
+        hipLaunchKernelGGL((kernel_hyb_coo_nnz_part1<256>),
+                           csr2hyb_blocks,
+                           csr2hyb_threads,
+                           0,
+                           0,
+                           nrow,
+                           max_row,
+                           cast_mat_csr->mat_.row_offset,
+                           workspace,
+                           coo_row_nnz);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-    if (num_nnz_ell <= 0 || num_nnz_coo <= 0) {
-      free_hip<int>(&nnz_coo);
-      return false;
+        hipLaunchKernelGGL((kernel_hyb_coo_nnz_part2<256>),
+                           dim3(1),
+                           csr2hyb_threads,
+                           0,
+                           0,
+                           blocks,
+                           workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipMemcpy(&coo_nnz, workspace, sizeof(int), hipMemcpyDeviceToHost);
+
+        // Perform exclusive scan on workspace TODO use rocPRIM
+        int *hbuf = NULL;
+        allocate_host(nrow+1, &hbuf);
+
+        hipMemcpy(hbuf+1, coo_row_nnz, sizeof(int)*nrow, hipMemcpyDeviceToHost);
+
+        hbuf[0] = 0;
+        for(int i=0; i<nrow; ++i)
+        {
+            hbuf[i+1] += hbuf[i];
+        }
+
+        hipMemcpy(coo_row_nnz, hbuf, sizeof(int)*(nrow+1), hipMemcpyHostToDevice);
+
+        free_host(&hbuf);
+        free_hip(&workspace);
     }
 
-    this->AllocateHYB(num_nnz_ell, num_nnz_coo, max_row, nrow, ncol);
+    // Allocate HYB matrix
+    this->AllocateHYB(ell_nnz, coo_nnz, max_row, nrow, ncol);
 
-    hipMemset(this->mat_.ELL.col, -1, num_nnz_ell*sizeof(int));
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
+    // Launch csr2hyb kernel
+    dim3 csr2hyb_blocks(blocks);
+    dim3 csr2hyb_threads(this->local_backend_.HIP_block_size);
 
-    // copy up to num_cols_per_row values of row i into the ELL
-    int *nnz_ell = NULL;
-
-    allocate_hip<int>(nrow, &nnz_ell);
-
-    hipLaunchKernelGGL((kernel_ell_fill_ell<ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, max_row,
+    hipLaunchKernelGGL((kernel_hyb_csr2hyb<ValueType>),
+                       csr2hyb_blocks,
+                       csr2hyb_threads,
+                       0,
+                       0,
+                       nrow,
+                       cast_mat_csr->mat_.val,
                        cast_mat_csr->mat_.row_offset,
                        cast_mat_csr->mat_.col,
-                       cast_mat_csr->mat_.val,
+                       max_row,
                        this->mat_.ELL.col,
                        this->mat_.ELL.val,
-                       nnz_ell);
+                       this->mat_.COO.row,
+                       this->mat_.COO.col,
+                       this->mat_.COO.val,
+                       coo_row_nnz);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-    // TODO currently performing partial sum on host
-    allocate_host(nrow, &h_buffer);
-    hipMemcpy(h_buffer, // dst
-               nnz_ell, // src
-               nrow*sizeof(int), // size
-               hipMemcpyDeviceToHost);
+    free_hip(&coo_row_nnz);
 
-    for (int i=1; i<nrow; ++i)
-      h_buffer[i] += h_buffer[i-1];
-
-    hipMemcpy(nnz_ell, // dst
-               h_buffer, // src
-               nrow*sizeof(int), // size
-               hipMemcpyHostToDevice);
-
-    free_host(&h_buffer);
-    // end TODO
-
-    // copy any remaining values in row i into the COO
-
-    hipLaunchKernelGGL((kernel_ell_fill_coo<ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, cast_mat_csr->mat_.row_offset,
-                       cast_mat_csr->mat_.col,
-                       cast_mat_csr->mat_.val,
-                       nnz_coo, nnz_ell,
-                       this->mat_.COO.row, this->mat_.COO.col,
-                       this->mat_.COO.val);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip<int>(&nnz_ell);
-    free_hip<int>(&nnz_coo);
-
-    this->nrow_ = cast_mat_csr->get_nrow();
-    this->ncol_ = cast_mat_csr->get_ncol();
-    this->nnz_  = num_nnz_ell + num_nnz_coo;
+    this->nrow_ = nrow;
+    this->ncol_ = ncol;
+    this->nnz_  = ell_nnz + coo_nnz;
     this->mat_.ELL.max_row = max_row;
-    this->ell_nnz_ = num_nnz_ell;
-    this->coo_nnz_ = num_nnz_coo;
+    this->ell_nnz_ = ell_nnz;
+    this->coo_nnz_ = coo_nnz;
 
     return true;
 
@@ -919,248 +965,40 @@ void HIPAcceleratorMatrixHYB<ValueType>::Apply(const BaseVector<ValueType> &in, 
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
+    ValueType alpha = 1.0;
+
     // ELL
-    if (this->get_ell_nnz() > 0) {
+    if (this->ell_nnz_ > 0) {
 
-      int nrow = this->get_nrow();
-      int ncol = this->get_ncol();
-      int max_row = this->get_ell_max_row();
-      dim3 BlockSize(this->local_backend_.HIP_block_size);
-      dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+        ValueType beta = 0.0;
 
-      hipLaunchKernelGGL((kernel_ell_spmv<ValueType, int>),
-                         GridSize, BlockSize, 0, 0,
-                         nrow, ncol, max_row,
-                         this->mat_.ELL.col, HIPPtr(this->mat_.ELL.val),
-                         HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_ ));
-      CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipsparseStatus_t stat_t;
+        stat_t = hipsparseTellmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                                 HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                                 this->get_nrow(), this->get_ncol(), &alpha,
+                                 this->ell_mat_descr_,
+                                 this->mat_.ELL.val, this->mat_.ELL.col, this->get_ell_max_row(),
+                                 cast_in->vec_, &beta,
+                                 cast_out->vec_);
+        CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
     }
 
-    // ----------------------------------------------------------
-    // Modified and adapted from CUSP 0.3.1, 
-    // http://code.google.com/p/cusp-library/
-    // NVIDIA, APACHE LICENSE 2.0
-    // ----------------------------------------------------------
-    // see __spmv_coo_flat(...)
-    // ----------------------------------------------------------
-    // CHANGELOG
-    // - adapted interface
-    // ----------------------------------------------------------
-    if (this->get_coo_nnz() > 0) {
+    // COO
+    if (this->coo_nnz_ > 0) {
 
-      ValueType one = (ValueType) 1;
+        // Add to y from ELL part
+        ValueType beta = 1.0;
 
-      if (this->get_coo_nnz() / this->nrow_ < 2) {
-
-        dim3 BlockSize(this->local_backend_.HIP_block_size);
-        dim3 GridSize(this->get_coo_nnz() / this->local_backend_.HIP_block_size + 1);
-
-        hipLaunchKernelGGL((kernel_spmv_add_coo<int, ValueType>),
-                           GridSize, BlockSize, 0, 0,
-                           this->get_coo_nnz(), this->mat_.COO.row, this->mat_.COO.col,
-                           HIPPtr(this->mat_.COO.val), HIPPtr(cast_in->vec_),
-                           HIPVal(one), HIPPtr(cast_out->vec_));
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-      } else {
-
-        // If nnz < warpsize, perform sequential spmv
-        if (this->get_coo_nnz() < this->local_backend_.HIP_warp) {
-
-          hipLaunchKernelGGL((kernel_spmv_coo_serial<int, ValueType>),
-                             dim3(1), dim3(1), 0, 0,
-                             this->get_coo_nnz(), this->mat_.COO.row,
-                             this->mat_.COO.col, HIPPtr(this->mat_.COO.val),
-                             HIPVal(one),
-                             HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
-          CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        } else {
-
-          int warps_per_block = this->local_backend_.HIP_block_size / this->local_backend_.HIP_warp;
-          int numWarps = (this->local_backend_.HIP_block_size + (this->local_backend_.HIP_warp - 1)) / this->local_backend_.HIP_warp;
-
-          int ctaLimitThreads = this->local_backend_.HIP_threads_per_proc / this->local_backend_.HIP_block_size;
-          int ctaLimitRegs = this->local_backend_.HIP_max_threads / this->local_backend_.HIP_block_size / numWarps;
-
-          int max_blocks = this->local_backend_.HIP_num_procs * std::min(ctaLimitRegs, std::min(ctaLimitThreads, 16));
-          int num_units  = this->get_coo_nnz() / this->local_backend_.HIP_warp;
-          int num_warps  = (num_units < warps_per_block * max_blocks) ? num_units : warps_per_block * max_blocks;
-          int num_blocks = (num_warps + (warps_per_block - 1)) / warps_per_block;
-          int num_iters  = (num_units + (num_warps - 1)) / num_warps;
-
-          int interval_size = this->local_backend_.HIP_warp * num_iters;
-          int tail = num_units * this->local_backend_.HIP_warp;
-          int active_warps = (interval_size == 0) ? 0 : (tail + (interval_size - 1)) / interval_size;
-
-          int *temp_rows = NULL;
-          ValueType *temp_vals = NULL;
-
-          allocate_hip(active_warps, &temp_rows);
-          allocate_hip(active_warps, &temp_vals);
-
-          // Run the appropriate kernel
-          if (this->local_backend_.HIP_warp == 32) {
-            if (this->local_backend_.HIP_block_size == 1024) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<1024, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(1024), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<1024, int, ValueType>),
-                                 dim3(1), dim3(1024), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 512) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<512, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(512), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<512, int, ValueType>),
-                                 dim3(1), dim3(512), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 256) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<256, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(256), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<256, int, ValueType>),
-                                 dim3(1), dim3(256), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 128) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<128, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(128), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<128, int, ValueType>),
-                                 dim3(1), dim3(128), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size ==  64) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<64, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(64), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<64, int, ValueType>),
-                                 dim3(1), dim3(64), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size ==  32) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<32, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(32), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<32, int, ValueType>),
-                                 dim3(1), dim3(32), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else {
-              LOG_INFO("Unsupported HIP blocksize of " << this->local_backend_.HIP_block_size);
-              FATAL_ERROR(__FILE__, __LINE__);
-            }
-          } else if (this->local_backend_.HIP_warp == 64) {
-            if (this->local_backend_.HIP_block_size == 1024) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<1024, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(1024), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<1024, int, ValueType>),
-                                 dim3(1), dim3(1024), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 512) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<512, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(512), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<512, int, ValueType>),
-                                 dim3(1), dim3(512), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 256) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<256, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(256), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<256, int, ValueType>),
-                                 dim3(1), dim3(256), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 128) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<128, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(128), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<128, int, ValueType>),
-                                 dim3(1), dim3(128), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size ==  64) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<64, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(64), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(one),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<64, int, ValueType>),
-                                 dim3(1), dim3(64), 0, 0,
-                                 active_warps, temp_rows, HIPPtr(temp_vals),
-                                 HIPPtr(cast_out->vec_));
-            } else {
-              LOG_INFO("Unsupported HIP blocksize of " << this->local_backend_.HIP_block_size);
-              FATAL_ERROR(__FILE__, __LINE__);
-            }
-          } else {
-            LOG_INFO("Unsupported HIP warpsize of " << this->local_backend_.HIP_warp);
-            FATAL_ERROR(__FILE__, __LINE__);
-          }
-
-          free_hip(&temp_rows);
-          free_hip(&temp_vals);
-
-          hipLaunchKernelGGL((kernel_spmv_coo_serial<int, ValueType>),
-                             dim3(1), dim3(1), 0, 0,
-                             this->get_coo_nnz()-tail, this->mat_.COO.row+tail,
-                             this->mat_.COO.col+tail, HIPPtr(this->mat_.COO.val+tail),
-                             HIPVal(one), HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
-          CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        }
-
-      }
+        hipsparseStatus_t stat_t;
+        stat_t = hipsparseTcoomv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                                 HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                                 this->get_nrow(), this->get_ncol(), this->coo_nnz_, &alpha,
+                                 this->coo_mat_descr_,
+                                 this->mat_.COO.val, this->mat_.COO.row, this->mat_.COO.col,
+                                 cast_in->vec_, &beta,
+                                 cast_out->vec_);
+        CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
     }
 
@@ -1186,248 +1024,37 @@ void HIPAcceleratorMatrixHYB<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     assert(cast_out!= NULL);
 
     // ELL
-    if (this->get_ell_nnz() > 0) {
+    if (this->ell_nnz_ > 0) {
 
-      int nrow = this->get_nrow();
-      int ncol = this->get_ncol();
-      int max_row = this->get_ell_max_row();
-      dim3 BlockSize(this->local_backend_.HIP_block_size);
-      dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+        ValueType beta = 0.0;
 
-      hipLaunchKernelGGL((kernel_ell_add_spmv<ValueType, int>),
-                         GridSize, BlockSize, 0, 0,
-                         nrow, ncol, max_row,
-                         this->mat_.ELL.col, HIPPtr(this->mat_.ELL.val),
-                         HIPVal(scalar),
-                         HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_ ));
-      CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipsparseStatus_t stat_t;
+        stat_t = hipsparseTellmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                                 HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                                 this->get_nrow(), this->get_ncol(), &scalar,
+                                 this->ell_mat_descr_,
+                                 this->mat_.ELL.val, this->mat_.ELL.col, this->get_ell_max_row(),
+                                 cast_in->vec_, &beta,
+                                 cast_out->vec_);
+        CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
     }
 
-    // ----------------------------------------------------------
-    // Modified and adapted from CUSP 0.3.1, 
-    // http://code.google.com/p/cusp-library/
-    // NVIDIA, APACHE LICENSE 2.0
-    // ----------------------------------------------------------
-    // see __spmv_coo_flat(...)
-    // ----------------------------------------------------------
-    // CHANGELOG
-    // - adapted interface
-    // ----------------------------------------------------------
-    if (this->get_coo_nnz() > 0) {
+    // COO
+    if (this->coo_nnz_ > 0) {
 
-      if (this->get_coo_nnz() / this->nrow_ < 2) {
+        // Add to y from ELL part
+        ValueType beta = 1.0;
 
-        dim3 BlockSize(this->local_backend_.HIP_block_size);
-        dim3 GridSize(this->get_coo_nnz() / this->local_backend_.HIP_block_size + 1);
-
-        hipLaunchKernelGGL((kernel_spmv_add_coo<int, ValueType>),
-                           GridSize, BlockSize, 0, 0,
-                           this->get_coo_nnz(), this->mat_.COO.row, this->mat_.COO.col,
-                           HIPPtr(this->mat_.COO.val), HIPPtr(cast_in->vec_),
-                           HIPVal(scalar), HIPPtr(cast_out->vec_));
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-      } else {
-
-        // If nnz < warpsize, perform sequential spmv
-        if (this->get_coo_nnz() < this->local_backend_.HIP_warp) {
-
-          hipLaunchKernelGGL((kernel_spmv_coo_serial<int, ValueType>),
-                             dim3(1), dim3(1), 0, 0,
-                             this->get_coo_nnz(),
-                             this->mat_.COO.row, this->mat_.COO.col,
-                             HIPPtr(this->mat_.COO.val),
-                             HIPVal(scalar),
-                             HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
-          CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        } else {
-
-          int warps_per_block = this->local_backend_.HIP_block_size / this->local_backend_.HIP_warp;
-          int numWarps = (this->local_backend_.HIP_block_size + (this->local_backend_.HIP_warp - 1)) / this->local_backend_.HIP_warp;
-
-          int ctaLimitThreads = this->local_backend_.HIP_threads_per_proc / this->local_backend_.HIP_block_size;
-          int ctaLimitRegs = this->local_backend_.HIP_max_threads / this->local_backend_.HIP_block_size / numWarps;
-
-          int max_blocks = this->local_backend_.HIP_num_procs * std::min(ctaLimitRegs, std::min(ctaLimitThreads, 16));
-          int num_units  = this->get_coo_nnz() / this->local_backend_.HIP_warp;
-          int num_warps  = (num_units < warps_per_block * max_blocks) ? num_units : warps_per_block * max_blocks;
-          int num_blocks = (num_warps + (warps_per_block - 1)) / warps_per_block;
-          int num_iters  = (num_units + (num_warps - 1)) / num_warps;
-
-          int interval_size = this->local_backend_.HIP_warp * num_iters;
-          int tail = num_units * this->local_backend_.HIP_warp;
-          int active_warps = (interval_size == 0) ? 0 : (tail + (interval_size - 1)) / interval_size;
-
-          int *temp_rows = NULL;
-          ValueType *temp_vals = NULL;
-
-          allocate_hip(active_warps, &temp_rows);
-          allocate_hip(active_warps, &temp_vals);
-
-          // Run the appropriate kernel
-          if (this->local_backend_.HIP_warp == 32) {
-            if (this->local_backend_.HIP_block_size == 1024) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<1024, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(1024), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<1024, int, ValueType>),
-                                 dim3(1), dim3(1024), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 512) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<512, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(512), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<512, int, ValueType>),
-                                 dim3(1), dim3(512), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 256) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<256, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(256), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<256, int, ValueType>),
-                                 dim3(1), dim3(256), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 128) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<128, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(128), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<128, int, ValueType>),
-                                 dim3(1), dim3(128), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size ==  64) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<64, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(64), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<64, int, ValueType>),
-                                 dim3(1), dim3(64), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size ==  32) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<32, 32, int, ValueType>),
-                                 dim3(num_blocks), dim3(32), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<32, int, ValueType>),
-                                 dim3(1), dim3(32), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else {
-              LOG_INFO("Unsupported HIP blocksize of " << this->local_backend_.HIP_block_size);
-              FATAL_ERROR(__FILE__, __LINE__);
-            }
-          } else if (this->local_backend_.HIP_warp == 64) {
-            if (this->local_backend_.HIP_block_size == 1024) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<1024, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(1024), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<1024, int, ValueType>),
-                                 dim3(1), dim3(1024), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 512) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<512, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(512), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<512, int, ValueType>),
-                                 dim3(1), dim3(512), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 256) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<256, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(256), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<256, int, ValueType>),
-                                 dim3(1), dim3(256), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size == 128) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<128, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(128), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<128, int, ValueType>),
-                                 dim3(1), dim3(128), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else if (this->local_backend_.HIP_block_size ==  64) {
-              hipLaunchKernelGGL((kernel_spmv_coo_flat<64, 64, int, ValueType>),
-                                 dim3(num_blocks), dim3(64), 0, 0,
-                                 tail, interval_size,
-                                 this->mat_.COO.row, this->mat_.COO.col,
-                                 HIPPtr(this->mat_.COO.val), HIPVal(scalar),
-                                 HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_),
-                                 temp_rows, HIPPtr(temp_vals));
-              hipLaunchKernelGGL((kernel_spmv_coo_reduce_update<64, int, ValueType>),
-                                 dim3(1), dim3(64), 0, 0,
-                                 active_warps, temp_rows,
-                                 HIPPtr(temp_vals), HIPPtr(cast_out->vec_));
-            } else {
-              LOG_INFO("Unsupported HIP blocksize of " << this->local_backend_.HIP_block_size);
-              FATAL_ERROR(__FILE__, __LINE__);
-            }
-          } else {
-            LOG_INFO("Unsupported HIP warpsize of " << this->local_backend_.HIP_warp);
-            FATAL_ERROR(__FILE__, __LINE__);
-          }
-
-          free_hip(&temp_rows);
-          free_hip(&temp_vals);
-
-          hipLaunchKernelGGL((kernel_spmv_coo_serial<int, ValueType>),
-                             dim3(1), dim3(1), 0, 0,
-                             this->get_coo_nnz()-tail, this->mat_.COO.row+tail,
-                             this->mat_.COO.col+tail, HIPPtr(this->mat_.COO.val+tail),
-                             HIPVal(scalar),
-                             HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
-          CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        }
-
-      }
+        hipsparseStatus_t stat_t;
+        stat_t = hipsparseTcoomv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                                 HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                                 this->get_nrow(), this->get_ncol(), this->coo_nnz_, &scalar,
+                                 this->coo_mat_descr_,
+                                 this->mat_.COO.val, this->mat_.COO.row, this->mat_.COO.col,
+                                 cast_in->vec_, &beta,
+                                 cast_out->vec_);
+        CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
     }
 
