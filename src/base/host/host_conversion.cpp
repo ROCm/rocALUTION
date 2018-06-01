@@ -533,18 +533,6 @@ bool hyb_to_csr(const int omp_threads,
 
 }
 
-// ----------------------------------------------------------
-// function coo_to_csr(...)
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.3.1,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - adapted interface
-// - Bubble sort each column after convertion
-// - OpenMP pragma for
-// ----------------------------------------------------------
 template <typename ValueType, typename IndexType>
 bool coo_to_csr(const int omp_threads,
                 const IndexType nnz, const IndexType nrow, const IndexType ncol,
@@ -561,45 +549,43 @@ bool coo_to_csr(const int omp_threads,
   allocate_host(nnz, &dst->col);
   allocate_host(nnz, &dst->val);
 
+  // COO has to be sorted by rows
+  for (IndexType i = 1; i < nnz; ++i)
+  {
+    assert(src.row[i] >= src.row[i-1]);
+    if (src.row[i] == src.row[i-1]) {
+      assert(src.col[i] >= src.col[i-1]);
+    }
+  }
+
+  // Initialize row offset with zeros
   set_to_zero_host(nrow+1, dst->row_offset);
-  set_to_zero_host(nnz, dst->col);
-  set_to_zero_host(nnz, dst->val);
 
-  // compute nnz entries per row of CSR
-  for (IndexType n = 0; n < nnz; ++n)
-    dst->row_offset[src.row[n]] = dst->row_offset[src.row[n]] + 1;
-
-  // cumsum the num_entries per row to get dst->row_offsets[]
-  IndexType cumsum = 0;
-  for(IndexType i = 0; i < nrow; ++i) {
-    IndexType temp = dst->row_offset[i];
-    dst->row_offset[i] = cumsum;
-    cumsum += temp;
+  // Compute nnz entries per row of CSR
+  for (IndexType i = 0; i < nnz; ++i)
+  {
+    ++dst->row_offset[src.row[i]+1];
   }
 
-  dst->row_offset[nrow] = cumsum;
-
-  // write Aj,Ax IndexTypeo dst->column_indices,dst->values
-  for(IndexType n = 0; n < nnz; ++n) {
-    IndexType row  = src.row[n];
-    IndexType dest = dst->row_offset[row];
-
-    dst->col[dest] = src.col[n];
-    dst->val[dest] = src.val[n];
-
-    dst->row_offset[row] = dst->row_offset[row] + 1;
+  // Do exclusive scan to obtain row ptrs
+  for (IndexType i=0; i<nrow; ++i)
+  {
+    dst->row_offset[i+1] += dst->row_offset[i];
   }
 
-  IndexType last = 0;
-  for(IndexType i = 0; i <= nrow; ++i) {
-    IndexType temp = dst->row_offset[i];
-    dst->row_offset[i]  = last;
-    last   = temp;
+  assert(dst->row_offset[nrow] == nnz);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (IndexType i=0; i<nnz; ++i)
+  {
+    dst->col[i] = src.col[i];
+    dst->val[i] = src.val[i];
   }
 
   // Sorting the col (per row)
   // Bubble sort algorithm
-
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -791,17 +777,6 @@ bool dia_to_csr(const int omp_threads,
 
 }
 
-// ----------------------------------------------------------
-// function csr_to_hyb(...)
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.3.1,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - adapted interface
-// - the entries per row are defined out side or as nnz/nrow
-// ----------------------------------------------------------
 template <typename ValueType, typename IndexType>
 bool csr_to_hyb(const int omp_threads,
                 const IndexType nnz, const IndexType nrow, const IndexType ncol,
