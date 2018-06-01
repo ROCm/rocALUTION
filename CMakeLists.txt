@@ -98,6 +98,11 @@ else()
 endif()
 
 #######################################################################################################################
+# Build flags
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Debug or RelWithDebInfo
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "debug")
   set(CXX_FLAGS "-g -O0 -Wall -fPIC")
