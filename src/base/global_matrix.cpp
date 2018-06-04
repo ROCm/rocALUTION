@@ -436,9 +436,8 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCOO(int **row, int **col, ValueType
   this->matrix_ghost_.SetDataPtrCOO(row, col, val, ghost_name, nnz,
                                     this->pm_->GetLocalSize(), this->pm_->GetNumReceivers());
 
-  // TODO fix: Conversion for sorted COO
-  this->matrix_ghost_.ConvertTo(CSR);
-  this->matrix_ghost_.ConvertTo(COO);
+  // Sort ghost matrix
+  this->matrix_ghost_.Sort();
 
 #ifdef SUPPORT_MULTINODE
   IndexType2 nnz_local;
