@@ -317,6 +317,12 @@ bool csr_to_ell(const int omp_threads,
 
   *nnz_ell = dst->max_row * nrow;
 
+  // Limit ELL size to 5 times CSR nnz
+  if(dst->row_nnz > 5 * nnz / nrow)
+  {
+      return false;
+  }
+
   allocate_host(*nnz_ell, &dst->val);
   allocate_host(*nnz_ell, &dst->col);
 
@@ -381,7 +387,7 @@ bool ell_to_csr(const int omp_threads,
       IndexType aj = ELL_IND(ai, n, nrow, src.max_row);
 
       if ((src.col[aj] >= 0) && (src.col[aj] < ncol))
-        dst->row_offset[ai] += 1;
+        ++dst->row_offset[ai];
 
     }
 
@@ -609,17 +615,6 @@ bool coo_to_csr(const int omp_threads,
 
 }
 
-// ----------------------------------------------------------
-// function csr_to_dia(...)
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.3.1,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - adapted interface
-// - OpenMP pragma for
-// ----------------------------------------------------------
 template <typename ValueType, typename IndexType>
 bool csr_to_dia(const int omp_threads,
                 const IndexType nnz, const IndexType nrow, const IndexType ncol,
@@ -630,87 +625,71 @@ bool csr_to_dia(const int omp_threads,
   assert(nrow > 0);
   assert(ncol > 0);
 
-  if (nrow != ncol)
-    return false;
-
   omp_set_num_threads(omp_threads);
 
-  // compute number of occupied diagonals and enumerate them
+  // Determine number of diagonals
   dst->num_diag = 0;
 
-  IndexType *diag_map = NULL;
+  std::vector<IndexType> diag_idx(nrow+ncol-1, 0);
 
-  allocate_host(nrow+ncol, &diag_map);
-  set_to_zero_host(nrow+ncol, diag_map);
+  // Loop over rows and increment ndiag counter if diag offset has not been visited yet
+  for(IndexType i = 0; i < nrow; ++i)
+  {
+    for(IndexType j = src.row_offset[i]; j < src.row_offset[i+1]; ++j)
+    {
+      // Diagonal offset the current entry belongs to
+      IndexType offset = nrow - 1 - i + src.col[j];
 
-  for(IndexType i = 0; i < nrow; i++) {
-    for(IndexType jj = src.row_offset[i]; jj < src.row_offset[i+1]; jj++) {
-      IndexType j         = src.col[jj];
-      IndexType map_index = (nrow - i) + j; //offset shifted by + num_rows
-
-      if(diag_map[map_index] == 0) {
-        diag_map[map_index] = 1;
+      if(!diag_idx[offset])
+      {
+        diag_idx[offset] = true;
         ++dst->num_diag;
       }
     }
   }
 
-  if (nrow < ncol) {
-    *nnz_dia = ncol * dst->num_diag;
-  } else {
-    *nnz_dia = nrow * dst->num_diag;
-  }
+  IndexType size = nrow > ncol ? nrow : ncol;
+  *nnz_dia = size * dst->num_diag;
 
-  // Conversion fails if numbers of diagonal is too large
-  if (dst->num_diag > 200)
+  // Conversion fails if DIA nnz exceeds 5 times CSR nnz
+  if (dst->num_diag > 5 * nnz / size)
     return false;
 
-  //allocate DIA structure
+  // Allocate DIA matrix
   allocate_host(dst->num_diag, &dst->offset);
-  set_to_zero_host(dst->num_diag, dst->offset);
-
   allocate_host(*nnz_dia, &dst->val);
+
   set_to_zero_host(*nnz_dia, dst->val);
 
-  // fill in diagonal_offsets array
-  for(IndexType n = 0, diag = 0 ; n < nrow + ncol; n++) {
-    if(diag_map[n] == 1) {
-      diag_map[n] = diag;
-      dst->offset[diag] = IndexType(n) - IndexType(nrow);
-      diag++;
+  for(IndexType i = 0, d = 0 ; i < nrow + ncol - 1; ++i)
+  {
+    // Fill DIA offset, if i-th diagonal is populated
+    if(diag_idx[i]) {
+      // Store offset index for reverse index access
+      diag_idx[i] = d;
+      // Store diagonals offset, where the diagonal is offset 0
+      // Left from diagonal offsets are decreasing
+      // Right from diagonal offsets are increasing
+      dst->offset[d++] = i - nrow + 1;
     }
   }
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  for(IndexType i = 0; i < nrow; i++) {
-    for(IndexType jj = src.row_offset[i]; jj < src.row_offset[i+1]; jj++) {
-      IndexType j = src.col[jj];
-      IndexType map_index = (nrow - i) + j; //offset shifted by + num_rows
-      IndexType diag = diag_map[map_index];
-
-      dst->val[DIA_IND(i, diag, nrow, dst->num_diag)] = src.val[jj];
-
+  for(IndexType i = 0; i < nrow; ++i)
+  {
+    for(IndexType j = src.row_offset[i]; j < src.row_offset[i+1]; ++j)
+    {
+      // Diagonal offset the current entry belongs to
+      IndexType offset = nrow - 1 - i + src.col[j];
+      dst->val[DIA_IND(i, diag_idx[offset], nrow, dst->num_diag)] = src.val[j];
     }
   }
 
-  free_host(&diag_map);
-
   return true;
-
 }
 
-// ----------------------------------------------------------
-// function dia_to_csr(...)
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.3.1,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - adapted interface
-// ----------------------------------------------------------
 template <typename ValueType, typename IndexType>
 bool dia_to_csr(const int omp_threads,
                 const IndexType nnz, const IndexType nrow, const IndexType ncol,
@@ -723,58 +702,65 @@ bool dia_to_csr(const int omp_threads,
 
   omp_set_num_threads(omp_threads);
 
-  *nnz_csr = 0;
+  // Allocate CSR row pointer array
+  allocate_host(nrow+1, &dst->row_offset);
 
-  // count nonzero entries
-  for(IndexType i = 0; i < nrow; i++) {
-    for(IndexType n = 0; n < src.num_diag; n++) {
-      const IndexType j = i + src.offset[n];
+  // Extract CSR row offsets
+  dst->row_offset[0] = 0;
+  for(IndexType i = 0; i < nrow; ++i)
+  {
+    // Initialize row offset of i-th row
+    dst->row_offset[i+1] = dst->row_offset[i];
 
-      //      if(j >= IndexType(0) && j < IndexType(ncol) && src.val[i*src.num_diag+n] != ValueType(0.0))
-      if(j >= IndexType(0) && j < IndexType(ncol) && src.val[DIA_IND(i, n, nrow, src.num_diag)] != ValueType(0.0))
-        ++(*nnz_csr);
+    for(IndexType n = 0; n < src.num_diag; ++n)
+    {
+      IndexType j = i + src.offset[n];
+
+      if(j >= 0 && j < ncol)
+      {
+          // Exclude padded zeros
+          if (src.val[DIA_IND(i, n, nrow, src.num_diag)] != static_cast<ValueType>(0))
+          {
+              ++dst->row_offset[i+1];
+          }
+      }
     }
   }
 
-  allocate_host(nrow+1, &dst->row_offset);
+  // CSR nnz
+  *nnz_csr = dst->row_offset[nrow];
+
+  // Allocate CSR matrix
   allocate_host(*nnz_csr, &dst->col);
   allocate_host(*nnz_csr, &dst->val);
 
-  set_to_zero_host(nrow+1, dst->row_offset);
-  set_to_zero_host(*nnz_csr, dst->col);
-  set_to_zero_host(*nnz_csr, dst->val);
+  // Fill CSR col and val arrays
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for(IndexType i = 0; i < nrow; ++i)
+  {
+    IndexType idx = dst->row_offset[i];
 
-  *nnz_csr = 0;
-  dst->row_offset[0] = 0;
+    for(IndexType n = 0; n < src.num_diag; ++n)
+    {
+      IndexType j = i + src.offset[n];
 
-  // copy nonzero entries to CSR structure
-  for(IndexType i = 0; i < nrow; i++) {
+      if(j >= 0 && j < ncol)
+      {
+          ValueType val = src.val[DIA_IND(i, n, nrow, src.num_diag)];
 
-    for(IndexType n = 0; n < src.num_diag; n++) {
-
-      const IndexType j = i + src.offset[n];
-
-      if(j >= IndexType(0) && j < IndexType(ncol)) {
-
-        IndexType ind = DIA_IND(i, n, nrow, src.num_diag);
-        const ValueType value = src.val[ind];
-
-        if (value != ValueType(0.0)) {
-          dst->col[*nnz_csr] = j;
-          dst->val[*nnz_csr] = value;
-          ++(*nnz_csr);
-        }
-
+          if(val != static_cast<ValueType>(0))
+          {
+              dst->col[idx] = j;
+              dst->val[idx] = val;
+              ++idx;
+          }        
       }
-
     }
-
-    dst->row_offset[i + 1] = *nnz_csr;
-
   }
 
   return true;
-
 }
 
 template <typename ValueType, typename IndexType>

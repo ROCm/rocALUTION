@@ -618,26 +618,24 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     int nrow = cast_mat_csr->get_nrow();
     int ncol = cast_mat_csr->get_ncol();
-    int *diag_map = NULL;
+    int nnz  = cast_mat_csr->get_nnz();
 
-    // DIA does not support non-squared matrices
-    if (cast_mat_csr->nrow_ != cast_mat_csr->ncol_)
-      return false;
+    int *diag_idx = NULL;
 
     // Get diagonal mapping vector
-    allocate_hip<int>(nrow+ncol, &diag_map);
+    allocate_hip<int>(nrow+ncol-1, &diag_idx);
 
     set_to_zero_hip(this->local_backend_.HIP_block_size,
                     this->local_backend_.HIP_max_threads,
-                    nrow+ncol, diag_map);
+                    nrow+ncol-1, diag_idx);
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-    hipLaunchKernelGGL((kernel_dia_diag_map<int>),
+    hipLaunchKernelGGL((kernel_dia_diag_idx<int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, cast_mat_csr->mat_.row_offset,
-                       cast_mat_csr->mat_.col, diag_map);
+                       cast_mat_csr->mat_.col, diag_idx);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     // Reduction to obtain number of occupied diagonals
@@ -649,9 +647,9 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     allocate_host(this->local_backend_.HIP_warp, &h_buffer);
 
     if (this->local_backend_.HIP_warp == 32) {
-      reduce_hip<int, int, 32, 256>(nrow+ncol, diag_map, &num_diag, h_buffer, d_buffer);
+      reduce_hip<int, int, 32, 256>(nrow+ncol-1, diag_idx, &num_diag, h_buffer, d_buffer);
     } else if (this->local_backend_.HIP_warp == 64) {
-      reduce_hip<int, int, 64, 256>(nrow+ncol, diag_map, &num_diag, h_buffer, d_buffer);
+      reduce_hip<int, int, 64, 256>(nrow+ncol-1, diag_idx, &num_diag, h_buffer, d_buffer);
     } else { //TODO
       FATAL_ERROR(__FILE__, __LINE__);
     }
@@ -660,17 +658,14 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     free_hip<int>(&d_buffer);
     free_host(&h_buffer);
 
-    // Conversion fails if number of diagonal is too large
-    if (num_diag > 200) {
-      free_hip<int>(&diag_map);
+    int size = nrow > ncol ? nrow : ncol;
+    // Conversion fails if DIA nnz exceeds 5 times CSR nnz
+    if (num_diag > 5 * nnz / size) {
+      free_hip<int>(&diag_idx);
       return false;
     }
 
-    int nnz_dia;
-    if (nrow < ncol)
-      nnz_dia = ncol * num_diag;
-    else
-      nnz_dia = nrow * num_diag;
+    int nnz_dia = size * num_diag;
 
     // Allocate DIA structure
     this->AllocateDIA(nnz_dia, nrow, ncol, num_diag);
@@ -678,74 +673,38 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     set_to_zero_hip(this->local_backend_.HIP_block_size,
                     this->local_backend_.HIP_max_threads,
                     nnz_dia, this->mat_.val);
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    num_diag, this->mat_.offset);
 
     // Fill diagonal offset array
     allocate_hip<int>(nrow+ncol+1, &d_buffer);
 
     // TODO currently performing partial sum on host
-    allocate_host(nrow+ncol+1, &h_buffer);
+    allocate_host(nrow+ncol, &h_buffer);
     hipMemcpy(h_buffer+1, // dst
-               diag_map, // src
-               (nrow+ncol)*sizeof(int), // size
+               diag_idx, // src
+               (nrow+ncol-1)*sizeof(int), // size
                hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     h_buffer[0] = 0;
-    for (int i=2; i<nrow+ncol+1; ++i)
+    for (int i=2; i<nrow+ncol; ++i)
       h_buffer[i] += h_buffer[i-1];
 
     hipMemcpy(d_buffer, // dst
                h_buffer, // src
-               (nrow+ncol)*sizeof(int), // size
+               (nrow+ncol-1)*sizeof(int), // size
                hipMemcpyHostToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     free_host(&h_buffer);
     // end TODO
 
-    // TODO
-    // fix the numbers (not hardcoded)
-    //
-    if (cast_mat_csr->get_nrow()+cast_mat_csr->get_ncol() > 16842494) {
-      
-      // Large systems
-      // 2D indexing
+    dim3 GridSize3((nrow+ncol) / this->local_backend_.HIP_block_size + 1);
 
-      int d2_bs = 16;
-    
-      int gsize1 = 65535;
-      int gsize2 = ((nrow+ncol)/(65535*d2_bs))/d2_bs + 1;
-    
-      
-      dim3 GridSize3(gsize1, 
-                     gsize2);
-      
-      dim3 BlockSize3(d2_bs, 
-                      d2_bs);
-      
-      hipLaunchKernelGGL((kernel_dia_fill_offset<int>),
-                         GridSize3, BlockSize3, 0, 0,
-                         nrow, ncol, diag_map,
-                         d_buffer, this->mat_.offset);
-      CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    } else {
-
-      // Small systems
-      // 1D indexing
-
-      dim3 GridSize3((nrow+ncol) / this->local_backend_.HIP_block_size + 1);
-
-      hipLaunchKernelGGL((kernel_dia_fill_offset<int>),
-                         GridSize3, BlockSize, 0, 0,
-                         nrow, ncol, diag_map,
-                         d_buffer, this->mat_.offset);
-      CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    }
+    hipLaunchKernelGGL((kernel_dia_fill_offset<int>),
+                       GridSize3, BlockSize, 0, 0,
+                       nrow, ncol, diag_idx,
+                       d_buffer, this->mat_.offset);
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     free_hip<int>(&d_buffer);
 
@@ -753,10 +712,10 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
                        GridSize, BlockSize, 0, 0,
                        nrow, num_diag, cast_mat_csr->mat_.row_offset,
                        cast_mat_csr->mat_.col, cast_mat_csr->mat_.val,
-                       diag_map, this->mat_.val);
+                       diag_idx, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-    free_hip<int>(&diag_map);
+    free_hip<int>(&diag_idx);
 
     this->nrow_ = cast_mat_csr->get_nrow();
     this->ncol_ = cast_mat_csr->get_ncol();
