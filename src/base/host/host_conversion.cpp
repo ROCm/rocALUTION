@@ -318,7 +318,7 @@ bool csr_to_ell(const int omp_threads,
   *nnz_ell = dst->max_row * nrow;
 
   // Limit ELL size to 5 times CSR nnz
-  if(dst->row_nnz > 5 * nnz / nrow)
+  if(dst->max_row > 5 * nnz / nrow)
   {
       return false;
   }
