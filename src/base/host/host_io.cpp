@@ -3,366 +3,212 @@
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/log.hpp"
 
-#include <vector>
-#include <string>
-#include <fstream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <complex>
 
 namespace rocalution {
 
-// ----------------------------------------------------------
-// struct matrix_market_banner
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-struct matrix_market_banner {
-
-  // "array" or "coordinate"
-  std::string storage;
-  // "general", "symmetric", "hermitian", or "skew-symmetric"
-  std::string symmetry;
-  // "complex", "real", "integer", or "pattern"
-  std::string type;
-
+struct mm_banner
+{
+    char array_type[64];
+    char matrix_type[64];
+    char storage_type[64];
 };
 
-// ----------------------------------------------------------
-// void tokenize
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-inline void tokenize(std::vector<std::string>& tokens,
-                     const std::string& str,
-                     const std::string& delimiters = "\n\r\t ") {
+bool mm_read_banner(FILE *fin, mm_banner &b)
+{
+    char line[1025];
 
-  // Skip delimiters at beginning.
-  std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-  // Find first "non-delimiter".
-  std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-  while (std::string::npos != pos || std::string::npos != lastPos) {
-
-    // Found a token, add it to the vector.
-    tokens.push_back(str.substr(lastPos, pos - lastPos));
-    // Skip delimiters.  Note the "not_of"
-    lastPos = str.find_first_not_of(delimiters, pos);
-    // Find next "non-delimiter"
-    pos = str.find_first_of(delimiters, lastPos);
-
-  }
-
-}
-
-// ----------------------------------------------------------
-// assign_complex
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-template <typename ValueType>
-void assign_complex(ValueType &val, double real, double imag) {
-
-  val = ValueType(real);
-
-}
-
-// ----------------------------------------------------------
-// void assign_complex
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-template <typename ValueType>
-void assign_complex(std::complex<ValueType> &val, double real, double imag) {
-
-  val = std::complex<ValueType>(ValueType(real), ValueType(imag));
-
-}
-
-// ----------------------------------------------------------
-// void write_value
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-template <typename ValueType>
-void write_value(std::ofstream &output, const ValueType &val) {
-
-  output << val;
-
-}
-
-// ----------------------------------------------------------
-// void write_value
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-template <typename ValueType>
-void write_value(std::ofstream &output, const std::complex<ValueType> &val) {
-
-  output << val.real() << " " << val.imag();
-
-}
-
-// ----------------------------------------------------------
-// bool read_matrix_market_banner
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-bool read_matrix_market_banner(matrix_market_banner &banner, std::ifstream &input) {
-
-  std::string line;
-  std::vector<std::string> tokens;
-
-  // read first line
-  std::getline(input, line);
-  tokenize(tokens, line);
-
-  if (tokens.size() != 5 || tokens[0] != "%%MatrixMarket" || tokens[1] != "matrix")
-    return false;
-
-  banner.storage  = tokens[2];
-  banner.type     = tokens[3];
-  banner.symmetry = tokens[4];
-
-  if (banner.storage != "array" && banner.storage != "coordinate")
-    return false;
-
-  if (banner.type != "complex" && banner.type != "real" &&
-      banner.type != "integer" && banner.type != "pattern")
-    return false;
-
-  if (banner.symmetry != "general"   && banner.symmetry != "symmetric" &&
-      banner.symmetry != "hermitian" && banner.symmetry != "skew-symmetric")
-    return false;
-
-  if (tokens.size() > 10)
-    return false;
-
-  return true;
-
-}
-
-// ----------------------------------------------------------
-// bool read_coordinate_stream
-// ----------------------------------------------------------
-// Modified and adapted from CUSP 0.4.0,
-// http://code.google.com/p/cusp-library/
-// NVIDIA, APACHE LICENSE 2.0
-// ----------------------------------------------------------
-// CHANGELOG
-// - None
-// ----------------------------------------------------------
-template <typename ValueType>
-bool read_coordinate_stream(int &nrow, int &ncol, int &nnz, int **row, int **col, ValueType **val,
-                            std::ifstream &input, matrix_market_banner &banner) {
-
-  // read file contents line by line
-  std::string line;
-
-  // skip over banner and comments
-  do {
-    std::getline(input, line);
-  } while (line[0] == '%');
-
-  // line contains [nrow num_columns nnz]
-  std::vector<std::string> tokens;
-  tokenize(tokens, line);
-
-  if (tokens.size() != 3)
-    return false;
-
-  std::istringstream(tokens[0]) >> nrow;
-  std::istringstream(tokens[1]) >> ncol;
-  std::istringstream(tokens[2]) >> nnz;
-
-  allocate_host(nnz, row);
-  allocate_host(nnz, col);
-  allocate_host(nnz, val);
-
-  int nnz_read = 0;
-
-  // read file contents
-  if (banner.type == "pattern") {
-
-    while(nnz_read < nnz && !input.eof()) {
-
-      input >> (*row)[nnz_read];
-      input >> (*col)[nnz_read];
-      ++nnz_read;
-
+    // Read banner line
+    if(!fgets(line, 1025, fin))
+    {
+        return false;
     }
 
-    for (int i=0; i<nnz; ++i)
-      (*val)[i] = ValueType(1.0);
+    char banner[64];
+    char mtx[64];
 
-  } else if (banner.type == "real" || banner.type == "integer") {
-
-    while(nnz_read < nnz && !input.eof()) {
-
-      input >> (*row)[nnz_read];
-      input >> (*col)[nnz_read];
-      input >> (*val)[nnz_read];
-      ++nnz_read;
-
+    // Read 5 tokens from banner
+    if(sscanf(line, "%s %s %s %s %s", banner, mtx, b.array_type, b.matrix_type, b.storage_type) != 5)
+    {
+        return false;
     }
 
-  } else if (banner.type == "complex") {
+    // clang-format off
+    // Convert to lower case
+    for(char *p=mtx; *p != '\0'; *p = tolower(*p), ++p);
+    for(char *p=b.array_type; *p != '\0'; *p = tolower(*p), ++p);
+    for(char *p=b.matrix_type; *p != '\0'; *p = tolower(*p), ++p);
+    for(char *p=b.storage_type; *p != '\0'; *p = tolower(*p), ++p);
 
-    while(nnz_read < nnz && !input.eof()) {
+    // clang-format on
 
-      double real, imag;
-
-      input >> (*row)[nnz_read];
-      input >> (*col)[nnz_read];
-      input >> real;
-      input >> imag;
-
-      assign_complex((*val)[nnz_read], real, imag);
-      ++nnz_read;
-
+    // Check banner
+    if(strncmp(banner, "%%MatrixMarket", 14))
+    {
+        return false;
     }
 
-  } else
-    return false;
-
-  if(nnz_read != nnz)
-    return false;
-
-  // check validity of row and column index data
-  if (nnz > 0) {
-
-    int min_row_index = 1;
-    int max_row_index = nrow;
-    int min_col_index = 1;
-    int max_col_index = ncol;
-
-    for (int i=0; i<nnz; ++i) {
-      min_row_index = ((*row)[i] < min_row_index) ? (*row)[i] : min_row_index;
-      max_row_index = ((*row)[i] > max_row_index) ? (*row)[i] : max_row_index;
-      min_col_index = ((*col)[i] < min_col_index) ? (*col)[i] : min_col_index;
-      max_col_index = ((*col)[i] > max_col_index) ? (*col)[i] : max_col_index;
+    // Check array type
+    if(strncmp(mtx, "matrix", 6))
+    {
+        return false;
     }
 
-    if (min_row_index < 1)    return false;
-    if (min_col_index < 1)    return false;
-    if (max_row_index > nrow) return false;
-    if (max_col_index > ncol) return false;
+    // Check array type
+    if(strncmp(b.array_type, "coordinate", 10))
+    {
+        return false;
+    }
 
-  }
+    // Check matrix type
+    if(strncmp(b.matrix_type, "real", 4) && strncmp(b.matrix_type, "complex", 7) && strncmp(b.matrix_type, "integer", 7))
+    {
+        return false;
+    }
 
-  // convert base-1 indices to base-0
-  for (int i=0; i<nnz; ++i) {
-    --(*row)[i];
-    --(*col)[i];
-  }
+    // Check storage type
+    if(strncmp(b.storage_type, "general", 7) && strncmp(b.storage_type, "symmetric", 9) && strncmp(b.storage_type, "hermitian", 9))
+    {
+        return false;
+    }
 
-  // expand symmetric formats to "general" format
-  if (banner.symmetry != "general") {
+    return true;
+}
 
-    int off_diagonals = 0;
 
-    for (int i=0; i<nnz; ++i)
-      if((*row)[i] != (*col)[i])
-        ++off_diagonals;
+template <typename ValueType>
+bool mm_read_coordinate(FILE *fin, mm_banner &b, int &nrow, int &ncol, int &nnz, int **row, int **col, ValueType **val) {
 
-    int general_nnz = nnz + off_diagonals;
+    char line[1025];
 
-    int *general_row = NULL;
-    int *general_col = NULL;
-    ValueType *general_val = NULL;
+    // Skip banner and comments
+    do
+    {
+        // Check for EOF
+        if(!fgets(line, 1025, fin))
+        {
+            return false;
+        }
+    }
+    while(line[0] == '%');
 
-    allocate_host(general_nnz, &general_row);
-    allocate_host(general_nnz, &general_col);
-    allocate_host(general_nnz, &general_val);
+    // Read m, n, nnz
+    while(sscanf(line, "%d %d %d", &nrow, &ncol, &nnz) != 3)
+    {
+        // Check for EOF and loop until line with 3 integer entries found
+        if(!fgets(line, 1025, fin))
+        {
+            return false;
+        }
+    }
 
-    if (banner.symmetry == "symmetric") {
+    // Allocate arrays
+    allocate_host(nnz, row);
+    allocate_host(nnz, col);
+    allocate_host(nnz, val);
 
-      int symm_nnz = 0;
+    // Read data
+    if(!strncmp(b.matrix_type, "complex", 7))
+    {
+        double tmp1, tmp2;
+        for(int i=0; i<nnz; ++i)
+        {
+            if(fscanf(fin, "%d %d %lg %lg", (*row)+i, (*col)+i, &tmp1, &tmp2) != 4)
+            {
+                return false;
+            }
+            --(*row)[i];
+            --(*col)[i];
+//            (*val)[i] = TODO
+        }
+    }
+    else if(!strncmp(b.matrix_type, "real", 4) || !strncmp(b.matrix_type, "integer", 7))
+    {
+        double tmp;
+        for(int i=0; i<nnz; ++i)
+        {
+            if(fscanf(fin, "%d %d %lg\n", (*row)+i, (*col)+i, &tmp) != 3)
+            {
+                return false;
+            }
+            --(*row)[i];
+            --(*col)[i];
+            (*val)[i] = static_cast<ValueType>(tmp);
+        }
+    }
+    else
+    {
+        return false;
+    }
 
-      for (int i=0; i<nnz; ++i) {
-
-        // copy entry over
-        general_row[symm_nnz] = (*row)[i];
-        general_col[symm_nnz] = (*col)[i];
-        general_val[symm_nnz] = (*val)[i];
-        ++symm_nnz;
-
-        // duplicate off-diagonals
-        if ((*row)[i] != (*col)[i]) {
-          general_row[symm_nnz] = (*col)[i];
-          general_col[symm_nnz] = (*row)[i];
-          general_val[symm_nnz] = (*val)[i];
-          ++symm_nnz;
+    // Expand symmetric matrix
+    if(strncmp(b.storage_type, "general", 7))
+    {
+        // Count diagonal entries
+        int ndiag = 0;
+        for(int i=0; i<nnz; ++i)
+        {
+            if((*row)[i] == (*col)[i])
+            {
+                ++ndiag;
+            }
         }
 
-      }
+        int tot_nnz = (nnz - ndiag) * 2 + ndiag;
 
-      nnz = symm_nnz;
+        // Allocate memory
+        int *sym_row = *row;
+        int *sym_col = *col;
+        ValueType *sym_val = *val;
 
-    } else if (banner.symmetry == "hermitian") {
-      //TODO
-      return false;
-    } else if (banner.symmetry == "skew-symmetric") {
-      //TODO
-      return false;
+        *row = NULL;
+        *col = NULL;
+        *val = NULL;
+
+        allocate_host(tot_nnz, row);
+        allocate_host(tot_nnz, col);
+        allocate_host(tot_nnz, val);
+
+        int idx = 0;
+        for(int i=0; i<nnz; ++i)
+        {
+            (*row)[idx] = sym_row[i];
+            (*col)[idx] = sym_col[i];
+            (*val)[idx] = sym_val[i];
+            ++idx;
+
+            // Do not write diagonal again
+            if(sym_row[i] != sym_col[i])
+            {
+                (*row)[idx] = sym_col[i];
+                (*col)[idx] = sym_row[i];
+                (*val)[idx] = sym_val[i];
+                ++idx;
+            }
+        }
+
+        if(idx != tot_nnz)
+        {
+            return false;
+        }
+
+        nnz = tot_nnz;
+
+        free_host(&sym_row);
+        free_host(&sym_col);
+        free_host(&sym_val);
     }
-
-    free_host(row);
-    free_host(col);
-    free_host(val);
-
-    (*row) = general_row;
-    (*col) = general_col;
-    (*val) = general_val;
-
-    general_row = NULL;
-    general_col = NULL;
-    general_val = NULL;
-
-  }
-
-  return true;
-
+    return true;
 }
 
 template <typename ValueType>
 bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, ValueType **val,
-                     const std::string filename) {  
+                     const char *filename) {  
 
-  std::ifstream file(filename.c_str());
+  FILE *file = fopen(filename, "r");
 
   if (!file) {
     LOG_INFO("ReadFileMTX: cannot open file " << filename);
@@ -370,26 +216,26 @@ bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, Value
   }
 
   // read banner
-  matrix_market_banner banner;
-  if (read_matrix_market_banner(banner, file) != true) {
+  mm_banner banner;
+  if (mm_read_banner(file, banner) != true) {
     LOG_INFO("ReadFileMTX: invalid matrix market banner");
     return false;
   }
 
-  if (banner.storage == "coordinate") {
-
-    if (read_coordinate_stream(nrow, ncol, nnz, row, col, val, file, banner) != true) {
-      LOG_INFO("ReadFileMTX: invalid matrix data");
+  if (strncmp(banner.array_type, "coordinate", 10))
+  {
       return false;
-    }
-
-  } else {
-
-    return false;
-
+  }
+  else
+  {
+      if (mm_read_coordinate(file, banner, nrow, ncol, nnz, row, col, val) != true)
+      {
+        LOG_INFO("ReadFileMTX: invalid matrix data");
+        return false;
+      }
   }
 
-  file.close();
+  fclose(file);
 
   return true;
 
@@ -397,58 +243,55 @@ bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, Value
 
 template <typename ValueType>
 bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
-                      const int *row, const int *col, const ValueType *val, const std::string filename) {
+                      const int *row, const int *col, const ValueType *val, const char *filename)
+{
+    FILE *file = fopen(filename, "w");
 
-  std::ofstream file(filename.c_str());
-  file.precision(12);
+    if (!file) {
+        LOG_INFO("WriteFileMTX: cannot open file " << filename);
+        return false;
+    }
 
-  if (!file) {
-    LOG_INFO("WriteFileMTX: cannot open file " << filename);
-    return false;
-  }
+    char sign[3];
+    strcpy(sign, "%%");
 
-  file << "%%MatrixMarket matrix coordinate real general\n";
-  file << nrow << " " << ncol << " " << nnz << "\n";
+    fprintf(file, "%sMatrixMarket matrix coordinate real general\n", sign);
+    fprintf(file, "%d %d %d\n", nrow, ncol, nnz);
 
-  for (int i=0; i<nnz; ++i) {
+    for (int i=0; i<nnz; ++i)
+    {
+        fprintf(file, "%d %d %0.12lg\n", row[i] + 1, col[i] + 1, val[i]);
+    }
 
-    file << row[i] + 1 << " ";
-    file << col[i] + 1 << " ";
+    fclose(file);
 
-    write_value(file, val[i]);
-
-    file << "\n";
-
-  }
-
-  return true;
-
+    return true;
 }
 
 
 template bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, float **val,
-                              const std::string filename);
+                              const char *filename);
 template bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, double **val,
-                              const std::string filename);
+                              const char *filename);
 #ifdef SUPPORT_COMPLEX
 template bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, std::complex<float> **val,
-                              const std::string filename);
+                              const char *filename);
 template bool read_matrix_mtx(int &nrow, int &ncol, int &nnz, int **row, int **col, std::complex<double> **val,
-                              const std::string filename);
+                              const char *filename);
 #endif
 
 template bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
                                const int *row, const int *col, const float *val,
-                               const std::string filename);
+                               const char *filename);
 template bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
                                const int *row, const int *col, const double *val,
-                               const std::string filename);
+                               const char *filename);
 #ifdef SUPPORT_COMPLEX
 template bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
                                const int *row, const int *col, const std::complex<float> *val,
-                               const std::string filename);
+                               const char *filename);
 template bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
                                const int *row, const int *col, const std::complex<double> *val,
-                               const std::string filename);
+                               const char *filename);
 #endif
 }

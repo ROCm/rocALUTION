@@ -321,7 +321,7 @@ bool HostMatrixCOO<ValueType>::ReadFileMTX(const std::string filename) {
   int *col = NULL;
   ValueType *val = NULL;
 
-  if (read_matrix_mtx(nrow, ncol, nnz, &row, &col, &val, filename) != true) {
+  if (read_matrix_mtx(nrow, ncol, nnz, &row, &col, &val, filename.c_str()) != true) {
     LOG_INFO("ReadFileMTX: failed to read matrix " << filename);
     FATAL_ERROR(__FILE__, __LINE__);
   }
@@ -344,7 +344,7 @@ bool HostMatrixCOO<ValueType>::WriteFileMTX(const std::string filename) const {
 
   if (write_matrix_mtx(this->nrow_, this->ncol_, this->nnz_,
                        this->mat_.row, this->mat_.col, this->mat_.val,
-                       filename) != true) {
+                       filename.c_str()) != true) {
     LOG_INFO("WriteFileMTX: failed to write matrix " << filename);
     FATAL_ERROR(__FILE__, __LINE__);
   }
