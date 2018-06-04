@@ -662,8 +662,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 8)
       {
@@ -671,8 +671,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 16)
       {
@@ -680,8 +680,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 32)
       {
@@ -689,8 +689,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else
       {
@@ -698,8 +698,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
     }
     else if (this->local_backend_.HIP_warp == 64)
@@ -710,8 +710,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 8)
       {
@@ -719,8 +719,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 16)
       {
@@ -728,8 +728,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 32)
       {
@@ -737,8 +737,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 64)
       {
@@ -746,8 +746,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
       else
       {
@@ -755,8 +755,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
       }
     }
     else
@@ -801,8 +801,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 8)
       {
@@ -810,8 +810,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 16)
       {
@@ -819,8 +819,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 32)
       {
@@ -828,8 +828,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else
       {
@@ -837,8 +837,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
     }
     else if (this->local_backend_.HIP_warp == 64)
@@ -849,8 +849,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 8)
       {
@@ -858,8 +858,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 16)
       {
@@ -867,8 +867,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 32)
       {
@@ -876,8 +876,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else if (nnz_per_row < 64)
       {
@@ -885,8 +885,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
       else
       {
@@ -894,8 +894,8 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
                            GridSize, BlockSize, 0, 0,
                            this->nrow_,
                            this->mat_.row_offset, this->mat_.col,
-                           HIPPtr(this->mat_.val), HIPVal(scalar),
-                           HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
       }
     }
     else

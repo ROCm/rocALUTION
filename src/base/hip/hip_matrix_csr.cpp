@@ -969,8 +969,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permuta
     hipLaunchKernelGGL((kernel_permute_rows<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->get_nrow(), this->mat_.row_offset, d_nnzPerm,
-                       this->mat_.col, HIPPtr(this->mat_.val), HIPPtr(cast_perm->vec_),
-                       d_nnzr, d_offset, HIPPtr(d_data));
+                       this->mat_.col, this->mat_.val, cast_perm->vec_,
+                       d_nnzr, d_offset, d_data);
     CHECK_HIP_ERROR(__FILE__,__LINE__);
 
     free_hip<int>(&this->mat_.row_offset);	
@@ -1020,37 +1020,37 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permuta
                          GridSize, BlockSize, 0, 0,
                          this->get_nrow(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
-                         HIPPtr(d_data), this->mat_.col, HIPPtr(this->mat_.val));
+                         d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >  32)
       hipLaunchKernelGGL((kernel_permute_cols<64, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
                          this->get_nrow(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
-                         HIPPtr(d_data), this->mat_.col, HIPPtr(this->mat_.val));
+                         d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >  16)
       hipLaunchKernelGGL((kernel_permute_cols<32, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
                          this->get_nrow(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
-                         HIPPtr(d_data), this->mat_.col, HIPPtr(this->mat_.val));
+                         d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >   8)
       hipLaunchKernelGGL((kernel_permute_cols<16, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
                          this->get_nrow(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
-                         HIPPtr(d_data), this->mat_.col, HIPPtr(this->mat_.val));
+                         d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >   4)
       hipLaunchKernelGGL((kernel_permute_cols<8, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
                          this->get_nrow(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
-                         HIPPtr(d_data), this->mat_.col, HIPPtr(this->mat_.val));
+                         d_data, this->mat_.col, this->mat_.val);
     else
       hipLaunchKernelGGL((kernel_permute_cols<4, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
                          this->get_nrow(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
-                         HIPPtr(d_data), this->mat_.col, HIPPtr(this->mat_.val));
+                         d_data, this->mat_.col, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__,__LINE__);
 
     free_hip<int>(&d_offset);
@@ -1788,7 +1788,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractDiagonal(BaseVector<ValueType> *
     hipLaunchKernelGGL((kernel_csr_extract_diag<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val), HIPPtr(cast_vec_diag->vec_));
+                       this->mat_.val, cast_vec_diag->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1814,7 +1814,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractInverseDiagonal(BaseVector<Value
     hipLaunchKernelGGL((kernel_csr_extract_inv_diag<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val), HIPPtr(cast_vec_inv_diag->vec_));
+                       this->mat_.val, cast_vec_inv_diag->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2408,7 +2408,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ScaleDiagonal(const ValueType alpha) {
     hipLaunchKernelGGL((kernel_csr_scale_diagonal<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset, this->mat_.col,
-                       HIPVal(alpha), HIPPtr(this->mat_.val));
+                       alpha, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2429,7 +2429,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ScaleOffDiagonal(const ValueType alpha)
     hipLaunchKernelGGL((kernel_csr_scale_offdiagonal<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset, this->mat_.col,
-                       HIPVal(alpha), HIPPtr(this->mat_.val));
+                       alpha, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2450,7 +2450,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarDiagonal(const ValueType alpha
     hipLaunchKernelGGL((kernel_csr_add_diagonal<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset, this->mat_.col,
-                       HIPVal(alpha), HIPPtr(this->mat_.val));
+                       alpha, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2471,7 +2471,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarOffDiagonal(const ValueType al
     hipLaunchKernelGGL((kernel_csr_add_offdiagonal<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset, this->mat_.col,
-                       HIPVal(alpha), HIPPtr(this->mat_.val));
+                       alpha, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2491,7 +2491,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalar(const ValueType alpha) {
 
     hipLaunchKernelGGL((kernel_buffer_addscalar<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       nnz, HIPVal(alpha), HIPPtr(this->mat_.val));
+                       nnz, alpha, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2517,7 +2517,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<Va
     hipLaunchKernelGGL((kernel_csr_diagmatmult_r<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(cast_diag->vec_), HIPPtr(this->mat_.val));
+                       cast_diag->vec_, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2543,7 +2543,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultL(const BaseVector<Va
     hipLaunchKernelGGL((kernel_csr_diagmatmult_l<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, this->mat_.row_offset,
-                       HIPPtr(cast_diag->vec_), HIPPtr(this->mat_.val));
+                       cast_diag->vec_, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2772,7 +2772,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
     hipLaunchKernelGGL((kernel_csr_compress_count_nrow<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val), this->get_nrow(),
+                       this->mat_.val, this->get_nrow(),
                        drop_off, row_offset);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -2794,9 +2794,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
 
     hipLaunchKernelGGL((kernel_csr_compress_copy<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       tmp.mat_.row_offset, tmp.mat_.col, HIPPtr(tmp.mat_.val),
+                       tmp.mat_.row_offset, tmp.mat_.col, tmp.mat_.val,
                        tmp.get_nrow(), drop_off, this->mat_.row_offset,
-                       this->mat_.col, HIPPtr(this->mat_.val));
+                       this->mat_.col, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);      
 
     free_hip(&row_offset);
@@ -2863,7 +2863,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, cons
     hipLaunchKernelGGL((kernel_csr_replace_column_vector_offset<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->mat_.row_offset, this->mat_.col, nrow,
-                       idx, HIPPtr(cast_vec->vec_), row_offset);
+                       idx, cast_vec->vec_, row_offset);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     int *host_offset = NULL;
@@ -2893,9 +2893,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, cons
     hipLaunchKernelGGL((kernel_csr_replace_column_vector<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val), nrow, idx,
-                       HIPPtr(cast_vec->vec_), row_offset, col,
-                       HIPPtr(val));
+                       this->mat_.val, nrow, idx,
+                       cast_vec->vec_, row_offset, col,
+                       val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     this->Clear();
@@ -2924,8 +2924,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractColumnVector(const int idx, Base
     hipLaunchKernelGGL((kernel_csr_extract_column_vector<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val), this->get_nrow(),
-                       idx, HIPPtr(cast_vec->vec_));
+                       this->mat_.val, this->get_nrow(),
+                       idx, cast_vec->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -2964,8 +2964,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractRowVector(const int idx, BaseVec
     hipLaunchKernelGGL((kernel_csr_extract_row_vector<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val), row_nnz, idx,
-                       HIPPtr(cast_vec->vec_));
+                       this->mat_.val, row_nnz, idx,
+                       cast_vec->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }

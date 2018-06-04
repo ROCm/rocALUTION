@@ -796,8 +796,8 @@ void HIPAcceleratorMatrixDIA<ValueType>::Apply(const BaseVector<ValueType> &in, 
     hipLaunchKernelGGL((kernel_dia_spmv<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, ncol, num_diag,
-                       this->mat_.offset, HIPPtr(this->mat_.val),
-                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                       this->mat_.offset, this->mat_.val,
+                       cast_in->vec_, cast_out->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -830,9 +830,9 @@ void HIPAcceleratorMatrixDIA<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     hipLaunchKernelGGL((kernel_dia_add_spmv<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        nrow, ncol, num_diag,
-                       this->mat_.offset, HIPPtr(this->mat_.val),
-                       HIPVal(scalar),
-                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
+                       this->mat_.offset, this->mat_.val,
+                       scalar,
+                       cast_in->vec_, cast_out->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }

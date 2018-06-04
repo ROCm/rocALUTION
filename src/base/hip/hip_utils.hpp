@@ -93,26 +93,6 @@ struct HIPType<std::complex<double> > {
 };
 #endif
 
-// Convert pointers to HIP types
-template <typename ValueType>
-inline typename HIPType<ValueType>::Type *HIPPtr(ValueType *ptr) {
-  return reinterpret_cast<typename HIPType<ValueType>::Type*>(ptr);
-}
-
-template <typename ValueType>
-inline const typename HIPType<ValueType>::Type *HIPPtr(const ValueType *ptr) {
-  return reinterpret_cast<const typename HIPType<ValueType>::Type*>(ptr);
-}
-
-// Convert values to HIP types
-inline float HIPVal(const float &val) { return val; }
-inline double HIPVal(const double &val) { return val; }
-#ifdef SUPPORT_COMPLEX
-inline cuFloatComplex HIPVal(const std::complex<float> &val) { return make_cuFloatComplex(val.real(), val.imag()); }
-inline cuDoubleComplex HIPVal(const std::complex<double> &val) { return make_cuDoubleComplex(val.real(), val.imag()); }
-#endif
-inline int HIPVal(const int &val) { return val; }
-
 template <typename IndexType, unsigned int BLOCK_SIZE>
 bool cum_sum( IndexType*  dst,
               const IndexType*  src,
@@ -160,7 +140,7 @@ void reduce_hip(const int size, const ValueType *src, ValueType *reduce, ValueTy
 
     hipLaunchKernelGGL((kernel_reduce<WARP_SIZE, BLOCK_SIZE, ValueType, IndexType>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPPtr(src), HIPPtr(device_buffer));
+                       size, src, device_buffer);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(host_buffer,                 // dst

@@ -848,7 +848,7 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd(const ValueType alpha, const Base
 
     hipLaunchKernelGGL((kernel_scaleadd<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPVal(alpha), HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       size, alpha, cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -871,8 +871,8 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const
 
     hipLaunchKernelGGL((kernel_scaleaddscale<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPVal(alpha), HIPVal(beta),
-                       HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       size, alpha, beta,
+                       cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -900,8 +900,8 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const
     hipLaunchKernelGGL((kernel_scaleaddscale_offset<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        size, src_offset, dst_offset,
-                       HIPVal(alpha), HIPVal(beta),
-                       HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       alpha, beta,
+                       cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -929,8 +929,8 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd2(const ValueType alpha, const Bas
 
     hipLaunchKernelGGL((kernel_scaleadd2<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPVal(alpha), HIPVal(beta), HIPVal(gamma),
-                       HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_), HIPPtr(this->vec_));
+                       size, alpha, beta, gamma,
+                       cast_x->vec_, cast_y->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1161,7 +1161,7 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
 
     hipLaunchKernelGGL((kernel_pointwisemult<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       size, cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1187,8 +1187,8 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
 
     hipLaunchKernelGGL((kernel_pointwisemult2<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_),
-                       HIPPtr(this->vec_));
+                       size, cast_x->vec_, cast_y->vec_,
+                       this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
