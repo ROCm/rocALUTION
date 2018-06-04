@@ -8,12 +8,15 @@
 #define IndexType2 long
 //#define IndexType2 long long
 
-inline static int IndexTypeToInt(const IndexType2 idx) {
+namespace rocalution {
 
-  assert (idx <= std::numeric_limits<int>::max());
+inline static int IndexTypeToInt(const IndexType2 idx)
+{
+    assert(idx <= std::numeric_limits<int>::max());
 
-  return static_cast<int> (idx);
-
+    return static_cast<int>(idx);
 }
+
+} // namespace rocalution
 
 #endif // ROCALUTION_UTILS_TYPES_HPP_
