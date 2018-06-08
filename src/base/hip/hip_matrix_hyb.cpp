@@ -132,10 +132,8 @@ void HIPAcceleratorMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const in
     allocate_hip(ell_nnz, &this->mat_.ELL.col);
     
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     ell_nnz, this->mat_.ELL.val);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     ell_nnz, this->mat_.ELL.col);
 
     this->mat_.ELL.max_row = ell_max_row;
@@ -151,13 +149,10 @@ void HIPAcceleratorMatrixHYB<ValueType>::AllocateHYB(const int ell_nnz, const in
     allocate_hip(coo_nnz, &this->mat_.COO.val);
  
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     coo_nnz, this->mat_.COO.row);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     coo_nnz, this->mat_.COO.col);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     coo_nnz, this->mat_.COO.val);
     this->coo_nnz_ = coo_nnz;
 

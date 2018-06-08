@@ -76,13 +76,10 @@ void HIPAcceleratorMatrixMCSR<ValueType>::AllocateMCSR(const int nnz, const int 
     allocate_hip(nnz,    &this->mat_.val);
     
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nrow+1, mat_.row_offset);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, mat_.col);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, mat_.val);
 
     this->nrow_ = nrow;
@@ -761,7 +758,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
     }
     else
     {
-      // TODO error message
+      LOG_INFO("Unsupported HIP warp size of " << this->local_backend_.HIP_warp);
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -900,7 +897,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
     }
     else
     {
-      // TODO error message
+      LOG_INFO("Unsupported HIP warp size of " << this->local_backend_.HIP_warp);
       FATAL_ERROR(__FILE__, __LINE__);
     }
 

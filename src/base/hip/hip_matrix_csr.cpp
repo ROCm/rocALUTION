@@ -114,13 +114,10 @@ void HIPAcceleratorMatrixCSR<ValueType>::AllocateCSR(const int nnz, const int nr
     allocate_hip(nnz,    &this->mat_.val);
     
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nrow+1, mat_.row_offset);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, mat_.col);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, mat_.val);
 
     this->nrow_ = nrow;
@@ -205,7 +202,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Zeros() {
 
   if (this->get_nnz() > 0)
     set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
                     this->get_nnz(), mat_.val);
 
   return true;
@@ -2762,7 +2758,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
     allocate_hip(this->get_nrow()+1, &mat_row_offset);
     
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     this->get_nrow()+1, row_offset); 
 
 

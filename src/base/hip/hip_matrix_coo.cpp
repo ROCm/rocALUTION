@@ -97,13 +97,10 @@ void HIPAcceleratorMatrixCOO<ValueType>::AllocateCOO(const int nnz, const int nr
     allocate_hip(nnz, &this->mat_.val);
  
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, this->mat_.row);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, this->mat_.col);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, this->mat_.val);
 
     this->nrow_ = nrow;

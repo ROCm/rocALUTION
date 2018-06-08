@@ -77,7 +77,6 @@ void HIPAcceleratorMatrixDENSE<ValueType>::AllocateDENSE(const int nrow, const i
 
     allocate_hip(nrow*ncol, &this->mat_.val);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nrow*ncol, mat_.val);   
 
     this->nrow_ = nrow;

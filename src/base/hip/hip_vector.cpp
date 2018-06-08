@@ -73,7 +73,6 @@ void HIPAcceleratorVector<ValueType>::Allocate(const int n) {
 
     allocate_hip(n, &this->vec_);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     n, this->vec_);
 
     allocate_host(this->local_backend_.HIP_warp, &this->host_buffer_);
@@ -501,7 +500,7 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src,
                                                const int dst_offset,
                                                const int size) {
 
-//TODO  assert(&src != this);
+  assert(&src != this);
   assert(this->get_size() > 0);
   assert(src.  get_size() > 0);
   assert(size > 0);
@@ -780,7 +779,6 @@ void HIPAcceleratorVector<ValueType>::Zeros(void) {
   if (this->get_size() > 0) {
 
     set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
                     this->get_size(), this->vec_);
 
   }
@@ -792,7 +790,6 @@ void HIPAcceleratorVector<ValueType>::Ones(void) {
 
   if (this->get_size() > 0)
     set_to_one_hip(this->local_backend_.HIP_block_size, 
-                   this->local_backend_.HIP_max_threads,
                    this->get_size(), this->vec_);
 
 }
@@ -1257,8 +1254,8 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermute(const BaseVector<ValueType
 
   if (this->get_size() > 0) {
 
-//TODO    assert(this != &src);
-    
+    assert(this != &src);
+
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
     assert(cast_perm != NULL);
@@ -1287,8 +1284,8 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermuteBackward(const BaseVector<V
 
   if (this->get_size() > 0) {
 
-//TODO    assert(this != &src);
-    
+    assert(this != &src);
+
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
     assert(cast_perm != NULL);
