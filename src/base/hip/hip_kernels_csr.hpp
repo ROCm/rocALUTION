@@ -7,50 +7,6 @@
 
 namespace rocalution {
 
-// Nathan Bell and Michael Garland
-// Efficient Sparse Matrix-Vector Multiplication
-// NVR-2008-004 / NVIDIA Technical Report
-template <typename ValueType, typename IndexType>
-__global__ void kernel_csr_spmv_scalar(const IndexType nrow, const IndexType *row_offset, 
-                                       const IndexType *col, const ValueType *val, 
-                                       const ValueType *in, ValueType *out) {
-
-  IndexType ai = blockIdx.x*blockDim.x+threadIdx.x;
-  IndexType aj;
-
-  if (ai <nrow) {
-
-    out[ai] = ValueType(0.0);
-
-    for (aj=row_offset[ai]; aj<row_offset[ai+1]; ++aj) {
-      out[ai] = out[ai] + val[aj]*in[col[aj]];
-    }
-
-  }
-}
-
-// Nathan Bell and Michael Garland
-// Efficient Sparse Matrix-Vector Multiplication on
-// NVR-2008-004 / NVIDIA Technical Report
-template <typename ValueType, typename IndexType>
-__global__ void kernel_csr_add_spmv_scalar(const IndexType nrow, const IndexType *row_offset, 
-                                           const IndexType *col, const ValueType *val, 
-                                           const ValueType scalar,
-                                           const ValueType *in, ValueType *out) {
-
-  IndexType ai = blockIdx.x*blockDim.x+threadIdx.x;
-  IndexType aj;
-
-  if (ai <nrow) {
-
-    for (aj=row_offset[ai]; aj<row_offset[ai+1]; ++aj) {
-      out[ai] = out[ai] + scalar*val[aj]*in[col[aj]];
-    }
-
-  }
-}
-
-
 template <typename ValueType, typename IndexType>
 __global__ void kernel_csr_scale_diagonal(const IndexType nrow, const IndexType *row_offset, 
                                           const IndexType *col, const ValueType alpha, ValueType *val) {
