@@ -37,7 +37,7 @@ bool rocalution_init_hip(void) {
   _get_backend_descriptor()->HIP_sparse_handle = new hipsparseHandle_t;
 
   // get last error (if any)
-//TODO port to hip  hipGetLastError();
+  hipGetLastError();
 
   hipError_t hip_status_t;
   int num_dev;
@@ -100,13 +100,12 @@ bool rocalution_init_hip(void) {
   struct hipDeviceProp_t dev_prop;      
   hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
 
-  // TODO
-  if (dev_prop.major < 2) {
-    LOG_INFO("HIP device " << _get_backend_descriptor()->HIP_dev << " has low compute capability (min 2.0 is needed)");
+  if (dev_prop.major < 3) {
+    LOG_INFO("HIP device " << _get_backend_descriptor()->HIP_dev << " has low compute capability (min 3.0 is needed)");
     return false;
   }
 
-  // Get some properties from the device TODO
+  // Get some properties from the device
   _get_backend_descriptor()->HIP_warp = dev_prop.warpSize;
   _get_backend_descriptor()->HIP_num_procs = dev_prop.multiProcessorCount;
   _get_backend_descriptor()->HIP_threads_per_proc = dev_prop.maxThreadsPerMultiProcessor;
