@@ -9,11 +9,17 @@ ARG user_uid
 # Install dependent packages
 # Dependencies:
 # * hcc-config.cmake: pkg-config
+# * rocalution: hipblas hipsparse openmp
+# * rocalution_mpi: mpi-default-bin mpi-default-dev
 # * rocalution-test: googletest
 # * rocalution-bench: libboost-program-options-dev
 # * libhsakmt.so: libnuma1
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     sudo \
+    mpi-default-bin \
+    mpi-default-dev \
+    libomp-dev \
+    libomp5 \
     build-essential \
     ca-certificates \
     git \
