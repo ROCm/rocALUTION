@@ -445,7 +445,7 @@ parallel rocm_ubuntu_host:
         compiler_path:'/opt/rocm/bin/hcc' )
 
     def rocalution_paths = new project_paths(
-        project_name:'rocalution_host-ubuntu',
+        project_name:'rocalution-ubuntu',
         src_prefix:'src',
         build_prefix:'src',
         build_command: './install.sh --host -cd' )
