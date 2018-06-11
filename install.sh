@@ -39,6 +39,8 @@ function display_help()
   echo "    [-d|--dependencies] install build dependencies"
   echo "    [-c|--clients] build library clients too (combines with -i & -d)"
   echo "    [-g|--debug] -DCMAKE_BUILD_TYPE=Debug (default is =Release)"
+  echo "    [--hip] build library for hip backend (default)"
+  echo "    [--host] build library for host backend only"
   echo "    [--cuda] build library for cuda backend"
 }
 
@@ -60,6 +62,7 @@ elevate_if_not_root( )
 install_package=false
 install_dependencies=false
 build_clients=false
+build_hip=true
 build_cuda=false
 build_release=true
 
@@ -70,7 +73,7 @@ build_release=true
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,cuda --options hicgd -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,hip,host,cuda --options hicgd -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -101,6 +104,13 @@ while true; do
     -g|--debug)
         build_release=false
         shift ;;
+    --hip)
+        build_hip=true
+        shift ;;
+    --host)
+        build_host=true
+        build_hip=false
+        shift ;;
     --cuda)
         build_cuda=true
         shift ;;
@@ -129,12 +139,14 @@ fi
 # #################################################
 if [[ "${install_dependencies}" == true ]]; then
   # dependencies needed for rocsparse and clients to build
-  library_dependencies_ubuntu=( "make" "cmake-curses-gui" "hip_hcc" "pkg-config" )
-  if [[ "${build_cuda}" == false ]]; then
-    library_dependencies_ubuntu+=( "hcc" )
-  else
-    # Ideally, this could be cuda-cusparse-dev, but the package name has a version number in it
-    library_dependencies_ubuntu+=( "cuda" )
+  library_dependencies_ubuntu=( "make" "cmake-curses-gui" "pkg-config" )
+
+  if [[ "${build_hip}" == true ]]; then
+    library_dependencies_ubuntu+=( "hip_hcc" "hcc" )
+  fi
+
+  if [[ "${build_cuda}" == true ]]; then
+    library_dependencies_ubuntu+=( "hip_hcc" "cuda" )
   fi
 
   client_dependencies_ubuntu=( "libboost-program-options-dev" )
@@ -191,34 +203,22 @@ pushd .
 
   # clients
   if [[ "${build_clients}" == true ]]; then
-    cmake_client_options="${cmake_client_options} -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON -DBUILD_CLIENTS_SELFTEST=ON -DBUILD_CLIENTS_RIDER=ON"
+    cmake_client_options="${cmake_client_options} -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON"
   fi
 
-  # On ROCm platforms, hcc compiler can build everything
-  if [[ "${build_cuda}" == false ]]; then
-    cmake ${cmake_common_options} ${cmake_client_options} -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
-    make -j$(nproc)
-  else
-    # The nvidia compile is a little more complicated, in that we split compiling the library from the clients
-    # We use the hipcc compiler to build the rocsparse library for a cuda backend (hipcc offloads the compile to nvcc)
-    # However, we run into a compiler incompatibility compiling the clients between nvcc and sparsew3.h 3.3.4 headers.
-    # The incompatibility is fixed in sparse v3.3.6, but that is not shipped by default on Ubuntu
-    # As a workaround, since clients do not contain device code, we opt to build clients with the native
-    # compiler on the platform.  The compiler cmake chooses during configuration time is mostly unchangeable,
-    # so we launch multiple cmake invocation with a different compiler on each.
-
-    # Build library only with hipcc as compiler
-    cmake ${cmake_common_options} -DCMAKE_INSTALL_PREFIX=rocsparse-install -DCPACK_PACKAGE_INSTALL_DIRECTORY=/opt/rocm ../..
-    make -j$(nproc) install
-
-    # Build cuda clients with default host compiler
-    if [[ "${build_clients}" == true ]]; then
-      pushd clients
-        cmake ${cmake_common_options} ${cmake_client_options} -DCMAKE_PREFIX_PATH="$(pwd)/../rocsparse-install;$(pwd)/../deps/deps-install" ../../../clients
-        make -j$(nproc)
-      popd
-    fi
+  if [[ "${build_host}" == true ]]; then
+    cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=OFF -DSUPPORT_OMP=OFF -DSUPPORT_MPI=OFF -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
   fi
+
+  if [[ "${build_hip}" == true ]]; then
+    cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=ON -DSUPPORT_OMP=OFF -DSUPPORT_MPI=OFF -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
+  fi
+
+  if [[ "${build_cuda}" == true ]]; then
+    cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=ON -DSUPPORT_OMP=OFF -DSUPPORT_MPI=OFF -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
+  fi
+
+  make -j$(nproc)
 
   # #################################################
   # install
