@@ -448,7 +448,7 @@ rocm_ubuntu:
         project_name:'rocalution-ubuntu',
         src_prefix:'src',
         build_prefix:'src',
-        build_command: './install.sh -cd' )
+        build_command: './install.sh --host -cd' )
 
     def print_version_closure = {
       sh  """
