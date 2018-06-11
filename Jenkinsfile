@@ -459,36 +459,37 @@ parallel rocm_ubuntu_host:
 
     build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
   }
-},
-rocm_ubuntu_hip:
-{
-  node( 'docker && rocm && dkms')
-  {
-    def hcc_docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
-        build_docker_file:'dockerfile-build-ubuntu',
-        install_docker_file:'dockerfile-install-ubuntu',
-        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
-        docker_build_args:' --pull' )
-
-    def hcc_compiler_args = new compiler_data(
-        compiler_name:'hcc-rocm-ubuntu',
-        build_config:'Release',
-        compiler_path:'/opt/rocm/bin/hcc' )
-
-    def rocalution_paths = new project_paths(
-        project_name:'rocalution_hip-ubuntu',
-        src_prefix:'src',
-        build_prefix:'src',
-        build_command: './install.sh --hip -cd' )
-
-    def print_version_closure = {
-      sh  """
-          set -x
-          /opt/rocm/bin/hcc --version
-        """
-    }
-
-    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
-  }
 }
+//,
+//rocm_ubuntu_hip:
+//{
+//  node( 'docker && rocm && dkms')
+//  {
+//    def hcc_docker_args = new docker_data(
+//        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+//        build_docker_file:'dockerfile-build-ubuntu',
+//        install_docker_file:'dockerfile-install-ubuntu',
+//        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
+//        docker_build_args:' --pull' )
+//
+//    def hcc_compiler_args = new compiler_data(
+//        compiler_name:'hcc-rocm-ubuntu',
+//        build_config:'Release',
+//        compiler_path:'/opt/rocm/bin/hcc' )
+//
+//    def rocalution_paths = new project_paths(
+//        project_name:'rocalution_hip-ubuntu',
+//        src_prefix:'src',
+//        build_prefix:'src',
+//        build_command: './install.sh --hip -cd' )
+//
+//    def print_version_closure = {
+//      sh  """
+//          set -x
+//          /opt/rocm/bin/hcc --version
+//        """
+//    }
+//
+//    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
+//  }
+//}
