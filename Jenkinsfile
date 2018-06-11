@@ -231,7 +231,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
             make package
           """
 
-        if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu' ) )
+        if( paths.project_name.toLowerCase().startsWith( 'rocalution-ubuntu' ) )
         {
           sh  """#!/usr/bin/env bash
               set -x
@@ -255,7 +255,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
 //            '''
 //          }
         }
-        else if( paths.project_name.equalsIgnoreCase( 'rocalution-fedora' ) )
+        else if( paths.project_name.toLowerCase().startsWith( 'rocalution-fedora' ) )
         {
           sh  """#!/usr/bin/env bash
               set -x
@@ -445,7 +445,7 @@ parallel rocm_ubuntu_host:
         compiler_path:'/opt/rocm/bin/hcc' )
 
     def rocalution_paths = new project_paths(
-        project_name:'rocalution-ubuntu',
+        project_name:'rocalution-ubuntu-host',
         src_prefix:'src',
         build_prefix:'src',
         build_command: './install.sh --host -cd' )
