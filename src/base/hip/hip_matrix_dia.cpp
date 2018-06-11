@@ -80,11 +80,9 @@ void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(const int nnz, const int nr
     allocate_hip(ndiag, &this->mat_.offset);
  
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, mat_.val);
     
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     ndiag, mat_.offset);
 
     this->nrow_ = nrow;
@@ -623,11 +621,10 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     int *diag_idx = NULL;
 
     // Get diagonal mapping vector
-    allocate_hip<int>(nrow+ncol-1, &diag_idx);
+    allocate_hip<int>(nrow+ncol, &diag_idx);
 
     set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
-                    nrow+ncol-1, diag_idx);
+                    nrow+ncol, diag_idx);
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
@@ -647,9 +644,9 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     allocate_host(this->local_backend_.HIP_warp, &h_buffer);
 
     if (this->local_backend_.HIP_warp == 32) {
-      reduce_hip<int, int, 32, 256>(nrow+ncol-1, diag_idx, &num_diag, h_buffer, d_buffer);
+      reduce_hip<int, int, 32, 256>(nrow+ncol, diag_idx, &num_diag, h_buffer, d_buffer);
     } else if (this->local_backend_.HIP_warp == 64) {
-      reduce_hip<int, int, 64, 256>(nrow+ncol-1, diag_idx, &num_diag, h_buffer, d_buffer);
+      reduce_hip<int, int, 64, 256>(nrow+ncol, diag_idx, &num_diag, h_buffer, d_buffer);
     } else { //TODO
       FATAL_ERROR(__FILE__, __LINE__);
     }
@@ -671,27 +668,26 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     this->AllocateDIA(nnz_dia, nrow, ncol, num_diag);
 
     set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
                     nnz_dia, this->mat_.val);
 
     // Fill diagonal offset array
     allocate_hip<int>(nrow+ncol+1, &d_buffer);
 
     // TODO currently performing partial sum on host
-    allocate_host(nrow+ncol, &h_buffer);
+    allocate_host(nrow+ncol+1, &h_buffer);
     hipMemcpy(h_buffer+1, // dst
                diag_idx, // src
-               (nrow+ncol-1)*sizeof(int), // size
+               (nrow+ncol)*sizeof(int), // size
                hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     h_buffer[0] = 0;
-    for (int i=2; i<nrow+ncol; ++i)
+    for (int i=2; i<nrow+ncol+1; ++i)
       h_buffer[i] += h_buffer[i-1];
 
     hipMemcpy(d_buffer, // dst
                h_buffer, // src
-               (nrow+ncol-1)*sizeof(int), // size
+               (nrow+ncol)*sizeof(int), // size
                hipMemcpyHostToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
