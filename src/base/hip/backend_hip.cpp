@@ -127,11 +127,11 @@ void rocalution_stop_hip(void) {
   if (_get_backend_descriptor()->accelerator) {
 
     if (hipblasDestroy(*(static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle))) != HIPBLAS_STATUS_SUCCESS) {
-      LOG_INFO("Error in rocblas_destroy_handle");
+      LOG_INFO("Error in hipblasDestroy");
     }
 
     if (hipsparseDestroy(*(static_cast<hipsparseHandle_t*>(_get_backend_descriptor()->HIP_sparse_handle))) != HIPSPARSE_STATUS_SUCCESS) {
-      LOG_INFO("Error in rocsparse_destroy_handle");
+      LOG_INFO("Error in hipsparseDestroy");
     }
 
   }

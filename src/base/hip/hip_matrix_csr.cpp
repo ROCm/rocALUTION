@@ -2659,7 +2659,6 @@ return false;
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     } else {
-      // New structure with rocSPARSE routines
 
       int m = this->get_nrow();
       int n = this->get_ncol();
