@@ -1,0 +1,31 @@
+# Find OpenMP package
+find_package(OpenMP)
+if (NOT OPENMP_FOUND)
+  message("-- OpenMP not found. Compiling WITHOUT OpenMP support.")
+else()
+  option(SUPPORT_OMP "Compile WITH OpenMP support." ON)
+endif()
+
+# MPI
+find_package(MPI)
+if (NOT MPI_FOUND)
+  message("-- MPI not found. Compiling WITHOUT MPI support.")
+else()
+  option(SUPPORT_MPI "Compile WITH MPI support." OFF)
+  if (SUPPORT_MPI)
+    set(CMAKE_C_COMPILER ${MPI_COMPILER})
+    set(CMAKE_CXX_COMPILER ${MPI_COMPILER})
+  endif()
+endif()
+
+# Find HIP package
+find_package(HIP)
+if (NOT HIP_FOUND)
+  message("-- HIP not found. Compiling WITHOUT HIP support.")
+else()
+  option(SUPPORT_HIP "Compile WITH HIP support." ON)
+  if (SUPPORT_HIP)
+    find_package(HIPBLAS REQUIRED)
+    find_package(HIPSPARSE REQUIRED)
+  endif()
+endif()
