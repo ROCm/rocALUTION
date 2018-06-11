@@ -33,6 +33,8 @@ set(SOURCE
     ${HOST_SOURCES}
     ${SOLVERS_SOURCES}
     ${UTILS_SOURCES}
+    ${PUBLIC_HEADERS}
+    ${PROJECT_BINARY_DIR}/include
 )
 
 if(SUPPORT_MPI)
@@ -83,9 +85,9 @@ set_target_properties(rocalution PROPERTIES VERSION ${rocalution_VERSION} SOVERS
 set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 #set_target_properties(rocalution PROPERTIES CXX_VISIBILITY_PRESET "hidden" VISIBILITY_INLINES_HIDDEN ON)
 
-# TODO export header
-
-
+# Generate export header
+#include(GenerateExportHeader)
+#generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/export.hpp)
 
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
