@@ -1,45 +1,31 @@
 set(BASE_SOURCES
-  base_rocalution.cpp
-  operator.cpp
-  vector.cpp
-  local_matrix.cpp
-  global_matrix.cpp
-  local_vector.cpp
-  global_vector.cpp
-  base_matrix.cpp
-  base_vector.cpp
-  backend_manager.cpp
-  parallel_manager.cpp
-  local_stencil.cpp
-  base_stencil.cpp
+  base/base_rocalution.cpp
+  base/operator.cpp
+  base/vector.cpp
+  base/local_matrix.cpp
+  base/global_matrix.cpp
+  base/local_vector.cpp
+  base/global_vector.cpp
+  base/base_matrix.cpp
+  base/base_vector.cpp
+  base/backend_manager.cpp
+  base/parallel_manager.cpp
+  base/local_stencil.cpp
+  base/base_stencil.cpp
 )
 
 set(BASE_PUBLIC_HEADERS
-  version.hpp
-  matrix_formats.hpp
-  matrix_formats_ind.hpp
-  base_rocalution.hpp
-  operator.hpp
-  vector.hpp
-  local_matrix.hpp
-  global_matrix.hpp
-  local_vector.hpp
-  global_vector.hpp
-  backend_manager.hpp
-  parallel_manager.hpp
-  local_stencil.hpp
-  stencil_types.hpp
+  base/matrix_formats.hpp
+  base/matrix_formats_ind.hpp
+  base/base_rocalution.hpp
+  base/operator.hpp
+  base/vector.hpp
+  base/local_matrix.hpp
+  base/global_matrix.hpp
+  base/local_vector.hpp
+  base/global_vector.hpp
+  base/backend_manager.hpp
+  base/parallel_manager.hpp
+  base/local_stencil.hpp
+  base/stencil_types.hpp
 )
-
-include(base/host/CMakeLists.txt)
-foreach(i ${HOST_SOURCES})
-  list(APPEND BASE_SOURCES host/${i})
-endforeach()
-
-foreach(i ${HOST_PUBLIC_HEADERS})
-  list(APPEND BASE_PUBLIC_HEADERS host/${i})
-endforeach()
-
-if (SUPPORT_HIP)
-  include(base/hip/CMakeLists.txt)
-endif()

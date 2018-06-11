@@ -1,16 +1,16 @@
 set(UTILS_SOURCES
-  log.cpp
-  allocate_free.cpp
-  math_functions.cpp
-  time_functions.cpp
+  utils/log.cpp
+  utils/allocate_free.cpp
+  utils/math_functions.cpp
+  utils/time_functions.cpp
 )
 
 set(UTILS_PUBLIC_HEADERS
-  allocate_free.hpp
-  time_functions.hpp
-  types.hpp
+  utils/allocate_free.hpp
+  utils/time_functions.hpp
+  utils/types.hpp
 )
 
 set(UTILS_MPI_SOURCES
-  communicator.cpp
+  utils/communicator.cpp
 )

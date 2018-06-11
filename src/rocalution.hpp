@@ -1,7 +1,8 @@
 #ifndef ROCALUTION_ROCALUTION_HPP_
 #define ROCALUTION_ROCALUTION_HPP_
 
-#include "base/version.hpp"
+#include "version.hpp"
+
 #include "base/backend_manager.hpp"
 #include "base/parallel_manager.hpp"
 
