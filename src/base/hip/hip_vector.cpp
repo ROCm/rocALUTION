@@ -500,7 +500,6 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src,
                                                const int dst_offset,
                                                const int size) {
 
-  assert(&src != this);
   assert(this->get_size() > 0);
   assert(src.  get_size() > 0);
   assert(size > 0);
@@ -1254,8 +1253,6 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermute(const BaseVector<ValueType
 
   if (this->get_size() > 0) {
 
-    assert(this != &src);
-
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
     assert(cast_perm != NULL);
@@ -1283,8 +1280,6 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermuteBackward(const BaseVector<V
                                                               const BaseVector<int> &permutation) {
 
   if (this->get_size() > 0) {
-
-    assert(this != &src);
 
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
