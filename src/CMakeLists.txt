@@ -1,87 +1,103 @@
-set(rocALUTION_SOURCES)
-set(rocALUTION_PUBLIC_HEADERS
-  rocalution.hpp
+# Configure a header file to pass the rocALUTION version
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
+               "${PROJECT_BINARY_DIR}/include/version.hpp"
+               @ONLY
 )
 
-# Copy headers to binary include dir
-foreach(i ${rocALUTION_PUBLIC_HEADERS})
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${i}" "${INC_BUILD_DIR}/${i}" COPYONLY)
-endforeach()
-
-# Fill rocALUTION lists with sources and headers for each subdirectory
-# base
+# Include sub-directories
 include(base/CMakeLists.txt)
-foreach(i ${BASE_SOURCES})
-  list(APPEND rocALUTION_SOURCES base/${i})
-endforeach()
-foreach(i ${BASE_PUBLIC_HEADERS})
-  list(APPEND rocALUTION_PUBLIC_HEADERS base/${i})
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/${i}" "${INC_BUILD_DIR}/base/${i}" COPYONLY)
-endforeach()
-
-# solvers
+include(base/host/CMakeLists.txt)
 include(solvers/CMakeLists.txt)
-foreach(i ${SOLVERS_SOURCES})
-  list(APPEND rocALUTION_SOURCES solvers/${i})
-endforeach()
-foreach(i ${SOLVERS_PUBLIC_HEADERS})
-  list(APPEND rocALUTION_PUBLIC_HEADERS solvers/${i})
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/solvers/${i}" "${INC_BUILD_DIR}/solvers/${i}" COPYONLY)
-endforeach()
-
-# utils
 include(utils/CMakeLists.txt)
-foreach(i ${UTILS_SOURCES})
-  list(APPEND rocALUTION_SOURCES utils/${i})
-endforeach()
-foreach(i ${UTILS_PUBLIC_HEADERS})
-  list(APPEND rocALUTION_PUBLIC_HEADERS utils/${i})
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/utils/${i}" "${INC_BUILD_DIR}/utils/${i}" COPYONLY)
-endforeach()
-if (SUPPORT_MPI)
-  foreach(i ${UTILS_MPI_SOURCES})
-    list(APPEND rocALUTION_SOURCES utils/${i})
-  endforeach()
-endif()
-
-# plug-ins
-include(plug-ins/CMakeLists.txt)
-foreach(i ${PLUG-INS_SOURCES})
-  list(APPEND rocALUTION_SOURCES plug-ins/${i})
-endforeach()
-foreach(i ${PLUG-INS_PUBLIC_HEADERS})
-  list(APPEND rocALUTION_PUBLIC_HEADERS plug-ins/${i})
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/plug-ins/${i}" "${PLUGINS_BUILD_DIR}/${i}" COPYONLY)
-endforeach()
-
-#######################################################################################################################
 
 if(SUPPORT_HIP)
-  set(CMAKE_SHARED_LIBRARY_CREATE_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS})
-  set(CMAKE_HIP_COMPILE_OPTIONS_PIC ${CMAKE_C_COMPILE_OPTIONS_PIC})
-  set(CMAKE_HIP_COMPILE_OPTIONS_PIE ${CMAKE_C_COMPILE_OPTIONS_PIE})
-  set(CMAKE_HIP_COMPILE_OPTIONS_DLL ${CMAKE_C_COMPILE_OPTIONS_DLL})
-  set(CMAKE_SHARED_LIBRARY_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_C_FLAGS})
-  set(CMAKE_SHARED_LIBRARY_LINK_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS})
-  set(CMAKE_SHARED_LIBRARY_RUNTIME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG})
-  set(CMAKE_SHARED_LIBRARY_RUNTIME_HIP_FLAG_SEP ${CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG_SEP})
-  set(CMAKE_SHARED_LIBRARY_RPATH_LINK_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RPATH_LINK_C_FLAG})
-  set(CMAKE_EXE_EXPORTS_HIP_FLAG ${CMAKE_EXE_EXPORTS_C_FLAG})
-  set(CMAKE_SHARED_LIBRARY_SONAME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_SONAME_C_FLAG})
-  set(CMAKE_EXECUTABLE_RUNTIME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RUNTIME_CXX_FLAG})
-  set(CMAKE_EXECUTABLE_RUNTIME_HIP_FLAG_SEP ${CMAKE_SHARED_LIBRARY_RUNTIME_CXX_FLAG_SEP})
-  set(CMAKE_EXECUTABLE_RPATH_LINK_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RPATH_LINK_CXX_FLAG})
-  set(CMAKE_SHARED_LIBRARY_LINK_HIP_WITH_RUNTIME_PATH ${CMAKE_SHARED_LIBRARY_LINK_C_WITH_RUNTIME_PATH})
-  set(CMAKE_INCLUDE_FLAG_HIP ${CMAKE_INCLUDE_FLAG_C})
-  set(CMAKE_INCLUDE_FLAG_SEP_HIP ${CMAKE_INCLUDE_FLAG_SEP_C})
-  set(CMAKE_HIP_CREATE_SHARED_LIBRARY
-      "${HIP_HIPCC_EXECUTABLE} ${HIP_LIBRARY_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+  include(base/hip/CMakeLists.txt)
+endif()
 
+# Public rocALUTION headers
+set(PUBLIC_HEADERS
+    rocalution.hpp
+    ${BASE_PUBLIC_HEADERS}
+    ${SOLVERS_PUBLIC_HEADERS}
+    ${UTILS_PUBLIC_HEADERS}
+)
+
+# Copy public headers to include directory
+foreach(i ${PUBLIC_HEADERS})
+  configure_file("${i}" "${PROJECT_BINARY_DIR}/include/${i}" COPYONLY)
+endforeach()
+
+# rocALUTION source
+set(SOURCE
+    ${BASE_SOURCES}
+    ${HOST_SOURCES}
+    ${SOLVERS_SOURCES}
+    ${UTILS_SOURCES}
+    ${PUBLIC_HEADERS}
+    ${PROJECT_BINARY_DIR}/include
+)
+
+if(SUPPORT_MPI)
+  list(APPEND SOURCE ${UTILS_MPI_SOURCES})
+endif()
+
+# TODO plug-ins
+
+
+
+# Create rocALUTION host library
+add_library(rocalution ${SOURCE})
+add_library(roc::rocalution ALIAS rocalution)
+
+# Target link libraries
+if(SUPPORT_OMP)
+target_link_libraries(rocalution PRIVATE ${OpenMP_CXX_FLAGS})
+endif()
+if(SUPPORT_MPI)
+target_link_libraries(rocalution PUBLIC ${MPI_CXX_LIBRARIES})
+endif()
+
+# Target include directories
+target_include_directories(rocalution PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
+if(SUPPORT_MPI)
+  target_include_directories(rocalution PUBLIC $<BUILD_INTERFACE:${MPI_CXX_INCLUDE_DIRS}>)
+endif()
+
+# Target compile definitions
+if(SUPPORT_MPI)
+  target_compile_definitions(rocalution PRIVATE SUPPORT_MULTINODE)
+  target_compile_definitions(rocalution PUBLIC ${MPI_COMPILE_DEFINITIONS})
+endif()
+if(SUPPORT_HIP)
+  target_compile_definitions(rocalution PRIVATE SUPPORT_HIP)
+endif()
+
+# Target compile options
+if(SUPPORT_OMP)
+  target_compile_options(rocalution PUBLIC ${OpenMP_CXX_FLAGS})
+endif()
+if(SUPPORT_MPI)
+  target_compile_options(rocalution PUBLIC ${MPI_COMPILE_OPTIONS})
+endif()
+
+# Target properties
+set_target_properties(rocalution PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
+set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
+#set_target_properties(rocalution PROPERTIES CXX_VISIBILITY_PRESET "hidden" VISIBILITY_INLINES_HIDDEN ON)
+
+# Generate export header
+#include(GenerateExportHeader)
+#generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/export.hpp)
+
+# Create rocALUTION hip library
+if(SUPPORT_HIP)
+
+  # Flag source file as a hip source file
   foreach(i ${HIP_SOURCES})
     set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
   endforeach()
 
-  HIP_PREPARE_TARGET_COMMANDS(${rocALUTION_BACKEND_HIP} OBJ _generated_files _source_files ${HIP_SOURCES} SHARED)
+  HIP_PREPARE_TARGET_COMMANDS(rocalution_hip OBJ _generated_files _source_files ${HIP_SOURCES} SHARED)
   list(REMOVE_ITEM HIP_SOURCES ${_source_files})
   list(APPEND HIP_SOURCES ${_generated_files})
 
@@ -91,18 +107,81 @@ if(SUPPORT_HIP)
     set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE CXX)
   endif()
 
-  add_library(${rocALUTION_BACKEND_HIP} SHARED ${HIP_SOURCES})
+  add_library(rocalution_hip SHARED ${HIP_SOURCES})
+
+  set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
+  set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
+
+  target_link_libraries(rocalution_hip PRIVATE hipblas hipsparse)
 
   if (HIP_PLATFORM STREQUAL "hcc")
-    target_link_libraries(${rocALUTION_BACKEND_HIP} hip_hcc hipblas)
+    foreach(target ${AMDGPU_TARGETS})
+      target_link_libraries(rocalution_hip PRIVATE --amdgpu-target=${target})
+    endforeach()
   else()
-    target_link_libraries(${rocALUTION_BACKEND_HIP} cudart hipblas)
+    target_link_libraries(rocalution_hip PRIVATE ${CUDA_LIBRARIES})
   endif()
+
+  target_link_libraries(rocalution PRIVATE rocalution_hip)
 endif()
 
-# Create rocalution library
-add_library(${rocALUTION_LIBRARY} ${LIBRARY_TYPE} ${rocALUTION_SOURCES})
 
+
+
+
+
+
+# Install targets
 if(SUPPORT_HIP)
-  target_link_libraries(${rocALUTION_LIBRARY} LINK_INTERFACE_LIBRARIES ${rocALUTION_BACKEND_HIP})
+  rocm_install_targets(TARGETS rocalution rocalution_hip
+                       INCLUDE
+                       ${CMAKE_BINARY_DIR}/include
+                       PREFIX rocalution
+  )
+else()
+  rocm_install_targets(TARGETS rocalution
+                       INCLUDE
+                       ${CMAKE_BINARY_DIR}/include
+                       PREFIX rocalution
+  )
 endif()
+
+# Export targets
+rocm_export_targets(TARGETS rocalution-targets
+                    PREFIX rocalution
+                    DEPENDS PACKAGE hip
+                    NAMESPACE roc::
+)
+
+# Symbolic links
+rocm_install_symlink_subdir(rocalution)
+
+# Package specific CPACK vars
+#set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.3)")
+#set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.3")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
+
+if(NOT CPACK_PACKAGING_INSTALL_PREFIX)
+  set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+endif()
+
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "\${CPACK_PACKAGING_INSTALL_PREFIX}" "\${CPACK_PACKAGING_INSTALL_PREFIX}/include")
+
+# Package name differs for CUDA backend
+if(HIP_PLATFORM STREQUAL "hcc")
+  set(package_name rocalution)
+endif()
+
+if(HIP_PLATFORM STREQUAL "nvcc")
+  set(package_name rocalution-alt)
+endif()
+
+set(ROCALUTION_CONFIG_DIR "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}" CACHE PATH "Path placed into ldconfig file")
+
+rocm_create_package(
+  NAME ${package_name}
+  DESCRIPTION "Radeon Open Compute library for sparse linear systems"
+  MAINTAINER "Nico Trost <nico.trost@amd.com>"
+  LDCONFIG
+  LDCONFIG_DIR ${ROCALUTION_CONFIG_DIR}
+)

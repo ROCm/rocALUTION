@@ -73,7 +73,6 @@ void HIPAcceleratorVector<ValueType>::Allocate(const int n) {
 
     allocate_hip(n, &this->vec_);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     n, this->vec_);
 
     allocate_host(this->local_backend_.HIP_warp, &this->host_buffer_);
@@ -123,6 +122,9 @@ void HIPAcceleratorVector<ValueType>::Clear(void) {
   if (this->get_size() > 0) {
 
     free_hip(&this->vec_);
+    free_hip(&this->device_buffer_);
+    free_host(&this->host_buffer_);
+
     this->size_ = 0;
 
   }
@@ -132,9 +134,6 @@ void HIPAcceleratorVector<ValueType>::Clear(void) {
     free_hip(&this->index_buffer_);
     free_hip(&this->index_array_);
     this->index_size_ = 0;
-
-    free_host(&this->host_buffer_);
-    free_hip(&this->device_buffer_);
 
   }
 
@@ -501,7 +500,6 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src,
                                                const int dst_offset,
                                                const int size) {
 
-//TODO  assert(&src != this);
   assert(this->get_size() > 0);
   assert(src.  get_size() > 0);
   assert(size > 0);
@@ -780,7 +778,6 @@ void HIPAcceleratorVector<ValueType>::Zeros(void) {
   if (this->get_size() > 0) {
 
     set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->local_backend_.HIP_max_threads,
                     this->get_size(), this->vec_);
 
   }
@@ -792,7 +789,6 @@ void HIPAcceleratorVector<ValueType>::Ones(void) {
 
   if (this->get_size() > 0)
     set_to_one_hip(this->local_backend_.HIP_block_size, 
-                   this->local_backend_.HIP_max_threads,
                    this->get_size(), this->vec_);
 
 }
@@ -848,7 +844,7 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd(const ValueType alpha, const Base
 
     hipLaunchKernelGGL((kernel_scaleadd<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPVal(alpha), HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       size, alpha, cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -871,8 +867,8 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const
 
     hipLaunchKernelGGL((kernel_scaleaddscale<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPVal(alpha), HIPVal(beta),
-                       HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       size, alpha, beta,
+                       cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -900,8 +896,8 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const
     hipLaunchKernelGGL((kernel_scaleaddscale_offset<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        size, src_offset, dst_offset,
-                       HIPVal(alpha), HIPVal(beta),
-                       HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       alpha, beta,
+                       cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -929,8 +925,8 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd2(const ValueType alpha, const Bas
 
     hipLaunchKernelGGL((kernel_scaleadd2<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPVal(alpha), HIPVal(beta), HIPVal(gamma),
-                       HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_), HIPPtr(this->vec_));
+                       size, alpha, beta, gamma,
+                       cast_x->vec_, cast_y->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1161,7 +1157,7 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
 
     hipLaunchKernelGGL((kernel_pointwisemult<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPPtr(cast_x->vec_), HIPPtr(this->vec_));
+                       size, cast_x->vec_, this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1187,8 +1183,8 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
 
     hipLaunchKernelGGL((kernel_pointwisemult2<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPPtr(cast_x->vec_), HIPPtr(cast_y->vec_),
-                       HIPPtr(this->vec_));
+                       size, cast_x->vec_, cast_y->vec_,
+                       this->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -1257,8 +1253,6 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermute(const BaseVector<ValueType
 
   if (this->get_size() > 0) {
 
-//TODO    assert(this != &src);
-    
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
     assert(cast_perm != NULL);
@@ -1287,8 +1281,6 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermuteBackward(const BaseVector<V
 
   if (this->get_size() > 0) {
 
-//TODO    assert(this != &src);
-    
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
     assert(cast_perm != NULL);

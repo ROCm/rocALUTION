@@ -13,10 +13,10 @@
 
 #include <hip/hip_runtime.h>
 #include <hipblas.h>
-//#include <rocsparse.h>
+#include <hipsparse.h>
 
 #define HIPBLAS_HANDLE(handle) *static_cast<hipblasHandle_t*>(handle)
-//#define HIPSPARSE_HANDLE(handle) *static_cast<rocsparse_handle*>(handle)
+#define HIPSPARSE_HANDLE(handle) *static_cast<hipsparseHandle_t*>(handle)
 
 #define CHECK_HIP_ERROR(file, line) {                                   \
     hipError_t err_t;                                                   \
@@ -47,18 +47,31 @@
   LOG_INFO("File: " << file << "; line: " << line);                     \
   exit(1);                                                              \
   }                                                                     \
-}   
-/*
-#define CHECK_ROCSPARSE_ERROR(stat_t, file, line) {                     \
-  if (stat_t  != rocsparse_status_success) {                            \
-  LOG_INFO("rocSPARSE error!");                                         \
-  if (stat_t == rocsparse_status_invalud_value)                         \
-    LOG_INFO("ROCSPARSE_STATUS_INVALID_VALUE");                         \
+}
+
+#define CHECK_HIPSPARSE_ERROR(stat_t, file, line) {                     \
+  if (stat_t  != HIPSPARSE_STATUS_SUCCESS) {                            \
+  LOG_INFO("hipSPARSE error " << stat_t);                               \
+  if (stat_t == HIPSPARSE_STATUS_NOT_INITIALIZED)                       \
+    LOG_INFO("HIPSPARSE_STATUS_NOT_INITIALIZED");                       \
+  if (stat_t == HIPSPARSE_STATUS_ALLOC_FAILED)                          \
+    LOG_INFO("HIPSPARSE_STATUS_ALLOC_FAILED");                          \
+  if (stat_t == HIPSPARSE_STATUS_INVALID_VALUE)                         \
+    LOG_INFO("HIPSPARSE_STATUS_INVALID_VALUE");                         \
+  if (stat_t == HIPSPARSE_STATUS_ARCH_MISMATCH)                         \
+    LOG_INFO("HIPSPARSE_STATUS_ARCH_MISMATCH");                         \
+  if (stat_t == HIPSPARSE_STATUS_MAPPING_ERROR)                         \
+    LOG_INFO("HIPSPARSE_STATUS_MAPPING_ERROR");                         \
+  if (stat_t == HIPSPARSE_STATUS_EXECUTION_FAILED)                      \
+    LOG_INFO("HIPSPARSE_STATUS_EXECUTION_FAILED");                      \
+  if (stat_t == HIPSPARSE_STATUS_INTERNAL_ERROR)                        \
+    LOG_INFO("HIPSPARSE_STATUS_INTERNAL_ERROR");                        \
+  if (stat_t == HIPSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED)             \
+    LOG_INFO("HIPSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED");             \
   LOG_INFO("File: " << file << "; line: " << line);                     \
   exit(1);                                                              \
   }                                                                     \
 }   
-*/
 
 namespace rocalution {
 
@@ -79,26 +92,6 @@ struct HIPType<std::complex<double> > {
   typedef cuDoubleComplex Type;
 };
 #endif
-
-// Convert pointers to HIP types
-template <typename ValueType>
-inline typename HIPType<ValueType>::Type *HIPPtr(ValueType *ptr) {
-  return reinterpret_cast<typename HIPType<ValueType>::Type*>(ptr);
-}
-
-template <typename ValueType>
-inline const typename HIPType<ValueType>::Type *HIPPtr(const ValueType *ptr) {
-  return reinterpret_cast<const typename HIPType<ValueType>::Type*>(ptr);
-}
-
-// Convert values to HIP types
-inline float HIPVal(const float &val) { return val; }
-inline double HIPVal(const double &val) { return val; }
-#ifdef SUPPORT_COMPLEX
-inline cuFloatComplex HIPVal(const std::complex<float> &val) { return make_cuFloatComplex(val.real(), val.imag()); }
-inline cuDoubleComplex HIPVal(const std::complex<double> &val) { return make_cuDoubleComplex(val.real(), val.imag()); }
-#endif
-inline int HIPVal(const int &val) { return val; }
 
 template <typename IndexType, unsigned int BLOCK_SIZE>
 bool cum_sum( IndexType*  dst,
@@ -147,7 +140,7 @@ void reduce_hip(const int size, const ValueType *src, ValueType *reduce, ValueTy
 
     hipLaunchKernelGGL((kernel_reduce<WARP_SIZE, BLOCK_SIZE, ValueType, IndexType>),
                        GridSize, BlockSize, 0, 0,
-                       size, HIPPtr(src), HIPPtr(device_buffer));
+                       size, src, device_buffer);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(host_buffer,                 // dst

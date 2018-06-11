@@ -13,6 +13,7 @@
 #include "../../utils/allocate_free.hpp"
 
 #include <stdio.h>
+#include <algorithm>
 #include <complex>
 
 #ifdef _OPENMP
@@ -320,13 +321,15 @@ bool HostMatrixCOO<ValueType>::ReadFileMTX(const std::string filename) {
   int *col = NULL;
   ValueType *val = NULL;
 
-  if (read_matrix_mtx(nrow, ncol, nnz, &row, &col, &val, filename) != true) {
+  if (read_matrix_mtx(nrow, ncol, nnz, &row, &col, &val, filename.c_str()) != true) {
     LOG_INFO("ReadFileMTX: failed to read matrix " << filename);
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
   this->Clear();
   this->SetDataPtrCOO(&row, &col, &val, nnz, nrow, ncol);
+
+  this->Sort();
 
   LOG_INFO("ReadFileMTX: filename="<< filename << "; done");
 
@@ -341,7 +344,7 @@ bool HostMatrixCOO<ValueType>::WriteFileMTX(const std::string filename) const {
 
   if (write_matrix_mtx(this->nrow_, this->ncol_, this->nnz_,
                        this->mat_.row, this->mat_.col, this->mat_.val,
-                       filename) != true) {
+                       filename.c_str()) != true) {
     LOG_INFO("WriteFileMTX: failed to write matrix " << filename);
     FATAL_ERROR(__FILE__, __LINE__);
   }
@@ -399,6 +402,58 @@ void HostMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
     for (int i=0; i<this->nnz_; ++i)
       cast_out->vec_[this->mat_.row[i] ] += scalar*this->mat_.val[i] * cast_in->vec_[ this->mat_.col[i] ];
   }
+
+}
+
+template <typename ValueType>
+bool HostMatrixCOO<ValueType>::Sort(void) {
+
+  if (this->nnz_ > 0) {
+
+    // Sort by row and column index
+    std::vector<int> perm(this->nnz_);
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i=0; i<this->nnz_; ++i) {
+      perm[i] = i;
+    }
+
+    int *row = this->mat_.row;
+    int *col = this->mat_.col;
+    ValueType *val = this->mat_.val;
+
+    this->mat_.row = NULL;
+    this->mat_.col = NULL;
+    this->mat_.val = NULL;
+
+    allocate_host(this->nnz_, &this->mat_.row);
+    allocate_host(this->nnz_, &this->mat_.col);
+    allocate_host(this->nnz_, &this->mat_.val);
+
+    // Compare function object to sort by row first, then by column
+    std::sort(perm.begin(), perm.end(), [&](const int& a, const int& b) {
+        if(row[a] < row[b]) return true;
+        if(row[a] == row[b]) return col[a] < col[b];
+        return false;
+    });
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i=0; i<this->nnz_; ++i) {
+      this->mat_.row[i] = row[perm[i]];
+      this->mat_.col[i] = col[perm[i]];
+      this->mat_.val[i] = val[perm[i]];
+    }
+
+    free_host(&row);
+    free_host(&col);
+    free_host(&val);
+
+  }
+
+  return true;
 
 }
 

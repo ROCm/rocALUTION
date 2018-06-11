@@ -1,7 +1,6 @@
-include_directories(base/hip)
-
 set(HIP_SOURCES
   base/hip/hip_blas.cpp
+  base/hip/hip_sparse.cpp
   base/hip/backend_hip.cpp
   base/hip/hip_allocate_free.cpp
   base/hip/hip_vector.cpp

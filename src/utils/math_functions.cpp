@@ -7,106 +7,89 @@
 
 namespace rocalution {
 
-float rocalution_abs(const float val) {
+float rocalution_abs(const float& val) { return std::fabs(val); }
 
-  return std::fabs(val);
+double rocalution_abs(const double& val) { return std::fabs(val); }
 
-}
+float rocalution_abs(const std::complex<float>& val) { return std::abs(val); }
 
-double rocalution_abs(const double val) {
+double rocalution_abs(const std::complex<double>& val) { return std::abs(val); }
 
-  return std::fabs(val);
+int rocalution_abs(const int& val) { return abs(val); }
 
-}
-
-float rocalution_abs(const std::complex<float> val) {
-
-  return std::abs(val);
-
-}
-
-double rocalution_abs(const std::complex<double> val) {
-
-  return std::abs(val);
-
-}
-
-int rocalution_abs(const int val) {
-
-  return abs(val);
-
+template <typename ValueType>
+ValueType rocalution_eps(void)
+{
+    return std::numeric_limits<ValueType>::epsilon();
 }
 
 template <typename ValueType>
-ValueType rocalution_eps(void) {
+bool operator<(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs)
+{
+    if(&lhs == &rhs)
+    {
+        return false;
+    }
 
-  return std::numeric_limits<ValueType>::epsilon();
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
 
+    return lhs.real() < rhs.real();
 }
 
 template <typename ValueType>
-bool operator<(const std::complex<ValueType> &lhs, const std::complex<ValueType> &rhs) {
+bool operator>(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs)
+{
+    if(&lhs == &rhs)
+    {
+        return false;
+    }
 
-  if (&lhs == &rhs)
-    return false;
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
 
-  assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
-
-  return lhs.real() < rhs.real();
-
+    return lhs.real() > rhs.real();
 }
 
 template <typename ValueType>
-bool operator>(const std::complex<ValueType> &lhs, const std::complex<ValueType> &rhs) {
+bool operator<=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs)
+{
+    if(&lhs == &rhs)
+    {
+        return true;
+    }
 
-  if (&lhs == &rhs)
-    return false;
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
 
-  assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
-
-  return lhs.real() > rhs.real();
-
+    return lhs.real() <= rhs.real();
 }
 
 template <typename ValueType>
-bool operator<=(const std::complex<ValueType> &lhs, const std::complex<ValueType> &rhs) {
+bool operator>=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs)
+{
+    if(&lhs == &rhs)
+    {
+        return true;
+    }
 
-  if (&lhs == &rhs)
-    return true;
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
 
-  assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
-
-  return lhs.real() <= rhs.real();
-
-}
-
-template <typename ValueType>
-bool operator>=(const std::complex<ValueType> &lhs, const std::complex<ValueType> &rhs) {
-
-  if (&lhs == &rhs)
-    return true;
-
-  assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
-
-  return lhs.real() >= rhs.real();
-
+    return lhs.real() >= rhs.real();
 }
 
 template double rocalution_eps(void);
-template float  rocalution_eps(void);
+template float rocalution_eps(void);
 template std::complex<double> rocalution_eps(void);
-template std::complex<float>  rocalution_eps(void);
+template std::complex<float> rocalution_eps(void);
 
-template bool operator<(const std::complex<float> &lhs, const std::complex<float> &rhs);
-template bool operator<(const std::complex<double> &lhs, const std::complex<double> &rhs);
+template bool operator<(const std::complex<float>& lhs, const std::complex<float>& rhs);
+template bool operator<(const std::complex<double>& lhs, const std::complex<double>& rhs);
 
-template bool operator>(const std::complex<float> &lhs, const std::complex<float> &rhs);
-template bool operator>(const std::complex<double> &lhs, const std::complex<double> &rhs);
+template bool operator>(const std::complex<float>& lhs, const std::complex<float>& rhs);
+template bool operator>(const std::complex<double>& lhs, const std::complex<double>& rhs);
 
-template bool operator<=(const std::complex<float> &lhs, const std::complex<float> &rhs);
-template bool operator<=(const std::complex<double> &lhs, const std::complex<double> &rhs);
+template bool operator<=(const std::complex<float>& lhs, const std::complex<float>& rhs);
+template bool operator<=(const std::complex<double>& lhs, const std::complex<double>& rhs);
 
-template bool operator>=(const std::complex<float> &lhs, const std::complex<float> &rhs);
-template bool operator>=(const std::complex<double> &lhs, const std::complex<double> &rhs);
+template bool operator>=(const std::complex<float>& lhs, const std::complex<float>& rhs);
+template bool operator>=(const std::complex<double>& lhs, const std::complex<double>& rhs);
 
-}
+} // namespace rocalution

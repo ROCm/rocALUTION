@@ -4,7 +4,6 @@
 // Uncomment to define verbose level
 #define VERBOSE_LEVEL 2
 
-
 // Uncomment for debug mode
 // #define DEBUG_MODE
 
@@ -25,12 +24,9 @@
 // Uncomment to disable automatic object tracking
 // #define OBJ_TRACKING_OFF
 
-
-
-
 // ******************
 // ******************
-// Do not edit below! 
+// Do not edit below!
 // ******************
 // ******************
 
@@ -44,7 +40,6 @@
 
 #endif
 
-
 #ifdef DEBUG_MODE
 
 #define assert_dbg(a) assert(a)
@@ -55,7 +50,7 @@
 
 #endif
 
-//TODO #define SUPPORT_COMPLEX
+// TODO #define SUPPORT_COMPLEX
 
 #ifdef LOG_FILE
 

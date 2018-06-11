@@ -6,6 +6,8 @@
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
+#include <hipsparse.h>
+
 namespace rocalution {
 
 template <typename ValueType>
@@ -126,6 +128,14 @@ private:
 
   MatrixCSR<ValueType, int> mat_;
 
+//  cusparseSolveAnalysisInfo_t L_mat_info_;
+//  cusparseSolveAnalysisInfo_t U_mat_info_;
+  hipsparseMatDescr_t L_mat_descr_;
+  hipsparseMatDescr_t U_mat_descr_;
+  hipsparseMatDescr_t mat_descr_;
+
+  HIPAcceleratorVector<ValueType> *tmp_vec_;
+
   friend class HIPAcceleratorMatrixCOO<ValueType>;
   friend class HIPAcceleratorMatrixDIA<ValueType>;
   friend class HIPAcceleratorMatrixELL<ValueType>;
@@ -134,14 +144,6 @@ private:
   friend class BaseVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
   friend class HIPAcceleratorVector<ValueType>;
-/* TODO
-  cusparseSolveAnalysisInfo_t L_mat_info_;
-  cusparseSolveAnalysisInfo_t U_mat_info_;
-  cusparseMatDescr_t L_mat_descr_;
-  cusparseMatDescr_t U_mat_descr_;
-  cusparseMatDescr_t mat_descr_;
-*/
-  HIPAcceleratorVector<ValueType> *tmp_vec_;
 
 };
 

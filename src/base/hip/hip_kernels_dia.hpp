@@ -83,18 +83,16 @@ __global__ void kernel_dia_add_spmv(const IndexType num_rows,
 }
 
 template <typename IndexType>
-__global__ void kernel_dia_diag_map(const IndexType nrow, const IndexType *row_offset,
-                                    const IndexType *col, IndexType *diag_map) {
+__global__ void kernel_dia_diag_idx(const IndexType nrow, const IndexType *row_offset,
+                                    const IndexType *col, IndexType *diag_idx) {
 
   int row = blockDim.x * blockIdx.x + threadIdx.x;
-  IndexType map_index;
-
   if (row < nrow) {
 
     for (IndexType j=row_offset[row]; j<row_offset[row+1]; ++j) {
 
-      map_index = col[j] - row + nrow;
-      diag_map[map_index] = 1;
+      int idx = col[j] - row + nrow - 1;
+      diag_idx[idx] = true;
 
     }
 
@@ -104,16 +102,15 @@ __global__ void kernel_dia_diag_map(const IndexType nrow, const IndexType *row_o
 
 template <typename IndexType>
 __global__ void kernel_dia_fill_offset(const IndexType nrow, const IndexType ncol,
-                                       IndexType *diag_map, const IndexType *offset_map,
+                                       IndexType *diag_idx, const IndexType *offset_map,
                                        IndexType *offset) {
 
-  // 1D and 2D indexing
-  int i =  threadIdx.x + ( ((gridDim.x * blockIdx.y) + blockIdx.x) * blockDim.x );
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
     
   if (i < nrow+ncol)
-    if (diag_map[i] == 1) {
-      offset[offset_map[i]] = i - nrow;
-      diag_map[i] = offset_map[i];
+    if (diag_idx[i]) {
+      offset[offset_map[i]] = i - nrow + 1;
+      diag_idx[i] = offset_map[i];
     }
   
 }
@@ -121,18 +118,17 @@ __global__ void kernel_dia_fill_offset(const IndexType nrow, const IndexType nco
 template <typename ValueType, typename IndexType>
 __global__ void kernel_dia_convert(const IndexType nrow, const IndexType ndiag,
                                    const IndexType *row_offset, const IndexType *col,
-                                   const ValueType *val, const IndexType *diag_map,
+                                   const ValueType *val, const IndexType *diag_idx,
                                    ValueType *dia_val) {
 
   int row = blockDim.x * blockIdx.x + threadIdx.x;
-  IndexType map_index;
 
   if (row < nrow) {
 
     for (int j=row_offset[row]; j<row_offset[row+1]; ++j) {
 
-      map_index = col[j] - row + nrow;
-      dia_val[DIA_IND(row, diag_map[map_index], nrow, ndiag)] = val[j];
+      IndexType idx = col[j] - row + nrow - 1;
+      dia_val[DIA_IND(row, diag_idx[idx], nrow, ndiag)] = val[j];
 
     }
 

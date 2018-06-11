@@ -76,13 +76,10 @@ void HIPAcceleratorMatrixMCSR<ValueType>::AllocateMCSR(const int nnz, const int 
     allocate_hip(nnz,    &this->mat_.val);
     
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nrow+1, mat_.row_offset);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, mat_.col);
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->local_backend_.HIP_max_threads,
                     nnz, mat_.val);
 
     this->nrow_ = nrow;
@@ -649,26 +646,122 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
+    dim3 BlockSize(512);
+    dim3 GridSize(this->nrow_ / 512 + 1);
 
     int nnz_per_row = this->nnz_ / this->nrow_;
-    int nthreads;
 
-    if      (nnz_per_row <=   8) nthreads =  2;
-    else if (nnz_per_row <=  16) nthreads =  4;
-    else if (nnz_per_row <=  32) nthreads =  8;
-    else if (nnz_per_row <=  64) nthreads = 16;
-    else if (nnz_per_row <= 128) nthreads = 32;
-    else                         nthreads = 64;
+    if (this->local_backend_.HIP_warp == 32)
+    {
+      if (nnz_per_row < 4)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 2, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 8)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 4, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 16)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 8, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 32)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 16, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 32, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+    }
+    else if (this->local_backend_.HIP_warp == 64)
+    {
+      if (nnz_per_row < 4)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 2, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 8)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 4, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 16)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 8, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 32)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 16, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 64)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 32, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else
+      {
+        hipLaunchKernelGGL((kernel_mcsr_spmv<512, 64, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val,
+                           cast_in->vec_, cast_out->vec_);
+      }
+    }
+    else
+    {
+      LOG_INFO("Unsupported HIP warp size of " << this->local_backend_.HIP_warp);
+      FATAL_ERROR(__FILE__, __LINE__);
+    }
 
-    //TODO warpsize
-    hipLaunchKernelGGL((kernel_mcsr_spmv<256, 64, ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       this->nrow_, nthreads,
-                       this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val),
-                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
@@ -692,26 +785,122 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
+    dim3 BlockSize(512);
+    dim3 GridSize(this->nrow_ / 512 + 1);
 
     int nnz_per_row = this->nnz_ / this->nrow_;
-    int nthreads;
 
-    if      (nnz_per_row <=   8) nthreads =  2;
-    else if (nnz_per_row <=  16) nthreads =  4;
-    else if (nnz_per_row <=  32) nthreads =  8;
-    else if (nnz_per_row <=  64) nthreads = 16;
-    else if (nnz_per_row <= 128) nthreads = 32;
-    else                         nthreads = 64;
+    if (this->local_backend_.HIP_warp == 32)
+    {
+      if (nnz_per_row < 4)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 2, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 8)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 4, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 16)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 8, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 32)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 16, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 32, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+    }
+    else if (this->local_backend_.HIP_warp == 64)
+    {
+      if (nnz_per_row < 4)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 2, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 8)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 4, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 16)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 8, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 32)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 16, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else if (nnz_per_row < 64)
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 32, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+      else
+      {
+        hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 64, ValueType, int>),
+                           GridSize, BlockSize, 0, 0,
+                           this->nrow_,
+                           this->mat_.row_offset, this->mat_.col,
+                           this->mat_.val, scalar,
+                           cast_in->vec_, cast_out->vec_);
+      }
+    }
+    else
+    {
+      LOG_INFO("Unsupported HIP warp size of " << this->local_backend_.HIP_warp);
+      FATAL_ERROR(__FILE__, __LINE__);
+    }
 
-    // TODO warpsize
-    hipLaunchKernelGGL((kernel_mcsr_add_spmv<256, 64, ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       this->nrow_, nthreads,
-                       this->mat_.row_offset, this->mat_.col,
-                       HIPPtr(this->mat_.val), HIPVal(scalar),
-                       HIPPtr(cast_in->vec_), HIPPtr(cast_out->vec_));
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }

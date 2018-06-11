@@ -6,7 +6,6 @@ namespace rocalution {
 /// Return current time in microseconds
 double rocalution_time(void);
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_

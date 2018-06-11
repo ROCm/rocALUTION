@@ -1,90 +1,85 @@
 #ifndef ROCALUTION_HIP_HIP_KERNELS_HYB_HPP_
 #define ROCALUTION_HIP_HIP_KERNELS_HYB_HPP_
 
-#include "hip_kernels_ell.hpp"
-#include "hip_kernels_coo.hpp"
 #include "../matrix_formats_ind.hpp"
 
 #include <hip/hip_runtime.h>
 
 namespace rocalution {
 
-template <typename IndexType>
-__global__ void kernel_ell_nnz_coo(const IndexType nrow, const IndexType max_row,
-                                   const IndexType *row_offset, IndexType *nnz_coo) {
+// Compute non-zero entries per row
+__global__ void kernel_hyb_coo_nnz(int m,
+                                   int ell_width,
+                                   const int* csr_row_ptr,
+                                   int* coo_row_nnz)
+{
+    int gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType gid = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if (gid < nrow) {
-
-    nnz_coo[gid] = 0;
-    IndexType nnz_per_row = row_offset[gid+1] - row_offset[gid];
-
-    if (nnz_per_row > max_row)
-
-      nnz_coo[gid] = nnz_per_row - max_row;
-
-  }
-
-}
-
-template <typename ValueType, typename IndexType>
-__global__ void kernel_ell_fill_ell(const IndexType nrow, const IndexType max_row,
-                                    const IndexType *row_offset, const IndexType *col,
-                                    const ValueType *val, IndexType *ELL_col,
-                                    ValueType *ELL_val, IndexType *nnz_ell) {
-
-  IndexType gid = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if (gid < nrow) {
-
-    IndexType n = 0;
-
-    for (IndexType i=row_offset[gid]; i<row_offset[gid+1]; ++i) {
-
-      if (n >= max_row) break;
-
-      IndexType idx = ELL_IND(gid, n, nrow, max_row);
-
-      ELL_col[idx] = col[i];
-      ELL_val[idx] = val[i];
-
-      ++n;
-
+    if(gid >= m)
+    {
+        return;
     }
 
-    nnz_ell[gid] = n;
-
-  }
+    int row_nnz = csr_row_ptr[gid + 1] - csr_row_ptr[gid] - ell_width;
+    coo_row_nnz[gid] = row_nnz > 0 ? row_nnz : 0;
 
 }
 
-template <typename ValueType, typename IndexType>
-__global__ void kernel_ell_fill_coo(const IndexType nrow, const IndexType *row_offset,
-                                    const IndexType *col, const ValueType *val,
-                                    const IndexType *nnz_coo, const IndexType *nnz_ell,
-                                    IndexType *COO_row, IndexType *COO_col, ValueType *COO_val) {
+// CSR to HYB format conversion kernel
+template <typename ValueType>
+__global__ void kernel_hyb_csr2hyb(int m,
+                                   const ValueType* csr_val,
+                                   const int* csr_row_ptr,
+                                   const int* csr_col_ind,
+                                   int ell_width,
+                                   int* ell_col_ind,
+                                   ValueType* ell_val,
+                                   int* coo_row_ind,
+                                   int* coo_col_ind,
+                                   ValueType* coo_val,
+                                   int* workspace)
+{
+    int ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType gid = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if (gid < nrow) {
-
-    IndexType row_ptr = row_offset[gid+1];
-
-    for (IndexType i=row_ptr - nnz_coo[gid]; i<row_ptr; ++i) {
-
-      IndexType idx = i - nnz_ell[gid];
-
-      COO_row[idx] = gid;
-      COO_col[idx] = col[i];
-      COO_val[idx] = val[i];
-
+    if(ai >= m)
+    {
+        return;
     }
 
-  }
+    int p = 0;
 
+    int row_begin = csr_row_ptr[ai];
+    int row_end   = csr_row_ptr[ai + 1];
+    int coo_idx   = coo_row_ind ? workspace[ai] : 0;
+
+    // Fill HYB matrix
+    for(int aj = row_begin; aj < row_end; ++aj)
+    {
+        if(p < ell_width)
+        {
+            // Fill ELL part
+            int idx = ELL_IND(ai, p++, m, ell_width);
+            ell_col_ind[idx]  = csr_col_ind[aj];
+            ell_val[idx]      = csr_val[aj];
+        }
+        else
+        {
+            // Fill COO part
+            coo_row_ind[coo_idx] = ai;
+            coo_col_ind[coo_idx] = csr_col_ind[aj];
+            coo_val[coo_idx]     = csr_val[aj];
+            ++coo_idx;
+        }
+    }
+
+    // Pad remaining ELL structure
+    for(int aj = row_end - row_begin; aj < ell_width; ++aj)
+    {
+        int idx = ELL_IND(ai, p++, m, ell_width);
+        ell_col_ind[idx]  = -1;
+        ell_val[idx]      = static_cast<ValueType>(0);
+    }
 }
-
 
 }
 

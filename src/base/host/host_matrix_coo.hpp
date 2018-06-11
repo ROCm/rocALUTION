@@ -35,6 +35,7 @@ public:
 
   virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
 
+  virtual bool Sort(void);
   virtual bool Permute(const BaseVector<int> &permutation);
   virtual bool PermuteBackward(const BaseVector<int> &permutation);
 
