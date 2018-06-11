@@ -6,6 +6,7 @@ find_package(GTest REQUIRED)
 
 set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
+  test_backend.cpp
 )
 
 set(ROCALUTION_CLIENTS_COMMON

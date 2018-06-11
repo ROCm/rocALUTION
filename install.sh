@@ -32,13 +32,16 @@ fi
 # #################################################
 function display_help()
 {
-  echo "rocsparse build & installation helper script"
+  echo "rocALUTION build & installation helper script"
   echo "./install [-h|--help] "
   echo "    [-h|--help] prints this help message"
   echo "    [-i|--install] install after build"
   echo "    [-d|--dependencies] install build dependencies"
   echo "    [-c|--clients] build library clients too (combines with -i & -d)"
   echo "    [-g|--debug] -DCMAKE_BUILD_TYPE=Debug (default is =Release)"
+  echo "    [--host] build library for host backend only"
+  echo "    [--no-openmp] build library without OpenMP"
+  echo "    [--mpi] build library with MPI"
   echo "    [--cuda] build library for cuda backend"
 }
 
@@ -60,6 +63,9 @@ elevate_if_not_root( )
 install_package=false
 install_dependencies=false
 build_clients=false
+build_host=false
+build_mpi=false
+build_omp=true
 build_cuda=false
 build_release=true
 
@@ -70,7 +76,7 @@ build_release=true
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,cuda --options hicgd -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,host,no-openmp,mpi,cuda --options hicgd -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -101,6 +107,15 @@ while true; do
     -g|--debug)
         build_release=false
         shift ;;
+    --host)
+        build_host=true
+        shift ;;
+    --no-openmp)
+        build_omp=false
+        shift ;;
+    --mpi)
+        build_mpi=true
+        shift ;;
     --cuda)
         build_cuda=true
         shift ;;
@@ -128,13 +143,27 @@ fi
 # install build dependencies on request
 # #################################################
 if [[ "${install_dependencies}" == true ]]; then
-  # dependencies needed for rocsparse and clients to build
-  library_dependencies_ubuntu=( "make" "cmake-curses-gui" "hip_hcc" "pkg-config" )
-  if [[ "${build_cuda}" == false ]]; then
-    library_dependencies_ubuntu+=( "hcc" )
-  else
-    # Ideally, this could be cuda-cusparse-dev, but the package name has a version number in it
-    library_dependencies_ubuntu+=( "cuda" )
+  # dependencies needed for rocalution and clients to build
+  library_dependencies_ubuntu=( "make" "cmake-curses-gui" "pkg-config" )
+
+  # Host build does not need hip_hcc, all other builds do
+  if [[ "${build_host}" == false ]]; then
+    library_dependencies_ubuntu+=("hip_hcc")
+    if [[ "${build_cuda}" == true ]]; then
+      library_dependencies_ubuntu+=("cuda" "hipsparse-alt" "hipblas-alt")
+    else
+      library_dependencies_ubuntu+=("hcc" "hipsparse" "hipblas")
+    fi
+  fi
+
+  # MPI
+  if [[ "${build_mpi}" == true ]]; then
+    library_dependencies_ubuntu+=("mpi-default-bin" "mpi-default-dev")
+  fi
+
+  # OpenMP
+  if [[ "${build_omp}" == true ]]; then
+    library_dependencies_ubuntu+=("libomp5" "libomp-dev")
   fi
 
   client_dependencies_ubuntu=( "libboost-program-options-dev" )
@@ -191,34 +220,35 @@ pushd .
 
   # clients
   if [[ "${build_clients}" == true ]]; then
-    cmake_client_options="${cmake_client_options} -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON -DBUILD_CLIENTS_SELFTEST=ON -DBUILD_CLIENTS_RIDER=ON"
+    cmake_client_options="${cmake_client_options} -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON"
   fi
 
-  # On ROCm platforms, hcc compiler can build everything
-  if [[ "${build_cuda}" == false ]]; then
-    cmake ${cmake_common_options} ${cmake_client_options} -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
-    make -j$(nproc)
+  # OpenMP
+  if [[ "${build_omp}" == false ]]; then
+    cmake_common_options="${cmake_common_options} -DSUPPORT_OMP=OFF"
+  fi
+
+  # MPI
+  if [[ "${build_mpi}" == true ]]; then
+    cmake_common_options="${cmake_common_options} -DSUPPORT_MPI=ON"
+  fi
+
+  # Host only
+  if [[ "${build_host}" == true ]]; then
+    cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=OFF -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
   else
-    # The nvidia compile is a little more complicated, in that we split compiling the library from the clients
-    # We use the hipcc compiler to build the rocsparse library for a cuda backend (hipcc offloads the compile to nvcc)
-    # However, we run into a compiler incompatibility compiling the clients between nvcc and sparsew3.h 3.3.4 headers.
-    # The incompatibility is fixed in sparse v3.3.6, but that is not shipped by default on Ubuntu
-    # As a workaround, since clients do not contain device code, we opt to build clients with the native
-    # compiler on the platform.  The compiler cmake chooses during configuration time is mostly unchangeable,
-    # so we launch multiple cmake invocation with a different compiler on each.
-
-    # Build library only with hipcc as compiler
-    cmake ${cmake_common_options} -DCMAKE_INSTALL_PREFIX=rocsparse-install -DCPACK_PACKAGE_INSTALL_DIRECTORY=/opt/rocm ../..
-    make -j$(nproc) install
-
-    # Build cuda clients with default host compiler
-    if [[ "${build_clients}" == true ]]; then
-      pushd clients
-        cmake ${cmake_common_options} ${cmake_client_options} -DCMAKE_PREFIX_PATH="$(pwd)/../rocsparse-install;$(pwd)/../deps/deps-install" ../../../clients
-        make -j$(nproc)
-      popd
+    if [[ "${build_cuda}" == false ]]; then
+      # HIP
+      export HIP_PLATFORM=hcc
+      cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=ON -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
+    else
+      # CUDA
+      export HIP_PLATFORM=nvcc
+      cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=ON -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
     fi
   fi
+
+  make -j$(nproc)
 
   # #################################################
   # install
@@ -226,6 +256,6 @@ pushd .
   # installing through package manager, which makes uninstalling easy
   if [[ "${install_package}" == true ]]; then
     make package
-    elevate_if_not_root dpkg -i rocsparse-*.deb
+    elevate_if_not_root dpkg -i rocalution-*.deb
   fi
 popd

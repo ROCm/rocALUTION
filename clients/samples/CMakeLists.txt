@@ -19,7 +19,6 @@ function(add_rocalution_example EXAMPLE_SOURCE)
 
   # MPI
   if(SUPPORT_MPI)
-  message("${MPI_LIBRARIES}")
     target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${MPI_LIBRARIES})
   endif()
 
