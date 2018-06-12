@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     }
 
     // Disable OpenMP thread affinity
-    set_omp_affinity(false);
+    set_omp_affinity_rocalution(false);
 
     // Initialize platform with rank and # of accelerator devices in the node
     init_rocalution(rank, 2);
