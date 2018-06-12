@@ -19,6 +19,7 @@ set(ROCALUTION_TEST_SOURCES
   test_qmrcgstab.cpp
 # AMG
   test_pairwise_amg.cpp
+  test_ruge_stueben_amg.cpp
 )
 
 set(ROCALUTION_CLIENTS_COMMON
