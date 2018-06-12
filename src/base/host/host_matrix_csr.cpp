@@ -4217,8 +4217,9 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const ValueType beta, 
 
     case 5: // MultiColoring
             int num_colors;
-            int *size_colors;
+            int *size_colors = NULL;
             this->MultiColoring(num_colors, &size_colors, &perm);
+            free_host(&size_colors);
             break;
 
   }
@@ -4393,8 +4394,9 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
 
     case 5: // MultiColoring
             int num_colors;
-            int *size_colors;
+            int *size_colors = NULL;
             this->MultiColoring(num_colors, &size_colors, &perm);
+            free_host(&size_colors);
             break;
 
   }
@@ -4563,8 +4565,9 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const ValueType beta, 
 
     case 5: // MultiColoring
             int num_colors;
-            int *size_colors;
+            int *size_colors = NULL;
             this->MultiColoring(num_colors, &size_colors, &perm);
+            free_host(&size_colors);
             break;
 
   }
@@ -4734,8 +4737,9 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const BaseMatrix<Value
 
     case 5: // MultiColoring
             int num_colors;
-            int *size_colors;
+            int *size_colors = NULL;
             this->MultiColoring(num_colors, &size_colors, &perm);
+            free_host(&size_colors);
             break;
 
   }

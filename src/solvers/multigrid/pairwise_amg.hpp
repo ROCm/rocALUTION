@@ -35,7 +35,7 @@ public:
   /// Sets beta for pairwise aggregation
   virtual void SetBeta(const ValueType beta);
   /// Sets reordering for aggregation
-  virtual void SetOrdering(const _aggregation_ordering ordering);
+  virtual void SetOrdering(unsigned int ordering);
   /// Sets target coarsening factor
   virtual void SetCoarseningFactor(const double factor);
 
@@ -68,7 +68,7 @@ private:
   /// Target factor for coarsening ratio
   double coarsening_factor_;
   /// Ordering for the aggregation scheme
-  int aggregation_ordering_;
+  unsigned int aggregation_ordering_;
 
   /// Transfer mapping
   LocalVector<int> **trans_level_;

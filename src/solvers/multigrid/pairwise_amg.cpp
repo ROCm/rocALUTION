@@ -39,7 +39,7 @@ PairwiseAMG<OperatorType, VectorType, ValueType>::PairwiseAMG() {
   this->scaling_ = false;
 
   // set default ordering to connectivity ordering
-  this->aggregation_ordering_ = 1;
+  this->aggregation_ordering_ = Connectivity;
 
 }
 
@@ -94,6 +94,9 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType b
   LOG_DEBUG(this, "PairwiseAMG::SetBeta()",
             beta);
 
+  assert(beta > 0.0);
+  assert(beta < 1.0);
+
   this->beta_ = beta;
 
 }
@@ -104,12 +107,15 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(const
   LOG_DEBUG(this, "PairwiseAMG::SetCoarseningFactor()",
             factor);
 
+  assert(factor > 0.0);
+  assert(factor < 20.0);
+
   this->coarsening_factor_ = factor;
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void PairwiseAMG<OperatorType, VectorType, ValueType>::SetOrdering(const _aggregation_ordering ordering) {
+void PairwiseAMG<OperatorType, VectorType, ValueType>::SetOrdering(unsigned int ordering) {
 
   LOG_DEBUG(this, "PairwiseAMG::SetOrdering()",
             ordering);
