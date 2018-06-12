@@ -77,8 +77,7 @@ const std::string _rocalution_backend_name [2] =
   {"None",
    "HIP"};
 
-int init_rocalution(const int rank, const int dev_per_node, const int platform) {
-
+int init_rocalution(int rank, int dev_per_node) {
 
   // please note your MPI communicator
   if (rank >= 0) {
@@ -99,9 +98,10 @@ int init_rocalution(const int rank, const int dev_per_node, const int platform) 
       MPI_Comm comm = MPI_COMM_WORLD;
       int status = MPI_Comm_rank(comm, &current_rank);
 
-      if (status != MPI_SUCCESS)       
+      if (status != MPI_SUCCESS)
+      {
         current_rank = 0;
-
+      }
     }
 #endif
 
@@ -139,10 +139,13 @@ int init_rocalution(const int rank, const int dev_per_node, const int platform) 
 #endif
 
   if (_get_backend_descriptor()->disable_accelerator == false) {
-
 #ifdef SUPPORT_HIP
-  if (rank > -1) set_hip_gpu_rocalution(rank % dev_per_node);
-  _get_backend_descriptor()->accelerator = rocalution_init_hip();
+    if (rank > -1 && dev_per_node > 0) set_device_rocalution(rank % dev_per_node);
+    _get_backend_descriptor()->accelerator = rocalution_init_hip();
+    if(_get_backend_descriptor()->accelerator == false)
+    {
+        LOG_INFO("Warning: the accelerator is disabled");
+    }
 #endif
   } else {
     LOG_INFO("Warning: the accelerator is disabled");
@@ -153,12 +156,12 @@ int init_rocalution(const int rank, const int dev_per_node, const int platform) 
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
+  _get_backend_descriptor()->init = true ;
+
   LOG_DEBUG(0, "init_rocalution()",
             "* end");
 
-  _get_backend_descriptor()->init = true ;
   return 0;
-
 }
 
 int stop_rocalution(void) {
@@ -166,10 +169,18 @@ int stop_rocalution(void) {
   LOG_DEBUG(0, "stop_rocalution()",
             "* begin");
 
+  if(_get_backend_descriptor()->init == false)
+  {
+    return 0;
+  }
+
   _rocalution_delete_all_obj();
 
 #ifdef SUPPORT_HIP
-  rocalution_stop_hip();
+  if (_get_backend_descriptor()->disable_accelerator == false)
+  {
+    rocalution_stop_hip();
+  }
 #endif
 
 #ifdef _OPENMP
@@ -190,21 +201,6 @@ int stop_rocalution(void) {
   _rocalution_close_log_file();
 
   return 0;
-}
-
-int set_device_rocalution(int dev) {
-
-  LOG_DEBUG(0, "set_device_rocalution()",
-            dev);
-
-  assert(_get_backend_descriptor()->init == false);
-
-#ifdef SUPPORT_HIP
-  set_hip_gpu_rocalution(dev);
-#endif
-
-  return 0;
-
 }
 
 void set_omp_threads_rocalution(int nthreads) {
@@ -230,17 +226,16 @@ void set_omp_threads_rocalution(int nthreads) {
   _get_backend_descriptor()->OpenMP_threads = 1;
 #endif // omp
 
-
 }
 
-void set_hip_gpu_rocalution(const int ngpu) {
+void set_device_rocalution(int dev) {
 
-  LOG_DEBUG(0, "set_hip_gpu_rocalution()",
-            ngpu);
+  LOG_DEBUG(0, "set_device_rocalution()",
+            dev);
 
   assert(_get_backend_descriptor()->init == false);
 
-  _get_backend_descriptor()->HIP_dev = ngpu;
+  _get_backend_descriptor()->HIP_dev = dev;
 
 }
 
@@ -343,14 +338,17 @@ void info_rocalution(const struct Rocalution_Backend_Descriptor backend_descript
 }
 
 
-void set_omp_affinity(bool affinity) {
+void set_omp_affinity_rocalution(bool affinity) {
 
   assert(_get_backend_descriptor()->init == false);
+
   _get_backend_descriptor()->OpenMP_affinity = affinity;
 
 }
 
-void set_omp_threshold(const int threshold) {
+void set_omp_threshold_rocalution(int threshold) {
+
+  assert(_get_backend_descriptor()->init == true);
 
   _get_backend_descriptor()->OpenMP_threshold = threshold;
 
@@ -363,12 +361,12 @@ bool _rocalution_available_accelerator(void) {
 
 }
 
-void disable_accelerator_rocalution(const bool onoff) {
+void disable_accelerator_rocalution(bool onoff) {
 
   assert(_get_backend_descriptor()->init == false);
 
   _get_backend_descriptor()->disable_accelerator = onoff;
- 
+
 }
 
 struct Rocalution_Backend_Descriptor *_get_backend_descriptor(void) {
@@ -412,7 +410,7 @@ AcceleratorVector<ValueType>* _rocalution_init_base_backend_vector(const struct 
   
 template <typename ValueType>
 AcceleratorMatrix<ValueType>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                   const unsigned int matrix_format) {
+                                                                   unsigned int matrix_format) {
 
   LOG_DEBUG(0, "_rocalution_init_base_backend_matrix()",
             matrix_format);
@@ -438,7 +436,7 @@ AcceleratorMatrix<ValueType>* _rocalution_init_base_backend_matrix(const struct 
 
 template <typename ValueType>
 HostMatrix<ValueType>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                         const unsigned int matrix_format) {
+                                                         unsigned int matrix_format) {
 
   LOG_DEBUG(0, "_rocalution_init_base_host_matrix()",
             matrix_format);
@@ -497,7 +495,7 @@ void _rocalution_sync(void) {
 }
 
 void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                              const int size) {
+                              int size) {
 
   // if the threshold is disabled or if the size is not in the threshold limit
   if ((backend_descriptor.OpenMP_threshold > 0) && 
@@ -616,23 +614,23 @@ template AcceleratorVector<std::complex<double> >* _rocalution_init_base_backend
 template AcceleratorVector<int>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
 template AcceleratorMatrix<float>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                        const unsigned int matrix_format);
+                                                                        unsigned int matrix_format);
 template AcceleratorMatrix<double>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                         const unsigned int matrix_format);
+                                                                         unsigned int matrix_format);
 #ifdef SUPPORT_COMPLEX
 template AcceleratorMatrix<std::complex<float> >* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                                       const unsigned int matrix_format);
+                                                                                       unsigned int matrix_format);
 template AcceleratorMatrix<std::complex<double> >* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                                        const unsigned int matrix_format);
+                                                                                        unsigned int matrix_format);
 #endif
 template HostMatrix<float>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                              const unsigned int matrix_format);
+                                                              unsigned int matrix_format);
 template HostMatrix<double>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                               const unsigned int matrix_format);
+                                                               unsigned int matrix_format);
 #ifdef SUPPORT_COMPLEX
 template HostMatrix<std::complex<float> >* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                             const unsigned int matrix_format);
+                                                                             unsigned int matrix_format);
 template HostMatrix<std::complex<double> >* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                              const unsigned int matrix_format);
+                                                                              unsigned int matrix_format);
 #endif
 }
