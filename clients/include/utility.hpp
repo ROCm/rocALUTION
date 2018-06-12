@@ -109,8 +109,14 @@ class Arguments
     double gamma = 0.0;
 
     // Solver variables
-    std::string solver = "";
-    std::string precond = "";
+    std::string solver   = "";
+    std::string precond  = "";
+    std::string smoother = "";
+
+    int pre_smooth  = 2;
+    int post_smooth = 2;
+    int ordering    = 1;
+    int cycle       = 0;
 
     unsigned int format;
 
@@ -134,8 +140,14 @@ class Arguments
         this->beta  = rhs.beta;
         this->gamma = rhs.gamma;
 
-        this->solver  = rhs.solver;
-        this->precond = rhs.precond;
+        this->solver   = rhs.solver;
+        this->precond  = rhs.precond;
+        this->smoother = rhs.smoother;
+
+        this->pre_smooth  = rhs.pre_smooth;
+        this->post_smooth = rhs.post_smooth;
+        this->ordering    = rhs.ordering;
+        this->cycle       = rhs.cycle;
 
         this->format = rhs.format;
 
