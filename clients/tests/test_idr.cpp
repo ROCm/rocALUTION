@@ -33,13 +33,13 @@ Arguments setup_idr_arguments(idr_tuple tup)
     return arg;
 }
 
-TEST_P(parameterized_idr, krylov_float)
+TEST_P(parameterized_idr, idr_float)
 {
     Arguments arg = setup_idr_arguments(GetParam());
     ASSERT_EQ(testing_idr<float>(arg), true);
 }
 
-TEST_P(parameterized_idr, krylov_double)
+TEST_P(parameterized_idr, idr_double)
 {
     Arguments arg = setup_idr_arguments(GetParam());
     ASSERT_EQ(testing_idr<double>(arg), true);

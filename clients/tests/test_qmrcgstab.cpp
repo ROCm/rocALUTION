@@ -31,13 +31,13 @@ Arguments setup_qmrcgstab_arguments(qmrcgstab_tuple tup)
     return arg;
 }
 
-TEST_P(parameterized_qmrcgstab, krylov_float)
+TEST_P(parameterized_qmrcgstab, qmrcgstab_float)
 {
     Arguments arg = setup_qmrcgstab_arguments(GetParam());
     ASSERT_EQ(testing_qmrcgstab<float>(arg), true);
 }
 
-TEST_P(parameterized_qmrcgstab, krylov_double)
+TEST_P(parameterized_qmrcgstab, qmrcgstab_double)
 {
     Arguments arg = setup_qmrcgstab_arguments(GetParam());
     ASSERT_EQ(testing_qmrcgstab<double>(arg), true);

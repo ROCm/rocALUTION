@@ -31,13 +31,13 @@ Arguments setup_fcg_arguments(fcg_tuple tup)
     return arg;
 }
 
-TEST_P(parameterized_fcg, krylov_float)
+TEST_P(parameterized_fcg, fcg_float)
 {
     Arguments arg = setup_fcg_arguments(GetParam());
     ASSERT_EQ(testing_fcg<float>(arg), true);
 }
 
-TEST_P(parameterized_fcg, krylov_double)
+TEST_P(parameterized_fcg, fcg_double)
 {
     Arguments arg = setup_fcg_arguments(GetParam());
     ASSERT_EQ(testing_fcg<double>(arg), true);

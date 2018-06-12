@@ -31,13 +31,13 @@ Arguments setup_cg_arguments(cg_tuple tup)
     return arg;
 }
 
-TEST_P(parameterized_cg, krylov_float)
+TEST_P(parameterized_cg, cg_float)
 {
     Arguments arg = setup_cg_arguments(GetParam());
     ASSERT_EQ(testing_cg<float>(arg), true);
 }
 
-TEST_P(parameterized_cg, krylov_double)
+TEST_P(parameterized_cg, cg_double)
 {
     Arguments arg = setup_cg_arguments(GetParam());
     ASSERT_EQ(testing_cg<double>(arg), true);
