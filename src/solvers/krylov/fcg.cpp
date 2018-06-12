@@ -1,3 +1,4 @@
+#include "../../utils/def.hpp"
 #include "fcg.hpp"
 #include "../iter_ctrl.hpp"
 
@@ -11,7 +12,6 @@
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
 
-#include <assert.h>
 #include <math.h>
 #include <complex>
 

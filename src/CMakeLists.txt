@@ -97,7 +97,14 @@ if(SUPPORT_HIP)
     set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
   endforeach()
 
-  HIP_PREPARE_TARGET_COMMANDS(rocalution_hip OBJ _generated_files _source_files ${HIP_SOURCES} SHARED)
+  # For some reason, hip does not recognize build type
+  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(HIP_BUILD_OPTIONS "-O3")
+  elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(HIP_BUILD_OPTIONS "-g")
+  endif()
+
+  HIP_PREPARE_TARGET_COMMANDS(rocalution_hip OBJ _generated_files _source_files ${HIP_SOURCES} SHARED HIPCC_OPTIONS ${HIP_BUILD_OPTIONS})
   list(REMOVE_ITEM HIP_SOURCES ${_source_files})
   list(APPEND HIP_SOURCES ${_generated_files})
 

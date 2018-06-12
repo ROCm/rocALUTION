@@ -137,6 +137,7 @@ bool LocalVector<ValueType>::Check(void) const {
 template <typename ValueType>
 void LocalVector<ValueType>::SetDataPtr(ValueType **ptr, std::string name, const int size) {
 
+  assert(ptr != NULL);
   assert(*ptr != NULL);
   assert(size > 0);
 

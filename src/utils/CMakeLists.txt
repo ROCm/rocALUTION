@@ -6,6 +6,7 @@ set(UTILS_SOURCES
 )
 
 set(UTILS_PUBLIC_HEADERS
+  utils/def.hpp
   utils/allocate_free.hpp
   utils/time_functions.hpp
   utils/types.hpp

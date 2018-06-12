@@ -7,6 +7,15 @@ find_package(GTest REQUIRED)
 set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
   test_backend.cpp
+  test_bicgstab.cpp
+  test_bicgstabl.cpp
+  test_cg.cpp
+  test_cr.cpp
+  test_fcg.cpp
+  test_fgmres.cpp
+  test_gmres.cpp
+  test_idr.cpp
+  test_qmrcgstab.cpp
 )
 
 set(ROCALUTION_CLIENTS_COMMON

@@ -3,7 +3,6 @@
 #include "log.hpp"
 
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 #include <complex>
 #include <cstddef>

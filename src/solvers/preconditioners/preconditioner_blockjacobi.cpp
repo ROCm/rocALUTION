@@ -1,3 +1,4 @@
+#include "../../utils/def.hpp"
 #include "preconditioner_blockjacobi.hpp"
 #include "../solver.hpp"
 #include "../../base/global_matrix.hpp"
@@ -10,7 +11,6 @@
 
 #include "preconditioner.hpp"
 
-#include <assert.h>
 #include <math.h>
 #include <complex>
 

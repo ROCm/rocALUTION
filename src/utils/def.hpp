@@ -36,6 +36,7 @@
 
 #else
 
+#undef NDEBUG
 #include <assert.h>
 
 #endif
