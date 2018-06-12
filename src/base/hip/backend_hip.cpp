@@ -72,6 +72,18 @@ bool rocalution_init_hip(void) {
       hipSetDevice(dev);
       hip_status_t = hipGetLastError();
 
+      if (hip_status_t == hipErrorContextAlreadyInUse)
+      {
+        LOG_INFO("HIP context of device " << dev << " is already in use");
+        return false;
+      }
+
+      if (hip_status_t == hipErrorInvalidDevice)
+      {
+        LOG_INFO("HIP device " << dev << " is invalid");
+        return false;
+      }
+
       if (hip_status_t == hipSuccess) {
 
         if ((hipblasCreate(static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle)) == HIPBLAS_STATUS_SUCCESS) &&
@@ -81,12 +93,6 @@ bool rocalution_init_hip(void) {
         } else
           LOG_INFO("HIP device " << dev << " cannot create hipBLAS/hipSPARSE context");
       }
-
-      if (hip_status_t == hipErrorContextAlreadyInUse)
-        LOG_INFO("HIP context of device " << dev << " is already in use");
-
-      if (hip_status_t == hipErrorInvalidDevice)
-        LOG_INFO("HIP device " << dev << " is invalid");
 
     }
 
