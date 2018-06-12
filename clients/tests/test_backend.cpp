@@ -39,7 +39,7 @@ Arguments setup_backend_arguments(backend_tuple tup)
     return arg;
 }
 
-TEST(backend_bad_arg, backend)
+TEST(backend_init_order, backend)
 {
     testing_backend_init_order();
 }
