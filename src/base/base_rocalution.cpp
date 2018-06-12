@@ -3,7 +3,6 @@
 #include "parallel_manager.hpp"
 #include "../utils/log.hpp"
 
-#include <assert.h>
 namespace rocalution {
 
 /// Global obj tracking structure
