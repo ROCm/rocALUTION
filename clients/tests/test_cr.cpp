@@ -31,13 +31,13 @@ Arguments setup_cr_arguments(cr_tuple tup)
     return arg;
 }
 /* TODO there _MIGHT_ be some issue with float accuracy
-TEST_P(parameterized_cr, krylov_float)
+TEST_P(parameterized_cr, cr_float)
 {
     Arguments arg = setup_cr_arguments(GetParam());
     ASSERT_EQ(testing_cr<float>(arg), true);
 }
 */
-TEST_P(parameterized_cr, krylov_double)
+TEST_P(parameterized_cr, cr_double)
 {
     Arguments arg = setup_cr_arguments(GetParam());
     ASSERT_EQ(testing_cr<double>(arg), true);

@@ -33,13 +33,13 @@ Arguments setup_gmres_arguments(gmres_tuple tup)
     return arg;
 }
 
-TEST_P(parameterized_gmres, krylov_float)
+TEST_P(parameterized_gmres, gmres_float)
 {
     Arguments arg = setup_gmres_arguments(GetParam());
     ASSERT_EQ(testing_gmres<float>(arg), true);
 }
 
-TEST_P(parameterized_gmres, krylov_double)
+TEST_P(parameterized_gmres, gmres_double)
 {
     Arguments arg = setup_gmres_arguments(GetParam());
     ASSERT_EQ(testing_gmres<double>(arg), true);

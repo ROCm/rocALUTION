@@ -54,7 +54,7 @@ public:
   virtual void SetHostLevels(const int levels);
 
   /// Set the MultiGrid Cycle (default: Vcycle)
-  virtual void SetCycle(const _cycle cycle);
+  virtual void SetCycle(unsigned int cycle);
 
   /// Set the MultiGrid Kcycle on all levels or only on finest level
   virtual void SetKcycleFull(const bool kcycle_full);
@@ -104,7 +104,7 @@ protected:
   bool scaling_;
   int iter_pre_smooth_;
   int iter_post_smooth_;
-  int cycle_;
+  unsigned int cycle_;
   bool kcycle_full_;
 
   double res_norm_;

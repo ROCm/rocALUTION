@@ -47,7 +47,7 @@ BaseMultiGrid<OperatorType, VectorType, ValueType>::BaseMultiGrid() {
   this->solver_coarse_ = NULL;
   this->smoother_level_ = NULL;
 
-  this->cycle_ = 0;
+  this->cycle_ = Vcycle;
   this->host_level_ = 0;
 
   this->kcycle_full_ = true;
@@ -156,7 +156,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetHostLevels(const int
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetCycle(const _cycle cycle) {
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetCycle(unsigned int cycle) {
 
   LOG_DEBUG(this, "BaseMultiGrid::SetCycle()",
             cycle);
@@ -258,7 +258,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Build(void) {
   this->s_level_ = new VectorType*[this->levels_];
 
   // Extra structure for K-cycle
-  if (this->cycle_ == 2) {
+  if (this->cycle_ == Kcycle) {
     this->p_level_ = new VectorType*[this->levels_-2];
     this->q_level_ = new VectorType*[this->levels_-2];
     this->k_level_ = new VectorType*[this->levels_-2];
@@ -344,7 +344,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Clear(void) {
     delete[] this->s_level_;
 
     // Extra structure for K-cycle
-    if (this->cycle_ == 2) {
+    if (this->cycle_ == Kcycle) {
 
       for (int i=0; i<this->levels_-2; ++i) {
         delete this->p_level_[i];
@@ -404,7 +404,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(vo
     }
 
     // Extra structure for K-cycle
-    if (this->cycle_ == 2) {
+    if (this->cycle_ == Kcycle) {
       for (int i=0; i<this->levels_-2; ++i) {
         this->p_level_[i]->MoveToHost();
         this->q_level_[i]->MoveToHost();
@@ -458,7 +458,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalD
     }
 
     // Extra structure for K-cycle
-    if (this->cycle_ == 2) {
+    if (this->cycle_ == Kcycle) {
       for (int i=0; i<this->levels_-2; ++i) {
         if (i < this->levels_ - this->host_level_ - 1) {
           this->p_level_[i]->MoveToAccelerator();
@@ -512,7 +512,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::MoveHostLevels(void) {
     }
 
     // Extra structure for K-cycle
-    if (this->cycle_ == 2) {
+    if (this->cycle_ == Kcycle) {
       for (int i=0; i<this->levels_-2; ++i) {
         if (i >= this->levels_ - this->host_level_ - 1) {
           this->p_level_[i]->MoveToHost();
@@ -547,7 +547,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Solve(const VectorType 
     assert(this->s_level_[i] != NULL);
   }
 
-  if (this->cycle_ == 2) {
+  if (this->cycle_ == Kcycle) {
     for (int i=0; i<this->levels_-2; ++i) {
       assert(this->k_level_[i] != NULL);
       assert(this->l_level_[i] != NULL);

@@ -33,13 +33,13 @@ Arguments setup_bicgstabl_arguments(bicgstabl_tuple tup)
     return arg;
 }
 
-TEST_P(parameterized_bicgstabl, krylov_float)
+TEST_P(parameterized_bicgstabl, bicgstabl_float)
 {
     Arguments arg = setup_bicgstabl_arguments(GetParam());
     ASSERT_EQ(testing_bicgstabl<float>(arg), true);
 }
 
-TEST_P(parameterized_bicgstabl, krylov_double)
+TEST_P(parameterized_bicgstabl, bicgstabl_double)
 {
     Arguments arg = setup_bicgstabl_arguments(GetParam());
     ASSERT_EQ(testing_bicgstabl<double>(arg), true);

@@ -33,13 +33,13 @@ Arguments setup_fgmres_arguments(fgmres_tuple tup)
     return arg;
 }
 
-TEST_P(parameterized_fgmres, krylov_float)
+TEST_P(parameterized_fgmres, fgmres_float)
 {
     Arguments arg = setup_fgmres_arguments(GetParam());
     ASSERT_EQ(testing_fgmres<float>(arg), true);
 }
 
-TEST_P(parameterized_fgmres, krylov_double)
+TEST_P(parameterized_fgmres, fgmres_double)
 {
     Arguments arg = setup_fgmres_arguments(GetParam());
     ASSERT_EQ(testing_fgmres<double>(arg), true);
