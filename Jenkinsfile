@@ -448,7 +448,7 @@ parallel rocm_ubuntu_host:
         project_name:'rocalution-ubuntu-host',
         src_prefix:'src',
         build_prefix:'src',
-        build_command: './install.sh --host --no-openmp -cd' )
+        build_command: './install.sh --debug --host --no-openmp -cd' )
 
     def print_version_closure = {
       sh  """
@@ -480,7 +480,7 @@ rocm_ubuntu_host_openmp:
         project_name:'rocalution-ubuntu-openmp',
         src_prefix:'src',
         build_prefix:'src',
-        build_command: './install.sh --host -cd' )
+        build_command: './install.sh --debug --host -cd' )
 
     def print_version_closure = {
       sh  """
@@ -512,7 +512,7 @@ rocm_ubuntu_host_mpi:
         project_name:'rocalution-ubuntu-mpi',
         src_prefix:'src',
         build_prefix:'src',
-        build_command: './install.sh --mpi --host --no-openmp -cd' )
+        build_command: './install.sh --debug --mpi --host --no-openmp -cd' )
 
     def print_version_closure = {
       sh  """
@@ -545,7 +545,7 @@ rocm_ubuntu_host_mpi:
 //        project_name:'rocalution_hip-ubuntu',
 //        src_prefix:'src',
 //        build_prefix:'src',
-//        build_command: './install.sh --hip -cd' )
+//        build_command: './install.sh --debug --hip -cd' )
 //
 //    def print_version_closure = {
 //      sh  """
