@@ -206,19 +206,19 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
         {
           sh """#!/usr/bin/env bash
                 set -x
-                cd ${paths.project_build_prefix}/build/release/clients/tests
+                cd ${paths.project_build_prefix}/build/debug/clients/tests
                 LD_LIBRARY_PATH=/opt/rocm/hcc/lib ./rocalution_host-test${build_type_postfix} --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*
             """
-          junit "${paths.project_build_prefix}/build/release/clients/tests/*.xml"
+          junit "${paths.project_build_prefix}/build/debug/clients/tests/*.xml"
         }
         else
         {
           sh """#!/usr/bin/env bash
                 set -x
-                cd ${paths.project_build_prefix}/build/release/clients/tests
+                cd ${paths.project_build_prefix}/build/debug/clients/tests
                 LD_LIBRARY_PATH=/opt/rocm/hcc/lib ./rocalution_host-test${build_type_postfix} --gtest_output=xml --gtest_color=yes #--gtest_filter=*checkin*
             """
-          junit "${paths.project_build_prefix}/build/release/clients/tests/*.xml"
+          junit "${paths.project_build_prefix}/build/debug/clients/tests/*.xml"
         }
       }
 
