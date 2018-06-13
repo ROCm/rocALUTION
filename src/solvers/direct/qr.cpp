@@ -122,7 +122,6 @@ void QR<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, Vect
 
   assert(x != NULL);
   assert(x != &rhs);
-  assert(&this->qr_ != NULL);
   assert(this->build_ == true);
 
   this->qr_.QRSolve(rhs, x);

@@ -122,7 +122,6 @@ void Inversion<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rh
 
   assert(x != NULL);
   assert(x != &rhs);
-  assert(&this->inverse_ != NULL);
   assert(this->build_ == true);
 
   this->inverse_.Apply(rhs, x);

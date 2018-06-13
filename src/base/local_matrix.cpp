@@ -1213,7 +1213,6 @@ void LocalMatrix<ValueType>::CopyFrom(const LocalMatrix<ValueType> &src) {
   LOG_DEBUG(this, "LocalMatrix::CopyFrom()",
             "");
 
-  assert(&src != NULL);
   assert(this != &src);
 
   this->matrix_->CopyFrom(*src.matrix_);
@@ -1226,7 +1225,6 @@ void LocalMatrix<ValueType>::CopyFromAsync(const LocalMatrix<ValueType> &src) {
   LOG_DEBUG(this, "LocalMatrix::CopyFromAsync()",
             "");
 
-  assert(&src != NULL);
   assert(this->asyncf == false);
   assert(this != &src);
 
@@ -1242,7 +1240,6 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
   LOG_DEBUG(this, "LocalMatrix::CloneFrom()",
             "");
 
-  assert(&src != NULL);
   assert(this != &src);
 
 #ifdef DEBUG_MODE
@@ -1681,7 +1678,6 @@ void LocalMatrix<ValueType>::Apply(const LocalVector<ValueType> &in, LocalVector
   LOG_DEBUG(this, "LocalMatrix::Apply()",
             "");
 
-  assert(&in != NULL);
   assert(out != NULL);
 
 #ifdef DEBUG_MODE
@@ -1709,7 +1705,6 @@ void LocalMatrix<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const Va
   LOG_DEBUG(this, "LocalMatrix::ApplyAdd()",
             "");
 
-  assert(&in != NULL);
   assert(out != NULL);
 
 #ifdef DEBUG_MODE
@@ -2187,7 +2182,6 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
   LOG_DEBUG(this, "LocalMatrix::LUSolve()",
             "");
 
-  assert(&in != NULL);
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
   assert(out->GetSize() == this->GetM());
@@ -2282,7 +2276,6 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
   LOG_DEBUG(this, "LocalMatrix::LLSolve()",
             "");
 
-  assert(&in != NULL);
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
   assert(out->GetSize() == this->GetM());
@@ -2347,8 +2340,6 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
   LOG_DEBUG(this, "LocalMatrix::LLSolve()",
             "");
 
-  assert(&in != NULL);
-  assert(&inv_diag != NULL);
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
   assert(out->GetSize() == this->GetM());
@@ -2445,7 +2436,6 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
   LOG_DEBUG(this, "LocalMatrix::LSolve()",
             "");
 
-  assert(&in != NULL);
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
   assert(out->GetSize() == this->GetM());
@@ -2533,7 +2523,6 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
   LOG_DEBUG(this, "LocalMatrix::USolve()",
             "");
 
-  assert(&in != NULL);
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
   assert(out->GetSize() == this->GetM());
@@ -3239,7 +3228,6 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
   LOG_DEBUG(this, "LocalMatrix::QRSolve()",
             "");
 
-  assert(&in != NULL);
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
   assert(out->GetSize() == this->GetM());
@@ -3305,7 +3293,6 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
   LOG_DEBUG(this, "LocalMatrix::Permute()",
             "");
 
-  assert(&permutation != NULL);
   assert((permutation.GetSize() == this->GetM()) ||
           (permutation.GetSize() == this->GetN()));
   assert(permutation.GetSize() > 0);
@@ -3377,7 +3364,6 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
   LOG_DEBUG(this, "LocalMatrix::PermuteBackward()",
             "");
 
-  assert(&permutation != NULL);
   assert((permutation.GetSize() == this->GetM()) ||
          (permutation.GetSize() == this->GetN()));
   assert(permutation.GetSize() > 0);
@@ -3711,7 +3697,6 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
   LOG_DEBUG(this, "LocalMatrix::MatrixAdd()",
             "");
 
-  assert(&mat != NULL);
   assert(&mat != this);
   assert(this->GetFormat() == mat.GetFormat());
   assert(this->GetM() == mat.GetM());
@@ -4199,8 +4184,6 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
   LOG_DEBUG(this, "LocalMatrix::AddScalarDiagonal()",
             "");
 
-  assert(&A != NULL);
-  assert(&B != NULL);
   assert(&A != this);
   assert(&B != this);
   assert(A.GetN() == B.GetM());
@@ -4293,7 +4276,6 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &d
   LOG_DEBUG(this, "LocalMatrix::DiagonalMatrixMultR()",
             "");
 
-  assert(&diag != NULL);
   assert((diag.GetSize() == this->GetM()) ||
          (diag.GetSize() == this->GetN()));
 
@@ -4371,7 +4353,6 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
   LOG_DEBUG(this, "LocalMatrix::DiagonalMatrixMultL()",
             "");
 
-  assert(&diag != NULL);
   assert((diag.GetSize() == this->GetM()) ||
          (diag.GetSize() == this->GetN()));
 
@@ -4745,7 +4726,6 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, L
   LOG_DEBUG(this, "LocalMatrix::AMGAggregate()",
             "");
 
-  assert(&connections != NULL);
   assert(aggregates != NULL);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (connections.vector_ == connections.vector_host_)  && (aggregates->vector_ == aggregates->vector_host_) ) ||
@@ -4812,8 +4792,6 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
   LOG_DEBUG(this, "LocalMatrix::AMGSmoothedAggregation()",
             relax);
 
-  assert(&aggregates != NULL);
-  assert(&connections != NULL);
   assert(relax > ValueType(0.0));
   assert(prolong != NULL);
   assert(restrict != NULL);
@@ -4909,7 +4887,6 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
   LOG_DEBUG(this, "LocalMatrix::AMGAggregation()",
             "");
 
-  assert(&aggregates != NULL);
   assert(prolong != NULL);
   assert(restrict != NULL);
   assert(this != prolong);
@@ -5150,7 +5127,6 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
   LOG_DEBUG(this, "LocalMatrix::InitialPairwiseAggregation()",
             "");
 
-  assert(&mat != NULL);
   assert(*rG == NULL);
   assert(&mat != this);
   assert(beta > ValueType(0.0));
@@ -5290,7 +5266,6 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
   LOG_DEBUG(this, "LocalMatrix::FurtherPairwiseAggregation()",
             "");
 
-  assert(&mat != NULL);
   assert(*rG != NULL);
   assert(&mat != this);
   assert(beta > ValueType(0.0));
@@ -5367,7 +5342,6 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
 
   assert(Ac != NULL);
   assert(Ac != this);
-  assert(&G != NULL);
   assert(nrow > 0);
   assert(ncol > 0);
   assert(rG != NULL);
@@ -5447,7 +5421,6 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
   LOG_DEBUG(this, "LocalMatrix::CreateFromMap()",
             n << " " << m);
 
-  assert(&map != NULL);
   assert(map.GetSize() == (IndexType2) n);
   assert(m > 0);
 
@@ -5518,7 +5491,6 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
   LOG_DEBUG(this, "LocalMatrix::CreateFromMap()",
             n << " " << m);
 
-  assert(&map != NULL);
   assert(pro != NULL);
   assert(this != pro);
   assert(map.GetSize() == (IndexType2) n);
@@ -5871,7 +5843,6 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
   LOG_DEBUG(this, "LocalMatrix::ReplaceColumnVector()",
             idx);
 
-  assert(&vec != NULL);
   assert(vec.GetSize() == this->GetM());
   assert(idx >= 0);
 
@@ -6011,7 +5982,6 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
   LOG_DEBUG(this, "LocalMatrix::ReplaceRowVector()",
             idx);
 
-  assert(&vec != NULL);
   assert(vec.GetSize() == this->GetN());
   assert(idx >= 0);
 

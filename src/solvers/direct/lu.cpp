@@ -122,7 +122,6 @@ void LU<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, Vect
 
   assert(x != NULL);
   assert(x != &rhs);
-  assert(&this->lu_ != NULL);
   assert(this->build_ == true);
 
   this->lu_.LUSolve(rhs, x);

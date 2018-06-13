@@ -244,7 +244,6 @@ void LocalVector<ValueType>::CopyFrom(const LocalVector<ValueType> &src) {
   LOG_DEBUG(this, "LocalVector::CopyFrom()",
             "");
 
-  assert(&src != NULL);
   assert(this != &src);
 
   this->vector_->CopyFrom(*src.vector_);
@@ -257,7 +256,6 @@ void LocalVector<ValueType>::CopyFromAsync(const LocalVector<ValueType> &src) {
   LOG_DEBUG(this, "LocalVector::CopyFromAsync()",
             "");
 
-  assert(&src != NULL);
   assert(this->asyncf == false);
   assert(this != &src);
 
@@ -273,8 +271,6 @@ void LocalVector<ValueType>::CopyFromFloat(const LocalVector<float> &src) {
   LOG_DEBUG(this, "LocalVector::CopyFromFloat()",
             "");
 
-  assert(&src != NULL);
-
   this->vector_->CopyFromFloat(*src.vector_);
 
 }
@@ -284,8 +280,6 @@ void LocalVector<ValueType>::CopyFromDouble(const LocalVector<double> &src) {
 
   LOG_DEBUG(this, "LocalVector::CopyFromDouble()",
             "");
-
-  assert(&src != NULL);
 
   this->vector_->CopyFromDouble(*src.vector_);
 
@@ -311,7 +305,6 @@ void LocalVector<ValueType>::CloneFrom(const LocalVector<ValueType> &src) {
   LOG_DEBUG(this, "LocalVector::CloneFrom()",
             "");
 
-  assert(&src != NULL);
   assert(this != &src);
 
   this->CloneBackend(src);
@@ -625,7 +618,6 @@ void LocalVector<ValueType>::AddScale(const LocalVector<ValueType> &x, const Val
   LOG_DEBUG(this, "LocalVector::AddScale()",
             alpha);
 
-  assert(&x != NULL);
   assert(this->GetSize() == x.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)) );
@@ -642,7 +634,6 @@ void LocalVector<ValueType>::ScaleAdd(const ValueType alpha, const LocalVector<V
   LOG_DEBUG(this, "LocalVector::ScaleAdd()",
             alpha);
 
-  assert(&x != NULL);
   assert(this->GetSize() == x.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)) );
@@ -659,7 +650,6 @@ void LocalVector<ValueType>::ScaleAddScale(const ValueType alpha, const LocalVec
   LOG_DEBUG(this, "LocalVector::ScaleAddScale()",
             alpha << " " << beta);
 
-  assert(&x != NULL);
   assert(this->GetSize() == x.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)) );
@@ -682,7 +672,6 @@ void LocalVector<ValueType>::ScaleAddScale(const ValueType alpha, const LocalVec
             " dst_offset=" << dst_offset <<
             " size=" << size);
 
-  assert(&x != NULL);
   assert((IndexType2) src_offset < x.GetSize());
   assert((IndexType2) dst_offset < this->GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
@@ -701,8 +690,6 @@ void LocalVector<ValueType>::ScaleAdd2(const ValueType alpha, const LocalVector<
   LOG_DEBUG(this, "LocalVector::ScaleAdd2()",
             alpha << " " << beta);
 
-  assert(&x != NULL);
-  assert(&y != NULL);
   assert(this->GetSize() == x.GetSize());
   assert(this->GetSize() == y.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)  && (y.vector_ == y.vector_host_)) ||
@@ -732,7 +719,6 @@ void LocalVector<ValueType>::ExclusiveScan(const LocalVector<ValueType> &x) {
   LOG_DEBUG(this, "LocalVector::ExclusiveScan()",
             "");
 
-  assert(&x != NULL);
   assert(this->GetSize() == x.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)) );
@@ -749,7 +735,6 @@ ValueType LocalVector<ValueType>::Dot(const LocalVector<ValueType> &x) const {
   LOG_DEBUG(this, "LocalVector::Dot()",
             "");
 
-  assert(&x != NULL);
   assert(this->GetSize() == x.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)) );
@@ -768,7 +753,6 @@ ValueType LocalVector<ValueType>::DotNonConj(const LocalVector<ValueType> &x) co
   LOG_DEBUG(this, "LocalVector::DotNonConj()",
             "");
 
-  assert(&x != NULL);
   assert(this->GetSize() == x.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)) );
@@ -844,7 +828,6 @@ void LocalVector<ValueType>::PointWiseMult(const LocalVector<ValueType> &x) {
   LOG_DEBUG(this, "LocalVector::PointWiseMult(x)",
             "");
 
-  assert(&x != NULL);
   assert(this->GetSize() == x.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)) );
@@ -861,8 +844,6 @@ void LocalVector<ValueType>::PointWiseMult(const LocalVector<ValueType> &x, cons
   LOG_DEBUG(this, "LocalVector::(x, y)",
             "");
 
-  assert(&x != NULL);
-  assert(&y != NULL);
   assert(this->GetSize() == x.GetSize());
   assert(this->GetSize() == y.GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (x.vector_ == x.vector_host_)  && (y.vector_ == y.vector_host_)) ||
@@ -885,7 +866,6 @@ void LocalVector<ValueType>::CopyFrom(const LocalVector<ValueType> &src,
             " dst_offset=" << dst_offset <<
             " size=" << size);
 
-  assert(&src != NULL);
   assert(&src != this);
   assert((IndexType2) src_offset < src.GetSize());
   assert((IndexType2) dst_offset < this->GetSize());
@@ -931,7 +911,6 @@ void LocalVector<ValueType>::Permute(const LocalVector<int> &permutation) {
   LOG_DEBUG(this, "LocalVector::Permute()",
             "");
 
-  assert(&permutation != NULL);
   assert(permutation.GetSize() == this->GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (permutation.vector_ == permutation.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (permutation.vector_ == permutation.vector_accel_)) );
@@ -948,7 +927,6 @@ void LocalVector<ValueType>::PermuteBackward(const LocalVector<int> &permutation
   LOG_DEBUG(this, "LocalVector::PermuteBackward()",
             "");
 
-  assert(&permutation != NULL);
   assert(permutation.GetSize() == this->GetSize());
   assert( ( (this->vector_ == this->vector_host_)  && (permutation.vector_ == permutation.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (permutation.vector_ == permutation.vector_accel_)) );
@@ -966,8 +944,6 @@ void LocalVector<ValueType>::CopyFromPermute(const LocalVector<ValueType> &src,
   LOG_DEBUG(this, "LocalVector::CopyFromPermute()",
             "");
 
-  assert(&src != NULL);
-  assert(&permutation != NULL);
   assert(&src != this);
   assert(permutation.GetSize() == this->GetSize());
   assert(this->GetSize() == src.GetSize());
@@ -987,8 +963,6 @@ void LocalVector<ValueType>::CopyFromPermuteBackward(const LocalVector<ValueType
   LOG_DEBUG(this, "LocalVector::CopyFromPermuteBackward()",
             "");
 
-  assert(&src != NULL);
-  assert(&permutation != NULL);
   assert(&src != this);
   assert(permutation.GetSize() == this->GetSize());
   assert(this->GetSize() == src.GetSize());
@@ -1007,8 +981,6 @@ void LocalVector<ValueType>::Restriction(const LocalVector<ValueType> &vec_fine,
   LOG_DEBUG(this, "LocalVector::Restriction()",
             "");
 
-  assert(&vec_fine != NULL);
-  assert(&map != NULL);
   assert(&vec_fine != this);
   assert( ( (this->vector_ == this->vector_host_)  && (vec_fine.vector_ == vec_fine.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (vec_fine.vector_ == vec_fine.vector_accel_) ) );
@@ -1057,8 +1029,6 @@ void LocalVector<ValueType>::Prolongation(const LocalVector<ValueType> &vec_coar
   LOG_DEBUG(this, "LocalVector::Prolongation()",
             "");
 
-  assert(&vec_coarse != NULL);
-  assert(&map != NULL);
   assert(&vec_coarse != this);
   assert( ( (this->vector_ == this->vector_host_)  && (vec_coarse.vector_ == vec_coarse.vector_host_)) ||
           ( (this->vector_ == this->vector_accel_) && (vec_coarse.vector_ == vec_coarse.vector_accel_) ) );
