@@ -31,32 +31,27 @@
 // ******************
 
 #ifdef ASSERT_OFF
-
 #define assert(a) ;
-
 #else
-
+#ifdef NDEBUG
 #undef NDEBUG
 #include <assert.h>
-
+#define NDEBUG
+#else
+#include <assert.h>
+#endif
 #endif
 
 #ifdef DEBUG_MODE
-
 #define assert_dbg(a) assert(a)
-
 #else
-
 #define assert_dbg(a) ;
-
 #endif
 
 // TODO #define SUPPORT_COMPLEX
 
 #ifdef LOG_FILE
-
 #undef LOG_MPI_RANK
-
 #endif
 
 #endif // ROCALUTION_UTILS_DEF_HPP_
