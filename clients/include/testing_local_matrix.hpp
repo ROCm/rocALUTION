@@ -37,6 +37,126 @@ void testing_local_matrix_bad_args(void)
     allocate_host(safe_size, &vint);
     allocate_host(safe_size, &vdata);
 
+    // ExtractSubMatrix, ExtractSubMatrices, Extract(Inverse)Diagonal, ExtractL/U
+    {
+        LocalMatrix<T> *mat_null = nullptr;
+        LocalMatrix<T> **mat_null2 = nullptr;
+        LocalMatrix<T> ***pmat = new LocalMatrix<T>**[1];
+        pmat[0] = new LocalMatrix<T>*[1];
+        pmat[0][0] = new LocalMatrix<T>;
+        LocalVector<T> *null_vec = nullptr;
+        ASSERT_DEATH(mat1.ExtractSubMatrix(0, 0, safe_size, safe_size, mat_null), ".*Assertion.*mat != NULL*");
+        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, null_int, vint, pmat), ".*Assertion.*row_offset != NULL*");
+        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, vint, null_int, pmat), ".*Assertion.*col_offset != NULL*");
+        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, vint, vint, nullptr), ".*Assertion.*mat != NULL*");
+        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, vint, vint, &mat_null2), ".*Assertion.*mat != NULL*");
+        ASSERT_DEATH(mat1.ExtractDiagonal(null_vec), ".*Assertion.*vec_diag != NULL*");
+        ASSERT_DEATH(mat1.ExtractInverseDiagonal(null_vec), ".*Assertion.*vec_inv_diag != NULL*");
+        ASSERT_DEATH(mat1.ExtractL(mat_null, true), ".*Assertion.*L != NULL*");
+        ASSERT_DEATH(mat1.ExtractU(mat_null, true), ".*Assertion.*U != NULL*");
+        delete pmat[0][0];
+        delete[] pmat[0];
+        delete[] pmat;
+    }
+
+    // CMK, RCMK, ConnectivityOrder, MultiColoring, MaximalIndependentSet, ZeroBlockPermutation
+    {
+        int val;
+        LocalVector<int> *null_vec = nullptr;
+        ASSERT_DEATH(mat1.CMK(null_vec), ".*Assertion.*permutation != NULL*");
+        ASSERT_DEATH(mat1.RCMK(null_vec), ".*Assertion.*permutation != NULL*");
+        ASSERT_DEATH(mat1.ConnectivityOrder(null_vec), ".*Assertion.*permutation != NULL*");
+        ASSERT_DEATH(mat1.MultiColoring(val, &vint, &int1), ".*Assertion.*size_colors == NULL*");
+        ASSERT_DEATH(mat1.MultiColoring(val, &null_int, null_vec), ".*Assertion.*permutation != NULL*");
+        ASSERT_DEATH(mat1.MaximalIndependentSet(val, null_vec), ".*Assertion.*permutation != NULL*");
+        ASSERT_DEATH(mat1.ZeroBlockPermutation(val, null_vec), ".*Assertion.*permutation != NULL*");
+    }
+
+    // LSolve, USolve, LLSolve, LUSolve, QRSolve
+    {
+        LocalVector<T> *null_vec = nullptr;
+        ASSERT_DEATH(mat1.LSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(mat1.USolve(vec1, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(mat1.LLSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(mat1.LLSolve(vec1, vec1, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(mat1.LUSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(mat1.QRSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
+    }
+
+    // ICFactorize, Householder
+    {
+        T val;
+        LocalVector<T> *null_vec = nullptr;
+        ASSERT_DEATH(mat1.ICFactorize(null_vec), ".*Assertion.*inv_diag != NULL*");
+        ASSERT_DEATH(mat1.Householder(0, val, null_vec), ".*Assertion.*vec != NULL*");
+    }
+
+    // CopyFrom functions
+    {
+        LocalMatrix<T> *null_mat = nullptr;
+        ASSERT_DEATH(mat1.UpdateValuesCSR(null_data), ".*Assertion.*val != NULL*");
+        ASSERT_DEATH(mat1.CopyFromCSR(null_int, vint, vdata), ".*Assertion.*row_offsets != NULL*");
+        ASSERT_DEATH(mat1.CopyFromCSR(vint, null_int, vdata), ".*Assertion.*col != NULL*");
+        ASSERT_DEATH(mat1.CopyFromCSR(vint, vint, null_data), ".*Assertion.*val != NULL*");
+        ASSERT_DEATH(mat1.CopyToCSR(null_int, vint, vdata), ".*Assertion.*row_offsets != NULL*");
+        ASSERT_DEATH(mat1.CopyToCSR(vint, null_int, vdata), ".*Assertion.*col != NULL*");
+        ASSERT_DEATH(mat1.CopyToCSR(vint, vint, null_data), ".*Assertion.*val != NULL*");
+        ASSERT_DEATH(mat1.CopyFromCOO(null_int, vint, vdata), ".*Assertion.*row != NULL*");
+        ASSERT_DEATH(mat1.CopyFromCOO(vint, null_int, vdata), ".*Assertion.*col != NULL*");
+        ASSERT_DEATH(mat1.CopyFromCOO(vint, vint, null_data), ".*Assertion.*val != NULL*");
+        ASSERT_DEATH(mat1.CopyToCOO(null_int, vint, vdata), ".*Assertion.*row != NULL*");
+        ASSERT_DEATH(mat1.CopyToCOO(vint, null_int, vdata), ".*Assertion.*col != NULL*");
+        ASSERT_DEATH(mat1.CopyToCOO(vint, vint, null_data), ".*Assertion.*val != NULL*");
+        ASSERT_DEATH(mat1.CopyFromHostCSR(null_int, vint, vdata, "", safe_size, safe_size, safe_size), ".*Assertion.*row_offset != NULL*");
+        ASSERT_DEATH(mat1.CopyFromHostCSR(vint, null_int, vdata, "", safe_size, safe_size, safe_size), ".*Assertion.*col != NULL*");
+        ASSERT_DEATH(mat1.CopyFromHostCSR(vint, vint, null_data, "", safe_size, safe_size, safe_size), ".*Assertion.*val != NULL*");
+    }
+
+    // CreateFromMat
+    {
+        LocalMatrix<T> *null_mat = nullptr;
+        ASSERT_DEATH(mat1.CreateFromMap(int1, safe_size, safe_size, null_mat), ".*Assertion.*pro != NULL*");
+    }
+
+    // Apply(Add)
+    {
+        LocalVector<T> *null_vec = nullptr;
+        ASSERT_DEATH(mat1.Apply(vec1, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(mat1.ApplyAdd(vec1, 1.0, null_vec), ".*Assertion.*out != NULL*");
+    }
+
+    // Row/Column manipulation
+    {
+        LocalVector<T> *null_vec = nullptr;
+        ASSERT_DEATH(mat1.ExtractColumnVector(0, null_vec), ".*Assertion.*vec != NULL*");
+        ASSERT_DEATH(mat1.ExtractRowVector(0, null_vec), ".*Assertion.*vec != NULL*");
+    }
+
+    // AMG
+    {
+        int val;
+        LocalVector<int> *null_vec = nullptr;
+        LocalMatrix<T> *null_mat = nullptr;
+        ASSERT_DEATH(mat1.AMGConnect(0.1, null_vec), ".*Assertion.*connections != NULL*");
+        ASSERT_DEATH(mat1.AMGAggregate(int1, null_vec), ".*Assertion.*aggregates != NULL*");
+        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, null_mat, &mat2), ".*Assertion.*prolong != NULL*");
+        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, &mat2, null_mat), ".*Assertion.*restrict != NULL*");
+        ASSERT_DEATH(mat1.AMGAggregation(int1, null_mat, &mat2), ".*Assertion.*prolong != NULL*");
+        ASSERT_DEATH(mat1.AMGAggregation(int1, &mat2, null_mat), ".*Assertion.*restrict != NULL*");
+        ASSERT_DEATH(mat1.RugeStueben(0.1, null_mat, &mat2), ".*Assertion.*prolong != NULL*");
+        ASSERT_DEATH(mat1.RugeStueben(0.1, &mat2, null_mat), ".*Assertion.*restrict != NULL*");
+        ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, null_vec, val, &null_int, val, 0), ".*Assertion.*G != NULL*");
+        ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, &int1, val, &vint, val, 0), ".*Assertion.*rG == NULL*");
+        ASSERT_DEATH(mat1.InitialPairwiseAggregation(mat2, 0.1, val, null_vec, val, &null_int, val, 0), ".*Assertion.*G != NULL*");
+        ASSERT_DEATH(mat1.InitialPairwiseAggregation(mat2, 0.1, val, &int1, val, &vint, val, 0), ".*Assertion.*rG == NULL*");
+        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(0.1, val, null_vec, val, &vint, val, 0), ".*Assertion.*G != NULL*");
+        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(0.1, val, &int1, val, &null_int, val, 0), ".*Assertion.*rG != NULL*");
+        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(mat2, 0.1, val, null_vec, val, &vint, val, 0), ".*Assertion.*G != NULL*");
+        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(mat2, 0.1, val, &int1, val, &null_int, val, 0), ".*Assertion.*rG != NULL*");
+        ASSERT_DEATH(mat1.CoarsenOperator(null_mat, safe_size, safe_size, int1, safe_size, vint, safe_size), ".*Assertion.*Ac != NULL*");
+        ASSERT_DEATH(mat1.CoarsenOperator(&mat2, safe_size, safe_size, int1, safe_size, null_int, safe_size), ".*Assertion.*rG != NULL*");
+    }
+
     // SetDataPtr
     {
         ASSERT_DEATH(mat1.SetDataPtrCOO(&null_int, &vint, &vdata, "", safe_size, safe_size, safe_size), ".*Assertion.*row != NULL*");
@@ -86,167 +206,6 @@ void testing_local_matrix_bad_args(void)
         ASSERT_DEATH(mat1.LeaveDataPtrDIA(&null_int, &vdata, val), ".*Assertion.*val == NULL*");
         ASSERT_DEATH(mat1.LeaveDataPtrDIA(&vint, &null_data, val), ".*Assertion.*offset == NULL*");
         ASSERT_DEATH(mat1.LeaveDataPtrDENSE(&vdata), ".*Assertion.*val == NULL*");
-    }
-
-    // ExtractSubMatrix, ExtractSubMatrices, Extract(Inverse)Diagonal, ExtractL/U
-    {
-        LocalMatrix<T> *mat_null = nullptr;
-        LocalMatrix<T> **mat_null2 = nullptr;
-        LocalMatrix<T> **pmat = new LocalMatrix<T>*[1];
-        pmat[0] = new LocalMatrix<T>;
-        LocalVector<T> *null_vec = nullptr;
-        ASSERT_DEATH(mat1.ExtractSubMatrix(0, 0, safe_size, safe_size, mat_null), ".*Assertion.*mat != NULL*");
-        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, null_int, vint, &pmat), ".*Assertion.*row_offset != NULL*");
-        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, vint, null_int, &pmat), ".*Assertion.*col_offset != NULL*");
-        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, vint, vint, nullptr), ".*Assertion.*mat != NULL*");
-        ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, vint, vint, &mat_null2), ".*Assertion.*mat != NULL*");
-        ASSERT_DEATH(mat1.ExtractDiagonal(null_vec), ".*Assertion.*vec_diag != NULL*");
-        ASSERT_DEATH(mat1.ExtractInverseDiagonal(null_vec), ".*Assertion.*vec_inv_diag != NULL*");
-        ASSERT_DEATH(mat1.ExtractL(mat_null, true), ".*Assertion.*L != NULL*");
-        ASSERT_DEATH(mat1.ExtractU(mat_null, true), ".*Assertion.*U != NULL*");
-        delete pmat[0];
-        delete[] pmat;
-    }
-
-    // Permute, PermuteBackward
-    {
-        LocalVector<int> *null_vec = nullptr;
-        ASSERT_DEATH(mat1.Permute(*null_vec), ".*Assertion.*permutation != NULL*");
-        ASSERT_DEATH(mat1.PermuteBackward(*null_vec), ".*Assertion.*permutation != NULL*");
-    }
-
-    // CMK, RCMK, ConnectivityOrder, MultiColoring, MaximalIndependentSet, ZeroBlockPermutation
-    {
-        int val;
-        LocalVector<int> *null_vec = nullptr;
-        ASSERT_DEATH(mat1.CMK(null_vec), ".*Assertion.*permutation != NULL*");
-        ASSERT_DEATH(mat1.RCMK(null_vec), ".*Assertion.*permutation != NULL*");
-        ASSERT_DEATH(mat1.ConnectivityOrder(null_vec), ".*Assertion.*permutation != NULL*");
-        ASSERT_DEATH(mat1.MultiColoring(val, &vint, &int1), ".*Assertion.*size_colors == NULL*");
-        ASSERT_DEATH(mat1.MultiColoring(val, &null_int, null_vec), ".*Assertion.*permutation != NULL*");
-        ASSERT_DEATH(mat1.MaximalIndependentSet(val, null_vec), ".*Assertion.*permutation != NULL*");
-        ASSERT_DEATH(mat1.ZeroBlockPermutation(val, null_vec), ".*Assertion.*permutation != NULL*");
-    }
-
-    // LSolve, USolve, LLSolve, LUSolve, QRSolve
-    {
-        LocalVector<T> *null_vec = nullptr;
-        ASSERT_DEATH(mat1.LSolve(*null_vec, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.LSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
-        ASSERT_DEATH(mat1.USolve(*null_vec, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.USolve(vec1, null_vec), ".*Assertion.*out != NULL*");
-        ASSERT_DEATH(mat1.LLSolve(*null_vec, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.LLSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
-        ASSERT_DEATH(mat1.LLSolve(*null_vec, vec1, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.LLSolve(vec1, *null_vec, &vec1), ".*Assertion.*inv_diag != NULL*");
-        ASSERT_DEATH(mat1.LLSolve(vec1, vec1, null_vec), ".*Assertion.*out != NULL*");
-        ASSERT_DEATH(mat1.LUSolve(*null_vec, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.LUSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
-        ASSERT_DEATH(mat1.QRSolve(*null_vec, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.QRSolve(vec1, null_vec), ".*Assertion.*out != NULL*");
-    }
-
-    // ICFactorize, Householder
-    {
-        T val;
-        LocalVector<T> *null_vec = nullptr;
-        ASSERT_DEATH(mat1.ICFactorize(null_vec), ".*Assertion.*inv_diag != NULL*");
-        ASSERT_DEATH(mat1.Householder(0, val, null_vec), ".*Assertion.*vec != NULL*");
-    }
-
-    // CopyFrom functions
-    {
-        LocalMatrix<T> *null_mat = nullptr;
-        ASSERT_DEATH(mat1.CopyFrom(*null_mat), ".*Assertion.*src != NULL*");
-        ASSERT_DEATH(mat1.CopyFromAsync(*null_mat), ".*Assertion.*src != NULL*");
-        ASSERT_DEATH(mat1.CloneFrom(*null_mat), ".*Assertion.*src != NULL*");
-        ASSERT_DEATH(mat1.UpdateValuesCSR(null_data), ".*Assertion.*val != NULL*");
-        ASSERT_DEATH(mat1.CopyFromCSR(null_int, vint, vdata), ".*Assertion.*row_offsets != NULL*");
-        ASSERT_DEATH(mat1.CopyFromCSR(vint, null_int, vdata), ".*Assertion.*col != NULL*");
-        ASSERT_DEATH(mat1.CopyFromCSR(vint, vint, null_data), ".*Assertion.*val != NULL*");
-        ASSERT_DEATH(mat1.CopyToCSR(null_int, vint, vdata), ".*Assertion.*row_offsets != NULL*");
-        ASSERT_DEATH(mat1.CopyToCSR(vint, null_int, vdata), ".*Assertion.*col != NULL*");
-        ASSERT_DEATH(mat1.CopyToCSR(vint, vint, null_data), ".*Assertion.*val != NULL*");
-        ASSERT_DEATH(mat1.CopyFromCOO(null_int, vint, vdata), ".*Assertion.*row != NULL*");
-        ASSERT_DEATH(mat1.CopyFromCOO(vint, null_int, vdata), ".*Assertion.*col != NULL*");
-        ASSERT_DEATH(mat1.CopyFromCOO(vint, vint, null_data), ".*Assertion.*val != NULL*");
-        ASSERT_DEATH(mat1.CopyToCOO(null_int, vint, vdata), ".*Assertion.*row != NULL*");
-        ASSERT_DEATH(mat1.CopyToCOO(vint, null_int, vdata), ".*Assertion.*col != NULL*");
-        ASSERT_DEATH(mat1.CopyToCOO(vint, vint, null_data), ".*Assertion.*val != NULL*");
-        ASSERT_DEATH(mat1.CopyFromHostCSR(null_int, vint, vdata, "", safe_size, safe_size, safe_size), ".*Assertion.*row_offset != NULL*");
-        ASSERT_DEATH(mat1.CopyFromHostCSR(vint, null_int, vdata, "", safe_size, safe_size, safe_size), ".*Assertion.*col != NULL*");
-        ASSERT_DEATH(mat1.CopyFromHostCSR(vint, vint, null_data, "", safe_size, safe_size, safe_size), ".*Assertion.*val != NULL*");
-    }
-
-    // CreateFromMat
-    {
-        LocalVector<int> *null_vec = nullptr;
-        LocalMatrix<T> *null_mat = nullptr;
-        ASSERT_DEATH(mat1.CreateFromMap(*null_vec, safe_size, safe_size), ".*Assertion.*map != NULL*");
-        ASSERT_DEATH(mat1.CreateFromMap(*null_vec, safe_size, safe_size, &mat2), ".*Assertion.*map != NULL*");
-        ASSERT_DEATH(mat1.CreateFromMap(int1, safe_size, safe_size, null_mat), ".*Assertion.*pro != NULL*");
-    }
-
-    // Apply(Add)
-    {
-        LocalVector<T> *null_vec = nullptr;
-        ASSERT_DEATH(mat1.Apply(*null_vec, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.Apply(vec1, null_vec), ".*Assertion.*out != NULL*");
-        ASSERT_DEATH(mat1.ApplyAdd(*null_vec, 1.0, &vec1), ".*Assertion.*in != NULL*");
-        ASSERT_DEATH(mat1.ApplyAdd(vec1, 1.0, null_vec), ".*Assertion.*out != NULL*");
-    }
-
-    // Matrix-Matrix routines
-    {
-        LocalVector<T> *null_vec = nullptr;
-        LocalMatrix<T> *null_mat = nullptr;
-        ASSERT_DEATH(mat1.MatrixAdd(*null_mat), ".*Assertion.*mat != NULL*");
-        ASSERT_DEATH(mat1.MatrixMult(*null_mat, mat2), ".*Assertion.*A != NULL*");
-        ASSERT_DEATH(mat1.MatrixMult(mat2, *null_mat), ".*Assertion.*B != NULL*");
-        ASSERT_DEATH(mat1.DiagonalMatrixMult(*null_vec), ".*Assertion.*diag != NULL*");
-        ASSERT_DEATH(mat1.DiagonalMatrixMultL(*null_vec), ".*Assertion.*diag != NULL*");
-        ASSERT_DEATH(mat1.DiagonalMatrixMultR(*null_vec), ".*Assertion.*diag != NULL*");
-    }
-
-    // Row/Column manipulation
-    {
-        LocalVector<T> *null_vec = nullptr;
-        ASSERT_DEATH(mat1.ReplaceColumnVector(0, *null_vec), ".*Assertion.*vec != NULL*");
-        ASSERT_DEATH(mat1.ReplaceRowVector(0, *null_vec), ".*Assertion.*vec != NULL*");
-        ASSERT_DEATH(mat1.ExtractColumnVector(0, null_vec), ".*Assertion.*vec != NULL*");
-        ASSERT_DEATH(mat1.ExtractRowVector(0, null_vec), ".*Assertion.*vec != NULL*");
-    }
-
-    // AMG
-    {
-        int val;
-        LocalVector<int> *null_vec = nullptr;
-        LocalMatrix<T> *null_mat = nullptr;
-        ASSERT_DEATH(mat1.AMGConnect(0.1, null_vec), ".*Assertion.*connections != NULL*");
-        ASSERT_DEATH(mat1.AMGAggregate(*null_vec, &int1), ".*Assertion.*connections != NULL*");
-        ASSERT_DEATH(mat1.AMGAggregate(int1, null_vec), ".*Assertion.*aggregates != NULL*");
-        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, *null_vec, int1, &mat2, &mat2), ".*Assertion.*aggregates != NULL*");
-        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, *null_vec, &mat2, &mat2), ".*Assertion.*connections != NULL*");
-        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, null_mat, &mat2), ".*Assertion.*prolong != NULL*");
-        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, &mat2, null_mat), ".*Assertion.*restrict != NULL*");
-        ASSERT_DEATH(mat1.AMGAggregation(*null_vec, &mat2, &mat2), ".*Assertion.*aggregates != NULL*");
-        ASSERT_DEATH(mat1.AMGAggregation(int1, null_mat, &mat2), ".*Assertion.*prolong != NULL*");
-        ASSERT_DEATH(mat1.AMGAggregation(int1, &mat2, null_mat), ".*Assertion.*restrict != NULL*");
-        ASSERT_DEATH(mat1.RugeStueben(0.1, null_mat, &mat2), ".*Assertion.*prolong != NULL*");
-        ASSERT_DEATH(mat1.RugeStueben(0.1, &mat2, null_mat), ".*Assertion.*restrict != NULL*");
-        ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, null_vec, val, &null_int, val, 0), ".*Assertion.*G != NULL*");
-        ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, &int1, val, &vint, val, 0), ".*Assertion.*rG == NULL*");
-        ASSERT_DEATH(mat1.InitialPairwiseAggregation(*null_mat, 0.1, val, &int1, val, &null_int, val, 0), ".*Assertion.*mat != NULL*");
-        ASSERT_DEATH(mat1.InitialPairwiseAggregation(mat2, 0.1, val, null_vec, val, &null_int, val, 0), ".*Assertion.*G != NULL*");
-        ASSERT_DEATH(mat1.InitialPairwiseAggregation(mat2, 0.1, val, &int1, val, &vint, val, 0), ".*Assertion.*rG == NULL*");
-        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(0.1, val, null_vec, val, &vint, val, 0), ".*Assertion.*G != NULL*");
-        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(0.1, val, &int1, val, &null_int, val, 0), ".*Assertion.*rG != NULL*");
-        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(*null_mat, 0.1, val, &int1, val, &vint, val, 0), ".*Assertion.*mat != NULL*");
-        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(mat2, 0.1, val, null_vec, val, &vint, val, 0), ".*Assertion.*G != NULL*");
-        ASSERT_DEATH(mat1.FurtherPairwiseAggregation(mat2, 0.1, val, &int1, val, &null_int, val, 0), ".*Assertion.*rG != NULL*");
-        ASSERT_DEATH(mat1.CoarsenOperator(null_mat, safe_size, safe_size, int1, safe_size, vint, safe_size), ".*Assertion.*Ac != NULL*");
-        ASSERT_DEATH(mat1.CoarsenOperator(&mat2, safe_size, safe_size, *null_vec, safe_size, vint, safe_size), ".*Assertion.*G != NULL*");
-        ASSERT_DEATH(mat1.CoarsenOperator(&mat2, safe_size, safe_size, int1, safe_size, null_int, safe_size), ".*Assertion.*rG != NULL*");
     }
 
     free_host(&vint);
