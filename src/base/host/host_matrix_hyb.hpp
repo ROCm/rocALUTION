@@ -20,7 +20,7 @@ public:
   inline int get_ell_nnz(void) const { return this->ell_nnz_; }
   inline int get_coo_nnz(void) const { return this->coo_nnz_; }
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual unsigned int get_mat_format(void) const { return  HYB; }
 
   virtual void Clear(void);

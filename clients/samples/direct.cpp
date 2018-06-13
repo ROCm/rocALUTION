@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
   ls.SetOperator(mat);
   ls.Build();
 
-  mat.info();
+  mat.Info();
 
   double tick, tack;
   tick = rocalution_time();

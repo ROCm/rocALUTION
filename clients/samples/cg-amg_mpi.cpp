@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     // Set host levels (requires solver built)
     p.SetHostLevels(3);
 
-    mat.info();
+    mat.Info();
 
     double time = rocalution_time();
 

@@ -74,7 +74,7 @@ HIPAcceleratorMatrixCOO<ValueType>::~HIPAcceleratorMatrixCOO() {
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixCOO<ValueType>::info(void) const {
+void HIPAcceleratorMatrixCOO<ValueType>::Info(void) const {
 
   LOG_INFO("HIPAcceleratorMatrixCOO<ValueType>");
 
@@ -220,8 +220,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFromHost(const HostMatrix<ValueType
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    src.info();
+    this->Info();
+    src.Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -272,8 +272,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    dst->info();
+    this->Info();
+    dst->Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -330,8 +330,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      src.info();
+      this->Info();
+      src.Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -392,8 +392,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      dst->info();
+      this->Info();
+      dst->Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -445,8 +445,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    src.info();
+    this->Info();
+    src.Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -497,8 +497,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    dst->info();
+    this->Info();
+    dst->Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -555,8 +555,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      src.info();
+      this->Info();
+      src.Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -617,8 +617,8 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      dst->info();
+      this->Info();
+      dst->Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }

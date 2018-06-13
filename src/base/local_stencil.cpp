@@ -76,9 +76,9 @@ IndexType2 LocalStencil<ValueType>::get_ncol(void) const {
 
 
 template <typename ValueType>
-void LocalStencil<ValueType>::info(void) const {
+void LocalStencil<ValueType>::Info(void) const {
 
-  this->stencil_->info();
+  this->stencil_->Info();
 
 }
 

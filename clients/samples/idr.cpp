@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   x.MoveToAccelerator();
   rhs.MoveToAccelerator();
 
-  mat.info();
+  mat.Info();
 
   x.Allocate("x", mat.get_nrow());
   rhs.Allocate("rhs", mat.get_nrow());
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
 //  ls.Verbose(2);
 
-  mat.info();
+  mat.Info();
 
   tick = rocalution_time();
 

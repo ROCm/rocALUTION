@@ -58,7 +58,7 @@ HostMatrixHYB<ValueType>::~HostMatrixHYB() {
 }
 
 template <typename ValueType>
-void HostMatrixHYB<ValueType>::info(void) const {
+void HostMatrixHYB<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixHYB<ValueType>" <<
            " ELL nnz=" << this->ell_nnz_ <<

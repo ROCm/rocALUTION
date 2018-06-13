@@ -98,7 +98,7 @@ bool HostMatrixCSR<ValueType>::Zeros(void) {
 }
 
 template <typename ValueType>
-void HostMatrixCSR<ValueType>::info(void) const {
+void HostMatrixCSR<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixCSR<ValueType>, OpenMP threads: " << this->local_backend_.OpenMP_threads);
 

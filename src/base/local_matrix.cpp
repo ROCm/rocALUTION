@@ -100,7 +100,7 @@ void LocalMatrix<ValueType>::Zeros(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Zeros() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -116,7 +116,7 @@ void LocalMatrix<ValueType>::Zeros(void) {
 
       if (this->matrix_->Zeros() == false) {
         LOG_INFO("Computation of LocalMatrix::Zeros() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -1046,7 +1046,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
     LOG_INFO("Computation of LocalMatrix::ReadFileMTX() failed");
-    this->info();
+    this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
@@ -1062,7 +1062,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
 
     if (this->matrix_->ReadFileMTX(filename) == false) {
       LOG_INFO("Computation of LocalMatrix::ReadFileMTX() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1096,7 +1096,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
     LOG_INFO("Computation of LocalMatrix::WriteFileMTX() failed");
-    this->info();
+    this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
@@ -1112,7 +1112,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 
     if (mat_host.matrix_->WriteFileMTX(filename) == false) {
       LOG_INFO("Computation of LocalMatrix::WriteFileMTX() failed");
-      mat_host.info();
+      mat_host.Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1132,7 +1132,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::ReadFileCSR() failed");
-    this->info();
+    this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
@@ -1148,7 +1148,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
 
     if (this->matrix_->ReadFileCSR(filename) == false) {
       LOG_INFO("Computation of LocalMatrix::ReadFileCSR() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1183,7 +1183,7 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::WriteFileCSR() failed");
-    this->info();
+    this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
@@ -1199,7 +1199,7 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 
     if (mat_host.matrix_->WriteFileCSR(filename) == false) {
       LOG_INFO("Computation of LocalMatrix::WriteFileCSR() failed");
-      mat_host.info();
+      mat_host.Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1346,7 +1346,7 @@ bool LocalMatrix<ValueType>::is_accel(void) const {
 }
 
 template <typename ValueType>
-void LocalMatrix<ValueType>::info(void) const {
+void LocalMatrix<ValueType>::Info(void) const {
 
   std::string current_backend_name;
 
@@ -1368,7 +1368,7 @@ void LocalMatrix<ValueType>::info(void) const {
            << " accelerator backend={" << _rocalution_backend_name[this->local_backend_.backend] << "};"
            << " current=" << current_backend_name);
 
-  // this->matrix_->info();
+  // this->matrix_->Info();
 
 }
 
@@ -1628,7 +1628,7 @@ void LocalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
         // If CSR conversion fails too, exit with error
         if (new_mat->ConvertFrom(*this->matrix_host_) == false) {
           LOG_INFO("Unsupported (on host) convertion type to CSR");
-          this->info();
+          this->Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -1754,7 +1754,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) c
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractDiagonal() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1770,7 +1770,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) c
 
       if (mat_host.matrix_->ExtractDiagonal(vec_diag->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::ExtractDiagonal() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -1815,7 +1815,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType> *vec_
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractInverseDiagonal() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1831,7 +1831,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType> *vec_
 
       if (mat_host.matrix_->ExtractInverseDiagonal(vec_inv_diag->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::ExtractInverseDiagonal() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -1895,7 +1895,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(const int row_offset,
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractSubMatrix() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1912,7 +1912,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(const int row_offset,
 
       if (mat_host.matrix_->ExtractSubMatrix(row_offset, col_offset, row_size, col_size, mat->matrix_) == false) {
         LOG_INFO("Computation of LocalMatrix::ExtractSubMatrix() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2021,7 +2021,7 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType> *U, const bool diag
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractU() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2045,7 +2045,7 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType> *U, const bool diag
 
       if (err == false) {
         LOG_INFO("Computation of LocalMatrix::ExtractU() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2103,7 +2103,7 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType> *L, const bool diag
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractL() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2127,7 +2127,7 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType> *L, const bool diag
 
       if (err == false) {
         LOG_INFO("Computation of LocalMatrix::ExtractL() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2205,7 +2205,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LUSolve() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2229,7 +2229,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
 
         if (mat_host.matrix_->LUSolve(*vec_host.vector_, out->vector_) == false) {
           LOG_INFO("Computation of LocalMatrix::LUSolve() failed");
-          mat_host.info();
+          mat_host.Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -2300,7 +2300,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2319,7 +2319,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
 
       if (mat_host.matrix_->LLSolve(*vec_host.vector_, out->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2372,7 +2372,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2394,7 +2394,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
 
       if (mat_host.matrix_->LLSolve(*vec_host.vector_, *inv_diag_host.vector_, out->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2463,7 +2463,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LSolve() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2482,7 +2482,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
 
       if (mat_host.matrix_->LSolve(*vec_host.vector_, out->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::LSolve() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2551,7 +2551,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::USolve() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2570,7 +2570,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
 
       if (mat_host.matrix_->USolve(*vec_host.vector_, out->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::USolve() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2607,7 +2607,7 @@ void LocalMatrix<ValueType>::ILU0Factorize(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ILU0Factorize() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2623,7 +2623,7 @@ void LocalMatrix<ValueType>::ILU0Factorize(void) {
 
       if (this->matrix_->ILU0Factorize() == false) {
         LOG_INFO("Computation of LocalMatrix::ILU0Factorize() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2672,7 +2672,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ILUTFactorize() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2688,7 +2688,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 
       if (this->matrix_->ILUTFactorize(t, maxrow) == false) {
         LOG_INFO("Computation of LocalMatrix::ILUTFactorize() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2749,7 +2749,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 
         if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
           LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
-          this->info();
+          this->Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -2767,7 +2767,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 
           if (this->matrix_->ILUpFactorizeNumeric(p, *structure.matrix_) == false) {
             LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
-            this->info();
+            this->Info();
             FATAL_ERROR(__FILE__, __LINE__);
           }
 
@@ -2802,7 +2802,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 
         if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
           LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
-          this->info();
+          this->Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -2818,7 +2818,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 
           if (this->matrix_->ILU0Factorize() == false) {
             LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
-            this->info();
+            this->Info();
             FATAL_ERROR(__FILE__, __LINE__);
           }
 
@@ -2873,7 +2873,7 @@ void LocalMatrix<ValueType>::ICFactorize(LocalVector<ValueType> *inv_diag) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ICFactorize() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2890,7 +2890,7 @@ void LocalMatrix<ValueType>::ICFactorize(LocalVector<ValueType> *inv_diag) {
 
       if (this->matrix_->ICFactorize(inv_diag->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::ICFactorize() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -2950,7 +2950,7 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::MultiColoring() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -2968,7 +2968,7 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
 
       if (mat_host.matrix_->MultiColoring(num_colors, size_colors, permutation->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::MultiColoring() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3015,7 +3015,7 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int &size, LocalVector<int> *
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::MaximalIndependentSet() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3033,7 +3033,7 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int &size, LocalVector<int> *
 
       if (mat_host.matrix_->MaximalIndependentSet(size, permutation->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::MaximalIndependentSet() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3079,7 +3079,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *p
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ZeroBlockPermutation() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3097,7 +3097,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *p
 
       if (mat_host.matrix_->ZeroBlockPermutation(size, permutation->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::ZeroBlockPermutation() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3137,7 +3137,7 @@ void LocalMatrix<ValueType>::Householder(const int idx, ValueType &beta, LocalVe
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::Householder() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3154,7 +3154,7 @@ void LocalMatrix<ValueType>::Householder(const int idx, ValueType &beta, LocalVe
 
       if (mat_host.matrix_->Householder(idx, beta, vec->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::Householder() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3191,7 +3191,7 @@ void LocalMatrix<ValueType>::QRDecompose(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::QRDecompose() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3207,7 +3207,7 @@ void LocalMatrix<ValueType>::QRDecompose(void) {
 
       if (this->matrix_->QRDecompose() == false) {
         LOG_INFO("Computation of LocalMatrix::QRDecompose() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3257,7 +3257,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::QRSolve() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3278,7 +3278,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
 
       if (mat_host.matrix_->QRSolve(*vec_host.vector_, out->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::QRSolve() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3323,7 +3323,7 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Permute() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3341,7 +3341,7 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
 
       if (this->matrix_->Permute(*perm_host.vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::Permute() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3395,7 +3395,7 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
       LOG_INFO("Computation of LocalMatrix::PermuteBackward() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3413,7 +3413,7 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
 
       if (this->matrix_->PermuteBackward(*perm_host.vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::PermuteBackward() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3464,7 +3464,7 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int> *permutation) const {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::CMK() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3482,7 +3482,7 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int> *permutation) const {
 
       if (mat_host.matrix_->CMK(permutation->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::CMK() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3531,7 +3531,7 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int> *permutation) const {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::RCMK() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3549,7 +3549,7 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int> *permutation) const {
 
       if (mat_host.matrix_->RCMK(permutation->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::RCMK() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3598,7 +3598,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int> *permutation) co
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ConnectivityOrder() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3616,7 +3616,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int> *permutation) co
 
       if (mat_host.matrix_->ConnectivityOrder(permutation->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::ConnectivityOrder() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3658,7 +3658,7 @@ void LocalMatrix<ValueType>::SymbolicPower(const int p) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::SymbolicPower() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3674,7 +3674,7 @@ void LocalMatrix<ValueType>::SymbolicPower(const int p) {
 
       if (this->matrix_->SymbolicPower(p) == false) {
         LOG_INFO("Computation of LocalMatrix::SymbolicPower() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3729,7 +3729,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::MatrixAdd() failed");
-    this->info();
+    this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
@@ -3746,7 +3746,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
 
     if (this->matrix_->MatrixAdd(*mat_host.matrix_, alpha, beta, structure) == false) {
       LOG_INFO("Computation of LocalMatrix::MatrixAdd() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3790,7 +3790,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Gershgorin() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3805,7 +3805,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda
 
       if (mat_host.matrix_->Gershgorin(lambda_min, lambda_max) == false) {
         LOG_INFO("Computation of LocalMatrix::Gershgorin() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3837,7 +3837,7 @@ void LocalMatrix<ValueType>::Scale(const ValueType alpha) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Scale() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3853,7 +3853,7 @@ void LocalMatrix<ValueType>::Scale(const ValueType alpha) {
 
       if (this->matrix_->Scale(alpha) == false) {
         LOG_INFO("Computation of LocalMatrix::Scale() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3899,7 +3899,7 @@ void LocalMatrix<ValueType>::ScaleDiagonal(const ValueType alpha) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ScaleDiagonal() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3915,7 +3915,7 @@ void LocalMatrix<ValueType>::ScaleDiagonal(const ValueType alpha) {
 
       if (this->matrix_->ScaleDiagonal(alpha) == false) {
         LOG_INFO("Computation of LocalMatrix::ScaleDiagonal() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -3961,7 +3961,7 @@ void LocalMatrix<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ScaleOffDiagonal() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -3977,7 +3977,7 @@ void LocalMatrix<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 
       if (this->matrix_->ScaleOffDiagonal(alpha) == false) {
         LOG_INFO("Computation of LocalMatrix::ScaleOffDiagonal() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4023,7 +4023,7 @@ void LocalMatrix<ValueType>::AddScalar(const ValueType alpha) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AddScalar() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4039,7 +4039,7 @@ void LocalMatrix<ValueType>::AddScalar(const ValueType alpha) {
 
       if (this->matrix_->AddScalar(alpha) == false) {
         LOG_INFO("Computation of LocalMatrix::AddScalar() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4085,7 +4085,7 @@ void LocalMatrix<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AddScalarDiagonal() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4101,7 +4101,7 @@ void LocalMatrix<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 
       if (this->matrix_->AddScalarDiagonal(alpha) == false) {
         LOG_INFO("Computation of LocalMatrix::AddScalarDiagonal() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4147,7 +4147,7 @@ void LocalMatrix<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AddScalarOffDiagonal() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4163,7 +4163,7 @@ void LocalMatrix<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 
       if (this->matrix_->AddScalarOffDiagonal(alpha) == false) {
         LOG_INFO("Computation of LocalMatrix::AddScalarOffDiagonal() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4238,7 +4238,7 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::MatMatMult() failed");
-    this->info();
+    this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
@@ -4259,7 +4259,7 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
 
     if (this->matrix_->MatMatMult(*A_host.matrix_, *B_host.matrix_) == false) {
       LOG_INFO("Computation of LocalMatrix::MatMatMult() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4310,7 +4310,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &d
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultR() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4328,7 +4328,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &d
 
       if (this->matrix_->DiagonalMatrixMultR(*diag_host.vector_) ==  false) {
         LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultR() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4388,7 +4388,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultL() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4406,7 +4406,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
 
       if (this->matrix_->DiagonalMatrixMultL(*diag_host.vector_) ==  false) {
         LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultL() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4454,7 +4454,7 @@ void LocalMatrix<ValueType>::Compress(const double drop_off) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Compress() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4470,7 +4470,7 @@ void LocalMatrix<ValueType>::Compress(const double drop_off) {
 
       if (this->matrix_->Compress(drop_off) == false) {
         LOG_INFO("Computation of LocalMatrix::Compress() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4516,7 +4516,7 @@ void LocalMatrix<ValueType>::Transpose(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Transpose() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4532,7 +4532,7 @@ void LocalMatrix<ValueType>::Transpose(void) {
 
       if (this->matrix_->Transpose() == false) {
         LOG_INFO("Computation of LocalMatrix::Transpose() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4578,7 +4578,7 @@ void LocalMatrix<ValueType>::Sort(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Sort() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4594,7 +4594,7 @@ void LocalMatrix<ValueType>::Sort(void) {
 
       if (this->matrix_->Sort() ==  false) {
         LOG_INFO("Computation of LocalMatrix::Sort() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4644,7 +4644,7 @@ void LocalMatrix<ValueType>::Key(long int &row_key,
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Key() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4662,7 +4662,7 @@ void LocalMatrix<ValueType>::Key(long int &row_key,
                                 col_key,
                                 val_key) == false) {
         LOG_INFO("Computation of LocalMatrix::Key() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4700,7 +4700,7 @@ void LocalMatrix<ValueType>::AMGConnect(const ValueType eps, LocalVector<int> *c
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGConnect() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4718,7 +4718,7 @@ void LocalMatrix<ValueType>::AMGConnect(const ValueType eps, LocalVector<int> *c
 
       if (mat_host.matrix_->AMGConnect(eps, connections->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::AMGConnect() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4761,7 +4761,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, L
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGAggregate() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4781,7 +4781,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, L
 
       if (mat_host.matrix_->AMGAggregate(*conn_host.vector_, aggregates->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::AMGAggregate() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4844,7 +4844,7 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4868,7 +4868,7 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
       if (mat_host.matrix_->AMGSmoothedAggregation(relax, *aggr_host.vector_, *conn_host.vector_,
                                                    prolong->matrix_, restrict->matrix_) == false) {
         LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -4936,7 +4936,7 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGAggregation() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -4957,7 +4957,7 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
 
       if (mat_host.matrix_->AMGAggregation(*aggr_host.vector_, prolong->matrix_, restrict->matrix_) == false) {
         LOG_INFO("Computation of LocalMatrix::AMGAggregation() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5021,7 +5021,7 @@ void LocalMatrix<ValueType>::RugeStueben(const ValueType eps, LocalMatrix<ValueT
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::RugeStueben() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5040,7 +5040,7 @@ void LocalMatrix<ValueType>::RugeStueben(const ValueType eps, LocalMatrix<ValueT
 
       if (mat_host.matrix_->RugeStueben(eps, prolong->matrix_, restrict->matrix_) == false) {
         LOG_INFO("Computation of LocalMatrix::RugeStueben() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5103,7 +5103,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, in
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5121,7 +5121,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, in
 
       if (mat_host.matrix_->InitialPairwiseAggregation(beta, nc, G->vector_, Gsize, rG, rGsize, ordering) == false) {
         LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5175,7 +5175,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5198,7 +5198,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
       if (mat_host.matrix_->InitialPairwiseAggregation(*mat2_host.matrix_, beta, nc, G->vector_,
                                                        Gsize, rG, rGsize, ordering) == false) {
         LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5243,7 +5243,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, in
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5261,7 +5261,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, in
 
       if (mat_host.matrix_->FurtherPairwiseAggregation(beta, nc, G->vector_, Gsize, rG, rGsize, ordering) == false) {
         LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5315,7 +5315,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5337,7 +5337,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
       if (mat_host.matrix_->FurtherPairwiseAggregation(*mat2_host.matrix_, beta, nc, G->vector_,
                                                        Gsize, rG, rGsize, ordering) == false) {
         LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5387,7 +5387,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::CoarsenOperator() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5409,7 +5409,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
 
       if (mat_host.matrix_->CoarsenOperator(Ac->matrix_, nrow, ncol, *vec_host.vector_, Gsize, rG, rGsize) == false) {
         LOG_INFO("Computation of LocalMatrix::CoarsenOperator() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5464,7 +5464,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5482,7 +5482,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 
       if (this->matrix_->CreateFromMap(*map_host.vector_, n, m) == false) {
         LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5534,7 +5534,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
-    this->info();
+    this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
 
@@ -5553,7 +5553,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 
     if (this->matrix_->CreateFromMap(*map_host.vector_, n, m, pro->matrix_) == false) {
       LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5600,7 +5600,7 @@ void LocalMatrix<ValueType>::LUFactorize(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::LUFactorize() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5616,7 +5616,7 @@ void LocalMatrix<ValueType>::LUFactorize(void) {
 
       if (this->matrix_->LUFactorize() == false) {
         LOG_INFO("Computation of LocalMatrix::LUFactorize() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5678,7 +5678,7 @@ void LocalMatrix<ValueType>::FSAI(const int power, const LocalMatrix<ValueType> 
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::FSAI() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5699,7 +5699,7 @@ void LocalMatrix<ValueType>::FSAI(const int power, const LocalMatrix<ValueType> 
 
         if (this->matrix_->FSAI(power, pattern_host.matrix_) == false) {
           LOG_INFO("Computation of LocalMatrix::FSAI() failed");
-          this->info();
+          this->Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -5707,7 +5707,7 @@ void LocalMatrix<ValueType>::FSAI(const int power, const LocalMatrix<ValueType> 
 
         if (this->matrix_->FSAI(power, NULL) == false) {
           LOG_INFO("Computation of LocalMatrix::FSAI() failed");
-          this->info();
+          this->Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -5757,7 +5757,7 @@ void LocalMatrix<ValueType>::SPAI(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::SPAI() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5773,7 +5773,7 @@ void LocalMatrix<ValueType>::SPAI(void) {
 
       if (this->matrix_->SPAI() == false) {
         LOG_INFO("Computation of LocalMatrix::SPAI() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5819,7 +5819,7 @@ void LocalMatrix<ValueType>::Invert(void) {
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::Invert() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5835,7 +5835,7 @@ void LocalMatrix<ValueType>::Invert(void) {
 
       if (this->matrix_->Invert() == false) {
         LOG_INFO("Computation of LocalMatrix::Invert() failed");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -5888,7 +5888,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ReplaceColumnVector() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5911,7 +5911,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
 
         if (this->matrix_->ReplaceColumnVector(idx, *vec_host.vector_) == false) {
           LOG_INFO("Computation of LocalMatrix::ReplaceColumnVector() failed");
-          this->info();
+          this->Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -5966,7 +5966,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<Valu
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractColumnVector() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -5984,7 +5984,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<Valu
 
       if (mat_host.matrix_->ExtractColumnVector(idx, vec->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::ExtractColumnVector() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -6028,7 +6028,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ReplaceRowVector() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -6051,7 +6051,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
 
         if (this->matrix_->ReplaceRowVector(idx, *vec_host.vector_) == false) {
           LOG_INFO("Computation of LocalMatrix::ReplaceRowVector() failed");
-          this->info();
+          this->Info();
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
@@ -6106,7 +6106,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(const int idx, LocalVector<ValueTy
 
     if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractRowVector() failed");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -6124,7 +6124,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(const int idx, LocalVector<ValueTy
 
       if (mat_host.matrix_->ExtractRowVector(idx, vec->vector_) == false) {
         LOG_INFO("Computation of LocalMatrix::ExtractRowVector() failed");
-        mat_host.info();
+        mat_host.Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 

@@ -283,12 +283,12 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
     assert(this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->get_ncol() ==
            this->A_last_->get_ncol());
 
-    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->info();
+    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->Info();
     this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->Clear();
     delete this->A_block_[this->num_blocks_-1][this->num_blocks_-1];
 
     this->A_block_[this->num_blocks_-1][this->num_blocks_-1] = this->A_last_;
-    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->info();
+    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->Info();
     this->A_last_ = NULL;
   }
 

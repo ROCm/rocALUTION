@@ -28,7 +28,7 @@ public:
   LocalMatrix();
   virtual ~LocalMatrix();
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
 
   /// Return the matrix format id (see matrix_formats.hpp)
   unsigned int GetFormat(void) const;

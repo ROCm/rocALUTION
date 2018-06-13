@@ -34,7 +34,7 @@ public:
   virtual void MoveToHostAsync(void);
   virtual void Sync(void);
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual IndexType2 get_size(void) const;
   virtual const LocalVector<ValueType>& GetInterior() const;
   virtual LocalVector<ValueType>& GetInterior();

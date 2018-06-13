@@ -44,7 +44,7 @@ HostStencilLaplace2D<ValueType>::~HostStencilLaplace2D() {
 }
 
 template <typename ValueType>
-void HostStencilLaplace2D<ValueType>::info(void) const {
+void HostStencilLaplace2D<ValueType>::Info(void) const {
 
   LOG_INFO("Stencil 2D Laplace (Host) size=" << this->size_ << " dim=" << this->get_ndim());
 

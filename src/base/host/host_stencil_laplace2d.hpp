@@ -17,7 +17,7 @@ public:
   virtual ~HostStencilLaplace2D();
 
   virtual int get_nnz(void) const;
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual unsigned int get_stencil_id(void) const { return  Laplace2D; }
 
  

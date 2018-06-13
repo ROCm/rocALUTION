@@ -50,7 +50,7 @@ HostMatrixDIA<ValueType>::~HostMatrixDIA() {
 }
 
 template <typename ValueType>
-void HostMatrixDIA<ValueType>::info(void) const {
+void HostMatrixDIA<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixDIA<ValueType>, diag = " << this->mat_.num_diag << " nnz=" << this->nnz_);
 

@@ -51,7 +51,7 @@ HostMatrixELL<ValueType>::~HostMatrixELL() {
 }
 
 template <typename ValueType>
-void HostMatrixELL<ValueType>::info(void) const {
+void HostMatrixELL<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixELL<ValueType>");
 

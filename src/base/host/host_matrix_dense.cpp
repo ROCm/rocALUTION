@@ -50,7 +50,7 @@ HostMatrixDENSE<ValueType>::~HostMatrixDENSE() {
 }
 
 template <typename ValueType>
-void HostMatrixDENSE<ValueType>::info(void) const {
+void HostMatrixDENSE<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixDENSE<ValueType>");
 

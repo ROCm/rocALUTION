@@ -16,7 +16,7 @@ public:
   HostMatrixMCSR(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixMCSR();
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual unsigned int get_mat_format(void) const { return  MCSR; }
 
   virtual void Clear(void);

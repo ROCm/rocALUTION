@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 
   cg.Build();
   
-  mat.info();    
+  mat.Info();    
   tick = paralution_time();
   
   cg.Solve(rhs, &x);

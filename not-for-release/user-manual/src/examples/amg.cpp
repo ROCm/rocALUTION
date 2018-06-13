@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
   rhs.MoveToAccelerator();
   ls.MoveToAccelerator();
 
-  mat.info();
+  mat.Info();
   
   tack = paralution_time();
   std::cout << "Building time:" << (tack-tick)/1000000 << " sec" << std::endl;

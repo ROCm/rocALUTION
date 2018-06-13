@@ -51,7 +51,7 @@ HostMatrixMCSR<ValueType>::~HostMatrixMCSR() {
 }
 
 template <typename ValueType>
-void HostMatrixMCSR<ValueType>::info(void) const {
+void HostMatrixMCSR<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixMCSR<ValueType>");
 

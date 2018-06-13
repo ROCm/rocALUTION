@@ -30,7 +30,7 @@ public:
   LocalStencil(unsigned int type);
   virtual ~LocalStencil();
 
-  virtual void info() const;
+  virtual void Info() const;
 
   virtual int get_ndim(void) const;
   virtual IndexType2 get_nrow(void) const;

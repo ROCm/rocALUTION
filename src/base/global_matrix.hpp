@@ -44,7 +44,7 @@ public:
   virtual void MoveToAccelerator(void); // check for ghost local and boundary parts!
   virtual void MoveToHost(void);
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual bool Check(void) const;
 
   // TODO

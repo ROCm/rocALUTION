@@ -630,9 +630,9 @@ bool GlobalMatrix<ValueType>::is_accel(void) const {
 }
 
 template <typename ValueType>
-void GlobalMatrix<ValueType>::info(void) const {
+void GlobalMatrix<ValueType>::Info(void) const {
 
-  LOG_DEBUG(this, "GlobalMatrix::info()",
+  LOG_DEBUG(this, "GlobalMatrix::Info()",
             "");
 
   std::string current_backend_name;

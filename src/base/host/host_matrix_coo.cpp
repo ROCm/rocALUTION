@@ -56,7 +56,7 @@ HostMatrixCOO<ValueType>::~HostMatrixCOO() {
 
 }
 template <typename ValueType>
-void HostMatrixCOO<ValueType>::info(void) const {
+void HostMatrixCOO<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixCOO<ValueType>");
 

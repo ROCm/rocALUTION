@@ -46,7 +46,7 @@ template <typename ValueType>
 bool BaseVector<ValueType>::Check(void) const {
 
   LOG_INFO("BaseVector::Check()");
-  this->info();
+  this->Info();
   LOG_INFO("Only host version!");
   FATAL_ERROR(__FILE__, __LINE__);
 
@@ -58,7 +58,7 @@ void BaseVector<ValueType>::Assemble(const int *i, const ValueType *v,
                                      int size, const int n) {
 
   LOG_INFO("BaseVector::Assemble()");
-  this->info();
+  this->Info();
   LOG_INFO("Only host version!");
   FATAL_ERROR(__FILE__, __LINE__);
 
@@ -68,7 +68,7 @@ template <typename ValueType>
 void BaseVector<ValueType>::CopyFromData(const ValueType *data) {
 
   LOG_INFO("CopyFromData(const ValueType *data)");
-  this->info();
+  this->Info();
   LOG_INFO("This function is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
 
@@ -78,7 +78,7 @@ template <typename ValueType>
 void BaseVector<ValueType>::CopyToData(ValueType *data) const {
 
   LOG_INFO("CopyToData(ValueType *val) const");
-  this->info();
+  this->Info();
   LOG_INFO("This function is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
 
@@ -88,8 +88,8 @@ template <typename ValueType>
 void BaseVector<ValueType>::CopyFromFloat(const BaseVector<float> &vec) {
 
   LOG_INFO("BaseVector::CopyFromFloat(const BaseVector<float> &vec)");
-  this->info();
-  vec.info();
+  this->Info();
+  vec.Info();
   LOG_INFO("Float casting is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
 
@@ -99,8 +99,8 @@ template <typename ValueType>
 void BaseVector<ValueType>::CopyFromDouble(const BaseVector<double> &vec) {
 
   LOG_INFO("BaseVector::CopyFromDouble(const BaseVector<double> &vec)");
-  this->info();
-  vec.info();
+  this->Info();
+  vec.Info();
   LOG_INFO("Float casting is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
 

@@ -56,7 +56,7 @@ HostVector<ValueType>::~HostVector() {
 }
 
 template <typename ValueType>
-void HostVector<ValueType>::info(void) const {
+void HostVector<ValueType>::Info(void) const {
 
   LOG_INFO("HostVector<ValueType>, OpenMP threads: " << this->local_backend_.OpenMP_threads);
 

@@ -76,9 +76,9 @@ int main(int argc, char* argv[])
     v2.Zeros();
     mat.Apply(v1, &v2);
 
-    mat.info();
-    v1.info();
-    v2.info();
+    mat.Info();
+    v1.Info();
+    v2.Info();
 
     int tests = 200;
 
@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
     mat.ConvertToCSR();
     nnz = mat.get_nnz();
 
-    mat.info();
+    mat.Info();
 
     mat.Apply(v1, &v2);
 
@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
     mat.ConvertToMCSR();
     nnz = mat.get_nnz();
 
-    mat.info();
+    mat.Info();
 
     mat.Apply(v1, &v2);
 
@@ -300,7 +300,7 @@ int main(int argc, char* argv[])
     mat.ConvertToELL();
     nnz = mat.get_nnz();
 
-    mat.info();
+    mat.Info();
 
     mat.Apply(v1, &v2);
 
@@ -336,7 +336,7 @@ int main(int argc, char* argv[])
     mat.ConvertToCOO();
     nnz = mat.get_nnz();
 
-    mat.info();
+    mat.Info();
 
     mat.Apply(v1, &v2);
 
@@ -372,7 +372,7 @@ int main(int argc, char* argv[])
     mat.ConvertToHYB();
     nnz = mat.get_nnz();
 
-    mat.info();
+    mat.Info();
 
     mat.Apply(v1, &v2);
 
@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
     mat.ConvertToDIA();
     nnz = mat.get_nnz();
 
-    mat.info();
+    mat.Info();
 
     mat.Apply(v1, &v2);
 

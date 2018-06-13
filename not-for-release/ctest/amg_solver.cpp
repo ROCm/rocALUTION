@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  mat.info();
+  mat.Info();
 
   ls.Solve(rhs, &x);
 

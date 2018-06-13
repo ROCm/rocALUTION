@@ -48,7 +48,7 @@ HostMatrixBCSR<ValueType>::~HostMatrixBCSR() {
 }
 
 template <typename ValueType>
-void HostMatrixBCSR<ValueType>::info(void) const {
+void HostMatrixBCSR<ValueType>::Info(void) const {
 
   //TODO
   LOG_INFO("HostMatrixBCSR<ValueType>");

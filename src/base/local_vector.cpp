@@ -508,7 +508,7 @@ const ValueType&  LocalVector<ValueType>::operator[](const int i) const {
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::info(void) const {
+void LocalVector<ValueType>::Info(void) const {
 
   std::string current_backend_name;
 
@@ -1021,7 +1021,7 @@ void LocalVector<ValueType>::Restriction(const LocalVector<ValueType> &vec_fine,
 
     if ((err == false) && (this->is_host() == true)) {
       LOG_INFO("Computation of LocalVector::Restriction() fail");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1037,7 +1037,7 @@ void LocalVector<ValueType>::Restriction(const LocalVector<ValueType> &vec_fine,
 
       if (this->vector_->Restriction(*vec_fine_tmp.vector_, *map_tmp.vector_) == false) {
         LOG_INFO("Computation of LocalVector::Restriction() fail");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
@@ -1071,7 +1071,7 @@ void LocalVector<ValueType>::Prolongation(const LocalVector<ValueType> &vec_coar
 
     if ((err == false) && (this->is_host() == true)) {
       LOG_INFO("Computation of LocalVector::Prolongation() fail");
-      this->info();
+      this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1087,7 +1087,7 @@ void LocalVector<ValueType>::Prolongation(const LocalVector<ValueType> &vec_coar
 
       if (this->vector_->Prolongation(*vec_coarse_tmp.vector_, *map_tmp.vector_) == false) {
         LOG_INFO("Computation of LocalVector::Prolongation() fail");
-        this->info();
+        this->Info();
         FATAL_ERROR(__FILE__, __LINE__);
       }
 

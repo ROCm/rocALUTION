@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
   rhs.MoveToAccelerator();
   ls.MoveToAccelerator();
   
-  mat.info();
+  mat.Info();
 
   tick = rocalution_time();
 

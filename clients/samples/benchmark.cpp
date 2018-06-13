@@ -45,9 +45,9 @@ int main(int argc, char* argv[]) {
   vec1.MoveToAccelerator();  
   vec2.MoveToAccelerator();
 
-  mat.info();    
-  vec1.info();
-  vec1.info();
+  mat.Info();    
+  vec1.Info();
+  vec1.Info();
 
 
   std::cout << "----------------------------------------------------" << std::endl;
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
   mat.ConvertToCSR();
   nnz = mat.get_nnz();
 
-  mat.info();
+  mat.Info();
   // Matrix-Vector Multiplication
   // Size = int(size+nnz) [row_offset + col] + valuetype(2*size+nnz) [in + out + nnz]
   // Flop = 2 per entry (nnz)
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
   mat.ConvertToMCSR();
   nnz = mat.get_nnz();
 
-  mat.info();
+  mat.Info();
   // Matrix-Vector Multiplication
   // Size = int(size+(nnz-size)) [row_offset + col] + valuetype(2*size+nnz) [in + out + nnz]
   // Flop = 2 per entry (nnz)
@@ -206,7 +206,7 @@ int main(int argc, char* argv[]) {
   mat.ConvertToELL();
   nnz = mat.get_nnz();
  
-  mat.info();
+  mat.Info();
   // Matrix-Vector Multiplication  
   // Size = int(nnz) [col] + valuetype(2*size+nnz) [in + out + nnz]  
   // Flop = 2 per entry (nnz)
@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
   mat.ConvertToCOO();
   nnz = mat.get_nnz();
 
-  mat.info();
+  mat.Info();
   // Matrix-Vector Multiplication
   // Size = int(2*nnz) + valuetype(2*size+nnz)
   // Flop = 2 per entry (nnz)
@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
   mat.ConvertToHYB();
   nnz = mat.get_nnz();
 
-  mat.info();
+  mat.Info();
   // Matrix-Vector Multiplication
   // Size = int(nnz) [col] + valuetype(2*size+nnz) [in + out + nnz]  
   // Flop = 2 per entry (nnz)
@@ -280,7 +280,7 @@ int main(int argc, char* argv[]) {
   mat.ConvertToDIA();
   nnz = mat.get_nnz();
 
-  mat.info();
+  mat.Info();
   // Matrix-Vector Multiplication
   // Size = int(size+nnz) + valuetype(2*size+nnz)
   // Flop = 2 per entry (nnz)

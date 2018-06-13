@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     ls.Build();
     ls.Verbose(1);
 
-    mat.info();
+    mat.Info();
 
     double time = rocalution_time();
 

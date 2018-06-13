@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  mat.info();
+  mat.Info();
 
   tick = rocalution_time();
 

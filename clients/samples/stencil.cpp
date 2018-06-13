@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  stencil.info();
+  stencil.Info();
 
   double tick, tack;
   tick = rocalution_time();

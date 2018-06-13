@@ -28,7 +28,7 @@ public:
   virtual void MoveToAccelerator(void);
   virtual void MoveToHost(void);
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual bool Check(void) const;
 
   virtual IndexType2 get_size(void) const;

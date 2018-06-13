@@ -45,8 +45,8 @@ void Vector<ValueType>::CopyFrom(const LocalVector<ValueType> &src) {
 
   LOG_INFO("Vector<ValueType>::CopyFrom(const LocalVector<ValueType> &src)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  src.info();
+  this->Info();
+  src.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -56,8 +56,8 @@ void Vector<ValueType>::CopyFrom(const GlobalVector<ValueType> &src) {
 
   LOG_INFO("Vector<ValueType>::CopyFrom(const GlobalVector<ValueType> &src)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  src.info();
+  this->Info();
+  src.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -67,8 +67,8 @@ void Vector<ValueType>::CopyFromAsync(const LocalVector<ValueType> &src) {
 
   LOG_INFO("Vector<ValueType>::CopyFromAsync(const LocalVector<ValueType> &src)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  src.info();
+  this->Info();
+  src.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -78,8 +78,8 @@ void Vector<ValueType>::CopyFromFloat(const LocalVector<float> &src) {
 
   LOG_INFO("Vector<ValueType>::CopyFromFloat(const LocalVector<float> &src)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  src.info();
+  this->Info();
+  src.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -89,8 +89,8 @@ void Vector<ValueType>::CopyFromDouble(const LocalVector<double> &src) {
 
   LOG_INFO("Vector<ValueType>::CopyFromDouble(const LocalVector<double> &src)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  src.info();
+  this->Info();
+  src.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -100,8 +100,8 @@ void Vector<ValueType>::CloneFrom(const LocalVector<ValueType> &src) {
 
   LOG_INFO("Vector<ValueType>::CloneFrom(const LocalVector<ValueType> &src)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  src.info();
+  this->Info();
+  src.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -111,8 +111,8 @@ void Vector<ValueType>::CloneFrom(const GlobalVector<ValueType> &src) {
 
   LOG_INFO("Vector<ValueType>::CloneFrom(const GlobalVector<ValueType> &src)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  src.info();
+  this->Info();
+  src.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -122,8 +122,8 @@ void Vector<ValueType>::AddScale(const LocalVector<ValueType> &x, const ValueTyp
 
   LOG_INFO("Vector<ValueType>::AddScale(const LocalVector<ValueType> &x, const ValueType alpha)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -133,8 +133,8 @@ void Vector<ValueType>::AddScale(const GlobalVector<ValueType> &x, const ValueTy
 
   LOG_INFO("Vector<ValueType>::AddScale(const GlobalVector<ValueType> &x, const ValueType alpha)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -144,8 +144,8 @@ void Vector<ValueType>::ScaleAdd(const ValueType alpha, const LocalVector<ValueT
 
   LOG_INFO("Vector<ValueType>::ScaleAdd(const ValueType alpha, const LocalVector<ValueType> &x)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -155,8 +155,8 @@ void Vector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector<Value
 
   LOG_INFO("Vector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector<ValueType> &x)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -166,8 +166,8 @@ ValueType Vector<ValueType>::Dot(const LocalVector<ValueType> &x) const {
 
   LOG_INFO("Vector<ValueType>::Dot(const LocalVector<ValueType> &x) const");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -177,8 +177,8 @@ ValueType Vector<ValueType>::Dot(const GlobalVector<ValueType> &x) const {
 
   LOG_INFO("Vector<ValueType>::Dot(const GlobalVector<ValueType> &x) const");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -188,8 +188,8 @@ ValueType Vector<ValueType>::DotNonConj(const LocalVector<ValueType> &x) const {
 
   LOG_INFO("Vector<ValueType>::DotNonConj(const LocalVector<ValueType> &x) const");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -199,8 +199,8 @@ ValueType Vector<ValueType>::DotNonConj(const GlobalVector<ValueType> &x) const 
 
   LOG_INFO("Vector<ValueType>::DotNonConj(const GlobalVector<ValueType> &x) const");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -210,8 +210,8 @@ void Vector<ValueType>::PointWiseMult(const LocalVector<ValueType> &x) {
 
   LOG_INFO("Vector<ValueType>::PointWiseMult(const LocalVector<ValueType> &x)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -221,8 +221,8 @@ void Vector<ValueType>::PointWiseMult(const GlobalVector<ValueType> &x) {
 
   LOG_INFO("Vector<ValueType>::PointWiseMult(const GlobalVector<ValueType> &x)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -232,9 +232,9 @@ void Vector<ValueType>::PointWiseMult(const LocalVector<ValueType> &x, const Loc
 
   LOG_INFO("Vector<ValueType>::PointWiseMult(const LocalVector<ValueType> &x, const LocalVector<ValueType> &y)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
-  y.info();
+  this->Info();
+  x.Info();
+  y.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -244,9 +244,9 @@ void Vector<ValueType>::PointWiseMult(const GlobalVector<ValueType> &x, const Lo
 
   LOG_INFO("Vector<ValueType>::PointWiseMult(const GlobalVector<ValueType> &x, const LocalVector<ValueType> &y)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
-  y.info();
+  this->Info();
+  x.Info();
+  y.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -256,8 +256,8 @@ void Vector<ValueType>::ScaleAddScale(const ValueType alpha, const LocalVector<V
 
   LOG_INFO("ScaleAddScale(const ValueType alpha, const LocalVector<ValueType> &x, const ValueType beta)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -267,8 +267,8 @@ void Vector<ValueType>::ScaleAddScale(const ValueType alpha, const GlobalVector<
 
   LOG_INFO("ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType> &x, const ValueType beta)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -278,9 +278,9 @@ void Vector<ValueType>::ScaleAdd2(const ValueType alpha, const LocalVector<Value
 
   LOG_INFO("ScaleAdd2(const ValueType alpha, const LocalVector<ValueType> &x, const ValueType beta, const LocalVector<ValueType> &y, const ValueType gamma)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
-  y.info();
+  this->Info();
+  x.Info();
+  y.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -290,9 +290,9 @@ void Vector<ValueType>::ScaleAdd2(const ValueType alpha, const GlobalVector<Valu
 
   LOG_INFO("ScaleAdd2(const ValueType alpha, const GlobalVector<ValueType> &x,const ValueType beta, const GlobalVector<ValueType> &y, const ValueType gamma)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
-  y.info();
+  this->Info();
+  x.Info();
+  y.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -302,8 +302,8 @@ void Vector<ValueType>::ExclusiveScan(const LocalVector<ValueType> &x) {
 
   LOG_INFO("ExclusiveScan(const LocalVector<ValueType> &x)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -313,8 +313,8 @@ void Vector<ValueType>::ExclusiveScan(const GlobalVector<ValueType> &x) {
 
   LOG_INFO("ExclusiveScan(const GlobalVector<ValueType> &x)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  x.info();
+  this->Info();
+  x.Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }

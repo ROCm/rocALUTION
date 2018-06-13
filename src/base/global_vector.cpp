@@ -363,7 +363,7 @@ const ValueType& GlobalVector<ValueType>::operator[](const int i) const {
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::info(void) const {
+void GlobalVector<ValueType>::Info(void) const {
 
   std::string current_backend_name;
 

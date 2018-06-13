@@ -18,7 +18,7 @@ public:
   HIPAcceleratorMatrixCOO(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorMatrixCOO();
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual unsigned int get_mat_format(void) const { return COO; }
 
   virtual void Clear(void);

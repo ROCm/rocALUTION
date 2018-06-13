@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
   if (mFormat == "DIA")  mat.ConvertTo(DIA);
   if (mFormat == "HYB")  mat.ConvertTo(HYB);
 
-  mat.info();
+  mat.Info();
 
   ls.Solve(rhs, &x);
 

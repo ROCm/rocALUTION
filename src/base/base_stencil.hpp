@@ -38,7 +38,7 @@ public:
   virtual int get_nnz(void) const = 0;
 
   /// Shows simple info about the object
-  virtual void info(void) const = 0;
+  virtual void Info(void) const = 0;
   /// Return the stencil format id (see stencil_formats.hpp)
   virtual unsigned int get_stencil_id(void) const = 0 ;
   /// Copy the backend descriptor information

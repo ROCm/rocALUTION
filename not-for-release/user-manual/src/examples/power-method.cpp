@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 
   b_k->Ones();
 
-  mat.info();
+  mat.Info();
 
   tick = paralution_time();
 

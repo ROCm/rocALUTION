@@ -52,7 +52,7 @@ HIPAcceleratorMatrixBCSR<ValueType>::~HIPAcceleratorMatrixBCSR() {
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixBCSR<ValueType>::info(void) const {
+void HIPAcceleratorMatrixBCSR<ValueType>::Info(void) const {
 
   LOG_INFO("HIPAcceleratorMatrixBCSR<ValueType>");
 
@@ -115,8 +115,8 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyFromHost(const HostMatrix<ValueTyp
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    src.info();
+    this->Info();
+    src.Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -149,8 +149,8 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyToHost(HostMatrix<ValueType> *dst)
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    dst->info();
+    this->Info();
+    dst->Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -191,8 +191,8 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      src.info();
+      this->Info();
+      src.Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -234,8 +234,8 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) con
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      dst->info();
+      this->Info();
+      dst->Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }

@@ -77,7 +77,7 @@ public:
   void CloneBackend(const BaseRocalution<ValueType2> &src);
 
   /// Print the object information (properties, backends)
-  virtual void info() const = 0;
+  virtual void Info() const = 0;
 
   /// Clear (free all data) the object
   virtual void Clear() = 0;

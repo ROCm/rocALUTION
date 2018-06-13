@@ -16,7 +16,7 @@ public:
   HostMatrixCSR(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixCSR();
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual unsigned int get_mat_format(void) const {  return CSR; }
 
   virtual bool Check(void) const;

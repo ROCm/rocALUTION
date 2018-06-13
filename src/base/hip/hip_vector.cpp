@@ -55,7 +55,7 @@ HIPAcceleratorVector<ValueType>::~HIPAcceleratorVector() {
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::info(void) const {
+void HIPAcceleratorVector<ValueType>::Info(void) const {
 
   LOG_INFO("HIPAcceleratorVector<ValueType>");
 
@@ -185,8 +185,8 @@ void HIPAcceleratorVector<ValueType>::CopyFromHost(const HostVector<ValueType> &
   } else {
 
     LOG_INFO("Error unsupported HIP vector type");
-    this->info();
-    src.info();
+    this->Info();
+    src.Info();
     FATAL_ERROR(__FILE__, __LINE__);
 
   }
@@ -238,8 +238,8 @@ void HIPAcceleratorVector<ValueType>::CopyToHost(HostVector<ValueType> *dst) con
   } else {
     
     LOG_INFO("Error unsupported HIP vector type");
-    this->info();
-    dst->info();
+    this->Info();
+    dst->Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -293,8 +293,8 @@ void HIPAcceleratorVector<ValueType>::CopyFromHostAsync(const HostVector<ValueTy
   } else {
 
     LOG_INFO("Error unsupported HIP vector type");
-    this->info();
-    src.info();
+    this->Info();
+    src.Info();
     FATAL_ERROR(__FILE__, __LINE__);
 
   }
@@ -346,8 +346,8 @@ void HIPAcceleratorVector<ValueType>::CopyToHostAsync(HostVector<ValueType> *dst
   } else {
 
     LOG_INFO("Error unsupported HIP vector type");
-    this->info();
-    dst->info();
+    this->Info();
+    dst->Info();
     FATAL_ERROR(__FILE__, __LINE__);
 
   }
@@ -415,8 +415,8 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src)
     } else {
 
       LOG_INFO("Error unsupported HIP vector type");
-      this->info();
-      src.info();
+      this->Info();
+      src.Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -484,8 +484,8 @@ void HIPAcceleratorVector<ValueType>::CopyFromAsync(const BaseVector<ValueType> 
     } else {
 
       LOG_INFO("Error unsupported HIP vector type");
-      this->info();
-      src.info();
+      this->Info();
+      src.Info();
       FATAL_ERROR(__FILE__, __LINE__);
 
     }
@@ -581,8 +581,8 @@ void HIPAcceleratorVector<ValueType>::CopyTo(BaseVector<ValueType> *dst) const{
       } else {
 
         LOG_INFO("Error unsupported HIP vector type");
-        this->info();
-        dst->info();
+        this->Info();
+        dst->Info();
         FATAL_ERROR(__FILE__, __LINE__);
         
       }
@@ -650,8 +650,8 @@ void HIPAcceleratorVector<ValueType>::CopyToAsync(BaseVector<ValueType> *dst) co
     } else {
 
       LOG_INFO("Error unsupported HIP vector type");
-      this->info();
-      dst->info();
+      this->Info();
+      dst->Info();
       FATAL_ERROR(__FILE__, __LINE__);
 
     }
