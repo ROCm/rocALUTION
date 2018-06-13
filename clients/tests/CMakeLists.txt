@@ -8,6 +8,7 @@ set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
 # Local structures
   test_local_matrix.cpp
+  test_local_stencil.cpp
   test_local_vector.cpp
 # Krylov solvers
   test_backend.cpp
