@@ -65,7 +65,7 @@ public:
   /// Shows simple info about the object
   virtual void Info(void) const = 0;
   /// Return the matrix format id (see matrix_formats.hpp)
-  virtual unsigned int get_mat_format(void) const = 0;
+  virtual unsigned int GetMatFormat(void) const = 0;
   /// Copy the backend descriptor information
   virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
 

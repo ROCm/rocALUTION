@@ -21,7 +21,7 @@ public:
   inline int get_coo_nnz(void) const { return this->coo_nnz_; }
 
   virtual void Info(void) const;
-  virtual unsigned int get_mat_format(void) const { return  HYB; }
+  virtual unsigned int GetMatFormat(void) const { return  HYB; }
 
   virtual void Clear(void);
   virtual void AllocateHYB(const int ell_nnz, const int coo_nnz, const int ell_max_row,

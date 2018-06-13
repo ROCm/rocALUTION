@@ -17,7 +17,7 @@ public:
   virtual ~HIPAcceleratorMatrixBCSR();
 
   virtual void Info(void) const;
-  virtual unsigned int get_mat_format(void) const { return BCSR; }
+  virtual unsigned int GetMatFormat(void) const { return BCSR; }
 
   virtual void Clear(void);
   virtual void AllocateBCSR(const int nnz, const int nrow, const int ncol);

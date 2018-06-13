@@ -17,7 +17,7 @@ public:
   virtual ~HIPAcceleratorMatrixDENSE();
 
   virtual void Info(void) const;
-  virtual unsigned int get_mat_format(void) const { return DENSE; }
+  virtual unsigned int GetMatFormat(void) const { return DENSE; }
 
   virtual void Clear(void);
   virtual void AllocateDENSE(const int nrow, const int ncol);

@@ -60,7 +60,7 @@ template <typename ValueType>
 bool BaseMatrix<ValueType>::Check(void) const {
 
   LOG_INFO("BaseMatrix<ValueType>::Check()");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -71,7 +71,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::CopyFromCSR(const int *row_offsets, const int *col, const ValueType *val) {
 
   LOG_INFO("CopyFromCSR(const int *row_offsets, const int *col, const ValueType *val)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This function is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -82,7 +82,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::CopyToCSR(int *row_offsets, int *col, ValueType *val) const {
 
   LOG_INFO("CopyToCSR(int *row_offsets, int *col, ValueType *val) const");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This function is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -93,7 +93,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::CopyFromCOO(const int *row, const int *col, const ValueType *val) {
 
   LOG_INFO("CopyFromCOO(const int *row, const int *col, const ValueType *val)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This function is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -104,7 +104,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::CopyToCOO(int *row, int *col, ValueType *val) const {
 
   LOG_INFO("CopyToCOO(const int *row, const int *col, const ValueType *val) const");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This function is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -116,7 +116,7 @@ void BaseMatrix<ValueType>::CopyFromHostCSR(const int *row_offset, const int *co
                                             const int nnz, const int nrow, const int ncol) {
 
   LOG_INFO("CopyFromHostCSR(const int *row_offsets, const int *col, const ValueType *val, const int nnz, const int nrow, const int ncol)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This function is not available for this backend");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -127,7 +127,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::AllocateCSR(const int nnz, const int nrow, const int ncol) {
 
   LOG_INFO("AllocateCSR(const int nnz, const int nrow, const int ncol)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This is NOT a CSR matrix");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -138,7 +138,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::AllocateCOO(const int nnz, const int nrow, const int ncol) {
 
   LOG_INFO("AllocateCOO(const int nnz, const int nrow, const int ncol)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This is NOT a COO matrix");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -149,7 +149,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::AllocateDIA(const int nnz, const int nrow, const int ncol, const int ndiag) {
 
   LOG_INFO("AllocateDIA(const int nnz, const int nrow, const int ncol, const int ndiag)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This is NOT a DIA matrix");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -160,7 +160,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::AllocateELL(const int nnz, const int nrow, const int ncol, const int max_row) {
 
   LOG_INFO("AllocateELL(const int nnz, const int nrow, const int ncol, const int max_row)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This is NOT a ELL matrix");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -172,7 +172,7 @@ void BaseMatrix<ValueType>::AllocateHYB(const int ell_nnz, const int coo_nnz, co
                                         const int nrow, const int ncol) {
 
   LOG_INFO("AllocateHYB(const int ell_nnz, const int coo_nnz, const int ell_max_row, const int nrow, const int ncol)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This is NOT a HYB matrix");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -183,7 +183,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::AllocateDENSE(const int nrow, const int ncol) {
 
   LOG_INFO("AllocateDENSE(const int nrow, const int ncol)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This is NOT a DENSE matrix");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -194,7 +194,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::AllocateMCSR(const int nnz, const int nrow, const int ncol) {
 
   LOG_INFO("AllocateMCSR(const int nnz, const int nrow, const int ncol)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("This is NOT a MCSR matrix");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -395,7 +395,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LUAnalyse(void) {
 
   LOG_INFO("BaseMatrix<ValueType>::LUAnalyse(void)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -406,7 +406,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LUAnalyseClear(void) {
 
   LOG_INFO("BaseMatrix<ValueType>::LUAnalyseClear(void)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -417,7 +417,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LLAnalyse(void) {
 
   LOG_INFO("BaseMatrix<ValueType>::LLAnalyse(void)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -428,7 +428,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LLAnalyseClear(void) {
 
   LOG_INFO("BaseMatrix<ValueType>::LLAnalyseClear(void)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -439,7 +439,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LAnalyse(const bool diag_unit) {
 
   LOG_INFO("BaseMatrix<ValueType>::LAnalyse(const bool diag_unit=false)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -450,7 +450,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LAnalyseClear(void) {
 
   LOG_INFO("BaseMatrix<ValueType>::LAnalyseClear(void)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -466,7 +466,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::UAnalyse(const bool diag_unit) {
 
   LOG_INFO("BaseMatrix<ValueType>::UAnalyse(const bool diag_unit=false)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -477,7 +477,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::UAnalyseClear(void) {
 
   LOG_INFO("BaseMatrix<ValueType>::UAnalyseClear(void)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)!");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -650,7 +650,7 @@ void BaseMatrix<ValueType>::SetDataPtrCOO(int **row, int **col, ValueType **val,
                                           const int nnz, const int nrow, const int ncol) {
 
   LOG_INFO("BaseMatrix<ValueType>::SetDataPtrCOO(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -661,7 +661,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LeaveDataPtrCOO(int **row, int **col, ValueType **val) {
 
   LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrCOO(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -673,7 +673,7 @@ void BaseMatrix<ValueType>::SetDataPtrCSR(int **row_offset, int **col, ValueType
                                           const int nnz, const int nrow, const int ncol) {
 
   LOG_INFO("BaseMatrix<ValueType>::SetDataPtrCSR(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -684,7 +684,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LeaveDataPtrCSR(int **row_offset, int **col, ValueType **val) {
 
   LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrCSR(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -696,7 +696,7 @@ void BaseMatrix<ValueType>::SetDataPtrMCSR(int **row_offset, int **col, ValueTyp
                                            const int nnz, const int nrow, const int ncol) {
 
   LOG_INFO("BaseMatrix<ValueType>::SetDataPtrMCSR(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -707,7 +707,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LeaveDataPtrMCSR(int **row_offset, int **col, ValueType **val) {
 
   LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrMCSR(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -718,7 +718,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::SetDataPtrDENSE(ValueType **val, const int nrow, const int ncol) {
 
   LOG_INFO("BaseMatrix<ValueType>::SetDataPtrDENSE(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -729,7 +729,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LeaveDataPtrDENSE(ValueType **val) {
 
   LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrDENSE(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -741,7 +741,7 @@ void BaseMatrix<ValueType>::SetDataPtrELL(int **col, ValueType **val,
                                           const int nnz, const int nrow, const int ncol, const int max_row) {
 
   LOG_INFO("BaseMatrix<ValueType>::SetDataPtrELL(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -752,7 +752,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LeaveDataPtrELL(int **col, ValueType **val, int &max_row) {
 
   LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrELL(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -764,7 +764,7 @@ void BaseMatrix<ValueType>::SetDataPtrDIA(int **offset, ValueType **val,
                                           const int nnz, const int nrow, const int ncol, const int num_diag) {
 
   LOG_INFO("BaseMatrix<ValueType>::SetDataPtrDIA(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -775,7 +775,7 @@ template <typename ValueType>
 void BaseMatrix<ValueType>::LeaveDataPtrDIA(int **offset, ValueType **val, int &num_diag) {
 
   LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrDIA(...)");
-  LOG_INFO("Matrix format=" << _matrix_format_names[this->get_mat_format()]);
+  LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
   this->Info();
   LOG_INFO("The function is not implemented (yet)! Check the backend?");
   FATAL_ERROR(__FILE__, __LINE__);

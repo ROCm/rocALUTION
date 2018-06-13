@@ -19,7 +19,7 @@ public:
   inline int get_ndiag(void) const { return mat_.num_diag; }
 
   virtual void Info(void) const;
-  virtual unsigned int get_mat_format(void) const { return DIA; }
+  virtual unsigned int GetMatFormat(void) const { return DIA; }
 
   virtual void Clear(void);
   virtual void AllocateDIA(const int nnz, const int nrow, const int ncol, const int ndiag);

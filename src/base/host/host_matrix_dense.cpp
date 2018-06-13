@@ -143,7 +143,7 @@ template <typename ValueType>
 void HostMatrixDENSE<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
   // copy only in the same format
-  assert(this->get_mat_format() == mat.get_mat_format());
+  assert(this->GetMatFormat() == mat.GetMatFormat());
 
   if (const HostMatrixDENSE<ValueType> *cast_mat = dynamic_cast<const HostMatrixDENSE<ValueType>*> (&mat)) {
 

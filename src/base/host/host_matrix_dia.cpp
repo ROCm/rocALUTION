@@ -165,7 +165,7 @@ template <typename ValueType>
 void HostMatrixDIA<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
   // copy only in the same format
-  assert(this->get_mat_format() == mat.get_mat_format());
+  assert(this->GetMatFormat() == mat.GetMatFormat());
 
   if (const HostMatrixDIA<ValueType> *cast_mat = dynamic_cast<const HostMatrixDIA<ValueType>*> (&mat)) {
 

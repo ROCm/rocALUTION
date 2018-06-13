@@ -74,7 +74,7 @@ IndexType2 LocalMatrix<ValueType>::get_nnz(void) const {
 template <typename ValueType>
 unsigned int LocalMatrix<ValueType>::GetFormat(void) const {
 
-  return this->matrix_->get_mat_format();
+  return this->matrix_->GetMatFormat();
 
 }
 

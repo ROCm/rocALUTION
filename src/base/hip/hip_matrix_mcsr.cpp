@@ -163,7 +163,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromHost(const HostMatrix<ValueTyp
   const HostMatrixMCSR<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixMCSR<ValueType>*> (&src)) != NULL) {
@@ -211,7 +211,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToHost(HostMatrix<ValueType> *dst)
   HostMatrixMCSR<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to CPU copy
   if ((cast_mat = dynamic_cast<HostMatrixMCSR<ValueType>*> (dst)) != NULL) {
@@ -262,7 +262,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &
   const HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixMCSR<ValueType>*> (&src)) != NULL) {
@@ -319,7 +319,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) con
   HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<HIPAcceleratorMatrixMCSR<ValueType>*> (dst)) != NULL) {
@@ -380,7 +380,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromHostAsync(const HostMatrix<Val
   const HostMatrixMCSR<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixMCSR<ValueType>*> (&src)) != NULL) {
@@ -428,7 +428,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToHostAsync(HostMatrix<ValueType> 
   HostMatrixMCSR<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to CPU copy
   if ((cast_mat = dynamic_cast<HostMatrixMCSR<ValueType>*> (dst)) != NULL) {
@@ -479,7 +479,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromAsync(const BaseMatrix<ValueTy
   const HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixMCSR<ValueType>*> (&src)) != NULL) {
@@ -536,7 +536,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst
   HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<HIPAcceleratorMatrixMCSR<ValueType>*> (dst)) != NULL) {

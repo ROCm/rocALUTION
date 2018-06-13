@@ -181,7 +181,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromHost(const HostMatrix<ValueType
   const HostMatrixDIA<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixDIA<ValueType>*> (&src)) != NULL) {
@@ -226,7 +226,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
   HostMatrixDIA<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to CPU copy
   if ((cast_mat = dynamic_cast<HostMatrixDIA<ValueType>*> (dst)) != NULL) {
@@ -273,7 +273,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
   const HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDIA<ValueType>*> (&src)) != NULL) {
@@ -327,7 +327,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
   HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<HIPAcceleratorMatrixDIA<ValueType>*> (dst)) != NULL) {
@@ -384,7 +384,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
   const HostMatrixDIA<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixDIA<ValueType>*> (&src)) != NULL) {
@@ -429,7 +429,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
   HostMatrixDIA<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to CPU copy
   if ((cast_mat = dynamic_cast<HostMatrixDIA<ValueType>*> (dst)) != NULL) {
@@ -476,7 +476,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
   const HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDIA<ValueType>*> (&src)) != NULL) {
@@ -530,7 +530,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
   HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<HIPAcceleratorMatrixDIA<ValueType>*> (dst)) != NULL) {

@@ -17,7 +17,7 @@ public:
   virtual ~HostMatrixCOO();
 
   virtual void Info(void) const;
-  virtual unsigned int get_mat_format(void) const { return  COO; }
+  virtual unsigned int GetMatFormat(void) const { return  COO; }
 
   virtual void Clear(void);
   virtual void AllocateCOO(const int nnz, const int nrow, const int ncol);

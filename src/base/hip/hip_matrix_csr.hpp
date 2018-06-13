@@ -20,7 +20,7 @@ public:
   virtual ~HIPAcceleratorMatrixCSR();
 
   virtual void Info(void) const;
-  virtual unsigned int get_mat_format(void) const { return CSR; }
+  virtual unsigned int GetMatFormat(void) const { return CSR; }
 
   virtual void Clear(void);
   virtual bool Zeros(void);
