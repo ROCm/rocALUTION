@@ -90,7 +90,7 @@ void AMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::SetInterpolation(_interp interpType) {
+void AMG<OperatorType, VectorType, ValueType>::SetInterpolation(unsigned int interpType) {
 
   this->interp_type_ = interpType;
 

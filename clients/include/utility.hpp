@@ -113,10 +113,11 @@ class Arguments
     std::string precond  = "";
     std::string smoother = "";
 
-    int pre_smooth  = 2;
-    int post_smooth = 2;
-    int ordering    = 1;
-    int cycle       = 0;
+    int pre_smooth    = 2;
+    int post_smooth   = 2;
+    int ordering      = 1;
+    int cycle         = 0;
+    unsigned int aggr = 0;
 
     unsigned int format;
 
@@ -148,6 +149,7 @@ class Arguments
         this->post_smooth = rhs.post_smooth;
         this->ordering    = rhs.ordering;
         this->cycle       = rhs.cycle;
+        this->aggr        = rhs.aggr;
 
         this->format = rhs.format;
 

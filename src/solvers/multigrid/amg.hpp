@@ -29,7 +29,7 @@ public:
   /// Sets coupling strength
   virtual void SetCouplingStrength(const ValueType eps);
   /// Sets the interpolation type
-  virtual void SetInterpolation(_interp interpType);
+  virtual void SetInterpolation(unsigned int interpType);
   /// Sets the relaxation parameter for smoothed aggregation
   virtual void SetInterpRelax(const ValueType relax);
   /// Sets over-interpolation parameter for aggregation
@@ -61,7 +61,7 @@ private:
   ValueType over_interp_;
 
   /// interpolation type for grid transfer operators
-  _interp interp_type_;
+  unsigned int interp_type_;
 
 };
 
