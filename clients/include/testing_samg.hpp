@@ -63,9 +63,9 @@ bool testing_samg(Arguments argus)
     e.MoveToAccelerator();
 
     // Allocate x, b and e
-    x.Allocate("x", A.get_ncol());
-    b.Allocate("b", A.get_nrow());
-    e.Allocate("e", A.get_ncol());
+    x.Allocate("x", A.GetN());
+    b.Allocate("b", A.GetM());
+    e.Allocate("e", A.GetN());
 
     // b = A * 1
     e.Ones();

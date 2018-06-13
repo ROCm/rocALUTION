@@ -29,8 +29,8 @@ int main(int argc, char* argv[]) {
   mat.ReadFileMTX(std::string(argv[1]));
   mat.Info();
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetN());
+  rhs.Allocate("rhs", mat.GetM());
 
   x.Info();
   rhs.Info();

@@ -31,11 +31,11 @@ int main(int argc, char* argv[]) {
 
   mat.ReadFileCSR(std::string(argv[1]));
 
-  vec1.Allocate("x", mat.get_nrow());
-  vec2.Allocate("rhs", mat.get_nrow());
+  vec1.Allocate("x", mat.GetM());
+  vec2.Allocate("rhs", mat.GetM());
 
-  int size = mat.get_nrow();
-  int nnz  = mat.get_nnz();
+  int size = mat.GetM();
+  int nnz  = mat.GetNnz();
 
   vec1.Ones();
   vec2.Zeros();
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 
 
   mat.ConvertToCSR();
-  nnz = mat.get_nnz();
+  nnz = mat.GetNnz();
 
   mat.Info();
   // Matrix-Vector Multiplication
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
             << max_tests*double((2*nnz))/(tack-tick)/1000 << " GFlop/sec" << std::endl;
 
   mat.ConvertToMCSR();
-  nnz = mat.get_nnz();
+  nnz = mat.GetNnz();
 
   mat.Info();
   // Matrix-Vector Multiplication
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
 
 
   mat.ConvertToELL();
-  nnz = mat.get_nnz();
+  nnz = mat.GetNnz();
  
   mat.Info();
   // Matrix-Vector Multiplication  
@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
 
 
   mat.ConvertToCOO();
-  nnz = mat.get_nnz();
+  nnz = mat.GetNnz();
 
   mat.Info();
   // Matrix-Vector Multiplication
@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
 
 
   mat.ConvertToHYB();
-  nnz = mat.get_nnz();
+  nnz = mat.GetNnz();
 
   mat.Info();
   // Matrix-Vector Multiplication
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
 
 
   mat.ConvertToDIA();
-  nnz = mat.get_nnz();
+  nnz = mat.GetNnz();
 
   mat.Info();
   // Matrix-Vector Multiplication

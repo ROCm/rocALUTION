@@ -114,17 +114,17 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
 
   this->op_h_ = this->op_;
 
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
-  assert(this->op_->get_nrow() > 0);
+  assert(this->op_->GetM() == this->op_->GetN());
+  assert(this->op_->GetM() > 0);
 
   assert(this->op_l_ == NULL);
   this->op_l_ = new OperatorTypeL;
         
-  this->r_l_.Allocate("r_l", this->op_l_->get_nrow());  
-  this->r_h_.Allocate("r_h", this->op_h_->get_nrow());
+  this->r_l_.Allocate("r_l", this->op_l_->GetM());  
+  this->r_h_.Allocate("r_h", this->op_h_->GetM());
 
-  this->d_h_.Allocate("d_h", this->op_h_->get_nrow());
-  this->d_l_.Allocate("d_l", this->op_h_->get_nrow());
+  this->d_h_.Allocate("d_h", this->op_h_->GetM());
+  this->d_l_.Allocate("d_l", this->op_h_->GetM());
   
   // TODO - ugly
   // copy the matrix
@@ -144,7 +144,7 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
   
   this->op_h_->CopyToCSR(row_offset, col, val_h);
 
-  for (IndexType2 i=0; i<this->op_h_->get_nnz(); ++i)
+  for (IndexType2 i=0; i<this->op_h_->GetNnz(); ++i)
     val_l[i] = ValueTypeL( val_h[i] );
   
   this->op_l_->SetDataPtrCSR(&row_offset, &col, &val_l,

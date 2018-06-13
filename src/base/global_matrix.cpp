@@ -76,21 +76,21 @@ void GlobalMatrix<ValueType>::Clear(void) {
 }
 
 template <typename ValueType>
-IndexType2 GlobalMatrix<ValueType>::get_nrow(void) const {
+IndexType2 GlobalMatrix<ValueType>::GetM(void) const {
 
   return this->pm_->GetGlobalSize();
 
 }
 
 template <typename ValueType>
-IndexType2 GlobalMatrix<ValueType>::get_ncol(void) const {
+IndexType2 GlobalMatrix<ValueType>::GetN(void) const {
 
   return this->pm_->GetGlobalSize();
 
 }
 
 template <typename ValueType>
-IndexType2 GlobalMatrix<ValueType>::get_nnz(void) const {
+IndexType2 GlobalMatrix<ValueType>::GetNnz(void) const {
 
   return this->nnz_;
 
@@ -191,8 +191,8 @@ void GlobalMatrix<ValueType>::AllocateCSR(const std::string name, const int loca
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -220,8 +220,8 @@ void GlobalMatrix<ValueType>::AllocateCOO(const std::string name, const int loca
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -265,8 +265,8 @@ void GlobalMatrix<ValueType>::SetDataPtrCSR(int **local_row_offset, int **local_
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -308,8 +308,8 @@ void GlobalMatrix<ValueType>::SetDataPtrCOO(int **local_row, int **local_col, Va
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -341,8 +341,8 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCSR(int **row_offset, int **col, Va
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -374,8 +374,8 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCOO(int **row, int **col, ValueType
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -408,8 +408,8 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCSR(int **row_offset, int **col, Va
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -443,8 +443,8 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCOO(int **row, int **col, ValueType
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -650,9 +650,9 @@ void GlobalMatrix<ValueType>::Info(void) const {
 
   LOG_INFO("GlobalMatrix" <<
            " name=" << this->object_name_ << ";" <<
-           " rows=" << this->get_nrow() << ";" <<
-           " cols=" << this->get_ncol() << ";" <<
-           " nnz=" << this->get_nnz() << ";" <<
+           " rows=" << this->GetM() << ";" <<
+           " cols=" << this->GetN() << ";" <<
+           " nnz=" << this->GetNnz() << ";" <<
            " prec=" << 8*sizeof(ValueType) << "bit;" <<
            " format=" << _matrix_format_names[this->matrix_interior_.GetFormat()] <<
            "/" << _matrix_format_names[this->matrix_ghost_.GetFormat()] << ";" <<
@@ -783,8 +783,8 @@ void GlobalMatrix<ValueType>::Apply(const GlobalVector<ValueType> &in, GlobalVec
   assert (out != NULL);
   assert (&in != out);
 
-  assert (this->get_nrow() == out->get_size());
-  assert (this->get_ncol() == in.get_size());
+  assert (this->GetM() == out->get_size());
+  assert (this->GetN() == in.get_size());
   assert (this->is_host() == in.is_host());
   assert (this->is_host() == out->is_host());
 
@@ -808,8 +808,8 @@ void GlobalMatrix<ValueType>::ApplyAdd(const GlobalVector<ValueType> &in, const 
   assert (out != NULL);
   assert (&in != out);
 
-  assert (this->get_nrow() == out->get_size());
-  assert (this->get_ncol() == in.get_size());
+  assert (this->GetM() == out->get_size());
+  assert (this->GetN() == in.get_size());
   assert (this->is_host() == in.is_host());
   assert (this->is_host() == out->is_host());
 
@@ -863,8 +863,8 @@ void GlobalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -960,8 +960,8 @@ void GlobalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
   IndexType2 nnz_local;
   IndexType2 nnz_ghost;
 
-  communication_allreduce_single_sum(this->matrix_interior_.get_nnz(), &nnz_local, this->pm_->comm_);
-  communication_allreduce_single_sum(this->matrix_ghost_.get_nnz(), &nnz_ghost, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
+  communication_allreduce_single_sum(this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
   this->nnz_ = nnz_local + nnz_ghost;
 #endif
@@ -1015,7 +1015,7 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::ExtractInverseDiagonal(GlobalVector<ValueType> *vec_inv_diag) const {
 
   assert (vec_inv_diag != NULL);
-  assert (vec_inv_diag->get_size() == this->get_nrow());
+  assert (vec_inv_diag->get_size() == this->GetM());
 
   this->matrix_interior_.ExtractInverseDiagonal(&vec_inv_diag->vector_interior_);
 
@@ -1174,7 +1174,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType> *Ac, Paral
   int *Ac_interior_col = NULL;
   ValueType *Ac_interior_val = NULL;
 
-  int nnzc = tmp.get_nnz();
+  int nnzc = tmp.GetNnz();
   tmp.LeaveDataPtrCSR(&Ac_interior_row_offset, &Ac_interior_col, &Ac_interior_val);
 
   // Wait for boundary offset communication to finish
@@ -1238,7 +1238,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType> *Ac, Paral
   int *Ac_ghost_col = NULL;
   ValueType *Ac_ghost_val = NULL;
 
-  int nnzg = tmp_ghost.get_nnz();
+  int nnzg = tmp_ghost.GetNnz();
   tmp_ghost.LeaveDataPtrCSR(&Ac_ghost_row_offset, &Ac_ghost_col, &Ac_ghost_val);
 
   // Communicator

@@ -21,9 +21,9 @@ int main(int argc, char* argv[]) {
   rhs.MoveToAccelerator();
   sol.MoveToAccelerator();
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
-  sol.Allocate("sol", mat.get_nrow());
+  x.Allocate("x", mat.GetM());
+  rhs.Allocate("rhs", mat.GetM());
+  sol.Allocate("sol", mat.GetM());
 
   // b = A*1
   sol.Ones();

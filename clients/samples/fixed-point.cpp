@@ -32,8 +32,8 @@ int main(int argc, char* argv[]) {
   rhs.MoveToAccelerator();
   x.MoveToAccelerator();
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetN());
+  rhs.Allocate("rhs", mat.GetM());
 
   FixedPoint<LocalMatrix<double>, LocalVector<double>, double > fp;
 

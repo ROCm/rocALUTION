@@ -24,8 +24,8 @@ int main(int argc, char* argv[]) {
   mat.ReadFileMTX(std::string(argv[1]));
   compare.ReadFileASCII(std::string(argv[2]));
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetM());
+  rhs.Allocate("rhs", mat.GetM());
 
   MixedPrecisionDC<LocalMatrix<double>, LocalVector<double>, double,
                    LocalMatrix<float>, LocalVector<float>, float> mp;

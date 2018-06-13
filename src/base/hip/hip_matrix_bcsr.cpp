@@ -65,7 +65,7 @@ void HIPAcceleratorMatrixBCSR<ValueType>::AllocateBCSR(const int nnz, const int 
   assert(ncol >= 0);
   assert(nrow >= 0);
 
-  if (this->get_nnz() > 0)
+  if (this->GetNnz() > 0)
     this->Clear();
 
   if (nnz > 0) {
@@ -80,7 +80,7 @@ void HIPAcceleratorMatrixBCSR<ValueType>::AllocateBCSR(const int nnz, const int 
 template <typename ValueType>
 void HIPAcceleratorMatrixBCSR<ValueType>::Clear() {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     FATAL_ERROR(__FILE__, __LINE__);
 
@@ -101,14 +101,14 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyFromHost(const HostMatrix<ValueTyp
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateBCSR(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateBCSR(src.GetNnz(), src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    cast_mat->get_nnz();
+    cast_mat->GetNnz();
 
     FATAL_ERROR(__FILE__, __LINE__);    
     
@@ -136,12 +136,12 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyToHost(HostMatrix<ValueType> *dst)
 
     cast_mat->set_backend(this->local_backend_);   
 
-  if (dst->get_nnz() == 0)
-    cast_mat->AllocateBCSR(this->get_nnz(), this->get_nrow(), this->get_ncol() );
+  if (dst->GetNnz() == 0)
+    cast_mat->AllocateBCSR(this->GetNnz(), this->GetM(), this->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
     FATAL_ERROR(__FILE__, __LINE__);    
    
@@ -169,14 +169,14 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixBCSR<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateBCSR(src.get_nnz(), src.get_nrow(), src.get_ncol() );  
+  if (this->GetNnz() == 0)
+    this->AllocateBCSR(src.GetNnz(), src.GetM(), src.GetN() );  
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    hip_cast_mat->get_nnz();
+    hip_cast_mat->GetNnz();
 
     FATAL_ERROR(__FILE__, __LINE__);    
 
@@ -215,12 +215,12 @@ void HIPAcceleratorMatrixBCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) con
 
     hip_cast_mat->set_backend(this->local_backend_);       
 
-  if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateBCSR(dst->get_nnz(), dst->get_nrow(), dst->get_ncol() );
+  if (this->GetNnz() == 0)
+    hip_cast_mat->AllocateBCSR(dst->GetNnz(), dst->GetM(), dst->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
     FATAL_ERROR(__FILE__, __LINE__);    
     
@@ -252,7 +252,7 @@ bool HIPAcceleratorMatrixBCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
 
@@ -272,9 +272,9 @@ bool HIPAcceleratorMatrixBCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType
     
     FATAL_ERROR(__FILE__, __LINE__);
     
-    this->nrow_ = cast_mat_csr->get_nrow();
-    this->ncol_ = cast_mat_csr->get_ncol();
-    this->nnz_  = cast_mat_csr->get_nnz();
+    this->nrow_ = cast_mat_csr->GetM();
+    this->ncol_ = cast_mat_csr->GetN();
+    this->nnz_  = cast_mat_csr->GetNnz();
     
     return true;
 
@@ -291,8 +291,8 @@ void HIPAcceleratorMatrixBCSR<ValueType>::Apply(const BaseVector<ValueType> &in,
 /*
   assert(in.  get_size() >= 0);
   assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->get_ncol());
-  assert(out->get_size() == this->get_nrow());
+  assert(in.  get_size() == this->GetN());
+  assert(out->get_size() == this->GetM());
 
 
   const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in) ; 

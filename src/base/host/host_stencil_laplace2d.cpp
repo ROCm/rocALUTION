@@ -51,7 +51,7 @@ void HostStencilLaplace2D<ValueType>::Info(void) const {
 }
 
 template <typename ValueType>
-int HostStencilLaplace2D<ValueType>::get_nnz(void) const {
+int HostStencilLaplace2D<ValueType>::GetNnz(void) const {
 
   return 5;
 }
@@ -63,7 +63,7 @@ void HostStencilLaplace2D<ValueType>::Apply(const BaseVector<ValueType> &in, Bas
 
     assert(in.  get_size() >= 0);
     assert(out->get_size() >= 0);
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     assert(in.  get_size() == nrow);
     assert(out->get_size() == nrow);
     assert(out->get_size() == in.  get_size());
@@ -175,7 +175,7 @@ void HostStencilLaplace2D<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, 
 
     assert(in.  get_size() >= 0);
     assert(out->get_size() >= 0);
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     assert(in.  get_size() == nrow);
     assert(out->get_size() == nrow);
     assert(out->get_size() == in.  get_size());

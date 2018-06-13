@@ -29,21 +29,21 @@ BaseMatrix<ValueType>::~BaseMatrix() {
 }
 
 template <typename ValueType>
-inline int BaseMatrix<ValueType>::get_nrow(void) const {
+inline int BaseMatrix<ValueType>::GetM(void) const {
 
   return this->nrow_;
 
 }
 
 template <typename ValueType>
-inline int BaseMatrix<ValueType>::get_ncol(void) const {
+inline int BaseMatrix<ValueType>::GetN(void) const {
 
   return this->ncol_;
 
 }
 
 template <typename ValueType>
-inline int BaseMatrix<ValueType>::get_nnz(void) const {
+inline int BaseMatrix<ValueType>::GetNnz(void) const {
 
   return this->nnz_;
 

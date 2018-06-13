@@ -354,7 +354,7 @@ void SGS<OperatorType, VectorType, ValueType>::Build(void) {
   this->SGS_.ExtractInverseDiagonal(&this->diag_entries_);
 
   this->v_.CloneBackend(*this->op_);
-  this->v_.Allocate("v", this->op_->get_nrow());
+  this->v_.Allocate("v", this->op_->GetM());
 
   LOG_DEBUG(this, "SGS::Build()",
             this->build_ <<
@@ -383,7 +383,7 @@ void SGS<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType 
 
   this->v_.Clear();
   this->v_.CloneBackend(*this->op_);
-  this->v_.Allocate("v", this->op_->get_nrow());
+  this->v_.Allocate("v", this->op_->GetM());
 
 }
 
@@ -488,7 +488,7 @@ void ILU<OperatorType, VectorType, ValueType>::Print(void) const {
   LOG_INFO("ILU(" << this->p_ <<") preconditioner");
 
   if (this->build_ == true) {
-    LOG_INFO("ILU nnz = " << this->ILU_.get_nnz());
+    LOG_INFO("ILU nnz = " << this->ILU_.GetNnz());
   }
 
 }
@@ -622,7 +622,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Print(void) const {
   LOG_INFO("ILUT(" << this->t_ <<"," << this->max_row_ <<") preconditioner");
 
   if (this->build_ == true) {
-    LOG_INFO("ILUT nnz = " << this->ILUT_.get_nnz());
+    LOG_INFO("ILUT nnz = " << this->ILUT_.GetNnz());
   }
 
 }
@@ -765,7 +765,7 @@ void IC<OperatorType, VectorType, ValueType>::Print(void) const {
   LOG_INFO("IC preconditioner");
 
   if (this->build_ == true) {
-    LOG_INFO("IC nnz = " << this->IC_.get_nnz());
+    LOG_INFO("IC nnz = " << this->IC_.GetNnz());
   }
 
 }

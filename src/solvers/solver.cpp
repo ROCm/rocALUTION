@@ -564,7 +564,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::Build(void) {
   assert(this->build_ == false);
   assert(this->precond_ != NULL);
   assert(this->op_ != NULL);
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
+  assert(this->op_->GetM() == this->op_->GetN());
 
   this->build_ = true;
 
@@ -573,10 +573,10 @@ void FixedPoint<OperatorType, VectorType, ValueType>::Build(void) {
 
 
   this->x_old_.CloneBackend(*this->op_);
-  this->x_old_.Allocate("x_old", this->op_->get_nrow());
+  this->x_old_.Allocate("x_old", this->op_->GetM());
 
   this->x_res_.CloneBackend(*this->op_);
-  this->x_res_.Allocate("x_res", this->op_->get_nrow());
+  this->x_res_.Allocate("x_res", this->op_->GetM());
 
   LOG_DEBUG(this, "FixedPoint::Build()",
             "building the preconditioner");

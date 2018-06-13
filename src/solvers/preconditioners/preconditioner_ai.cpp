@@ -41,7 +41,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Print(void) const {
   LOG_INFO("Approximate Inverse Chebyshev(" << this->p_ <<") preconditioner");
 
   if (this->build_ == true) {
-    LOG_INFO("AI matrix nnz = " << this->AIChebyshev_.get_nnz());
+    LOG_INFO("AI matrix nnz = " << this->AIChebyshev_.GetNnz());
   }
 
 }
@@ -240,9 +240,9 @@ void FSAI<OperatorType, VectorType, ValueType>::Print(void) const {
   LOG_INFO("Factorized Sparse Approximate Inverse preconditioner");
 
   if (this->build_ == true) {
-    LOG_INFO("FSAI matrix nnz = " << this->FSAI_L_.get_nnz()
-                                   + this->FSAI_LT_.get_nnz()
-                                   - this->FSAI_L_.get_nrow());
+    LOG_INFO("FSAI matrix nnz = " << this->FSAI_L_.GetNnz()
+                                   + this->FSAI_LT_.GetNnz()
+                                   - this->FSAI_L_.GetM());
   }
 
 }
@@ -296,7 +296,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Build(void) {
   this->FSAI_LT_.Transpose();
 
   this->t_.CloneBackend(*this->op_);
-  this->t_.Allocate("temporary", this->op_->get_nrow());
+  this->t_.Allocate("temporary", this->op_->GetM());
 
   if (this->op_mat_format_ == true) {
     this->FSAI_L_.ConvertTo(this->precond_mat_format_);
@@ -420,7 +420,7 @@ void SPAI<OperatorType, VectorType, ValueType>::Print(void) const {
   LOG_INFO("SParse Approximate Inverse preconditioner");
 
   if (this->build_ == true) {
-    LOG_INFO("SPAI matrix nnz = " << this->SPAI_.get_nnz());
+    LOG_INFO("SPAI matrix nnz = " << this->SPAI_.GetNnz());
   }
 
 }
@@ -555,9 +555,9 @@ void TNS<OperatorType, VectorType, ValueType>::Print(void) const {
   if (this->build_ == true) {
 
     if (this->impl_ == true) {
-      LOG_INFO("Implicit TNS L matrix nnz = " << this->L_.get_nnz());
+      LOG_INFO("Implicit TNS L matrix nnz = " << this->L_.GetNnz());
     } else {
-      LOG_INFO("Explicit TNS matrix nnz = " << this->TNS_.get_nnz());
+      LOG_INFO("Explicit TNS matrix nnz = " << this->TNS_.GetNnz());
     }
   }
 
@@ -606,8 +606,8 @@ void TNS<OperatorType, VectorType, ValueType>::Build(void) {
     this->LT_.CloneFrom(this->L_);
     this->LT_.Transpose();
     
-    this->tmp1_.Allocate("tmp1 vec for TNS", this->op_->get_nrow());
-    this->tmp2_.Allocate("tmp2 vec for TNS", this->op_->get_nrow());
+    this->tmp1_.Allocate("tmp1 vec for TNS", this->op_->GetM());
+    this->tmp2_.Allocate("tmp2 vec for TNS", this->op_->GetM());
   
   } else {
     // explicit computation

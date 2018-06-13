@@ -188,7 +188,7 @@ bool HostMatrixDENSE<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   if (const HostMatrixDENSE<ValueType> *cast_mat = dynamic_cast<const HostMatrixDENSE<ValueType>*> (&mat)) {
@@ -560,7 +560,7 @@ bool HostMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, const BaseVe
 
   assert(vec.get_size() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HostVector<ValueType> *cast_vec = dynamic_cast<const HostVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
@@ -584,7 +584,7 @@ bool HostMatrixDENSE<ValueType>::ReplaceRowVector(const int idx, const BaseVecto
 
   assert(vec.get_size() == this->ncol_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HostVector<ValueType> *cast_vec = dynamic_cast<const HostVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
@@ -609,7 +609,7 @@ bool HostMatrixDENSE<ValueType>::ExtractColumnVector(const int idx, BaseVector<V
   assert(vec != NULL);
   assert(vec->get_size() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HostVector<ValueType> *cast_vec = dynamic_cast<HostVector<ValueType>*> (vec);
     assert(cast_vec != NULL);
@@ -634,7 +634,7 @@ bool HostMatrixDENSE<ValueType>::ExtractRowVector(const int idx, BaseVector<Valu
   assert(vec != NULL);
   assert(vec->get_size() == this->ncol_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HostVector<ValueType> *cast_vec = dynamic_cast<HostVector<ValueType>*> (vec);
     assert(cast_vec != NULL);

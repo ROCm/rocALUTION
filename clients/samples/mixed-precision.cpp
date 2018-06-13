@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
   // read from file 
   mat.ReadFileMTX(std::string(argv[1]));
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetN());
+  rhs.Allocate("rhs", mat.GetM());
 
   MixedPrecisionDC<LocalMatrix<double>, LocalVector<double>, double,
                    LocalMatrix<float>, LocalVector<float>, float> mp;

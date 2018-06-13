@@ -33,9 +33,9 @@ public:
   /// Return the matrix format id (see matrix_formats.hpp)
   unsigned int GetFormat(void) const;
 
-  virtual IndexType2 get_nrow(void) const;
-  virtual IndexType2 get_ncol(void) const;
-  virtual IndexType2 get_nnz(void) const;
+  virtual IndexType2 GetM(void) const;
+  virtual IndexType2 GetN(void) const;
+  virtual IndexType2 GetNnz(void) const;
 
   /// Return true if the matrix is ok (empty matrix is also ok)
   //  and false if there is something wrong with the strcture or some of values are NaN

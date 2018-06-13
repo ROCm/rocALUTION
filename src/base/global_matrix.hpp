@@ -25,9 +25,9 @@ public:
   GlobalMatrix(const ParallelManager &pm);
   virtual ~GlobalMatrix();
 
-  virtual IndexType2 get_nrow(void) const;
-  virtual IndexType2 get_ncol(void) const;
-  virtual IndexType2 get_nnz(void) const;
+  virtual IndexType2 GetM(void) const;
+  virtual IndexType2 GetN(void) const;
+  virtual IndexType2 GetNnz(void) const;
   virtual int get_local_nrow(void) const;
   virtual int get_local_ncol(void) const;
   virtual int get_local_nnz(void) const;

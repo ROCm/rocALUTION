@@ -27,11 +27,11 @@ public:
   virtual ~Operator();
 
   /// Return the number of rows in the matrix/stencil
-  virtual IndexType2 get_nrow(void) const = 0;
+  virtual IndexType2 GetM(void) const = 0;
   /// Return the number of columns in the matrix/stencil
-  virtual IndexType2 get_ncol(void) const = 0;
+  virtual IndexType2 GetN(void) const = 0;
   /// Return the number of non-zeros in the matrix/stencil
-  virtual IndexType2 get_nnz(void) const = 0;
+  virtual IndexType2 GetNnz(void) const = 0;
 
   /// Return the number of rows in the local matrix/stencil
   virtual int get_local_nrow(void) const;

@@ -29,7 +29,7 @@ BaseStencil<ValueType>::~BaseStencil() {
 }
 
 template <typename ValueType>
-int BaseStencil<ValueType>::get_nrow(void) const {
+int BaseStencil<ValueType>::GetM(void) const {
 
   int dim = 1;
 
@@ -45,9 +45,9 @@ int BaseStencil<ValueType>::get_nrow(void) const {
 } 
 
 template <typename ValueType>
-int BaseStencil<ValueType>::get_ncol(void) const {
+int BaseStencil<ValueType>::GetN(void) const {
 
-  return this->get_nrow(); 
+  return this->GetM(); 
 } 
 
 template <typename ValueType>

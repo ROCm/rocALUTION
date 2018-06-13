@@ -109,7 +109,7 @@ void AS<OperatorType, VectorType, ValueType>::Build(void) {
   
   this->weight_.MoveToHost();
   this->weight_.Allocate("Overlapping weights",
-                         this->op_->get_nrow());
+                         this->op_->GetM());
   this->weight_.Ones();
   
   ValueType *ptr_w = NULL;

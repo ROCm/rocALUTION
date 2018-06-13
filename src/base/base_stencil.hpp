@@ -29,13 +29,13 @@ public:
   virtual ~BaseStencil();
 
   /// Return the number of rows in the stencil
-  int get_nrow(void) const;
+  int GetM(void) const;
   /// Return the number of columns in the stencil
-  int get_ncol(void) const;
+  int GetN(void) const;
   /// Return the dimension of the stencil
   int GetNDim(void) const;
   /// Return the nnz per row
-  virtual int get_nnz(void) const = 0;
+  virtual int GetNnz(void) const = 0;
 
   /// Shows simple info about the object
   virtual void Info(void) const = 0;

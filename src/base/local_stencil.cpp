@@ -57,23 +57,22 @@ int LocalStencil<ValueType>::GetNDim(void) const {
 }
 
 template <typename ValueType>
-IndexType2 LocalStencil<ValueType>::get_nnz(void) const {
+IndexType2 LocalStencil<ValueType>::GetNnz(void) const {
 
-  return this->stencil_->get_nnz();
+  return this->stencil_->GetNnz();
 }
 
 template <typename ValueType>
-IndexType2 LocalStencil<ValueType>::get_nrow(void) const {
+IndexType2 LocalStencil<ValueType>::GetM(void) const {
 
-  return this->stencil_->get_nrow();
+  return this->stencil_->GetM();
 }
 
 template <typename ValueType>
-IndexType2 LocalStencil<ValueType>::get_ncol(void) const {
+IndexType2 LocalStencil<ValueType>::GetN(void) const {
 
-  return this->stencil_->get_ncol();
+  return this->stencil_->GetN();
 }
-
 
 template <typename ValueType>
 void LocalStencil<ValueType>::Info(void) const {

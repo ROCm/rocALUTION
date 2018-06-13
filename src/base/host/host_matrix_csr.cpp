@@ -483,7 +483,7 @@ bool HostMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   if (const HostMatrixCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&mat)) {
@@ -3137,7 +3137,7 @@ bool HostMatrixCSR<ValueType>::CreateFromMap(const BaseVector<int> &map, const i
   // Build restriction operator
   this->CreateFromMap(map, n, m);
 
-  int nnz = this->get_nnz();
+  int nnz = this->GetNnz();
 
   // Build prolongation operator
   cast_pro->Clear();
@@ -4116,7 +4116,7 @@ bool HostMatrixCSR<ValueType>::RugeStueben(const ValueType eps, BaseMatrix<Value
 #ifdef _OPENMP
 #pragma omp parallel for      
 #endif
-  for (int i=0; i<cast_prolong->get_nrow(); ++i)
+  for (int i=0; i<cast_prolong->GetM(); ++i)
     for (int j=cast_prolong->mat_.row_offset[i]; j<cast_prolong->mat_.row_offset[i+1]; ++j)
       for (int jj=cast_prolong->mat_.row_offset[i]; jj<cast_prolong->mat_.row_offset[i+1]-1; ++jj)
         if (cast_prolong->mat_.col[jj] > cast_prolong->mat_.col[jj+1]) {
@@ -5066,7 +5066,7 @@ bool HostMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, const BaseVect
 
   assert(vec.get_size() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HostVector<ValueType> *cast_vec = dynamic_cast<const HostVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
@@ -5164,7 +5164,7 @@ bool HostMatrixCSR<ValueType>::ExtractColumnVector(const int idx, BaseVector<Val
   assert(vec != NULL);
   assert(vec->get_size() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HostVector<ValueType> *cast_vec = dynamic_cast<HostVector<ValueType>*> (vec);
     assert(cast_vec != NULL);
@@ -5201,7 +5201,7 @@ bool HostMatrixCSR<ValueType>::ReplaceRowVector(const int idx, const BaseVector<
 
   assert(vec.get_size() == this->ncol_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HostVector<ValueType> *cast_vec = dynamic_cast<const HostVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
@@ -5307,7 +5307,7 @@ bool HostMatrixCSR<ValueType>::ExtractRowVector(const int idx, BaseVector<ValueT
   assert(vec != NULL);
   assert(vec->get_size() == this->ncol_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HostVector<ValueType> *cast_vec = dynamic_cast<HostVector<ValueType>*> (vec);
     assert(cast_vec != NULL);

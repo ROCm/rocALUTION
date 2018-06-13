@@ -104,7 +104,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::AllocateCSR(const int nnz, const int nr
   assert(ncol >= 0);
   assert(nrow >= 0);
 
-  if (this->get_nnz() > 0)
+  if (this->GetNnz() > 0)
     this->Clear();
 
   if (nnz > 0) {
@@ -156,9 +156,9 @@ void HIPAcceleratorMatrixCSR<ValueType>::SetDataPtrCSR(int **row_offset, int **c
 template <typename ValueType>
 void HIPAcceleratorMatrixCSR<ValueType>::LeaveDataPtrCSR(int **row_offset, int **col, ValueType **val) {
 
-  assert(this->get_nrow() > 0);
-  assert(this->get_ncol() > 0);
-  assert(this->get_nnz() > 0);
+  assert(this->GetM() > 0);
+  assert(this->GetN() > 0);
+  assert(this->GetNnz() > 0);
 
   hipDeviceSynchronize();
 
@@ -180,7 +180,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::LeaveDataPtrCSR(int **row_offset, int *
 template <typename ValueType>
 void HIPAcceleratorMatrixCSR<ValueType>::Clear() {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     free_hip(&this->mat_.row_offset);
     free_hip(&this->mat_.col);
@@ -200,9 +200,9 @@ void HIPAcceleratorMatrixCSR<ValueType>::Clear() {
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::Zeros() {
 
-  if (this->get_nnz() > 0)
+  if (this->GetNnz() > 0)
     set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->get_nnz(), mat_.val);
+                    this->GetNnz(), mat_.val);
 
   return true;
 
@@ -220,30 +220,30 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHost(const HostMatrix<ValueType
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCSR(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCSR(src.GetNnz(), src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
   
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpy(this->mat_.row_offset,     // dst
                  cast_mat->mat_.row_offset, // src
-                 (this->get_nrow()+1)*sizeof(int), // size
+                 (this->GetM()+1)*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.col,     // dst
                  cast_mat->mat_.col, // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.val,     // dst
                  cast_mat->mat_.val, // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -270,30 +270,30 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCSR(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCSR(src.GetNnz(), src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
   
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpyAsync(this->mat_.row_offset,     // dst
                  cast_mat->mat_.row_offset, // src
-                 (this->get_nrow()+1)*sizeof(int), // size
+                 (this->GetM()+1)*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(this->mat_.col,     // dst
                  cast_mat->mat_.col, // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(this->mat_.val,     // dst
                  cast_mat->mat_.val, // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -322,30 +322,30 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
 
     cast_mat->set_backend(this->local_backend_);   
 
-  if (dst->get_nnz() == 0)
-    cast_mat->AllocateCSR(this->get_nnz(), this->get_nrow(), this->get_ncol() );
+  if (dst->GetNnz() == 0)
+    cast_mat->AllocateCSR(this->GetNnz(), this->GetM(), this->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetN() == dst->GetN());
 
    
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpy(cast_mat->mat_.row_offset, // dst
                  this->mat_.row_offset,     // src
-                 (this->get_nrow()+1)*sizeof(int), // size
+                 (this->GetM()+1)*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(cast_mat->mat_.col, // dst
                  this->mat_.col,     // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(cast_mat->mat_.val, // dst
                  this->mat_.val,     // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -376,29 +376,29 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
 
     cast_mat->set_backend(this->local_backend_);   
 
-  if (dst->get_nnz() == 0)
-    cast_mat->AllocateCSR(this->get_nnz(), this->get_nrow(), this->get_ncol() );
+  if (dst->GetNnz() == 0)
+    cast_mat->AllocateCSR(this->GetNnz(), this->GetM(), this->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetN() == dst->GetN());
    
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpyAsync(cast_mat->mat_.row_offset, // dst
                  this->mat_.row_offset,     // src
-                 (this->get_nrow()+1)*sizeof(int), // size
+                 (this->GetM()+1)*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(cast_mat->mat_.col, // dst
                  this->mat_.col,     // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(cast_mat->mat_.val, // dst
                  this->mat_.val,     // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -428,32 +428,32 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCSR(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCSR(src.GetNnz(), src.GetM(), src.GetN() );
 
 
-     assert(this->get_nnz()  == src.get_nnz());
-     assert(this->get_nrow() == src.get_nrow());
-     assert(this->get_ncol() == src.get_ncol());
+     assert(this->GetNnz()  == src.GetNnz());
+     assert(this->GetM() == src.GetM());
+     assert(this->GetN() == src.GetN());
 
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
         hipMemcpy(this->mat_.row_offset,         // dst
                    hip_cast_mat->mat_.row_offset, // src
-                   (this->get_nrow()+1)*sizeof(int), // size
+                   (this->GetM()+1)*sizeof(int), // size
                    hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(this->mat_.col,         // dst
                    hip_cast_mat->mat_.col, // src
-                   this->get_nnz()*sizeof(int), // size
+                   this->GetNnz()*sizeof(int), // size
                    hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(this->mat_.val,         // dst
                    hip_cast_mat->mat_.val, // src
-                   this->get_nnz()*sizeof(ValueType), // size
+                   this->GetNnz()*sizeof(ValueType), // size
                    hipMemcpyDeviceToDevice);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -490,32 +490,32 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCSR(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCSR(src.GetNnz(), src.GetM(), src.GetN() );
 
 
-     assert(this->get_nnz()  == src.get_nnz());
-     assert(this->get_nrow() == src.get_nrow());
-     assert(this->get_ncol() == src.get_ncol());
+     assert(this->GetNnz()  == src.GetNnz());
+     assert(this->GetM() == src.GetM());
+     assert(this->GetN() == src.GetN());
 
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
         hipMemcpy(this->mat_.row_offset,         // dst
                    hip_cast_mat->mat_.row_offset, // src
-                   (this->get_nrow()+1)*sizeof(int), // size
+                   (this->GetM()+1)*sizeof(int), // size
                    hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(this->mat_.col,         // dst
                    hip_cast_mat->mat_.col, // src
-                   this->get_nnz()*sizeof(int), // size
+                   this->GetNnz()*sizeof(int), // size
                    hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(this->mat_.val,         // dst
                    hip_cast_mat->mat_.val, // src
-                   this->get_nnz()*sizeof(ValueType), // size
+                   this->GetNnz()*sizeof(ValueType), // size
                    hipMemcpyDeviceToDevice);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -555,30 +555,30 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
 
     hip_cast_mat->set_backend(this->local_backend_);       
 
-  if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateCSR(dst->get_nnz(), dst->get_nrow(), dst->get_ncol() );
+  if (this->GetNnz() == 0)
+    hip_cast_mat->AllocateCSR(dst->GetNnz(), dst->GetM(), dst->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
         hipMemcpy(hip_cast_mat->mat_.row_offset, // dst
                    this->mat_.row_offset,         // src
-                   (this->get_nrow()+1)*sizeof(int), // size
+                   (this->GetM()+1)*sizeof(int), // size
                    hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(hip_cast_mat->mat_.col, // dst
                    this->mat_.col,         // src
-                   this->get_nnz()*sizeof(int), // size
+                   this->GetNnz()*sizeof(int), // size
                    hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(hip_cast_mat->mat_.val, // dst
                    this->mat_.val,         // src
-                   this->get_nnz()*sizeof(ValueType), // size
+                   this->GetNnz()*sizeof(ValueType), // size
                    hipMemcpyDeviceToHost);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -618,31 +618,31 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
 
     hip_cast_mat->set_backend(this->local_backend_);       
 
-  if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateCSR(dst->get_nnz(), dst->get_nrow(), dst->get_ncol() );
+  if (this->GetNnz() == 0)
+    hip_cast_mat->AllocateCSR(dst->GetNnz(), dst->GetM(), dst->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
         hipMemcpy(hip_cast_mat->mat_.row_offset, // dst
                    this->mat_.row_offset,         // src
-                   (this->get_nrow()+1)*sizeof(int), // size
+                   (this->GetM()+1)*sizeof(int), // size
                    hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(hip_cast_mat->mat_.col, // dst
                    this->mat_.col,         // src
-                   this->get_nnz()*sizeof(int), // size
+                   this->GetNnz()*sizeof(int), // size
                    hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(hip_cast_mat->mat_.val, // dst
                    this->mat_.val,         // src
-                   this->get_nnz()*sizeof(ValueType), // size
+                   this->GetNnz()*sizeof(ValueType), // size
                    hipMemcpyDeviceToHost);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -674,26 +674,26 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromCSR(const int *row_offsets, con
   // assert CSR format
   assert(this->GetMatFormat() == CSR);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(this->nrow_ > 0);
     assert(this->ncol_ > 0);
 
     hipMemcpy(this->mat_.row_offset,            // dst
                row_offsets,                      // src
-               (this->get_nrow()+1)*sizeof(int), // size
+               (this->GetM()+1)*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(this->mat_.col,              // dst
                col,                         // src
-               this->get_nnz()*sizeof(int), // size
+               this->GetNnz()*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(this->mat_.val,                    // dst
                val,                               // src
-               this->get_nnz()*sizeof(ValueType), // size
+               this->GetNnz()*sizeof(ValueType), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -707,26 +707,26 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyToCSR(int *row_offsets, int *col, V
   // assert CSR format
   assert(this->GetMatFormat() == CSR);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(this->nrow_ > 0);
     assert(this->ncol_ > 0);
 
     hipMemcpy(row_offsets,                      // dst
                this->mat_.row_offset,            // src
-               (this->get_nrow()+1)*sizeof(int), // size
+               (this->GetM()+1)*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(col,                         // dst
                this->mat_.col,              // src
-               this->get_nnz()*sizeof(int), // size
+               this->GetNnz()*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(val,                               // dst
                this->mat_.val,                    // src
-               this->get_nnz()*sizeof(ValueType), // size
+               this->GetNnz()*sizeof(ValueType), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -740,7 +740,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   const HIPAcceleratorMatrixCSR<ValueType>   *cast_mat_csr;
@@ -770,9 +770,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     FATAL_ERROR(__FILE__, __LINE__);
 
-    this->nrow_ = cast_mat_coo->get_nrow();
-    this->ncol_ = cast_mat_coo->get_ncol();
-    this->nnz_  = cast_mat_coo->get_nnz();
+    this->nrow_ = cast_mat_coo->GetM();
+    this->ncol_ = cast_mat_coo->GetN();
+    this->nnz_  = cast_mat_coo->GetNnz();
 
     return true;
 
@@ -788,8 +788,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     FATAL_ERROR(__FILE__, __LINE__);
 
-    this->nrow_ = cast_mat_dense->get_nrow();
-    this->ncol_ = cast_mat_dense->get_ncol();
+    this->nrow_ = cast_mat_dense->GetM();
+    this->ncol_ = cast_mat_dense->GetN();
     this->nnz_  = nnz;
 
     return true;
@@ -806,8 +806,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     FATAL_ERROR(__FILE__, __LINE__);
 
-    this->nrow_ = cast_mat_dia->get_nrow();
-    this->ncol_ = cast_mat_dia->get_ncol();
+    this->nrow_ = cast_mat_dia->GetM();
+    this->ncol_ = cast_mat_dia->GetN();
     this->nnz_  = nnz ;
 
     return true;
@@ -824,8 +824,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     FATAL_ERROR(__FILE__, __LINE__);
 
-    this->nrow_ = cast_mat_ell->get_nrow();
-    this->ncol_ = cast_mat_ell->get_ncol();
+    this->nrow_ = cast_mat_ell->GetM();
+    this->ncol_ = cast_mat_ell->GetN();
     this->nnz_  = nnz ;
 
     return true;
@@ -841,9 +841,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     FATAL_ERROR(__FILE__, __LINE__);
 
-    this->nrow_ = cast_mat_mcsr->get_nrow();
-    this->ncol_ = cast_mat_mcsr->get_ncol();
-    this->nnz_  = cast_mat_mcsr->get_nnz();
+    this->nrow_ = cast_mat_mcsr->GetM();
+    this->ncol_ = cast_mat_mcsr->GetN();
+    this->nnz_  = cast_mat_mcsr->GetNnz();
 
     return true;
 
@@ -860,8 +860,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
     FATAL_ERROR(__FILE__, __LINE__);
     int nnz = 0;
 
-    this->nrow_ = cast_mat_hyb->get_nrow();
-    this->ncol_ = cast_mat_hyb->get_ncol();
+    this->nrow_ = cast_mat_hyb->GetM();
+    this->ncol_ = cast_mat_hyb->GetN();
     this->nnz_  = nnz;
 
     return true;
@@ -924,10 +924,10 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostCSR(const int *row_offset, 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permutation){
 
-  assert(permutation.get_size() == this->get_nrow());
-  assert(permutation.get_size() == this->get_ncol());
+  assert(permutation.get_size() == this->GetM());
+  assert(permutation.get_size() == this->GetN());
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     int *d_nnzr     = NULL;
     int *d_nnzrPerm = NULL;
@@ -935,36 +935,36 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permuta
     int *d_offset   = NULL;
     ValueType *d_data = NULL;
 
-    allocate_hip<int>(this->get_nrow(), &d_nnzr);
-    allocate_hip<int>(this->get_nrow(), &d_nnzrPerm);
-    allocate_hip<int>((this->get_nrow()+1), &d_nnzPerm);
-    allocate_hip<ValueType>(this->get_nnz(), &d_data);
-    allocate_hip<int>(this->get_nnz(), &d_offset);
+    allocate_hip<int>(this->GetM(), &d_nnzr);
+    allocate_hip<int>(this->GetM(), &d_nnzrPerm);
+    allocate_hip<int>((this->GetM()+1), &d_nnzPerm);
+    allocate_hip<ValueType>(this->GetNnz(), &d_data);
+    allocate_hip<int>(this->GetNnz(), &d_offset);
 
     const HIPAcceleratorVector<int> *cast_perm = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation);
     assert(cast_perm != NULL);
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
     hipLaunchKernelGGL((kernel_calc_row_nnz<int>),
                        GridSize, BlockSize, 0, 0,
-                       this->get_nrow(), this->mat_.row_offset, d_nnzr);
+                       this->GetM(), this->mat_.row_offset, d_nnzr);
     CHECK_HIP_ERROR(__FILE__,__LINE__);
 
     hipLaunchKernelGGL((kernel_permute_row_nnz<int>),
                        GridSize, BlockSize, 0, 0,
-                       this->get_nrow(), d_nnzr, cast_perm->vec_, d_nnzrPerm);
+                       this->GetM(), d_nnzr, cast_perm->vec_, d_nnzrPerm);
     CHECK_HIP_ERROR(__FILE__,__LINE__);
 
     //TODO 
     //move in extra file
-    cum_sum<int, 256>(d_nnzPerm, d_nnzrPerm, this->get_nrow());
+    cum_sum<int, 256>(d_nnzPerm, d_nnzrPerm, this->GetM());
 
     hipLaunchKernelGGL((kernel_permute_rows<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
-                       this->get_nrow(), this->mat_.row_offset, d_nnzPerm,
+                       this->GetM(), this->mat_.row_offset, d_nnzPerm,
                        this->mat_.col, this->mat_.val, cast_perm->vec_,
                        d_nnzr, d_offset, d_data);
     CHECK_HIP_ERROR(__FILE__,__LINE__);
@@ -1014,37 +1014,37 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permuta
     if (maxnnzrow > 64)
       hipLaunchKernelGGL((kernel_permute_cols_fallback<ValueType, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_nrow(), this->mat_.row_offset,
+                         this->GetM(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
                          d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >  32)
       hipLaunchKernelGGL((kernel_permute_cols<64, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_nrow(), this->mat_.row_offset,
+                         this->GetM(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
                          d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >  16)
       hipLaunchKernelGGL((kernel_permute_cols<32, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_nrow(), this->mat_.row_offset,
+                         this->GetM(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
                          d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >   8)
       hipLaunchKernelGGL((kernel_permute_cols<16, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_nrow(), this->mat_.row_offset,
+                         this->GetM(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
                          d_data, this->mat_.col, this->mat_.val);
     else if (maxnnzrow >   4)
       hipLaunchKernelGGL((kernel_permute_cols<8, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_nrow(), this->mat_.row_offset,
+                         this->GetM(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
                          d_data, this->mat_.col, this->mat_.val);
     else
       hipLaunchKernelGGL((kernel_permute_cols<4, ValueType, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_nrow(), this->mat_.row_offset,
+                         this->GetM(), this->mat_.row_offset,
                          cast_perm->vec_, d_nnzrPerm, d_offset,
                          d_data, this->mat_.col, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__,__LINE__);
@@ -1063,12 +1063,12 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permuta
 template <typename ValueType>
 void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(in.  get_size() >= 0);
     assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->get_ncol());
-    assert(out->get_size() == this->get_nrow());
+    assert(in.  get_size() == this->GetN());
+    assert(out->get_size() == this->GetM());
     
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in) ; 
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out) ; 
@@ -1082,7 +1082,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, 
     hipsparseStatus_t stat_t;
     stat_t = hipsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                              HIPSPARSE_OPERATION_NON_TRANSPOSE,
-                             this->get_nrow(), this->get_ncol(), this->get_nnz(), &alpha,
+                             this->GetM(), this->GetN(), this->GetNnz(), &alpha,
                              this->mat_descr_,
                              this->mat_.val, 
                              this->mat_.row_offset, this->mat_.col,
@@ -1098,12 +1098,12 @@ template <typename ValueType>
 void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
                                                   BaseVector<ValueType> *out) const {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(in.  get_size() >= 0);
     assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->get_ncol());
-    assert(out->get_size() == this->get_nrow());
+    assert(in.  get_size() == this->GetN());
+    assert(out->get_size() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -1116,7 +1116,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     hipsparseStatus_t stat_t;
     stat_t = hipsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                              HIPSPARSE_OPERATION_NON_TRANSPOSE,
-                             this->get_nrow(), this->get_ncol(), this->get_nnz(), &scalar,
+                             this->GetM(), this->GetN(), this->GetNnz(), &scalar,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.row_offset, this->mat_.col,
                              cast_in->vec_, &beta,
@@ -1130,7 +1130,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ILU0Factorize(void) {
 return false;
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 /*
     cusparseStatus_t stat_t;
 
@@ -1141,7 +1141,7 @@ return false;
 
     stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                      CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                     this->get_nrow(), this->get_nnz(),
+                                     this->GetM(), this->GetNnz(),
                                      this->mat_descr_,
                                      this->mat_.val, this->mat_.row_offset, this->mat_.col,
                                      infoA);
@@ -1149,7 +1149,7 @@ return false;
 
     stat_t = cusparseDcsrilu0(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                               CUSPARSE_OPERATION_NON_TRANSPOSE,
-                              this->get_nrow(),
+                              this->GetM(),
                               this->mat_descr_,
                               this->mat_.val, this->mat_.row_offset, this->mat_.col,
                               infoA);
@@ -1167,7 +1167,7 @@ return false;
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ICFactorize(BaseVector<ValueType> *inv_diag) {
 return false;
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 /*
     cusparseStatus_t stat_t;
 
@@ -1187,7 +1187,7 @@ return false;
 
     stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle), 
                                      CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                     this->get_nrow(), this->get_nnz(),
+                                     this->GetM(), this->GetNnz(),
                                      this->mat_descr_,
                                      this->mat_.val, this->mat_.row_offset, this->mat_.col, 
                                      infoA);
@@ -1195,7 +1195,7 @@ return false;
 
     stat_t = cusparseDcsric0(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                              CUSPARSE_OPERATION_NON_TRANSPOSE,
-                             this->get_nrow(),
+                             this->GetM(),
                              this->mat_descr_,
                              this->mat_.val, this->mat_.row_offset, this->mat_.col,
                              infoA);
@@ -1256,7 +1256,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::LUAnalyse(void) {
     // Analysis
     stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                      CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                     this->get_nrow(), this->get_nnz(),
+                                     this->GetM(), this->GetNnz(),
                                      this->L_mat_descr_,
                                      this->mat_.val, this->mat_.row_offset, this->mat_.col,
                                      this->L_mat_info_);
@@ -1264,18 +1264,18 @@ void HIPAcceleratorMatrixCSR<ValueType>::LUAnalyse(void) {
 
     stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                      CUSPARSE_OPERATION_NON_TRANSPOSE, 
-                                     this->get_nrow(), this->get_nnz(), 
+                                     this->GetM(), this->GetNnz(), 
                                      this->U_mat_descr_, 
                                      this->mat_.val, this->mat_.row_offset, this->mat_.col,
                                      this->U_mat_info_);
     CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 */
-    assert(this->get_ncol() == this->get_nrow());
+    assert(this->GetN() == this->GetM());
     assert(this->tmp_vec_ == NULL);
     this->tmp_vec_ = new HIPAcceleratorVector<ValueType>(this->local_backend_);
     assert(this->tmp_vec_ != NULL);
 
-    tmp_vec_->Allocate(this->get_nrow());
+    tmp_vec_->Allocate(this->GetM());
 
 }
 
@@ -1320,7 +1320,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
 return false;
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 /*
     assert(this->L_mat_descr_ != 0);
     assert(this->U_mat_descr_ != 0);
@@ -1329,9 +1329,9 @@ return false;
 */
     assert(in.  get_size()  >= 0);
     assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->get_ncol());
-    assert(out->get_size()  == this->get_nrow());
-    assert(this->get_ncol() == this->get_nrow());
+    assert(in.  get_size()  == this->GetN());
+    assert(out->get_size()  == this->GetM());
+    assert(this->GetN() == this->GetM());
 
     assert(this->tmp_vec_ != NULL);
 
@@ -1348,7 +1348,7 @@ return false;
     // Solve L
     stat_t = cusparseScsrsv_solve(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                  this->get_nrow(),
+                                  this->GetM(),
                                   &one,
                                   this->L_mat_descr_,
                                   this->mat_.val, this->mat_.row_offset, this->mat_.col,
@@ -1360,7 +1360,7 @@ return false;
     // Solve U
     stat_t = cusparseScsrsv_solve(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                  this->get_nrow(),
+                                  this->GetM(),
                                   &one,
                                   this->U_mat_descr_,
                                   this->mat_.val, this->mat_.row_offset, this->mat_.col,
@@ -1423,7 +1423,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::LLAnalyse(void) {
     // Analysis
     stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                      CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                     this->get_nrow(), this->get_nnz(),
+                                     this->GetM(), this->GetNnz(),
                                      this->L_mat_descr_,
                                      this->mat_.val, this->mat_.row_offset, this->mat_.col,
                                      this->L_mat_info_);
@@ -1431,18 +1431,18 @@ void HIPAcceleratorMatrixCSR<ValueType>::LLAnalyse(void) {
 
     stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                      CUSPARSE_OPERATION_TRANSPOSE,
-                                     this->get_nrow(), this->get_nnz(),
+                                     this->GetM(), this->GetNnz(),
                                      this->U_mat_descr_,
                                      this->mat_.val, this->mat_.row_offset, this->mat_.col,
                                      this->U_mat_info_);
     CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 */
-    assert(this->get_ncol() == this->get_nrow());
+    assert(this->GetN() == this->GetM());
     assert(this->tmp_vec_ == NULL);
     this->tmp_vec_ = new HIPAcceleratorVector<ValueType>(this->local_backend_);
     assert(this->tmp_vec_ != NULL);
 
-    tmp_vec_->Allocate(this->get_nrow());
+    tmp_vec_->Allocate(this->GetM());
 
 }
 
@@ -1488,7 +1488,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::LLSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 return false;
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 /*
     assert(this->L_mat_descr_ != 0);
     assert(this->U_mat_descr_ != 0);
@@ -1497,9 +1497,9 @@ return false;
 
     assert(in.  get_size()  >= 0);
     assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->get_ncol());
-    assert(out->get_size()  == this->get_nrow());
-    assert(this->get_ncol() == this->get_nrow());
+    assert(in.  get_size()  == this->GetN());
+    assert(out->get_size()  == this->GetM());
+    assert(this->GetN() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -1514,7 +1514,7 @@ return false;
     // Solve L
     stat_t = cusparseScsrsv_solve(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                  this->get_nrow(),
+                                  this->GetM(),
                                   &one,
                                   this->L_mat_descr_,
                                   this->mat_.val, this->mat_.row_offset, this->mat_.col,
@@ -1526,7 +1526,7 @@ return false;
     // Solve U
     stat_t = cusparseScsrsv_solve(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                   CUSPARSE_OPERATION_TRANSPOSE,
-                                  this->get_nrow(),
+                                  this->GetM(),
                                   &one,
                                   this->U_mat_descr_,
                                   this->mat_.val, this->mat_.row_offset, this->mat_.col,
@@ -1585,7 +1585,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::LAnalyse(const bool diag_unit) {
   // Analysis
   stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                    CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                   this->get_nrow(), this->get_nnz(),
+                                   this->GetM(), this->GetNnz(),
                                    this->L_mat_descr_,
                                    this->mat_.val, this->mat_.row_offset, this->mat_.col,
                                    this->L_mat_info_);
@@ -1629,7 +1629,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::UAnalyse(const bool diag_unit) {
   // Analysis
   stat_t = cusparseDcsrsv_analysis(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                    CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                   this->get_nrow(), this->get_nnz(),
+                                   this->GetM(), this->GetNnz(),
                                    this->U_mat_descr_,
                                    this->mat_.val, this->mat_.row_offset, this->mat_.col,
                                    this->U_mat_info_);
@@ -1681,7 +1681,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::LSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 return false;
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 /*
     assert(this->L_mat_descr_ != 0);
     assert(this->U_mat_descr_ != 0);
@@ -1690,9 +1690,9 @@ return false;
 */
     assert(in.  get_size()  >= 0);
     assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->get_ncol());
-    assert(out->get_size()  == this->get_nrow());
-    assert(this->get_ncol() == this->get_nrow());
+    assert(in.  get_size()  == this->GetN());
+    assert(out->get_size()  == this->GetM());
+    assert(this->GetN() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -1707,7 +1707,7 @@ return false;
     // Solve L
     stat_t = cusparseDcsrsv_solve(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                  this->get_nrow(),
+                                  this->GetM(),
                                   &one,
                                   this->L_mat_descr_,
                                   this->mat_.val, this->mat_.row_offset, this->mat_.col,
@@ -1726,7 +1726,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::USolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 return false;
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 /*
     assert(this->L_mat_descr_ != 0);
     assert(this->U_mat_descr_ != 0);
@@ -1735,9 +1735,9 @@ return false;
 */
     assert(in.  get_size()  >= 0);
     assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->get_ncol());
-    assert(out->get_size()  == this->get_nrow());
-    assert(this->get_ncol() == this->get_nrow()); 
+    assert(in.  get_size()  == this->GetN());
+    assert(out->get_size()  == this->GetM());
+    assert(this->GetN() == this->GetM()); 
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -1752,7 +1752,7 @@ return false;
     // Solve U
     stat_t = cusparseDcsrsv_solve(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                  this->get_nrow(),
+                                  this->GetM(),
                                   &one,
                                   this->U_mat_descr_,
                                   this->mat_.val, this->mat_.row_offset, this->mat_.col,
@@ -1770,14 +1770,14 @@ return false;
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ExtractDiagonal(BaseVector<ValueType> *vec_diag) const {
 
-  if (this->get_nnz() > 0)  {
+  if (this->GetNnz() > 0)  {
 
     assert(vec_diag != NULL);
-    assert(vec_diag->get_size() == this->get_nrow());
+    assert(vec_diag->get_size() == this->GetM());
 
     HIPAcceleratorVector<ValueType> *cast_vec_diag  = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec_diag);
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -1796,14 +1796,14 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractDiagonal(BaseVector<ValueType> *
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ExtractInverseDiagonal(BaseVector<ValueType> *vec_inv_diag) const {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(vec_inv_diag != NULL);
-    assert(vec_inv_diag->get_size() == this->get_nrow());
+    assert(vec_inv_diag->get_size() == this->GetM());
 
     HIPAcceleratorVector<ValueType> *cast_vec_inv_diag  = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec_inv_diag);
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -1830,8 +1830,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractSubMatrix(const int row_offset,
   assert(row_offset >= 0);
   assert(col_offset >= 0);
 
-  assert(this->get_nrow() > 0);
-  assert(this->get_ncol() > 0);
+  assert(this->GetM() > 0);
+  assert(this->GetN() > 0);
 
   HIPAcceleratorMatrixCSR<ValueType> *cast_mat  = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*> (mat) ; 
   assert(cast_mat != NULL);
@@ -1923,8 +1923,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractL(BaseMatrix<ValueType> *L) cons
   
   assert(L != NULL);
   
-  assert(this->get_nrow() > 0);
-  assert(this->get_ncol() > 0);
+  assert(this->GetM() > 0);
+  assert(this->GetN() > 0);
   
   HIPAcceleratorMatrixCSR<ValueType> *cast_L = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*> (L);
   
@@ -1933,7 +1933,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractL(BaseMatrix<ValueType> *L) cons
   cast_L->Clear();
   
   // compute nnz per row
-  int nrow = this->get_nrow();
+  int nrow = this->GetM();
   
   allocate_hip<int>(nrow+1, &cast_L->mat_.row_offset);
   
@@ -1983,8 +1983,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractL(BaseMatrix<ValueType> *L) cons
                      cast_L->mat_.val);
   CHECK_HIP_ERROR(__FILE__,__LINE__);
   
-  cast_L->nrow_ = this->get_nrow();
-  cast_L->ncol_ = this->get_ncol();
+  cast_L->nrow_ = this->GetM();
+  cast_L->ncol_ = this->GetN();
   cast_L->nnz_ = nnz_L;
   
   return true;
@@ -1997,8 +1997,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> 
 
   assert(L != NULL);
   
-  assert(this->get_nrow() > 0);
-  assert(this->get_ncol() > 0);
+  assert(this->GetM() > 0);
+  assert(this->GetN() > 0);
   
   HIPAcceleratorMatrixCSR<ValueType> *cast_L = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*> (L);
   
@@ -2007,7 +2007,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> 
   cast_L->Clear();
   
   // compute nnz per row
-  int nrow = this->get_nrow();
+  int nrow = this->GetM();
   
   allocate_hip<int>(nrow+1, &cast_L->mat_.row_offset);
   
@@ -2057,8 +2057,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> 
                      cast_L->mat_.val);
   CHECK_HIP_ERROR(__FILE__,__LINE__);
   
-  cast_L->nrow_ = this->get_nrow();
-  cast_L->ncol_ = this->get_ncol();
+  cast_L->nrow_ = this->GetM();
+  cast_L->ncol_ = this->GetN();
   cast_L->nnz_ = nnz_L;
   
   return true;
@@ -2070,8 +2070,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractU(BaseMatrix<ValueType> *U) cons
   
   assert(U != NULL);
   
-  assert(this->get_nrow() > 0);
-  assert(this->get_ncol() > 0);
+  assert(this->GetM() > 0);
+  assert(this->GetN() > 0);
   
   HIPAcceleratorMatrixCSR<ValueType> *cast_U = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*> (U);
   
@@ -2080,7 +2080,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractU(BaseMatrix<ValueType> *U) cons
   cast_U->Clear();
   
   // compute nnz per row
-  int nrow = this->get_nrow();
+  int nrow = this->GetM();
   
   allocate_hip<int>(nrow+1, &cast_U->mat_.row_offset);
   
@@ -2130,8 +2130,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractU(BaseMatrix<ValueType> *U) cons
                      cast_U->mat_.val);
   CHECK_HIP_ERROR(__FILE__,__LINE__);
 
-  cast_U->nrow_ = this->get_nrow();
-  cast_U->ncol_ = this->get_ncol();
+  cast_U->nrow_ = this->GetM();
+  cast_U->ncol_ = this->GetN();
   cast_U->nnz_ = nnz_L;
 
   return true;
@@ -2144,8 +2144,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractUDiagonal(BaseMatrix<ValueType> 
 
   assert(U != NULL);
   
-  assert(this->get_nrow() > 0);
-  assert(this->get_ncol() > 0);
+  assert(this->GetM() > 0);
+  assert(this->GetN() > 0);
   
   HIPAcceleratorMatrixCSR<ValueType> *cast_U = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*> (U);
   
@@ -2154,7 +2154,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractUDiagonal(BaseMatrix<ValueType> 
   cast_U->Clear();
   
   // compute nnz per row
-  int nrow = this->get_nrow();
+  int nrow = this->GetM();
 
   allocate_hip<int>(nrow+1, &cast_U->mat_.row_offset);
 
@@ -2204,8 +2204,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractUDiagonal(BaseMatrix<ValueType> 
                      cast_U->mat_.val);
   CHECK_HIP_ERROR(__FILE__,__LINE__);
   
-  cast_U->nrow_ = this->get_nrow();
-  cast_U->ncol_ = this->get_ncol();
+  cast_U->nrow_ = this->GetM();
+  cast_U->ncol_ = this->GetN();
   cast_U->nnz_ = nnz_L;
   
   return true;
@@ -2218,24 +2218,24 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MaximalIndependentSet(int &size,
   assert(permutation != NULL);
   HIPAcceleratorVector<int> *cast_perm = dynamic_cast<HIPAcceleratorVector<int>*> (permutation);
   assert(cast_perm != NULL);
-  assert(this->get_nrow() == this->get_ncol());
+  assert(this->GetM() == this->GetN());
 
   int *h_row_offset = NULL;
   int *h_col = NULL;
 
-  allocate_host(this->get_nrow()+1, &h_row_offset);
-  allocate_host(this->get_nnz(), &h_col);
+  allocate_host(this->GetM()+1, &h_row_offset);
+  allocate_host(this->GetNnz(), &h_col);
 
-  hipMemcpy(h_row_offset, this->mat_.row_offset, (this->get_nrow()+1)*sizeof(int), hipMemcpyDeviceToHost);
-  hipMemcpy(h_col, this->mat_.col, this->get_nnz()*sizeof(int), hipMemcpyDeviceToHost);
+  hipMemcpy(h_row_offset, this->mat_.row_offset, (this->GetM()+1)*sizeof(int), hipMemcpyDeviceToHost);
+  hipMemcpy(h_col, this->mat_.col, this->GetNnz()*sizeof(int), hipMemcpyDeviceToHost);
 
   int *mis = NULL;
-  allocate_host(this->get_nrow(), &mis);
-  memset(mis, 0, sizeof(int)*this->get_nrow());
+  allocate_host(this->GetM(), &mis);
+  memset(mis, 0, sizeof(int)*this->GetM());
 
   size = 0 ;
 
-  for (int ai=0; ai<this->get_nrow(); ++ai) {
+  for (int ai=0; ai<this->GetM(); ++ai) {
 
     if (mis[ai] == 0) {
 
@@ -2252,10 +2252,10 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MaximalIndependentSet(int &size,
   }
 
   int *h_perm = NULL;
-  allocate_host(this->get_nrow(), &h_perm);
+  allocate_host(this->GetM(), &h_perm);
 
   int pos = 0;
-  for (int ai=0; ai<this->get_nrow(); ++ai) {
+  for (int ai=0; ai<this->GetM(); ++ai) {
 
     if (mis[ai] == 1) {
 
@@ -2272,13 +2272,13 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MaximalIndependentSet(int &size,
   
   // Check the permutation
   //
-  //  for (int ai=0; ai<this->get_nrow(); ++ai) {
+  //  for (int ai=0; ai<this->GetM(); ++ai) {
   //    assert( h_perm[ai] >= 0 );
-  //    assert( h_perm[ai] < this->get_nrow() );
+  //    assert( h_perm[ai] < this->GetM() );
   //  }
 
 
-  cast_perm->Allocate(this->get_nrow());
+  cast_perm->Allocate(this->GetM());
   hipMemcpy(cast_perm->vec_, h_perm, permutation->get_size()*sizeof(int), hipMemcpyHostToDevice);
 
   free_host(&h_row_offset);
@@ -2303,19 +2303,19 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MultiColoring(int &num_colors,
   int *color = NULL;
   int *h_row_offset = NULL;
   int *h_col = NULL;
-  int size = this->get_nrow();
+  int size = this->GetM();
   allocate_host(size, &color);
-  allocate_host(this->get_nrow()+1, &h_row_offset);
-  allocate_host(this->get_nnz(), &h_col);
+  allocate_host(this->GetM()+1, &h_row_offset);
+  allocate_host(this->GetNnz(), &h_col);
 
-  hipMemcpy(h_row_offset, this->mat_.row_offset, (this->get_nrow()+1)*sizeof(int), hipMemcpyDeviceToHost);
-  hipMemcpy(h_col, this->mat_.col, this->get_nnz()*sizeof(int), hipMemcpyDeviceToHost);
+  hipMemcpy(h_row_offset, this->mat_.row_offset, (this->GetM()+1)*sizeof(int), hipMemcpyDeviceToHost);
+  hipMemcpy(h_col, this->mat_.col, this->GetNnz()*sizeof(int), hipMemcpyDeviceToHost);
 
   memset(color, 0, size*sizeof(int));
   num_colors = 0;
   std::vector<bool> row_col;
 
-  for (int ai=0; ai<this->get_nrow(); ++ai) {
+  for (int ai=0; ai<this->GetM(); ++ai) {
     color[ai] = 1;
     row_col.clear();
     row_col.assign(num_colors+2, false);
@@ -2343,7 +2343,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MultiColoring(int &num_colors,
   allocate_host(num_colors, &offsets_color);
   memset(offsets_color, 0, sizeof(int)*num_colors);
 
-  for (int i=0; i<this->get_nrow(); ++i) 
+  for (int i=0; i<this->GetM(); ++i) 
     ++(*size_colors)[color[i]-1];
 
   int total=0;
@@ -2356,16 +2356,16 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MultiColoring(int &num_colors,
   }
 
   int *h_perm = NULL;
-  allocate_host(this->get_nrow(), &h_perm);
+  allocate_host(this->GetM(), &h_perm);
 
-  for (int i=0; i<this->get_nrow(); ++i) {
+  for (int i=0; i<this->GetM(); ++i) {
 
     h_perm[i] = offsets_color[ color[i]-1 ] ;
     ++offsets_color[color[i]-1];
 
   }
 
-  cast_perm->Allocate(this->get_nrow());
+  cast_perm->Allocate(this->GetM());
   hipMemcpy(cast_perm->vec_, h_perm, permutation->get_size()*sizeof(int), hipMemcpyHostToDevice);
 
   free_host(&h_perm);
@@ -2379,11 +2379,11 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MultiColoring(int &num_colors,
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::Scale(const ValueType alpha) {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     hipblasStatus_t stat_t;
     stat_t = hipblasTscal(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                          this->get_nnz(), &alpha, this->mat_.val, 1);
+                          this->GetNnz(), &alpha, this->mat_.val, 1);
     CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
@@ -2395,9 +2395,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Scale(const ValueType alpha) {
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ScaleDiagonal(const ValueType alpha) {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -2416,9 +2416,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ScaleDiagonal(const ValueType alpha) {
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -2437,9 +2437,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ScaleOffDiagonal(const ValueType alpha)
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -2458,9 +2458,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarDiagonal(const ValueType alpha
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -2479,9 +2479,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarOffDiagonal(const ValueType al
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::AddScalar(const ValueType alpha) {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    int nnz = this->get_nnz();
+    int nnz = this->GetNnz();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nnz / this->local_backend_.HIP_block_size + 1);
 
@@ -2499,14 +2499,14 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalar(const ValueType alpha) {
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<ValueType> &diag) {
 
-  assert(diag.get_size() == this->get_ncol());
+  assert(diag.get_size() == this->GetN());
 
   const HIPAcceleratorVector<ValueType> *cast_diag = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&diag);
   assert(cast_diag!= NULL);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -2525,14 +2525,14 @@ bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<Va
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultL(const BaseVector<ValueType> &diag) {
 
-  assert(diag.get_size() == this->get_ncol());
+  assert(diag.get_size() == this->GetN());
 
   const HIPAcceleratorVector<ValueType> *cast_diag = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&diag);
   assert(cast_diag!= NULL);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    int nrow = this->get_nrow();
+    int nrow = this->GetM();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -2552,10 +2552,10 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::MatMatMult(const BaseMatrix<ValueType> &A, const BaseMatrix<ValueType> &B) {
 return false;
 
-  assert(A.get_ncol() == B.get_nrow());
-  assert(A.get_nrow() > 0);
-  assert(B.get_ncol() > 0);
-  assert(B.get_nrow() > 0);
+  assert(A.GetN() == B.GetM());
+  assert(A.GetM() > 0);
+  assert(B.GetN() > 0);
+  assert(B.GetM() > 0);
 
   const HIPAcceleratorMatrixCSR<ValueType> *cast_mat_A = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&A);
   const HIPAcceleratorMatrixCSR<ValueType> *cast_mat_B = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&B);
@@ -2564,9 +2564,9 @@ return false;
 
   this->Clear();
 
-  int m = cast_mat_A->get_nrow();
-  int n = cast_mat_B->get_ncol();
-  int k = cast_mat_B->get_nrow();
+  int m = cast_mat_A->GetM();
+  int n = cast_mat_B->GetN();
+  int k = cast_mat_B->GetM();
   int nnzC = 0;
 
   allocate_hip(m+1, &this->mat_.row_offset);
@@ -2582,9 +2582,9 @@ return false;
                                CUSPARSE_OPERATION_NON_TRANSPOSE,
                                CUSPARSE_OPERATION_NON_TRANSPOSE,
                                m, n, k,
-                               cast_mat_A->mat_descr_, cast_mat_A->get_nnz(),
+                               cast_mat_A->mat_descr_, cast_mat_A->GetNnz(),
                                cast_mat_A->mat_.row_offset, cast_mat_A->mat_.col,
-                               cast_mat_B->mat_descr_, cast_mat_B->get_nnz(),
+                               cast_mat_B->mat_descr_, cast_mat_B->GetNnz(),
                                cast_mat_B->mat_.row_offset, cast_mat_B->mat_.col,
                                this->mat_descr_, this->mat_.row_offset,
                                &nnzC);
@@ -2605,11 +2605,11 @@ return false;
                                 CUSPARSE_OPERATION_NON_TRANSPOSE,
                                 m, n, k,
                                 // A
-                                cast_mat_A->mat_descr_, cast_mat_A->get_nnz(),
+                                cast_mat_A->mat_descr_, cast_mat_A->GetNnz(),
                                 cast_mat_A->mat_.val,
                                 cast_mat_A->mat_.row_offset, cast_mat_A->mat_.col,
                                 // B
-                                cast_mat_B->mat_descr_, cast_mat_B->get_nnz(),
+                                cast_mat_B->mat_descr_, cast_mat_B->GetNnz(),
                                 cast_mat_B->mat_.val,
                                 cast_mat_B->mat_.row_offset, cast_mat_B->mat_.col,
                                 // C
@@ -2633,19 +2633,19 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType> &
                                                    const ValueType beta, const bool structure) {
 return false;
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HIPAcceleratorMatrixCSR<ValueType> *cast_mat = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat);
     assert(cast_mat != NULL);
 
-    assert(cast_mat->get_nrow() == this->get_nrow());
-    assert(cast_mat->get_ncol() == this->get_ncol());
-    assert(this    ->get_nnz() > 0);  
-    assert(cast_mat->get_nnz() > 0);
+    assert(cast_mat->GetM() == this->GetM());
+    assert(cast_mat->GetN() == this->GetN());
+    assert(this    ->GetNnz() > 0);  
+    assert(cast_mat->GetNnz() > 0);
 
     if (structure == false) {
 
-      int nrow = this->get_nrow();
+      int nrow = this->GetM();
       dim3 BlockSize(this->local_backend_.HIP_block_size);
       dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -2660,8 +2660,8 @@ return false;
 
     } else {
 
-      int m = this->get_nrow();
-      int n = this->get_ncol();
+      int m = this->GetM();
+      int n = this->GetN();
       int *csrRowPtrC = NULL;
       int *csrColC = NULL;
       ValueType *csrValC = NULL;
@@ -2688,9 +2688,9 @@ return false;
 
       stat_t = cusparseXcsrgeamNnz(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                                    m, n,
-                                   this->mat_descr_, this->get_nnz(),
+                                   this->mat_descr_, this->GetNnz(),
                                    this->mat_.row_offset, this->mat_.col,
-                                   cast_mat->mat_descr_, cast_mat->get_nnz(),
+                                   cast_mat->mat_descr_, cast_mat->GetNnz(),
                                    cast_mat->mat_.row_offset, cast_mat->mat_.col,
                                    desc_mat_C, csrRowPtrC,
                                    &nnzC);
@@ -2703,12 +2703,12 @@ return false;
                                     m, n,
                                     // A
                                     &alpha,
-                                    this->mat_descr_, this->get_nnz(),
+                                    this->mat_descr_, this->GetNnz(),
                                     this->mat_.val,
                                     this->mat_.row_offset, this->mat_.col,
                                     // B
                                     &beta,
-                                    cast_mat->mat_descr_, cast_mat->get_nnz(),
+                                    cast_mat->mat_descr_, cast_mat->GetNnz(),
                                     cast_mat->mat_.val,
                                     cast_mat->mat_.row_offset, cast_mat->mat_.col,
                                     // C
@@ -2742,7 +2742,7 @@ return false;
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HIPAcceleratorMatrixCSR<ValueType> tmp(this->local_backend_);
 
@@ -2751,45 +2751,45 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
     int mat_nnz = 0;
 
     int *row_offset = NULL;
-    allocate_hip(this->get_nrow()+1, &row_offset);
+    allocate_hip(this->GetM()+1, &row_offset);
 
     int *mat_row_offset = NULL;
-    allocate_hip(this->get_nrow()+1, &mat_row_offset);
+    allocate_hip(this->GetM()+1, &mat_row_offset);
     
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
-                    this->get_nrow()+1, row_offset); 
+                    this->GetM()+1, row_offset); 
 
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->get_nrow() / this->local_backend_.HIP_block_size + 1);
+    dim3 GridSize(this->GetM() / this->local_backend_.HIP_block_size + 1);
  
     hipLaunchKernelGGL((kernel_csr_compress_count_nrow<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->mat_.row_offset, this->mat_.col,
-                       this->mat_.val, this->get_nrow(),
+                       this->mat_.val, this->GetM(),
                        drop_off, row_offset);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     // TODO
-    cum_sum<int, 256>(mat_row_offset, row_offset, this->get_nrow());
+    cum_sum<int, 256>(mat_row_offset, row_offset, this->GetM());
 
     // get the new mat nnz
-    hipMemcpy(&mat_nnz, &mat_row_offset[this->get_nrow()],
+    hipMemcpy(&mat_nnz, &mat_row_offset[this->GetM()],
                sizeof(int), hipMemcpyDeviceToHost);
 
-    this->AllocateCSR(mat_nnz, this->get_nrow(), this->get_ncol());
+    this->AllocateCSR(mat_nnz, this->GetM(), this->GetN());
 
     // TODO - just exchange memory pointers
     // copy row_offset
     hipMemcpy(this->mat_.row_offset, mat_row_offset,
-               (this->get_nrow()+1)*sizeof(int), hipMemcpyDeviceToDevice);
+               (this->GetM()+1)*sizeof(int), hipMemcpyDeviceToDevice);
 
     // copy col and val
 
     hipLaunchKernelGGL((kernel_csr_compress_copy<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        tmp.mat_.row_offset, tmp.mat_.col, tmp.mat_.val,
-                       tmp.get_nrow(), drop_off, this->mat_.row_offset,
+                       tmp.GetM(), drop_off, this->mat_.row_offset,
                        this->mat_.col, this->mat_.val);
     CHECK_HIP_ERROR(__FILE__, __LINE__);      
 
@@ -2806,19 +2806,19 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::Transpose(void) {
 return false;
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HIPAcceleratorMatrixCSR<ValueType> tmp(this->local_backend_);
 
     tmp.CopyFrom(*this);
 
     this->Clear();
-    this->AllocateCSR(tmp.get_nnz(), tmp.get_ncol(), tmp.get_nrow());
+    this->AllocateCSR(tmp.GetNnz(), tmp.GetN(), tmp.GetM());
 /*
     cusparseStatus_t stat_t;
 
     stat_t = cusparseDcsr2csc(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                              tmp.get_nrow(), tmp.get_ncol(), tmp.get_nnz(),
+                              tmp.GetM(), tmp.GetN(), tmp.GetNnz(),
                               tmp.mat_.val, tmp.mat_.row_offset, tmp.mat_.col,
                               this->mat_.val, this->mat_.col, this->mat_.row_offset,
                               CUSPARSE_ACTION_NUMERIC,
@@ -2837,7 +2837,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, cons
 
   assert(vec.get_size() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
@@ -2846,8 +2846,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, cons
     int *col = NULL;
     ValueType *val = NULL;
 
-    int nrow = this->get_nrow();
-    int ncol = this->get_ncol();
+    int nrow = this->GetM();
+    int ncol = this->GetN();
 
     allocate_hip(nrow+1, &row_offset);
 
@@ -2907,18 +2907,18 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractColumnVector(const int idx, Base
   assert(vec != NULL);
   assert(vec->get_size() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec);
     assert(cast_vec != NULL);
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(this->get_nrow() / this->local_backend_.HIP_block_size + 1);
+    dim3 GridSize(this->GetM() / this->local_backend_.HIP_block_size + 1);
 
     hipLaunchKernelGGL((kernel_csr_extract_column_vector<ValueType, int>),
                        GridSize, BlockSize, 0, 0,
                        this->mat_.row_offset, this->mat_.col,
-                       this->mat_.val, this->get_nrow(),
+                       this->mat_.val, this->GetM(),
                        idx, cast_vec->vec_);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -2934,7 +2934,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractRowVector(const int idx, BaseVec
   assert(vec != NULL);
   assert(vec->get_size() == this->ncol_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec);
     assert(cast_vec != NULL);

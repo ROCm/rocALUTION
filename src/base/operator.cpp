@@ -30,21 +30,21 @@ Operator<ValueType>::~Operator() {
 template <typename ValueType>
 int Operator<ValueType>::get_local_nrow(void) const {
  
-  return IndexTypeToInt(this->get_nrow());
+  return IndexTypeToInt(this->GetM());
 
 }
 
 template <typename ValueType>
 int Operator<ValueType>::get_local_ncol(void) const {
  
-  return IndexTypeToInt(this->get_ncol());
+  return IndexTypeToInt(this->GetN());
 
 }
 
 template <typename ValueType>
 int Operator<ValueType>::get_local_nnz(void) const {
  
-  return IndexTypeToInt(this->get_nnz());
+  return IndexTypeToInt(this->GetNnz());
 
 }
 

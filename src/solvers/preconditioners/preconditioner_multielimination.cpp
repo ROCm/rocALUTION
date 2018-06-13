@@ -264,11 +264,11 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->x_.CloneBackend(*this->op_); 
   this->x_.Allocate("Permuted solution vector",
-                    this->op_->get_nrow());
+                    this->op_->GetM());
 
   this->rhs_.CloneBackend(*this->op_); 
   this->rhs_.Allocate("Permuted RHS vector",
-                      this->op_->get_nrow());
+                      this->op_->GetM());
 
   this->x_1_.CloneBackend(*this->op_); 
   this->x_1_.Allocate("Permuted solution vector",
@@ -276,7 +276,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->x_2_.CloneBackend(*this->op_); 
   this->x_2_.Allocate("Permuted solution vector",
-                      this->op_->get_nrow()-this->size_);
+                      this->op_->GetM()-this->size_);
 
   this->rhs_1_.CloneBackend(*this->op_); 
   this->rhs_1_.Allocate("Permuted solution vector",
@@ -284,7 +284,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->rhs_2_.CloneBackend(*this->op_); 
   this->rhs_2_.Allocate("Permuted solution vector",
-                      this->op_->get_nrow()-this->size_);
+                      this->op_->GetM()-this->size_);
 
   if (this->level_ > 1) { 
     this->AA_.Clear();

@@ -113,19 +113,19 @@ void FGMRES<OperatorType, VectorType, ValueType>::Build(void) {
     for (int i=0; i<this->size_basis_+1; ++i) {
       this->z_[i] = new VectorType;
       this->z_[i]->CloneBackend(*this->op_);
-      this->z_[i]->Allocate("z", this->op_->get_nrow());
+      this->z_[i]->Allocate("z", this->op_->GetM());
     }
 
   }
 
   this->w_.CloneBackend(*this->op_);
-  this->w_.Allocate("w", this->op_->get_nrow());
+  this->w_.Allocate("w", this->op_->GetM());
 
   this->v_ = new VectorType*[this->size_basis_+1];
   for (int i = 0; i < this->size_basis_+1; ++i) {
     this->v_[i] = new VectorType;
     this->v_[i]->CloneBackend(*this->op_);
-    this->v_[i]->Allocate("v", this->op_->get_nrow());
+    this->v_[i]->Allocate("v", this->op_->GetM());
   }
 
   LOG_DEBUG(this, "FGMRES::Build()",

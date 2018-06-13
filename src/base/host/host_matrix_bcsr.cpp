@@ -134,7 +134,7 @@ bool HostMatrixBCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   if (const HostMatrixBCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*> (&mat)) {

@@ -98,8 +98,8 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::Build(void) {
   this->build_ = true;
 
   assert(this->op_ != NULL);  
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
-  assert(this->op_->get_nrow() > 0);
+  assert(this->op_->GetM() == this->op_->GetN());
+  assert(this->op_->GetM() > 0);
 
 
   if (this->precond_ != NULL) {
@@ -109,12 +109,12 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::Build(void) {
     this->precond_->Build();
 
     this->z_.CloneBackend(*this->op_);
-    this->z_.Allocate("z", this->op_->get_nrow());
+    this->z_.Allocate("z", this->op_->GetM());
 
   }
 
   this->r0_.CloneBackend(*this->op_);
-  this->r0_.Allocate("r0", this->op_->get_nrow());
+  this->r0_.Allocate("r0", this->op_->GetM());
 
   this->r_ = new VectorType*[this->l_+1];
   this->u_ = new VectorType*[this->l_+1];
@@ -123,11 +123,11 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::Build(void) {
 
     this->r_[i] = new VectorType;
     this->r_[i]->CloneBackend(*this->op_);
-    this->r_[i]->Allocate("r", this->op_->get_nrow());
+    this->r_[i]->Allocate("r", this->op_->GetM());
 
     this->u_[i] = new VectorType;
     this->u_[i]->CloneBackend(*this->op_);
-    this->u_[i]->Allocate("u", this->op_->get_nrow());
+    this->u_[i]->Allocate("u", this->op_->GetM());
 
   }
 

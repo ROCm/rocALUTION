@@ -87,7 +87,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::AllocateCOO(const int nnz, const int nr
   assert(ncol >= 0);
   assert(nrow >= 0);
 
-  if (this->get_nnz() > 0)
+  if (this->GetNnz() > 0)
     this->Clear();
 
   if (nnz > 0) {
@@ -139,9 +139,9 @@ void HIPAcceleratorMatrixCOO<ValueType>::SetDataPtrCOO(int **row, int **col, Val
 template <typename ValueType>
 void HIPAcceleratorMatrixCOO<ValueType>::LeaveDataPtrCOO(int **row, int **col, ValueType **val) {
 
-  assert(this->get_nrow() > 0);
-  assert(this->get_ncol() > 0);
-  assert(this->get_nnz() > 0);
+  assert(this->GetM() > 0);
+  assert(this->GetN() > 0);
+  assert(this->GetNnz() > 0);
 
   hipDeviceSynchronize();
 
@@ -163,7 +163,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::LeaveDataPtrCOO(int **row, int **col, V
 template <typename ValueType>
 void HIPAcceleratorMatrixCOO<ValueType>::Clear() {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     free_hip(&this->mat_.row);
     free_hip(&this->mat_.col);
@@ -189,30 +189,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFromHost(const HostMatrix<ValueType
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixCOO<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCOO(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCOO(src.GetNnz(), src.GetM(), src.GetN() );
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-      assert(this->get_nnz()  == src.get_nnz());
-      assert(this->get_nrow()  == src.get_nrow());
-      assert(this->get_ncol()  == src.get_ncol());
+      assert(this->GetNnz()  == src.GetNnz());
+      assert(this->GetM()  == src.GetM());
+      assert(this->GetN()  == src.GetN());
       
       hipMemcpy(this->mat_.row,     // dst
                  cast_mat->mat_.row, // src
-                 (this->get_nnz())*sizeof(int), // size
+                 (this->GetNnz())*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.col,     // dst
                  cast_mat->mat_.col, // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.val,     // dst
                  cast_mat->mat_.val, // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -241,30 +241,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
 
     cast_mat->set_backend(this->local_backend_);   
 
-  if (dst->get_nnz() == 0)
-    cast_mat->AllocateCOO(this->get_nnz(), this->get_nrow(), this->get_ncol() );
+  if (dst->GetNnz() == 0)
+    cast_mat->AllocateCOO(this->GetNnz(), this->GetM(), this->GetN() );
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-      assert(this->get_nnz()  == dst->get_nnz());
-      assert(this->get_nrow() == dst->get_nrow());
-      assert(this->get_ncol() == dst->get_ncol());
+      assert(this->GetNnz()  == dst->GetNnz());
+      assert(this->GetM() == dst->GetM());
+      assert(this->GetN() == dst->GetN());
       
       hipMemcpy(cast_mat->mat_.row, // dst
                  this->mat_.row,     // src
-                 this->get_nnz()*sizeof(int), // size           
+                 this->GetNnz()*sizeof(int), // size           
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(cast_mat->mat_.col, // dst
                  this->mat_.col,     // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(cast_mat->mat_.val, // dst
                  this->mat_.val,     // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -292,30 +292,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCOO<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCOO(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCOO(src.GetNnz(), src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpy(this->mat_.row,         // dst
                  hip_cast_mat->mat_.row, // src
-                 (this->get_nnz())*sizeof(int), // size
+                 (this->GetNnz())*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.col,         // dst
                  hip_cast_mat->mat_.col, // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.val,         // dst
                  hip_cast_mat->mat_.val, // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -354,30 +354,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
 
     hip_cast_mat->set_backend(this->local_backend_);       
 
-  if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateCOO(dst->get_nnz(), dst->get_nrow(), dst->get_ncol() );
+  if (this->GetNnz() == 0)
+    hip_cast_mat->AllocateCOO(dst->GetNnz(), dst->GetM(), dst->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpy(hip_cast_mat->mat_.row, // dst
                  this->mat_.row,         // src
-                 (this->get_nnz())*sizeof(int), // size
+                 (this->GetNnz())*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.col, // dst
                  this->mat_.col,         // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.val, // dst
                  this->mat_.val,         // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -414,30 +414,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixCOO<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCOO(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCOO(src.GetNnz(), src.GetM(), src.GetN() );
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-      assert(this->get_nnz()  == src.get_nnz());
-      assert(this->get_nrow()  == src.get_nrow());
-      assert(this->get_ncol()  == src.get_ncol());
+      assert(this->GetNnz()  == src.GetNnz());
+      assert(this->GetM()  == src.GetM());
+      assert(this->GetN()  == src.GetN());
       
       hipMemcpyAsync(this->mat_.row,     // dst
                       cast_mat->mat_.row, // src
-                      (this->get_nnz())*sizeof(int), // size
+                      (this->GetNnz())*sizeof(int), // size
                       hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(this->mat_.col,     // dst
                       cast_mat->mat_.col, // src
-                      this->get_nnz()*sizeof(int), // size
+                      this->GetNnz()*sizeof(int), // size
                       hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(this->mat_.val,     // dst
                       cast_mat->mat_.val, // src
-                      this->get_nnz()*sizeof(ValueType), // size
+                      this->GetNnz()*sizeof(ValueType), // size
                       hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -466,30 +466,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
 
     cast_mat->set_backend(this->local_backend_);   
 
-  if (dst->get_nnz() == 0)
-    cast_mat->AllocateCOO(this->get_nnz(), this->get_nrow(), this->get_ncol() );
+  if (dst->GetNnz() == 0)
+    cast_mat->AllocateCOO(this->GetNnz(), this->GetM(), this->GetN() );
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-      assert(this->get_nnz()  == dst->get_nnz());
-      assert(this->get_nrow() == dst->get_nrow());
-      assert(this->get_ncol() == dst->get_ncol());
+      assert(this->GetNnz()  == dst->GetNnz());
+      assert(this->GetM() == dst->GetM());
+      assert(this->GetN() == dst->GetN());
       
       hipMemcpyAsync(cast_mat->mat_.row, // dst
                       this->mat_.row,     // src
-                      this->get_nnz()*sizeof(int), // size           
+                      this->GetNnz()*sizeof(int), // size           
                       hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(cast_mat->mat_.col, // dst
                       this->mat_.col,     // src
-                      this->get_nnz()*sizeof(int), // size
+                      this->GetNnz()*sizeof(int), // size
                       hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(cast_mat->mat_.val, // dst
                       this->mat_.val,     // src
-                      this->get_nnz()*sizeof(ValueType), // size
+                      this->GetNnz()*sizeof(ValueType), // size
                       hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -517,30 +517,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCOO<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateCOO(src.get_nnz(), src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateCOO(src.GetNnz(), src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpy(this->mat_.row,         // dst
                  hip_cast_mat->mat_.row, // src
-                 (this->get_nnz())*sizeof(int), // size
+                 (this->GetNnz())*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.col,         // dst
                  hip_cast_mat->mat_.col, // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.val,         // dst
                  hip_cast_mat->mat_.val, // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -579,30 +579,30 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
 
     hip_cast_mat->set_backend(this->local_backend_);       
 
-  if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateCOO(dst->get_nnz(), dst->get_nrow(), dst->get_ncol() );
+  if (this->GetNnz() == 0)
+    hip_cast_mat->AllocateCOO(dst->GetNnz(), dst->GetM(), dst->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpy(hip_cast_mat->mat_.row, // dst
                  this->mat_.row,         // src
-                 (this->get_nnz())*sizeof(int), // size
+                 (this->GetNnz())*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.col, // dst
                  this->mat_.col,         // src
-                 this->get_nnz()*sizeof(int), // size
+                 this->GetNnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.val, // dst
                  this->mat_.val,         // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -634,26 +634,26 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyFromCOO(const int *row, const int *
   // assert CSR format
   assert(this->GetMatFormat() == COO);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(this->nrow_ > 0);
     assert(this->ncol_ > 0);
 
     hipMemcpy(this->mat_.row,              // dst
                row,                         // src
-               this->get_nnz()*sizeof(int), // size
+               this->GetNnz()*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(this->mat_.col,              // dst
                col,                         // src
-               this->get_nnz()*sizeof(int), // size
+               this->GetNnz()*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(this->mat_.val,                    // dst
                val,                               // src
-               this->get_nnz()*sizeof(ValueType), // size
+               this->GetNnz()*sizeof(ValueType), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -667,26 +667,26 @@ void HIPAcceleratorMatrixCOO<ValueType>::CopyToCOO(int *row, int *col, ValueType
   // assert CSR format
   assert(this->GetMatFormat() == COO);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(this->nrow_ > 0);
     assert(this->ncol_ > 0);
 
     hipMemcpy(row,                         // dst
                this->mat_.row,              // src
-               this->get_nnz()*sizeof(int), // size
+               this->GetNnz()*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(col,                         // dst
                this->mat_.col,              // src
-               this->get_nnz()*sizeof(int), // size
+               this->GetNnz()*sizeof(int), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     hipMemcpy(val,                               // dst
                this->mat_.val,                    // src
-               this->get_nnz()*sizeof(ValueType), // size
+               this->GetNnz()*sizeof(ValueType), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -700,7 +700,7 @@ bool HIPAcceleratorMatrixCOO<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   const HIPAcceleratorMatrixCOO<ValueType> *cast_mat_coo;
@@ -718,9 +718,9 @@ bool HIPAcceleratorMatrixCOO<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     this->Clear();
 
-    int nrow = cast_mat_csr->get_nrow();
-    int ncol = cast_mat_csr->get_ncol();
-    int nnz  = cast_mat_csr->get_nnz();
+    int nrow = cast_mat_csr->GetM();
+    int ncol = cast_mat_csr->GetN();
+    int nnz  = cast_mat_csr->GetNnz();
 
     assert(nrow > 0);
     assert(ncol > 0);
@@ -758,12 +758,12 @@ bool HIPAcceleratorMatrixCOO<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 template <typename ValueType>
 void HIPAcceleratorMatrixCOO<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(in.  get_size() >= 0);
     assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->get_ncol());
-    assert(out->get_size() == this->get_nrow());
+    assert(in.  get_size() == this->GetN());
+    assert(out->get_size() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -777,7 +777,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::Apply(const BaseVector<ValueType> &in, 
     hipsparseStatus_t stat_t;
     stat_t = hipsparseTcoomv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                              HIPSPARSE_OPERATION_NON_TRANSPOSE,
-                             this->get_nrow(), this->get_ncol(), this->get_nnz(), &alpha,
+                             this->GetM(), this->GetN(), this->GetNnz(), &alpha,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.row, this->mat_.col,
                              cast_in->vec_, &beta,
@@ -792,12 +792,12 @@ template <typename ValueType>
 void HIPAcceleratorMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
                                                   BaseVector<ValueType> *out) const {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     assert(in.  get_size() >= 0);
     assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->get_ncol());
-    assert(out->get_size() == this->get_nrow());
+    assert(in.  get_size() == this->GetN());
+    assert(out->get_size() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -810,7 +810,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     hipsparseStatus_t stat_t;
     stat_t = hipsparseTcoomv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
                              HIPSPARSE_OPERATION_NON_TRANSPOSE,
-                             this->get_nrow(), this->get_ncol(), this->get_nnz(), &scalar,
+                             this->GetM(), this->GetN(), this->GetNnz(), &scalar,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.row, this->mat_.col,
                              cast_in->vec_, &beta,
@@ -825,19 +825,19 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCOO<ValueType>::Permute(const BaseVector<int> &permutation) {
 
   // symmetric permutation only
-  assert(permutation.get_size() == this->get_nrow());
-  assert(permutation.get_size() == this->get_ncol());
+  assert(permutation.get_size() == this->GetM());
+  assert(permutation.get_size() == this->GetN());
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HIPAcceleratorVector<int> *cast_perm = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation);
     assert(cast_perm != NULL);
 
     HIPAcceleratorMatrixCOO<ValueType> src(this->local_backend_);
-    src.AllocateCOO(this->get_nnz(), this->get_nrow(), this->get_ncol());
+    src.AllocateCOO(this->GetNnz(), this->GetM(), this->GetN());
     src.CopyFrom(*this);
 
-    int nnz = this->get_nnz();
+    int nnz = this->GetNnz();
     int s = nnz;
     int k = (nnz/this->local_backend_.HIP_block_size)/this->local_backend_.HIP_max_threads + 1;
     if (k > 1) s = nnz / k;
@@ -863,18 +863,18 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCOO<ValueType>::PermuteBackward(const BaseVector<int> &permutation) {
 
   // symmetric permutation only
-  assert(permutation.get_size() == this->get_nrow());
-  assert(permutation.get_size() == this->get_ncol());
+  assert(permutation.get_size() == this->GetM());
+  assert(permutation.get_size() == this->GetN());
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HIPAcceleratorVector<int> *cast_perm = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation);
     assert(cast_perm != NULL);
 
     int *pb = NULL;
-    allocate_hip(this->get_nrow(), &pb);
+    allocate_hip(this->GetM(), &pb);
 
-    int n = this->get_nrow();
+    int n = this->GetM();
     dim3 BlockSize1(this->local_backend_.HIP_block_size);
     dim3 GridSize1(n / this->local_backend_.HIP_block_size + 1);
 
@@ -884,10 +884,10 @@ bool HIPAcceleratorMatrixCOO<ValueType>::PermuteBackward(const BaseVector<int> &
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     HIPAcceleratorMatrixCOO<ValueType> src(this->local_backend_);
-    src.AllocateCOO(this->get_nnz(), this->get_nrow(), this->get_ncol());
+    src.AllocateCOO(this->GetNnz(), this->GetM(), this->GetN());
     src.CopyFrom(*this);
 
-    int nnz = this->get_nnz();
+    int nnz = this->GetNnz();
     int s = nnz;
     int k = (nnz/this->local_backend_.HIP_block_size)/this->local_backend_.HIP_max_threads + 1;
     if (k > 1) s = nnz / k;

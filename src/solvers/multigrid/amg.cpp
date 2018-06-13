@@ -51,8 +51,8 @@ void AMG<OperatorType, VectorType, ValueType>::Print(void) const {
       break;
   }
 
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->get_nrow());
-  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->get_nnz());
+  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
   LOG_INFO("AMG with smoother:");
   this->smoother_level_[0]->Print();
   
@@ -75,8 +75,8 @@ void AMG<OperatorType, VectorType, ValueType>::PrintStart_(void) const {
       break;
   }
 
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->get_nrow());
-  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->get_nnz());
+  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
   LOG_INFO("AMG with smoother:");
   this->smoother_level_[0]->Print();
 

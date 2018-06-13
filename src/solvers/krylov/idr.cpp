@@ -110,9 +110,9 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void) {
   this->build_ = true;
 
   assert (this->op_ != NULL);
-  assert (this->op_->get_nrow() == this->op_->get_ncol());
-  assert (this->op_->get_nrow() > 0);
-  assert ((IndexType2) this->s_ <= this->op_->get_nrow());
+  assert (this->op_->GetM() == this->op_->GetN());
+  assert (this->op_->GetM() > 0);
+  assert ((IndexType2) this->s_ <= this->op_->GetM());
 
   if (this->precond_ != NULL) {
 
@@ -121,7 +121,7 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void) {
     this->precond_->Build();
 
     this->z_.CloneBackend(*this->op_);
-    this->z_.Allocate("z", this->op_->get_nrow());
+    this->z_.Allocate("z", this->op_->GetM());
 
   }
 
@@ -129,13 +129,13 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void) {
   allocate_host(this->s_*this->s_, &this->Mhost_);
 
   this->r_.CloneBackend(*this->op_);
-  this->r_.Allocate("r", this->op_->get_nrow());
+  this->r_.Allocate("r", this->op_->GetM());
 
   this->v_.CloneBackend(*this->op_);
-  this->v_.Allocate("v", this->op_->get_nrow());
+  this->v_.Allocate("v", this->op_->GetM());
 
   this->t_.CloneBackend(*this->op_);
-  this->t_.Allocate("t", this->op_->get_nrow());
+  this->t_.Allocate("t", this->op_->GetM());
 
   this->g_ = new VectorType*[this->s_];
   this->u_ = new VectorType*[this->s_];
@@ -145,15 +145,15 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void) {
 
     this->g_[i] = new VectorType;
     this->g_[i]->CloneBackend(*this->op_);
-    this->g_[i]->Allocate("g", this->op_->get_nrow());
+    this->g_[i]->Allocate("g", this->op_->GetM());
 
     this->u_[i] = new VectorType;
     this->u_[i]->CloneBackend(*this->op_);
-    this->u_[i]->Allocate("u", this->op_->get_nrow());
+    this->u_[i]->Allocate("u", this->op_->GetM());
 
     this->P_[i] = new VectorType;
     this->P_[i]->CloneBackend(*this->op_);
-    this->P_[i]->Allocate("P", this->op_->get_nrow());
+    this->P_[i]->Allocate("P", this->op_->GetM());
     this->P_[i]->SetRandom(-2.0, 2.0, int((i+1)*time(NULL)));
 
   }
@@ -261,7 +261,7 @@ void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(const int s) {
   assert(this->build_ == false);
   assert(s > 0);
   assert(this->op_ != NULL);
-  assert((IndexType2) s <= this->op_->get_nrow());
+  assert((IndexType2) s <= this->op_->GetM());
 
   this->s_ = s;
 

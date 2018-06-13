@@ -66,10 +66,10 @@ int main(int argc, char* argv[])
     v2.MoveToAccelerator();
 
     // Allocate memory
-    v1.Allocate("v1", mat.get_ncol());
-    v2.Allocate("v2", mat.get_nrow());
+    v1.Allocate("v1", mat.GetN());
+    v2.Allocate("v2", mat.GetM());
 
-    size_t size = mat.get_nrow();
+    size_t size = mat.GetM();
     size_t nnz;
 
     v1.Ones();
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
     // Flop = 2 per entry (nnz)
 
     mat.ConvertToCSR();
-    nnz = mat.get_nnz();
+    nnz = mat.GetNnz();
 
     mat.Info();
 
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
     // Flop = 2 per entry (nnz)
 
     mat.ConvertToMCSR();
-    nnz = mat.get_nnz();
+    nnz = mat.GetNnz();
 
     mat.Info();
 
@@ -298,7 +298,7 @@ int main(int argc, char* argv[])
     // Flop = 2 per entry (nnz)
 
     mat.ConvertToELL();
-    nnz = mat.get_nnz();
+    nnz = mat.GetNnz();
 
     mat.Info();
 
@@ -334,7 +334,7 @@ int main(int argc, char* argv[])
     // Flop = 2 per entry (nnz)
 
     mat.ConvertToCOO();
-    nnz = mat.get_nnz();
+    nnz = mat.GetNnz();
 
     mat.Info();
 
@@ -370,7 +370,7 @@ int main(int argc, char* argv[])
     // Flop = 2 per entry (nnz)
 
     mat.ConvertToHYB();
-    nnz = mat.get_nnz();
+    nnz = mat.GetNnz();
 
     mat.Info();
 
@@ -406,7 +406,7 @@ int main(int argc, char* argv[])
     // Flop = 2 per entry (nnz)
 
     mat.ConvertToDIA();
-    nnz = mat.get_nnz();
+    nnz = mat.GetNnz();
 
     mat.Info();
 

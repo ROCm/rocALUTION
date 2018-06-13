@@ -65,8 +65,8 @@ void QR<OperatorType, VectorType, ValueType>::Build(void) {
   this->build_ = true;
 
   assert(this->op_ != NULL);
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
-  assert(this->op_->get_nrow() > 0);
+  assert(this->op_->GetM() == this->op_->GetN());
+  assert(this->op_->GetM() > 0);
 
   this->qr_.CloneFrom(*this->op_);
   this->qr_.QRDecompose();

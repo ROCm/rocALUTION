@@ -47,10 +47,10 @@ int main(int argc, char* argv[]) {
   b_old.MoveToAccelerator();
 
 
-  b.Allocate("b_k+1", mat.get_nrow());
+  b.Allocate("b_k+1", mat.GetM());
   b_k1 = &b;
 
-  b_old.Allocate("b_k", mat.get_nrow());
+  b_old.Allocate("b_k", mat.GetM());
   b_k = &b_old;  
 
   b_k->Ones();
@@ -122,8 +122,8 @@ int main(int argc, char* argv[]) {
   x.CloneBackend(mat);
   rhs.CloneBackend(mat);
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetM());
+  rhs.Allocate("rhs", mat.GetM());
 
   // Chebyshev iteration
   Chebyshev<LocalMatrix<double>, LocalVector<double>, double > ls;

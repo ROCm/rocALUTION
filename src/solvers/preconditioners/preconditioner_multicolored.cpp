@@ -272,7 +272,7 @@ void MultiColored<OperatorType, VectorType, ValueType>::Decompose_(void) {
 
   this->x_.CloneBackend(*this->op_); 
   this->x_.Allocate("Permuted solution vector",
-                    this->op_->get_nrow());
+                    this->op_->GetM());
 
   LOG_DEBUG(this, "MultiColored::Decompose_()",
             " * end");

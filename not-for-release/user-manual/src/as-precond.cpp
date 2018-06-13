@@ -16,7 +16,7 @@ p2 = new Solver<LocalMatrix<ValueType>,
                 LocalVector<ValueType>, ValueType >*[n];
 
 for (int i=0; i<n; ++i) {
-  size[i] = mat.get_nrow() / n ;   
+  size[i] = mat.GetM() / n ;   
 
   MultiColoredILU<LocalMatrix<ValueType>, 
                   LocalVector<ValueType>, ValueType > *mc;
