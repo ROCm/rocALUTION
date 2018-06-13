@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 
   mat.ReadFileMTX(std::string(argv[1]));
 
-  mat.info();
+  mat.Info();
 
   long int row_key;
   long int col_key;

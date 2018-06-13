@@ -15,7 +15,7 @@ void distribute_matrix(const MPI_Comm *comm,
     MPI_Comm_rank(*comm, &rank);
     MPI_Comm_size(*comm, &num_procs);
 
-    size_t global_nrow = lmat->get_nrow();
+    size_t global_nrow = lmat->GetM();
 
     int *global_row_offset = NULL;
     int *global_col = NULL;

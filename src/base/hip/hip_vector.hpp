@@ -19,7 +19,7 @@ public:
   HIPAcceleratorVector(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorVector();
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
 
   virtual void Allocate(const int n);
   virtual void SetDataPtr(ValueType **ptr, const int size);

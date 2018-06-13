@@ -28,12 +28,12 @@ public:
   virtual void MoveToAccelerator(void);
   virtual void MoveToHost(void);
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual bool Check(void) const;
 
-  virtual IndexType2 get_size(void) const;
-  virtual int get_local_size(void) const;
-  virtual int get_ghost_size(void) const;
+  virtual IndexType2 GetSize(void) const;
+  virtual int GetLocalSize(void) const;
+  virtual int GetGhostSize(void) const;
 
   const LocalVector<ValueType>& GetInterior() const;
   LocalVector<ValueType>& GetInterior();

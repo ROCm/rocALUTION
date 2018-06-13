@@ -267,19 +267,19 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Build(void) {
     for (int i=0; i<this->levels_-2; ++i) {
       this->p_level_[i] = new VectorType;
       this->p_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->p_level_[i]->Allocate("p", this->op_level_[i]->get_nrow());
+      this->p_level_[i]->Allocate("p", this->op_level_[i]->GetM());
 
       this->q_level_[i] = new VectorType;
       this->q_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->q_level_[i]->Allocate("q", this->op_level_[i]->get_nrow());
+      this->q_level_[i]->Allocate("q", this->op_level_[i]->GetM());
 
       this->k_level_[i] = new VectorType;
       this->k_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->k_level_[i]->Allocate("k", this->op_level_[i]->get_nrow());
+      this->k_level_[i]->Allocate("k", this->op_level_[i]->GetM());
 
       this->l_level_[i] = new VectorType;
       this->l_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->l_level_[i]->Allocate("l", this->op_level_[i]->get_nrow());
+      this->l_level_[i]->Allocate("l", this->op_level_[i]->GetM());
     }
   }
 
@@ -288,33 +288,33 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Build(void) {
     // On finest level, we need to get the size from this->op_ instead
     this->d_level_[i] = new VectorType;
     this->d_level_[i]->CloneBackend(*this->op_level_[i-1]);
-    this->d_level_[i]->Allocate("defect correction", this->op_level_[i-1]->get_nrow());
+    this->d_level_[i]->Allocate("defect correction", this->op_level_[i-1]->GetM());
 
     this->r_level_[i] = new VectorType;
     this->r_level_[i]->CloneBackend(*this->op_level_[i-1]);
-    this->r_level_[i]->Allocate("residual", this->op_level_[i-1]->get_nrow());
+    this->r_level_[i]->Allocate("residual", this->op_level_[i-1]->GetM());
 
     this->t_level_[i] = new VectorType;
     this->t_level_[i]->CloneBackend(*this->op_level_[i-1]);
-    this->t_level_[i]->Allocate("temporary", this->op_level_[i-1]->get_nrow());
+    this->t_level_[i]->Allocate("temporary", this->op_level_[i-1]->GetM());
 
     this->s_level_[i] = new VectorType;
     this->s_level_[i]->CloneBackend(*this->op_level_[i-1]);
-    this->s_level_[i]->Allocate("temporary", this->op_level_[i-1]->get_nrow());
+    this->s_level_[i]->Allocate("temporary", this->op_level_[i-1]->GetM());
 
   }
 
   this->r_level_[0] = new VectorType;
   this->r_level_[0]->CloneBackend(*this->op_);
-  this->r_level_[0]->Allocate("residual", this->op_->get_nrow());
+  this->r_level_[0]->Allocate("residual", this->op_->GetM());
 
   this->t_level_[0] = new VectorType;
   this->t_level_[0]->CloneBackend(*this->op_);
-  this->t_level_[0]->Allocate("temporary", this->op_->get_nrow());
+  this->t_level_[0]->Allocate("temporary", this->op_->GetM());
 
   this->s_level_[0] = new VectorType;
   this->s_level_[0]->CloneBackend(*this->op_);
-  this->s_level_[0]->Allocate("temporary", this->op_->get_nrow());
+  this->s_level_[0]->Allocate("temporary", this->op_->GetM());
 
   LOG_DEBUG(this, "BaseMultiGrid::Build()",
             this->build_ <<

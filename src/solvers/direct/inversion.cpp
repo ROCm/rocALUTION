@@ -65,8 +65,8 @@ void Inversion<OperatorType, VectorType, ValueType>::Build(void) {
   this->build_ = true;
 
   assert(this->op_ != NULL);
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
-  assert(this->op_->get_nrow() > 0);
+  assert(this->op_->GetM() == this->op_->GetN());
+  assert(this->op_->GetM() > 0);
 
   this->inverse_.CloneFrom(*this->op_);
   this->inverse_.Invert();
@@ -122,7 +122,6 @@ void Inversion<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rh
 
   assert(x != NULL);
   assert(x != &rhs);
-  assert(&this->inverse_ != NULL);
   assert(this->build_ == true);
 
   this->inverse_.Apply(rhs, x);

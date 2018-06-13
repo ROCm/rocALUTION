@@ -51,7 +51,7 @@ HostMatrixELL<ValueType>::~HostMatrixELL() {
 }
 
 template <typename ValueType>
-void HostMatrixELL<ValueType>::info(void) const {
+void HostMatrixELL<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixELL<ValueType>");
 
@@ -156,7 +156,7 @@ template <typename ValueType>
 void HostMatrixELL<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
   // copy only in the same format
-  assert(this->get_mat_format() == mat.get_mat_format());
+  assert(this->GetMatFormat() == mat.GetMatFormat());
 
   if (const HostMatrixELL<ValueType> *cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*> (&mat)) {
 
@@ -209,7 +209,7 @@ bool HostMatrixELL<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   if (const HostMatrixELL<ValueType> *cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*> (&mat)) {
@@ -247,10 +247,10 @@ void HostMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
 
   if (this->nnz_ > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->ncol_);
-    assert(out->get_size() == this->nrow_);
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->ncol_);
+    assert(out->GetSize() == this->nrow_);
 
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
@@ -292,10 +292,10 @@ void HostMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
 
   if (this->nnz_ > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->ncol_);
-    assert(out->get_size() == this->nrow_);
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->ncol_);
+    assert(out->GetSize() == this->nrow_);
 
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);

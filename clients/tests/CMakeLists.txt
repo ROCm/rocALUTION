@@ -6,6 +6,9 @@ find_package(GTest REQUIRED)
 
 set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
+# Local structures
+  test_local_matrix.cpp
+  test_local_vector.cpp
 # Krylov solvers
   test_backend.cpp
   test_bicgstab.cpp
@@ -20,6 +23,7 @@ set(ROCALUTION_TEST_SOURCES
 # AMG
   test_pairwise_amg.cpp
   test_ruge_stueben_amg.cpp
+  test_samg.cpp
 )
 
 set(ROCALUTION_CLIENTS_COMMON

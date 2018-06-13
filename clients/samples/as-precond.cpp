@@ -27,8 +27,8 @@ int main(int argc, char* argv[]) {
 
   mat.ReadFileMTX(std::string(argv[1]));
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetN());
+  rhs.Allocate("rhs", mat.GetM());
 
   // Linear Solver
   GMRES<LocalMatrix<double>, LocalVector<double>, double > ls;
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
   rhs.MoveToAccelerator();
   ls.MoveToAccelerator();
   
-  mat.info();
+  mat.Info();
 
   tick = rocalution_time();
 

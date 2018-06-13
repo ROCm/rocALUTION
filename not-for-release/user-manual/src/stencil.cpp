@@ -18,8 +18,8 @@ int main(int argc, char* argv[]) {
 
   stencil.SetGrid(100); // 100x100
 
-  x.Allocate("x", stencil.get_nrow());
-  rhs.Allocate("rhs", stencil.get_nrow());
+  x.Allocate("x", stencil.GetM());
+  rhs.Allocate("rhs", stencil.GetM());
 
   // Linear Solver
   CG<LocalStencil<double>, LocalVector<double>, double > ls;
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  stencil.info();
+  stencil.Info();
 
   double tick, tack;
   tick = paralution_time();

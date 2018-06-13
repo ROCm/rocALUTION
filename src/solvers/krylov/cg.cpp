@@ -96,8 +96,8 @@ void CG<OperatorType, VectorType, ValueType>::Build(void) {
   this->build_ = true;
 
   assert(this->op_ != NULL);
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
-  assert(this->op_->get_nrow() > 0);
+  assert(this->op_->GetM() == this->op_->GetN());
+  assert(this->op_->GetM() > 0);
 
   if (this->precond_ != NULL) {
 
@@ -106,18 +106,18 @@ void CG<OperatorType, VectorType, ValueType>::Build(void) {
     this->precond_->Build();
 
     this->z_.CloneBackend(*this->op_);
-    this->z_.Allocate("z", this->op_->get_nrow());
+    this->z_.Allocate("z", this->op_->GetM());
 
   } 
 
   this->r_.CloneBackend(*this->op_);
-  this->r_.Allocate("r", this->op_->get_nrow());
+  this->r_.Allocate("r", this->op_->GetM());
 
   this->p_.CloneBackend(*this->op_);
-  this->p_.Allocate("p", this->op_->get_nrow());
+  this->p_.Allocate("p", this->op_->GetM());
 
   this->q_.CloneBackend(*this->op_);
-  this->q_.Allocate("q", this->op_->get_nrow());
+  this->q_.Allocate("q", this->op_->GetM());
 
   LOG_DEBUG(this, "CG::Build()",
             this->build_ <<
@@ -139,8 +139,8 @@ void CG<OperatorType, VectorType, ValueType>::BuildMoveToAcceleratorAsync(void) 
   this->build_ = true;
 
   assert(this->op_ != NULL);
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
-  assert(this->op_->get_nrow() > 0);
+  assert(this->op_->GetM() == this->op_->GetN());
+  assert(this->op_->GetM() > 0);
 
   if (this->precond_ != NULL) {
 
@@ -149,20 +149,20 @@ void CG<OperatorType, VectorType, ValueType>::BuildMoveToAcceleratorAsync(void) 
     this->precond_->BuildMoveToAcceleratorAsync();
 
     this->z_.CloneBackend(*this->op_);
-    this->z_.Allocate("z", this->op_->get_nrow());
+    this->z_.Allocate("z", this->op_->GetM());
     this->z_.MoveToAcceleratorAsync();
   } 
 
   this->r_.CloneBackend(*this->op_);
-  this->r_.Allocate("r", this->op_->get_nrow());
+  this->r_.Allocate("r", this->op_->GetM());
   this->r_.MoveToAcceleratorAsync();
 
   this->p_.CloneBackend(*this->op_);
-  this->p_.Allocate("p", this->op_->get_nrow());
+  this->p_.Allocate("p", this->op_->GetM());
   this->p_.MoveToAcceleratorAsync();
 
   this->q_.CloneBackend(*this->op_);
-  this->q_.Allocate("q", this->op_->get_nrow());
+  this->q_.Allocate("q", this->op_->GetM());
   this->q_.MoveToAcceleratorAsync();
 
 

@@ -3,8 +3,8 @@
  * ************************************************************************ */
 
 #pragma once
-#ifndef TESTING_RUGE_STUEBEN_AMG_HPP
-#define TESTING_RUGE_STUEBEN_AMG_HPP
+#ifndef TESTING_SAMG_HPP
+#define TESTING_SAMG_HPP
 
 #include "utility.hpp"
 
@@ -23,7 +23,7 @@ static bool check_residual(double res)
 }
 
 template <typename T>
-bool testing_ruge_stueben_amg(Arguments argus)
+bool testing_samg(Arguments argus)
 {
     int ndim = argus.size;
     int pre_iter = argus.pre_smooth;
@@ -32,6 +32,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
     unsigned int format = argus.format;
     int cycle = argus.cycle;
     bool scaling = argus.ordering;
+    unsigned int aggr = argus.aggr;
 
     // Initialize rocALUTION platform
     init_rocalution();
@@ -74,13 +75,14 @@ bool testing_ruge_stueben_amg(Arguments argus)
     x.SetRandom(-4.0, 6.0, 12345ULL);
 
     // Solver
-    BiCGStab<LocalMatrix<T>, LocalVector<T>, T> ls;
+    FCG<LocalMatrix<T>, LocalVector<T>, T> ls;
 
     // AMG
-    RugeStuebenAMG<LocalMatrix<T>, LocalVector<T>, T> p;
+    AMG<LocalMatrix<T>, LocalVector<T>, T> p;
 
     // Setup AMG
-    p.SetCoarsestLevel(300);
+    p.SetInterpolation(aggr);
+    p.SetCoarsestLevel(200);
     p.SetCycle(cycle);
     p.SetOperator(A);
     p.SetManualSmoothers(true);
@@ -92,7 +94,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
     int levels = p.GetNumLevels();
 
     // Coarse grid solver
-    BiCGStab<LocalMatrix<T>, LocalVector<T>, T> cgs;
+    FCG<LocalMatrix<T>, LocalVector<T>, T> cgs;
     cgs.Verbose(0);
 
     // Smoother for each level
@@ -105,12 +107,8 @@ bool testing_ruge_stueben_amg(Arguments argus)
 
         Preconditioner<LocalMatrix<T>, LocalVector<T>, T> *smooth;
         
-        if(smoother == "ILU") smooth = new ILU<LocalMatrix<T>, LocalVector<T>, T>;
-        else if(smoother == "MCGS")
-        {
-            smooth = new MultiColoredGS<LocalMatrix<T>, LocalVector<T>, T>;
-            fp->SetRelaxation(1.3);
-        }
+        if(smoother == "FSAI") smooth = new FSAI<LocalMatrix<T>, LocalVector<T>, T>;
+        else if(smoother == "SPAI") smooth = new SPAI<LocalMatrix<T>, LocalVector<T>, T>;
         else return false;
 
         sm[i]->SetPreconditioner(*smooth);
@@ -125,7 +123,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
     p.InitMaxIter(1);
     p.Verbose(0);
 
-//    ls.Verbose(0);
+    ls.Verbose(0);
     ls.SetOperator(A);
     ls.SetPreconditioner(p);
 
@@ -148,4 +146,4 @@ bool testing_ruge_stueben_amg(Arguments argus)
     return success;
 }
 
-#endif // TESTING_RUGE_STUEBEN_AMG_HPP
+#endif // TESTING_SAMG_HPP

@@ -44,14 +44,14 @@ HostStencilLaplace2D<ValueType>::~HostStencilLaplace2D() {
 }
 
 template <typename ValueType>
-void HostStencilLaplace2D<ValueType>::info(void) const {
+void HostStencilLaplace2D<ValueType>::Info(void) const {
 
-  LOG_INFO("Stencil 2D Laplace (Host) size=" << this->size_ << " dim=" << this->get_ndim());
+  LOG_INFO("Stencil 2D Laplace (Host) size=" << this->size_ << " dim=" << this->GetNDim());
 
 }
 
 template <typename ValueType>
-int HostStencilLaplace2D<ValueType>::get_nnz(void) const {
+int HostStencilLaplace2D<ValueType>::GetNnz(void) const {
 
   return 5;
 }
@@ -61,12 +61,12 @@ void HostStencilLaplace2D<ValueType>::Apply(const BaseVector<ValueType> &in, Bas
 
   if ((this->ndim_ > 0) && (this->size_ > 0)) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    int nrow = this->get_nrow();
-    assert(in.  get_size() == nrow);
-    assert(out->get_size() == nrow);
-    assert(out->get_size() == in.  get_size());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    int nrow = this->GetM();
+    assert(in.  GetSize() == nrow);
+    assert(out->GetSize() == nrow);
+    assert(out->GetSize() == in.  GetSize());
 
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
@@ -173,12 +173,12 @@ void HostStencilLaplace2D<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, 
 
   if ((this->ndim_ > 0) && (this->size_ > 0)) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    int nrow = this->get_nrow();
-    assert(in.  get_size() == nrow);
-    assert(out->get_size() == nrow);
-    assert(out->get_size() == in.  get_size());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    int nrow = this->GetM();
+    assert(in.  GetSize() == nrow);
+    assert(out->GetSize() == nrow);
+    assert(out->GetSize() == in.  GetSize());
 
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);

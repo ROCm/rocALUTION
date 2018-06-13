@@ -127,7 +127,7 @@ void MultiColoredILU<OperatorType, VectorType, ValueType>::Factorize_(void) {
 
   this->preconditioner_->ILUpFactorize(this->p_, this->level_);
 
-  this->nnz_ = this->preconditioner_->get_local_nnz();
+  this->nnz_ = this->preconditioner_->GetLocalNnz();
 
 }
 
@@ -199,7 +199,7 @@ void MultiColoredILU<OperatorType, VectorType, ValueType>::SolveL_(void) {
   for (int i=0; i<this->num_blocks_; ++i) {
 
     for (int j=0; j<i; ++j)
-      if (this->preconditioner_block_[i][j]->get_nnz() > 0)
+      if (this->preconditioner_block_[i][j]->GetNnz() > 0)
         this->preconditioner_block_[i][j]->ApplyAdd(*this->x_block_[j], ValueType(-1.0), this->x_block_[i]);
 
   }
@@ -221,7 +221,7 @@ void MultiColoredILU<OperatorType, VectorType, ValueType>::SolveR_(void) {
   for (int i=this->num_blocks_-1; i>=0; --i) {
 
     for (int j=this->num_blocks_-1; j>i; --j)
-      if (this->preconditioner_block_[i][j]->get_nnz() > 0)
+      if (this->preconditioner_block_[i][j]->GetNnz() > 0)
         this->preconditioner_block_[i][j]->ApplyAdd(*this->x_block_[j], ValueType(-1.0), this->x_block_[i]);
 
     this->diag_solver_[i]->Solve(*this->x_block_[i], this->x_block_[i]);

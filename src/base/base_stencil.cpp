@@ -29,11 +29,11 @@ BaseStencil<ValueType>::~BaseStencil() {
 }
 
 template <typename ValueType>
-int BaseStencil<ValueType>::get_nrow(void) const {
+int BaseStencil<ValueType>::GetM(void) const {
 
   int dim = 1;
 
-  if (this->get_ndim() > 0) {
+  if (this->GetNDim() > 0) {
 
     for (int i=0; i<ndim_; ++i)
       dim *= this->size_;
@@ -45,13 +45,13 @@ int BaseStencil<ValueType>::get_nrow(void) const {
 } 
 
 template <typename ValueType>
-int BaseStencil<ValueType>::get_ncol(void) const {
+int BaseStencil<ValueType>::GetN(void) const {
 
-  return this->get_nrow(); 
+  return this->GetM(); 
 } 
 
 template <typename ValueType>
-int BaseStencil<ValueType>::get_ndim(void) const {
+int BaseStencil<ValueType>::GetNDim(void) const {
 
   return this->ndim_; 
 } 

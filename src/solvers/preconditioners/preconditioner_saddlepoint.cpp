@@ -167,11 +167,11 @@ void DiagJacobiSaddlePointPrecond<OperatorType, VectorType, ValueType>::Build(vo
   inv_K.CloneBackend(*this->op_);
 
   this->A_.ExtractSubMatrix(0, this->size_,
-                       this->size_, this->A_.get_local_ncol()-this->size_,
+                       this->size_, this->A_.GetLocalN()-this->size_,
                        &F);
 
   this->A_.ExtractSubMatrix(this->size_, 0,
-                       this->A_.get_local_nrow()-this->size_, this->size_,
+                       this->A_.GetLocalM()-this->size_, this->size_,
                        &E);
 
   this->A_.Clear();
@@ -195,11 +195,11 @@ void DiagJacobiSaddlePointPrecond<OperatorType, VectorType, ValueType>::Build(vo
 
   this->x_.CloneBackend(*this->op_); 
   this->x_.Allocate("Permuted solution vector",
-                    this->op_->get_nrow());
+                    this->op_->GetM());
 
   this->rhs_.CloneBackend(*this->op_); 
   this->rhs_.Allocate("Permuted RHS vector",
-                      this->op_->get_nrow());
+                      this->op_->GetM());
 
   this->x_1_.CloneBackend(*this->op_); 
   this->x_1_.Allocate("Permuted solution vector",
@@ -207,7 +207,7 @@ void DiagJacobiSaddlePointPrecond<OperatorType, VectorType, ValueType>::Build(vo
 
   this->x_2_.CloneBackend(*this->op_); 
   this->x_2_.Allocate("Permuted solution vector",
-                      this->op_->get_nrow()-this->size_);
+                      this->op_->GetM()-this->size_);
 
   this->rhs_1_.CloneBackend(*this->op_); 
   this->rhs_1_.Allocate("Permuted solution vector",
@@ -215,7 +215,7 @@ void DiagJacobiSaddlePointPrecond<OperatorType, VectorType, ValueType>::Build(vo
 
   this->rhs_2_.CloneBackend(*this->op_); 
   this->rhs_2_.Allocate("Permuted solution vector",
-                      this->op_->get_nrow()-this->size_);
+                      this->op_->GetM()-this->size_);
 
   LOG_DEBUG(this, "DiagJacobiSaddlePointPrecond::Build()",
             this->build_ <<
@@ -243,7 +243,7 @@ void DiagJacobiSaddlePointPrecond<OperatorType, VectorType, ValueType>::Solve(co
   this->rhs_2_.CopyFrom(this->rhs_, 
                         this->size_,
                         0,
-                        this->rhs_.get_local_size() - this->size_);
+                        this->rhs_.GetLocalSize() - this->size_);
 
   // Solve the first (K) block
   this->K_solver_->SolveZeroSol(this->rhs_1_,
@@ -262,7 +262,7 @@ void DiagJacobiSaddlePointPrecond<OperatorType, VectorType, ValueType>::Solve(co
   this->x_.CopyFrom(this->x_2_, 
                     0,
                     this->size_,
-                    this->rhs_.get_local_size() - this->size_);
+                    this->rhs_.GetLocalSize() - this->size_);
 
   x->CopyFromPermuteBackward(this->x_,
                              this->permutation_);

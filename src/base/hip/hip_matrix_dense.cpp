@@ -58,7 +58,7 @@ HIPAcceleratorMatrixDENSE<ValueType>::~HIPAcceleratorMatrixDENSE() {
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixDENSE<ValueType>::info(void) const {
+void HIPAcceleratorMatrixDENSE<ValueType>::Info(void) const {
 
   LOG_INFO("HIPAcceleratorMatrixDENSE<ValueType>");
 
@@ -70,7 +70,7 @@ void HIPAcceleratorMatrixDENSE<ValueType>::AllocateDENSE(const int nrow, const i
   assert( ncol  >= 0);
   assert( nrow  >= 0);
 
-  if (this->get_nnz() > 0)
+  if (this->GetNnz() > 0)
     this->Clear();
 
   if (nrow*ncol > 0) {
@@ -91,7 +91,7 @@ void HIPAcceleratorMatrixDENSE<ValueType>::AllocateDENSE(const int nrow, const i
 template <typename ValueType>
 void HIPAcceleratorMatrixDENSE<ValueType>::Clear() {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     free_hip(&this->mat_.val);
 
@@ -148,23 +148,23 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFromHost(const HostMatrix<ValueTy
   const HostMatrixDENSE<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixDENSE<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateDENSE(src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateDENSE(src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpy(this->mat_.val,     // dst
                  cast_mat->mat_.val, // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -172,8 +172,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFromHost(const HostMatrix<ValueTy
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    src.info();
+    this->Info();
+    src.Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -186,25 +186,25 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyToHost(HostMatrix<ValueType> *dst
   HostMatrixDENSE<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to CPU copy
   if ((cast_mat = dynamic_cast<HostMatrixDENSE<ValueType>*> (dst)) != NULL) {
 
     cast_mat->set_backend(this->local_backend_);   
 
-  if (dst->get_nnz() == 0)
-    cast_mat->AllocateDENSE(this->get_nrow(), this->get_ncol() );
+  if (dst->GetNnz() == 0)
+    cast_mat->AllocateDENSE(this->GetM(), this->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
       
       hipMemcpy(cast_mat->mat_.val, // dst
                  this->mat_.val,     // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -212,8 +212,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyToHost(HostMatrix<ValueType> *dst
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    dst->info();
+    this->Info();
+    dst->Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -227,23 +227,23 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFrom(const BaseMatrix<ValueType> 
   const HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDENSE<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateDENSE(src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateDENSE(src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    if (this->get_nnz() > 0) { 
+    if (this->GetNnz() > 0) { 
 
         hipMemcpy(this->mat_.val,         // dst
                    hip_cast_mat->mat_.val, // src
-                   this->get_nnz()*sizeof(ValueType), // size
+                   this->GetNnz()*sizeof(ValueType), // size
                    hipMemcpyDeviceToDevice);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -258,8 +258,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFrom(const BaseMatrix<ValueType> 
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      src.info();
+      this->Info();
+      src.Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -275,25 +275,25 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) co
   HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<HIPAcceleratorMatrixDENSE<ValueType>*> (dst)) != NULL) {
 
     hip_cast_mat->set_backend(this->local_backend_);       
 
-  if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateDENSE(dst->get_nrow(), dst->get_ncol() );
+  if (this->GetNnz() == 0)
+    hip_cast_mat->AllocateDENSE(dst->GetM(), dst->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
         hipMemcpy(hip_cast_mat->mat_.val, // dst
                    this->mat_.val,         // src
-                   this->get_nnz()*sizeof(ValueType), // size
+                   this->GetNnz()*sizeof(ValueType), // size
                    hipMemcpyDeviceToHost);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -308,8 +308,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) co
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      dst->info();
+      this->Info();
+      dst->Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -326,23 +326,23 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFromHostAsync(const HostMatrix<Va
   const HostMatrixDENSE<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // CPU to HIP copy
   if ((cast_mat = dynamic_cast<const HostMatrixDENSE<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateDENSE(src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateDENSE(src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
       hipMemcpyAsync(this->mat_.val,     // dst
                       cast_mat->mat_.val, // src
-                      this->get_nnz()*sizeof(ValueType), // size
+                      this->GetNnz()*sizeof(ValueType), // size
                       hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -350,8 +350,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFromHostAsync(const HostMatrix<Va
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    src.info();
+    this->Info();
+    src.Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -364,25 +364,25 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyToHostAsync(HostMatrix<ValueType>
   HostMatrixDENSE<ValueType> *cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to CPU copy
   if ((cast_mat = dynamic_cast<HostMatrixDENSE<ValueType>*> (dst)) != NULL) {
 
     cast_mat->set_backend(this->local_backend_);   
 
-  if (dst->get_nnz() == 0)
-    cast_mat->AllocateDENSE(this->get_nrow(), this->get_ncol() );
+  if (dst->GetNnz() == 0)
+    cast_mat->AllocateDENSE(this->GetM(), this->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
       
       hipMemcpyAsync(cast_mat->mat_.val, // dst
                       this->mat_.val,     // src
-                      this->get_nnz()*sizeof(ValueType), // size
+                      this->GetNnz()*sizeof(ValueType), // size
                       hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -390,8 +390,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyToHostAsync(HostMatrix<ValueType>
   } else {
     
     LOG_INFO("Error unsupported HIP matrix type");
-    this->info();
-    dst->info();
+    this->Info();
+    dst->Info();
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
@@ -405,23 +405,23 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFromAsync(const BaseMatrix<ValueT
   const HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == src.get_mat_format());
+  assert(this->GetMatFormat() == src.GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDENSE<ValueType>*> (&src)) != NULL) {
     
-  if (this->get_nnz() == 0)
-    this->AllocateDENSE(src.get_nrow(), src.get_ncol() );
+  if (this->GetNnz() == 0)
+    this->AllocateDENSE(src.GetM(), src.GetN() );
 
-    assert(this->get_nnz()  == src.get_nnz());
-    assert(this->get_nrow() == src.get_nrow());
-    assert(this->get_ncol() == src.get_ncol());
+    assert(this->GetNnz()  == src.GetNnz());
+    assert(this->GetM() == src.GetM());
+    assert(this->GetN() == src.GetN());
 
-    if (this->get_nnz() > 0) { 
+    if (this->GetNnz() > 0) { 
 
       hipMemcpy(this->mat_.val,         // dst
                  hip_cast_mat->mat_.val, // src
-                 this->get_nnz()*sizeof(ValueType), // size
+                 this->GetNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -436,8 +436,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyFromAsync(const BaseMatrix<ValueT
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      src.info();
+      this->Info();
+      src.Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -453,25 +453,25 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyToAsync(BaseMatrix<ValueType> *ds
   HostMatrix<ValueType> *host_cast_mat;
 
   // copy only in the same format
-  assert(this->get_mat_format() == dst->get_mat_format());
+  assert(this->GetMatFormat() == dst->GetMatFormat());
 
   // HIP to HIP copy
   if ((hip_cast_mat = dynamic_cast<HIPAcceleratorMatrixDENSE<ValueType>*> (dst)) != NULL) {
 
     hip_cast_mat->set_backend(this->local_backend_);       
 
-  if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateDENSE(dst->get_nrow(), dst->get_ncol() );
+  if (this->GetNnz() == 0)
+    hip_cast_mat->AllocateDENSE(dst->GetM(), dst->GetN() );
 
-    assert(this->get_nnz()  == dst->get_nnz());
-    assert(this->get_nrow() == dst->get_nrow());
-    assert(this->get_ncol() == dst->get_ncol());
+    assert(this->GetNnz()  == dst->GetNnz());
+    assert(this->GetM() == dst->GetM());
+    assert(this->GetN() == dst->GetN());
 
-    if (this->get_nnz() > 0) {
+    if (this->GetNnz() > 0) {
 
         hipMemcpy(hip_cast_mat->mat_.val, // dst
                    this->mat_.val,         // src
-                   this->get_nnz()*sizeof(ValueType), // size
+                   this->GetNnz()*sizeof(ValueType), // size
                    hipMemcpyDeviceToHost);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
@@ -486,8 +486,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyToAsync(BaseMatrix<ValueType> *ds
     } else {
       
       LOG_INFO("Error unsupported HIP matrix type");
-      this->info();
-      dst->info();
+      this->Info();
+      dst->Info();
       FATAL_ERROR(__FILE__, __LINE__);
       
     }
@@ -504,7 +504,7 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ConvertFrom(const BaseMatrix<ValueTyp
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   const HIPAcceleratorMatrixDENSE<ValueType>   *cast_mat_dense;
@@ -524,9 +524,9 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ConvertFrom(const BaseMatrix<ValueTyp
     
     FATAL_ERROR(__FILE__, __LINE__);
     
-    this->nrow_ = cast_mat_csr->get_nrow();
-    this->ncol_ = cast_mat_csr->get_ncol();
-    this->nnz_  = cast_mat_csr->get_nnz();
+    this->nrow_ = cast_mat_csr->GetM();
+    this->ncol_ = cast_mat_csr->GetN();
+    this->nnz_  = cast_mat_csr->GetNnz();
     
     return true;
     
@@ -540,12 +540,12 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ConvertFrom(const BaseMatrix<ValueTyp
 template <typename ValueType>
 void HIPAcceleratorMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->get_ncol());
-    assert(out->get_size() == this->get_nrow());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -562,9 +562,9 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType> &in
 
       status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
                             HIPBLAS_OP_N,
-                            this->get_nrow(), this->get_ncol(),
+                            this->GetM(), this->GetN(),
                             &alpha,
-                            this->mat_.val, this->get_nrow(),
+                            this->mat_.val, this->GetM(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
       CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
@@ -573,9 +573,9 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType> &in
 
       status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
                             HIPBLAS_OP_T,
-                            this->get_ncol(), this->get_nrow(),
+                            this->GetN(), this->GetM(),
                             &alpha,
-                            this->mat_.val, this->get_ncol(),
+                            this->mat_.val, this->GetN(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
       CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
@@ -590,12 +590,12 @@ template <typename ValueType>
 void HIPAcceleratorMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
                                                     BaseVector<ValueType> *out) const {
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->get_ncol());
-    assert(out->get_size() == this->get_nrow());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -611,9 +611,9 @@ void HIPAcceleratorMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType> 
 
       status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
                             HIPBLAS_OP_N,
-                            this->get_nrow(), this->get_ncol(),
+                            this->GetM(), this->GetN(),
                             &scalar,
-                            this->mat_.val, this->get_nrow(),
+                            this->mat_.val, this->GetM(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
       CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
@@ -622,9 +622,9 @@ void HIPAcceleratorMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType> 
 
       status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
                             HIPBLAS_OP_T,
-                            this->get_ncol(), this->get_nrow(),
+                            this->GetN(), this->GetM(),
                             &scalar,
-                            this->mat_.val, this->get_ncol(),
+                            this->mat_.val, this->GetN(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
       CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
@@ -681,15 +681,15 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::MatMatMult(const BaseMatrix<ValueType
 template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->get_nrow());
+  assert(vec.GetSize() == this->GetM());
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
 
-    const int nrow = this->get_nrow();
-    const int ncol = this->get_ncol();
+    const int nrow = this->GetM();
+    const int ncol = this->GetN();
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
@@ -708,15 +708,15 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, co
 template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceRowVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->get_ncol());
+  assert(vec.GetSize() == this->GetN());
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
 
-    const int nrow = this->get_nrow();
-    const int ncol = this->get_ncol();
+    const int nrow = this->GetM();
+    const int ncol = this->GetN();
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(ncol / this->local_backend_.HIP_block_size + 1);
@@ -736,15 +736,15 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractColumnVector(const int idx, BaseVector<ValueType> *vec) const {
 
     assert(vec != NULL);
-    assert(vec->get_size() == this->get_nrow());
+    assert(vec->GetSize() == this->GetM());
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec);
     assert(cast_vec != NULL);
 
-    const int nrow = this->get_nrow();
-    const int ncol = this->get_ncol();
+    const int nrow = this->GetM();
+    const int ncol = this->GetN();
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
@@ -764,15 +764,15 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractRowVector(const int idx, BaseVector<ValueType> *vec) const {
 
     assert(vec != NULL);
-    assert(vec->get_size() == this->get_ncol());
+    assert(vec->GetSize() == this->GetN());
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec);
     assert(cast_vec != NULL);
 
-    const int nrow = this->get_nrow();
-    const int ncol = this->get_ncol();
+    const int nrow = this->GetM();
+    const int ncol = this->GetN();
 
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(ncol / this->local_backend_.HIP_block_size + 1);

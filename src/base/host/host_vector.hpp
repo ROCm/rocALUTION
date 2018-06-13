@@ -21,7 +21,7 @@ public:
   HostVector(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostVector();
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
 
   virtual bool Check(void) const;
   virtual void Allocate(const int n);

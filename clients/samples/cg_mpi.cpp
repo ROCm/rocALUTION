@@ -68,9 +68,9 @@ int main(int argc, char* argv[])
     e.MoveToAccelerator();
 
     // Allocate memory
-    rhs.Allocate("rhs", mat.get_nrow());
-    x.Allocate("x", mat.get_ncol());
-    e.Allocate("sol", mat.get_ncol());
+    rhs.Allocate("rhs", mat.GetM());
+    x.Allocate("x", mat.GetN());
+    e.Allocate("sol", mat.GetN());
 
     e.Ones();
     mat.Apply(e, &rhs);
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     ls.Build();
     ls.Verbose(1);
 
-    mat.info();
+    mat.Info();
 
     double time = rocalution_time();
 

@@ -16,8 +16,8 @@ public:
   HostMatrixCOO(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixCOO();
 
-  virtual void info(void) const;
-  virtual unsigned int get_mat_format(void) const { return  COO; }
+  virtual void Info(void) const;
+  virtual unsigned int GetMatFormat(void) const { return  COO; }
 
   virtual void Clear(void);
   virtual void AllocateCOO(const int nnz, const int nrow, const int ncol);

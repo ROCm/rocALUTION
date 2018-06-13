@@ -16,10 +16,10 @@ public:
   HostMatrixELL(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixELL();
 
-  inline int get_max_row(void) const { return mat_.max_row; }
+  inline int GetMaxRow(void) const { return mat_.max_row; }
 
-  virtual void info(void) const;
-  virtual unsigned int get_mat_format(void) const { return  ELL; }
+  virtual void Info(void) const;
+  virtual unsigned int GetMatFormat(void) const { return  ELL; }
 
   virtual void Clear(void);
   virtual void AllocateELL(const int nnz, const int nrow, const int ncol, const int max_row);

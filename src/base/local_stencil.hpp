@@ -30,12 +30,12 @@ public:
   LocalStencil(unsigned int type);
   virtual ~LocalStencil();
 
-  virtual void info() const;
+  virtual void Info() const;
 
-  virtual int get_ndim(void) const;
-  virtual IndexType2 get_nrow(void) const;
-  virtual IndexType2 get_ncol(void) const;
-  virtual IndexType2 get_nnz(void) const;
+  virtual int GetNDim(void) const;
+  virtual IndexType2 GetM(void) const;
+  virtual IndexType2 GetN(void) const;
+  virtual IndexType2 GetNnz(void) const;
 
   virtual void SetGrid(const int size);
 

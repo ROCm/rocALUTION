@@ -65,8 +65,8 @@ void LU<OperatorType, VectorType, ValueType>::Build(void) {
   this->build_ = true;
 
   assert(this->op_ != NULL);
-  assert(this->op_->get_nrow() == this->op_->get_ncol());
-  assert(this->op_->get_nrow() > 0);
+  assert(this->op_->GetM() == this->op_->GetN());
+  assert(this->op_->GetM() > 0);
 
   this->lu_.CloneFrom(*this->op_);
   this->lu_.LUFactorize();
@@ -122,7 +122,6 @@ void LU<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, Vect
 
   assert(x != NULL);
   assert(x != &rhs);
-  assert(&this->lu_ != NULL);
   assert(this->build_ == true);
 
   this->lu_.LUSolve(rhs, x);

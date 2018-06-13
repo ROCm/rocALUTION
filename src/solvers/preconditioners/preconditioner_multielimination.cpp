@@ -109,8 +109,8 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Print(void) const {
 
   if (this->build_ == true) {
 
-    LOG_INFO("MultiElimination (I)LU preconditioner with " << this->get_level() 
-             << " levels; diagonal size = " << this->get_size_diag_block() 
+    LOG_INFO("MultiElimination (I)LU preconditioner with " << this->GetLevel() 
+             << " levels; diagonal size = " << this->GetSizeDiagBlock() 
              << " ; drop tol  = " << this->drop_off_ 
              << " ; last-block size = " << this->AA_nrow_
              << " ; last-block nnz = " << this->AA_nnz_
@@ -200,15 +200,15 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
                        &this->D_);
 
   this->A_.ExtractSubMatrix(0, this->size_,
-                       this->size_, this->A_.get_local_ncol()-this->size_,
+                       this->size_, this->A_.GetLocalN()-this->size_,
                        &this->F_);
 
   this->A_.ExtractSubMatrix(this->size_, 0,
-                       this->A_.get_local_nrow()-this->size_, this->size_,
+                       this->A_.GetLocalM()-this->size_, this->size_,
                        &this->E_);
 
   this->A_.ExtractSubMatrix(this->size_, this->size_,
-                       this->A_.get_local_nrow()-this->size_, this->A_.get_local_ncol()-this->size_,
+                       this->A_.GetLocalM()-this->size_, this->A_.GetLocalN()-this->size_,
                        &this->C_);
 
   this->A_.Clear();
@@ -235,8 +235,8 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
   if (this->drop_off_ > double(0.0))
     this->AA_.Compress(this->drop_off_);
 
-  this->AA_nrow_ = this->AA_.get_local_nrow();
-  this->AA_nnz_  = this->AA_.get_local_nnz();
+  this->AA_nrow_ = this->AA_.GetLocalM();
+  this->AA_nnz_  = this->AA_.GetLocalNnz();
 
   if (this->level_ > 1) {
 
@@ -264,11 +264,11 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->x_.CloneBackend(*this->op_); 
   this->x_.Allocate("Permuted solution vector",
-                    this->op_->get_nrow());
+                    this->op_->GetM());
 
   this->rhs_.CloneBackend(*this->op_); 
   this->rhs_.Allocate("Permuted RHS vector",
-                      this->op_->get_nrow());
+                      this->op_->GetM());
 
   this->x_1_.CloneBackend(*this->op_); 
   this->x_1_.Allocate("Permuted solution vector",
@@ -276,7 +276,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->x_2_.CloneBackend(*this->op_); 
   this->x_2_.Allocate("Permuted solution vector",
-                      this->op_->get_nrow()-this->size_);
+                      this->op_->GetM()-this->size_);
 
   this->rhs_1_.CloneBackend(*this->op_); 
   this->rhs_1_.Allocate("Permuted solution vector",
@@ -284,7 +284,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->rhs_2_.CloneBackend(*this->op_); 
   this->rhs_2_.Allocate("Permuted solution vector",
-                      this->op_->get_nrow()-this->size_);
+                      this->op_->GetM()-this->size_);
 
   if (this->level_ > 1) { 
     this->AA_.Clear();
@@ -317,7 +317,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Solve(const VectorTy
   assert(this->build_ == true);
 
   LOG_DEBUG(this, "MultiElimination::Solve()",
-            "level = " << this->get_level() << " with size=" << this->get_size_diag_block() );
+            "level = " << this->GetLevel() << " with size=" << this->GetSizeDiagBlock() );
 
   this->rhs_.CopyFromPermute(rhs, this->permutation_);
 
@@ -329,7 +329,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Solve(const VectorTy
   this->rhs_2_.CopyFrom(this->rhs_, 
                       this->size_,
                       0,
-                      this->rhs_.get_local_size() - this->size_);
+                      this->rhs_.GetLocalSize() - this->size_);
 
   // Solve L  
   this->E_.ApplyAdd(this->x_1_, ValueType(-1.0), &this->rhs_2_);
@@ -350,7 +350,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Solve(const VectorTy
   this->x_.CopyFrom(this->x_2_, 
                     0,
                     this->size_,
-                    this->rhs_.get_local_size() - this->size_);
+                    this->rhs_.GetLocalSize() - this->size_);
 
   x->CopyFromPermuteBackward(this->x_,
                              this->permutation_);

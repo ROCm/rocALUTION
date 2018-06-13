@@ -16,8 +16,8 @@ public:
   HIPAcceleratorMatrixDENSE(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorMatrixDENSE();
 
-  virtual void info(void) const;
-  virtual unsigned int get_mat_format(void) const { return DENSE; }
+  virtual void Info(void) const;
+  virtual unsigned int GetMatFormat(void) const { return DENSE; }
 
   virtual void Clear(void);
   virtual void AllocateDENSE(const int nrow, const int ncol);

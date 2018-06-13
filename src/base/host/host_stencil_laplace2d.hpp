@@ -16,9 +16,9 @@ public:
   HostStencilLaplace2D(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostStencilLaplace2D();
 
-  virtual int get_nnz(void) const;
-  virtual void info(void) const;
-  virtual unsigned int get_stencil_id(void) const { return  Laplace2D; }
+  virtual int GetNnz(void) const;
+  virtual void Info(void) const;
+  virtual unsigned int GetStencilId(void) const { return  Laplace2D; }
 
  
   virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;

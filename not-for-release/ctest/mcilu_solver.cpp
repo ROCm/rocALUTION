@@ -21,9 +21,9 @@ int main(int argc, char* argv[]) {
 
   mat.ReadFileMTX(std::string(argv[1]));
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
-  sol.Allocate("sol", mat.get_nrow());
+  x.Allocate("x", mat.GetM());
+  rhs.Allocate("rhs", mat.GetM());
+  sol.Allocate("sol", mat.GetM());
 
   // b = A*1
   sol.Ones();
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
   if (mFormat == "DIA")  mat.ConvertTo(DIA);
   if (mFormat == "HYB")  mat.ConvertTo(HYB);
 
-  mat.info();
+  mat.Info();
 
   ls.Solve(rhs, &x);
 

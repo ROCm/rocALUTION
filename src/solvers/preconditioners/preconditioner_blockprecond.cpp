@@ -176,7 +176,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetPermutation(co
   LOG_DEBUG(this, "BlockPreconditioner::SetPermutation()",
             "");
 
-  assert(perm.get_size() > 0);
+  assert(perm.GetSize() > 0);
 
   this->permutation_.CopyFrom(perm);
 
@@ -238,12 +238,12 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
     }
 
 
-  if (this->permutation_.get_size() > 0) {
+  if (this->permutation_.GetSize() > 0) {
 
     // with permutation
 
-    assert(this->permutation_.get_size() == this->op_->get_nrow());
-    assert(this->permutation_.get_size() == this->op_->get_ncol());
+    assert(this->permutation_.GetSize() == this->op_->GetM());
+    assert(this->permutation_.GetSize() == this->op_->GetN());
 
     this->permutation_.CloneBackend(*this->op_);
 
@@ -259,7 +259,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
 
     this->x_.CloneBackend(*this->op_);
     this->x_.Allocate("x (not permuted)",
-                      this->op_->get_nrow());
+                      this->op_->GetM());
 
 
   } else {
@@ -278,17 +278,17 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
 
   if (this->A_last_ != NULL) {
 
-    assert(this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->get_nrow() ==
-           this->A_last_->get_nrow());
-    assert(this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->get_ncol() ==
-           this->A_last_->get_ncol());
+    assert(this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->GetM() ==
+           this->A_last_->GetM());
+    assert(this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->GetN() ==
+           this->A_last_->GetN());
 
-    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->info();
+    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->Info();
     this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->Clear();
     delete this->A_block_[this->num_blocks_-1][this->num_blocks_-1];
 
     this->A_block_[this->num_blocks_-1][this->num_blocks_-1] = this->A_last_;
-    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->info();
+    //    this->A_block_[this->num_blocks_-1][this->num_blocks_-1]->Info();
     this->A_last_ = NULL;
   }
 
@@ -330,12 +330,12 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Solve(const Vecto
 
   // Extract RHS into the solution
 
-  if (this->permutation_.get_size() > 0) {
+  if (this->permutation_.GetSize() > 0) {
 
-    assert(this->permutation_.get_size() == this->x_.get_size());
-    assert(this->op_->get_nrow() == this->x_.get_size());
-    assert(this->x_.get_size() == x->get_size());
-    assert(this->x_.get_size() == rhs.get_size());
+    assert(this->permutation_.GetSize() == this->x_.GetSize());
+    assert(this->op_->GetM() == this->x_.GetSize());
+    assert(this->x_.GetSize() == x->GetSize());
+    assert(this->x_.GetSize() == rhs.GetSize());
 
     // with permutation
     this->x_.CopyFromPermute(rhs,
@@ -397,7 +397,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Solve(const Vecto
 
   // Insert Solution
   
-  if (this->permutation_.get_size() > 0) {
+  if (this->permutation_.GetSize() > 0) {
     // with permutation
 
 

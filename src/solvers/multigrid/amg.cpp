@@ -51,8 +51,8 @@ void AMG<OperatorType, VectorType, ValueType>::Print(void) const {
       break;
   }
 
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->get_nrow());
-  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->get_nnz());
+  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
   LOG_INFO("AMG with smoother:");
   this->smoother_level_[0]->Print();
   
@@ -75,8 +75,8 @@ void AMG<OperatorType, VectorType, ValueType>::PrintStart_(void) const {
       break;
   }
 
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->get_nrow());
-  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->get_nnz());
+  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
   LOG_INFO("AMG with smoother:");
   this->smoother_level_[0]->Print();
 
@@ -90,7 +90,7 @@ void AMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::SetInterpolation(_interp interpType) {
+void AMG<OperatorType, VectorType, ValueType>::SetInterpolation(unsigned int interpType) {
 
   this->interp_type_ = interpType;
 
@@ -166,7 +166,7 @@ void AMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
   this->op_level_[0]->Clear();
   this->op_level_[0]->ConvertToCSR();
 
-  if (this->op_->get_format() != CSR) {
+  if (this->op_->GetFormat() != CSR) {
     OperatorType op_csr;
     op_csr.CloneFrom(*this->op_);
     op_csr.ConvertToCSR();

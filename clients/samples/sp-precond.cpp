@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
   x.MoveToAccelerator();
   rhs.MoveToAccelerator();
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetN());
+  rhs.Allocate("rhs", mat.GetM());
 
   // Linear Solver
   BiCGStab<LocalMatrix<double>, LocalVector<double>, double > ls;
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  mat.info();
+  mat.Info();
 
   tick = rocalution_time();
 

@@ -25,10 +25,10 @@ public:
   virtual ~BaseVector();
 
   /// Shows info about the object
-  virtual void info(void) const = 0;
+  virtual void Info(void) const = 0;
 
   /// Returns the size of the vector
-  int get_size(void) const;
+  int GetSize(void) const;
 
   /// Copy the backend descriptor information
   void set_backend(const Rocalution_Backend_Descriptor local_backend);

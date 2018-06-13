@@ -29,18 +29,18 @@ public:
   virtual ~BaseStencil();
 
   /// Return the number of rows in the stencil
-  int get_nrow(void) const;
+  int GetM(void) const;
   /// Return the number of columns in the stencil
-  int get_ncol(void) const;
+  int GetN(void) const;
   /// Return the dimension of the stencil
-  int get_ndim(void) const;
+  int GetNDim(void) const;
   /// Return the nnz per row
-  virtual int get_nnz(void) const = 0;
+  virtual int GetNnz(void) const = 0;
 
   /// Shows simple info about the object
-  virtual void info(void) const = 0;
+  virtual void Info(void) const = 0;
   /// Return the stencil format id (see stencil_formats.hpp)
-  virtual unsigned int get_stencil_id(void) const = 0 ;
+  virtual unsigned int GetStencilId(void) const = 0 ;
   /// Copy the backend descriptor information
   virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
   // Set the grid size

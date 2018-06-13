@@ -28,41 +28,41 @@ Operator<ValueType>::~Operator() {
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_local_nrow(void) const {
+int Operator<ValueType>::GetLocalM(void) const {
  
-  return IndexTypeToInt(this->get_nrow());
+  return IndexTypeToInt(this->GetM());
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_local_ncol(void) const {
+int Operator<ValueType>::GetLocalN(void) const {
  
-  return IndexTypeToInt(this->get_ncol());
+  return IndexTypeToInt(this->GetN());
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_local_nnz(void) const {
+int Operator<ValueType>::GetLocalNnz(void) const {
  
-  return IndexTypeToInt(this->get_nnz());
+  return IndexTypeToInt(this->GetNnz());
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_ghost_nrow(void) const {
- 
-  return 0;
-}
-
-template <typename ValueType>
-int Operator<ValueType>::get_ghost_ncol(void) const {
+int Operator<ValueType>::GetGhostM(void) const {
  
   return 0;
+}
+
+template <typename ValueType>
+int Operator<ValueType>::GetGhostN(void) const {
+ 
+  return 0;
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_ghost_nnz(void) const {
+int Operator<ValueType>::GetGhostNnz(void) const {
  
   return 0;
 
@@ -73,9 +73,9 @@ void Operator<ValueType>::Apply(const GlobalVector<ValueType> &in, GlobalVector<
 
   LOG_INFO("Operator<ValueType>::Apply(const GlobalVector<ValueType> &in, GlobalVector<ValueType> *out)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  in.info();
-  out->info();
+  this->Info();
+  in.Info();
+  out->Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -85,9 +85,9 @@ void Operator<ValueType>::Apply(const LocalVector<ValueType> &in, LocalVector<Va
 
   LOG_INFO("Operator<ValueType>::Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  in.info();
-  out->info();
+  this->Info();
+  in.Info();
+  out->Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -97,9 +97,9 @@ void Operator<ValueType>::ApplyAdd(const GlobalVector<ValueType> &in, const Valu
 
   LOG_INFO("Operator<ValueType>::ApplyAdd(const GlobalVector<ValueType> &in, const ValueType scalar, GlobalVector<ValueType> *out)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  in.info();
-  out->info();
+  this->Info();
+  in.Info();
+  out->Info();
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -109,9 +109,9 @@ void Operator<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const Value
 
   LOG_INFO("Operator<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const ValueType scalar, LocalVector<ValueType> *out)");
   LOG_INFO("Mismatched types:");
-  this->info();
-  in.info();
-  out->info();
+  this->Info();
+  in.Info();
+  out->Info();
   FATAL_ERROR(__FILE__, __LINE__); 
 
 }

@@ -154,19 +154,19 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
     for (int i=0; i<this->levels_-2; ++i) {
       this->p_level_[i] = new VectorType;
       this->p_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->p_level_[i]->Allocate("p", this->op_level_[i]->get_nrow());
+      this->p_level_[i]->Allocate("p", this->op_level_[i]->GetM());
 
       this->q_level_[i] = new VectorType;
       this->q_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->q_level_[i]->Allocate("q", this->op_level_[i]->get_nrow());
+      this->q_level_[i]->Allocate("q", this->op_level_[i]->GetM());
 
       this->k_level_[i] = new VectorType;
       this->k_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->k_level_[i]->Allocate("k", this->op_level_[i]->get_nrow());
+      this->k_level_[i]->Allocate("k", this->op_level_[i]->GetM());
 
       this->l_level_[i] = new VectorType;
       this->l_level_[i]->CloneBackend(*this->op_level_[i]);
-      this->l_level_[i]->Allocate("l", this->op_level_[i]->get_nrow());
+      this->l_level_[i]->Allocate("l", this->op_level_[i]->GetM());
     }
   }
 
@@ -194,14 +194,14 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
   for (int level=0; level<this->levels_; ++level) {
 
     if (level > 0) {
-      this->d_level_[level]->Allocate("defect correction", this->op_level_[level-1]->get_nrow());
-      this->r_level_[level]->Allocate("residual", this->op_level_[level-1]->get_nrow());
-      this->t_level_[level]->Allocate("temporary", this->op_level_[level-1]->get_nrow());
-      this->s_level_[level]->Allocate("temporary", this->op_level_[level-1]->get_nrow());
+      this->d_level_[level]->Allocate("defect correction", this->op_level_[level-1]->GetM());
+      this->r_level_[level]->Allocate("residual", this->op_level_[level-1]->GetM());
+      this->t_level_[level]->Allocate("temporary", this->op_level_[level-1]->GetM());
+      this->s_level_[level]->Allocate("temporary", this->op_level_[level-1]->GetM());
     } else {
-      this->r_level_[level]->Allocate("residual", this->op_->get_nrow());
-      this->t_level_[level]->Allocate("temporary", this->op_->get_nrow());
-      this->s_level_[level]->Allocate("temporary", this->op_->get_nrow());
+      this->r_level_[level]->Allocate("residual", this->op_->GetM());
+      this->t_level_[level]->Allocate("temporary", this->op_->GetM());
+      this->s_level_[level]->Allocate("temporary", this->op_->GetM());
     }
   }
 
@@ -271,7 +271,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
     assert(this->op_ != NULL);
     assert(this->coarse_size_ > 0);
 
-    if (this->op_->get_nrow() <= (IndexType2) this->coarse_size_) {
+    if (this->op_->GetM() <= (IndexType2) this->coarse_size_) {
       LOG_INFO("Problem size too small for AMG, use Krylov solver instead");
       FATAL_ERROR(__FILE__, __LINE__);
     }
@@ -297,7 +297,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 
     ++this->levels_;
 
-    while(op_list_.back()->get_nrow() > (IndexType2) this->coarse_size_) {
+    while(op_list_.back()->GetM() > (IndexType2) this->coarse_size_) {
 
       // Add new list elements
       restrict_list_.push_back(new OperatorType);

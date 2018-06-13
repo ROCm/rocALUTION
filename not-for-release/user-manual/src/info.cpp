@@ -1,2 +1,2 @@
-mat.info();
-vec.info();
+mat.Info();
+vec.Info();

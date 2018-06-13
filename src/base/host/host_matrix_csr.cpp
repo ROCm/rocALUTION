@@ -98,7 +98,7 @@ bool HostMatrixCSR<ValueType>::Zeros(void) {
 }
 
 template <typename ValueType>
-void HostMatrixCSR<ValueType>::info(void) const {
+void HostMatrixCSR<ValueType>::Info(void) const {
 
   LOG_INFO("HostMatrixCSR<ValueType>, OpenMP threads: " << this->local_backend_.OpenMP_threads);
 
@@ -330,7 +330,7 @@ template <typename ValueType>
 void HostMatrixCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
 
   // copy only in the same format
-  assert(this->get_mat_format() == mat.get_mat_format());
+  assert(this->GetMatFormat() == mat.GetMatFormat());
 
   if (const HostMatrixCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&mat)) {
 
@@ -483,7 +483,7 @@ bool HostMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
   this->Clear();
 
   // empty matrix is empty matrix
-  if (mat.get_nnz() == 0)
+  if (mat.GetNnz() == 0)
     return true;
 
   if (const HostMatrixCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&mat)) {
@@ -615,10 +615,10 @@ bool HostMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
 template <typename ValueType>
 void HostMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->ncol_);
+  assert(out->GetSize() == this->nrow_);
 
   const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in) ; 
   HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out) ; 
@@ -652,10 +652,10 @@ void HostMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
 
   if (this->nnz_ > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->ncol_);
-    assert(out->get_size() == this->nrow_);
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->ncol_);
+    assert(out->GetSize() == this->nrow_);
     
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in) ; 
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out) ; 
@@ -679,7 +679,7 @@ template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ExtractDiagonal(BaseVector<ValueType> *vec_diag) const {
 
   assert(vec_diag != NULL);
-  assert(vec_diag->get_size() == this->nrow_);
+  assert(vec_diag->GetSize() == this->nrow_);
 
   HostVector<ValueType> *cast_vec_diag  = dynamic_cast<HostVector<ValueType>*> (vec_diag) ; 
 
@@ -707,7 +707,7 @@ template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ExtractInverseDiagonal(BaseVector<ValueType> *vec_inv_diag) const {
 
   assert(vec_inv_diag != NULL);
-  assert(vec_inv_diag->get_size() == this->nrow_);
+  assert(vec_inv_diag->GetSize() == this->nrow_);
 
   HostVector<ValueType> *cast_vec_inv_diag  = dynamic_cast<HostVector<ValueType>*> (vec_inv_diag) ; 
 
@@ -1002,10 +1002,10 @@ bool HostMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> *L) const 
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->ncol_);
+  assert(out->GetSize() == this->nrow_);
 
   const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in) ; 
   HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out) ; 
@@ -1077,10 +1077,10 @@ void HostMatrixCSR<ValueType>::LUAnalyseClear(void) {
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LLSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->ncol_);
+  assert(out->GetSize() == this->nrow_);
 
   const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
   HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
@@ -1122,12 +1122,12 @@ template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LLSolve(const BaseVector<ValueType> &in, const BaseVector<ValueType> &inv_diag,
                                        BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
-  assert(inv_diag.get_size() == this->nrow_ ||
-         inv_diag.get_size() == this->ncol_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->ncol_);
+  assert(out->GetSize() == this->nrow_);
+  assert(inv_diag.GetSize() == this->nrow_ ||
+         inv_diag.GetSize() == this->ncol_);
 
   const HostVector<ValueType> *cast_in   = dynamic_cast<const HostVector<ValueType>*> (&in);
   const HostVector<ValueType> *cast_diag = dynamic_cast<const HostVector<ValueType>*> (&inv_diag);
@@ -1182,10 +1182,10 @@ void HostMatrixCSR<ValueType>::LAnalyseClear(void) {
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::LSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->ncol_);
+  assert(out->GetSize() == this->nrow_);
 
   const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in) ; 
   HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out) ; 
@@ -1240,10 +1240,10 @@ void HostMatrixCSR<ValueType>::UAnalyseClear(void) {
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::USolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->ncol_);
+  assert(out->GetSize() == this->nrow_);
 
   const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in) ; 
   HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out) ; 
@@ -1616,6 +1616,7 @@ bool HostMatrixCSR<ValueType>::MultiColoring(int &num_colors,
                                              int **size_colors,
                                              BaseVector<int> *permutation) const {
 
+  assert(*size_colors == NULL);
   assert(permutation != NULL);
   HostVector<int> *cast_perm = dynamic_cast<HostVector<int>*> (permutation) ; 
   assert(cast_perm != NULL);
@@ -1668,7 +1669,7 @@ bool HostMatrixCSR<ValueType>::MultiColoring(int &num_colors,
 
   cast_perm->Allocate(this->nrow_);
 
-  for (int i=0; i<permutation->get_size(); ++i) {
+  for (int i=0; i<permutation->GetSize(); ++i) {
 
     cast_perm->vec_[ i ] = offsets_color[ color[i]-1 ] ;
     ++offsets_color[color[i]-1];
@@ -1749,8 +1750,8 @@ template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ZeroBlockPermutation(int &size, BaseVector<int> *permutation) const {
 
   assert(permutation != NULL);
-  assert(permutation->get_size() == this->nrow_);
-  assert(permutation->get_size() == this->ncol_);
+  assert(permutation->GetSize() == this->nrow_);
+  assert(permutation->GetSize() == this->ncol_);
 
   HostVector<int> *cast_perm = dynamic_cast<HostVector<int>*> (permutation);
   assert(cast_perm != NULL);
@@ -2621,7 +2622,7 @@ bool HostMatrixCSR<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<ValueType> &diag) {
 
-  assert(diag.get_size() == this->ncol_);
+  assert(diag.GetSize() == this->ncol_);
 
   const HostVector<ValueType> *cast_diag = dynamic_cast<const HostVector<ValueType>*> (&diag) ; 
   assert(cast_diag!= NULL);
@@ -2643,7 +2644,7 @@ bool HostMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<ValueType> &
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::DiagonalMatrixMultL(const BaseVector<ValueType> &diag) {
 
-  assert(diag.get_size() == this->ncol_);
+  assert(diag.GetSize() == this->ncol_);
 
   const HostVector<ValueType> *cast_diag = dynamic_cast<const HostVector<ValueType>*> (&diag) ; 
   assert(cast_diag!= NULL);
@@ -2806,8 +2807,8 @@ bool HostMatrixCSR<ValueType>::Sort(void) {
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::Permute(const BaseVector<int> &permutation) {
 
-  assert((permutation.get_size() == this->nrow_) &&
-         (permutation.get_size() == this->ncol_));
+  assert((permutation.GetSize() == this->nrow_) &&
+         (permutation.GetSize() == this->ncol_));
 
   if( this->nnz_ > 0 ) {
 
@@ -3072,7 +3073,7 @@ bool HostMatrixCSR<ValueType>::ConnectivityOrder(BaseVector<int> *permutation) c
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::CreateFromMap(const BaseVector<int> &map, const int n, const int m) {
 
-  assert(map.get_size() == n);
+  assert(map.GetSize() == n);
 
   const HostVector<int> *cast_map = dynamic_cast<const HostVector<int>*>(&map);
 
@@ -3124,7 +3125,7 @@ bool HostMatrixCSR<ValueType>::CreateFromMap(const BaseVector<int> &map, const i
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::CreateFromMap(const BaseVector<int> &map, const int n, const int m, BaseMatrix<ValueType> *pro) {
 
-  assert(map.get_size() == n);
+  assert(map.GetSize() == n);
   assert(pro != NULL);
 
   const HostVector<int> *cast_map = dynamic_cast<const HostVector<int>*>(&map);
@@ -3136,7 +3137,7 @@ bool HostMatrixCSR<ValueType>::CreateFromMap(const BaseVector<int> &map, const i
   // Build restriction operator
   this->CreateFromMap(map, n, m);
 
-  int nnz = this->get_nnz();
+  int nnz = this->GetNnz();
 
   // Build prolongation operator
   cast_pro->Clear();
@@ -3338,7 +3339,7 @@ bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(const ValueType relax,
 
   int ncol = 0;
 
-  for (int i=0; i<cast_agg->get_size(); ++i)
+  for (int i=0; i<cast_agg->GetSize(); ++i)
     if (cast_agg->vec_[i] > ncol)
       ncol = cast_agg->vec_[i];
 
@@ -3490,7 +3491,7 @@ bool HostMatrixCSR<ValueType>::AMGAggregation(const BaseVector<int> &aggregates,
 
   int ncol = 0;
 
-  for (int i=0; i<cast_agg->get_size(); ++i)
+  for (int i=0; i<cast_agg->GetSize(); ++i)
     if (cast_agg->vec_[i] > ncol)
       ncol = cast_agg->vec_[i];
 
@@ -3717,7 +3718,7 @@ bool HostMatrixCSR<ValueType>::SPAI(void) {
     ek.Allocate(Asub.nrow_);
     mk.Allocate(Asub.ncol_);
 
-    for (int j=0; j<ek.get_size(); ++j)
+    for (int j=0; j<ek.GetSize(); ++j)
       if (I[j] == i)
         ek.vec_[j] = 1.0;
 
@@ -4115,7 +4116,7 @@ bool HostMatrixCSR<ValueType>::RugeStueben(const ValueType eps, BaseMatrix<Value
 #ifdef _OPENMP
 #pragma omp parallel for      
 #endif
-  for (int i=0; i<cast_prolong->get_nrow(); ++i)
+  for (int i=0; i<cast_prolong->GetM(); ++i)
     for (int j=cast_prolong->mat_.row_offset[i]; j<cast_prolong->mat_.row_offset[i+1]; ++j)
       for (int jj=cast_prolong->mat_.row_offset[i]; jj<cast_prolong->mat_.row_offset[i+1]-1; ++jj)
         if (cast_prolong->mat_.col[jj] > cast_prolong->mat_.col[jj+1]) {
@@ -5063,9 +5064,9 @@ bool HostMatrixCSR<ValueType>::Key(long int &row_key,
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->nrow_);
+  assert(vec.GetSize() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HostVector<ValueType> *cast_vec = dynamic_cast<const HostVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
@@ -5161,9 +5162,9 @@ template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ExtractColumnVector(const int idx, BaseVector<ValueType> *vec) const {
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->nrow_);
+  assert(vec->GetSize() == this->nrow_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HostVector<ValueType> *cast_vec = dynamic_cast<HostVector<ValueType>*> (vec);
     assert(cast_vec != NULL);
@@ -5198,9 +5199,9 @@ bool HostMatrixCSR<ValueType>::ExtractColumnVector(const int idx, BaseVector<Val
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ReplaceRowVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->ncol_);
+  assert(vec.GetSize() == this->ncol_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     const HostVector<ValueType> *cast_vec = dynamic_cast<const HostVector<ValueType>*> (&vec);
     assert(cast_vec != NULL);
@@ -5304,9 +5305,9 @@ template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ExtractRowVector(const int idx, BaseVector<ValueType> *vec) const {
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->ncol_);
+  assert(vec->GetSize() == this->ncol_);
 
-  if (this->get_nnz() > 0) {
+  if (this->GetNnz() > 0) {
 
     HostVector<ValueType> *cast_vec = dynamic_cast<HostVector<ValueType>*> (vec);
     assert(cast_vec != NULL);

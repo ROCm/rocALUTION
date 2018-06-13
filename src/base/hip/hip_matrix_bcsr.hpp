@@ -16,8 +16,8 @@ public:
   HIPAcceleratorMatrixBCSR(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HIPAcceleratorMatrixBCSR();
 
-  virtual void info(void) const;
-  virtual unsigned int get_mat_format(void) const { return BCSR; }
+  virtual void Info(void) const;
+  virtual unsigned int GetMatFormat(void) const { return BCSR; }
 
   virtual void Clear(void);
   virtual void AllocateBCSR(const int nnz, const int nrow, const int ncol);

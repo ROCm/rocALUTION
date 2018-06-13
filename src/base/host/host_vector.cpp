@@ -56,7 +56,7 @@ HostVector<ValueType>::~HostVector() {
 }
 
 template <typename ValueType>
-void HostVector<ValueType>::info(void) const {
+void HostVector<ValueType>::Info(void) const {
 
   LOG_INFO("HostVector<ValueType>, OpenMP threads: " << this->local_backend_.OpenMP_threads);
 
@@ -1209,6 +1209,7 @@ bool HostVector<ValueType>::Prolongation(const BaseVector<ValueType> &vec_coarse
 template <typename ValueType>
 void HostVector<ValueType>::SetIndexArray(const int size, const int *index) {
 
+  assert(index != NULL);
   assert(size > 0);
 
   this->index_size_ = size;
@@ -1245,7 +1246,7 @@ void HostVector<ValueType>::GetContinuousValues(const int start, const int end, 
 
   assert(start >= 0);
   assert(end >= start);
-  assert(end <= this->get_size());
+  assert(end <= this->GetSize());
   assert(values != NULL);
 
   for (int i=start, j=0; i<end; ++i, ++j)
@@ -1258,7 +1259,7 @@ void HostVector<ValueType>::SetContinuousValues(const int start, const int end, 
 
   assert(start >= 0);
   assert(end >= start);
-  assert(end <= this->get_size());
+  assert(end <= this->GetSize());
   assert(values != NULL);
 
   for (int i=start, j=0; i<end; ++i, ++j)
@@ -1278,6 +1279,12 @@ void HostVector<ValueType>::ExtractCoarseMapping(const int start, const int end,
 template <>
 void HostVector<int>::ExtractCoarseMapping(const int start, const int end, const int *index,
                                            const int nc, int *size, int *map) const {
+
+  assert(index != NULL);
+  assert(size != NULL);
+  assert(map != NULL);
+  assert(start >= 0);
+  assert(end >= start);
 
   int ind = 0;
   int k = 0;
@@ -1319,6 +1326,12 @@ void HostVector<ValueType>::ExtractCoarseBoundary(const int start, const int end
 template <>
 void HostVector<int>::ExtractCoarseBoundary(const int start, const int end, const int *index,
                                             const int nc, int *size, int *boundary) const {
+
+  assert(index != NULL);
+  assert(size != NULL);
+  assert(boundary != NULL);
+  assert(start >= 0);
+  assert(end >= start);
 
   int ind = *size;
   int *check = NULL;

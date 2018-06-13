@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
 
   mat.ReadFileMTX(std::string(argv[1]));
  
-  x.Allocate("x", mat.get_nrow());
-  y.Allocate("y", mat.get_nrow());
+  x.Allocate("x", mat.GetN());
+  y.Allocate("y", mat.GetM());
 
   x.Ones();
 
@@ -39,9 +39,9 @@ int main(int argc, char* argv[]) {
 
   y.Zeros();
 
-  mat.info();
-  x.info();
-  y.info();
+  mat.Info();
+  x.Info();
+  y.Info();
 
   // CPU
   tick = rocalution_time();
@@ -63,9 +63,9 @@ int main(int argc, char* argv[]) {
   x.MoveToAccelerator();
   y.MoveToAccelerator();
 
-  mat.info();
-  x.info();
-  y.info();
+  mat.Info();
+  x.Info();
+  y.Info();
 
   tack = rocalution_time();
   std::cout << "Sync Transfer:" << (tack-tick)/1000000 << " sec" << std::endl;
@@ -107,9 +107,9 @@ int main(int argc, char* argv[]) {
   mat.MoveToAcceleratorAsync();
   x.MoveToAcceleratorAsync();
 
-  mat.info();
-  x.info();
-  y.info();
+  mat.Info();
+  x.Info();
+  y.Info();
 
 
   tack = rocalution_time();
@@ -131,9 +131,9 @@ int main(int argc, char* argv[]) {
 
   y.MoveToAccelerator();
 
-  mat.info();
-  x.info();
-  y.info();
+  mat.Info();
+  x.Info();
+  y.Info();
 
   y.Zeros();
 

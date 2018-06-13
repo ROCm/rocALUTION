@@ -30,8 +30,8 @@ int main(int argc, char* argv[]) {
 
   mat.ReadFileMTX(std::string(argv[1]));
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetM());
+  rhs.Allocate("rhs", mat.GetM());
 
   rhs.Ones();
   x.Zeros(); 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
   rhs.MoveToAccelerator();
   ls.MoveToAccelerator();
 
-  mat.info();
+  mat.Info();
 
   tick = paralution_time();
 

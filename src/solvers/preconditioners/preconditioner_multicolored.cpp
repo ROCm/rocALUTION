@@ -171,7 +171,7 @@ void MultiColored<OperatorType, VectorType, ValueType>::Permute_(void) {
   LOG_DEBUG(this, "MultiColored::Permute_()",
             "");
 
-  assert(this->permutation_.get_size() > 0);
+  assert(this->permutation_.GetSize() > 0);
 
   this->preconditioner_->Permute(this->permutation_);
 
@@ -272,7 +272,7 @@ void MultiColored<OperatorType, VectorType, ValueType>::Decompose_(void) {
 
   this->x_.CloneBackend(*this->op_); 
   this->x_.Allocate("Permuted solution vector",
-                    this->op_->get_nrow());
+                    this->op_->GetM());
 
   LOG_DEBUG(this, "MultiColored::Decompose_()",
             " * end");

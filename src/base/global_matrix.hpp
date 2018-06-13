@@ -25,15 +25,15 @@ public:
   GlobalMatrix(const ParallelManager &pm);
   virtual ~GlobalMatrix();
 
-  virtual IndexType2 get_nrow(void) const;
-  virtual IndexType2 get_ncol(void) const;
-  virtual IndexType2 get_nnz(void) const;
-  virtual int get_local_nrow(void) const;
-  virtual int get_local_ncol(void) const;
-  virtual int get_local_nnz(void) const;
-  virtual int get_ghost_nrow(void) const;
-  virtual int get_ghost_ncol(void) const;
-  virtual int get_ghost_nnz(void) const;
+  virtual IndexType2 GetM(void) const;
+  virtual IndexType2 GetN(void) const;
+  virtual IndexType2 GetNnz(void) const;
+  virtual int GetLocalM(void) const;
+  virtual int GetLocalN(void) const;
+  virtual int GetLocalNnz(void) const;
+  virtual int GetGhostM(void) const;
+  virtual int GetGhostN(void) const;
+  virtual int GetGhostNnz(void) const;
 
   // TODO
   // do we need this to be public?
@@ -44,7 +44,7 @@ public:
   virtual void MoveToAccelerator(void); // check for ghost local and boundary parts!
   virtual void MoveToHost(void);
 
-  virtual void info(void) const;
+  virtual void Info(void) const;
   virtual bool Check(void) const;
 
   // TODO

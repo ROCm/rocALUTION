@@ -32,8 +32,8 @@ int main(int argc, char* argv[]) {
   x.MoveToAccelerator();
   rhs.MoveToAccelerator();
 
-  x.Allocate("x", mat.get_nrow());
-  rhs.Allocate("rhs", mat.get_nrow());
+  x.Allocate("x", mat.GetN());
+  rhs.Allocate("rhs", mat.GetM());
 
   // Linear Solver
   CG<LocalMatrix<std::complex<double> >, LocalVector<std::complex<double> >, std::complex<double> > ls;
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 
 //  ls.Verbose(2);
 
-  mat.info();
+  mat.Info();
 
   double tick, tack;
   tick = rocalution_time();

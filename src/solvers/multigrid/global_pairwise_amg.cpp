@@ -63,8 +63,8 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::Print(void) const {
   LOG_INFO("AMG solver");
   LOG_INFO("AMG number of levels " << this->levels_);
   LOG_INFO("AMG using pairwise aggregation");
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->get_nrow());
-  int global_nnz = this->op_level_[this->levels_-2]->get_nnz();
+  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  int global_nnz = this->op_level_[this->levels_-2]->GetNnz();
   LOG_INFO("AMG coarsest level nnz = " << global_nnz);
   LOG_INFO("AMG with smoother:");
   this->smoother_level_[0]->Print();
@@ -79,8 +79,8 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::PrintStart_(void) c
   LOG_INFO("AMG solver starts");
   LOG_INFO("AMG number of levels " << this->levels_);
   LOG_INFO("AMG using pairwise aggregation");
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->get_nrow());
-  int global_nnz = this->op_level_[this->levels_-2]->get_nnz();
+  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  int global_nnz = this->op_level_[this->levels_-2]->GetNnz();
   LOG_INFO("AMG coarsest level nnz = " << global_nnz);
   LOG_INFO("AMG with smoother:");
   this->smoother_level_[0]->Print();
@@ -188,7 +188,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void
     assert(this->op_ != NULL);
     assert(this->coarse_size_ > 0);
 
-    if (this->op_->get_nrow() <= (IndexType2) this->coarse_size_) {
+    if (this->op_->GetM() <= (IndexType2) this->coarse_size_) {
       LOG_INFO("Problem size too small for AMG, use Krylov solver instead");
       FATAL_ERROR(__FILE__, __LINE__);
     }
@@ -220,7 +220,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void
 
     ++this->levels_;
 
-    while(op_list_.back()->get_nrow() > (IndexType2) this->coarse_size_) {
+    while(op_list_.back()->GetM() > (IndexType2) this->coarse_size_) {
 
       // Add new list elements
       OperatorType *prev_op_ = op_list_.back();
@@ -339,19 +339,19 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const Ope
   int rGsize;
 
   // Allocate transfer mapping for current level
-  trans->Allocate("transfer map", op.get_local_nrow());
+  trans->Allocate("transfer map", op.GetLocalM());
 
   op.InitialPairwiseAggregation(this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
   op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
 
-  while (double(op.get_nrow()) / double(coarse->get_nrow()) < this->coarsening_factor_) {
+  while (double(op.GetM()) / double(coarse->GetM()) < this->coarsening_factor_) {
 
     coarse->FurtherPairwiseAggregation(this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
     op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
 
   }
 
-  cast_res->CreateFromMap(*trans, op.get_local_nrow(), nc, cast_pro);
+  cast_res->CreateFromMap(*trans, op.GetLocalM(), nc, cast_pro);
 
   // Store data for possible coarse operator rebuild
   this->dim_level_.push_back(nc);

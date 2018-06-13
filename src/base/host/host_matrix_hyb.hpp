@@ -16,12 +16,12 @@ public:
   HostMatrixHYB(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixHYB();
 
-  inline int get_ell_max_row(void) const { return this->mat_.ELL.max_row; }
-  inline int get_ell_nnz(void) const { return this->ell_nnz_; }
-  inline int get_coo_nnz(void) const { return this->coo_nnz_; }
+  inline int GetELLMaxRow(void) const { return this->mat_.ELL.max_row; }
+  inline int GetELLNnz(void) const { return this->ell_nnz_; }
+  inline int GetCOONnz(void) const { return this->coo_nnz_; }
 
-  virtual void info(void) const;
-  virtual unsigned int get_mat_format(void) const { return  HYB; }
+  virtual void Info(void) const;
+  virtual unsigned int GetMatFormat(void) const { return  HYB; }
 
   virtual void Clear(void);
   virtual void AllocateHYB(const int ell_nnz, const int coo_nnz, const int ell_max_row,

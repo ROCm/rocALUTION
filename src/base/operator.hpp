@@ -27,25 +27,25 @@ public:
   virtual ~Operator();
 
   /// Return the number of rows in the matrix/stencil
-  virtual IndexType2 get_nrow(void) const = 0;
+  virtual IndexType2 GetM(void) const = 0;
   /// Return the number of columns in the matrix/stencil
-  virtual IndexType2 get_ncol(void) const = 0;
+  virtual IndexType2 GetN(void) const = 0;
   /// Return the number of non-zeros in the matrix/stencil
-  virtual IndexType2 get_nnz(void) const = 0;
+  virtual IndexType2 GetNnz(void) const = 0;
 
   /// Return the number of rows in the local matrix/stencil
-  virtual int get_local_nrow(void) const;
+  virtual int GetLocalM(void) const;
   /// Return the number of columns in the local matrix/stencil
-  virtual int get_local_ncol(void) const;
+  virtual int GetLocalN(void) const;
   /// Return the number of non-zeros in the local matrix/stencil
-  virtual int get_local_nnz(void) const;
+  virtual int GetLocalNnz(void) const;
 
   /// Return the number of rows in the ghost matrix/stencil
-  virtual int get_ghost_nrow(void) const;
+  virtual int GetGhostM(void) const;
   /// Return the number of columns in the ghost matrix/stencil
-  virtual int get_ghost_ncol(void) const;
+  virtual int GetGhostN(void) const;
   /// Return the number of non-zeros in the ghost matrix/stencil
-  virtual int get_ghost_nnz(void) const;
+  virtual int GetGhostNnz(void) const;
 
   /// Apply the operator, out = Operator(in), where in, out are local vectors
   virtual void Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const;
