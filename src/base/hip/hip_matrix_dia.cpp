@@ -57,7 +57,7 @@ HIPAcceleratorMatrixDIA<ValueType>::~HIPAcceleratorMatrixDIA() {
 template <typename ValueType>
 void HIPAcceleratorMatrixDIA<ValueType>::Info(void) const {
 
-  LOG_INFO("HIPAcceleratorMatrixDIA<ValueType> diag=" << this->get_ndiag() << " nnz=" << this->get_nnz() );
+  LOG_INFO("HIPAcceleratorMatrixDIA<ValueType> diag=" << this->GetNDiag() << " nnz=" << this->get_nnz() );
 
 }
 
@@ -187,7 +187,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromHost(const HostMatrix<ValueType
   if ((cast_mat = dynamic_cast<const HostMatrixDIA<ValueType>*> (&src)) != NULL) {
     
   if (this->get_nnz() == 0)
-    this->AllocateDIA(cast_mat->get_nnz(), cast_mat->get_nrow(), cast_mat->get_ncol(), cast_mat->get_ndiag());
+    this->AllocateDIA(cast_mat->get_nnz(), cast_mat->get_nrow(), cast_mat->get_ncol(), cast_mat->GetNDiag());
 
     assert(this->get_nnz()  == src.get_nnz());
     assert(this->get_nrow() == src.get_nrow());
@@ -197,7 +197,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromHost(const HostMatrix<ValueType
 
       hipMemcpy(this->mat_.offset,     // dst
                  cast_mat->mat_.offset, // src
-                 this->get_ndiag()*sizeof(int), // size
+                 this->GetNDiag()*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -234,7 +234,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
     cast_mat->set_backend(this->local_backend_);   
 
   if (dst->get_nnz() == 0)
-    cast_mat->AllocateDIA(this->get_nnz(), this->get_nrow(), this->get_ncol(), this->get_ndiag());
+    cast_mat->AllocateDIA(this->get_nnz(), this->get_nrow(), this->get_ncol(), this->GetNDiag());
 
     assert(this->get_nnz()  == dst->get_nnz());
     assert(this->get_nrow() == dst->get_nrow());
@@ -244,7 +244,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
 
       hipMemcpy(cast_mat->mat_.offset, // dst
                  this->mat_.offset,     // src
-                 this->get_ndiag()*sizeof(int), // size
+                 this->GetNDiag()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -279,7 +279,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDIA<ValueType>*> (&src)) != NULL) {
     
   if (this->get_nnz() == 0)
-    this->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->get_ndiag());
+    this->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->GetNDiag());
 
     assert(this->get_nnz()  == src.get_nnz());
     assert(this->get_nrow() == src.get_nrow());
@@ -289,7 +289,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
 
       hipMemcpy(this->mat_.offset,         // dst
                  hip_cast_mat->mat_.offset, // src
-                 this->get_ndiag()*sizeof(int), // size
+                 this->GetNDiag()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -335,7 +335,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
     hip_cast_mat->set_backend(this->local_backend_);       
 
   if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->get_ndiag());
+    hip_cast_mat->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->GetNDiag());
 
     assert(this->get_nnz()  == dst->get_nnz());
     assert(this->get_nrow() == dst->get_nrow());
@@ -345,7 +345,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
 
       hipMemcpy(hip_cast_mat->mat_.offset, // dst
                  this->mat_.offset,         // src
-                 this->get_ndiag()*sizeof(int), // size
+                 this->GetNDiag()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -390,7 +390,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
   if ((cast_mat = dynamic_cast<const HostMatrixDIA<ValueType>*> (&src)) != NULL) {
     
   if (this->get_nnz() == 0)
-    this->AllocateDIA(cast_mat->get_nnz(), cast_mat->get_nrow(), cast_mat->get_ncol(), cast_mat->get_ndiag());
+    this->AllocateDIA(cast_mat->get_nnz(), cast_mat->get_nrow(), cast_mat->get_ncol(), cast_mat->GetNDiag());
 
     assert(this->get_nnz()  == src.get_nnz());
     assert(this->get_nrow() == src.get_nrow());
@@ -400,7 +400,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
 
       hipMemcpyAsync(this->mat_.offset,     // dst
                       cast_mat->mat_.offset, // src
-                      this->get_ndiag()*sizeof(int), // size
+                      this->GetNDiag()*sizeof(int), // size
                       hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -437,7 +437,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
     cast_mat->set_backend(this->local_backend_);   
 
   if (dst->get_nnz() == 0)
-    cast_mat->AllocateDIA(this->get_nnz(), this->get_nrow(), this->get_ncol(), this->get_ndiag());
+    cast_mat->AllocateDIA(this->get_nnz(), this->get_nrow(), this->get_ncol(), this->GetNDiag());
 
     assert(this->get_nnz()  == dst->get_nnz());
     assert(this->get_nrow() == dst->get_nrow());
@@ -447,7 +447,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
 
       hipMemcpyAsync(cast_mat->mat_.offset, // dst
                       this->mat_.offset,     // src
-                      this->get_ndiag()*sizeof(int), // size
+                      this->GetNDiag()*sizeof(int), // size
                       hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -482,7 +482,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDIA<ValueType>*> (&src)) != NULL) {
     
   if (this->get_nnz() == 0)
-    this->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->get_ndiag());
+    this->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->GetNDiag());
 
     assert(this->get_nnz()  == src.get_nnz());
     assert(this->get_nrow() == src.get_nrow());
@@ -492,7 +492,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
 
       hipMemcpy(this->mat_.offset,         // dst
                  hip_cast_mat->mat_.offset, // src
-                 this->get_ndiag()*sizeof(int), // size
+                 this->GetNDiag()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -538,7 +538,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
     hip_cast_mat->set_backend(this->local_backend_);       
 
   if (this->get_nnz() == 0)
-    hip_cast_mat->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->get_ndiag());
+    hip_cast_mat->AllocateDIA(hip_cast_mat->get_nnz(), hip_cast_mat->get_nrow(), hip_cast_mat->get_ncol(), hip_cast_mat->GetNDiag());
 
     assert(this->get_nnz()  == dst->get_nnz());
     assert(this->get_nrow() == dst->get_nrow());
@@ -548,7 +548,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
 
       hipMemcpy(hip_cast_mat->mat_.offset, // dst
                  this->mat_.offset,         // src
-                 this->get_ndiag()*sizeof(int), // size
+                 this->GetNDiag()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -744,7 +744,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::Apply(const BaseVector<ValueType> &in, 
 
     int nrow = this->get_nrow();
     int ncol = this->get_ncol();
-    int num_diag = this->get_ndiag();
+    int num_diag = this->GetNDiag();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
@@ -778,7 +778,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 
     int nrow = this->get_nrow();
     int ncol = this->get_ncol();
-    int num_diag = this->get_ndiag();
+    int num_diag = this->GetNDiag();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 

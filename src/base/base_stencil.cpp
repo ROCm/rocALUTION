@@ -33,7 +33,7 @@ int BaseStencil<ValueType>::get_nrow(void) const {
 
   int dim = 1;
 
-  if (this->get_ndim() > 0) {
+  if (this->GetNDim() > 0) {
 
     for (int i=0; i<ndim_; ++i)
       dim *= this->size_;
@@ -51,7 +51,7 @@ int BaseStencil<ValueType>::get_ncol(void) const {
 } 
 
 template <typename ValueType>
-int BaseStencil<ValueType>::get_ndim(void) const {
+int BaseStencil<ValueType>::GetNDim(void) const {
 
   return this->ndim_; 
 } 

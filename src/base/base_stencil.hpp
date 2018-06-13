@@ -33,7 +33,7 @@ public:
   /// Return the number of columns in the stencil
   int get_ncol(void) const;
   /// Return the dimension of the stencil
-  int get_ndim(void) const;
+  int GetNDim(void) const;
   /// Return the nnz per row
   virtual int get_nnz(void) const = 0;
 

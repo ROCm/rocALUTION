@@ -32,7 +32,7 @@ public:
 
   virtual void Info() const;
 
-  virtual int get_ndim(void) const;
+  virtual int GetNDim(void) const;
   virtual IndexType2 get_nrow(void) const;
   virtual IndexType2 get_ncol(void) const;
   virtual IndexType2 get_nnz(void) const;

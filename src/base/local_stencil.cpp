@@ -51,9 +51,9 @@ LocalStencil<ValueType>::LocalStencil(unsigned int type) {
 }
 
 template <typename ValueType>
-int LocalStencil<ValueType>::get_ndim(void) const {
+int LocalStencil<ValueType>::GetNDim(void) const {
 
-  return this->stencil_->get_ndim();
+  return this->stencil_->GetNDim();
 }
 
 template <typename ValueType>
