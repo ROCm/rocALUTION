@@ -10,20 +10,20 @@ set(ROCALUTION_TEST_SOURCES
   test_local_matrix.cpp
   test_local_vector.cpp
 # Krylov solvers
-#  test_backend.cpp
-#  test_bicgstab.cpp
-#  test_bicgstabl.cpp
-#  test_cg.cpp
-#  test_cr.cpp
-#  test_fcg.cpp
-#  test_fgmres.cpp
-#  test_gmres.cpp
-#  test_idr.cpp
-#  test_qmrcgstab.cpp
+  test_backend.cpp
+  test_bicgstab.cpp
+  test_bicgstabl.cpp
+  test_cg.cpp
+  test_cr.cpp
+  test_fcg.cpp
+  test_fgmres.cpp
+  test_gmres.cpp
+  test_idr.cpp
+  test_qmrcgstab.cpp
 # AMG
-#  test_pairwise_amg.cpp
-#  test_ruge_stueben_amg.cpp
-#  test_samg.cpp
+  test_pairwise_amg.cpp
+  test_ruge_stueben_amg.cpp
+  test_samg.cpp
 )
 
 set(ROCALUTION_CLIENTS_COMMON
