@@ -28,41 +28,41 @@ Operator<ValueType>::~Operator() {
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_local_nrow(void) const {
+int Operator<ValueType>::GetLocalM(void) const {
  
   return IndexTypeToInt(this->GetM());
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_local_ncol(void) const {
+int Operator<ValueType>::GetLocalN(void) const {
  
   return IndexTypeToInt(this->GetN());
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_local_nnz(void) const {
+int Operator<ValueType>::GetLocalNnz(void) const {
  
   return IndexTypeToInt(this->GetNnz());
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_ghost_nrow(void) const {
+int Operator<ValueType>::GetGhostM(void) const {
  
   return 0;
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_ghost_ncol(void) const {
+int Operator<ValueType>::GetGhostN(void) const {
  
   return 0;
 
 }
 
 template <typename ValueType>
-int Operator<ValueType>::get_ghost_nnz(void) const {
+int Operator<ValueType>::GetGhostNnz(void) const {
  
   return 0;
 

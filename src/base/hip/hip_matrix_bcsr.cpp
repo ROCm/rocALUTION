@@ -289,10 +289,10 @@ bool HIPAcceleratorMatrixBCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType
 template <typename ValueType>
 void HIPAcceleratorMatrixBCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 /*
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->GetN());
-  assert(out->get_size() == this->GetM());
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->GetN());
+  assert(out->GetSize() == this->GetM());
 
 
   const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in) ; 

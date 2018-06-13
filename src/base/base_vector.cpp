@@ -29,7 +29,7 @@ BaseVector<ValueType>::~BaseVector() {
 }
 
 template <typename ValueType>
-inline int BaseVector<ValueType>::get_size(void) const { 
+inline int BaseVector<ValueType>::GetSize(void) const { 
 
   return this->size_; 
 

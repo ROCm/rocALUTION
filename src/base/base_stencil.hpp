@@ -40,7 +40,7 @@ public:
   /// Shows simple info about the object
   virtual void Info(void) const = 0;
   /// Return the stencil format id (see stencil_formats.hpp)
-  virtual unsigned int get_stencil_id(void) const = 0 ;
+  virtual unsigned int GetStencilId(void) const = 0 ;
   /// Copy the backend descriptor information
   virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
   // Set the grid size

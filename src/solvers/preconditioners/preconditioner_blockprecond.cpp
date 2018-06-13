@@ -176,7 +176,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetPermutation(co
   LOG_DEBUG(this, "BlockPreconditioner::SetPermutation()",
             "");
 
-  assert(perm.get_size() > 0);
+  assert(perm.GetSize() > 0);
 
   this->permutation_.CopyFrom(perm);
 
@@ -238,12 +238,12 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
     }
 
 
-  if (this->permutation_.get_size() > 0) {
+  if (this->permutation_.GetSize() > 0) {
 
     // with permutation
 
-    assert(this->permutation_.get_size() == this->op_->GetM());
-    assert(this->permutation_.get_size() == this->op_->GetN());
+    assert(this->permutation_.GetSize() == this->op_->GetM());
+    assert(this->permutation_.GetSize() == this->op_->GetN());
 
     this->permutation_.CloneBackend(*this->op_);
 
@@ -330,12 +330,12 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Solve(const Vecto
 
   // Extract RHS into the solution
 
-  if (this->permutation_.get_size() > 0) {
+  if (this->permutation_.GetSize() > 0) {
 
-    assert(this->permutation_.get_size() == this->x_.get_size());
-    assert(this->op_->GetM() == this->x_.get_size());
-    assert(this->x_.get_size() == x->get_size());
-    assert(this->x_.get_size() == rhs.get_size());
+    assert(this->permutation_.GetSize() == this->x_.GetSize());
+    assert(this->op_->GetM() == this->x_.GetSize());
+    assert(this->x_.GetSize() == x->GetSize());
+    assert(this->x_.GetSize() == rhs.GetSize());
 
     // with permutation
     this->x_.CopyFromPermute(rhs,
@@ -397,7 +397,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Solve(const Vecto
 
   // Insert Solution
   
-  if (this->permutation_.get_size() > 0) {
+  if (this->permutation_.GetSize() > 0) {
     // with permutation
 
 

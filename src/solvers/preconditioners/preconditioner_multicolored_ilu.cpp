@@ -127,7 +127,7 @@ void MultiColoredILU<OperatorType, VectorType, ValueType>::Factorize_(void) {
 
   this->preconditioner_->ILUpFactorize(this->p_, this->level_);
 
-  this->nnz_ = this->preconditioner_->get_local_nnz();
+  this->nnz_ = this->preconditioner_->GetLocalNnz();
 
 }
 

@@ -1300,9 +1300,9 @@ void LocalMatrix<ValueType>::UpdateValuesCSR(ValueType *val) {
   int *mat_col = NULL;
   ValueType *mat_val = NULL;
 
-  int nrow = this->get_local_nrow();
-  int ncol = this->get_local_ncol();
-  int nnz  = this->get_local_nnz();
+  int nrow = this->GetLocalM();
+  int ncol = this->GetLocalN();
+  int nnz  = this->GetLocalNnz();
 
   // Extract matrix pointers
   this->matrix_->LeaveDataPtrCSR(&mat_row_offset, &mat_col, &mat_val);
@@ -1690,8 +1690,8 @@ void LocalMatrix<ValueType>::Apply(const LocalVector<ValueType> &in, LocalVector
 
   if (this->GetNnz() > 0) {
 
-    assert(in.get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     assert( ( (this->matrix_ == this->matrix_host_)  && (in.vector_ == in.vector_host_) && (out->vector_ == out->vector_host_)) ||
             ( (this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_) && (out->vector_ == out->vector_accel_)) );
@@ -1718,8 +1718,8 @@ void LocalMatrix<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const Va
 
   if (this->GetNnz() > 0) {
 
-    assert(in.get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     assert( ( (this->matrix_ == this->matrix_host_)  && (in.vector_ == in.vector_host_) && (out->vector_ == out->vector_host_)) ||
             ( (this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_) && (out->vector_ == out->vector_accel_)) );
@@ -1748,7 +1748,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) c
   if (this->GetNnz() > 0) {
 
     std::string vec_diag_name = "Diagonal elements of " + this->object_name_;
-    vec_diag->Allocate(vec_diag_name, std::min(this->get_local_nrow(), this->get_local_ncol()));
+    vec_diag->Allocate(vec_diag_name, std::min(this->GetLocalM(), this->GetLocalN()));
 
     bool err = this->matrix_->ExtractDiagonal(vec_diag->vector_);
 
@@ -1809,7 +1809,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType> *vec_
   if (this->GetNnz() > 0) {
 
     std::string vec_inv_diag_name = "Inverse of the diagonal elements of " + this->object_name_;
-    vec_inv_diag->Allocate(vec_inv_diag_name, std::min(this->get_local_nrow(), this->get_local_ncol()));
+    vec_inv_diag->Allocate(vec_inv_diag_name, std::min(this->GetLocalM(), this->GetLocalN()));
 
     bool err = this->matrix_->ExtractInverseDiagonal(vec_inv_diag->vector_);
 
@@ -2189,8 +2189,8 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
 
   assert(&in != NULL);
   assert(out != NULL);
-  assert(in.get_size() == this->GetN());
-  assert(out->get_size() == this->GetM());
+  assert(in.GetSize() == this->GetN());
+  assert(out->GetSize() == this->GetM());
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (in.vector_ == in.vector_host_)  && (out->vector_ == out->vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_) && (out->vector_ == out->vector_accel_)) );
@@ -2284,8 +2284,8 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
 
   assert(&in != NULL);
   assert(out != NULL);
-  assert(in.get_size() == this->GetN());
-  assert(out->get_size() == this->GetM());
+  assert(in.GetSize() == this->GetN());
+  assert(out->GetSize() == this->GetM());
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (in.vector_ == in.vector_host_) && (out->vector_ == out->vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_) && (out->vector_ == out->vector_accel_)) );
@@ -2350,8 +2350,8 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
   assert(&in != NULL);
   assert(&inv_diag != NULL);
   assert(out != NULL);
-  assert(in.get_size() == this->GetN());
-  assert(out->get_size() == this->GetM());
+  assert(in.GetSize() == this->GetN());
+  assert(out->GetSize() == this->GetM());
 
   assert( ( (this->matrix_ == this->matrix_host_) &&
             (in.vector_ == in.vector_host_) &&
@@ -2447,8 +2447,8 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
 
   assert(&in != NULL);
   assert(out != NULL);
-  assert(in.get_size() == this->GetN());
-  assert(out->get_size() == this->GetM());
+  assert(in.GetSize() == this->GetN());
+  assert(out->GetSize() == this->GetM());
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (in.vector_ == in.vector_host_) && (out->vector_ == out->vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_) && (out->vector_ == out->vector_accel_)) );
@@ -2535,8 +2535,8 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
 
   assert(&in != NULL);
   assert(out != NULL);
-  assert(in.get_size() == this->GetN());
-  assert(out->get_size() == this->GetM());
+  assert(in.GetSize() == this->GetN());
+  assert(out->GetSize() == this->GetM());
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (in.vector_ == in.vector_host_) && (out->vector_ == out->vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_) && (out->vector_ == out->vector_accel_)) );
@@ -3073,7 +3073,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *p
   if (this->GetNnz() > 0) {
 
     std::string vec_perm_name = "ZeroBlockPermutation permutation of " + this->object_name_;
-    permutation->Allocate(vec_perm_name, this->get_local_nrow());
+    permutation->Allocate(vec_perm_name, this->GetLocalM());
 
     bool err = this->matrix_->ZeroBlockPermutation(size, permutation->vector_);
 
@@ -3241,8 +3241,8 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
 
   assert(&in != NULL);
   assert(out != NULL);
-  assert(in.get_size() == this->GetN());
-  assert(out->get_size() == this->GetM());
+  assert(in.GetSize() == this->GetN());
+  assert(out->GetSize() == this->GetM());
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (in.vector_ == in.vector_host_)  && (out->vector_ == out->vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_) && (out->vector_ == out->vector_accel_)) );
@@ -3306,9 +3306,9 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
             "");
 
   assert(&permutation != NULL);
-  assert((permutation.get_size() == this->GetM()) ||
-          (permutation.get_size() == this->GetN()));
-  assert(permutation.get_size() > 0);
+  assert((permutation.GetSize() == this->GetM()) ||
+          (permutation.GetSize() == this->GetN()));
+  assert(permutation.GetSize() > 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (permutation.vector_ == permutation.vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (permutation.vector_ == permutation.vector_accel_) ) );
@@ -3378,9 +3378,9 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
             "");
 
   assert(&permutation != NULL);
-  assert((permutation.get_size() == this->GetM()) ||
-         (permutation.get_size() == this->GetN()));
-  assert(permutation.get_size() > 0);
+  assert((permutation.GetSize() == this->GetM()) ||
+         (permutation.GetSize() == this->GetN()));
+  assert(permutation.GetSize() > 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (permutation.vector_ == permutation.vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (permutation.vector_ == permutation.vector_accel_) ) );
@@ -4221,7 +4221,7 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
     if (this->GetNnz() != A.GetNnz()) {
 
       this->Clear();
-      this->AllocateDENSE("", A.get_local_nrow(), B.get_local_ncol());
+      this->AllocateDENSE("", A.GetLocalM(), B.GetLocalN());
 
     }
 
@@ -4294,8 +4294,8 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &d
             "");
 
   assert(&diag != NULL);
-  assert((diag.get_size() == this->GetM()) ||
-         (diag.get_size() == this->GetN()));
+  assert((diag.GetSize() == this->GetM()) ||
+         (diag.GetSize() == this->GetN()));
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (diag.vector_ == diag.vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (diag.vector_ == diag.vector_accel_) ) );
@@ -4372,8 +4372,8 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
             "");
 
   assert(&diag != NULL);
-  assert((diag.get_size() == this->GetM()) ||
-         (diag.get_size() == this->GetN()));
+  assert((diag.GetSize() == this->GetM()) ||
+         (diag.GetSize() == this->GetN()));
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (diag.vector_ == diag.vector_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (diag.vector_ == diag.vector_accel_) ) );
@@ -5448,7 +5448,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
             n << " " << m);
 
   assert(&map != NULL);
-  assert(map.get_size() == (IndexType2) n);
+  assert(map.GetSize() == (IndexType2) n);
   assert(m > 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (map.vector_ == map.vector_host_)) ||
@@ -5521,7 +5521,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
   assert(&map != NULL);
   assert(pro != NULL);
   assert(this != pro);
-  assert(map.get_size() == (IndexType2) n);
+  assert(map.GetSize() == (IndexType2) n);
   assert(m > 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (map.vector_ == map.vector_host_)  && (pro->matrix_ == pro->matrix_host_)) ||
@@ -5872,7 +5872,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
             idx);
 
   assert(&vec != NULL);
-  assert(vec.get_size() == this->GetM());
+  assert(vec.GetSize() == this->GetM());
   assert(idx >= 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (vec.vector_ == vec.vector_host_)) ||
@@ -5950,7 +5950,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<Valu
             idx);
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->GetM());
+  assert(vec->GetSize() == this->GetM());
   assert(idx >= 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (vec->vector_ == vec->vector_host_)) ||
@@ -6012,7 +6012,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
             idx);
 
   assert(&vec != NULL);
-  assert(vec.get_size() == this->GetN());
+  assert(vec.GetSize() == this->GetN());
   assert(idx >= 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (vec.vector_ == vec.vector_host_)) ||
@@ -6090,7 +6090,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(const int idx, LocalVector<ValueTy
             idx);
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->GetN());
+  assert(vec->GetSize() == this->GetN());
   assert(idx >= 0);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (vec->vector_ == vec->vector_host_)) ||

@@ -21,10 +21,10 @@ public:
   virtual ~MultiElimination();
 
   /// Returns the size of the first (diagonal) block of the preconditioner
-  inline int get_size_diag_block(void) const { return this->size_; }
+  inline int GetSizeDiagBlock(void) const { return this->size_; }
 
   /// Return the depth of the current level
-  inline int get_level(void) const { return this->level_; }
+  inline int GetLevel(void) const { return this->level_; }
 
   virtual void Print(void) const;
   virtual void Clear(void);

@@ -34,18 +34,18 @@ public:
   virtual IndexType2 GetNnz(void) const = 0;
 
   /// Return the number of rows in the local matrix/stencil
-  virtual int get_local_nrow(void) const;
+  virtual int GetLocalM(void) const;
   /// Return the number of columns in the local matrix/stencil
-  virtual int get_local_ncol(void) const;
+  virtual int GetLocalN(void) const;
   /// Return the number of non-zeros in the local matrix/stencil
-  virtual int get_local_nnz(void) const;
+  virtual int GetLocalNnz(void) const;
 
   /// Return the number of rows in the ghost matrix/stencil
-  virtual int get_ghost_nrow(void) const;
+  virtual int GetGhostM(void) const;
   /// Return the number of columns in the ghost matrix/stencil
-  virtual int get_ghost_ncol(void) const;
+  virtual int GetGhostN(void) const;
   /// Return the number of non-zeros in the ghost matrix/stencil
-  virtual int get_ghost_nnz(void) const;
+  virtual int GetGhostNnz(void) const;
 
   /// Apply the operator, out = Operator(in), where in, out are local vectors
   virtual void Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const;

@@ -116,23 +116,23 @@ void GlobalVector<ValueType>::SetParallelManager(const ParallelManager &pm) {
 }
 
 template <typename ValueType>
-IndexType2 GlobalVector<ValueType>::get_size(void) const {
+IndexType2 GlobalVector<ValueType>::GetSize(void) const {
 
   return this->pm_->global_size_;
 
 }
 
 template <typename ValueType>
-int GlobalVector<ValueType>::get_local_size(void) const {
+int GlobalVector<ValueType>::GetLocalSize(void) const {
 
-  return this->vector_interior_.get_local_size();
+  return this->vector_interior_.GetLocalSize();
 
 }
 
 template <typename ValueType>
-int GlobalVector<ValueType>::get_ghost_size(void) const {
+int GlobalVector<ValueType>::GetGhostSize(void) const {
 
-  return this->vector_ghost_.get_local_size();
+  return this->vector_ghost_.GetLocalSize();
 
 }
 
@@ -276,7 +276,7 @@ void GlobalVector<ValueType>::LeaveDataPtr(ValueType **ptr) {
             "");
 
   assert(*ptr == NULL);
-  assert(this->vector_interior_.get_size() > 0);
+  assert(this->vector_interior_.GetSize() > 0);
 
   this->vector_interior_.LeaveDataPtr(ptr);
 
@@ -380,7 +380,7 @@ void GlobalVector<ValueType>::Info(void) const {
 
   LOG_INFO("GlobalVector" <<
            " name=" << this->object_name_ << ";" <<
-           " size=" << this->get_size() << ";" <<
+           " size=" << this->GetSize() << ";" <<
            " prec=" << 8*sizeof(ValueType) << "bit;" <<
            " subdomains=" << this->pm_->num_procs_ << ";" <<
            " host backend={" << _rocalution_host_name[0] << "};" <<

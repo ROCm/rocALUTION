@@ -924,8 +924,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostCSR(const int *row_offset, 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permutation){
 
-  assert(permutation.get_size() == this->GetM());
-  assert(permutation.get_size() == this->GetN());
+  assert(permutation.GetSize() == this->GetM());
+  assert(permutation.GetSize() == this->GetN());
 
   if (this->GetNnz() > 0) {
 
@@ -1065,10 +1065,10 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, 
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
     
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in) ; 
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out) ; 
@@ -1100,10 +1100,10 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -1327,10 +1327,10 @@ return false;
     assert(this->L_mat_info_  != 0);
     assert(this->U_mat_info_  != 0);
 */
-    assert(in.  get_size()  >= 0);
-    assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->GetN());
-    assert(out->get_size()  == this->GetM());
+    assert(in.  GetSize()  >= 0);
+    assert(out->GetSize()  >= 0);
+    assert(in.  GetSize()  == this->GetN());
+    assert(out->GetSize()  == this->GetM());
     assert(this->GetN() == this->GetM());
 
     assert(this->tmp_vec_ != NULL);
@@ -1495,10 +1495,10 @@ return false;
     assert(this->L_mat_info_  != 0);
     assert(this->U_mat_info_  != 0);
 
-    assert(in.  get_size()  >= 0);
-    assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->GetN());
-    assert(out->get_size()  == this->GetM());
+    assert(in.  GetSize()  >= 0);
+    assert(out->GetSize()  >= 0);
+    assert(in.  GetSize()  == this->GetN());
+    assert(out->GetSize()  == this->GetM());
     assert(this->GetN() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
@@ -1688,10 +1688,10 @@ return false;
     assert(this->L_mat_info_  != 0);
     assert(this->U_mat_info_  != 0);
 */
-    assert(in.  get_size()  >= 0);
-    assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->GetN());
-    assert(out->get_size()  == this->GetM());
+    assert(in.  GetSize()  >= 0);
+    assert(out->GetSize()  >= 0);
+    assert(in.  GetSize()  == this->GetN());
+    assert(out->GetSize()  == this->GetM());
     assert(this->GetN() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
@@ -1733,10 +1733,10 @@ return false;
     assert(this->L_mat_info_  != 0);
     assert(this->U_mat_info_  != 0);
 */
-    assert(in.  get_size()  >= 0);
-    assert(out->get_size()  >= 0);
-    assert(in.  get_size()  == this->GetN());
-    assert(out->get_size()  == this->GetM());
+    assert(in.  GetSize()  >= 0);
+    assert(out->GetSize()  >= 0);
+    assert(in.  GetSize()  == this->GetN());
+    assert(out->GetSize()  == this->GetM());
     assert(this->GetN() == this->GetM()); 
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
@@ -1773,7 +1773,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractDiagonal(BaseVector<ValueType> *
   if (this->GetNnz() > 0)  {
 
     assert(vec_diag != NULL);
-    assert(vec_diag->get_size() == this->GetM());
+    assert(vec_diag->GetSize() == this->GetM());
 
     HIPAcceleratorVector<ValueType> *cast_vec_diag  = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec_diag);
 
@@ -1799,7 +1799,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractInverseDiagonal(BaseVector<Value
   if (this->GetNnz() > 0) {
 
     assert(vec_inv_diag != NULL);
-    assert(vec_inv_diag->get_size() == this->GetM());
+    assert(vec_inv_diag->GetSize() == this->GetM());
 
     HIPAcceleratorVector<ValueType> *cast_vec_inv_diag  = dynamic_cast<HIPAcceleratorVector<ValueType>*> (vec_inv_diag);
 
@@ -2279,7 +2279,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MaximalIndependentSet(int &size,
 
 
   cast_perm->Allocate(this->GetM());
-  hipMemcpy(cast_perm->vec_, h_perm, permutation->get_size()*sizeof(int), hipMemcpyHostToDevice);
+  hipMemcpy(cast_perm->vec_, h_perm, permutation->GetSize()*sizeof(int), hipMemcpyHostToDevice);
 
   free_host(&h_row_offset);
   free_host(&h_col);
@@ -2366,7 +2366,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MultiColoring(int &num_colors,
   }
 
   cast_perm->Allocate(this->GetM());
-  hipMemcpy(cast_perm->vec_, h_perm, permutation->get_size()*sizeof(int), hipMemcpyHostToDevice);
+  hipMemcpy(cast_perm->vec_, h_perm, permutation->GetSize()*sizeof(int), hipMemcpyHostToDevice);
 
   free_host(&h_perm);
   free_host(&color);
@@ -2499,7 +2499,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalar(const ValueType alpha) {
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<ValueType> &diag) {
 
-  assert(diag.get_size() == this->GetN());
+  assert(diag.GetSize() == this->GetN());
 
   const HIPAcceleratorVector<ValueType> *cast_diag = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&diag);
   assert(cast_diag!= NULL);
@@ -2525,7 +2525,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<Va
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultL(const BaseVector<ValueType> &diag) {
 
-  assert(diag.get_size() == this->GetN());
+  assert(diag.GetSize() == this->GetN());
 
   const HIPAcceleratorVector<ValueType> *cast_diag = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&diag);
   assert(cast_diag!= NULL);
@@ -2835,7 +2835,7 @@ return false;
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->nrow_);
+  assert(vec.GetSize() == this->nrow_);
 
   if (this->GetNnz() > 0) {
 
@@ -2905,7 +2905,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ExtractColumnVector(const int idx, BaseVector<ValueType> *vec) const {
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->nrow_);
+  assert(vec->GetSize() == this->nrow_);
 
   if (this->GetNnz() > 0) {
 
@@ -2932,7 +2932,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::ExtractRowVector(const int idx, BaseVector<ValueType> *vec) const {
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->ncol_);
+  assert(vec->GetSize() == this->ncol_);
 
   if (this->GetNnz() > 0) {
 

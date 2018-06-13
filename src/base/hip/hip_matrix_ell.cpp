@@ -193,7 +193,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFromHost(const HostMatrix<ValueType
   if ((cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateELL(cast_mat->GetNnz(), cast_mat->GetM(), cast_mat->GetN(), cast_mat->get_max_row());
+    this->AllocateELL(cast_mat->GetNnz(), cast_mat->GetM(), cast_mat->GetN(), cast_mat->GetMaxRow());
 
     assert(this->GetNnz()  == src.GetNnz());
     assert(this->GetM() == src.GetM());
@@ -239,7 +239,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
     cast_mat->set_backend(this->local_backend_);   
 
   if (dst->GetNnz() == 0)
-    cast_mat->AllocateELL(this->GetNnz(), this->GetM(), this->GetN(), this->get_max_row() );
+    cast_mat->AllocateELL(this->GetNnz(), this->GetM(), this->GetN(), this->GetMaxRow() );
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
@@ -284,7 +284,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixELL<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->get_max_row() );
+    this->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->GetMaxRow() );
 
     assert(this->GetNnz()  == src.GetNnz());
     assert(this->GetM() == src.GetM());
@@ -340,7 +340,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
     hip_cast_mat->set_backend(this->local_backend_);       
 
   if (this->GetNnz() == 0)
-    hip_cast_mat->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->get_max_row() );
+    hip_cast_mat->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->GetMaxRow() );
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
@@ -394,7 +394,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
   if ((cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateELL(cast_mat->GetNnz(), cast_mat->GetM(), cast_mat->GetN(), cast_mat->get_max_row());
+    this->AllocateELL(cast_mat->GetNnz(), cast_mat->GetM(), cast_mat->GetN(), cast_mat->GetMaxRow());
 
     assert(this->GetNnz()  == src.GetNnz());
     assert(this->GetM() == src.GetM());
@@ -440,7 +440,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
     cast_mat->set_backend(this->local_backend_);   
 
   if (dst->GetNnz() == 0)
-    cast_mat->AllocateELL(this->GetNnz(), this->GetM(), this->GetN(), this->get_max_row() );
+    cast_mat->AllocateELL(this->GetNnz(), this->GetM(), this->GetN(), this->GetMaxRow() );
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
@@ -485,7 +485,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixELL<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->get_max_row() );
+    this->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->GetMaxRow() );
 
     assert(this->GetNnz()  == src.GetNnz());
     assert(this->GetM() == src.GetM());
@@ -541,7 +541,7 @@ void HIPAcceleratorMatrixELL<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
     hip_cast_mat->set_backend(this->local_backend_);       
 
   if (this->GetNnz() == 0)
-    hip_cast_mat->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->get_max_row() );
+    hip_cast_mat->AllocateELL(hip_cast_mat->GetNnz(), hip_cast_mat->GetM(), hip_cast_mat->GetN(), hip_cast_mat->GetMaxRow() );
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
@@ -654,10 +654,10 @@ void HIPAcceleratorMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, 
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -674,7 +674,7 @@ void HIPAcceleratorMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, 
                              this->GetM(), this->GetN(), &alpha,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.col,
-                             this->get_max_row(),
+                             this->GetMaxRow(),
                              cast_in->vec_, &beta,
                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
@@ -689,10 +689,10 @@ void HIPAcceleratorMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -708,7 +708,7 @@ void HIPAcceleratorMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
                              this->GetM(), this->GetN(), &scalar,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.col,
-                             this->get_max_row(),
+                             this->GetMaxRow(),
                              cast_in->vec_, &beta,
                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);

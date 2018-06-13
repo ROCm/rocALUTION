@@ -1246,7 +1246,7 @@ void HostVector<ValueType>::GetContinuousValues(const int start, const int end, 
 
   assert(start >= 0);
   assert(end >= start);
-  assert(end <= this->get_size());
+  assert(end <= this->GetSize());
   assert(values != NULL);
 
   for (int i=start, j=0; i<end; ++i, ++j)
@@ -1259,7 +1259,7 @@ void HostVector<ValueType>::SetContinuousValues(const int start, const int end, 
 
   assert(start >= 0);
   assert(end >= start);
-  assert(end <= this->get_size());
+  assert(end <= this->GetSize());
   assert(values != NULL);
 
   for (int i=start, j=0; i<end; ++i, ++j)

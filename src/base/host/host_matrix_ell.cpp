@@ -247,10 +247,10 @@ void HostMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector
 
   if (this->nnz_ > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->ncol_);
-    assert(out->get_size() == this->nrow_);
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->ncol_);
+    assert(out->GetSize() == this->nrow_);
 
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
@@ -292,10 +292,10 @@ void HostMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const V
 
   if (this->nnz_ > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->ncol_);
-    assert(out->get_size() == this->nrow_);
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->ncol_);
+    assert(out->GetSize() == this->nrow_);
 
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);

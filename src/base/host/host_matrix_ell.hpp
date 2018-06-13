@@ -16,7 +16,7 @@ public:
   HostMatrixELL(const Rocalution_Backend_Descriptor local_backend);
   virtual ~HostMatrixELL();
 
-  inline int get_max_row(void) const { return mat_.max_row; }
+  inline int GetMaxRow(void) const { return mat_.max_row; }
 
   virtual void Info(void) const;
   virtual unsigned int GetMatFormat(void) const { return  ELL; }

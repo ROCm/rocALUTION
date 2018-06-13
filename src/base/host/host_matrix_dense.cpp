@@ -222,10 +222,10 @@ bool HostMatrixDENSE<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
 template <typename ValueType>
 void HostMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->ncol_);
-  assert(out->get_size() == this->nrow_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->ncol_);
+  assert(out->GetSize() == this->nrow_);
 
   const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
   HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
@@ -252,10 +252,10 @@ void HostMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const
 
   if (this->nnz_ > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->ncol_);
-    assert(out->get_size() == this->nrow_);
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->ncol_);
+    assert(out->GetSize() == this->nrow_);
 
     const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
     HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
@@ -319,7 +319,7 @@ bool HostMatrixDENSE<ValueType>::Householder(const int idx, ValueType &beta, Bas
 
   HostVector<ValueType> *cast_vec = dynamic_cast<HostVector<ValueType>*> (vec);
   assert(cast_vec != NULL);
-  assert(cast_vec->get_size() >= this->nrow_-idx);
+  assert(cast_vec->GetSize() >= this->nrow_-idx);
 
   ValueType s  = ValueType(0.0);
 
@@ -400,10 +400,10 @@ bool HostMatrixDENSE<ValueType>::QRDecompose(void) {
 template <typename ValueType>
 bool HostMatrixDENSE<ValueType>::QRSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->nrow_);
-  assert(out->get_size() == this->ncol_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->nrow_);
+  assert(out->GetSize() == this->ncol_);
 
   HostVector<ValueType> *cast_out = dynamic_cast<HostVector<ValueType>*>(out);
 
@@ -524,10 +524,10 @@ bool HostMatrixDENSE<ValueType>::LUFactorize(void) {
 template <typename ValueType>
 bool HostMatrixDENSE<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
 
-  assert(in.  get_size() >= 0);
-  assert(out->get_size() >= 0);
-  assert(in.  get_size() == this->nrow_);
-  assert(out->get_size() == this->ncol_);
+  assert(in.  GetSize() >= 0);
+  assert(out->GetSize() >= 0);
+  assert(in.  GetSize() == this->nrow_);
+  assert(out->GetSize() == this->ncol_);
 
   HostVector<ValueType> *cast_out = dynamic_cast<HostVector<ValueType>*>(out);
   const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*>(&in);
@@ -558,7 +558,7 @@ bool HostMatrixDENSE<ValueType>::LUSolve(const BaseVector<ValueType> &in, BaseVe
 template <typename ValueType>
 bool HostMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->nrow_);
+  assert(vec.GetSize() == this->nrow_);
 
   if (this->GetNnz() > 0) {
 
@@ -582,7 +582,7 @@ bool HostMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, const BaseVe
 template <typename ValueType>
 bool HostMatrixDENSE<ValueType>::ReplaceRowVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->ncol_);
+  assert(vec.GetSize() == this->ncol_);
 
   if (this->GetNnz() > 0) {
 
@@ -607,7 +607,7 @@ template <typename ValueType>
 bool HostMatrixDENSE<ValueType>::ExtractColumnVector(const int idx, BaseVector<ValueType> *vec) const {
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->nrow_);
+  assert(vec->GetSize() == this->nrow_);
 
   if (this->GetNnz() > 0) {
 
@@ -632,7 +632,7 @@ template <typename ValueType>
 bool HostMatrixDENSE<ValueType>::ExtractRowVector(const int idx, BaseVector<ValueType> *vec) const {
 
   assert(vec != NULL);
-  assert(vec->get_size() == this->ncol_);
+  assert(vec->GetSize() == this->ncol_);
 
   if (this->GetNnz() > 0) {
 

@@ -97,44 +97,44 @@ IndexType2 GlobalMatrix<ValueType>::GetNnz(void) const {
 }
 
 template <typename ValueType>
-int GlobalMatrix<ValueType>::get_local_nrow(void) const {
+int GlobalMatrix<ValueType>::GetLocalM(void) const {
 
-  return this->matrix_interior_.get_local_nrow();
-
-}
-
-template <typename ValueType>
-int GlobalMatrix<ValueType>::get_local_ncol(void) const {
-
-  return this->matrix_interior_.get_local_ncol();
+  return this->matrix_interior_.GetLocalM();
 
 }
 
 template <typename ValueType>
-int GlobalMatrix<ValueType>::get_local_nnz(void) const {
+int GlobalMatrix<ValueType>::GetLocalN(void) const {
 
-  return this->matrix_interior_.get_local_nnz();
-
-}
-
-template <typename ValueType>
-int GlobalMatrix<ValueType>::get_ghost_nrow(void) const {
-
-  return this->matrix_ghost_.get_local_nrow();
+  return this->matrix_interior_.GetLocalN();
 
 }
 
 template <typename ValueType>
-int GlobalMatrix<ValueType>::get_ghost_ncol(void) const {
+int GlobalMatrix<ValueType>::GetLocalNnz(void) const {
 
-  return this->matrix_ghost_.get_local_ncol();
+  return this->matrix_interior_.GetLocalNnz();
 
 }
 
 template <typename ValueType>
-int GlobalMatrix<ValueType>::get_ghost_nnz(void) const {
+int GlobalMatrix<ValueType>::GetGhostM(void) const {
 
-  return this->matrix_ghost_.get_local_nnz();
+  return this->matrix_ghost_.GetLocalM();
+
+}
+
+template <typename ValueType>
+int GlobalMatrix<ValueType>::GetGhostN(void) const {
+
+  return this->matrix_ghost_.GetLocalN();
+
+}
+
+template <typename ValueType>
+int GlobalMatrix<ValueType>::GetGhostNnz(void) const {
+
+  return this->matrix_ghost_.GetLocalNnz();
 
 }
 
@@ -458,13 +458,13 @@ void GlobalMatrix<ValueType>::LeaveDataPtrCSR(int **local_row_offset, int **loca
   LOG_DEBUG(this, "GlobalMatrix::LeaveDataPtrCSR()",
             "");
 
-  assert(this->get_local_nrow() > 0);
-  assert(this->get_local_ncol() > 0);
-  assert(this->get_local_nnz()  > 0);
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
 
-  assert(this->get_ghost_nrow() > 0);
-  assert(this->get_ghost_ncol() > 0);
-  assert(this->get_ghost_nnz()  > 0);
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   assert(*local_row_offset == NULL);
   assert(*local_col == NULL);
@@ -488,13 +488,13 @@ void GlobalMatrix<ValueType>::LeaveDataPtrCOO(int **local_row, int **local_col, 
   LOG_DEBUG(this, "GlobalMatrix::LeaveDataPtrCOO()",
             "");
 
-  assert(this->get_local_nrow() > 0);
-  assert(this->get_local_ncol() > 0);
-  assert(this->get_local_nnz()  > 0);
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
 
-  assert(this->get_ghost_nrow() > 0);
-  assert(this->get_ghost_ncol() > 0);
-  assert(this->get_ghost_nnz()  > 0);
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   assert(*local_row == NULL);
   assert(*local_col == NULL);
@@ -517,9 +517,9 @@ void GlobalMatrix<ValueType>::LeaveLocalDataPtrCSR(int **row_offset, int **col, 
   LOG_DEBUG(this, "GlobalMatrix::LeaveLocalDataPtrCSR()",
             "");
 
-  assert(this->get_local_nrow() > 0);
-  assert(this->get_local_ncol() > 0);
-  assert(this->get_local_nnz()  > 0);
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
 
   assert(*row_offset == NULL);
   assert(*col == NULL);
@@ -537,9 +537,9 @@ void GlobalMatrix<ValueType>::LeaveLocalDataPtrCOO(int **row, int **col, ValueTy
   LOG_DEBUG(this, "GlobalMatrix::LeaveLocalDataPtrCOO()",
             "");
 
-  assert(this->get_local_nrow() > 0);
-  assert(this->get_local_ncol() > 0);
-  assert(this->get_local_nnz()  > 0);
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
 
   assert(*row == NULL);
   assert(*col == NULL);
@@ -557,9 +557,9 @@ void GlobalMatrix<ValueType>::LeaveGhostDataPtrCSR(int **row_offset, int **col, 
   LOG_DEBUG(this, "GlobalMatrix::LeaveGhostDataPtrCSR()",
             "");
 
-  assert(this->get_ghost_nrow() > 0);
-  assert(this->get_ghost_ncol() > 0);
-  assert(this->get_ghost_nnz()  > 0);
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   assert(*row_offset == NULL);
   assert(*col == NULL);
@@ -577,9 +577,9 @@ void GlobalMatrix<ValueType>::LeaveGhostDataPtrCOO(int **row, int **col, ValueTy
   LOG_DEBUG(this, "GlobalMatrix::LeaveGhostDataPtrCOO()",
             "");
 
-  assert(this->get_ghost_nrow() > 0);
-  assert(this->get_ghost_ncol() > 0);
-  assert(this->get_ghost_nnz()  > 0);
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   assert(*row == NULL);
   assert(*col == NULL);
@@ -692,8 +692,8 @@ void GlobalMatrix<ValueType>::CopyFrom(const GlobalMatrix<ValueType> &src) {
             "");
 
   assert(this != &src);
-  assert(src.get_local_nnz() != 0);
-  assert(src.get_ghost_nnz() != 0);
+  assert(src.GetLocalNnz() != 0);
+  assert(src.GetGhostNnz() != 0);
 
   this->matrix_interior_.CopyFrom(src.GetInterior());
   this->matrix_ghost_.CopyFrom(src.GetGhost());
@@ -783,8 +783,8 @@ void GlobalMatrix<ValueType>::Apply(const GlobalVector<ValueType> &in, GlobalVec
   assert (out != NULL);
   assert (&in != out);
 
-  assert (this->GetM() == out->get_size());
-  assert (this->GetN() == in.get_size());
+  assert (this->GetM() == out->GetSize());
+  assert (this->GetN() == in.GetSize());
   assert (this->is_host() == in.is_host());
   assert (this->is_host() == out->is_host());
 
@@ -808,8 +808,8 @@ void GlobalMatrix<ValueType>::ApplyAdd(const GlobalVector<ValueType> &in, const 
   assert (out != NULL);
   assert (&in != out);
 
-  assert (this->GetM() == out->get_size());
-  assert (this->GetN() == in.get_size());
+  assert (this->GetM() == out->GetSize());
+  assert (this->GetN() == in.GetSize());
   assert (this->is_host() == in.is_host());
   assert (this->is_host() == out->is_host());
 
@@ -1015,7 +1015,7 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::ExtractInverseDiagonal(GlobalVector<ValueType> *vec_inv_diag) const {
 
   assert (vec_inv_diag != NULL);
-  assert (vec_inv_diag->get_size() == this->GetM());
+  assert (vec_inv_diag->GetSize() == this->GetM());
 
   this->matrix_interior_.ExtractInverseDiagonal(&vec_inv_diag->vector_interior_);
 

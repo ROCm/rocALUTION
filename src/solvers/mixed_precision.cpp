@@ -137,10 +137,10 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
   // CSR L
   ValueTypeL *val_l = NULL;
 
-  allocate_host(this->op_h_->get_local_nrow()+1, &row_offset);
-  allocate_host(this->op_h_->get_local_nnz(),    &col);
-  allocate_host(this->op_h_->get_local_nnz(),    &val_l);
-  allocate_host(this->op_h_->get_local_nnz(),    &val_h);
+  allocate_host(this->op_h_->GetLocalM()+1, &row_offset);
+  allocate_host(this->op_h_->GetLocalNnz(),    &col);
+  allocate_host(this->op_h_->GetLocalNnz(),    &val_l);
+  allocate_host(this->op_h_->GetLocalNnz(),    &val_h);
   
   this->op_h_->CopyToCSR(row_offset, col, val_h);
 
@@ -149,9 +149,9 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
   
   this->op_l_->SetDataPtrCSR(&row_offset, &col, &val_l,
                              "Low prec Matrix", 
-                             this->op_h_->get_local_nnz(),
-                             this->op_h_->get_local_nrow(),
-                             this->op_h_->get_local_ncol());
+                             this->op_h_->GetLocalNnz(),
+                             this->op_h_->GetLocalM(),
+                             this->op_h_->GetLocalN());
   
   // free only the h prec values
   free_host(&val_h);
@@ -306,7 +306,7 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
   LOG_VERBOSE_INFO(2, "MixedPrecisionDC: starting the internal solver [" << 8*sizeof(ValueTypeL) << "bit]");
 
   // set the initial solution to zero
-  this->d_l_.Allocate("d_l",this->r_l_.get_size());
+  this->d_l_.Allocate("d_l",this->r_l_.GetSize());
   this->d_l_.Zeros();
   // solver the inner problem (low)
   this->Solver_L_->Solve(this->r_l_,

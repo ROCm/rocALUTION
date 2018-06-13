@@ -339,7 +339,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const Ope
   int rGsize;
 
   // Allocate transfer mapping for current level
-  trans->Allocate("transfer map", op.get_local_nrow());
+  trans->Allocate("transfer map", op.GetLocalM());
 
   op.InitialPairwiseAggregation(this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
   op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
@@ -351,7 +351,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const Ope
 
   }
 
-  cast_res->CreateFromMap(*trans, op.get_local_nrow(), nc, cast_pro);
+  cast_res->CreateFromMap(*trans, op.GetLocalM(), nc, cast_pro);
 
   // Store data for possible coarse operator rebuild
   this->dim_level_.push_back(nc);

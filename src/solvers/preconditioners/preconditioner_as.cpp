@@ -92,7 +92,7 @@ void AS<OperatorType, VectorType, ValueType>::Build(void) {
   assert(this->overlap_ >= 0);
   assert(this->local_precond_ != NULL);
 
-  int size = this->op_->get_local_nrow() / this->num_blocks_;
+  int size = this->op_->GetLocalM() / this->num_blocks_;
   int offset = 0 ;
   
   for (int i=0; i<this->num_blocks_; ++i) {
@@ -125,7 +125,7 @@ void AS<OperatorType, VectorType, ValueType>::Build(void) {
   }
   
   this->weight_.SetDataPtr(&ptr_w, "Overlapping weights",
-                           this->op_->get_local_nrow());
+                           this->op_->GetLocalM());
   this->weight_.CloneBackend(*this->op_);
   
   
@@ -355,7 +355,7 @@ void RAS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vect
   }
 
 
-  int size = this->op_->get_local_nrow() / this->num_blocks_;
+  int size = this->op_->GetLocalM() / this->num_blocks_;
   int z_offset = 0;
   for (int i=0; i<this->num_blocks_; ++i) {
 

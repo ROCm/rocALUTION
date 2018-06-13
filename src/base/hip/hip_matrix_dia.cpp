@@ -731,10 +731,10 @@ void HIPAcceleratorMatrixDIA<ValueType>::Apply(const BaseVector<ValueType> &in, 
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -765,10 +765,10 @@ void HIPAcceleratorMatrixDIA<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);

@@ -171,7 +171,7 @@ void MultiColored<OperatorType, VectorType, ValueType>::Permute_(void) {
   LOG_DEBUG(this, "MultiColored::Permute_()",
             "");
 
-  assert(this->permutation_.get_size() > 0);
+  assert(this->permutation_.GetSize() > 0);
 
   this->preconditioner_->Permute(this->permutation_);
 

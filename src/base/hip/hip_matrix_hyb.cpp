@@ -205,47 +205,47 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyFromHost(const HostMatrix<ValueType
   if ((cast_mat = dynamic_cast<const HostMatrixHYB<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateHYB(cast_mat->get_ell_nnz(), cast_mat->get_coo_nnz(), cast_mat->get_ell_max_row(),
+    this->AllocateHYB(cast_mat->GetELLNnz(), cast_mat->GetCOONnz(), cast_mat->GetELLMaxRow(),
                       cast_mat->GetM(), cast_mat->GetN());
 
     assert(this->GetNnz()  == src.GetNnz());
     assert(this->GetM() == src.GetM());
     assert(this->GetN() == src.GetN());
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
 
       // ELL
       hipMemcpy(this->mat_.ELL.col,     // dst
                  cast_mat->mat_.ELL.col, // src
-                 this->get_ell_nnz()*sizeof(int), // size
+                 this->GetELLNnz()*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.ELL.val,     // dst
                  cast_mat->mat_.ELL.val, // src
-                 this->get_ell_nnz()*sizeof(ValueType), // size
+                 this->GetELLNnz()*sizeof(ValueType), // size
                  hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpy(this->mat_.COO.row,     // dst
                  cast_mat->mat_.COO.row, // src
-                 (this->get_coo_nnz())*sizeof(int), // size
+                 (this->GetCOONnz())*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.COO.col,     // dst
                  cast_mat->mat_.COO.col, // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.COO.val,     // dst
                  cast_mat->mat_.COO.val, // src
-                 this->get_coo_nnz()*sizeof(ValueType), // size
+                 this->GetCOONnz()*sizeof(ValueType), // size
                  hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -275,48 +275,48 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyToHost(HostMatrix<ValueType> *dst) 
     cast_mat->set_backend(this->local_backend_);   
 
   if (dst->GetNnz() == 0)
-    cast_mat->AllocateHYB(this->get_ell_nnz(), this->get_coo_nnz(), this->get_ell_max_row(),
+    cast_mat->AllocateHYB(this->GetELLNnz(), this->GetCOONnz(), this->GetELLMaxRow(),
                       this->GetM(), this->GetN());
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
     assert(this->GetN() == dst->GetN());
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
       
       // ELL
       hipMemcpy(cast_mat->mat_.ELL.col, // dst
                  this->mat_.ELL.col,     // src
-                 this->get_ell_nnz()*sizeof(int), // size
+                 this->GetELLNnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(cast_mat->mat_.ELL.val, // dst
                  this->mat_.ELL.val,     // src
-                 this->get_ell_nnz()*sizeof(ValueType), // size
+                 this->GetELLNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpy(cast_mat->mat_.COO.row, // dst
                  this->mat_.COO.row,     // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(cast_mat->mat_.COO.col, // dst
                  this->mat_.COO.col,     // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(cast_mat->mat_.COO.val, // dst
                  this->mat_.COO.val,     // src
-                 this->get_coo_nnz()*sizeof(ValueType), // size
+                 this->GetCOONnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -346,7 +346,7 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixHYB<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateHYB(hip_cast_mat->get_ell_nnz(), hip_cast_mat->get_coo_nnz(), hip_cast_mat->get_ell_max_row(),
+    this->AllocateHYB(hip_cast_mat->GetELLNnz(), hip_cast_mat->GetCOONnz(), hip_cast_mat->GetELLMaxRow(),
                       hip_cast_mat->GetM(), hip_cast_mat->GetN());
 
     assert(this->GetNnz()  == src.GetNnz());
@@ -354,40 +354,40 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
     assert(this->GetN() == src.GetN());
 
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
 
       // ELL
       hipMemcpy(this->mat_.ELL.col,     // dst
                  hip_cast_mat->mat_.ELL.col, // src
-                 this->get_ell_nnz()*sizeof(int), // size
+                 this->GetELLNnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.ELL.val,     // dst
                  hip_cast_mat->mat_.ELL.val, // src
-                 this->get_ell_nnz()*sizeof(ValueType), // size
+                 this->GetELLNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpy(this->mat_.COO.row,     // dst
                  hip_cast_mat->mat_.COO.row, // src
-                 (this->get_coo_nnz())*sizeof(int), // size
+                 (this->GetCOONnz())*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.COO.col,     // dst
                  hip_cast_mat->mat_.COO.col, // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.COO.val,     // dst
                  hip_cast_mat->mat_.COO.val, // src
-                 this->get_coo_nnz()*sizeof(ValueType), // size
+                 this->GetCOONnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
@@ -428,47 +428,47 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
     hip_cast_mat->set_backend(this->local_backend_);       
 
   if (this->GetNnz() == 0)
-    hip_cast_mat->AllocateHYB(this->get_ell_nnz(), this->get_coo_nnz(), this->get_ell_max_row(),
+    hip_cast_mat->AllocateHYB(this->GetELLNnz(), this->GetCOONnz(), this->GetELLMaxRow(),
                       this->GetM(), this->GetN());
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
     assert(this->GetN() == dst->GetN());
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
 
       // ELL
       hipMemcpy(hip_cast_mat->mat_.ELL.col, // dst
                  this->mat_.ELL.col,     // src
-                 this->get_ell_nnz()*sizeof(int), // size
+                 this->GetELLNnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.ELL.val, // dst
                  this->mat_.ELL.val,     // src
-                 this->get_ell_nnz()*sizeof(ValueType), // size
+                 this->GetELLNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpy(hip_cast_mat->mat_.COO.row, // dst
                  this->mat_.COO.row,     // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.COO.col, // dst
                  this->mat_.COO.col,     // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.COO.val, // dst
                  this->mat_.COO.val,     // src
-                 this->get_coo_nnz()*sizeof(ValueType), // size
+                 this->GetCOONnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
@@ -509,47 +509,47 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
   if ((cast_mat = dynamic_cast<const HostMatrixHYB<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateHYB(cast_mat->get_ell_nnz(), cast_mat->get_coo_nnz(), cast_mat->get_ell_max_row(),
+    this->AllocateHYB(cast_mat->GetELLNnz(), cast_mat->GetCOONnz(), cast_mat->GetELLMaxRow(),
                       cast_mat->GetM(), cast_mat->GetN());
 
     assert(this->GetNnz()  == src.GetNnz());
     assert(this->GetM() == src.GetM());
     assert(this->GetN() == src.GetN());
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
 
       // ELL
       hipMemcpyAsync(this->mat_.ELL.col,     // dst
                       cast_mat->mat_.ELL.col, // src
-                      this->get_ell_nnz()*sizeof(int), // size
+                      this->GetELLNnz()*sizeof(int), // size
                       hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(this->mat_.ELL.val,     // dst
                       cast_mat->mat_.ELL.val, // src
-                      this->get_ell_nnz()*sizeof(ValueType), // size
+                      this->GetELLNnz()*sizeof(ValueType), // size
                       hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpyAsync(this->mat_.COO.row,     // dst
                       cast_mat->mat_.COO.row, // src
-                      (this->get_coo_nnz())*sizeof(int), // size
+                      (this->GetCOONnz())*sizeof(int), // size
                       hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(this->mat_.COO.col,     // dst
                       cast_mat->mat_.COO.col, // src
-                      this->get_coo_nnz()*sizeof(int), // size
+                      this->GetCOONnz()*sizeof(int), // size
                       hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(this->mat_.COO.val,     // dst
                       cast_mat->mat_.COO.val, // src
-                      this->get_coo_nnz()*sizeof(ValueType), // size
+                      this->GetCOONnz()*sizeof(ValueType), // size
                       hipMemcpyHostToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
@@ -579,48 +579,48 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *
     cast_mat->set_backend(this->local_backend_);   
 
   if (dst->GetNnz() == 0)
-    cast_mat->AllocateHYB(this->get_ell_nnz(), this->get_coo_nnz(), this->get_ell_max_row(),
+    cast_mat->AllocateHYB(this->GetELLNnz(), this->GetCOONnz(), this->GetELLMaxRow(),
                       this->GetM(), this->GetN());
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
     assert(this->GetN() == dst->GetN());
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
       
       // ELL
       hipMemcpyAsync(cast_mat->mat_.ELL.col, // dst
                       this->mat_.ELL.col,     // src
-                      this->get_ell_nnz()*sizeof(int), // size
+                      this->GetELLNnz()*sizeof(int), // size
                       hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(cast_mat->mat_.ELL.val, // dst
                       this->mat_.ELL.val,     // src
-                      this->get_ell_nnz()*sizeof(ValueType), // size
+                      this->GetELLNnz()*sizeof(ValueType), // size
                       hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpyAsync(cast_mat->mat_.COO.row, // dst
                       this->mat_.COO.row,     // src
-                      this->get_coo_nnz()*sizeof(int), // size
+                      this->GetCOONnz()*sizeof(int), // size
                       hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(cast_mat->mat_.COO.col, // dst
                       this->mat_.COO.col,     // src
-                      this->get_coo_nnz()*sizeof(int), // size
+                      this->GetCOONnz()*sizeof(int), // size
                       hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpyAsync(cast_mat->mat_.COO.val, // dst
                       this->mat_.COO.val,     // src
-                      this->get_coo_nnz()*sizeof(ValueType), // size
+                      this->GetCOONnz()*sizeof(ValueType), // size
                       hipMemcpyDeviceToHost);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
@@ -650,7 +650,7 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
   if ((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixHYB<ValueType>*> (&src)) != NULL) {
     
   if (this->GetNnz() == 0)
-    this->AllocateHYB(hip_cast_mat->get_ell_nnz(), hip_cast_mat->get_coo_nnz(), hip_cast_mat->get_ell_max_row(),
+    this->AllocateHYB(hip_cast_mat->GetELLNnz(), hip_cast_mat->GetCOONnz(), hip_cast_mat->GetELLMaxRow(),
                       hip_cast_mat->GetM(), hip_cast_mat->GetN());
 
     assert(this->GetNnz()  == src.GetNnz());
@@ -658,40 +658,40 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
     assert(this->GetN() == src.GetN());
 
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
 
       // ELL
       hipMemcpy(this->mat_.ELL.col,     // dst
                  hip_cast_mat->mat_.ELL.col, // src
-                 this->get_ell_nnz()*sizeof(int), // size
+                 this->GetELLNnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.ELL.val,     // dst
                  hip_cast_mat->mat_.ELL.val, // src
-                 this->get_ell_nnz()*sizeof(ValueType), // size
+                 this->GetELLNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpy(this->mat_.COO.row,     // dst
                  hip_cast_mat->mat_.COO.row, // src
-                 (this->get_coo_nnz())*sizeof(int), // size
+                 (this->GetCOONnz())*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.COO.col,     // dst
                  hip_cast_mat->mat_.COO.col, // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(this->mat_.COO.val,     // dst
                  hip_cast_mat->mat_.COO.val, // src
-                 this->get_coo_nnz()*sizeof(ValueType), // size
+                 this->GetCOONnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
@@ -732,47 +732,47 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
     hip_cast_mat->set_backend(this->local_backend_);       
 
   if (this->GetNnz() == 0)
-    hip_cast_mat->AllocateHYB(this->get_ell_nnz(), this->get_coo_nnz(), this->get_ell_max_row(),
+    hip_cast_mat->AllocateHYB(this->GetELLNnz(), this->GetCOONnz(), this->GetELLMaxRow(),
                       this->GetM(), this->GetN());
 
     assert(this->GetNnz()  == dst->GetNnz());
     assert(this->GetM() == dst->GetM());
     assert(this->GetN() == dst->GetN());
 
-    if (this->get_ell_nnz() > 0) {
+    if (this->GetELLNnz() > 0) {
 
       // ELL
       hipMemcpy(hip_cast_mat->mat_.ELL.col, // dst
                  this->mat_.ELL.col,     // src
-                 this->get_ell_nnz()*sizeof(int), // size
+                 this->GetELLNnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.ELL.val, // dst
                  this->mat_.ELL.val,     // src
-                 this->get_ell_nnz()*sizeof(ValueType), // size
+                 this->GetELLNnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
 
-    if (this->get_coo_nnz() > 0) {
+    if (this->GetCOONnz() > 0) {
 
       // COO
       hipMemcpy(hip_cast_mat->mat_.COO.row, // dst
                  this->mat_.COO.row,     // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.COO.col, // dst
                  this->mat_.COO.col,     // src
-                 this->get_coo_nnz()*sizeof(int), // size
+                 this->GetCOONnz()*sizeof(int), // size
                  hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.COO.val, // dst
                  this->mat_.COO.val,     // src
-                 this->get_coo_nnz()*sizeof(ValueType), // size
+                 this->GetCOONnz()*sizeof(ValueType), // size
                  hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
@@ -936,10 +936,10 @@ void HIPAcceleratorMatrixHYB<ValueType>::Apply(const BaseVector<ValueType> &in, 
 
   if (this->GetNnz() > 0) {
     
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
         
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in) ; 
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out) ; 
@@ -959,7 +959,7 @@ void HIPAcceleratorMatrixHYB<ValueType>::Apply(const BaseVector<ValueType> &in, 
                                  HIPSPARSE_OPERATION_NON_TRANSPOSE,
                                  this->GetM(), this->GetN(), &alpha,
                                  this->ell_mat_descr_,
-                                 this->mat_.ELL.val, this->mat_.ELL.col, this->get_ell_max_row(),
+                                 this->mat_.ELL.val, this->mat_.ELL.col, this->GetELLMaxRow(),
                                  cast_in->vec_, &beta,
                                  cast_out->vec_);
         CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
@@ -994,10 +994,10 @@ void HIPAcceleratorMatrixHYB<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in) ; 
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out) ; 
@@ -1015,7 +1015,7 @@ void HIPAcceleratorMatrixHYB<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
                                  HIPSPARSE_OPERATION_NON_TRANSPOSE,
                                  this->GetM(), this->GetN(), &scalar,
                                  this->ell_mat_descr_,
-                                 this->mat_.ELL.val, this->mat_.ELL.col, this->get_ell_max_row(),
+                                 this->mat_.ELL.val, this->mat_.ELL.col, this->GetELLMaxRow(),
                                  cast_in->vec_, &beta,
                                  cast_out->vec_);
         CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);

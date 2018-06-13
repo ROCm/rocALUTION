@@ -25,11 +25,11 @@ public:
   virtual ~Vector();
 
   /// Return the size of the vector
-  virtual IndexType2 get_size(void) const = 0;
+  virtual IndexType2 GetSize(void) const = 0;
   /// Return the size of the local vector
-  virtual int get_local_size(void) const;
+  virtual int GetLocalSize(void) const;
   /// Return the size of the ghost vector
-  virtual int get_ghost_size(void) const;
+  virtual int GetGhostSize(void) const;
 
   /// Return true if the vector is ok (empty vector is also ok)
   /// and false if some of values are NaN

@@ -148,7 +148,7 @@ void Solver<OperatorType, VectorType, ValueType>::MoveToHost(void) {
   LOG_DEBUG(this, "Solver::MoveToHost()",
             "");
 
-  if ( this->permutation_.get_size() > 0)
+  if ( this->permutation_.GetSize() > 0)
     this->permutation_.MoveToHost();
 
   if (this->precond_ != NULL)
@@ -165,7 +165,7 @@ void Solver<OperatorType, VectorType, ValueType>::MoveToAccelerator(void) {
   LOG_DEBUG(this, "Solver::MoveToAccelerator()",
             "");
 
-  if ( this->permutation_.get_size() > 0)
+  if ( this->permutation_.GetSize() > 0)
     this->permutation_.MoveToAccelerator();
 
   if (this->precond_ != NULL)

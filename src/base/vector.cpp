@@ -27,14 +27,14 @@ Vector<ValueType>::~Vector() {
 }
 
 template <typename ValueType>
-int Vector<ValueType>::get_local_size(void) const {
+int Vector<ValueType>::GetLocalSize(void) const {
 
-  return IndexTypeToInt(this->get_size());
+  return IndexTypeToInt(this->GetSize());
 
 }
 
 template <typename ValueType>
-int Vector<ValueType>::get_ghost_size(void) const {
+int Vector<ValueType>::GetGhostSize(void) const {
 
   return 0;
 

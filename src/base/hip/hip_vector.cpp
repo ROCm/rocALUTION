@@ -66,7 +66,7 @@ void HIPAcceleratorVector<ValueType>::Allocate(const int n) {
 
   assert(n >= 0);
 
-  if (this->get_size() >0)
+  if (this->GetSize() >0)
     this->Clear();
 
   if (n > 0) {
@@ -102,7 +102,7 @@ void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType **ptr, const int size
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::LeaveDataPtr(ValueType **ptr) {
 
-  assert(this->get_size() > 0);
+  assert(this->GetSize() > 0);
 
   hipDeviceSynchronize();
   *ptr = this->vec_;
@@ -119,7 +119,7 @@ void HIPAcceleratorVector<ValueType>::LeaveDataPtr(ValueType **ptr) {
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::Clear(void) {
   
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     free_hip(&this->vec_);
     free_hip(&this->device_buffer_);
@@ -146,10 +146,10 @@ void HIPAcceleratorVector<ValueType>::CopyFromHost(const HostVector<ValueType> &
   const HostVector<ValueType> *cast_vec;
   if ((cast_vec = dynamic_cast<const HostVector<ValueType>*> (&src)) != NULL) {
 
-    if (this->get_size() == 0) {
+    if (this->GetSize() == 0) {
 
       // Allocate local structure
-      this->Allocate(cast_vec->get_size());
+      this->Allocate(cast_vec->GetSize());
 
       // Check for boundary
       assert(this->index_size_ == 0);
@@ -163,10 +163,10 @@ void HIPAcceleratorVector<ValueType>::CopyFromHost(const HostVector<ValueType> &
 
     }
 
-    assert(cast_vec->get_size() == this->get_size());
+    assert(cast_vec->GetSize() == this->GetSize());
     assert(cast_vec->index_size_ == this->index_size_);
 
-    if (this->get_size() > 0) {      
+    if (this->GetSize() > 0) {      
 
       hipMemcpy(this->vec_,
                 cast_vec->vec_,
@@ -200,10 +200,10 @@ void HIPAcceleratorVector<ValueType>::CopyToHost(HostVector<ValueType> *dst) con
   HostVector<ValueType> *cast_vec;
   if ((cast_vec = dynamic_cast<HostVector<ValueType>*> (dst)) != NULL) {
 
-    if (cast_vec->get_size() == 0) {
+    if (cast_vec->GetSize() == 0) {
 
       // Allocate local vector
-      cast_vec->Allocate(this->get_size());
+      cast_vec->Allocate(this->GetSize());
 
       // Check for boundary
       assert(cast_vec->index_size_ == 0);
@@ -216,10 +216,10 @@ void HIPAcceleratorVector<ValueType>::CopyToHost(HostVector<ValueType> *dst) con
 
     }
       
-    assert(cast_vec->get_size() == this->get_size());
+    assert(cast_vec->GetSize() == this->GetSize());
     assert(cast_vec->index_size_ == this->index_size_);
 
-    if (this->get_size() > 0) {
+    if (this->GetSize() > 0) {
 
       hipMemcpy(cast_vec->vec_,
                 this->vec_,
@@ -254,10 +254,10 @@ void HIPAcceleratorVector<ValueType>::CopyFromHostAsync(const HostVector<ValueTy
   const HostVector<ValueType> *cast_vec;
   if ((cast_vec = dynamic_cast<const HostVector<ValueType>*> (&src)) != NULL) {
 
-    if (this->get_size() == 0) {
+    if (this->GetSize() == 0) {
 
       // Allocate local vector
-      this->Allocate(cast_vec->get_size());
+      this->Allocate(cast_vec->GetSize());
 
       // Check for boundary
       assert(this->index_size_ == 0);
@@ -271,14 +271,14 @@ void HIPAcceleratorVector<ValueType>::CopyFromHostAsync(const HostVector<ValueTy
 
     }
 
-    assert(cast_vec->get_size() == this->get_size());
+    assert(cast_vec->GetSize() == this->GetSize());
     assert(cast_vec->index_size_ == this->index_size_);
 
-    if (this->get_size() > 0) {
+    if (this->GetSize() > 0) {
 
       hipMemcpyAsync(this->vec_,     // dst
                       cast_vec->vec_, // src
-                      this->get_size()*sizeof(ValueType), // size
+                      this->GetSize()*sizeof(ValueType), // size
                       hipMemcpyHostToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -308,10 +308,10 @@ void HIPAcceleratorVector<ValueType>::CopyToHostAsync(HostVector<ValueType> *dst
   HostVector<ValueType> *cast_vec;
   if ((cast_vec = dynamic_cast<HostVector<ValueType>*> (dst)) != NULL) {
 
-    if (cast_vec->get_size() == 0) {
+    if (cast_vec->GetSize() == 0) {
 
       // Allocate local vector
-      cast_vec->Allocate(this->get_size());
+      cast_vec->Allocate(this->GetSize());
 
       // Check for boundary
       assert(cast_vec->index_size_ == 0);
@@ -324,14 +324,14 @@ void HIPAcceleratorVector<ValueType>::CopyToHostAsync(HostVector<ValueType> *dst
 
     }
 
-    assert(cast_vec->get_size() == this->get_size());
+    assert(cast_vec->GetSize() == this->GetSize());
     assert(cast_vec->index_size_ == this->index_size_);
 
-    if (this->get_size() > 0) {
+    if (this->GetSize() > 0) {
 
       hipMemcpyAsync(cast_vec->vec_,  // dst
                       this->vec_,      // src
-                      this->get_size()*sizeof(ValueType), // size
+                      this->GetSize()*sizeof(ValueType), // size
                       hipMemcpyDeviceToHost);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -363,10 +363,10 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src)
   // HIP to HIP copy
   if ((hip_cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src)) != NULL) {
 
-    if (this->get_size() == 0) {
+    if (this->GetSize() == 0) {
 
       // Allocate local vector
-      this->Allocate(hip_cast_vec->get_size());
+      this->Allocate(hip_cast_vec->GetSize());
 
       // Check for boundary
       assert(this->index_size_ == 0);
@@ -380,16 +380,16 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src)
 
     }
 
-    assert(hip_cast_vec->get_size() == this->get_size());
+    assert(hip_cast_vec->GetSize() == this->GetSize());
     assert(hip_cast_vec->index_size_ == this->index_size_);
 
     if (this != hip_cast_vec)  {  
 
-      if (this->get_size() > 0) {
+      if (this->GetSize() > 0) {
 
         hipMemcpy(this->vec_,         // dst
                    hip_cast_vec->vec_, // src
-                   this->get_size()*sizeof(ValueType), // size
+                   this->GetSize()*sizeof(ValueType), // size
                    hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -434,10 +434,10 @@ void HIPAcceleratorVector<ValueType>::CopyFromAsync(const BaseVector<ValueType> 
   // HIP to HIP copy
   if ((hip_cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src)) != NULL) {
 
-    if (this->get_size() == 0) {
+    if (this->GetSize() == 0) {
 
       // Allocate local vector
-      this->Allocate(hip_cast_vec->get_size());
+      this->Allocate(hip_cast_vec->GetSize());
 
       // Check for boundary
       assert(this->index_size_ == 0);
@@ -451,16 +451,16 @@ void HIPAcceleratorVector<ValueType>::CopyFromAsync(const BaseVector<ValueType> 
 
     }
 
-    assert(hip_cast_vec->get_size() == this->get_size());
+    assert(hip_cast_vec->GetSize() == this->GetSize());
     assert(hip_cast_vec->index_size_ == this->index_size_);
 
     if (this != hip_cast_vec) {
 
-      if (this->get_size() > 0) {
+      if (this->GetSize() > 0) {
 
         hipMemcpy(this->vec_,         // dst
                    hip_cast_vec->vec_, // src
-                   this->get_size()*sizeof(ValueType), // size
+                   this->GetSize()*sizeof(ValueType), // size
                    hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -500,12 +500,12 @@ void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType> &src,
                                                const int dst_offset,
                                                const int size) {
 
-  assert(this->get_size() > 0);
-  assert(src.  get_size() > 0);
+  assert(this->GetSize() > 0);
+  assert(src.  GetSize() > 0);
   assert(size > 0);
 
-  assert(src_offset + size <= src.get_size());
-  assert(dst_offset + size <= this->get_size());
+  assert(src_offset + size <= src.GetSize());
+  assert(dst_offset + size <= this->GetSize());
 
   const HIPAcceleratorVector<ValueType> *cast_src = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
   assert(cast_src != NULL);
@@ -530,10 +530,10 @@ void HIPAcceleratorVector<ValueType>::CopyTo(BaseVector<ValueType> *dst) const{
     // HIP to HIP copy
     if ((hip_cast_vec = dynamic_cast<HIPAcceleratorVector<ValueType>*> (dst)) != NULL) {
 
-      if (hip_cast_vec->get_size() == 0) {
+      if (hip_cast_vec->GetSize() == 0) {
 
         // Allocate local vector
-        hip_cast_vec->Allocate(this->get_size());
+        hip_cast_vec->Allocate(this->GetSize());
 
         // Check for boundary
         assert(hip_cast_vec->index_size_ == 0);
@@ -547,16 +547,16 @@ void HIPAcceleratorVector<ValueType>::CopyTo(BaseVector<ValueType> *dst) const{
 
       }
 
-      assert(hip_cast_vec->get_size() == this->get_size());
+      assert(hip_cast_vec->GetSize() == this->GetSize());
       assert(hip_cast_vec->index_size_ == this->index_size_);
 
       if (this != hip_cast_vec)  {
 
-        if (this->get_size() >0) {
+        if (this->GetSize() >0) {
 
           hipMemcpy(hip_cast_vec->vec_, // dst
                      this->vec_,         // src
-                     this->get_size()*sizeof(ValueType), // size
+                     this->GetSize()*sizeof(ValueType), // size
                      hipMemcpyDeviceToDevice);
           CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -600,10 +600,10 @@ void HIPAcceleratorVector<ValueType>::CopyToAsync(BaseVector<ValueType> *dst) co
   // HIP to HIP copy
   if ((hip_cast_vec = dynamic_cast<HIPAcceleratorVector<ValueType>*> (dst)) != NULL) {
 
-    if (hip_cast_vec->get_size() == 0) {
+    if (hip_cast_vec->GetSize() == 0) {
 
       // Allocate local vector
-      hip_cast_vec->Allocate(this->get_size());
+      hip_cast_vec->Allocate(this->GetSize());
 
       // Check for boundary
       assert(hip_cast_vec->index_size_ == 0);
@@ -617,16 +617,16 @@ void HIPAcceleratorVector<ValueType>::CopyToAsync(BaseVector<ValueType> *dst) co
 
     }
 
-    assert(hip_cast_vec->get_size() == this->get_size());
+    assert(hip_cast_vec->GetSize() == this->GetSize());
     assert(hip_cast_vec->index_size_ == this->index_size_);
 
     if (this != hip_cast_vec) {
 
-      if (this->get_size() > 0) {
+      if (this->GetSize() > 0) {
 
         hipMemcpy(hip_cast_vec->vec_, // dst
                    this->vec_,         // src
-                   this->get_size()*sizeof(ValueType), // size
+                   this->GetSize()*sizeof(ValueType), // size
                    hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -676,19 +676,19 @@ void HIPAcceleratorVector<double>::CopyFromFloat(const BaseVector<float> &src) {
   // HIP to HIP copy
   if ((hip_cast_vec = dynamic_cast<const HIPAcceleratorVector<float>*> (&src)) != NULL) {
 
-    if (this->get_size() == 0)
-      this->Allocate(hip_cast_vec->get_size());
+    if (this->GetSize() == 0)
+      this->Allocate(hip_cast_vec->GetSize());
 
-    assert(hip_cast_vec->get_size() == this->get_size());
+    assert(hip_cast_vec->GetSize() == this->GetSize());
 
-    if (this->get_size() > 0) {
+    if (this->GetSize() > 0) {
 
       dim3 BlockSize(this->local_backend_.HIP_block_size);
-      dim3 GridSize(this->get_size() / this->local_backend_.HIP_block_size + 1);
+      dim3 GridSize(this->GetSize() / this->local_backend_.HIP_block_size + 1);
 
       hipLaunchKernelGGL((kernel_copy_from_float<double, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_size(), hip_cast_vec->vec_, this->vec_);
+                         this->GetSize(), hip_cast_vec->vec_, this->vec_);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     }
@@ -718,19 +718,19 @@ void HIPAcceleratorVector<float>::CopyFromDouble(const BaseVector<double> &src) 
   // HIP to HIP copy
   if ((hip_cast_vec = dynamic_cast<const HIPAcceleratorVector<double>*> (&src)) != NULL) {
 
-    if (this->get_size() == 0)
-      this->Allocate(hip_cast_vec->get_size());
+    if (this->GetSize() == 0)
+      this->Allocate(hip_cast_vec->GetSize());
 
-    assert(hip_cast_vec->get_size() == this->get_size());
+    assert(hip_cast_vec->GetSize() == this->GetSize());
 
-    if (this->get_size()  >0) {
+    if (this->GetSize()  >0) {
 
       dim3 BlockSize(this->local_backend_.HIP_block_size);
-      dim3 GridSize(this->get_size() / this->local_backend_.HIP_block_size + 1);
+      dim3 GridSize(this->GetSize() / this->local_backend_.HIP_block_size + 1);
 
       hipLaunchKernelGGL((kernel_copy_from_double<float, int>),
                          GridSize, BlockSize, 0, 0,
-                         this->get_size(), hip_cast_vec->vec_, this->vec_);
+                         this->GetSize(), hip_cast_vec->vec_, this->vec_);
       CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
@@ -745,11 +745,11 @@ void HIPAcceleratorVector<float>::CopyFromDouble(const BaseVector<double> &src) 
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::CopyFromData(const ValueType *data) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     hipMemcpy(this->vec_,                         // dst
                data,                               // src
-               this->get_size()*sizeof(ValueType), // size
+               this->GetSize()*sizeof(ValueType), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -760,11 +760,11 @@ void HIPAcceleratorVector<ValueType>::CopyFromData(const ValueType *data) {
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::CopyToData(ValueType *data) const {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     hipMemcpy(data,                               // dst
                this->vec_,                         // src
-               this->get_size()*sizeof(ValueType), // size
+               this->GetSize()*sizeof(ValueType), // size
                hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -775,10 +775,10 @@ void HIPAcceleratorVector<ValueType>::CopyToData(ValueType *data) const {
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::Zeros(void) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    this->get_size(), this->vec_);
+                    this->GetSize(), this->vec_);
 
   }
 
@@ -787,9 +787,9 @@ void HIPAcceleratorVector<ValueType>::Zeros(void) {
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::Ones(void) {
 
-  if (this->get_size() > 0)
+  if (this->GetSize() > 0)
     set_to_one_hip(this->local_backend_.HIP_block_size, 
-                   this->get_size(), this->vec_);
+                   this->GetSize(), this->vec_);
 
 }
 
@@ -804,16 +804,16 @@ void HIPAcceleratorVector<ValueType>::SetValues(const ValueType val) {
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::AddScale(const BaseVector<ValueType> &x, const ValueType alpha) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == x.get_size());
+    assert(this->GetSize() == x.GetSize());
     
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     assert(cast_x != NULL);
 
     hipblasStatus_t stat_t;
     stat_t = hipblasTaxpy(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle), 
-                          this->get_size(), &alpha, cast_x->vec_, 1, this->vec_, 1);
+                          this->GetSize(), &alpha, cast_x->vec_, 1, this->vec_, 1);
     CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
@@ -831,14 +831,14 @@ void HIPAcceleratorVector<int>::AddScale(const BaseVector<int> &x, const int alp
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::ScaleAdd(const ValueType alpha, const BaseVector<ValueType> &x) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == x.get_size());
+    assert(this->GetSize() == x.GetSize());
 
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     assert(cast_x != NULL);
 
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
@@ -854,14 +854,14 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd(const ValueType alpha, const Base
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const BaseVector<ValueType> &x, const ValueType beta) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == x.get_size());
+    assert(this->GetSize() == x.GetSize());
 
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     assert(cast_x != NULL);
 
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
@@ -879,13 +879,13 @@ template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha, const BaseVector<ValueType> &x, const ValueType beta,
                                                     const int src_offset, const int dst_offset,const int size) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() > 0);
-    assert(x.get_size() > 0);
+    assert(this->GetSize() > 0);
+    assert(x.GetSize() > 0);
     assert(size > 0);
-    assert(src_offset + size <= x.get_size());
-    assert(dst_offset + size <= this->get_size());
+    assert(src_offset + size <= x.GetSize());
+    assert(dst_offset + size <= this->GetSize());
 
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     assert(cast_x != NULL);
@@ -909,17 +909,17 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd2(const ValueType alpha, const Bas
                                                 const ValueType beta, const BaseVector<ValueType> &y,
                                                 const ValueType gamma) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == x.get_size());
-    assert(this->get_size() == y.get_size());
+    assert(this->GetSize() == x.GetSize());
+    assert(this->GetSize() == y.GetSize());
 
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     const HIPAcceleratorVector<ValueType> *cast_y = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&y);
     assert(cast_x != NULL);
     assert(cast_y != NULL);
 
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
@@ -936,11 +936,11 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd2(const ValueType alpha, const Bas
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::Scale(const ValueType alpha) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     hipblasStatus_t stat_t;
     stat_t = hipblasTscal(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                          this->get_size(), &alpha,
+                          this->GetSize(), &alpha,
                           this->vec_, 1);
     CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
@@ -967,18 +967,18 @@ void HIPAcceleratorVector<ValueType>::ExclusiveScan(const BaseVector<ValueType> 
 template <typename ValueType>
 ValueType HIPAcceleratorVector<ValueType>::Dot(const BaseVector<ValueType> &x) const {
 
-  assert(this->get_size() == x.get_size());
+  assert(this->GetSize() == x.GetSize());
 
   const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
   assert(cast_x != NULL);
 
   ValueType res = static_cast<ValueType>(0);
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     hipblasStatus_t stat_t;
     stat_t = hipblasTdot(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                         this->get_size(), this->vec_, 1, cast_x->vec_, 1, &res);
+                         this->GetSize(), this->vec_, 1, cast_x->vec_, 1, &res);
     CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
@@ -998,18 +998,18 @@ int HIPAcceleratorVector<int>::Dot(const BaseVector<int> &x) const {
 template <typename ValueType>
 ValueType HIPAcceleratorVector<ValueType>::DotNonConj(const BaseVector<ValueType> &x) const {
 
-  assert(this->get_size() == x.get_size());
+  assert(this->GetSize() == x.GetSize());
 
   const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
   assert(cast_x != NULL);
 
   ValueType res = static_cast<ValueType>(0);
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
       hipblasStatus_t stat_t;
       stat_t = hipblasTdotc(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                            this->get_size(), this->vec_, 1, cast_x->vec_, 1, &res);
+                            this->GetSize(), this->vec_, 1, cast_x->vec_, 1, &res);
       CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
@@ -1031,11 +1031,11 @@ ValueType HIPAcceleratorVector<ValueType>::Norm(void) const {
 
   ValueType res = static_cast<ValueType>(0);
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     hipblasStatus_t stat_t;
     stat_t = hipblasTnrm2(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                          this->get_size(), this->vec_, 1, &res);
+                          this->GetSize(), this->vec_, 1, &res);
     CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
@@ -1057,12 +1057,12 @@ ValueType HIPAcceleratorVector<ValueType>::Reduce(void) const {
 
   ValueType res = (ValueType) 0;
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     if (this->local_backend_.HIP_warp == 32) {
-        reduce_hip<int, ValueType, 32, 256>(this->get_size(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
+        reduce_hip<int, ValueType, 32, 256>(this->GetSize(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
     } else if (this->local_backend_.HIP_warp == 64) {
-        reduce_hip<int, ValueType, 64, 256>(this->get_size(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
+        reduce_hip<int, ValueType, 64, 256>(this->GetSize(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
     } else {
         LOG_INFO("Unsupported warp size");
         FATAL_ERROR(__FILE__, __LINE__);
@@ -1088,11 +1088,11 @@ ValueType HIPAcceleratorVector<ValueType>::Asum(void) const {
 
   ValueType res = static_cast<ValueType>(0);
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     hipblasStatus_t stat_t;
     stat_t = hipblasTasum(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                          this->get_size(), this->vec_, 1, &res);
+                          this->GetSize(), this->vec_, 1, &res);
     CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
   }
@@ -1115,11 +1115,11 @@ int HIPAcceleratorVector<ValueType>::Amax(ValueType &value) const {
   int index = 0;
   value = static_cast<ValueType>(0.0);
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     hipblasStatus_t stat_t;
     stat_t = hipblasTamax(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                          this->get_size(),
+                          this->GetSize(),
                           this->vec_, 1, &index);
     CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
 
@@ -1144,14 +1144,14 @@ int HIPAcceleratorVector<int>::Amax(int &value) const {
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> &x) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == x.get_size());
+    assert(this->GetSize() == x.GetSize());
 
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     assert(cast_x != NULL);
 
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
@@ -1167,17 +1167,17 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> &x, const BaseVector<ValueType> &y) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == x.get_size());
-    assert(this->get_size() == y.get_size());
+    assert(this->GetSize() == x.GetSize());
+    assert(this->GetSize() == y.GetSize());
 
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     const HIPAcceleratorVector<ValueType> *cast_y = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&y);
     assert(cast_x != NULL);
     assert(cast_y != NULL);
 
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
@@ -1194,18 +1194,18 @@ void HIPAcceleratorVector<ValueType>::PointWiseMult(const BaseVector<ValueType> 
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::Permute(const BaseVector<int> &permutation) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == permutation.get_size());
+    assert(this->GetSize() == permutation.GetSize());
     
     const HIPAcceleratorVector<int> *cast_perm = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation);
     assert(cast_perm != NULL);
     
     HIPAcceleratorVector<ValueType> vec_tmp(this->local_backend_);     
-    vec_tmp.Allocate(this->get_size());
+    vec_tmp.Allocate(this->GetSize());
     vec_tmp.CopyFrom(*this);
     
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
@@ -1222,18 +1222,18 @@ void HIPAcceleratorVector<ValueType>::Permute(const BaseVector<int> &permutation
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::PermuteBackward(const BaseVector<int> &permutation) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    assert(this->get_size() == permutation.get_size());
+    assert(this->GetSize() == permutation.GetSize());
     
     const HIPAcceleratorVector<int> *cast_perm = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation);
     assert(cast_perm != NULL);
     
     HIPAcceleratorVector<ValueType> vec_tmp(this->local_backend_);   
-    vec_tmp.Allocate(this->get_size());
+    vec_tmp.Allocate(this->GetSize());
     vec_tmp.CopyFrom(*this);
     
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
@@ -1251,17 +1251,17 @@ template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::CopyFromPermute(const BaseVector<ValueType> &src,
                                                       const BaseVector<int> &permutation) { 
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
     assert(cast_perm != NULL);
     assert(cast_vec  != NULL);
     
-    assert(cast_vec ->get_size() == this->get_size());
-    assert(cast_perm->get_size() == this->get_size());
+    assert(cast_vec ->GetSize() == this->GetSize());
+    assert(cast_perm->GetSize() == this->GetSize());
     
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
@@ -1279,18 +1279,18 @@ template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::CopyFromPermuteBackward(const BaseVector<ValueType> &src,
                                                               const BaseVector<int> &permutation) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     const HIPAcceleratorVector<ValueType> *cast_vec = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&src);
     const HIPAcceleratorVector<int> *cast_perm      = dynamic_cast<const HIPAcceleratorVector<int>*> (&permutation) ; 
     assert(cast_perm != NULL);
     assert(cast_vec  != NULL);
     
-    assert(cast_vec ->get_size() == this->get_size());
-    assert(cast_perm->get_size() == this->get_size());
+    assert(cast_vec ->GetSize() == this->GetSize());
+    assert(cast_perm->GetSize() == this->GetSize());
     
     
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
     
@@ -1308,7 +1308,7 @@ template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::SetIndexArray(const int size, const int *index) {
 
   assert(size > 0);
-  assert(this->get_size() >= size);
+  assert(this->GetSize() >= size);
 
   this->index_size_ = size;
 
@@ -1371,7 +1371,7 @@ void HIPAcceleratorVector<ValueType>::GetContinuousValues(const int start, const
 
   assert(start >= 0);
   assert(end >= start);
-  assert(end <= this->get_size());
+  assert(end <= this->GetSize());
   assert(values != NULL);
 
   hipMemcpy(values,                        // dst
@@ -1387,7 +1387,7 @@ void HIPAcceleratorVector<ValueType>::SetContinuousValues(const int start, const
 
   assert(start >= 0);
   assert(end >= start);
-  assert(end <= this->get_size());
+  assert(end <= this->GetSize());
   assert(values != NULL);
 
   hipMemcpy(this->vec_+start,              // dst
@@ -1419,9 +1419,9 @@ void HIPAcceleratorVector<ValueType>::ExtractCoarseBoundary(const int start, con
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::Power(const double power) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
-    int size = this->get_size();
+    int size = this->GetSize();
     dim3 BlockSize(this->local_backend_.HIP_block_size);
     dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
@@ -1437,7 +1437,7 @@ void HIPAcceleratorVector<ValueType>::Power(const double power) {
 template <>
 void HIPAcceleratorVector<int>::Power(const double power) {
 
-  if (this->get_size() > 0) {
+  if (this->GetSize() > 0) {
 
     LOG_INFO("HIPAcceleratorVector::Power(), no pow() for int in HIP");
     FATAL_ERROR(__FILE__, __LINE__);

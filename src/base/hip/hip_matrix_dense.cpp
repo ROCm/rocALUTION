@@ -542,10 +542,10 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType> &in
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -592,10 +592,10 @@ void HIPAcceleratorMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType> 
 
   if (this->GetNnz() > 0) {
 
-    assert(in.  get_size() >= 0);
-    assert(out->get_size() >= 0);
-    assert(in.  get_size() == this->GetN());
-    assert(out->get_size() == this->GetM());
+    assert(in.  GetSize() >= 0);
+    assert(out->GetSize() >= 0);
+    assert(in.  GetSize() == this->GetN());
+    assert(out->GetSize() == this->GetM());
 
     const HIPAcceleratorVector<ValueType> *cast_in = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&in);
     HIPAcceleratorVector<ValueType> *cast_out      = dynamic_cast<      HIPAcceleratorVector<ValueType>*> (out);
@@ -681,7 +681,7 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::MatMatMult(const BaseMatrix<ValueType
 template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->GetM());
+  assert(vec.GetSize() == this->GetM());
 
   if (this->GetNnz() > 0) {
 
@@ -708,7 +708,7 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx, co
 template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceRowVector(const int idx, const BaseVector<ValueType> &vec) {
 
-  assert(vec.get_size() == this->GetN());
+  assert(vec.GetSize() == this->GetN());
 
   if (this->GetNnz() > 0) {
 
@@ -736,7 +736,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractColumnVector(const int idx, BaseVector<ValueType> *vec) const {
 
     assert(vec != NULL);
-    assert(vec->get_size() == this->GetM());
+    assert(vec->GetSize() == this->GetM());
 
   if (this->GetNnz() > 0) {
 
@@ -764,7 +764,7 @@ template <typename ValueType>
 bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractRowVector(const int idx, BaseVector<ValueType> *vec) const {
 
     assert(vec != NULL);
-    assert(vec->get_size() == this->GetN());
+    assert(vec->GetSize() == this->GetN());
 
   if (this->GetNnz() > 0) {
 
