@@ -5226,7 +5226,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, in
   LOG_DEBUG(this, "LocalMatrix::FurtherPairwiseAggregation()",
             "");
 
-  assert(*rG == NULL);
+  assert(*rG != NULL);
   assert(beta > ValueType(0.0));
   assert(G != NULL);
 
@@ -5291,7 +5291,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
             "");
 
   assert(&mat != NULL);
-  assert(*rG == NULL);
+  assert(*rG != NULL);
   assert(&mat != this);
   assert(beta > ValueType(0.0));
   assert(G != NULL);
