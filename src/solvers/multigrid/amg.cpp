@@ -166,7 +166,7 @@ void AMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
   this->op_level_[0]->Clear();
   this->op_level_[0]->ConvertToCSR();
 
-  if (this->op_->get_format() != CSR) {
+  if (this->op_->GetFormat() != CSR) {
     OperatorType op_csr;
     op_csr.CloneFrom(*this->op_);
     op_csr.ConvertToCSR();

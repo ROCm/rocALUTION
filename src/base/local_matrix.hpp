@@ -31,7 +31,7 @@ public:
   virtual void info(void) const;
 
   /// Return the matrix format id (see matrix_formats.hpp)
-  unsigned int get_format(void) const;
+  unsigned int GetFormat(void) const;
 
   virtual IndexType2 get_nrow(void) const;
   virtual IndexType2 get_ncol(void) const;

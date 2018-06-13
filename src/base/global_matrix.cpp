@@ -654,8 +654,8 @@ void GlobalMatrix<ValueType>::info(void) const {
            " cols=" << this->get_ncol() << ";" <<
            " nnz=" << this->get_nnz() << ";" <<
            " prec=" << 8*sizeof(ValueType) << "bit;" <<
-           " format=" << _matrix_format_names[this->matrix_interior_.get_format()] <<
-           "/" << _matrix_format_names[this->matrix_ghost_.get_format()] << ";" <<
+           " format=" << _matrix_format_names[this->matrix_interior_.GetFormat()] <<
+           "/" << _matrix_format_names[this->matrix_ghost_.GetFormat()] << ";" <<
            " subdomains=" << this->pm_->num_procs_ << ";" <<
            " host backend={" << _rocalution_host_name[0] << "};" <<
            " accelerator backend={" << _rocalution_backend_name[this->local_backend_.backend] << "};" <<
@@ -1159,7 +1159,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType> *Ac, Paral
 
   if (this->is_accel()) {
 
-    host_interior.ConvertTo(this->GetInterior().get_format());
+    host_interior.ConvertTo(this->GetInterior().GetFormat());
     host_interior.CopyFrom(this->GetInterior());
 
     host_interior.CoarsenOperator(&tmp, nrow, nrow, G, Gsize, rG, rGsize);
@@ -1221,7 +1221,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType> *Ac, Paral
 
   if (this->is_accel()) {
 
-    host_ghost.ConvertTo(this->GetGhost().get_format());
+    host_ghost.ConvertTo(this->GetGhost().GetFormat());
     host_ghost.CopyFrom(this->GetGhost());
 
     host_ghost.CoarsenOperator(&tmp_ghost, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);

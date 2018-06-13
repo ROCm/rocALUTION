@@ -1616,6 +1616,7 @@ bool HostMatrixCSR<ValueType>::MultiColoring(int &num_colors,
                                              int **size_colors,
                                              BaseVector<int> *permutation) const {
 
+  assert(*size_colors == NULL);
   assert(permutation != NULL);
   HostVector<int> *cast_perm = dynamic_cast<HostVector<int>*> (permutation) ; 
   assert(cast_perm != NULL);

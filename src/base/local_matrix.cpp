@@ -72,7 +72,7 @@ IndexType2 LocalMatrix<ValueType>::get_nnz(void) const {
 }
 
 template <typename ValueType>
-unsigned int LocalMatrix<ValueType>::get_format(void) const {
+unsigned int LocalMatrix<ValueType>::GetFormat(void) const {
 
   return this->matrix_->get_mat_format();
 
@@ -98,7 +98,7 @@ void LocalMatrix<ValueType>::Zeros(void) {
 
     bool err = this->matrix_->Zeros();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Zeros() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -111,7 +111,7 @@ void LocalMatrix<ValueType>::Zeros(void) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->Zeros() == false) {
@@ -166,7 +166,7 @@ void LocalMatrix<ValueType>::AllocateCSR(const std::string name, const int nnz, 
     assert(ncol > 0);
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -215,7 +215,7 @@ void LocalMatrix<ValueType>::AllocateCOO(const std::string name, const int nnz, 
     assert(ncol > 0);
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -265,7 +265,7 @@ void LocalMatrix<ValueType>::AllocateDIA(const std::string name, const int nnz, 
     assert(ncol > 0);
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -314,7 +314,7 @@ void LocalMatrix<ValueType>::AllocateMCSR(const std::string name, const int nnz,
     assert(ncol > 0);
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -363,7 +363,7 @@ void LocalMatrix<ValueType>::AllocateELL(const std::string name, const int nnz, 
     assert(ncol > 0);
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -416,7 +416,7 @@ void LocalMatrix<ValueType>::AllocateHYB(const std::string name, const int ell_n
     assert(ncol > 0);
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -461,7 +461,7 @@ void LocalMatrix<ValueType>::AllocateDENSE(const std::string name, const int nro
   if (nrow*ncol > 0) {
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -501,7 +501,7 @@ bool LocalMatrix<ValueType>::Check(void) const {
   if (this->is_accel() == true) {
 
     LocalMatrix<ValueType> mat_host;
-    mat_host.ConvertTo(this->get_format());
+    mat_host.ConvertTo(this->GetFormat());
     mat_host.CopyFrom(*this);
 
     // Convert to CSR
@@ -509,17 +509,17 @@ bool LocalMatrix<ValueType>::Check(void) const {
 
     check = mat_host.matrix_->Check();
 
-    if (this->get_format() != CSR)
+    if (this->GetFormat() != CSR)
       LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Check() is performed in CSR format");
 
     LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Check() is performed on the host");
 
   } else {
 
-    if (this->get_format() != CSR) {
+    if (this->GetFormat() != CSR) {
 
       LocalMatrix<ValueType> mat_csr;
-      mat_csr.ConvertTo(this->get_format());
+      mat_csr.ConvertTo(this->GetFormat());
       mat_csr.CopyFrom(*this);
 
       // Convert to CSR
@@ -549,6 +549,9 @@ void LocalMatrix<ValueType>::SetDataPtrCOO(int **row, int **col, ValueType **val
   LOG_DEBUG(this, "LocalMatrix::SetDataPtrCOO()",
             "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
 
+  assert(row != NULL);
+  assert(col != NULL);
+  assert(val != NULL);
   assert(*row != NULL);
   assert(*col != NULL);
   assert(*val != NULL);
@@ -607,6 +610,9 @@ void LocalMatrix<ValueType>::SetDataPtrCSR(int **row_offset, int **col, ValueTyp
   LOG_DEBUG(this, "LocalMatrix::SetDataPtrCSR()",
             "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
 
+  assert(row_offset != NULL);
+  assert(col != NULL);
+  assert(val != NULL);
   assert(*row_offset != NULL);
   assert(*col != NULL);
   assert(*val != NULL);
@@ -665,6 +671,9 @@ void LocalMatrix<ValueType>::SetDataPtrMCSR(int **row_offset, int **col, ValueTy
   LOG_DEBUG(this, "LocalMatrix::SetDataPtrMCSR()",
             "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
 
+  assert(row_offset != NULL);
+  assert(col != NULL);
+  assert(val != NULL);
   assert(*row_offset != NULL);
   assert(*col != NULL);
   assert(*val != NULL);
@@ -723,6 +732,8 @@ void LocalMatrix<ValueType>::SetDataPtrELL(int **col, ValueType **val,
   LOG_DEBUG(this, "LocalMatrix::SetDataPtrELL()",
             "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol << " max_row=" << max_row);
 
+  assert(col != NULL);
+  assert(val != NULL);
   assert(*col != NULL);
   assert(*val != NULL);
   assert(nnz > 0);
@@ -779,6 +790,8 @@ void LocalMatrix<ValueType>::SetDataPtrDIA(int **offset, ValueType **val,
   LOG_DEBUG(this, "LocalMatrix::SetDataPtrDIA()",
             "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol << " num_diag=" << num_diag);
 
+  assert(offset != NULL);
+  assert(val != NULL);
   assert(*offset != NULL);
   assert(*val != NULL);
   assert(nnz > 0);
@@ -839,6 +852,7 @@ void LocalMatrix<ValueType>::SetDataPtrDENSE(ValueType **val, std::string name,
   LOG_DEBUG(this, "LocalMatrix::SetDataPtrDENSE()",
             "name=" << name << " nrow=" << nrow << " ncol=" << ncol);
 
+  assert(val != NULL);
   assert(*val != NULL);
   assert(nrow > 0);
   assert(ncol > 0);
@@ -891,7 +905,7 @@ void LocalMatrix<ValueType>::CopyFromCSR(const int *row_offsets, const int *col,
   assert(row_offsets != NULL);
   assert(col != NULL);
   assert(val != NULL);
-  assert(this->get_format() == CSR);
+  assert(this->GetFormat() == CSR);
 
   if (this->get_nnz() > 0)
     this->matrix_->CopyFromCSR(row_offsets, col, val);
@@ -913,7 +927,7 @@ void LocalMatrix<ValueType>::CopyToCSR(int *row_offsets, int *col, ValueType *va
   assert(row_offsets != NULL);
   assert(col != NULL);
   assert(val != NULL);
-  assert(this->get_format() == CSR);
+  assert(this->GetFormat() == CSR);
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -933,7 +947,7 @@ void LocalMatrix<ValueType>::CopyFromCOO(const int *row, const int *col, const V
   assert(row != NULL);
   assert(col != NULL);
   assert(val != NULL);
-  assert(this->get_format() == COO);
+  assert(this->GetFormat() == COO);
 
   if (this->get_nnz() > 0)
     this->matrix_->CopyFromCOO(row, col, val);
@@ -955,7 +969,7 @@ void LocalMatrix<ValueType>::CopyToCOO(int *row, int *col, ValueType *val) const
   assert(row != NULL);
   assert(col != NULL);
   assert(val != NULL);
-  assert(this->get_format() == COO);
+  assert(this->GetFormat() == COO);
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -991,7 +1005,7 @@ void LocalMatrix<ValueType>::CopyFromHostCSR(const int *row_offset, const int *c
     assert(ncol > 0);
 
     Rocalution_Backend_Descriptor backend = this->local_backend_;
-    unsigned int mat = this->get_format();
+    unsigned int mat = this->GetFormat();
 
     // init host matrix
     if (this->matrix_ == this->matrix_host_) {
@@ -1030,7 +1044,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
 
   bool err = this->matrix_->ReadFileMTX(filename);
 
-  if ((err == false) && (this->is_host() == true) && (this->get_format() == COO)) {
+  if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
     LOG_INFO("Computation of LocalMatrix::ReadFileMTX() failed");
     this->info();
     FATAL_ERROR(__FILE__, __LINE__);
@@ -1043,7 +1057,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
     this->MoveToHost();
 
     // Convert to COO
-    unsigned int format = this->get_format();
+    unsigned int format = this->GetFormat();
     this->ConvertToCOO();
 
     if (this->matrix_->ReadFileMTX(filename) == false) {
@@ -1080,7 +1094,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 
   bool err = this->matrix_->WriteFileMTX(filename);
 
-  if ((err == false) && (this->is_host() == true) && (this->get_format() == COO)) {
+  if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
     LOG_INFO("Computation of LocalMatrix::WriteFileMTX() failed");
     this->info();
     FATAL_ERROR(__FILE__, __LINE__);
@@ -1090,7 +1104,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 
     // Move to host
     LocalMatrix<ValueType> mat_host;
-    mat_host.ConvertTo(this->get_format());
+    mat_host.ConvertTo(this->GetFormat());
     mat_host.CopyFrom(*this);
 
     // Convert to COO
@@ -1116,7 +1130,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
 
   bool err = this->matrix_->ReadFileCSR(filename);
 
-  if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+  if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::ReadFileCSR() failed");
     this->info();
     FATAL_ERROR(__FILE__, __LINE__);
@@ -1129,7 +1143,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
     this->MoveToHost();
 
     // Convert to CSR
-    unsigned int format = this->get_format();
+    unsigned int format = this->GetFormat();
     this->ConvertToCSR();
 
     if (this->matrix_->ReadFileCSR(filename) == false) {
@@ -1167,7 +1181,7 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 
   bool err = this->matrix_->WriteFileCSR(filename);
 
-  if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+  if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::WriteFileCSR() failed");
     this->info();
     FATAL_ERROR(__FILE__, __LINE__);
@@ -1177,7 +1191,7 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 
     // Move to host
     LocalMatrix<ValueType> mat_host;
-    mat_host.ConvertTo(this->get_format());
+    mat_host.ConvertTo(this->GetFormat());
     mat_host.CopyFrom(*this);
 
     // Convert to CSR
@@ -1199,6 +1213,7 @@ void LocalMatrix<ValueType>::CopyFrom(const LocalMatrix<ValueType> &src) {
   LOG_DEBUG(this, "LocalMatrix::CopyFrom()",
             "");
 
+  assert(&src != NULL);
   assert(this != &src);
 
   this->matrix_->CopyFrom(*src.matrix_);
@@ -1211,6 +1226,7 @@ void LocalMatrix<ValueType>::CopyFromAsync(const LocalMatrix<ValueType> &src) {
   LOG_DEBUG(this, "LocalMatrix::CopyFromAsync()",
             "");
 
+  assert(&src != NULL);
   assert(this->asyncf == false);
   assert(this != &src);
 
@@ -1226,6 +1242,7 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
   LOG_DEBUG(this, "LocalMatrix::CloneFrom()",
             "");
 
+  assert(&src != NULL);
   assert(this != &src);
 
 #ifdef DEBUG_MODE
@@ -1242,7 +1259,7 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
 
     // host
     delete this->matrix_host_;
-    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, src.get_format());
+    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, src.GetFormat());
     this->matrix_ = this->matrix_host_;
 
   } else {
@@ -1250,7 +1267,7 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
     // accel
     delete this->matrix_accel_;
 
-    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, src.get_format());
+    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, src.GetFormat());
     this->matrix_ = this->matrix_accel_;
 
   }
@@ -1269,11 +1286,11 @@ void LocalMatrix<ValueType>::UpdateValuesCSR(ValueType *val) {
   LOG_DEBUG(this, "LocalMatrix::UpdateValues()",
             "");
 
+  assert(val != NULL);
   assert(this->get_nnz() > 0);
   assert(this->get_nrow() > 0);
   assert(this->get_ncol() > 0);
-  assert(val != NULL);
-  assert(this->get_format() == CSR);
+  assert(this->GetFormat() == CSR);
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -1346,7 +1363,7 @@ void LocalMatrix<ValueType>::info(void) const {
            << " cols=" << this->get_ncol() << ";"
            << " nnz=" << this->get_nnz() << ";"
            << " prec=" << 8*sizeof(ValueType) << "bit;"
-           << " format=" << _matrix_format_names[this->get_format()] << ";"
+           << " format=" << _matrix_format_names[this->GetFormat()] << ";"
            << " host backend={" << _rocalution_host_name[0] << "};"
            << " accelerator backend={" << _rocalution_backend_name[this->local_backend_.backend] << "};"
            << " current=" << current_backend_name);
@@ -1370,7 +1387,7 @@ void LocalMatrix<ValueType>::MoveToAccelerator(void) {
 
   if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_host_)) {
 
-    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_, this->GetFormat());
     this->matrix_accel_->CopyFrom(*this->matrix_host_);
 
     this->matrix_ = this->matrix_accel_;
@@ -1393,7 +1410,7 @@ void LocalMatrix<ValueType>::MoveToHost(void) {
 
   if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
 
-    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, this->GetFormat());
     this->matrix_host_->CopyFrom(*this->matrix_accel_);
 
     this->matrix_ = this->matrix_host_;
@@ -1427,7 +1444,7 @@ void LocalMatrix<ValueType>::MoveToAcceleratorAsync(void) {
 
   if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_host_)) {
 
-    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_, this->GetFormat());
     this->matrix_accel_->CopyFromAsync(*this->matrix_host_);
     this->asyncf = true;
 
@@ -1447,7 +1464,7 @@ void LocalMatrix<ValueType>::MoveToHostAsync(void) {
 
   if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
 
-    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, this->get_format());
+    this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, this->GetFormat());
     this->matrix_host_->CopyFromAsync(*this->matrix_accel_);
     this->asyncf = true;
 
@@ -1586,11 +1603,11 @@ void LocalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
          (matrix_format == ELL) ||
          (matrix_format == HYB));
 
-  LOG_VERBOSE_INFO(5, "Converting " << _matrix_format_names[matrix_format] << " <- " << _matrix_format_names[this->get_format()] );
+  LOG_VERBOSE_INFO(5, "Converting " << _matrix_format_names[matrix_format] << " <- " << _matrix_format_names[this->GetFormat()] );
 
-  if (this->get_format() != matrix_format) {
+  if (this->GetFormat() != matrix_format) {
 
-    if ((this->get_format() != CSR) && (matrix_format != CSR))
+    if ((this->GetFormat() != CSR) && (matrix_format != CSR))
       this->ConvertToCSR();
 
     // CPU matrix
@@ -1652,7 +1669,7 @@ void LocalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
 
     }
 
-    assert(this->get_format() == matrix_format || this->get_format() == CSR);
+    assert(this->GetFormat() == matrix_format || this->GetFormat() == CSR);
 
   }
 
@@ -1664,6 +1681,7 @@ void LocalMatrix<ValueType>::Apply(const LocalVector<ValueType> &in, LocalVector
   LOG_DEBUG(this, "LocalMatrix::Apply()",
             "");
 
+  assert(&in != NULL);
   assert(out != NULL);
 
 #ifdef DEBUG_MODE
@@ -1691,6 +1709,7 @@ void LocalMatrix<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const Va
   LOG_DEBUG(this, "LocalMatrix::ApplyAdd()",
             "");
 
+  assert(&in != NULL);
   assert(out != NULL);
 
 #ifdef DEBUG_MODE
@@ -1733,7 +1752,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) c
 
     bool err = this->matrix_->ExtractDiagonal(vec_diag->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractDiagonal() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -1742,7 +1761,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) c
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       vec_diag->MoveToHost();
@@ -1755,7 +1774,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) c
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ExtractDiagonal() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -1794,7 +1813,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType> *vec_
 
     bool err = this->matrix_->ExtractInverseDiagonal(vec_inv_diag->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractInverseDiagonal() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -1803,7 +1822,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType> *vec_
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       vec_inv_diag->MoveToHost();
@@ -1816,7 +1835,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType> *vec_
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ExtractInverseDiagonal() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -1863,7 +1882,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(const int row_offset,
   if (this->get_nnz() > 0) {
 
     // Submatrix should be same format as full matrix
-    mat->ConvertTo(this->get_format());
+    mat->ConvertTo(this->GetFormat());
 
     bool err = false;
 
@@ -1874,7 +1893,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(const int row_offset,
                                             row_size,   col_size,
                                             mat->matrix_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractSubMatrix() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -1883,7 +1902,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(const int row_offset,
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       mat->MoveToHost();
@@ -1897,12 +1916,12 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(const int row_offset,
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR) {
+      if (this->GetFormat() != CSR) {
 
         if (row_size > 1)
           LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ExtractSubMatrix() is performed in CSR format");
 
-        mat->ConvertTo(this->get_format());
+        mat->ConvertTo(this->GetFormat());
 
       }
 
@@ -2000,7 +2019,7 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType> *U, const bool diag
       err = this->matrix_->ExtractU(U->matrix_);
     }
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractU() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2009,7 +2028,7 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType> *U, const bool diag
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -2030,11 +2049,11 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType> *U, const bool diag
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR) {
+      if (this->GetFormat() != CSR) {
 
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ExtractU() is performed in CSR format");
 
-        U->ConvertTo(this->get_format());
+        U->ConvertTo(this->GetFormat());
 
       }
 
@@ -2082,7 +2101,7 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType> *L, const bool diag
       err = this->matrix_->ExtractL(L->matrix_);
     }
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractL() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2091,7 +2110,7 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType> *L, const bool diag
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -2112,11 +2131,11 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType> *L, const bool diag
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR) {
+      if (this->GetFormat() != CSR) {
 
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ExtractL() is performed in CSR format");
 
-        L->ConvertTo(this->get_format());
+        L->ConvertTo(this->GetFormat());
 
       }
 
@@ -2168,6 +2187,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
   LOG_DEBUG(this, "LocalMatrix::LUSolve()",
             "");
 
+  assert(&in != NULL);
   assert(out != NULL);
   assert(in.get_size() == this->get_ncol());
   assert(out->get_size() == this->get_nrow());
@@ -2183,7 +2203,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
 
     bool err = this->matrix_->LUSolve(*in.vector_, out->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LUSolve() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2192,7 +2212,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       LocalVector<ValueType> vec_host;
@@ -2213,7 +2233,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
           FATAL_ERROR(__FILE__, __LINE__);
         }
 
-        if (this->get_format() != CSR)
+        if (this->GetFormat() != CSR)
           LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LUSolve() is performed in CSR format");
 
       }
@@ -2262,6 +2282,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
   LOG_DEBUG(this, "LocalMatrix::LLSolve()",
             "");
 
+  assert(&in != NULL);
   assert(out != NULL);
   assert(in.get_size() == this->get_ncol());
   assert(out->get_size() == this->get_nrow());
@@ -2277,7 +2298,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
 
     bool err = this->matrix_->LLSolve(*in.vector_, out->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2286,7 +2307,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       LocalVector<ValueType> vec_host;
@@ -2302,7 +2323,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVect
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LLSolve() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -2326,6 +2347,8 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
   LOG_DEBUG(this, "LocalMatrix::LLSolve()",
             "");
 
+  assert(&in != NULL);
+  assert(&inv_diag != NULL);
   assert(out != NULL);
   assert(in.get_size() == this->get_ncol());
   assert(out->get_size() == this->get_nrow());
@@ -2347,7 +2370,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
 
     bool err = this->matrix_->LLSolve(*in.vector_, *inv_diag.vector_, out->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2356,7 +2379,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       LocalVector<ValueType> vec_host;
@@ -2375,7 +2398,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LLSolve() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -2422,6 +2445,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
   LOG_DEBUG(this, "LocalMatrix::LSolve()",
             "");
 
+  assert(&in != NULL);
   assert(out != NULL);
   assert(in.get_size() == this->get_ncol());
   assert(out->get_size() == this->get_nrow());
@@ -2437,7 +2461,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
 
     bool err = this->matrix_->LSolve(*in.vector_, out->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::LSolve() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2446,7 +2470,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       LocalVector<ValueType> vec_host;
@@ -2462,7 +2486,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LSolve() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -2509,6 +2533,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
   LOG_DEBUG(this, "LocalMatrix::USolve()",
             "");
 
+  assert(&in != NULL);
   assert(out != NULL);
   assert(in.get_size() == this->get_ncol());
   assert(out->get_size() == this->get_nrow());
@@ -2524,7 +2549,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
 
     bool err = this->matrix_->USolve(*in.vector_, out->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::USolve() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2533,7 +2558,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       LocalVector<ValueType> vec_host;
@@ -2549,7 +2574,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::USolve() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -2580,7 +2605,7 @@ void LocalMatrix<ValueType>::ILU0Factorize(void) {
 
     bool err = this->matrix_->ILU0Factorize();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ILU0Factorize() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2593,7 +2618,7 @@ void LocalMatrix<ValueType>::ILU0Factorize(void) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->ILU0Factorize() == false) {
@@ -2645,7 +2670,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 
     bool err = this->matrix_->ILUTFactorize(t, maxrow);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ILUTFactorize() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2658,7 +2683,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(const double t, const int maxrow) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->ILUTFactorize(t, maxrow) == false) {
@@ -2722,7 +2747,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 
         bool err = this->matrix_->ILUpFactorizeNumeric(p, *structure.matrix_);
 
-        if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+        if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
           LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
           this->info();
           FATAL_ERROR(__FILE__, __LINE__);
@@ -2736,7 +2761,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
           structure.MoveToHost();
 
           // Convert to CSR
-          unsigned int format = this->get_format();
+          unsigned int format = this->GetFormat();
           this->ConvertToCSR();
           structure.ConvertToCSR();
 
@@ -2775,7 +2800,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 
         bool err = this->matrix_->ILU0Factorize();
 
-        if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+        if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
           LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
           this->info();
           FATAL_ERROR(__FILE__, __LINE__);
@@ -2788,7 +2813,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
           this->MoveToHost();
 
           // Convert to CSR
-          unsigned int format = this->get_format();
+          unsigned int format = this->GetFormat();
           this->ConvertToCSR();
 
           if (this->matrix_->ILU0Factorize() == false) {
@@ -2846,7 +2871,7 @@ void LocalMatrix<ValueType>::ICFactorize(LocalVector<ValueType> *inv_diag) {
 
     bool err = this->matrix_->ICFactorize(inv_diag->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ICFactorize() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2860,7 +2885,7 @@ void LocalMatrix<ValueType>::ICFactorize(LocalVector<ValueType> *inv_diag) {
       inv_diag->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->ICFactorize(inv_diag->vector_) == false) {
@@ -2904,6 +2929,7 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
   LOG_DEBUG(this, "LocalMatrix::MultiColoring()",
             "");
 
+  assert(*size_colors == NULL);
   assert(permutation != NULL);
   assert(this->get_nrow() == this->get_ncol());
 
@@ -2922,7 +2948,7 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
 
     bool err = this->matrix_->MultiColoring(num_colors, size_colors, permutation->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::MultiColoring() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2931,7 +2957,7 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -2946,7 +2972,7 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::MultiColoring() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -2987,7 +3013,7 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int &size, LocalVector<int> *
 
     bool err = this->matrix_->MaximalIndependentSet(size, permutation->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::MaximalIndependentSet() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -2996,7 +3022,7 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int &size, LocalVector<int> *
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -3011,7 +3037,7 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int &size, LocalVector<int> *
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::MaximalIndependentSet() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -3051,7 +3077,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *p
 
     bool err = this->matrix_->ZeroBlockPermutation(size, permutation->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ZeroBlockPermutation() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3060,7 +3086,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *p
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -3075,7 +3101,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *p
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ZeroBlockPermutation() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -3109,7 +3135,7 @@ void LocalMatrix<ValueType>::Householder(const int idx, ValueType &beta, LocalVe
 
     bool err = this->matrix_->Householder(idx, beta, vec->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == DENSE)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::Householder() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3118,7 +3144,7 @@ void LocalMatrix<ValueType>::Householder(const int idx, ValueType &beta, LocalVe
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       vec->MoveToHost();
@@ -3132,7 +3158,7 @@ void LocalMatrix<ValueType>::Householder(const int idx, ValueType &beta, LocalVe
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != DENSE)
+      if (this->GetFormat() != DENSE)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Householder() is performed in DENSE format");
 
       if (this->is_accel() == true) {
@@ -3163,7 +3189,7 @@ void LocalMatrix<ValueType>::QRDecompose(void) {
 
     bool err = this->matrix_->QRDecompose();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == DENSE)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::QRDecompose() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3176,7 +3202,7 @@ void LocalMatrix<ValueType>::QRDecompose(void) {
       this->MoveToHost();
 
       // Convert to DENSE
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToDENSE();
 
       if (this->matrix_->QRDecompose() == false) {
@@ -3213,6 +3239,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
   LOG_DEBUG(this, "LocalMatrix::QRSolve()",
             "");
 
+  assert(&in != NULL);
   assert(out != NULL);
   assert(in.get_size() == this->get_ncol());
   assert(out->get_size() == this->get_nrow());
@@ -3228,7 +3255,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
 
     bool err = this->matrix_->QRSolve(*in.vector_, out->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == DENSE)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::QRSolve() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3237,7 +3264,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       LocalVector<ValueType> vec_host;
@@ -3255,7 +3282,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != DENSE)
+      if (this->GetFormat() != DENSE)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::QRSolve() is performed in DENSE format");
 
       if (this->is_accel() == true) {
@@ -3278,6 +3305,7 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
   LOG_DEBUG(this, "LocalMatrix::Permute()",
             "");
 
+  assert(&permutation != NULL);
   assert((permutation.get_size() == this->get_nrow()) ||
           (permutation.get_size() == this->get_ncol()));
   assert(permutation.get_size() > 0);
@@ -3293,7 +3321,7 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
 
     bool err = this->matrix_->Permute(*permutation.vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Permute() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3308,7 +3336,7 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->Permute(*perm_host.vector_) == false) {
@@ -3349,6 +3377,7 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
   LOG_DEBUG(this, "LocalMatrix::PermuteBackward()",
             "");
 
+  assert(&permutation != NULL);
   assert((permutation.get_size() == this->get_nrow()) ||
          (permutation.get_size() == this->get_ncol()));
   assert(permutation.get_size() > 0);
@@ -3364,7 +3393,7 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
 
     bool err = this->matrix_->PermuteBackward(*permutation.vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == COO)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
       LOG_INFO("Computation of LocalMatrix::PermuteBackward() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3379,7 +3408,7 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
       this->MoveToHost();
 
       // Convert to COO
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCOO();
 
       if (this->matrix_->PermuteBackward(*perm_host.vector_) == false) {
@@ -3433,7 +3462,7 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int> *permutation) const {
 
     bool err = this->matrix_->CMK(permutation->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::CMK() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3442,7 +3471,7 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int> *permutation) const {
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -3457,7 +3486,7 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int> *permutation) const {
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::CMK() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -3500,7 +3529,7 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int> *permutation) const {
 
     bool err = this->matrix_->RCMK(permutation->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::RCMK() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3509,7 +3538,7 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int> *permutation) const {
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -3524,7 +3553,7 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int> *permutation) const {
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::RCMK() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -3567,7 +3596,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int> *permutation) co
 
     bool err = this->matrix_->ConnectivityOrder(permutation->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ConnectivityOrder() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3576,7 +3605,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int> *permutation) co
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -3591,7 +3620,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int> *permutation) co
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ConnectivityOrder() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -3627,7 +3656,7 @@ void LocalMatrix<ValueType>::SymbolicPower(const int p) {
 
     bool err = this->matrix_->SymbolicPower(p);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::SymbolicPower() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3640,7 +3669,7 @@ void LocalMatrix<ValueType>::SymbolicPower(const int p) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->SymbolicPower(p) == false) {
@@ -3682,8 +3711,9 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
   LOG_DEBUG(this, "LocalMatrix::MatrixAdd()",
             "");
 
+  assert(&mat != NULL);
   assert(&mat != this);
-  assert(this->get_format() == mat.get_format());
+  assert(this->GetFormat() == mat.GetFormat());
   assert(this->get_nrow() == mat.get_nrow());
   assert(this->get_ncol() == mat.get_ncol());
 
@@ -3697,7 +3727,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
 
   bool err = this->matrix_->MatrixAdd(*mat.matrix_, alpha, beta, structure);
 
-  if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+  if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::MatrixAdd() failed");
     this->info();
     FATAL_ERROR(__FILE__, __LINE__);
@@ -3706,7 +3736,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
   if (err == false) {
 
     LocalMatrix<ValueType> mat_host;
-    mat_host.ConvertTo(mat.get_format());
+    mat_host.ConvertTo(mat.GetFormat());
     mat_host.CopyFrom(mat);
 
     this->MoveToHost();
@@ -3720,11 +3750,11 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
-    if (mat.get_format() != CSR) {
+    if (mat.GetFormat() != CSR) {
 
       LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::MatrixAdd() is performed in CSR format");
 
-      this->ConvertTo(mat.get_format());
+      this->ConvertTo(mat.GetFormat());
 
     }
 
@@ -3758,7 +3788,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda
 
     bool err = this->matrix_->Gershgorin(lambda_min, lambda_max);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Gershgorin() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3767,7 +3797,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Convert to CSR
@@ -3779,7 +3809,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Gershgorin() is performed in CSR format");
 
       if (this->is_accel() == true)
@@ -3805,7 +3835,7 @@ void LocalMatrix<ValueType>::Scale(const ValueType alpha) {
 
     bool err = this->matrix_->Scale(alpha);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Scale() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3818,7 +3848,7 @@ void LocalMatrix<ValueType>::Scale(const ValueType alpha) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->Scale(alpha) == false) {
@@ -3867,7 +3897,7 @@ void LocalMatrix<ValueType>::ScaleDiagonal(const ValueType alpha) {
 
     bool err = this->matrix_->ScaleDiagonal(alpha);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ScaleDiagonal() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3880,7 +3910,7 @@ void LocalMatrix<ValueType>::ScaleDiagonal(const ValueType alpha) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->ScaleDiagonal(alpha) == false) {
@@ -3929,7 +3959,7 @@ void LocalMatrix<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 
     bool err = this->matrix_->ScaleOffDiagonal(alpha);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ScaleOffDiagonal() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -3942,7 +3972,7 @@ void LocalMatrix<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->ScaleOffDiagonal(alpha) == false) {
@@ -3991,7 +4021,7 @@ void LocalMatrix<ValueType>::AddScalar(const ValueType alpha) {
 
     bool err = this->matrix_->AddScalar(alpha);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AddScalar() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4004,7 +4034,7 @@ void LocalMatrix<ValueType>::AddScalar(const ValueType alpha) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->AddScalar(alpha) == false) {
@@ -4053,7 +4083,7 @@ void LocalMatrix<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 
     bool err = this->matrix_->AddScalarDiagonal(alpha);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AddScalarDiagonal() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4066,7 +4096,7 @@ void LocalMatrix<ValueType>::AddScalarDiagonal(const ValueType alpha) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->AddScalarDiagonal(alpha) == false) {
@@ -4115,7 +4145,7 @@ void LocalMatrix<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 
     bool err = this->matrix_->AddScalarOffDiagonal(alpha);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AddScalarOffDiagonal() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4128,7 +4158,7 @@ void LocalMatrix<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->AddScalarOffDiagonal(alpha) == false) {
@@ -4169,11 +4199,13 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
   LOG_DEBUG(this, "LocalMatrix::AddScalarDiagonal()",
             "");
 
+  assert(&A != NULL);
+  assert(&B != NULL);
   assert(&A != this);
   assert(&B != this);
   assert(A.get_ncol() == B.get_nrow());
 
-  assert(A.get_format() == B.get_format());
+  assert(A.GetFormat() == B.GetFormat());
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (A.matrix_ == A.matrix_host_)  && (B.matrix_ == B.matrix_host_)) ||
           ( (this->matrix_ == this->matrix_accel_) && (A.matrix_ == A.matrix_accel_) && (B.matrix_ == B.matrix_accel_)) );
@@ -4184,7 +4216,7 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
   B.Check();
 #endif
 
-  if (this->get_format() == DENSE) {
+  if (this->GetFormat() == DENSE) {
 
     if (this->get_nnz() != A.get_nnz()) {
 
@@ -4200,11 +4232,11 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
   }
 
   this->object_name_ = A.object_name_ + " x " + B.object_name_;
-  this->ConvertTo(A.get_format());
+  this->ConvertTo(A.GetFormat());
 
   bool err = this->matrix_->MatMatMult(*A.matrix_, *B.matrix_);
 
-  if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+  if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::MatMatMult() failed");
     this->info();
     FATAL_ERROR(__FILE__, __LINE__);
@@ -4214,8 +4246,8 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
 
     LocalMatrix<ValueType> A_host;
     LocalMatrix<ValueType> B_host;
-    A_host.ConvertTo(A.get_format());
-    B_host.ConvertTo(B.get_format());
+    A_host.ConvertTo(A.GetFormat());
+    B_host.ConvertTo(B.GetFormat());
     A_host.CopyFrom(A);
     B_host.CopyFrom(B);
 
@@ -4231,11 +4263,11 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
-    if (A.get_format() != CSR) {
+    if (A.GetFormat() != CSR) {
 
       LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::MatMatMult() is performed in CSR format");
 
-      this->ConvertTo(A.get_format());
+      this->ConvertTo(A.GetFormat());
 
     }
 
@@ -4261,6 +4293,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &d
   LOG_DEBUG(this, "LocalMatrix::DiagonalMatrixMultR()",
             "");
 
+  assert(&diag != NULL);
   assert((diag.get_size() == this->get_nrow()) ||
          (diag.get_size() == this->get_ncol()));
 
@@ -4275,7 +4308,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &d
 
     bool err = this->matrix_->DiagonalMatrixMultR(*diag.vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultR() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4290,7 +4323,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &d
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->DiagonalMatrixMultR(*diag_host.vector_) ==  false) {
@@ -4338,6 +4371,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
   LOG_DEBUG(this, "LocalMatrix::DiagonalMatrixMultL()",
             "");
 
+  assert(&diag != NULL);
   assert((diag.get_size() == this->get_nrow()) ||
          (diag.get_size() == this->get_ncol()));
 
@@ -4352,7 +4386,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
 
     bool err = this->matrix_->DiagonalMatrixMultL(*diag.vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultL() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4367,7 +4401,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->DiagonalMatrixMultL(*diag_host.vector_) ==  false) {
@@ -4418,7 +4452,7 @@ void LocalMatrix<ValueType>::Compress(const double drop_off) {
 
     bool err = this->matrix_->Compress(drop_off);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Compress() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4431,7 +4465,7 @@ void LocalMatrix<ValueType>::Compress(const double drop_off) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->Compress(drop_off) == false) {
@@ -4480,7 +4514,7 @@ void LocalMatrix<ValueType>::Transpose(void) {
 
     bool err = this->matrix_->Transpose();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Transpose() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4493,7 +4527,7 @@ void LocalMatrix<ValueType>::Transpose(void) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->Transpose() == false) {
@@ -4542,7 +4576,7 @@ void LocalMatrix<ValueType>::Sort(void) {
 
     bool err = this->matrix_->Sort();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Sort() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4555,7 +4589,7 @@ void LocalMatrix<ValueType>::Sort(void) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->Sort() ==  false) {
@@ -4608,7 +4642,7 @@ void LocalMatrix<ValueType>::Key(long int &row_key,
                                   col_key,
                                   val_key);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::Key() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4618,7 +4652,7 @@ void LocalMatrix<ValueType>::Key(long int &row_key,
 
       // Move to host
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Convert to CSR
@@ -4632,7 +4666,7 @@ void LocalMatrix<ValueType>::Key(long int &row_key,
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Key() is performed in CSR format");
 
       if (this->is_accel() == true)
@@ -4664,7 +4698,7 @@ void LocalMatrix<ValueType>::AMGConnect(const ValueType eps, LocalVector<int> *c
 
     bool err = this->matrix_->AMGConnect(eps, connections->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGConnect() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4673,7 +4707,7 @@ void LocalMatrix<ValueType>::AMGConnect(const ValueType eps, LocalVector<int> *c
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -4688,7 +4722,7 @@ void LocalMatrix<ValueType>::AMGConnect(const ValueType eps, LocalVector<int> *c
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::AMGConnect() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -4711,6 +4745,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, L
   LOG_DEBUG(this, "LocalMatrix::AMGAggregate()",
             "");
 
+  assert(&connections != NULL);
   assert(aggregates != NULL);
 
   assert( ( (this->matrix_ == this->matrix_host_)  && (connections.vector_ == connections.vector_host_)  && (aggregates->vector_ == aggregates->vector_host_) ) ||
@@ -4724,7 +4759,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, L
 
     bool err = this->matrix_->AMGAggregate(*connections.vector_, aggregates->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGAggregate() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4734,7 +4769,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, L
 
       LocalMatrix<ValueType> mat_host;
       LocalVector<int> conn_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
       conn_host.CopyFrom(connections);
 
@@ -4750,7 +4785,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, L
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::AMGAggregate() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -4777,6 +4812,8 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
   LOG_DEBUG(this, "LocalMatrix::AMGSmoothedAggregation()",
             relax);
 
+  assert(&aggregates != NULL);
+  assert(&connections != NULL);
   assert(relax > ValueType(0.0));
   assert(prolong != NULL);
   assert(restrict != NULL);
@@ -4805,7 +4842,7 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
     bool err = this->matrix_->AMGSmoothedAggregation(relax, *aggregates.vector_, *connections.vector_,
                                                      prolong->matrix_, restrict->matrix_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4816,7 +4853,7 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
       LocalMatrix<ValueType> mat_host;
       LocalVector<int> conn_host;
       LocalVector<int> aggr_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
       conn_host.CopyFrom(connections);
       aggr_host.CopyFrom(aggregates);
@@ -4835,12 +4872,12 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR) {
+      if (this->GetFormat() != CSR) {
 
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::AMGSmoothedAggregation() is performed in CSR format");
 
-        prolong->ConvertTo(this->get_format());
-        restrict->ConvertTo(this->get_format());
+        prolong->ConvertTo(this->GetFormat());
+        restrict->ConvertTo(this->GetFormat());
 
       }
 
@@ -4872,6 +4909,7 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
   LOG_DEBUG(this, "LocalMatrix::AMGAggregation()",
             "");
 
+  assert(&aggregates != NULL);
   assert(prolong != NULL);
   assert(restrict != NULL);
   assert(this != prolong);
@@ -4896,7 +4934,7 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
 
     bool err = this->matrix_->AMGAggregation(*aggregates.vector_, prolong->matrix_, restrict->matrix_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::AMGAggregation() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4906,7 +4944,7 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
 
       LocalMatrix<ValueType> mat_host;
       LocalVector<int> aggr_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
       aggr_host.CopyFrom(aggregates);
 
@@ -4923,12 +4961,12 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR) {
+      if (this->GetFormat() != CSR) {
 
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::AMGAggregation() is performed in CSR format");
 
-        prolong->ConvertTo(this->get_format());
-        restrict->ConvertTo(this->get_format());
+        prolong->ConvertTo(this->GetFormat());
+        restrict->ConvertTo(this->GetFormat());
 
       }
 
@@ -4981,7 +5019,7 @@ void LocalMatrix<ValueType>::RugeStueben(const ValueType eps, LocalMatrix<ValueT
 
     bool err = this->matrix_->RugeStueben(eps, prolong->matrix_, restrict->matrix_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::RugeStueben() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -4990,7 +5028,7 @@ void LocalMatrix<ValueType>::RugeStueben(const ValueType eps, LocalMatrix<ValueT
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -5006,12 +5044,12 @@ void LocalMatrix<ValueType>::RugeStueben(const ValueType eps, LocalMatrix<ValueT
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR) {
+      if (this->GetFormat() != CSR) {
 
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::RugeStueben() is performed in CSR format");
 
-        prolong->ConvertTo(this->get_format());
-        restrict->ConvertTo(this->get_format());
+        prolong->ConvertTo(this->GetFormat());
+        restrict->ConvertTo(this->GetFormat());
 
       }
 
@@ -5048,6 +5086,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, in
   LOG_DEBUG(this, "LocalMatrix::InitialPairwiseAggregation()",
             "");
 
+  assert(*rG == NULL);
   assert(beta > ValueType(0.0));
   assert(G != NULL);
 
@@ -5062,7 +5101,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, in
 
     bool err = this->matrix_->InitialPairwiseAggregation(beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5071,7 +5110,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, in
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -5086,7 +5125,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, in
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::InitialPairwiseAggregation() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -5111,6 +5150,8 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
   LOG_DEBUG(this, "LocalMatrix::InitialPairwiseAggregation()",
             "");
 
+  assert(&mat != NULL);
+  assert(*rG == NULL);
   assert(&mat != this);
   assert(beta > ValueType(0.0));
   assert(G != NULL);
@@ -5132,7 +5173,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
     bool err = this->matrix_->InitialPairwiseAggregation(*mat.matrix_, beta, nc, G->vector_,
                                                          Gsize, rG, rGsize, ordering);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5142,8 +5183,8 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
 
       LocalMatrix<ValueType> mat_host;
       LocalMatrix<ValueType> mat2_host;
-      mat_host.ConvertTo(this->get_format());
-      mat2_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
+      mat2_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
       mat2_host.CopyFrom(mat);
 
@@ -5161,7 +5202,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::InitialPairwiseAggregation() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -5185,6 +5226,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, in
   LOG_DEBUG(this, "LocalMatrix::FurtherPairwiseAggregation()",
             "");
 
+  assert(*rG == NULL);
   assert(beta > ValueType(0.0));
   assert(G != NULL);
 
@@ -5199,7 +5241,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, in
 
     bool err = this->matrix_->FurtherPairwiseAggregation(beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5208,7 +5250,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, in
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -5223,7 +5265,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, in
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::FurtherPairwiseAggregation() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -5248,6 +5290,8 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
   LOG_DEBUG(this, "LocalMatrix::FurtherPairwiseAggregation()",
             "");
 
+  assert(&mat != NULL);
+  assert(*rG == NULL);
   assert(&mat != this);
   assert(beta > ValueType(0.0));
   assert(G != NULL);
@@ -5269,7 +5313,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
     bool err = this->matrix_->FurtherPairwiseAggregation(*mat.matrix_, beta, nc, G->vector_,
                                                          Gsize, rG, rGsize, ordering);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5279,8 +5323,8 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
 
       LocalMatrix<ValueType> mat_host;
       LocalMatrix<ValueType> mat2_host;
-      mat_host.ConvertTo(this->get_format());
-      mat2_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
+      mat2_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
       mat2_host.CopyFrom(mat);
 
@@ -5297,7 +5341,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::FurtherPairwiseAggregation() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -5323,6 +5367,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
 
   assert(Ac != NULL);
   assert(Ac != this);
+  assert(&G != NULL);
   assert(nrow > 0);
   assert(ncol > 0);
   assert(rG != NULL);
@@ -5340,7 +5385,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
 
     bool err = this->matrix_->CoarsenOperator(Ac->matrix_, nrow, ncol, *G.vector_, Gsize, rG, rGsize);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::CoarsenOperator() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5349,7 +5394,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       LocalVector<int> vec_host;
@@ -5368,13 +5413,13 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR) {
+      if (this->GetFormat() != CSR) {
 
         // Adding COO due to MPI using COO ghost matrix
-        if (this->get_format() != COO)
+        if (this->GetFormat() != COO)
           LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::CoarsenOperator() is performed in CSR format");
 
-        Ac->ConvertTo(this->get_format());
+        Ac->ConvertTo(this->GetFormat());
 
       }
 
@@ -5402,6 +5447,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
   LOG_DEBUG(this, "LocalMatrix::CreateFromMap()",
             n << " " << m);
 
+  assert(&map != NULL);
   assert(map.get_size() == (IndexType2) n);
   assert(m > 0);
 
@@ -5416,7 +5462,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 
     bool err = this->matrix_->CreateFromMap(*map.vector_, n, m);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5431,7 +5477,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->CreateFromMap(*map_host.vector_, n, m) == false) {
@@ -5472,6 +5518,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
   LOG_DEBUG(this, "LocalMatrix::CreateFromMap()",
             n << " " << m);
 
+  assert(&map != NULL);
   assert(pro != NULL);
   assert(this != pro);
   assert(map.get_size() == (IndexType2) n);
@@ -5485,7 +5532,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 
   bool err = this->matrix_->CreateFromMap(*map.vector_, n , m, pro->matrix_);
 
-  if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+  if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
     LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
     this->info();
     FATAL_ERROR(__FILE__, __LINE__);
@@ -5501,7 +5548,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
     pro->MoveToHost();
 
     // Convert to CSR
-    unsigned int format = this->get_format();
+    unsigned int format = this->GetFormat();
     this->ConvertToCSR();
 
     if (this->matrix_->CreateFromMap(*map_host.vector_, n, m, pro->matrix_) == false) {
@@ -5551,7 +5598,7 @@ void LocalMatrix<ValueType>::LUFactorize(void) {
 
     bool err = this->matrix_->LUFactorize();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == DENSE)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::LUFactorize() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5564,7 +5611,7 @@ void LocalMatrix<ValueType>::LUFactorize(void) {
       this->MoveToHost();
 
       // Convert to DENSE
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToDENSE();
 
       if (this->matrix_->LUFactorize() == false) {
@@ -5629,7 +5676,7 @@ void LocalMatrix<ValueType>::FSAI(const int power, const LocalMatrix<ValueType> 
 
     }
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::FSAI() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5642,7 +5689,7 @@ void LocalMatrix<ValueType>::FSAI(const int power, const LocalMatrix<ValueType> 
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (pattern != NULL) {
@@ -5708,7 +5755,7 @@ void LocalMatrix<ValueType>::SPAI(void) {
 
     bool err = this->matrix_->SPAI();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::SPAI() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5721,7 +5768,7 @@ void LocalMatrix<ValueType>::SPAI(void) {
       this->MoveToHost();
 
       // Convert to CSR
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToCSR();
 
       if (this->matrix_->SPAI() == false) {
@@ -5770,7 +5817,7 @@ void LocalMatrix<ValueType>::Invert(void) {
 
     bool err = this->matrix_->Invert();
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == DENSE)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE)) {
       LOG_INFO("Computation of LocalMatrix::Invert() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5783,7 +5830,7 @@ void LocalMatrix<ValueType>::Invert(void) {
       this->MoveToHost();
 
       // Convert to DENSE
-      unsigned int format = this->get_format();
+      unsigned int format = this->GetFormat();
       this->ConvertToDENSE();
 
       if (this->matrix_->Invert() == false) {
@@ -5824,6 +5871,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
   LOG_DEBUG(this, "LocalMatrix::ReplaceColumnVector()",
             idx);
 
+  assert(&vec != NULL);
   assert(vec.get_size() == this->get_nrow());
   assert(idx >= 0);
 
@@ -5838,7 +5886,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
 
     bool err = this->matrix_->ReplaceColumnVector(idx, *vec.vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ReplaceColumnVector() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5858,7 +5906,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
       if (err == false) {
 
         // Convert to CSR
-        unsigned int format = this->get_format();
+        unsigned int format = this->GetFormat();
         this->ConvertToCSR();
 
         if (this->matrix_->ReplaceColumnVector(idx, *vec_host.vector_) == false) {
@@ -5916,7 +5964,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<Valu
 
     bool err = this->matrix_->ExtractColumnVector(idx, vec->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractColumnVector() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5925,7 +5973,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<Valu
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -5940,7 +5988,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<Valu
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ExtractColumnVector() is performed in CSR format");
 
       if (this->is_accel() == true) {
@@ -5963,6 +6011,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
   LOG_DEBUG(this, "LocalMatrix::ReplaceRowVector()",
             idx);
 
+  assert(&vec != NULL);
   assert(vec.get_size() == this->get_ncol());
   assert(idx >= 0);
 
@@ -5977,7 +6026,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
 
     bool err = this->matrix_->ReplaceRowVector(idx, *vec.vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ReplaceRowVector() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -5997,7 +6046,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
       if (err == false) {
 
         // Convert to CSR
-        unsigned int format = this->get_format();
+        unsigned int format = this->GetFormat();
         this->ConvertToCSR();
 
         if (this->matrix_->ReplaceRowVector(idx, *vec_host.vector_) == false) {
@@ -6055,7 +6104,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(const int idx, LocalVector<ValueTy
 
     bool err = this->matrix_->ExtractRowVector(idx, vec->vector_);
 
-    if ((err == false) && (this->is_host() == true) && (this->get_format() == CSR)) {
+    if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
       LOG_INFO("Computation of LocalMatrix::ExtractRowVector() failed");
       this->info();
       FATAL_ERROR(__FILE__, __LINE__);
@@ -6064,7 +6113,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(const int idx, LocalVector<ValueTy
     if (err == false) {
 
       LocalMatrix<ValueType> mat_host;
-      mat_host.ConvertTo(this->get_format());
+      mat_host.ConvertTo(this->GetFormat());
       mat_host.CopyFrom(*this);
 
       // Move to host
@@ -6079,7 +6128,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(const int idx, LocalVector<ValueTy
         FATAL_ERROR(__FILE__, __LINE__);
       }
 
-      if (this->get_format() != CSR)
+      if (this->GetFormat() != CSR)
         LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::ExtractRowVector() is performed in CSR format");
 
       if (this->is_accel() == true) {
