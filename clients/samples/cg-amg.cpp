@@ -51,7 +51,11 @@ int main(int argc, char* argv[]) {
   ls.SetOperator(mat);
   ls.Build();
 
-  p.SetHostLevels(2);
+  // Compute coarsest levels on the host
+  if(p.GetNumLevels() > 2)
+  {
+    p.SetHostLevels(2);
+  }
 
   tack = rocalution_time();
   std::cout << "Building time:" << (tack-tick)/1000000 << " sec" << std::endl;
