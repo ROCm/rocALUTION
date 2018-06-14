@@ -283,18 +283,14 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
     ValueType alpha, beta;
     ValueType rho, rho_old;
 
-    // initial residual = b - Ax
+    // Initial residual = b - Ax
     op->Apply(*x, r);
-    r->ScaleAdd(ValueType(-1.0), rhs);
+    r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    // p = r
-    p->CopyFrom(*r);
-
-    // rho = (r,r)
-    rho = r->DotNonConj(*r);
-
-    // use for |b-Ax0|
+    // Initial residual norm |b-Ax0|
     ValueType res_norm = this->Norm(*r);
+    // Initial residual norm |b|
+    //    ValueType res_norm = this->Norm(rhs);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -302,35 +298,14 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
         return;
     }
 
-    // use for |b|
-    //  this->iter_ctrl_.InitResidual(rhs.Norm());
-
-    // q=Ap
-    op->Apply(*p, q);
-
-    // alpha = rho / (p,q)
-    alpha = rho / p->DotNonConj(*q);
-
-    // x = x + alpha*p
-    x->AddScale(*p, alpha);
-
-    // r = r - alpha*q
-    r->AddScale(*q, ValueType(-1.0) * alpha);
-
-    rho_old = rho;
+    // p = r
+    p->CopyFrom(*r);
 
     // rho = (r,r)
     rho = r->DotNonConj(*r);
 
-    res_norm = this->Norm(*r);
-
-    while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+    while(true)
     {
-        beta = rho / rho_old;
-
-        // p = beta*p + r
-        p->ScaleAdd(beta, *r);
-
         // q=Ap
         op->Apply(*p, q);
 
@@ -343,12 +318,20 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
         // r = r - alpha*q
         r->AddScale(*q, ValueType(-1.0) * alpha);
 
-        rho_old = rho;
+        // Check convergence
+        res_norm = this->Norm(*r);
+        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        {
+            break;
+        }
 
         // rho = (r,r)
-        rho = r->DotNonConj(*r);
+        rho_old = rho;
+        rho     = r->DotNonConj(*r);
 
-        res_norm = this->Norm(*r);
+        // p = beta*p + r
+        beta = rho / rho_old;
+        p->ScaleAdd(beta, *r);
     }
 
     LOG_DEBUG(this, "CG::SolveNonPrecond_()", " #*# end");
@@ -375,9 +358,21 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     ValueType alpha, beta;
     ValueType rho, rho_old;
 
-    // initial residual = b - Ax
+    // Initial residual = b - Ax
     op->Apply(*x, r);
-    r->ScaleAdd(ValueType(-1.0), rhs);
+    r->ScaleAdd(static_cast<ValueType>(-1), rhs);
+
+    // Initial residual norm |b-Ax0|
+    ValueType res_norm = this->Norm(*r);
+    // Initial residual norm |b|
+    //    ValueType res_norm = this->Norm(rhs);
+
+    // |b - Ax0|
+    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    {
+        LOG_DEBUG(this, "CG::SolvePrecond_()", " #*# end");
+        return;
+    }
 
     // Solve Mz=r
     this->precond_->SolveZeroSol(*r, z);
@@ -388,49 +383,8 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     // rho = (r,z)
     rho = r->DotNonConj(*z);
 
-    // initial residual norm
-
-    // use for |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
-
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    while(true)
     {
-        LOG_DEBUG(this, "CG::SolvePrecond_()", " #*# end");
-        return;
-    }
-
-    // use for |b|
-    //  this->iter_ctrl_.InitResidual(rhs.Norm());
-
-    // q=Ap
-    op->Apply(*p, q);
-
-    // alpha = rho / (p,q)
-    alpha = rho / p->DotNonConj(*q);
-
-    // x = x + alpha*p
-    x->AddScale(*p, alpha);
-
-    // r = r - alpha*q
-    r->AddScale(*q, ValueType(-1.0) * alpha);
-
-    res_norm = this->Norm(*r);
-
-    while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
-    {
-        rho_old = rho;
-
-        // Solve Mz=r
-        this->precond_->SolveZeroSol(*r, z);
-
-        // rho = (r,z)
-        rho = r->DotNonConj(*z);
-
-        beta = rho / rho_old;
-
-        // p = beta*p + z
-        p->ScaleAdd(beta, *z);
-
         // q=Ap
         op->Apply(*p, q);
 
@@ -441,9 +395,25 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
         x->AddScale(*p, alpha);
 
         // r = r - alpha*q
-        r->AddScale(*q, ValueType(-1.0) * alpha);
+        r->AddScale(*q, -alpha);
 
+        // Check convergence
         res_norm = this->Norm(*r);
+        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        {
+            break;
+        }
+
+        // Solve Mz=r
+        this->precond_->SolveZeroSol(*r, z);
+
+        // rho = (r,z)
+        rho_old = rho;
+        rho     = r->DotNonConj(*z);
+
+        // p = beta*p + z
+        beta = rho / rho_old;
+        p->ScaleAdd(beta, *z);
     }
 
     LOG_DEBUG(this, "CG::SolvePrecond_()", " #*# end");
