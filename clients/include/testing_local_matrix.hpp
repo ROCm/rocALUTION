@@ -93,7 +93,6 @@ void testing_local_matrix_bad_args(void)
 
     // CopyFrom functions
     {
-        LocalMatrix<T> *null_mat = nullptr;
         ASSERT_DEATH(mat1.UpdateValuesCSR(null_data), ".*Assertion.*val != NULL*");
         ASSERT_DEATH(mat1.CopyFromCSR(null_int, vint, vdata), ".*Assertion.*row_offsets != NULL*");
         ASSERT_DEATH(mat1.CopyFromCSR(vint, null_int, vdata), ".*Assertion.*col != NULL*");

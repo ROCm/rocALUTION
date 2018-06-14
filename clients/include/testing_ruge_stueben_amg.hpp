@@ -125,7 +125,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
     p.InitMaxIter(1);
     p.Verbose(0);
 
-//    ls.Verbose(0);
+    ls.Verbose(0);
     ls.SetOperator(A);
     ls.SetPreconditioner(p);
 

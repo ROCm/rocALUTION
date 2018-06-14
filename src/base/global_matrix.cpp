@@ -236,8 +236,6 @@ void GlobalMatrix<ValueType>::SetDataPtrCSR(int **local_row_offset, int **local_
   LOG_DEBUG(this, "GlobalMatrix::SetDataPtrCSR()",
             name);
 
-  assert(this->pm_ != NULL);
-
   assert(local_row_offset != NULL);
   assert(local_col != NULL);
   assert(local_val != NULL);
@@ -255,6 +253,8 @@ void GlobalMatrix<ValueType>::SetDataPtrCSR(int **local_row_offset, int **local_
   assert(*ghost_col != NULL);
   assert(*ghost_val != NULL);
   assert(ghost_nnz > 0);
+
+  assert(this->pm_ != NULL);
 
   this->Clear();
 
@@ -289,8 +289,6 @@ void GlobalMatrix<ValueType>::SetDataPtrCOO(int **local_row, int **local_col, Va
   LOG_DEBUG(this, "GlobalMatrix::SetDataPtrCOO()",
             name);
 
-  assert(this->pm_ != NULL);
-
   assert(local_row != NULL);
   assert(local_col != NULL);
   assert(local_val != NULL);
@@ -308,6 +306,8 @@ void GlobalMatrix<ValueType>::SetDataPtrCOO(int **local_row, int **local_col, Va
   assert(*ghost_col != NULL);
   assert(*ghost_val != NULL);
   assert(ghost_nnz > 0);
+
+  assert(this->pm_ != NULL);
 
   this->Clear();
 
@@ -339,8 +339,6 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCSR(int **row_offset, int **col, Va
   LOG_DEBUG(this, "GlobalMatrix::SetLocalDataPtrCSR()",
             name);
 
-  assert(this->pm_ != NULL);
-
   assert(row_offset != NULL);
   assert(col != NULL);
   assert(val != NULL);
@@ -350,6 +348,8 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCSR(int **row_offset, int **col, Va
   assert(*val != NULL);
 
   assert(nnz > 0);
+
+  assert(this->pm_ != NULL);
 
   this->object_name_ = name;
   std::string interior_name = "Interior of " + name;
@@ -376,8 +376,6 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCOO(int **row, int **col, ValueType
   LOG_DEBUG(this, "GlobalMatrix::SetLocalDataPtrCOO()",
             name);
 
-  assert(this->pm_ != NULL);
-
   assert(row != NULL);
   assert(col != NULL);
   assert(val != NULL);
@@ -387,6 +385,8 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCOO(int **row, int **col, ValueType
   assert(*val != NULL);
 
   assert(nnz > 0);
+
+  assert(this->pm_ != NULL);
 
   this->object_name_ = name;
   std::string interior_name = "Interior of " + name;
@@ -413,8 +413,6 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCSR(int **row_offset, int **col, Va
   LOG_DEBUG(this, "GlobalMatrix::SetGhostDataPtrCSR()",
             name);
 
-  assert(this->pm_ != NULL);
-
   assert(row_offset != NULL);
   assert(col != NULL);
   assert(val != NULL);
@@ -424,6 +422,8 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCSR(int **row_offset, int **col, Va
   assert(*val != NULL);
 
   assert(nnz > 0);
+
+  assert(this->pm_ != NULL);
 
   std::string ghost_name = "Ghost of " + name;
 
@@ -451,8 +451,6 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCOO(int **row, int **col, ValueType
   LOG_DEBUG(this, "GlobalMatrix::SetGhostDataPtrCOO()",
             name);
 
-  assert(this->pm_ != NULL);
-
   assert(row != NULL);
   assert(col != NULL);
   assert(val != NULL);
@@ -462,6 +460,8 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCOO(int **row, int **col, ValueType
   assert(*val != NULL);
 
   assert(nnz > 0);
+
+  assert(this->pm_ != NULL);
 
   std::string ghost_name = "Ghost of " + name;
 
