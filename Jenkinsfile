@@ -81,9 +81,9 @@ String g_relativize( String root_string, String rel_source, String rel_build )
 
 ////////////////////////////////////////////////////////////////////////
 // Construct the relative path of the build directory
-void build_directory_rel( project_paths paths, compiler_data hcc_args )
+void build_directory_rel( project_paths paths, compiler_data args )
 {
-//   if( hcc_args.build_config.equalsIgnoreCase( 'release' ) )
+//   if( args.build_config.equalsIgnoreCase( 'release' ) )
 //   {
 //     paths.project_build_prefix = paths.build_prefix + '/' + paths.project_name + '/release';
 //   }
@@ -203,7 +203,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
         """
     }
 
-    stage( "Test ${compiler_args.compiler_name} ${compiler_args.build_config}" )
+    stage( "Test ${compiler_args.build_config}" )
     {
       // Cap the maximum amount of testing to be a few hours; assume failure if the time limit is hit
       timeout(time: 2, unit: 'HOURS')
@@ -228,7 +228,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
         }
       }
 
-      String docker_context = "${compiler_args.build_config}/${compiler_args.compiler_name}"
+      String docker_context = "${compiler_args.build_config}"
       sh  """#!/usr/bin/env bash
           set -x
           cd ${paths.project_build_prefix}/build/release
@@ -282,10 +282,10 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
 String docker_test_install( compiler_data compiler_args, docker_data docker_args, project_paths rocalution_paths, String job_name )
 {
   def rocalution_install_image = null
-  String image_name = "rocalution-hip-${compiler_args.compiler_name}-ubuntu-16.04"
-  String docker_context = "${compiler_args.build_config}/${compiler_args.compiler_name}"
+  String image_name = "rocalution-hip-ubuntu-16.04"
+  String docker_context = "${compiler_args.build_config}"
 
-  stage( "Install ${compiler_args.compiler_name} ${compiler_args.build_config}" )
+  stage( "Install ${compiler_args.build_config}" )
   {
     //  We copy the docker files into the bin directory where the .deb lives so that it's a clean build everytime
     sh  """#!/usr/bin/env bash
@@ -376,7 +376,6 @@ class docker_data implements Serializable
 // Docker related variables gathered together to reduce parameter bloat on function calls
 class compiler_data implements Serializable
 {
-  String compiler_name
   String build_config
   String compiler_path
 }
@@ -401,7 +400,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
 {
   ansiColor( 'vga' )
   {
-    stage( "Build ${compiler_args.compiler_name} ${compiler_args.build_config}" )
+    stage( "Build ${compiler_args.build_config}" )
     {
       // Checkout source code, dependencies and version files
       checkout_and_version( rocalution_paths )
@@ -419,7 +418,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
       docker_build_inside_image( rocalution_build_image, compiler_args, docker_args, rocalution_paths )
     }
 
-    if( !rocalution_paths.project_name.equalsIgnoreCase( 'rocalution-hcc-ctu' ) )
+    if( rocalution_paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' ) )
     {
       // After a successful build, upload a docker image of the results
       String job_name = env.JOB_NAME.toLowerCase( )
@@ -442,7 +441,6 @@ parallel rocm_ubuntu_host:
         docker_build_args:' --pull' )
 
     def compiler_args = new compiler_data(
-        compiler_name:'hcc-rocm-ubuntu',
         build_config:'Release',
         compiler_path:'/usr/bin/c++' )
 
@@ -474,7 +472,6 @@ rocm_ubuntu_host_openmp:
         docker_build_args:' --pull' )
 
     def compiler_args = new compiler_data(
-        compiler_name:'hcc-rocm-ubuntu',
         build_config:'Release',
         compiler_path:'/usr/bin/c++' )
 
@@ -506,7 +503,6 @@ rocm_ubuntu_host_mpi:
         docker_build_args:' --pull' )
 
     def compiler_args = new compiler_data(
-        compiler_name:'hcc-rocm-ubuntu',
         build_config:'Release',
         compiler_path:'/usr/bin/c++' )
 
@@ -538,7 +534,6 @@ rocm_ubuntu_hip:
         docker_build_args:' --pull' )
 
     def compiler_args = new compiler_data(
-        compiler_name:'gnu-g++-ubuntu',
         build_config:'Release',
         compiler_path:'/usr/bin/c++' )
 
