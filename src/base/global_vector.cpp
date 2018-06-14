@@ -237,10 +237,11 @@ void GlobalVector<ValueType>::SetDataPtr(ValueType **ptr, std::string name, cons
   LOG_DEBUG(this, "GlobalVector::SetDataPtr()",
             name);
 
-  assert (this->pm_ != NULL);
-  assert (*ptr != NULL);
-  assert (this->pm_->global_size_ == size);
-  assert (size <= std::numeric_limits<IndexType2>::max());
+  assert(ptr != NULL);
+  assert(*ptr != NULL);
+  assert(this->pm_ != NULL);
+  assert(this->pm_->global_size_ == size);
+  assert(size <= std::numeric_limits<IndexType2>::max());
 
   this->Clear();
 

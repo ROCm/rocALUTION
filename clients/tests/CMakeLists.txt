@@ -4,6 +4,7 @@
 
 find_package(GTest REQUIRED)
 
+# Non MPI tests
 set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
 # Local structures
@@ -26,6 +27,16 @@ set(ROCALUTION_TEST_SOURCES
   test_ruge_stueben_amg.cpp
   test_samg.cpp
 )
+
+# MPI tests
+if(SUPPORT_MPI)
+  list(APPEND ROCALUTION_TEST_SOURCES
+    test_global_matrix.cpp
+#    test_global_stencil.cpp
+    test_global_vector.cpp
+    test_parallel_manager.cpp
+  )
+endif()
 
 set(ROCALUTION_CLIENTS_COMMON
 )
