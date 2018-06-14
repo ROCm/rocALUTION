@@ -238,6 +238,14 @@ void GlobalMatrix<ValueType>::SetDataPtrCSR(int **local_row_offset, int **local_
 
   assert(this->pm_ != NULL);
 
+  assert(local_row_offset != NULL);
+  assert(local_col != NULL);
+  assert(local_val != NULL);
+
+  assert(ghost_row_offset != NULL);
+  assert(ghost_col != NULL);
+  assert(ghost_val != NULL);
+
   assert(*local_row_offset != NULL);
   assert(*local_col != NULL);
   assert(*local_val != NULL);
@@ -283,6 +291,14 @@ void GlobalMatrix<ValueType>::SetDataPtrCOO(int **local_row, int **local_col, Va
 
   assert(this->pm_ != NULL);
 
+  assert(local_row != NULL);
+  assert(local_col != NULL);
+  assert(local_val != NULL);
+
+  assert(ghost_row != NULL);
+  assert(ghost_col != NULL);
+  assert(ghost_val != NULL);
+
   assert(*local_row != NULL);
   assert(*local_col != NULL);
   assert(*local_val != NULL);
@@ -325,6 +341,10 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCSR(int **row_offset, int **col, Va
 
   assert(this->pm_ != NULL);
 
+  assert(row_offset != NULL);
+  assert(col != NULL);
+  assert(val != NULL);
+
   assert(*row_offset != NULL);
   assert(*col != NULL);
   assert(*val != NULL);
@@ -358,6 +378,10 @@ void GlobalMatrix<ValueType>::SetLocalDataPtrCOO(int **row, int **col, ValueType
 
   assert(this->pm_ != NULL);
 
+  assert(row != NULL);
+  assert(col != NULL);
+  assert(val != NULL);
+
   assert(*row != NULL);
   assert(*col != NULL);
   assert(*val != NULL);
@@ -390,6 +414,10 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCSR(int **row_offset, int **col, Va
             name);
 
   assert(this->pm_ != NULL);
+
+  assert(row_offset != NULL);
+  assert(col != NULL);
+  assert(val != NULL);
 
   assert(*row_offset != NULL);
   assert(*col != NULL);
@@ -425,6 +453,10 @@ void GlobalMatrix<ValueType>::SetGhostDataPtrCOO(int **row, int **col, ValueType
 
   assert(this->pm_ != NULL);
 
+  assert(row != NULL);
+  assert(col != NULL);
+  assert(val != NULL);
+
   assert(*row != NULL);
   assert(*col != NULL);
   assert(*val != NULL);
@@ -458,14 +490,6 @@ void GlobalMatrix<ValueType>::LeaveDataPtrCSR(int **local_row_offset, int **loca
   LOG_DEBUG(this, "GlobalMatrix::LeaveDataPtrCSR()",
             "");
 
-  assert(this->GetLocalM() > 0);
-  assert(this->GetLocalN() > 0);
-  assert(this->GetLocalNnz()  > 0);
-
-  assert(this->GetGhostM() > 0);
-  assert(this->GetGhostN() > 0);
-  assert(this->GetGhostNnz()  > 0);
-
   assert(*local_row_offset == NULL);
   assert(*local_col == NULL);
   assert(*local_val == NULL);
@@ -473,6 +497,14 @@ void GlobalMatrix<ValueType>::LeaveDataPtrCSR(int **local_row_offset, int **loca
   assert(*ghost_row_offset == NULL);
   assert(*ghost_col == NULL);
   assert(*ghost_val == NULL);
+
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
+
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   this->matrix_interior_.LeaveDataPtrCSR(local_row_offset, local_col, local_val);
   this->matrix_ghost_.LeaveDataPtrCSR(ghost_row_offset, ghost_col, ghost_val);
@@ -488,14 +520,6 @@ void GlobalMatrix<ValueType>::LeaveDataPtrCOO(int **local_row, int **local_col, 
   LOG_DEBUG(this, "GlobalMatrix::LeaveDataPtrCOO()",
             "");
 
-  assert(this->GetLocalM() > 0);
-  assert(this->GetLocalN() > 0);
-  assert(this->GetLocalNnz()  > 0);
-
-  assert(this->GetGhostM() > 0);
-  assert(this->GetGhostN() > 0);
-  assert(this->GetGhostNnz()  > 0);
-
   assert(*local_row == NULL);
   assert(*local_col == NULL);
   assert(*local_val == NULL);
@@ -503,6 +527,14 @@ void GlobalMatrix<ValueType>::LeaveDataPtrCOO(int **local_row, int **local_col, 
   assert(*ghost_row == NULL);
   assert(*ghost_col == NULL);
   assert(*ghost_val == NULL);
+
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
+
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   this->matrix_interior_.LeaveDataPtrCOO(local_row, local_col, local_val);
   this->matrix_ghost_.LeaveDataPtrCOO(ghost_row, ghost_col, ghost_val);
@@ -517,13 +549,13 @@ void GlobalMatrix<ValueType>::LeaveLocalDataPtrCSR(int **row_offset, int **col, 
   LOG_DEBUG(this, "GlobalMatrix::LeaveLocalDataPtrCSR()",
             "");
 
-  assert(this->GetLocalM() > 0);
-  assert(this->GetLocalN() > 0);
-  assert(this->GetLocalNnz()  > 0);
-
   assert(*row_offset == NULL);
   assert(*col == NULL);
   assert(*val == NULL);
+
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
 
   this->matrix_interior_.LeaveDataPtrCSR(row_offset, col, val);
 
@@ -537,13 +569,13 @@ void GlobalMatrix<ValueType>::LeaveLocalDataPtrCOO(int **row, int **col, ValueTy
   LOG_DEBUG(this, "GlobalMatrix::LeaveLocalDataPtrCOO()",
             "");
 
-  assert(this->GetLocalM() > 0);
-  assert(this->GetLocalN() > 0);
-  assert(this->GetLocalNnz()  > 0);
-
   assert(*row == NULL);
   assert(*col == NULL);
   assert(*val == NULL);
+
+  assert(this->GetLocalM() > 0);
+  assert(this->GetLocalN() > 0);
+  assert(this->GetLocalNnz()  > 0);
 
   this->matrix_interior_.LeaveDataPtrCOO(row, col, val);
 
@@ -557,13 +589,13 @@ void GlobalMatrix<ValueType>::LeaveGhostDataPtrCSR(int **row_offset, int **col, 
   LOG_DEBUG(this, "GlobalMatrix::LeaveGhostDataPtrCSR()",
             "");
 
-  assert(this->GetGhostM() > 0);
-  assert(this->GetGhostN() > 0);
-  assert(this->GetGhostNnz()  > 0);
-
   assert(*row_offset == NULL);
   assert(*col == NULL);
   assert(*val == NULL);
+
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   this->matrix_ghost_.LeaveDataPtrCSR(row_offset, col, val);
 
@@ -577,13 +609,13 @@ void GlobalMatrix<ValueType>::LeaveGhostDataPtrCOO(int **row, int **col, ValueTy
   LOG_DEBUG(this, "GlobalMatrix::LeaveGhostDataPtrCOO()",
             "");
 
-  assert(this->GetGhostM() > 0);
-  assert(this->GetGhostN() > 0);
-  assert(this->GetGhostNnz()  > 0);
-
   assert(*row == NULL);
   assert(*col == NULL);
   assert(*val == NULL);
+
+  assert(this->GetGhostM() > 0);
+  assert(this->GetGhostN() > 0);
+  assert(this->GetGhostNnz()  > 0);
 
   this->matrix_ghost_.LeaveDataPtrCOO(row, col, val);
 
@@ -1067,6 +1099,10 @@ void GlobalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, i
 template <typename ValueType>
 void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType> *Ac, ParallelManager *pm, const int nrow, const int ncol,
                                               const LocalVector<int> &G, const int Gsize, const int *rG, const int rGsize) const {
+
+  assert(Ac != NULL);
+  assert(pm != NULL);
+  assert(rG != NULL);
 
   // TODO asserts
 

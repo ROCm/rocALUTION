@@ -4,10 +4,12 @@
 
 find_package(GTest REQUIRED)
 
+# Non MPI tests
 set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
 # Local structures
   test_local_matrix.cpp
+  test_local_stencil.cpp
   test_local_vector.cpp
 # Krylov solvers
   test_backend.cpp
@@ -25,6 +27,16 @@ set(ROCALUTION_TEST_SOURCES
   test_ruge_stueben_amg.cpp
   test_samg.cpp
 )
+
+# MPI tests
+if(SUPPORT_MPI)
+  list(APPEND ROCALUTION_TEST_SOURCES
+    test_global_matrix.cpp
+#    test_global_stencil.cpp
+    test_global_vector.cpp
+    test_parallel_manager.cpp
+  )
+endif()
 
 set(ROCALUTION_CLIENTS_COMMON
 )
