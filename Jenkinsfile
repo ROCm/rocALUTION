@@ -189,6 +189,12 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
   {
     withEnv(["CXX=${compiler_args.compiler_path}", 'CLICOLOR_FORCE=1'])
     {
+      // Install hipblas, rocsparse and hipsparse
+      sh  """#!/usr/bin/env bash
+          set -x
+          cd ${paths.project_build_prefix}
+          sudo dpkg -i deps/hipblas* deps/rocsparse* deps/hipsparse*
+        """
       // Build library & clients
       sh  """#!/usr/bin/env bash
           set -x
@@ -223,50 +229,46 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
       }
 
       String docker_context = "${compiler_args.build_config}/${compiler_args.compiler_name}"
-      if( compiler_args.compiler_name.toLowerCase( ).startsWith( 'hcc-' ) )
+      sh  """#!/usr/bin/env bash
+          set -x
+          cd ${paths.project_build_prefix}/build/release
+          make package
+        """
+
+      if( paths.project_name.toLowerCase().startsWith( 'rocalution-ubuntu' ) )
       {
         sh  """#!/usr/bin/env bash
             set -x
-            cd ${paths.project_build_prefix}/build/release
-            make package
-          """
+            rm -rf ${docker_context} && mkdir -p ${docker_context}
+            mv ${paths.project_build_prefix}/build/release/*.deb ${docker_context}
+            dpkg -c ${docker_context}/*.deb
+        """
+        archiveArtifacts artifacts: "${docker_context}/*.deb", fingerprint: true
 
-        if( paths.project_name.toLowerCase().startsWith( 'rocalution-ubuntu' ) )
-        {
-          sh  """#!/usr/bin/env bash
-              set -x
-              rm -rf ${docker_context} && mkdir -p ${docker_context}
-              mv ${paths.project_build_prefix}/build/release/*.deb ${docker_context}
-              dpkg -c ${docker_context}/*.deb
-          """
-          archiveArtifacts artifacts: "${docker_context}/*.deb", fingerprint: true
-
-//          stage('Clang Format')
-//          {
-//            sh '''
-//                find . -iname \'*.h\' \
-//                    -o -iname \'*.hpp\' \
-//                    -o -iname \'*.cpp\' \
-//                    -o -iname \'*.h.in\' \
-//                    -o -iname \'*.hpp.in\' \
-//                    -o -iname \'*.cpp.in\' \
-//                | grep -v 'build/' \
-//                | xargs -n 1 -P 1 -I{} -t sh -c \'clang-format-3.8 -style=file {} | diff - {}\'
-//            '''
-//          }
-        }
-        else if( paths.project_name.toLowerCase().startsWith( 'rocalution-fedora' ) )
-        {
-          sh  """#!/usr/bin/env bash
-              set -x
-              rm -rf ${docker_context} && mkdir -p ${docker_context}
-              mv ${paths.project_build_prefix}/build/release/*.rpm ${docker_context}
-              rpm -qlp ${docker_context}/*.rpm
-          """
-          archiveArtifacts artifacts: "${docker_context}/*.rpm", fingerprint: true
-        }
+//        stage('Clang Format')
+//        {
+//          sh '''
+//              find . -iname \'*.h\' \
+//                  -o -iname \'*.hpp\' \
+//                  -o -iname \'*.cpp\' \
+//                  -o -iname \'*.h.in\' \
+//                  -o -iname \'*.hpp.in\' \
+//                  -o -iname \'*.cpp.in\' \
+//              | grep -v 'build/' \
+//              | xargs -n 1 -P 1 -I{} -t sh -c \'clang-format-3.8 -style=file {} | diff - {}\'
+//          '''
+//        }
       }
-
+      else if( paths.project_name.toLowerCase().startsWith( 'rocalution-fedora' ) )
+      {
+        sh  """#!/usr/bin/env bash
+            set -x
+            rm -rf ${docker_context} && mkdir -p ${docker_context}
+            mv ${paths.project_build_prefix}/build/release/*.rpm ${docker_context}
+            rpm -qlp ${docker_context}/*.rpm
+        """
+        archiveArtifacts artifacts: "${docker_context}/*.rpm", fingerprint: true
+      }
     }
   }
 
@@ -428,104 +430,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
   }
 }
 
-parallel rocm_ubuntu_host:
-{
-  node( 'docker && rocm && dkms')
-  {
-    def hcc_docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
-        build_docker_file:'dockerfile-build-ubuntu',
-        install_docker_file:'dockerfile-install-ubuntu',
-        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
-        docker_build_args:' --pull' )
-
-    def hcc_compiler_args = new compiler_data(
-        compiler_name:'hcc-rocm-ubuntu',
-        build_config:'Release',
-        compiler_path:'/opt/rocm/bin/hcc' )
-
-    def rocalution_paths = new project_paths(
-        project_name:'rocalution-ubuntu-host',
-        src_prefix:'src',
-        build_prefix:'src',
-        build_command: './install.sh --host --no-openmp -cd' )
-
-    def print_version_closure = {
-      sh  """
-          set -x
-          /opt/rocm/bin/hcc --version
-        """
-    }
-
-    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
-  }
-},
-rocm_ubuntu_host_openmp:
-{
-  node( 'docker && rocm && dkms')
-  {
-    def hcc_docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
-        build_docker_file:'dockerfile-build-ubuntu',
-        install_docker_file:'dockerfile-install-ubuntu',
-        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
-        docker_build_args:' --pull' )
-
-    def hcc_compiler_args = new compiler_data(
-        compiler_name:'hcc-rocm-ubuntu',
-        build_config:'Release',
-        compiler_path:'/opt/rocm/bin/hcc' )
-
-    def rocalution_paths = new project_paths(
-        project_name:'rocalution-ubuntu-openmp',
-        src_prefix:'src',
-        build_prefix:'src',
-        build_command: './install.sh --host -cd' )
-
-    def print_version_closure = {
-      sh  """
-          set -x
-          /opt/rocm/bin/hcc --version
-        """
-    }
-
-    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
-  }
-},
-rocm_ubuntu_host_mpi:
-{
-  node( 'docker && rocm && dkms')
-  {
-    def hcc_docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
-        build_docker_file:'dockerfile-build-ubuntu',
-        install_docker_file:'dockerfile-install-ubuntu',
-        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
-        docker_build_args:' --pull' )
-
-    def hcc_compiler_args = new compiler_data(
-        compiler_name:'hcc-rocm-ubuntu',
-        build_config:'Release',
-        compiler_path:'/opt/rocm/bin/hcc' )
-
-    def rocalution_paths = new project_paths(
-        project_name:'rocalution-ubuntu-mpi',
-        src_prefix:'src',
-        build_prefix:'src',
-        build_command: './install.sh --mpi --host --no-openmp -cd' )
-
-    def print_version_closure = {
-      sh  """
-          set -x
-          /opt/rocm/bin/hcc --version
-        """
-    }
-
-    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
-  }
-}
-//,
-//rocm_ubuntu_hip:
+//parallel rocm_ubuntu_host:
 //{
 //  node( 'docker && rocm && dkms')
 //  {
@@ -542,10 +447,10 @@ rocm_ubuntu_host_mpi:
 //        compiler_path:'/opt/rocm/bin/hcc' )
 //
 //    def rocalution_paths = new project_paths(
-//        project_name:'rocalution_hip-ubuntu',
+//        project_name:'rocalution-ubuntu-host',
 //        src_prefix:'src',
 //        build_prefix:'src',
-//        build_command: './install.sh --hip -cd' )
+//        build_command: './install.sh --host --no-openmp -cd' )
 //
 //    def print_version_closure = {
 //      sh  """
@@ -556,4 +461,100 @@ rocm_ubuntu_host_mpi:
 //
 //    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
 //  }
-//}
+//},
+//rocm_ubuntu_host_openmp:
+//{
+//  node( 'docker && rocm && dkms')
+//  {
+//    def hcc_docker_args = new docker_data(
+//        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+//        build_docker_file:'dockerfile-build-ubuntu',
+//        install_docker_file:'dockerfile-install-ubuntu',
+//        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
+//        docker_build_args:' --pull' )
+//
+//    def hcc_compiler_args = new compiler_data(
+//        compiler_name:'hcc-rocm-ubuntu',
+//        build_config:'Release',
+//        compiler_path:'/opt/rocm/bin/hcc' )
+//
+//    def rocalution_paths = new project_paths(
+//        project_name:'rocalution-ubuntu-openmp',
+//        src_prefix:'src',
+//        build_prefix:'src',
+//        build_command: './install.sh --host -cd' )
+//
+//    def print_version_closure = {
+//      sh  """
+//          set -x
+//          /opt/rocm/bin/hcc --version
+//        """
+//    }
+//
+//    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
+//  }
+//},
+//rocm_ubuntu_host_mpi:
+//{
+//  node( 'docker && rocm && dkms')
+//  {
+//    def hcc_docker_args = new docker_data(
+//        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+//        build_docker_file:'dockerfile-build-ubuntu',
+//        install_docker_file:'dockerfile-install-ubuntu',
+//        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
+//        docker_build_args:' --pull' )
+//
+//    def hcc_compiler_args = new compiler_data(
+//        compiler_name:'hcc-rocm-ubuntu',
+//        build_config:'Release',
+//        compiler_path:'/opt/rocm/bin/hcc' )
+//
+//    def rocalution_paths = new project_paths(
+//        project_name:'rocalution-ubuntu-mpi',
+//        src_prefix:'src',
+//        build_prefix:'src',
+//        build_command: './install.sh --mpi --host --no-openmp -cd' )
+//
+//    def print_version_closure = {
+//      sh  """
+//          set -x
+//          /opt/rocm/bin/hcc --version
+//        """
+//    }
+//
+//    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
+//  }
+//},
+rocm_ubuntu_hip:
+{
+  node( 'docker && rocm && gfx900')
+  {
+    def hcc_docker_args = new docker_data(
+        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+        build_docker_file:'dockerfile-build-ubuntu',
+        install_docker_file:'dockerfile-install-ubuntu',
+        docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
+        docker_build_args:' --pull' )
+
+    def hcc_compiler_args = new compiler_data(
+        compiler_name:'gnu-g++-ubuntu',
+        build_config:'Release',
+        compiler_path:'/usr/bin/c++' )
+
+    def rocalution_paths = new project_paths(
+        project_name:'rocalution-ubuntu-hip',
+        src_prefix:'src',
+        build_prefix:'src',
+        build_command: './install.sh -cd' )
+
+    def print_version_closure = {
+      sh  """
+          set -x
+          /opt/rocm/bin/hcc --version
+        """
+    }
+
+    build_pipeline( hcc_compiler_args, hcc_docker_args, rocalution_paths, print_version_closure )
+  }
+}
