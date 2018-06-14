@@ -2,6 +2,7 @@
 #include "gmres.hpp"
 #include "../iter_ctrl.hpp"
 
+#include "../../base/matrix_formats_ind.hpp"
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_stencil.hpp"
 #include "../../base/local_vector.hpp"
@@ -10,6 +11,7 @@
 #include "../../base/global_vector.hpp"
 
 #include "../../utils/log.hpp"
+#include "../../utils/allocate_free.hpp"
 #include "../../utils/math_functions.hpp"
 
 #include <math.h>
@@ -18,727 +20,599 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-GMRES<OperatorType, VectorType, ValueType>::GMRES() {
+GMRES<OperatorType, VectorType, ValueType>::GMRES()
+{
+    LOG_DEBUG(this, "GMRES::GMRES()", "default constructor");
 
-  LOG_DEBUG(this, "GMRES::GMRES()",
-            "default constructor");
+    this->size_basis_ = 30;
 
-  this->size_basis_ = 30;
-
+    this->c_ = NULL;
+    this->s_ = NULL;
+    this->r_ = NULL;
+    this->H_ = NULL;
+    this->v_ = NULL;
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-GMRES<OperatorType, VectorType, ValueType>::~GMRES() {
+GMRES<OperatorType, VectorType, ValueType>::~GMRES()
+{
+    LOG_DEBUG(this, "GMRES::~GMRES()", "destructor");
 
-  LOG_DEBUG(this, "GMRES::~GMRES()",
-            "destructor");
-
-  this->Clear();
-
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::Print(void) const {
-
-  if (this->precond_ == NULL) { 
-
-    LOG_INFO("GMRES solver");
-
-  } else {
-
-    LOG_INFO("GMRES solver, with preconditioner:");
-    this->precond_->Print();
-
-  }
-
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::PrintStart_(void) const {
-
-  if (this->precond_ == NULL) { 
-
-    LOG_INFO("GMRES(" <<this->size_basis_ <<") (non-precond) linear solver starts");
-
-  } else {
-
-    LOG_INFO("GMRES(" <<this->size_basis_ <<") solver starts, with preconditioner:");
-    this->precond_->Print();
-
-  }
-
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
-
-  if (this->precond_ == NULL) { 
-
-    LOG_INFO("GMRES(" <<this->size_basis_ <<") (non-precond) ends");
-
-  } else {
-
-    LOG_INFO("GMRES(" <<this->size_basis_ <<") ends");
-
-  }
-
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::Build(void) {
-
-  LOG_DEBUG(this, "GMRES::Build()",
-            this->build_ <<
-            " #*# begin");
-
-  if (this->build_ == true)
     this->Clear();
-
-  assert(this->build_ == false);
-
-  if (this->res_norm_ != 2) {
-    LOG_INFO("GMRES solver supports only L2 residual norm. The solver is switching to L2 norm");
-    this->res_norm_ = 2;
-  }
-
-  this->build_ = true;
-
-  if (this->precond_ != NULL) {
-
-    this->precond_->SetOperator(*this->op_);
-
-    this->precond_->Build();
-
-    this->z_.CloneBackend(*this->op_);
-    this->z_.Allocate("z", this->op_->GetM());
-
-  }
-
-  this->w_.CloneBackend(*this->op_);
-  this->w_.Allocate("w", this->op_->GetM());
-
-  this->v_ = new VectorType*[this->size_basis_+1];
-  for (int i = 0; i < this->size_basis_+1; ++i) {
-    this->v_[i] = new VectorType;
-    this->v_[i]->CloneBackend(*this->op_);
-    this->v_[i]->Allocate("v", this->op_->GetM());
-  }
-
-  LOG_DEBUG(this, "GMRES::Build()",
-            this->build_ <<
-            " #*# end");
-
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::Clear(void) {
+void GMRES<OperatorType, VectorType, ValueType>::Print(void) const
+{
+    if(this->precond_ == NULL)
+    {
+        LOG_INFO("GMRES solver");
+    }
+    else
+    {
+        LOG_INFO("GMRES solver, with preconditioner:");
+        this->precond_->Print();
+    }
+}
 
-  LOG_DEBUG(this, "GMRES::Clear()",
-            this->build_);
+template <class OperatorType, class VectorType, typename ValueType>
+void GMRES<OperatorType, VectorType, ValueType>::PrintStart_(void) const
+{
+    if(this->precond_ == NULL)
+    {
+        LOG_INFO("GMRES(" << this->size_basis_ << ") (non-precond) linear solver starts");
+    }
+    else
+    {
+        LOG_INFO("GMRES(" << this->size_basis_ << ") solver starts, with preconditioner:");
+        this->precond_->Print();
+    }
+}
 
-  if (this->build_ == true) {
+template <class OperatorType, class VectorType, typename ValueType>
+void GMRES<OperatorType, VectorType, ValueType>::PrintEnd_(void) const
+{
+    if(this->precond_ == NULL)
+    {
+        LOG_INFO("GMRES(" << this->size_basis_ << ") (non-precond) ends");
+    }
+    else
+    {
+        LOG_INFO("GMRES(" << this->size_basis_ << ") ends");
+    }
+}
 
-    if (this->precond_ != NULL) {
-        this->precond_->Clear();
-        this->precond_   = NULL;
+template <class OperatorType, class VectorType, typename ValueType>
+void GMRES<OperatorType, VectorType, ValueType>::Build(void)
+{
+    LOG_DEBUG(this, "GMRES::Build()", this->build_ << " #*# begin");
+
+    if(this->build_ == true)
+    {
+        this->Clear();
     }
 
-    this->z_.Clear();
-    this->w_.Clear();
+    assert(this->build_ == false);
+    assert(this->op_ != NULL);
+    assert(this->op_->GetM() > 0);
+    assert(this->op_->GetM() == this->op_->GetN());
+    assert(this->size_basis_ > 0);
 
-    for (int i = 0; i < this->size_basis_+1; ++i)
-      delete this->v_[i];
-    delete[] this->v_;
-
-    this->iter_ctrl_.Clear();
-
-    this->build_ = false;
-
-  }
-
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
-
-  LOG_DEBUG(this, "GMRES::ReBuildNumeric()",
-            this->build_);
-
-  if (this->build_ == true) {
-
-    this->z_.Zeros();
-    this->w_.Zeros();
-
-    for (int i = 0; i < this->size_basis_+1; ++i)
-      this->v_[i]->Zeros();
-
-    this->iter_ctrl_.Clear();
-
-    if (this->precond_ != NULL) {
-        this->precond_->ReBuildNumeric();
+    if(this->res_norm_ != 2)
+    {
+        LOG_INFO("GMRES solver supports only L2 residual norm. The solver is switching to L2 norm");
+        this->res_norm_ = 2;
     }
 
-  } else {
-    
-    this->Build();
+    allocate_host(this->size_basis_, &this->c_);
+    allocate_host(this->size_basis_, &this->s_);
+    allocate_host(this->size_basis_ + 1, &this->r_);
+    allocate_host((this->size_basis_ + 1) * this->size_basis_, &this->H_);
 
-  }
+    this->v_ = new VectorType*[this->size_basis_ + 1];
 
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
-
-  LOG_DEBUG(this, "GMRES::MoveToHostLocalData_()",
-            this->build_);  
-
-
-  if (this->build_ == true) {
-
-    this->w_.MoveToHost();
-
-    for (int i = 0; i < this->size_basis_+1; ++i)
-      this->v_[i]->MoveToHost();
-
-    if (this->precond_ != NULL) {
-      this->z_.MoveToHost();
-      this->precond_->MoveToHost();
+    for(int i = 0; i < this->size_basis_ + 1; ++i)
+    {
+        this->v_[i] = new VectorType;
+        this->v_[i]->CloneBackend(*this->op_);
+        this->v_[i]->Allocate("v", this->op_->GetM());
     }
 
-  }
+    if(this->precond_ != NULL)
+    {
+        this->z_.CloneBackend(*this->op_);
+        this->z_.Allocate("z", this->op_->GetM());
 
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
-
-  LOG_DEBUG(this, "GMRES::MoveToAcceleratorLocalData_()",
-            this->build_);
-
-  if (this->build_ == true) {
-
-    this->w_.MoveToAccelerator();
-
-    for (int i = 0; i < this->size_basis_+1; ++i)
-      this->v_[i]->MoveToAccelerator();
-
-
-    if (this->precond_ != NULL) {
-      this->z_.MoveToAccelerator();
-      this->precond_->MoveToAccelerator();
+        this->precond_->SetOperator(*this->op_);
+        this->precond_->Build();
     }
 
-  }
+    this->build_ = true;
 
+    LOG_DEBUG(this, "GMRES::Build()", this->build_ << " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::SetBasisSize(const int size_basis) {
+void GMRES<OperatorType, VectorType, ValueType>::Clear(void)
+{
+    LOG_DEBUG(this, "GMRES::Clear()", this->build_);
 
-  LOG_DEBUG(this, "GMRES:SetBasisSize()",
-            size_basis);
+    if(this->build_ == true)
+    {
+        if(this->precond_ != NULL)
+        {
+            this->z_.Clear();
+            this->precond_->Clear();
+            this->precond_ = NULL;
+        }
 
-  assert(size_basis > 0);
-  this->size_basis_ = size_basis;
+        free_host(&this->c_);
+        free_host(&this->s_);
+        free_host(&this->r_);
+        free_host(&this->H_);
 
+        for(int i = 0; i < this->size_basis_ + 1; ++i)
+        {
+            this->v_[i]->Clear();
+            delete this->v_[i];
+        }
+        delete[] this->v_;
+        this->v_ = NULL;
+
+        this->iter_ctrl_.Clear();
+
+        this->build_ = false;
+    }
+}
+
+template <class OperatorType, class VectorType, typename ValueType>
+void GMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
+{
+    LOG_DEBUG(this, "GMRES::ReBuildNumeric()", this->build_);
+
+    if(this->build_ == true)
+    {
+        this->z_.Zeros();
+
+        for(int i = 0; i < this->size_basis_ + 1; ++i)
+        {
+            this->v_[i]->Zeros();
+        }
+
+        this->iter_ctrl_.Clear();
+
+        if(this->precond_ != NULL)
+        {
+            this->precond_->ReBuildNumeric();
+        }
+    }
+    else
+    {
+        this->Build();
+    }
+}
+
+template <class OperatorType, class VectorType, typename ValueType>
+void GMRES<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
+{
+    LOG_DEBUG(this, "GMRES::MoveToHostLocalData_()", this->build_);
+
+    if(this->build_ == true)
+    {
+        for(int i = 0; i < this->size_basis_ + 1; ++i)
+        {
+            this->v_[i]->MoveToHost();
+        }
+
+        if(this->precond_ != NULL)
+        {
+            this->z_.MoveToHost();
+            this->precond_->MoveToHost();
+        }
+    }
+}
+
+template <class OperatorType, class VectorType, typename ValueType>
+void GMRES<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
+{
+    LOG_DEBUG(this, "GMRES::MoveToAcceleratorLocalData_()", this->build_);
+
+    if(this->build_ == true)
+    {
+        for(int i = 0; i < this->size_basis_ + 1; ++i)
+        {
+            this->v_[i]->MoveToAccelerator();
+        }
+
+        if(this->precond_ != NULL)
+        {
+            this->z_.MoveToAccelerator();
+            this->precond_->MoveToAccelerator();
+        }
+    }
+}
+
+template <class OperatorType, class VectorType, typename ValueType>
+void GMRES<OperatorType, VectorType, ValueType>::SetBasisSize(const int size_basis)
+{
+    LOG_DEBUG(this, "GMRES:SetBasisSize()", size_basis);
+
+    assert(size_basis > 0);
+    assert(this->build_ == false);
+
+    this->size_basis_ = size_basis;
 }
 
 // GMRES implementation is based on the algorithm described in the book
 // 'Templates for the Solution of Linear Systems: Building Blocks for Iterative Methods'
 // by SIAM on page 18 and modified to fit rocalution structures.
 template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType &rhs,
-                                                                        VectorType *x) {
+void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
+                                                                  VectorType* x)
+{
+    LOG_DEBUG(this, "GMRES::SolveNonPrecond_()", " #*# begin");
 
-  LOG_DEBUG(this, "GMRES::SolveNonPrecond_()",
-            " #*# begin");
+    assert(x != NULL);
+    assert(x != &rhs);
+    assert(this->op_ != NULL);
+    assert(this->precond_ == NULL);
+    assert(this->build_ == true);
+    assert(this->size_basis_ > 0);
+    assert(this->res_norm_ == 2);
 
-  assert(x != NULL);
-  assert(x != &rhs);
-  assert(this->op_  != NULL);
-  assert(this->precond_  == NULL);
-  assert(this->build_ == true);
-  assert(this->size_basis_ > 0);
+    const OperatorType* op = this->op_;
 
-  if (this->res_norm_ != 2) {
-    LOG_INFO("GMRES solver supports only L2 residual norm. The solver is switching to L2 norm");
-    this->res_norm_ = 2;
-  }
+    VectorType** v = this->v_;
 
-  const OperatorType *op = this->op_;
+    ValueType* c = this->c_;
+    ValueType* s = this->s_;
+    ValueType* r = this->r_;
+    ValueType* H = this->H_;
 
-  VectorType *w  = &this->w_;
-  VectorType **v = this->v_;
+    ValueType one = static_cast<ValueType>(1);
 
-  int size_basis = this->size_basis_;
+    int i;
+    int size = this->size_basis_;
 
-  std::vector<ValueType> c(size_basis);
-  std::vector<ValueType> s(size_basis);
-  std::vector<ValueType> H((size_basis+1)*size_basis, ValueType(0.0));
-  std::vector<ValueType> sq(size_basis+1, ValueType(0.0));
-
-  // Compute residual V[0] = b - Ax
-  op->Apply(*x, v[0]);
-  v[0]->ScaleAdd(ValueType(-1.0), rhs);
-
-  // res_norm = (v[0],v[0])
-  ValueType res_norm = this->Norm(*v[0]);
-  double res = rocalution_abs(res_norm);
-
-  if (this->iter_ctrl_.InitResidual(res) == false) {
-
-      LOG_DEBUG(this, "GMRES::SolveNonPrecond_()",
-            " #*# end");
-
-      return;
-
-  }
-
-  // Residual normalization
-  // v = r / ||r||
-  v[0]->Scale(ValueType(1.0)/res_norm);
-  sq[0] = res_norm;
-
-  for (int i = 0; i < size_basis; ++i) {
-    // w = A*v(i)
-    op->Apply(*v[i], w);
-
-    // Build Hessenberg matrix H
-    for (int j = 0; j <= i; ++j) {
-      // H(j,i) = <w,v(j)>
-      H[j+i*(size_basis+1)] = w->Dot(*v[j]);
-
-      // w = w - H(j,i) * v(j)
-      w->AddScale( *v[j], ValueType(-1.0) * H[j+i*(size_basis+1)] );
-    }
-
-    // H(i+1,i) = ||w||
-    H[i+1+i*(size_basis+1)] = this->Norm(*w);
-
-    // v(i+1) = w / H(i+1,i)
-    w->Scale(ValueType(1.0) / H[i+1+i*(size_basis+1)]);
-    v[i+1]->CopyFrom(*w);
-
-    // Apply J(0),...,J(j-1) on ( H(0,i),...,H(i,i) )
-    for (int k = 0; k < i; ++k)
-      this->ApplyGivensRotation_( c[k], s[k], H[k+i*(size_basis+1)], H[k+1+i*(size_basis+1)] );
-
-    // Construct J(i) (Givens rotation taken from wikipedia pseudo code)
-    this->GenerateGivensRotation_(H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)], c[i], s[i]);
-
-    // Apply J(i) to H(i,i) and H(i,i+1) such that H(i,i+1) = 0
-    this->ApplyGivensRotation_(c[i], s[i], H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)]);
-
-    // Apply J(i) to the norm of the residual sg[i]
-    this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
-
-    // Get current residual
-    res_norm = rocalution_abs(sq[i+1]);
-    res = rocalution_abs(res_norm);
-
-    if (this->iter_ctrl_.CheckResidual(res)) {
-      this->BackSubstitute_(sq, H, i);
-      // Compute solution of least square problem
-      for (int j = 0; j <= i; ++j)
-        x->AddScale(*v[j], sq[j]);
-      break;
-    }
-
-  }
-
-  // If convergence has not been reached, RESTART
-  if (!this->iter_ctrl_.CheckResidualNoCount(res)) {
-    this->BackSubstitute_(sq, H, size_basis-1);
-
-    // Compute solution of least square problem
-    for (int j = 0; j <= size_basis-1; ++j)
-      x->AddScale(*v[j], sq[j]);
-
-    // Compute residual with previous solution vector
+    // Initial residual
     op->Apply(*x, v[0]);
-    v[0]->ScaleAdd(ValueType(-1.0), rhs);
+    v[0]->ScaleAdd(-one, rhs);
 
-    res_norm = this->Norm(*v[0]);
-    res = rocalution_abs(res_norm);
+    // r = 0
+    set_to_zero_host(size + 1, r);
 
-  }
+    // r_0 = ||v_0||
+    r[0] = this->Norm(*v[0]);
 
-  while (!this->iter_ctrl_.CheckResidual(res)) {
-
-    sq.assign(sq.size(), ValueType(0.0));
-
-    // Residual normalization
-    // v = r / ||r||
-    v[0]->Scale(ValueType(1.0)/res_norm);
-    sq[0] = res_norm;
-
-    for (int i = 0; i < size_basis; ++i) {
-      // w = A*v(i)
-      op->Apply(*v[i], w);
-
-      // Build Hessenberg matrix H
-      for (int j = 0; j <= i; ++j) {
-        // H(j,i) = <w,v(j)>
-        H[j+i*(size_basis+1)] = w->Dot(*v[j]);
-
-        // w = w - H(j,i) * v(j)
-        w->AddScale( *v[j], ValueType(-1.0) * H[j+i*(size_basis+1)] );
-      }
-
-      // H(i+1,i) = ||w||
-      H[i+1+i*(size_basis+1)] = this->Norm(*w);
-
-      // v(i+1) = w / H(i+1,i)
-      w->Scale(ValueType(1.0) / H[i+1+i*(size_basis+1)]);
-      v[i+1]->CopyFrom(*w);
-
-      // Apply J(0),...,J(j-1) on ( H(0,i),...,H(i,i) )
-      for (int k = 0; k < i; ++k)
-        this->ApplyGivensRotation_( c[k], s[k], H[k+i*(size_basis+1)], H[k+1+i*(size_basis+1)] );
-
-      // Construct J(i) (Givens rotation taken from wikipedia pseudo code)
-      this->GenerateGivensRotation_(H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)], c[i], s[i]);
-
-      // Apply J(i) to H(i,i) and H(i,i+1) such that H(i,i+1) = 0
-      this->ApplyGivensRotation_(c[i], s[i], H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)]);
-
-      // Apply J(i) to the norm of the residual sg[i]
-      this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
-
-      // Get current residual
-      res_norm = rocalution_abs(sq[i+1]);
-      res = rocalution_abs(res_norm);
-
-      if (this->iter_ctrl_.CheckResidual(res)) {
-        this->BackSubstitute_(sq, H, i);
-        // Compute solution of least square problem
-        for (int j = 0; j <= i; ++j)
-          x->AddScale(*v[j], sq[j]);
-        break;
-      }
-
+    // Initial residual
+    if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
+    {
+        LOG_DEBUG(this, "GMRES::SolveNonPrecond_()", " #*# end");
+        return;
     }
 
-    // If convergence has not been reached, RESTART
-    if (!this->iter_ctrl_.CheckResidualNoCount(res)) {
-      this->BackSubstitute_(sq, H, size_basis-1);
+    while(true)
+    {
+        // Normalize v_0
+        v[0]->Scale(one / r[0]);
 
-      // Compute solution of least square problem
-      for (int j = 0; j <= size_basis-1; ++j)
-        x->AddScale(*v[j], sq[j]);
+        // Arnoldi iteration
+        i = 0;
+        while(i < size)
+        {
+            // v_i+1 = Av_i
+            op->Apply(*v[i], v[i + 1]);
 
-      // Compute residual with previous solution vector
-      op->Apply(*x, v[0]);
-      v[0]->ScaleAdd(ValueType(-1.0), rhs);
+            // Build Hessenberg matrix H
+            for(int k = 0; k <= i; ++k)
+            {
+                int idx = DENSE_IND(k, i, size + 1, size);
+                // H_ki = <v_k,v_i+1>
+                H[idx] = v[k]->Dot(*v[i + 1]);
+                // v_i+1 -= H_ki * v_k
+                v[i + 1]->AddScale(*v[k], -H[idx]);
+            }
 
-      res_norm = this->Norm(*v[0]);
-      res = rocalution_abs(res_norm);
+            // Precompute some indices
+            int ii   = DENSE_IND(i, i, size + 1, size);
+            int ip1i = DENSE_IND(i + 1, i, size + 1, size);
 
+            // H_i+1i = ||v_i+1||
+            H[ip1i] = this->Norm(*v[i + 1]);
+
+            // v_i+1 /= H_i+1i
+            v[i + 1]->Scale(one / H[ip1i]);
+
+            // Apply Givens rotation J(0),...,J(j-1) on (H(0,i),...,H(i,i))
+            for(int k = 0; k < i; ++k)
+            {
+                int ki   = DENSE_IND(k, i, size + 1, size);
+                int kp1i = DENSE_IND(k + 1, i, size + 1, size);
+                this->ApplyGivensRotation_(c[k], s[k], H[ki], H[kp1i]);
+            }
+
+            // Construct J(i)
+            this->GenerateGivensRotation_(H[ii], H[ip1i], c[i], s[i]);
+
+            // Apply J(i) to H(i,i) and H(i,i+1) such that H(i,i+1) = 0
+            this->ApplyGivensRotation_(c[i], s[i], H[ii], H[ip1i]);
+
+            // Apply J(i) to the norm of the residual sg[i]
+            this->ApplyGivensRotation_(c[i], s[i], r[i], r[i + 1]);
+
+            // Check convergence
+            if(this->iter_ctrl_.CheckResidual(rocalution_abs(r[++i])))
+            {
+                break;
+            }
+        }
+
+        // Solve upper triangular system
+        for(int j = i - 1; j >= 0; --j)
+        {
+            r[j] /= H[DENSE_IND(j, j, size + 1, size)];
+
+            for(int k = 0; k < j; ++k)
+            {
+                r[k] -= H[DENSE_IND(k, j, size + 1, size)] * r[j];
+            }
+        }
+
+        // Update solution
+        x->AddScale(*v[0], r[0]);
+
+        for(int j = 1; j < i; ++j)
+        {
+            x->AddScale(*v[j], r[j]);
+        }
+
+        // Compute residual v_0 = b - Ax
+        op->Apply(*x, v[0]);
+        v[0]->ScaleAdd(-one, rhs);
+
+        // r = 0
+        set_to_zero_host(size + 1, r);
+
+        // r_0 = ||v_0||
+        r[0] = this->Norm(*v[0]);
+
+        // Check convergence
+        if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(r[0])))
+        {
+            break;
+        }
     }
 
-  }
-
-  LOG_DEBUG(this, "GMRES::SolveNonPrecond_()",
-            " #*# end");
-
+    LOG_DEBUG(this, "GMRES::SolveNonPrecond_()", " #*# end");
 }
 
 // GMRES implementation is based on the algorithm described in the book
 // 'Templates for the Solution of Linear Systems: Building Blocks for Iterative Methods'
 // by SIAM on page 18 and modified to fit rocalution structures.
 template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rhs,
-                                                                     VectorType *x) {
+void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
+{
+    LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# begin");
 
-  LOG_DEBUG(this, "GMRES::SolvePrecond_()",
-            " #*# begin");
+    assert(x != NULL);
+    assert(x != &rhs);
+    assert(this->op_ != NULL);
+    assert(this->precond_ != NULL);
+    assert(this->build_ == true);
+    assert(this->size_basis_ > 0);
+    assert(this->res_norm_ == 2);
 
-  assert(x != NULL);
-  assert(x != &rhs);
-  assert(this->op_  != NULL);
-  assert(this->precond_ != NULL);
-  assert(this->build_ == true);
-  assert(this->size_basis_ > 0);
+    const OperatorType* op = this->op_;
 
-  if (this->res_norm_ != 2) {
-    LOG_INFO("GMRES solver supports only L2 residual norm. The solver is switching to L2 norm");
-    this->res_norm_ = 2;
-  }
+    VectorType* z  = &this->z_;
+    VectorType** v = this->v_;
 
-  const OperatorType *op = this->op_;
+    ValueType* c = this->c_;
+    ValueType* s = this->s_;
+    ValueType* r = this->r_;
+    ValueType* H = this->H_;
 
-  VectorType *z  = &this->z_;
-  VectorType *w  = &this->w_;
-  VectorType **v = this->v_;
+    ValueType one = static_cast<ValueType>(1);
 
-  int size_basis = this->size_basis_;
+    int i;
+    int size = this->size_basis_;
 
-  std::vector<ValueType> c(size_basis);
-  std::vector<ValueType> s(size_basis);
-  std::vector<ValueType> H((size_basis+1)*size_basis, ValueType(0.0));
-  std::vector<ValueType> sq(size_basis+1, ValueType(0.0));
+    // Initial residual
+    op->Apply(*x, z);
+    z->ScaleAdd(-one, rhs);
 
-  // Compute residual V[0] = b - Ax
-  op->Apply(*x, v[0]);
-  v[0]->ScaleAdd(ValueType(-1.0), rhs);
+    // Solve Mv_0 = z
+    this->precond_->SolveZeroSol(*z, v[0]);
 
-  // res_norm = (v[0],v[0])
-  ValueType res_norm = this->Norm(*v[0]);
-  double res = rocalution_abs(res_norm);
+    // r = 0
+    set_to_zero_host(size + 1, r);
 
-  if (this->iter_ctrl_.InitResidual(res) == false) {
+    // r_0 = ||v_0||
+    r[0] = this->Norm(*v[0]);
 
-      LOG_DEBUG(this, "GMRES::SolvePrecond_()",
-            " #*# end");
-
-      return;
-  }
-
-
-  // Residual normalization
-  // v = r / ||r||
-  v[0]->Scale(ValueType(1.0)/res_norm);
-  sq[0] = res_norm;
-
-  for (int i = 0; i < size_basis; ++i) {
-    // Mz = v(j)
-    this->precond_->SolveZeroSol(*v[i], z);
-
-    // w = A*z
-    op->Apply(*z, w);
-
-    // Build Hessenberg matrix H
-    for (int j = 0; j <= i; ++j) {
-      // H(j,i) = <w,v(j)>
-      H[j+i*(size_basis+1)] = w->Dot(*v[j]);
-
-      // w = w - H(j,i) * v(j)
-      w->AddScale(*v[j], ValueType(-1.0) * H[j+i*(size_basis+1)]);
+    // Initial residual
+    if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
+    {
+        LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
+        return;
     }
 
-    // H(i+1,i) = ||w||
-    H[i+1+i*(size_basis+1)] = this->Norm(*w);
+    while(true)
+    {
+        // Normalize v_0
+        v[0]->Scale(one / r[0]);
 
-    // v(i+1) = w / H(i+1,i)
-    w->Scale(ValueType(1.0) / H[i+1+i*(size_basis+1)]);
-    v[i+1]->CopyFrom(*w);
+        // Arnoldi iteration
+        i = 0;
+        while(i < size)
+        {
+            // z = Av_i
+            op->Apply(*v[i], z);
 
-    // Apply J(0),...,J(j-1) on ( H(0,i),...,H(i,i) )
-    for (int k = 0; k < i; ++k)
-      this->ApplyGivensRotation_(c[k], s[k], H[k+i*(size_basis+1)], H[k+1+i*(size_basis+1)]);
+            // Solve Mz = v_i+1
+            this->precond_->SolveZeroSol(*z, v[i + 1]);
 
-    // Construct J(i) (Givens rotation taken from wikipedia pseudo code)
-    this->GenerateGivensRotation_(H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)], c[i], s[i]);
+            // Build Hessenberg matrix H
+            for(int k = 0; k <= i; ++k)
+            {
+                int idx = DENSE_IND(k, i, size + 1, size);
+                // H_ki = <v_k,v_i+1>
+                H[idx] = v[k]->Dot(*v[i + 1]);
+                // v_i+1 -= H_ki * v_k
+                v[i + 1]->AddScale(*v[k], -H[idx]);
+            }
 
-    // Apply J(i) to H(i,i) and H(i,i+1) such that H(i,i+1) = 0
-    this->ApplyGivensRotation_(c[i], s[i], H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)]);
+            // Precompute some indices
+            int ii   = DENSE_IND(i, i, size + 1, size);
+            int ip1i = DENSE_IND(i + 1, i, size + 1, size);
 
-    // Apply J(i) to the norm of the residual sg[i]
-    this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
+            // H_i+1i = ||v_i+1||
+            H[ip1i] = this->Norm(*v[i + 1]);
 
-    // Get current residual
-    res_norm = rocalution_abs(sq[i+1]);
-    res = rocalution_abs(res_norm);
+            // v_i+1 /= H_i+1i
+            v[i + 1]->Scale(one / H[ip1i]);
 
-    if (this->iter_ctrl_.CheckResidual(res)) {
-      z->Zeros();
-      this->BackSubstitute_(sq, H, i);
+            // Apply Givens rotation J(0),...,J(j-1) on (H(0,i),...,H(i,i))
+            for(int k = 0; k < i; ++k)
+            {
+                int ki   = DENSE_IND(k, i, size + 1, size);
+                int kp1i = DENSE_IND(k + 1, i, size + 1, size);
+                this->ApplyGivensRotation_(c[k], s[k], H[ki], H[kp1i]);
+            }
 
-      // Compute solution of least square problem
-      for (int j = 0; j <= i; ++j)
-        z->AddScale(*v[j], sq[j]);
+            // Construct J(i)
+            this->GenerateGivensRotation_(H[ii], H[ip1i], c[i], s[i]);
 
-      this->precond_->SolveZeroSol(*z, w);
-      x->AddScale(*w, ValueType(1.0));
-      break;
+            // Apply J(i) to H(i,i) and H(i,i+1) such that H(i,i+1) = 0
+            this->ApplyGivensRotation_(c[i], s[i], H[ii], H[ip1i]);
+
+            // Apply J(i) to the norm of the residual sg[i]
+            this->ApplyGivensRotation_(c[i], s[i], r[i], r[i + 1]);
+
+            // Check convergence
+            if(this->iter_ctrl_.CheckResidual(rocalution_abs(r[++i])))
+            {
+                break;
+            }
+        }
+
+        // Solve upper triangular system
+        for(int j = i - 1; j >= 0; --j)
+        {
+            r[j] /= H[DENSE_IND(j, j, size + 1, size)];
+
+            for(int k = 0; k < j; ++k)
+            {
+                r[k] -= H[DENSE_IND(k, j, size + 1, size)] * r[j];
+            }
+        }
+
+        // Update solution
+        x->AddScale(*v[0], r[0]);
+
+        for(int j = 1; j < i; ++j)
+        {
+            x->AddScale(*v[j], r[j]);
+        }
+
+        // Compute residual z = b - Ax
+        op->Apply(*x, z);
+        z->ScaleAdd(-one, rhs);
+
+        // Solve Mv_0 = z
+        this->precond_->SolveZeroSol(*z, v[0]);
+
+        // r = 0
+        set_to_zero_host(size + 1, r);
+
+        // r_0 = ||v_0||
+        r[0] = this->Norm(*v[0]);
+
+        // Check convergence
+        if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(r[0])))
+        {
+            break;
+        }
     }
 
-  }
-
-  // If convergence has not been reached, RESTART
-  if (!this->iter_ctrl_.CheckResidualNoCount(res)) {
-
-    this->BackSubstitute_(sq, H, size_basis-1);
-
-    // Compute solution of least square problem
-    z->Zeros();
-    for (int j = 0; j <= size_basis-1; ++j)
-      z->AddScale(*v[j], sq[j]);
-
-    this->precond_->SolveZeroSol(*z, w);
-    x->AddScale(*w, ValueType(1.0));
-
-    // Compute residual with previous solution vector
-    op->Apply(*x, v[0]);
-    v[0]->ScaleAdd(ValueType(-1.0), rhs);
-
-    res_norm = this->Norm(*v[0]);
-    res = rocalution_abs(res_norm);
-
-  }
-
-  while (!this->iter_ctrl_.CheckResidual(res)) {
-
-    H.assign(H.size(), ValueType(0.0));
-    sq.assign(sq.size(), ValueType(0.0));
-
-    // Residual normalization
-    // v = r / ||r||
-    v[0]->Scale(ValueType(1.0)/res_norm);
-    sq[0] = res_norm;
-
-    for (int i = 0; i < size_basis; ++i) {
-      // Mz = v(j)
-      this->precond_->SolveZeroSol(*v[i], z);
-
-      // w = A*z
-      op->Apply(*z, w);
-
-      // Build Hessenberg matrix H
-      for (int j = 0; j <= i; ++j) {
-        // H(j,i) = <w,v(j)>
-        H[j+i*(size_basis+1)] = w->Dot(*v[j]);
-
-        // w = w - H(j,i) * v(j)
-        w->AddScale(*v[j], ValueType(-1.0) * H[j+i*(size_basis+1)]);
-      }
-
-      // H(i+1,i) = ||w||
-      H[i+1+i*(size_basis+1)] = this->Norm(*w);
-
-      // v(i+1) = w / H(i+1,i)
-      w->Scale(ValueType(1.0) / H[i+1+i*(size_basis+1)]);
-      v[i+1]->CopyFrom(*w);
-
-      // Apply J(0),...,J(j-1) on ( H(0,i),...,H(i,i) )
-      for (int k = 0; k < i; ++k)
-        this->ApplyGivensRotation_(c[k], s[k], H[k+i*(size_basis+1)], H[k+1+i*(size_basis+1)]);
-
-      // Construct J(i) (Givens rotation taken from wikipedia pseudo code)
-      this->GenerateGivensRotation_(H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)], c[i], s[i]);
-
-      // Apply J(i) to H(i,i) and H(i,i+1) such that H(i,i+1) = 0
-      this->ApplyGivensRotation_(c[i], s[i], H[i+i*(size_basis+1)], H[i+1+i*(size_basis+1)]);
-
-      // Apply J(i) to the norm of the residual sg[i]
-      this->ApplyGivensRotation_(c[i], s[i], sq[i], sq[i+1]);
-
-      // Get current residual
-      res_norm = rocalution_abs(sq[i+1]);
-      res = rocalution_abs(res_norm);
-
-      if (this->iter_ctrl_.CheckResidual(res)) {
-        z->Zeros();
-        this->BackSubstitute_(sq, H, i);
-
-        // Compute solution of least square problem
-        for (int j = 0; j <= i; ++j)
-          z->AddScale(*v[j], sq[j]);
-
-        this->precond_->SolveZeroSol(*z, w);
-        x->AddScale(*w, ValueType(1.0));
-        break;
-      }
-
-    }
-
-    // If convergence has not been reached, RESTART
-    if (!this->iter_ctrl_.CheckResidualNoCount(res)) {
-
-      this->BackSubstitute_(sq, H, size_basis-1);
-
-      // Compute solution of least square problem
-      z->Zeros();
-      for (int j = 0; j <= size_basis-1; ++j)
-        z->AddScale(*v[j], sq[j]);
-
-      this->precond_->SolveZeroSol(*z, w);
-      x->AddScale(*w, ValueType(1.0));
-
-      // Compute residual with previous solution vector
-      op->Apply(*x, v[0]);
-      v[0]->ScaleAdd(ValueType(-1.0), rhs);
-
-      res_norm = this->Norm(*v[0]);
-      res = rocalution_abs(res_norm);
-
-    }
-
-  }
-
-  LOG_DEBUG(this, "GMRES::SolvePrecond_()",
-            " #*# end");
-
+    LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::GenerateGivensRotation_(const ValueType &x, const ValueType &y,
-                                                                               ValueType &c,       ValueType &s) const {
+void GMRES<OperatorType, VectorType, ValueType>::GenerateGivensRotation_(ValueType dx,
+                                                                         ValueType dy,
+                                                                         ValueType& c,
+                                                                         ValueType& s) const
+{
+    ValueType zero = static_cast<ValueType>(0);
+    ValueType one  = static_cast<ValueType>(1);
 
-  if (y == ValueType(0.0)) {
-
-  	c = ValueType(1.0);
-  	s = ValueType(0.0);
-
-  } else if (rocalution_abs(y) > rocalution_abs(x)) {
-
-  	ValueType tmp = x / y;
-  	s = ValueType(1.0) / sqrt(ValueType(1.0) + tmp * tmp);
-  	c = tmp * s;
-
-  } else {
-
-  	ValueType tmp = y / x;
-  	c = ValueType(1.0) / sqrt(ValueType(1.0) + tmp * tmp);
-  	s = tmp * c;
-
-  }
-
+    if(dy == zero)
+    {
+        c = one;
+        s = zero;
+    }
+    else if(dx == zero)
+    {
+        c = zero;
+        s = one;
+    }
+    else if(rocalution_abs(dy) > rocalution_abs(dx))
+    {
+        ValueType tmp = dx / dy;
+        s             = one / sqrt(one + tmp * tmp);
+        c             = tmp * s;
+    }
+    else
+    {
+        ValueType tmp = dy / dx;
+        c             = one / sqrt(one + tmp * tmp);
+        s             = tmp * c;
+    }
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::ApplyGivensRotation_(const ValueType &c, const ValueType &s,
-                                                                            ValueType &x,       ValueType &y) const {
-
-  ValueType temp = x;
-  x =  c * x + s * y;
-  y = -s * temp + c * y;
-
+void GMRES<OperatorType, VectorType, ValueType>::ApplyGivensRotation_(ValueType c,
+                                                                      ValueType s,
+                                                                      ValueType& dx,
+                                                                      ValueType& dy) const
+{
+    ValueType temp = dx;
+    dx             = c * dx + s * dy;
+    dy             = -s * temp + c * dy;
 }
 
-template <class OperatorType, class VectorType, typename ValueType>
-void GMRES<OperatorType, VectorType, ValueType>::BackSubstitute_(      std::vector<ValueType> &sq,
-                                                                 const std::vector<ValueType> &H,
-                                                                 int k) const {
-
-  for (int i = k; i >= 0; --i) {
-    sq[i] /= H[i+i*(this->size_basis_+1)];
-    for (int j = i-1; j >= 0; --j)
-      sq[j] -= H[j+i*(this->size_basis_+1)] * sq[i];
-
-  }
-
-}
-
-template class GMRES< LocalMatrix<double>, LocalVector<double>, double >;
-template class GMRES< LocalMatrix<float>,  LocalVector<float>, float >;
+template class GMRES<LocalMatrix<double>, LocalVector<double>, double>;
+template class GMRES<LocalMatrix<float>, LocalVector<float>, float>;
 #ifdef SUPPORT_COMPLEX
-template class GMRES< LocalMatrix<std::complex<double> >,  LocalVector<std::complex<double> >, std::complex<double> >;
-template class GMRES< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
+template class GMRES<LocalMatrix<std::complex<double>>,
+                     LocalVector<std::complex<double>>,
+                     std::complex<double>>;
+template class GMRES<LocalMatrix<std::complex<float>>,
+                     LocalVector<std::complex<float>>,
+                     std::complex<float>>;
 #endif
 
-template class GMRES< GlobalMatrix<double>, GlobalVector<double>, double >;
-template class GMRES< GlobalMatrix<float>,  GlobalVector<float>, float >;
+template class GMRES<GlobalMatrix<double>, GlobalVector<double>, double>;
+template class GMRES<GlobalMatrix<float>, GlobalVector<float>, float>;
 #ifdef SUPPORT_COMPLEX
-template class GMRES< GlobalMatrix<std::complex<double> >,  GlobalVector<std::complex<double> >, std::complex<double> >;
-template class GMRES< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >, std::complex<float> >;
+template class GMRES<GlobalMatrix<std::complex<double>>,
+                     GlobalVector<std::complex<double>>,
+                     std::complex<double>>;
+template class GMRES<GlobalMatrix<std::complex<float>>,
+                     GlobalVector<std::complex<float>>,
+                     std::complex<float>>;
 #endif
 
-template class GMRES< LocalStencil<double>, LocalVector<double>, double >;
-template class GMRES< LocalStencil<float>,  LocalVector<float>, float >;
+template class GMRES<LocalStencil<double>, LocalVector<double>, double>;
+template class GMRES<LocalStencil<float>, LocalVector<float>, float>;
 #ifdef SUPPORT_COMPLEX
-template class GMRES< LocalStencil<std::complex<double> >,  LocalVector<std::complex<double> >, std::complex<double> >;
-template class GMRES< LocalStencil<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
+template class GMRES<LocalStencil<std::complex<double>>,
+                     LocalVector<std::complex<double>>,
+                     std::complex<double>>;
+template class GMRES<LocalStencil<std::complex<float>>,
+                     LocalVector<std::complex<float>>,
+                     std::complex<float>>;
 #endif
 
-}
+} // namespace rocalution
