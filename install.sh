@@ -150,9 +150,9 @@ if [[ "${install_dependencies}" == true ]]; then
   if [[ "${build_host}" == false ]]; then
     library_dependencies_ubuntu+=("hip_hcc")
     if [[ "${build_cuda}" == true ]]; then
-      library_dependencies_ubuntu+=("cuda" "hipsparse-alt" "hipblas-alt")
+      library_dependencies_ubuntu+=("cuda") # "hipsparse-alt" "hipblas-alt") TODO
     else
-      library_dependencies_ubuntu+=("hcc" "hipsparse" "hipblas")
+      library_dependencies_ubuntu+=("hcc" "rocblas") # "hipsparse" "hipblas") TODO
     fi
   fi
 
