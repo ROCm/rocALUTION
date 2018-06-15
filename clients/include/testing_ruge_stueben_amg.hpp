@@ -71,7 +71,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
     A.Apply(e, &b);
 
     // Random initial guess
-    x.SetRandom(-4.0, 6.0, 12345ULL);
+    x.SetRandomUniform(12345ULL, -4.0, 6.0);
 
     // Solver
     BiCGStab<LocalMatrix<T>, LocalVector<T>, T> ls;

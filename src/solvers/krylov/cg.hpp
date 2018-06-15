@@ -8,44 +8,37 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class CG : public IterativeLinearSolver<OperatorType, VectorType, ValueType> {
+class CG : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
+{
+    public:
+    CG();
+    virtual ~CG();
 
-public:
+    virtual void Print(void) const;
 
-  CG();
-  virtual ~CG();
+    virtual void Build(void);
 
-  virtual void Print(void) const;
+    virtual void BuildMoveToAcceleratorAsync(void);
+    virtual void Sync(void);
 
-  virtual void Build(void);
+    virtual void ReBuildNumeric(void);
+    virtual void Clear(void);
 
-  virtual void BuildMoveToAcceleratorAsync(void);
-  virtual void Sync(void);
+    protected:
+    virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
+    virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
-  virtual void ReBuildNumeric(void);
-  virtual void Clear(void);
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-protected:
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 
-  virtual void SolveNonPrecond_(const VectorType &rhs,
-                                VectorType *x);
-  virtual void SolvePrecond_(const VectorType &rhs,
-                             VectorType *x);
-
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
-
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void);
-
-private:
-
-  VectorType r_, z_;
-  VectorType p_, q_;
-
+    private:
+    VectorType r_, z_;
+    VectorType p_, q_;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_KRYLOV_CG_HPP_
