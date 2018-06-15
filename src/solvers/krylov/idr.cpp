@@ -508,11 +508,11 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
             FATAL_ERROR(__FILE__, __LINE__);
         }
 
-        // r = r - omega * v
-        r->AddScale(*v, -omega);
-
         // x = x + omega * r
         x->AddScale(*r, omega);
+
+        // r = r - omega * v
+        r->AddScale(*v, -omega);
 
         // Residual norm to check outer loop convergence
         res_norm = this->Norm(*r);
