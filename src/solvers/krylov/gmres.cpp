@@ -172,8 +172,6 @@ void GMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 
     if(this->build_ == true)
     {
-        this->z_.Zeros();
-
         for(int i = 0; i < this->size_basis_ + 1; ++i)
         {
             this->v_[i]->Zeros();
@@ -183,6 +181,7 @@ void GMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 
         if(this->precond_ != NULL)
         {
+            this->z_.Zeros();
             this->precond_->ReBuildNumeric();
         }
     }
