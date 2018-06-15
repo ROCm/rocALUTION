@@ -14,7 +14,7 @@ using namespace rocalution;
 
 static bool check_residual(float res)
 {
-    return (res < 1e-1f);
+    return (res < 1e-2f);
 }
 
 static bool check_residual(double res)
@@ -68,7 +68,7 @@ bool testing_idr(Arguments argus)
     A.Apply(e, &b);
 
     // Random initial guess
-    x.SetRandom(-4.0, 6.0, 12345ULL);
+    x.SetRandomUniform(12345ULL, -4.0, 6.0);
 
     // Solver
     IDR<LocalMatrix<T>, LocalVector<T>, T> ls;

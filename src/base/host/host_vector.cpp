@@ -390,23 +390,9 @@ void HostVector<ValueType>::SetValues(const ValueType val) {
 }
 
 template <typename ValueType>
-void HostVector<ValueType>::SetRandom(const ValueType a, const ValueType b, const int seed) {
+void HostVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType a, ValueType b) {
 
-  _set_omp_backend_threads(this->local_backend_, this->size_);
-
-  // Fill this with random data from interval [a,b]
-  srand(seed | 0x67854903);
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-  for (int i=0; i<this->size_; ++i)
-    this->vec_[i] = a + (ValueType)rand() / (ValueType)RAND_MAX * (b - a);
-
-}
-
-template <>
-void HostVector<std::complex<float> >::SetRandom(const std::complex<float> a, const std::complex<float> b,
-                                                 const int seed) {
+  assert(a <= b);
 
   _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -416,8 +402,34 @@ void HostVector<std::complex<float> >::SetRandom(const std::complex<float> a, co
 #pragma omp parallel for
 #endif
   for (int i=0; i<this->size_; ++i)
-    this->vec_[i] = a + (float)rand() / (float)RAND_MAX * (b - a);
+  {
+    this->vec_[i] = a + (ValueType)rand() / (ValueType)RAND_MAX * (b - a);
+  }
 
+}
+
+template <typename ValueType>
+void HostVector<ValueType>::SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var)
+{
+  _set_omp_backend_threads(this->local_backend_, this->size_);
+
+  // Fill this with random data from interval [a,b]
+  srand(seed);
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (int i=0; i<this->size_; ++i)
+  {
+    // Box-Muller
+    ValueType u1 = static_cast<ValueType>(rand()) / RAND_MAX;
+    ValueType u2 = static_cast<ValueType>(rand()) / RAND_MAX;
+
+    this->vec_[i] = sqrt(static_cast<ValueType>(-2) * log(u1))
+                  * cos(static_cast<ValueType>(2 * M_PI) * u2);
+
+    // Shift
+    this->vec_[i] = mean + var * this->vec_[i];
+  }
 }
 
 template <typename ValueType>

@@ -31,7 +31,8 @@ public:
   virtual void Zeros(void);
   virtual void Ones(void);
   virtual void SetValues(const ValueType val);
-  virtual void SetRandom(const ValueType a, const ValueType b, const int seed);
+  virtual void SetRandomUniform(unsigned long long seed, ValueType a, ValueType b);
+  virtual void SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var);
 
   virtual void CopyFrom(const BaseVector<ValueType> &vec);
   virtual void CopyFromFloat(const BaseVector<float> &vec);
