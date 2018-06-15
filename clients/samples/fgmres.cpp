@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
   e.Allocate("e", mat.GetN());
 
   // Linear Solver
-  BiCGStab<LocalMatrix<double>, LocalVector<double>, double > ls;
+  FGMRES<LocalMatrix<double>, LocalVector<double>, double > ls;
 
   // Preconditioner
   MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double > p;
@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
   x.Zeros(); 
 
   ls.SetOperator(mat);
+  ls.SetBasisSize(30);
   ls.SetPreconditioner(p);
 
   ls.Build();
