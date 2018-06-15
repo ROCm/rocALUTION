@@ -8,55 +8,46 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class FGMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType> {
+class FGMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
+{
+    public:
+    FGMRES();
+    virtual ~FGMRES();
 
-public:
+    virtual void Print(void) const;
 
-  FGMRES();
-  virtual ~FGMRES();
+    virtual void Build(void);
+    virtual void ReBuildNumeric(void);
+    virtual void Clear(void);
 
-  virtual void Print(void) const;
+    /// Set the size of the Krylov-space basis
+    virtual void SetBasisSize(const int size_basis);
 
-  virtual void Build(void);
-  virtual void ReBuildNumeric(void);
-  virtual void Clear(void);
+    protected:
+    virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
+    virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
-  /// Set the size of the Krylov-space basis
-  virtual void SetBasisSize(const int size_basis);
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-protected:
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 
-  virtual void SolveNonPrecond_(const VectorType &rhs,
-                                VectorType *x);
-  virtual void SolvePrecond_(const VectorType &rhs,
-                             VectorType *x);
+    void GenerateGivensRotation_(ValueType dx, ValueType dy, ValueType& c, ValueType& s) const;
+    void ApplyGivensRotation_(ValueType c, ValueType s, ValueType& dx, ValueType& dy) const;
 
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
+    private:
+    VectorType** v_;
+    VectorType** z_;
 
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void);
+    ValueType* c_;
+    ValueType* s_;
+    ValueType* r_;
+    ValueType* H_;
 
-  void GenerateGivensRotation_(const ValueType &x, const ValueType &y,
-                                     ValueType &c,       ValueType &s) const;
-
-  void ApplyGivensRotation_(const ValueType &c, const ValueType &s,
-                                  ValueType &x,       ValueType &y) const;
-
-  void BackSubstitute_(std::vector<ValueType> &g,
-                       const std::vector<ValueType> &H,
-                       int k) const;
-
-private:
-
-  VectorType w_;
-  VectorType **v_, **z_;
-
-  int size_basis_;
-
+    int size_basis_;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_FGMRES_FGMRES_HPP_
