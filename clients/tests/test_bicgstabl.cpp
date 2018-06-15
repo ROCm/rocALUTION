@@ -10,7 +10,7 @@
 typedef std::tuple<int, std::string, unsigned int, int> bicgstabl_tuple;
 
 int bicgstabl_size[] = {7, 63};
-std::string bicgstabl_precond[] = {"None", "Chebyshev", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
+std::string bicgstabl_precond[] = {"None", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
 unsigned int bicgstabl_format[] = {1, 2, 4, 5, 6, 7};
 int bicgstabl_level[] = {1, 2, 4};
 
