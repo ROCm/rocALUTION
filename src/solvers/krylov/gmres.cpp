@@ -420,14 +420,6 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
     op->Apply(*x, z);
     z->ScaleAdd(-one, rhs);
 
-    // Initial residual
-    ValueType init_res = rocalution_abs(this->Norm(*z));
-    if(this->iter_ctrl_.InitResidual(init_res) == false)
-    {
-        LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
-        return;
-    }
-
     // Solve Mv_0 = z
     this->precond_->SolveZeroSol(*z, v[0]);
 
@@ -436,6 +428,13 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
 
     // r_0 = ||v_0||
     r[0] = this->Norm(*v[0]);
+
+    // Initial residual
+    if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
+    {
+        LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
+        return;
+    }
 
     while(true)
     {
@@ -519,13 +518,6 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
         op->Apply(*x, z);
         z->ScaleAdd(-one, rhs);
 
-        // Check convergence
-        ValueType res_norm = rocalution_abs(this->Norm(*z));
-        if(this->iter_ctrl_.CheckResidualNoCount(res_norm))
-        {
-            break;
-        }
-
         // Solve Mv_0 = z
         this->precond_->SolveZeroSol(*z, v[0]);
 
@@ -534,6 +526,12 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
 
         // r_0 = ||v_0||
         r[0] = this->Norm(*v[0]);
+
+        // Check convergence
+        if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(r[0])))
+        {
+            break;
+        }
     }
 
     LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
