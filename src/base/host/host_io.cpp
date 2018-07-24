@@ -64,7 +64,10 @@ bool mm_read_banner(FILE *fin, mm_banner &b)
     }
 
     // Check matrix type
-    if(strncmp(b.matrix_type, "real", 4) && strncmp(b.matrix_type, "complex", 7) && strncmp(b.matrix_type, "integer", 7))
+    if(strncmp(b.matrix_type, "real", 4) &&
+       strncmp(b.matrix_type, "complex", 7) &&
+       strncmp(b.matrix_type, "integer", 7) &&
+       strncmp(b.matrix_type, "pattern", 7))
     {
         return false;
     }
@@ -137,6 +140,19 @@ bool mm_read_coordinate(FILE *fin, mm_banner &b, int &nrow, int &ncol, int &nnz,
             --(*row)[i];
             --(*col)[i];
             (*val)[i] = static_cast<ValueType>(tmp);
+        }
+    }
+    else if(!strncmp(b.matrix_type, "pattern", 7))
+    {
+        for(int i=0; i<nnz; ++i)
+        {
+            if(fscanf(fin, "%d %d\n", (*row)+i, (*col)+i) != 2)
+            {
+                return false;
+            }
+            --(*row)[i];
+            --(*col)[i];
+            (*val)[i] = static_cast<ValueType>(1);
         }
     }
     else
