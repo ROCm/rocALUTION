@@ -178,19 +178,19 @@ class LocalVector : public Vector<ValueType>
 
     friend class LocalVector<double>;
     friend class LocalVector<float>;
-    friend class LocalVector<std::complex<double>>;
-    friend class LocalVector<std::complex<float>>;
+    friend class LocalVector<std::complex<double> >;
+    friend class LocalVector<std::complex<float> >;
     friend class LocalVector<int>;
 
     friend class LocalMatrix<double>;
     friend class LocalMatrix<float>;
-    friend class LocalMatrix<std::complex<double>>;
-    friend class LocalMatrix<std::complex<float>>;
+    friend class LocalMatrix<std::complex<double> >;
+    friend class LocalMatrix<std::complex<float> >;
 
     friend class LocalStencil<double>;
     friend class LocalStencil<float>;
-    friend class LocalStencil<std::complex<double>>;
-    friend class LocalStencil<std::complex<float>>;
+    friend class LocalStencil<std::complex<double> >;
+    friend class LocalStencil<std::complex<float> >;
 
     friend class GlobalVector<ValueType>;
     friend class LocalMatrix<ValueType>;

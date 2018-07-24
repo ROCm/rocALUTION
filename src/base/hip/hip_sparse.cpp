@@ -122,6 +122,47 @@ hipsparseStatus_t hipsparseTellmv(hipsparseHandle_t handle,
                            ellWidth, x, beta, y);
 }
 
+// hipsparse csr2csc
+template <>
+hipsparseStatus_t hipsparseTcsr2csc(hipsparseHandle_t handle,
+                                    int m,
+                                    int n,
+                                    int nnz,
+                                    const float* csrSortedVal,
+                                    const int* csrSortedRowPtr,
+                                    const int* csrSortedColInd,
+                                    float* cscSortedVal,
+                                    int* cscSortedRowInd,
+                                    int* cscSortedColPtr,
+                                    hipsparseAction_t copyValues,
+                                    hipsparseIndexBase_t idxBase)
+{
+    return hipsparseScsr2csc(handle, m, n, nnz,
+                             csrSortedVal, csrSortedRowPtr, csrSortedColInd,
+                             cscSortedVal, cscSortedRowInd, cscSortedColPtr,
+                             copyValues, idxBase);
+}
+
+template <>
+hipsparseStatus_t hipsparseTcsr2csc(hipsparseHandle_t handle,
+                                    int m,
+                                    int n,
+                                    int nnz,
+                                    const double* csrSortedVal,
+                                    const int* csrSortedRowPtr,
+                                    const int* csrSortedColInd,
+                                    double* cscSortedVal,
+                                    int* cscSortedRowInd,
+                                    int* cscSortedColPtr,
+                                    hipsparseAction_t copyValues,
+                                    hipsparseIndexBase_t idxBase)
+{
+    return hipsparseDcsr2csc(handle, m, n, nnz,
+                             csrSortedVal, csrSortedRowPtr, csrSortedColInd,
+                             cscSortedVal, cscSortedRowInd, cscSortedColPtr,
+                             copyValues, idxBase);
+}
+
 // hipsparse csr2ell
 template <>
 hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
@@ -155,4 +196,4 @@ hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
                              descrC, ellWidthC, ellValC, ellColIndC);
 }
 
-}
+} // namespace rocalution
