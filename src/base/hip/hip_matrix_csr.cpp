@@ -2803,33 +2803,29 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::Transpose(void) {
-return false;
+bool HIPAcceleratorMatrixCSR<ValueType>::Transpose(void)
+{
+    if (this->GetNnz() > 0)
+    {
+        HIPAcceleratorMatrixCSR<ValueType> tmp(this->local_backend_);
 
-  if (this->GetNnz() > 0) {
+        tmp.CopyFrom(*this);
 
-    HIPAcceleratorMatrixCSR<ValueType> tmp(this->local_backend_);
+        this->Clear();
+        this->AllocateCSR(tmp.GetNnz(), tmp.GetN(), tmp.GetM());
 
-    tmp.CopyFrom(*this);
+        hipsparseStatus_t stat_t;
 
-    this->Clear();
-    this->AllocateCSR(tmp.GetNnz(), tmp.GetN(), tmp.GetM());
-/*
-    cusparseStatus_t stat_t;
+        stat_t = hipsparseTcsr2csc(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                                   tmp.GetM(), tmp.GetN(), tmp.GetNnz(),
+                                   tmp.mat_.val, tmp.mat_.row_offset, tmp.mat_.col,
+                                   this->mat_.val, this->mat_.col, this->mat_.row_offset,
+                                   HIPSPARSE_ACTION_NUMERIC,
+                                   HIPSPARSE_INDEX_BASE_ZERO);
+        CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+    }
 
-    stat_t = cusparseDcsr2csc(CUSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                              tmp.GetM(), tmp.GetN(), tmp.GetNnz(),
-                              tmp.mat_.val, tmp.mat_.row_offset, tmp.mat_.col,
-                              this->mat_.val, this->mat_.col, this->mat_.row_offset,
-                              CUSPARSE_ACTION_NUMERIC,
-                              CUSPARSE_INDEX_BASE_ZERO);
-
-    CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-*/
-  }
-
-  return true;
-
+    return true;
 }
 
 template <typename ValueType>

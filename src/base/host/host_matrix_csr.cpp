@@ -403,9 +403,6 @@ bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string filename) {
 
   out.close();
 
-  // Sorting the col (per row)
-  this->Sort();
-
   return true;
 
 }

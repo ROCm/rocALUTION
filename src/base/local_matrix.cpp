@@ -1040,6 +1040,8 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
   LOG_DEBUG(this, "LocalMatrix::ReadFileMTX()",
             filename);
 
+  LOG_INFO("ReadFileMTX: filename="<< filename << "; reading...");
+
   this->Clear();
 
   bool err = this->matrix_->ReadFileMTX(filename);
@@ -1061,17 +1063,22 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
     this->ConvertToCOO();
 
     if (this->matrix_->ReadFileMTX(filename) == false) {
-      LOG_INFO("Computation of LocalMatrix::ReadFileMTX() failed");
+      LOG_INFO("ReadFileMTX: failed to read matrix " << filename);
       this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
-    this->ConvertTo(format);
-    this->Check();
-
     if (is_accel == true)
       this->MoveToAccelerator();
 
+    this->Sort();
+
+    this->ConvertTo(format);
+
+  }
+  else
+  {
+      this->Sort();
   }
 
   this->object_name_ = filename;
@@ -1080,6 +1087,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
   this->Check();
 #endif
 
+  LOG_INFO("ReadFileMTX: filename="<< filename << "; done");
 }
 
 template <typename ValueType>
@@ -1152,13 +1160,10 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
       FATAL_ERROR(__FILE__, __LINE__);
     }
 
-    this->Check();
-
-    this->ConvertTo(format);
-
     if (is_accel == true)
       this->MoveToAccelerator();
 
+    this->ConvertTo(format);
   }
 
   this->object_name_ = filename;
