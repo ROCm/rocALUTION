@@ -79,6 +79,7 @@ void HostMatrixCOO<ValueType>::Clear() {
 
 }
 
+
 template <typename ValueType>
 void HostMatrixCOO<ValueType>::AllocateCOO(const int nnz, const int nrow, const int ncol) {
 
@@ -311,8 +312,6 @@ bool HostMatrixCOO<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
 template <typename ValueType>
 bool HostMatrixCOO<ValueType>::ReadFileMTX(const std::string filename) { 
 
-  LOG_INFO("ReadFileMTX: filename="<< filename << "; reading...");
-
   int nrow;
   int ncol;
   int nnz;
@@ -322,16 +321,11 @@ bool HostMatrixCOO<ValueType>::ReadFileMTX(const std::string filename) {
   ValueType *val = NULL;
 
   if (read_matrix_mtx(nrow, ncol, nnz, &row, &col, &val, filename.c_str()) != true) {
-    LOG_INFO("ReadFileMTX: failed to read matrix " << filename);
-    FATAL_ERROR(__FILE__, __LINE__);
+    return false;
   }
 
   this->Clear();
   this->SetDataPtrCOO(&row, &col, &val, nnz, nrow, ncol);
-
-  this->Sort();
-
-  LOG_INFO("ReadFileMTX: filename="<< filename << "; done");
 
   return true;
 
