@@ -52,6 +52,21 @@ hipsparseStatus_t hipsparseTellmv(hipsparseHandle_t handle,
                                   const ValueType *beta,
                                   ValueType *y);
 
+// hipsparse csr2csc
+template <typename ValueType>
+hipsparseStatus_t hipsparseTcsr2csc(hipsparseHandle_t handle,
+                                    int m,
+                                    int n,
+                                    int nnz,
+                                    const ValueType* csrSortedVal,
+                                    const int* csrSortedRowPtr,
+                                    const int* csrSortedColInd,
+                                    ValueType* cscSortedVal,
+                                    int* cscSortedRowInd,
+                                    int* cscSortedColPtr,
+                                    hipsparseAction_t copyValues,
+                                    hipsparseIndexBase_t idxBase);
+
 // hipsparse csr2ell
 template <typename ValueType>
 hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
@@ -65,6 +80,6 @@ hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
                                     ValueType *ellValC,
                                     int *ellColIndC);
 
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_SPARSE_HPP_
