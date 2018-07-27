@@ -4,6 +4,7 @@
 #include "hip_matrix_ell.hpp"
 #include "hip_matrix_hyb.hpp"
 #include "hip_vector.hpp"
+#include "hip_conversion.hpp"
 #include "../host/host_matrix_hyb.hpp"
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
@@ -802,133 +803,55 @@ void HIPAcceleratorMatrixHYB<ValueType>::CopyToAsync(BaseMatrix<ValueType> *dst)
 
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixHYB<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
-
-  this->Clear();
-
-  // empty matrix is empty matrix
-  if (mat.GetNnz() == 0)
-    return true;
-
-  const HIPAcceleratorMatrixHYB<ValueType>   *cast_mat_hyb;
-  
-  if ((cast_mat_hyb = dynamic_cast<const HIPAcceleratorMatrixHYB<ValueType>*> (&mat)) != NULL) {
-
-    this->CopyFrom(*cast_mat_hyb);
-    return true;
-
-  }
-
-  const HIPAcceleratorMatrixCSR<ValueType> *cast_mat_csr;
-
-  if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL) {
-
+bool HIPAcceleratorMatrixHYB<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat)
+{
     this->Clear();
 
-    this->nrow_ = cast_mat_csr->GetM();
-    this->ncol_ = cast_mat_csr->GetN();
-    int nnz  = cast_mat_csr->GetNnz();
-
-    assert(this->nrow_ > 0);
-    assert(this->ncol_ > 0);
-    assert(nnz > 0);
-
-    // Determine ELL width by average nnz per row
-    this->mat_.ELL.max_row = (nnz - 1) / this->nrow_ + 1;
-
-    // ELL nnz is ELL width times nrow
-    this->ell_nnz_ = this->mat_.ELL.max_row * this->nrow_;
-    this->coo_nnz_ = 0;
-
-    // Allocate ELL part
-    allocate_hip(this->ell_nnz_, &this->mat_.ELL.val);
-    allocate_hip(this->ell_nnz_, &this->mat_.ELL.col);
-    
-    // Array to hold COO part nnz per row
-    int *coo_row_nnz = NULL;
-    allocate_hip(this->nrow_+1, &coo_row_nnz);
-
-    int blocks = (this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1;
-
-    // If there is no ELL part, its easy...
-    if(this->ell_nnz_ == 0)
+    // empty matrix is empty matrix
+    if(mat.GetNnz() == 0)
     {
-        this->coo_nnz_ = nnz;
-        hipMemcpy(coo_row_nnz, cast_mat_csr->mat_.row_offset, sizeof(int)*(this->nrow_+1), hipMemcpyDeviceToDevice);
+        return true;
     }
-    else
+
+    const HIPAcceleratorMatrixHYB<ValueType>   *cast_mat_hyb;
+  
+    if((cast_mat_hyb = dynamic_cast<const HIPAcceleratorMatrixHYB<ValueType>*> (&mat)) != NULL)
     {
-        dim3 csr2hyb_blocks(blocks);
-        dim3 csr2hyb_threads(this->local_backend_.HIP_block_size);
+        this->CopyFrom(*cast_mat_hyb);
+        return true;
+    }
 
-        hipLaunchKernelGGL((kernel_hyb_coo_nnz),
-                           csr2hyb_blocks,
-                           csr2hyb_threads,
-                           0,
-                           0,
-                           this->nrow_,
-                           this->mat_.ELL.max_row,
-                           cast_mat_csr->mat_.row_offset,
-                           coo_row_nnz);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+    const HIPAcceleratorMatrixCSR<ValueType> *cast_mat_csr;
 
-        // Perform exclusive scan on coo_row_nnz TODO use rocPRIM
-        int *hbuf = NULL;
-        allocate_host(this->nrow_+1, &hbuf);
+    if((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL)
+    {
+        this->Clear();
 
-        hipMemcpy(hbuf+1, coo_row_nnz, sizeof(int)*this->nrow_, hipMemcpyDeviceToHost);
+        int nnz_hyb;
+        int nnz_ell;
+        int nnz_coo;
 
-        hbuf[0] = 0;
-        for(int i=0; i<this->nrow_; ++i)
+        if(csr_to_hyb_hip(this->local_backend_.HIP_block_size,
+                          cast_mat_csr->nnz_,
+                          cast_mat_csr->nrow_,
+                          cast_mat_csr->ncol_,
+                          cast_mat_csr->mat_,
+                          &this->mat_,
+                          &nnz_hyb,
+                          &nnz_ell,
+                          &nnz_coo) == true)
         {
-            hbuf[i+1] += hbuf[i];
+            this->nrow_    = cast_mat_csr->nrow_;
+            this->ncol_    = cast_mat_csr->ncol_;
+            this->nnz_     = nnz_hyb;
+            this->ell_nnz_ = nnz_ell;
+            this->coo_nnz_ = nnz_coo;
+
+            return true;
         }
-
-        // Extract COO nnz
-        this->coo_nnz_ = hbuf[this->nrow_];
-
-        hipMemcpy(coo_row_nnz, hbuf, sizeof(int)*(this->nrow_+1), hipMemcpyHostToDevice);
-
-        free_host(&hbuf);
     }
 
-    // Allocate COO part
-    allocate_hip(this->coo_nnz_, &this->mat_.COO.val);
-    allocate_hip(this->coo_nnz_, &this->mat_.COO.row);
-    allocate_hip(this->coo_nnz_, &this->mat_.COO.col);
-
-    this->nnz_ = this->ell_nnz_ + this->coo_nnz_;
-
-    // Launch csr2hyb kernel
-    dim3 csr2hyb_blocks(blocks);
-    dim3 csr2hyb_threads(this->local_backend_.HIP_block_size);
-
-    hipLaunchKernelGGL((kernel_hyb_csr2hyb<ValueType>),
-                       csr2hyb_blocks,
-                       csr2hyb_threads,
-                       0,
-                       0,
-                       this->nrow_,
-                       cast_mat_csr->mat_.val,
-                       cast_mat_csr->mat_.row_offset,
-                       cast_mat_csr->mat_.col,
-                       this->mat_.ELL.max_row,
-                       this->mat_.ELL.col,
-                       this->mat_.ELL.val,
-                       this->mat_.COO.row,
-                       this->mat_.COO.col,
-                       this->mat_.COO.val,
-                       coo_row_nnz);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip(&coo_row_nnz);
-
-    return true;
-
-  }
-
-  return false;
-
+    return false;
 }
 
 template <typename ValueType>

@@ -56,6 +56,8 @@ private:
 
   hipsparseMatDescr_t mat_descr_;
 
+  friend class HIPAcceleratorMatrixCSR<ValueType>;
+
   friend class BaseVector<ValueType>;
   friend class AcceleratorVector<ValueType>;
   friend class HIPAcceleratorVector<ValueType>;

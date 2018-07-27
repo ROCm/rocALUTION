@@ -1,4 +1,5 @@
 set(HIP_SOURCES
+  base/hip/hip_conversion.cpp
   base/hip/hip_blas.cpp
   base/hip/hip_sparse.cpp
   base/hip/backend_hip.cpp
