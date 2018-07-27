@@ -400,6 +400,36 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
 {
   ansiColor( 'vga' )
   {
+    // OpenMP
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-openmp'))
+    {
+        // Trying to fix git pull issues by delaying builds
+        sh  """#!/usr/bin/env bash
+            set -x
+            sleep 60s
+          """
+    }
+
+    // HIP build
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-mpi'))
+    {
+        // Trying to fix git pull issues by delaying builds
+        sh  """#!/usr/bin/env bash
+            set -x
+            sleep 120s
+          """
+    }
+
+    // HIP build
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-hip'))
+    {
+        // Trying to fix git pull issues by delaying builds
+        sh  """#!/usr/bin/env bash
+            set -x
+            sleep 180s
+          """
+    }
+
     stage( "Build ${compiler_args.build_config}" )
     {
       // Checkout source code, dependencies and version files
@@ -429,7 +459,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
   }
 }
 
-rocm_ubuntu_host:
+parallel rocm_ubuntu_host:
 {
   node( 'docker && rocm && dkms')
   {
