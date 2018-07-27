@@ -627,10 +627,10 @@ bool csr_to_dia(const int omp_threads,
 
   omp_set_num_threads(omp_threads);
 
-  // Determine number of diagonals
+  // Determine number of populated diagonals
   dst->num_diag = 0;
 
-  std::vector<IndexType> diag_idx(nrow+ncol-1, 0);
+  std::vector<IndexType> diag_idx(nrow + ncol, 0);
 
   // Loop over rows and increment ndiag counter if diag offset has not been visited yet
   for(IndexType i = 0; i < nrow; ++i)
@@ -638,11 +638,11 @@ bool csr_to_dia(const int omp_threads,
     for(IndexType j = src.row_offset[i]; j < src.row_offset[i+1]; ++j)
     {
       // Diagonal offset the current entry belongs to
-      IndexType offset = nrow - 1 - i + src.col[j];
+      IndexType offset = src.col[j] - i + nrow;
 
       if(!diag_idx[offset])
       {
-        diag_idx[offset] = true;
+        diag_idx[offset] = 1;
         ++dst->num_diag;
       }
     }
@@ -661,7 +661,7 @@ bool csr_to_dia(const int omp_threads,
 
   set_to_zero_host(*nnz_dia, dst->val);
 
-  for(IndexType i = 0, d = 0 ; i < nrow + ncol - 1; ++i)
+  for(IndexType i = 0, d = 0 ; i < nrow + ncol; ++i)
   {
     // Fill DIA offset, if i-th diagonal is populated
     if(diag_idx[i]) {
@@ -670,7 +670,7 @@ bool csr_to_dia(const int omp_threads,
       // Store diagonals offset, where the diagonal is offset 0
       // Left from diagonal offsets are decreasing
       // Right from diagonal offsets are increasing
-      dst->offset[d++] = i - nrow + 1;
+      dst->offset[d++] = i - nrow;
     }
   }
 
@@ -682,7 +682,7 @@ bool csr_to_dia(const int omp_threads,
     for(IndexType j = src.row_offset[i]; j < src.row_offset[i+1]; ++j)
     {
       // Diagonal offset the current entry belongs to
-      IndexType offset = nrow - 1 - i + src.col[j];
+      IndexType offset = src.col[j] - i + nrow;
       dst->val[DIA_IND(i, diag_idx[offset], nrow, dst->num_diag)] = src.val[j];
     }
   }
