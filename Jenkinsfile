@@ -193,7 +193,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
       sh  """#!/usr/bin/env bash
           set -x
           cd ${paths.project_build_prefix}
-          sudo dpkg -i deps/hipblas* deps/rocsparse* deps/hipsparse*
+          sudo dpkg -i deps/hipblas* deps/rocsparse* deps/hipsparse* deps/rocprim*
         """
       // Build library & clients
       sh  """#!/usr/bin/env bash
