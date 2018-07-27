@@ -429,7 +429,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
   }
 }
 
-parallel rocm_ubuntu_host:
+rocm_ubuntu_host:
 {
   node( 'docker && rocm && dkms')
   {
