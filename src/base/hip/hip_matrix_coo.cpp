@@ -2,6 +2,7 @@
 #include "hip_matrix_csr.hpp"
 #include "hip_matrix_coo.hpp"
 #include "hip_vector.hpp"
+#include "hip_conversion.hpp"
 #include "../host/host_matrix_coo.hpp"
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
@@ -718,41 +719,17 @@ bool HIPAcceleratorMatrixCOO<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     this->Clear();
 
-    int nrow = cast_mat_csr->GetM();
-    int ncol = cast_mat_csr->GetN();
-    int nnz  = cast_mat_csr->GetNnz();
+    if(csr_to_coo_hip(this->local_backend_.HIP_sparse_handle, cast_mat_csr->nnz_, cast_mat_csr->nrow_, cast_mat_csr->ncol_, cast_mat_csr->mat_, &this->mat_) == true)
+    {
+        this->nrow_ = cast_mat_csr->nrow_;
+        this->ncol_ = cast_mat_csr->ncol_;
+        this->nnz_  = cast_mat_csr->nnz_;
 
-    assert(nrow > 0);
-    assert(ncol > 0);
-    assert(nnz > 0);
-
-    this->AllocateCOO(nnz, nrow, ncol);
-
-    hipsparseStatus_t stat_t;
-
-    hipMemcpyAsync(this->mat_.col, cast_mat_csr->mat_.col, nnz*sizeof(int), hipMemcpyDeviceToDevice);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    hipMemcpyAsync(this->mat_.val, cast_mat_csr->mat_.val, nnz*sizeof(ValueType), hipMemcpyDeviceToDevice);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    stat_t = hipsparseXcsr2coo(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                               cast_mat_csr->mat_.row_offset,
-                               nnz,
-                               nrow,
-                               this->mat_.row,
-                               HIPSPARSE_INDEX_BASE_ZERO);
-    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-
-    // Sync memcopy
-    hipDeviceSynchronize();
-
-    return true;
-
+        return true;
+    }
   }
 
   return false;
-
 }
 
 template <typename ValueType>

@@ -14,7 +14,7 @@ using namespace rocalution;
 
 static bool check_residual(float res)
 {
-    return (res < 1e-3f);
+    return (res < 1e-2f);
 }
 
 static bool check_residual(double res)
@@ -37,9 +37,6 @@ bool testing_bicgstab(Arguments argus)
     LocalVector<T> x;
     LocalVector<T> b;
     LocalVector<T> e;
-
-    // Matrix format
-    A.ConvertTo(format);
 
     // Generate A
     int* csr_ptr = NULL;
@@ -116,6 +113,10 @@ bool testing_bicgstab(Arguments argus)
 
     ls.Init(1e-8, 0.0, 1e+8, 10000);
     ls.Build();
+
+    // Matrix format
+    A.ConvertTo(format);
+
     ls.Solve(b, &x);
 
     // Verify solution
