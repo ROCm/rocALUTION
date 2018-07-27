@@ -2,6 +2,7 @@
 #include "hip_matrix_csr.hpp"
 #include "hip_matrix_ell.hpp"
 #include "hip_vector.hpp"
+#include "hip_conversion.hpp"
 #include "../host/host_matrix_ell.hpp"
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
@@ -606,43 +607,24 @@ bool HIPAcceleratorMatrixELL<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     this->Clear();
 
-    assert(cast_mat_csr->GetM() > 0);
-    assert(cast_mat_csr->GetN() > 0);
-    assert(cast_mat_csr->GetNnz() > 0);
+    int ell_nnz;
 
-    int nrow = cast_mat_csr->GetM();
+    if(csr_to_ell_hip(this->local_backend_.HIP_sparse_handle,
+                      cast_mat_csr->nnz_,
+                      cast_mat_csr->nrow_,
+                      cast_mat_csr->ncol_,
+                      cast_mat_csr->mat_,
+                      cast_mat_csr->mat_descr_,
+                      &this->mat_,
+                      this->mat_descr_,
+                      &ell_nnz) == true)
+    {
+        this->nrow_ = cast_mat_csr->nrow_;
+        this->ncol_ = cast_mat_csr->ncol_;
+        this->nnz_  = ell_nnz;
 
-    hipsparseStatus_t stat_t;
-
-    stat_t = hipsparseXcsr2ellWidth(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                                    nrow,
-                                    cast_mat_csr->mat_descr_,
-                                    cast_mat_csr->mat_.row_offset,
-                                    this->mat_descr_,
-                                    &this->mat_.max_row);
-    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-
-    int ell_nnz = this->mat_.max_row * nrow;
-    this->AllocateELL(ell_nnz, nrow, cast_mat_csr->GetN(), this->mat_.max_row);
-
-    stat_t = hipsparseTcsr2ell(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                               nrow,
-                               cast_mat_csr->mat_descr_,
-                               cast_mat_csr->mat_.val,
-                               cast_mat_csr->mat_.row_offset,
-                               cast_mat_csr->mat_.col,
-                               this->mat_descr_,
-                               this->mat_.max_row,
-                               this->mat_.val,
-                               this->mat_.col);
-    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
-
-    this->nrow_ = cast_mat_csr->GetM();
-    this->ncol_ = cast_mat_csr->GetN();
-    this->nnz_  = ell_nnz;
-
-    return true;
-
+        return true;
+    }
   }
 
   return false;

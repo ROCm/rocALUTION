@@ -8,6 +8,7 @@
 #include "hip_matrix_bcsr.hpp"
 #include "hip_matrix_dense.hpp"
 #include "hip_vector.hpp"
+#include "hip_conversion.hpp"
 #include "../host/host_matrix_csr.hpp"
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
@@ -741,43 +742,37 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
   // empty matrix is empty matrix
   if (mat.GetNnz() == 0)
+  {
     return true;
+  }
 
   const HIPAcceleratorMatrixCSR<ValueType>   *cast_mat_csr;
-  if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL) {
-    
+  if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL)
+  {
     this->CopyFrom(*cast_mat_csr);
     return true;
-    
   }
 
-  /*
-  const HIPAcceleratorMatrixCOO<ValueType>   *cast_mat_coo;
-  if ((cast_mat_coo = dynamic_cast<const HIPAcceleratorMatrixCOO<ValueType>*> (&mat)) != NULL) {
+  // Convert from COO to CSR
+  const HIPAcceleratorMatrixCOO<ValueType> *cast_mat_coo;
+  if((cast_mat_coo = dynamic_cast<const HIPAcceleratorMatrixCOO<ValueType>*>(&mat)) != NULL)
+  {
+      this->Clear();
 
-    this->Clear();
+      if(coo_to_csr_hip(this->local_backend_.HIP_sparse_handle,
+                        cast_mat_coo->nnz_,
+                        cast_mat_coo->nrow_,
+                        cast_mat_coo->ncol_,
+                        cast_mat_coo->mat_,
+                        &this->mat_) == true)
+      {
+          this->nrow_ = cast_mat_coo->nrow_;
+          this->ncol_ = cast_mat_coo->ncol_;
+          this->nnz_  = cast_mat_coo->nnz_;
 
-
-  TODO
-  Allocate
-  copy colmn
-  copy val
-  cusparseStatus_t
-      cusparseXcoo2csr(cusparseHandle_t handle, const int *cooRowInd,
-                       int nnz, int m, int *csrRowPtr, cusparseIndexBase_t
-                       idxBase);
-
-
-    FATAL_ERROR(__FILE__, __LINE__);
-
-    this->nrow_ = cast_mat_coo->GetM();
-    this->ncol_ = cast_mat_coo->GetN();
-    this->nnz_  = cast_mat_coo->GetNnz();
-
-    return true;
-
+          return true;
+      }
   }
-  */
 
   /*
   const HIPAcceleratorMatrixDENSE<ValueType> *cast_mat_dense;

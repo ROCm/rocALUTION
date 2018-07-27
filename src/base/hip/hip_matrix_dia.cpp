@@ -2,6 +2,7 @@
 #include "hip_matrix_csr.hpp"
 #include "hip_matrix_dia.hpp"
 #include "hip_vector.hpp"
+#include "hip_conversion.hpp"
 #include "../host/host_matrix_dia.hpp"
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
@@ -604,126 +605,29 @@ bool HIPAcceleratorMatrixDIA<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     this->Clear();
 
-    // TODO
-    // upper bound (somehow fixed for now)
-    //
-    //     GROUP_SIZE = ( size_t( ( size_t( nrow+ncol / ( this->local_backend_.HIP_warp * 4 ) ) + 1 ) 
-    //                  / this->local_backend_.HIP_block_size ) + 1 ) * this->local_backend_.HIP_block_size;
-    //
-    if (cast_mat_csr->GetM()+cast_mat_csr->GetN() > 16842494*4)
-      return false;
+    int nnz_dia;
+    int num_diag;
 
+    if(csr_to_dia_hip(this->local_backend_.HIP_block_size,
+                      cast_mat_csr->nnz_,
+                      cast_mat_csr->nrow_,
+                      cast_mat_csr->ncol_,
+                      cast_mat_csr->mat_,
+                      &this->mat_,
+                      &nnz_dia,
+                      &num_diag) == true)
+    {
 
-    int nrow = cast_mat_csr->GetM();
-    int ncol = cast_mat_csr->GetN();
-    int nnz  = cast_mat_csr->GetNnz();
+        this->nrow_ = cast_mat_csr->GetM();
+        this->ncol_ = cast_mat_csr->GetN();
+        this->nnz_  = nnz_dia;
+        this->mat_.num_diag = num_diag;
 
-    int *diag_idx = NULL;
-
-    // Get diagonal mapping vector
-    allocate_hip<int>(nrow+ncol, &diag_idx);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    nrow+ncol, diag_idx);
-
-    dim3 BlockSize(this->local_backend_.HIP_block_size);
-    dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
-
-    hipLaunchKernelGGL((kernel_dia_diag_idx<int>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, cast_mat_csr->mat_.row_offset,
-                       cast_mat_csr->mat_.col, diag_idx);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    // Reduction to obtain number of occupied diagonals
-    int num_diag = 0;
-    int *d_buffer = NULL;
-    int *h_buffer = NULL;
-
-    allocate_hip<int>(this->local_backend_.HIP_warp, &d_buffer);
-    allocate_host(this->local_backend_.HIP_warp, &h_buffer);
-
-    if (this->local_backend_.HIP_warp == 32) {
-      reduce_hip<int, int, 32, 256>(nrow+ncol, diag_idx, &num_diag, h_buffer, d_buffer);
-    } else if (this->local_backend_.HIP_warp == 64) {
-      reduce_hip<int, int, 64, 256>(nrow+ncol, diag_idx, &num_diag, h_buffer, d_buffer);
-    } else { //TODO
-      FATAL_ERROR(__FILE__, __LINE__);
+        return true;
     }
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip<int>(&d_buffer);
-    free_host(&h_buffer);
-
-    int size = nrow > ncol ? nrow : ncol;
-    // Conversion fails if DIA nnz exceeds 5 times CSR nnz
-    if (num_diag > 5 * nnz / size) {
-      free_hip<int>(&diag_idx);
-      return false;
-    }
-
-    int nnz_dia = size * num_diag;
-
-    // Allocate DIA structure
-    this->AllocateDIA(nnz_dia, nrow, ncol, num_diag);
-
-    set_to_zero_hip(this->local_backend_.HIP_block_size,
-                    nnz_dia, this->mat_.val);
-
-    // Fill diagonal offset array
-    allocate_hip<int>(nrow+ncol+1, &d_buffer);
-
-    // TODO currently performing partial sum on host
-    allocate_host(nrow+ncol+1, &h_buffer);
-    hipMemcpy(h_buffer+1, // dst
-               diag_idx, // src
-               (nrow+ncol)*sizeof(int), // size
-               hipMemcpyDeviceToHost);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    h_buffer[0] = 0;
-    for (int i=2; i<nrow+ncol+1; ++i)
-      h_buffer[i] += h_buffer[i-1];
-
-    hipMemcpy(d_buffer, // dst
-               h_buffer, // src
-               (nrow+ncol)*sizeof(int), // size
-               hipMemcpyHostToDevice);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_host(&h_buffer);
-    // end TODO
-
-    dim3 GridSize3((nrow+ncol) / this->local_backend_.HIP_block_size + 1);
-
-    hipLaunchKernelGGL((kernel_dia_fill_offset<int>),
-                       GridSize3, BlockSize, 0, 0,
-                       nrow, ncol, diag_idx,
-                       d_buffer, this->mat_.offset);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip<int>(&d_buffer);
-
-    hipLaunchKernelGGL((kernel_dia_convert<ValueType, int>),
-                       GridSize, BlockSize, 0, 0,
-                       nrow, num_diag, cast_mat_csr->mat_.row_offset,
-                       cast_mat_csr->mat_.col, cast_mat_csr->mat_.val,
-                       diag_idx, this->mat_.val);
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    free_hip<int>(&diag_idx);
-
-    this->nrow_ = cast_mat_csr->GetM();
-    this->ncol_ = cast_mat_csr->GetN();
-    this->nnz_  = nnz_dia;
-    this->mat_.num_diag = num_diag;
-
-    return true;
-
   }
 
   return false;
-
 }
 
 template <typename ValueType>
