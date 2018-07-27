@@ -38,9 +38,6 @@ bool testing_cr(Arguments argus)
     LocalVector<T> b;
     LocalVector<T> e;
 
-    // Matrix format
-    A.ConvertTo(format);
-
     // Generate A
     int* csr_ptr = NULL;
     int* csr_col = NULL;
@@ -116,6 +113,10 @@ bool testing_cr(Arguments argus)
 
     ls.Init(1e-8, 0.0, 1e+8, 10000);
     ls.Build();
+
+    // Matrix format
+    A.ConvertTo(format);
+
     ls.Solve(b, &x);
 
     // Verify solution
