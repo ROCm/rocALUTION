@@ -3,8 +3,7 @@
 #include "hip_conversion.hpp"
 #include "hip_sparse.hpp"
 #include "hip_utils.hpp"
-#include "hip_kernels_dia.hpp"
-#include "hip_kernels_hyb.hpp"
+#include "hip_kernels_conversion.hpp"
 #include "../matrix_formats.hpp"
 
 #include <hip/hip_runtime_api.h>
@@ -206,6 +205,9 @@ bool csr_to_dia_hip(int blocksize,
     // Copy result to host
     hipMemcpy(num_diag, d_num_diag, sizeof(IndexType), hipMemcpyDeviceToHost);
 
+    // Free device memory
+    free_hip(&d_num_diag);
+
     // Conversion fails if DIA nnz exceeds 5 times CSR nnz
     IndexType size = (nrow > ncol) ? nrow : ncol;
     if(*num_diag > 5 * nnz / size)
@@ -221,28 +223,37 @@ bool csr_to_dia_hip(int blocksize,
     allocate_hip(*nnz_dia, &dst->val);
 
     // Initialize values with zero
+    set_to_zero_hip(blocksize, *num_diag, dst->offset);
     set_to_zero_hip(blocksize, *nnz_dia, dst->val);
 
     // Inclusive sum to obtain diagonal offsets
     IndexType* work = NULL;
-    allocate_hip(nrow + ncol + 1, &work);
+    allocate_hip(nrow + ncol, &work);
     d_temp_storage = NULL;
     temp_storage_bytes = 0;
 
+/*
     // Obtain hipcub buffer size
-    hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work + 1, nrow + ncol);
+    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Allocate hipcub buffer
     hipMalloc(&d_temp_storage, temp_storage_bytes);
 
     // Do inclusive sum
-    hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work + 1, nrow + ncol);
-
-    // Set initial entry of work to zero
-    set_to_zero_hip(blocksize, 1, work);
+    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Clear hipcub buffer
     hipFree(d_temp_storage);
+*/
+
+    // TODO
+    std::vector<int> tmp(nrow+ncol);
+    hipMemcpy(&tmp[1], diag_idx, sizeof(int)*(nrow+ncol-1), hipMemcpyDeviceToHost);
+    tmp[0] = 0;
+    for(int i=1; i<nrow+ncol; ++i)
+        tmp[i] += tmp[i-1];
+    hipMemcpy(work, tmp.data(), sizeof(int)*(nrow+ncol), hipMemcpyHostToDevice);
+    // TODO END
 
     // Fill DIA structures
     dim3 fill_blocks((nrow + ncol) / blocksize + 1);
