@@ -43,7 +43,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     rm -rf /var/lib/apt/lists/*
 
 # Update rocm as a work around until the images are updated
-RUN apt-get upgrade -y && apt-get cean && rm -rf /var/lib/apt/lists/*
+RUN apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # docker pipeline runs containers with particular uid
 # create a jenkins user with this specific uid so it can use sudo priviledges
