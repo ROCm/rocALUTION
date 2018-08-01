@@ -152,7 +152,7 @@ if [[ "${install_dependencies}" == true ]]; then
     if [[ "${build_cuda}" == true ]]; then
       library_dependencies_ubuntu+=("cuda") # "hipsparse-alt" "hipblas-alt") TODO
     else
-      library_dependencies_ubuntu+=("hcc" "rocblas") # "hipsparse" "hipblas") TODO
+      library_dependencies_ubuntu+=("hcc" "rocblas" "hipblas" "rocrand") # "hipsparse" TODO
     fi
   fi
 
