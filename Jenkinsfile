@@ -189,11 +189,11 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
   {
     withEnv(["CXX=${compiler_args.compiler_path}", 'CLICOLOR_FORCE=1'])
     {
-      // Install hipblas, rocsparse and hipsparse
+      // Install rocsparse and hipsparse
       sh  """#!/usr/bin/env bash
           set -x
           cd ${paths.project_build_prefix}
-          sudo dpkg -i deps/hipblas* deps/rocsparse* deps/hipsparse* deps/rocprim*
+          sudo dpkg -i deps/rocsparse* deps/hipsparse*
         """
       // Build library & clients
       sh  """#!/usr/bin/env bash
