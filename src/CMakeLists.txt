@@ -121,7 +121,10 @@ if(SUPPORT_HIP)
 
   target_link_libraries(rocalution_hip PRIVATE hipblas hipsparse)
 
-  target_include_directories(rocalution_hip PRIVATE $<BUILD_INTERFACE:${HIPCUB_INCLUDE_DIRS}>)
+  target_include_directories(rocalution_hip
+                             PRIVATE
+                             $<BUILD_INTERFACE:${HIPCUB_INCLUDE_DIRS}>
+                             $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>)
 
   if (HIP_PLATFORM STREQUAL "hcc")
     foreach(target ${AMDGPU_TARGETS})
