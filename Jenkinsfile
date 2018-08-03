@@ -464,7 +464,7 @@ parallel rocm_ubuntu_host:
   node( 'docker && rocm && dkms')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+        from_image:'rocm/dev-ubuntu-16.04:1.8.2',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
@@ -495,7 +495,7 @@ rocm_ubuntu_host_openmp:
   node( 'docker && rocm && dkms')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+        from_image:'rocm/dev-ubuntu-16.04:1.8.2',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
@@ -526,7 +526,7 @@ rocm_ubuntu_host_mpi:
   node( 'docker && rocm && dkms')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+        from_image:'rocm/dev-ubuntu-16.04:1.8.2',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
@@ -557,7 +557,7 @@ rocm_ubuntu_hip:
   node( 'docker && rocm && gfx900')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
+        from_image:'rocm/dev-ubuntu-16.04:1.8.2',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
