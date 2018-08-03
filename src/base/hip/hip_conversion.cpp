@@ -144,9 +144,68 @@ bool csr_to_ell_hip(const hipsparseHandle_t handle,
     return true;
 }
 
+template <typename ValueType, typename IndexType>
+bool ell_to_csr_hip(const hipsparseHandle_t handle,
+                    IndexType nnz, IndexType nrow, IndexType ncol,
+                    const MatrixELL<ValueType, IndexType>& src,
+                    const hipsparseMatDescr_t src_descr,
+                    MatrixCSR<ValueType, IndexType>* dst,
+                    const hipsparseMatDescr_t dst_descr,
+                    IndexType* nnz_csr)
+{
+    assert(nnz  > 0);
+    assert(nrow > 0);
+    assert(ncol > 0);
 
+    assert(dst != NULL);
+    assert(nnz_csr != NULL);
+    assert(handle != NULL);
+    assert(src_descr != NULL);
+    assert(dst_descr != NULL);
 
+    hipsparseStatus_t stat_t;
 
+    // Allocate CSR row offset structure
+    allocate_hip(nrow + 1, &dst->row_offset);
+
+    // Determine CSR nnz
+    stat_t = hipsparseXell2csrNnz(HIPSPARSE_HANDLE(handle),
+                                  nrow,
+                                  ncol,
+                                  src_descr,
+                                  src.max_row,
+                                  src.col,
+                                  dst_descr,
+                                  dst->row_offset,
+                                  nnz_csr);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
+    if(*nnz_csr < 0)
+    {
+        free_hip(&dst->row_offset);
+        return false;
+    }
+
+    // Allocate CSR column and value structures
+    allocate_hip(*nnz_csr, &dst->col);
+    allocate_hip(*nnz_csr, &dst->val);
+
+    // Conversion
+    stat_t = hipsparseTell2csr(HIPSPARSE_HANDLE(handle),
+                               nrow,
+                               ncol,
+                               src_descr,
+                               src.max_row,
+                               src.val,
+                               src.col,
+                               dst_descr,
+                               dst->val,
+                               dst->row_offset,
+                               dst->col);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
+    return true;
+}
 
 template <typename ValueType, typename IndexType>
 bool csr_to_dia_hip(int blocksize,
@@ -452,6 +511,23 @@ template bool csr_to_ell_hip(const hipsparseHandle_t handle,
                              MatrixELL<double, int>* dst,
                              const hipsparseMatDescr_t dst_descr,
                              int* nnz_ell);
+
+// ell_to_csr
+template bool ell_to_csr_hip(const hipsparseHandle_t handle,
+                             int nnz, int nrow, int ncol,
+                             const MatrixELL<float, int>& src,
+                             const hipsparseMatDescr_t src_descr,
+                             MatrixCSR<float, int>* dst,
+                             const hipsparseMatDescr_t dst_descr,
+                             int* nnz_csr);
+
+template bool ell_to_csr_hip(const hipsparseHandle_t handle,
+                             int nnz, int nrow, int ncol,
+                             const MatrixELL<double, int>& src,
+                             const hipsparseMatDescr_t src_descr,
+                             MatrixCSR<double, int>* dst,
+                             const hipsparseMatDescr_t dst_descr,
+                             int* nnz_csr);
 
 // csr_to_dia
 template bool csr_to_dia_hip(int blocksize,

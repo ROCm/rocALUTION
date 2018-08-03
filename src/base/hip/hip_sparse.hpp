@@ -80,6 +80,20 @@ hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
                                     ValueType *ellValC,
                                     int *ellColIndC);
 
+// hipsparse ell2csr
+template <typename ValueType>
+hipsparseStatus_t hipsparseTell2csr(hipsparseHandle_t handle,
+                                    int m,
+                                    int n,
+                                    const hipsparseMatDescr_t descrA,
+                                    int ellWidthA,
+                                    const ValueType* ellValA,
+                                    const int* ellColIndA,
+                                    const hipsparseMatDescr_t descrC,
+                                    ValueType* csrValC,
+                                    const int* csrRowPtrC,
+                                    int* csrColIndC);
+
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_SPARSE_HPP_
