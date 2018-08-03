@@ -196,4 +196,37 @@ hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
                              descrC, ellWidthC, ellValC, ellColIndC);
 }
 
+// hipsparse ell2csr
+template <>
+hipsparseStatus_t hipsparseTell2csr(hipsparseHandle_t handle,
+                                    int m,
+                                    int n,
+                                    const hipsparseMatDescr_t descrA,
+                                    int ellWidthA,
+                                    const float* ellValA,
+                                    const int* ellColIndA,
+                                    const hipsparseMatDescr_t descrC,
+                                    float* csrValC,
+                                    const int* csrRowPtrC,
+                                    int* csrColIndC)
+{
+    return hipsparseSell2csr(handle, m, n, descrA, ellWidthA, ellValA, ellColIndA, descrC, csrValC, csrRowPtrC, csrColIndC);
+}
+
+template <>
+hipsparseStatus_t hipsparseTell2csr(hipsparseHandle_t handle,
+                                    int m,
+                                    int n,
+                                    const hipsparseMatDescr_t descrA,
+                                    int ellWidthA,
+                                    const double* ellValA,
+                                    const int* ellColIndA,
+                                    const hipsparseMatDescr_t descrC,
+                                    double* csrValC,
+                                    const int* csrRowPtrC,
+                                    int* csrColIndC)
+{
+    return hipsparseDell2csr(handle, m, n, descrA, ellWidthA, ellValA, ellColIndA, descrC, csrValC, csrRowPtrC, csrColIndC);
+}
+
 } // namespace rocalution
