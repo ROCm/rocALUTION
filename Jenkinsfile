@@ -187,28 +187,39 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
 
   if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
   {
-    String rocm_archive_path='hcc-rocm-ubuntu';
-
+    String rocsparse_archive_path='hcc-rocm-ubuntu';
     // This invokes 'copy artifact plugin' to copy latest archive from rocsparse project
-    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+    step([$class: 'CopyArtifact', filter: "Release/${rocsparse_archive_path}/*.deb",
       fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocSPARSE/develop', flatten: true,
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
+  }
 
+  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
+  {
+    String hipsparse_archive_path='hcc-rocm-ubuntu';
     // This invokes 'copy artifact plugin' to copy latest archive from hipsparse project
-    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+    step([$class: 'CopyArtifact', filter: "Release/${hipsparse_archive_path}/*.deb",
       fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipSPARSE/develop', flatten: true,
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
+  }
 
+  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
+  {
+    String rocblas_archive_path='hcc-rocm-ubuntu';
     // This invokes 'copy artifact plugin' to copy latest archive from rocblas project
-    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+    step([$class: 'CopyArtifact', filter: "Release/${rocblas_archive_path}/*.deb",
       fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocBLAS/develop', flatten: true,
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
+  }
 
+  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
+  {
+    String hipblas_archive_path='hcc-rocm-ubuntu';
     // This invokes 'copy artifact plugin' to copy latest archive from hipsparse project
-    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+    step([$class: 'CopyArtifact', filter: "Release/${hipblas_archive_path}/*.deb",
       fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipBLAS/develop', flatten: true,
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
