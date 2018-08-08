@@ -185,16 +185,39 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
     build_type_postfix = "-d"
   }
 
+  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' ) )
+  {
+    String rocm_archive_path='hcc-rocm-ubuntu';
+
+    // This invokes 'copy artifact plugin' to copy latest archive from rocsparse project
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocSPARSE/develop', flatten: true,
+      selector: [$class: 'StatusBuildSelector', stable: false],
+      target: "${paths.project_build_prefix}" ])
+
+    // This invokes 'copy artifact plugin' to copy latest archive from hipsparse project
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipSPARSE/develop', flatten: true,
+      selector: [$class: 'StatusBuildSelector', stable: false],
+      target: "${paths.project_build_prefix}" ])
+
+    // This invokes 'copy artifact plugin' to copy latest archive from rocblas project
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocBLAS/develop', flatten: true,
+      selector: [$class: 'StatusBuildSelector', stable: false],
+      target: "${paths.project_build_prefix}" ])
+
+    // This invokes 'copy artifact plugin' to copy latest archive from hipblas project
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipBLAS/develop', flatten: true,
+      selector: [$class: 'StatusBuildSelector', stable: false],
+      target: "${paths.project_build_prefix}" ])
+  }
+
   build_image.inside( docker_args.docker_run_args )
   {
     withEnv(["CXX=${compiler_args.compiler_path}", 'CLICOLOR_FORCE=1'])
     {
-      // Install hipblas, rocsparse and hipsparse
-      sh  """#!/usr/bin/env bash
-          set -x
-          cd ${paths.project_build_prefix}
-          sudo dpkg -i deps/hipblas* deps/rocsparse* deps/hipsparse* deps/rocprim*
-        """
       // Build library & clients
       sh  """#!/usr/bin/env bash
           set -x
@@ -265,6 +288,9 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
             set -x
             rm -rf ${docker_context} && mkdir -p ${docker_context}
             mv ${paths.project_build_prefix}/build/release/*.rpm ${docker_context}
+
+            # Temp rocm lib mv because repo.radeon.com does not have rpms for them
+            mv ${paths.project_build_prefix}/*.rpm ${docker_context}
             rpm -qlp ${docker_context}/*.rpm
         """
         archiveArtifacts artifacts: "${docker_context}/*.rpm", fingerprint: true
@@ -571,7 +597,7 @@ rocm_ubuntu_hip:
         project_name:'rocalution-ubuntu-hip',
         src_prefix:'src',
         build_prefix:'src',
-        build_command: './install.sh -cd' )
+        build_command: 'sudo dpkg -i rocsparse-*.deb hipsparse-*.deb rocblas-*.deb hipblas-*.deb; ./install.sh -cd' )
 
     def print_version_closure = {
       sh  """

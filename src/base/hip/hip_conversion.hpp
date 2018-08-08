@@ -30,6 +30,15 @@ bool csr_to_ell_hip(const hipsparseHandle_t handle,
                     IndexType* nnz_ell);
 
 template <typename ValueType, typename IndexType>
+bool ell_to_csr_hip(const hipsparseHandle_t handle,
+                    IndexType nnz, IndexType nrow, IndexType ncol,
+                    const MatrixELL<ValueType, IndexType>& src,
+                    const hipsparseMatDescr_t src_descr,
+                    MatrixCSR<ValueType, IndexType>* dst,
+                    const hipsparseMatDescr_t dst_descr,
+                    IndexType* nnz_csr);
+
+template <typename ValueType, typename IndexType>
 bool csr_to_dia_hip(int blocksize,
                     IndexType nnz, IndexType nrow, IndexType ncol,
                     const MatrixCSR<ValueType, IndexType>& src,

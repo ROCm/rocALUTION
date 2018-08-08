@@ -736,43 +736,68 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyToCSR(int *row_offsets, int *col, V
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
+bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat)
+{
+    this->Clear();
 
-  this->Clear();
+    // empty matrix is empty matrix
+    if(mat.GetNnz() == 0)
+    {
+        return true;
+    }
 
-  // empty matrix is empty matrix
-  if (mat.GetNnz() == 0)
-  {
-    return true;
-  }
+    const HIPAcceleratorMatrixCSR<ValueType>   *cast_mat_csr;
+    if((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL)
+    {
+        this->CopyFrom(*cast_mat_csr);
+        return true;
+    }
 
-  const HIPAcceleratorMatrixCSR<ValueType>   *cast_mat_csr;
-  if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL)
-  {
-    this->CopyFrom(*cast_mat_csr);
-    return true;
-  }
+    // Convert from COO to CSR
+    const HIPAcceleratorMatrixCOO<ValueType> *cast_mat_coo;
+    if((cast_mat_coo = dynamic_cast<const HIPAcceleratorMatrixCOO<ValueType>*>(&mat)) != NULL)
+    {
+        this->Clear();
 
-  // Convert from COO to CSR
-  const HIPAcceleratorMatrixCOO<ValueType> *cast_mat_coo;
-  if((cast_mat_coo = dynamic_cast<const HIPAcceleratorMatrixCOO<ValueType>*>(&mat)) != NULL)
-  {
-      this->Clear();
+        if(coo_to_csr_hip(this->local_backend_.HIP_sparse_handle,
+                          cast_mat_coo->nnz_,
+                          cast_mat_coo->nrow_,
+                          cast_mat_coo->ncol_,
+                          cast_mat_coo->mat_,
+                          &this->mat_) == true)
+        {
+            this->nrow_ = cast_mat_coo->nrow_;
+            this->ncol_ = cast_mat_coo->ncol_;
+            this->nnz_  = cast_mat_coo->nnz_;
 
-      if(coo_to_csr_hip(this->local_backend_.HIP_sparse_handle,
-                        cast_mat_coo->nnz_,
-                        cast_mat_coo->nrow_,
-                        cast_mat_coo->ncol_,
-                        cast_mat_coo->mat_,
-                        &this->mat_) == true)
-      {
-          this->nrow_ = cast_mat_coo->nrow_;
-          this->ncol_ = cast_mat_coo->ncol_;
-          this->nnz_  = cast_mat_coo->nnz_;
+            return true;
+        }
+    }
 
-          return true;
-      }
-  }
+    const HIPAcceleratorMatrixELL<ValueType> *cast_mat_ell;
+    if((cast_mat_ell = dynamic_cast<const HIPAcceleratorMatrixELL<ValueType>*>(&mat)) != NULL)
+    {
+        this->Clear();
+        int nnz;
+
+        if(ell_to_csr_hip(this->local_backend_.HIP_sparse_handle,
+                          cast_mat_ell->nnz_,
+                          cast_mat_ell->nrow_,
+                          cast_mat_ell->ncol_,
+                          cast_mat_ell->mat_,
+                          cast_mat_ell->mat_descr_,
+                          &this->mat_,
+                          this->mat_descr_,
+                          &nnz) == true)
+        {
+
+            this->nrow_ = cast_mat_ell->nrow_;
+            this->ncol_ = cast_mat_ell->ncol_;
+            this->nnz_  = nnz;
+
+            return true;
+        }
+    }
 
   /*
   const HIPAcceleratorMatrixDENSE<ValueType> *cast_mat_dense;
@@ -803,24 +828,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     this->nrow_ = cast_mat_dia->GetM();
     this->ncol_ = cast_mat_dia->GetN();
-    this->nnz_  = nnz ;
-
-    return true;
-
-  }
-  */
-
-  /*
-  const HIPAcceleratorMatrixELL<ValueType>   *cast_mat_ell;
-  if ((cast_mat_ell = dynamic_cast<const HIPAcceleratorMatrixELL<ValueType>*> (&mat)) != NULL) {
-
-    this->Clear();
-    int nnz = 0;
-
-    FATAL_ERROR(__FILE__, __LINE__);
-
-    this->nrow_ = cast_mat_ell->GetM();
-    this->ncol_ = cast_mat_ell->GetN();
     this->nnz_  = nnz ;
 
     return true;

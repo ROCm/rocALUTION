@@ -13,7 +13,6 @@
 #include "../../utils/allocate_free.hpp"
 #include "hip_utils.hpp"
 #include "hip_kernels_general.hpp"
-#include "hip_kernels_hyb.hpp"
 #include "hip_kernels_vector.hpp"
 #include "hip_allocate_free.hpp"
 #include "hip_sparse.hpp"

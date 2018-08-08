@@ -3,8 +3,7 @@
 #include "hip_conversion.hpp"
 #include "hip_sparse.hpp"
 #include "hip_utils.hpp"
-#include "hip_kernels_dia.hpp"
-#include "hip_kernels_hyb.hpp"
+#include "hip_kernels_conversion.hpp"
 #include "../matrix_formats.hpp"
 
 #include <hip/hip_runtime_api.h>
@@ -145,9 +144,68 @@ bool csr_to_ell_hip(const hipsparseHandle_t handle,
     return true;
 }
 
+template <typename ValueType, typename IndexType>
+bool ell_to_csr_hip(const hipsparseHandle_t handle,
+                    IndexType nnz, IndexType nrow, IndexType ncol,
+                    const MatrixELL<ValueType, IndexType>& src,
+                    const hipsparseMatDescr_t src_descr,
+                    MatrixCSR<ValueType, IndexType>* dst,
+                    const hipsparseMatDescr_t dst_descr,
+                    IndexType* nnz_csr)
+{
+    assert(nnz  > 0);
+    assert(nrow > 0);
+    assert(ncol > 0);
 
+    assert(dst != NULL);
+    assert(nnz_csr != NULL);
+    assert(handle != NULL);
+    assert(src_descr != NULL);
+    assert(dst_descr != NULL);
 
+    hipsparseStatus_t stat_t;
 
+    // Allocate CSR row offset structure
+    allocate_hip(nrow + 1, &dst->row_offset);
+
+    // Determine CSR nnz
+    stat_t = hipsparseXell2csrNnz(HIPSPARSE_HANDLE(handle),
+                                  nrow,
+                                  ncol,
+                                  src_descr,
+                                  src.max_row,
+                                  src.col,
+                                  dst_descr,
+                                  dst->row_offset,
+                                  nnz_csr);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
+    if(*nnz_csr < 0)
+    {
+        free_hip(&dst->row_offset);
+        return false;
+    }
+
+    // Allocate CSR column and value structures
+    allocate_hip(*nnz_csr, &dst->col);
+    allocate_hip(*nnz_csr, &dst->val);
+
+    // Conversion
+    stat_t = hipsparseTell2csr(HIPSPARSE_HANDLE(handle),
+                               nrow,
+                               ncol,
+                               src_descr,
+                               src.max_row,
+                               src.val,
+                               src.col,
+                               dst_descr,
+                               dst->val,
+                               dst->row_offset,
+                               dst->col);
+    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
+    return true;
+}
 
 template <typename ValueType, typename IndexType>
 bool csr_to_dia_hip(int blocksize,
@@ -206,6 +264,9 @@ bool csr_to_dia_hip(int blocksize,
     // Copy result to host
     hipMemcpy(num_diag, d_num_diag, sizeof(IndexType), hipMemcpyDeviceToHost);
 
+    // Free device memory
+    free_hip(&d_num_diag);
+
     // Conversion fails if DIA nnz exceeds 5 times CSR nnz
     IndexType size = (nrow > ncol) ? nrow : ncol;
     if(*num_diag > 5 * nnz / size)
@@ -221,28 +282,37 @@ bool csr_to_dia_hip(int blocksize,
     allocate_hip(*nnz_dia, &dst->val);
 
     // Initialize values with zero
+    set_to_zero_hip(blocksize, *num_diag, dst->offset);
     set_to_zero_hip(blocksize, *nnz_dia, dst->val);
 
     // Inclusive sum to obtain diagonal offsets
     IndexType* work = NULL;
-    allocate_hip(nrow + ncol + 1, &work);
+    allocate_hip(nrow + ncol, &work);
     d_temp_storage = NULL;
     temp_storage_bytes = 0;
 
+/*
     // Obtain hipcub buffer size
-    hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work + 1, nrow + ncol);
+    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Allocate hipcub buffer
     hipMalloc(&d_temp_storage, temp_storage_bytes);
 
     // Do inclusive sum
-    hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work + 1, nrow + ncol);
-
-    // Set initial entry of work to zero
-    set_to_zero_hip(blocksize, 1, work);
+    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Clear hipcub buffer
     hipFree(d_temp_storage);
+*/
+
+    // TODO
+    std::vector<int> tmp(nrow+ncol);
+    hipMemcpy(&tmp[1], diag_idx, sizeof(int)*(nrow+ncol-1), hipMemcpyDeviceToHost);
+    tmp[0] = 0;
+    for(int i=1; i<nrow+ncol; ++i)
+        tmp[i] += tmp[i-1];
+    hipMemcpy(work, tmp.data(), sizeof(int)*(nrow+ncol), hipMemcpyHostToDevice);
+    // TODO END
 
     // Fill DIA structures
     dim3 fill_blocks((nrow + ncol) / blocksize + 1);
@@ -441,6 +511,23 @@ template bool csr_to_ell_hip(const hipsparseHandle_t handle,
                              MatrixELL<double, int>* dst,
                              const hipsparseMatDescr_t dst_descr,
                              int* nnz_ell);
+
+// ell_to_csr
+template bool ell_to_csr_hip(const hipsparseHandle_t handle,
+                             int nnz, int nrow, int ncol,
+                             const MatrixELL<float, int>& src,
+                             const hipsparseMatDescr_t src_descr,
+                             MatrixCSR<float, int>* dst,
+                             const hipsparseMatDescr_t dst_descr,
+                             int* nnz_csr);
+
+template bool ell_to_csr_hip(const hipsparseHandle_t handle,
+                             int nnz, int nrow, int ncol,
+                             const MatrixELL<double, int>& src,
+                             const hipsparseMatDescr_t src_descr,
+                             MatrixCSR<double, int>* dst,
+                             const hipsparseMatDescr_t dst_descr,
+                             int* nnz_csr);
 
 // csr_to_dia
 template bool csr_to_dia_hip(int blocksize,
