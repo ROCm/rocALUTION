@@ -185,12 +185,31 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
     build_type_postfix = "-d"
   }
 
-  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
+  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' ) )
   {
-    String rocsparse_archive_path='hcc-rocm-ubuntu';
+    String rocm_archive_path='hcc-rocm-ubuntu';
+
     // This invokes 'copy artifact plugin' to copy latest archive from rocsparse project
-    step([$class: 'CopyArtifact', filter: "Release/${rocsparse_archive_path}/*.deb",
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
       fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocSPARSE/develop', flatten: true,
+      selector: [$class: 'StatusBuildSelector', stable: false],
+      target: "${paths.project_build_prefix}" ])
+
+    // This invokes 'copy artifact plugin' to copy latest archive from hipsparse project
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipSPARSE/develop', flatten: true,
+      selector: [$class: 'StatusBuildSelector', stable: false],
+      target: "${paths.project_build_prefix}" ])
+
+    // This invokes 'copy artifact plugin' to copy latest archive from rocblas project
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocBLAS/develop', flatten: true,
+      selector: [$class: 'StatusBuildSelector', stable: false],
+      target: "${paths.project_build_prefix}" ])
+
+    // This invokes 'copy artifact plugin' to copy latest archive from hipblas project
+    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
+      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipBLAS/develop', flatten: true,
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
   }
@@ -199,12 +218,6 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
   {
     withEnv(["CXX=${compiler_args.compiler_path}", 'CLICOLOR_FORCE=1'])
     {
-      // Install rocsparse and hipsparse
-      sh  """#!/usr/bin/env bash
-          set -x
-          cd ${paths.project_build_prefix}
-          sudo dpkg -i deps/rocsparse* deps/hipsparse*
-        """
       // Build library & clients
       sh  """#!/usr/bin/env bash
           set -x
