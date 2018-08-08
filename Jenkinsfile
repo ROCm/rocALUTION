@@ -195,36 +195,6 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
       target: "${paths.project_build_prefix}" ])
   }
 
-  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
-  {
-    String hipsparse_archive_path='hcc-rocm-ubuntu';
-    // This invokes 'copy artifact plugin' to copy latest archive from hipsparse project
-    step([$class: 'CopyArtifact', filter: "Release/${hipsparse_archive_path}/*.deb",
-      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipSPARSE/develop', flatten: true,
-      selector: [$class: 'StatusBuildSelector', stable: false],
-      target: "${paths.project_build_prefix}" ])
-  }
-
-  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
-  {
-    String rocblas_archive_path='hcc-rocm-ubuntu';
-    // This invokes 'copy artifact plugin' to copy latest archive from rocblas project
-    step([$class: 'CopyArtifact', filter: "Release/${rocblas_archive_path}/*.deb",
-      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocBLAS/develop', flatten: true,
-      selector: [$class: 'StatusBuildSelector', stable: false],
-      target: "${paths.project_build_prefix}" ])
-  }
-
-  if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' )
-  {
-    String hipblas_archive_path='hcc-rocm-ubuntu';
-    // This invokes 'copy artifact plugin' to copy latest archive from hipsparse project
-    step([$class: 'CopyArtifact', filter: "Release/${hipblas_archive_path}/*.deb",
-      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipBLAS/develop', flatten: true,
-      selector: [$class: 'StatusBuildSelector', stable: false],
-      target: "${paths.project_build_prefix}" ])
-  }
-
   build_image.inside( docker_args.docker_run_args )
   {
     withEnv(["CXX=${compiler_args.compiler_path}", 'CLICOLOR_FORCE=1'])
@@ -507,7 +477,7 @@ parallel rocm_ubuntu_host:
   node( 'docker && rocm && dkms')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.8.2',
+        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
@@ -538,7 +508,7 @@ rocm_ubuntu_host_openmp:
   node( 'docker && rocm && dkms')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.8.2',
+        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
@@ -569,7 +539,7 @@ rocm_ubuntu_host_mpi:
   node( 'docker && rocm && dkms')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:1.8.2',
+        from_image:'rocm/dev-ubuntu-16.04:1.7.1',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
