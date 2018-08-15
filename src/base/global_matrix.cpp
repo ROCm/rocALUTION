@@ -989,6 +989,9 @@ void GlobalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
   this->matrix_interior_.ReadFileCSR(path + interior_name);
   this->matrix_ghost_.ReadFileCSR(path + ghost_name);
 
+  // Convert ghost matrix to COO
+  this->matrix_ghost_.ConvertToCOO();
+
   this->object_name_ = filename;
 
 #ifdef SUPPORT_MULTINODE
