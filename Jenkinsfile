@@ -432,7 +432,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
         // Trying to fix git pull issues by delaying builds
         sh  """#!/usr/bin/env bash
             set -x
-            sleep 60s
+            sleep 360
           """
     }
 
@@ -442,7 +442,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
         // Trying to fix git pull issues by delaying builds
         sh  """#!/usr/bin/env bash
             set -x
-            sleep 360s
+            sleep 720s
           """
     }
 
