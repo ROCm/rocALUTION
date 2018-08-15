@@ -229,7 +229,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
     stage( "Test ${compiler_args.build_config}" )
     {
       // Cap the maximum amount of testing to be a few hours; assume failure if the time limit is hit
-      timeout(time: 2, unit: 'HOURS')
+      timeout(time: 3, unit: 'HOURS')
       {
         if(isJobStartedByTimer())
         {
@@ -426,8 +426,8 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
 {
   ansiColor( 'vga' )
   {
-    // OpenMP
-    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-openmp'))
+    // HIP build
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-mpi'))
     {
         // Trying to fix git pull issues by delaying builds
         sh  """#!/usr/bin/env bash
@@ -437,22 +437,12 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
     }
 
     // HIP build
-    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-mpi'))
-    {
-        // Trying to fix git pull issues by delaying builds
-        sh  """#!/usr/bin/env bash
-            set -x
-            sleep 120s
-          """
-    }
-
-    // HIP build
     if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-hip'))
     {
         // Trying to fix git pull issues by delaying builds
         sh  """#!/usr/bin/env bash
             set -x
-            sleep 180s
+            sleep 360s
           """
     }
 
