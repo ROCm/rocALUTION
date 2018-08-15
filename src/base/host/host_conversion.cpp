@@ -558,10 +558,7 @@ bool coo_to_csr(const int omp_threads,
   // COO has to be sorted by rows
   for (IndexType i = 1; i < nnz; ++i)
   {
-    assert(src.row[i] >= src.row[i-1]);
-    if (src.row[i] == src.row[i-1]) {
-      assert(src.col[i] >= src.col[i-1]);
-    }
+      assert(src.row[i] >= src.row[i-1]);
   }
 
   // Initialize row offset with zeros

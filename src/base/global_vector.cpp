@@ -715,13 +715,12 @@ void GlobalVector<ValueType>::UpdateGhostValuesAsync(const GlobalVector<ValueTyp
     LOG_DEBUG(this, "GlobalVector::UpdateGhostValuesAsync()", "#*# begin");
 
 #ifdef SUPPORT_MULTINODE
-    in.vector_interior_.GetIndexValues(this->send_boundary_);
-
     int tag = 0;
 
     // async recv boundary from neighbors
     for(int i = 0; i < this->pm_->nrecv_; ++i)
     {
+        // nnz that we receive from process i
         int boundary_nnz = this->pm_->recv_offset_index_[i + 1] - this->pm_->recv_offset_index_[i];
 
         // if this has ghost values that belong to process i
@@ -736,9 +735,13 @@ void GlobalVector<ValueType>::UpdateGhostValuesAsync(const GlobalVector<ValueTyp
         }
     }
 
-    // asyc send boundary to neighbors
+    // prepare send buffer
+    in.vector_interior_.GetIndexValues(this->send_boundary_);
+
+    // async send boundary to neighbors
     for(int i = 0; i < this->pm_->nsend_; ++i)
     {
+        // nnz that we send to process i
         int boundary_nnz = this->pm_->send_offset_index_[i + 1] - this->pm_->send_offset_index_[i];
 
         // if process i has ghost values that belong to this
