@@ -1243,7 +1243,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType> *Ac, Paral
   int k = 0;
   for (int n=0; n<this->pm_->nrecv_; ++n) {
     for (int i=0; i<this->pm_->recv_offset_index_[n+1] - this->pm_->recv_offset_index_[n]; ++i) {
-      ghost_G[k] = recv_offset_index[n] + recv_ghost_map[n][i];
+      ghost_G[k] = (i < recv_map_size[n]) ? (recv_offset_index[n] + recv_ghost_map[n][i]) : -1;
       ++k;
     }
   }
