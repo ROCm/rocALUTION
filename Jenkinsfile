@@ -427,7 +427,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
   ansiColor( 'vga' )
   {
     // HIP build
-    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-mpi'))
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-host'))
     {
         // Trying to fix git pull issues by delaying builds
         sh  """#!/usr/bin/env bash
@@ -437,12 +437,22 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
     }
 
     // HIP build
-    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-hip'))
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-openmp'))
     {
         // Trying to fix git pull issues by delaying builds
         sh  """#!/usr/bin/env bash
             set -x
-            sleep 720s
+            sleep 720
+          """
+    }
+
+    // HIP build
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-mpi'))
+    {
+        // Trying to fix git pull issues by delaying builds
+        sh  """#!/usr/bin/env bash
+            set -x
+            sleep 1080s
           """
     }
 
