@@ -36,12 +36,16 @@ public:
   void SetGlobalSize(const IndexType2 size);
   void SetLocalSize(const int size);
 
-  // Contains all boundary indices of current process -- local or global indices?
+  // Contains all boundary indices of current rank
   void SetBoundaryIndex(const int size, const int *index);
 
-  // Number of receivers, array of the receiver process number, offsets where the boundary for process 'receiver' starts
+  // Number of ranks, the current rank is receiving data from,
+  // array of the ranks, the current rank is receiving data from,
+  // offsets where the boundary for process 'receiver' starts
   void SetReceivers(const int nrecv, const int *recvs, const int *recv_offset);
-  // Number of senders, array of the sender process number, offsets where the ghost for process 'sender' starts
+  // Number of ranks, the current rank is sending data to,
+  // array of the ranks, the current rank is sending data to,
+  // offsets where the ghost for process 'sender' starts
   void SetSenders(const int nsend, const int *sends, const int *send_offset);
 
   // Mapping local to global and global to local
@@ -64,18 +68,27 @@ private:
   IndexType2 global_size_;
   int local_size_;
 
+  // Number of total ids, the current process is receiving
   int recv_index_size_;
+  // Number of total ids, the current process is sending
   int send_index_size_;
 
+  // Number of processes, the current process receives data from
   int nrecv_;
+  // Number of processes, the current process sends data to
   int nsend_;
 
+  // Array of process ids, the current process receives data from
   int *recvs_;
+  // Array of process ids, the current process sends data to
   int *sends_;
 
+  // Array of offsets, the current process receives data from
   int *recv_offset_index_;
+  // Array of offsets, the current process sends data to
   int *send_offset_index_;
 
+  // Boundary index ids
   int *boundary_index_;
 
   friend class GlobalMatrix<double>;

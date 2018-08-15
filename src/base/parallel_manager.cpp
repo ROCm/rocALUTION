@@ -154,7 +154,6 @@ int ParallelManager::GetNumReceivers(void) const {
   assert(this->Status());
 
   return this->recv_index_size_;
-
 }
 
 int ParallelManager::GetNumSenders(void) const {
@@ -307,8 +306,6 @@ void ParallelManager::WriteFileASCII(const std::string filename) const {
   file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
   file << "#LOCAL_SIZE\n" << this->local_size_ << std::endl;
   file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
-  file << "#GHOST_SIZE\n" << this->recv_index_size_ << std::endl;
-  file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
   file << "#BOUNDARY_SIZE\n" << this->send_index_size_ << std::endl;
   file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
   file << "#NUMBER_OF_RECEIVERS\n" << this->nrecv_ << std::endl;
@@ -398,8 +395,6 @@ void ParallelManager::ReadFileASCII(const std::string filename) {
       file >> this->global_size_;
     if (line.find("#LOCAL_SIZE") != std::string::npos)
       file >> this->local_size_;
-    if (line.find("#GHOST_SIZE") != std::string::npos)
-      file >> this->recv_index_size_;
     if (line.find("#BOUNDARY_SIZE") != std::string::npos)
       file >> this->send_index_size_;
     if (line.find("#NUMBER_OF_RECEIVERS") != std::string::npos)
@@ -437,6 +432,12 @@ void ParallelManager::ReadFileASCII(const std::string filename) {
 
   }
 
+  // Number of nnz we receive
+  this->recv_index_size_ = this->recv_offset_index_[this->nrecv_];
+
+  // Number of nnz we send == boundary size
+  assert(this->send_index_size_ == this->send_offset_index_[this->nsend_]);
+
   file.close();
 
   assert(rank == this->rank_);
@@ -450,5 +451,4 @@ void ParallelManager::ReadFileASCII(const std::string filename) {
 
 }
 
-
-}
+} // namespace rocalution
