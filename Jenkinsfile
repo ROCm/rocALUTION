@@ -126,7 +126,7 @@ void checkout_and_version( project_paths paths )
       $class: 'GitSCM',
       branches: scm.branches,
       doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-      extensions: scm.extensions + [[$class: 'CleanCheckout']],
+      extensions: scm.extensions + [[$class: 'CleanCheckout']] + [[$class: 'CloneOption', timeout: 180]],
       userRemoteConfigs: scm.userRemoteConfigs
     ])
 
@@ -426,36 +426,6 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
 {
   ansiColor( 'vga' )
   {
-    // HIP build
-    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-host'))
-    {
-        // Trying to fix git pull issues by delaying builds
-        sh  """#!/usr/bin/env bash
-            set -x
-            sleep 360
-          """
-    }
-
-    // HIP build
-    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-openmp'))
-    {
-        // Trying to fix git pull issues by delaying builds
-        sh  """#!/usr/bin/env bash
-            set -x
-            sleep 720
-          """
-    }
-
-    // HIP build
-    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-mpi'))
-    {
-        // Trying to fix git pull issues by delaying builds
-        sh  """#!/usr/bin/env bash
-            set -x
-            sleep 1080s
-          """
-    }
-
     stage( "Build ${compiler_args.build_config}" )
     {
       // Checkout source code, dependencies and version files
