@@ -121,6 +121,36 @@ void checkout_and_version( project_paths paths )
 
   dir( paths.project_src_prefix )
   {
+    // HIP build
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-host'))
+    {
+        // Trying to fix git pull issues by delaying builds
+        sh  """#!/usr/bin/env bash
+            set -x
+            sleep 360
+          """
+    }
+
+    // HIP build
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-openmp'))
+    {
+        // Trying to fix git pull issues by delaying builds
+        sh  """#!/usr/bin/env bash
+            set -x
+            sleep 720
+          """
+    }
+
+    // HIP build
+    if(rocalution_paths.project_name.equalsIgnoreCase('rocalution-ubuntu-mpi'))
+    {
+        // Trying to fix git pull issues by delaying builds
+        sh  """#!/usr/bin/env bash
+            set -x
+            sleep 1080s
+          """
+    }
+
     // checkout rocalution
     checkout([
       $class: 'GitSCM',
