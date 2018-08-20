@@ -24,7 +24,7 @@ hipsparseStatus_t hipsparseTcsrmv(hipsparseHandle_t handle,
                                   float *y)
 {
     return hipsparseScsrmv(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
-                           csrSortedRowPtrA, csrSortedColIndA, x, beta, y, NULL);
+                           csrSortedRowPtrA, csrSortedColIndA, x, beta, y);
 }
 
 template <>
@@ -43,7 +43,7 @@ hipsparseStatus_t hipsparseTcsrmv(hipsparseHandle_t handle,
                                   double *y)
 {
     return hipsparseDcsrmv(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
-                           csrSortedRowPtrA, csrSortedColIndA, x, beta, y, NULL);
+                           csrSortedRowPtrA, csrSortedColIndA, x, beta, y);
 }
 
 // hipsparse coomv

@@ -171,10 +171,10 @@ rocm_install_symlink_subdir(rocalution)
 # Package specific CPACK vars
 if(SUPPORT_HIP)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5)")
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hipsparse (>= 0.1.2)")
+#  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hipsparse (>= 0.1.2)") enable this when we go live in rocm repo
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "hipblas (>= 0.10.3.1)")
   set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5")
-  set(CPACK_RPM_PACKAGE_REQUIRES "hipsparse >= 0.1.2")
+#  set(CPACK_RPM_PACKAGE_REQUIRES "hipsparse >= 0.1.2") enabled this when we go live in rocm repo
   set(CPACK_RPM_PACKAGE_REQUIRES "hipblas >= 0.10.3.1")
 endif()
 
