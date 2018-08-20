@@ -22,6 +22,7 @@ int main(int argc, char* argv[]) {
 
   LocalVector<double> vec1;
   LocalVector<double> vec2;
+  LocalVector<double> vec3;
 
   LocalMatrix<double> mat;
 
@@ -31,23 +32,27 @@ int main(int argc, char* argv[]) {
 
   mat.ReadFileCSR(std::string(argv[1]));
 
-  vec1.Allocate("x", mat.GetM());
-  vec2.Allocate("rhs", mat.GetM());
+  vec1.Allocate("x", mat.GetN());
+  vec2.Allocate("y", mat.GetM());
+  vec3.Allocate("z", mat.GetM());
 
   int size = mat.GetM();
   int nnz  = mat.GetNnz();
 
   vec1.Ones();
   vec2.Zeros();
+  vec3.Ones();
   mat.Apply(vec1, &vec2);
 
   mat.MoveToAccelerator();
   vec1.MoveToAccelerator();  
   vec2.MoveToAccelerator();
+  vec3.MoveToAccelerator();
 
   mat.Info();    
   vec1.Info();
-  vec1.Info();
+  vec2.Info();
+  vec3.Info();
 
 
   std::cout << "----------------------------------------------------" << std::endl;
@@ -60,13 +65,13 @@ int main(int argc, char* argv[]) {
   // Dot product
   // Size = 2*size
   // Flop = 2 per element
-  vec1.Dot(vec2);
+  vec3.Dot(vec2);
 
   _rocalution_sync();
   tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
-    vec1.Dot(vec2);
+    vec3.Dot(vec2);
     _rocalution_sync();
   }
 
@@ -79,13 +84,13 @@ int main(int argc, char* argv[]) {
   // Reduce
   // Size = size
   // Flop = 1 per element
-  vec1.Reduce();
+  vec3.Reduce();
 
   _rocalution_sync();
   tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
-    vec1.Reduce();
+    vec3.Reduce();
     _rocalution_sync();
   }
 
@@ -98,13 +103,13 @@ int main(int argc, char* argv[]) {
   // Norm
   // Size = size
   // Flop = 2 per element
-  vec1.Norm();
+  vec3.Norm();
 
   _rocalution_sync();
   tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
-    vec1.Norm();
+    vec3.Norm();
     _rocalution_sync();
   }
 
@@ -117,13 +122,13 @@ int main(int argc, char* argv[]) {
   // Vector Update 1
   // Size = 3xsize
   // Flop = 2 per element
-  vec1.ScaleAdd(double(5.5), vec2);
+  vec3.ScaleAdd(double(5.5), vec2);
 
   _rocalution_sync();
   tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
-    vec1.ScaleAdd(double(5.5), vec2);
+    vec3.ScaleAdd(double(5.5), vec2);
     _rocalution_sync();
   }
 
@@ -138,13 +143,13 @@ int main(int argc, char* argv[]) {
   // Vector Update 2
   // Size = 3*size
   // Flop = 2 per element
-  vec1.AddScale(vec2, double(5.5));
+  vec3.AddScale(vec2, double(5.5));
 
   _rocalution_sync();
   tick = rocalution_time();
 
   for (int i=0; i<max_tests; ++i) {
-    vec1.AddScale(vec2, double(5.5));
+    vec3.AddScale(vec2, double(5.5));
     _rocalution_sync();
   }
 
@@ -319,18 +324,19 @@ int main(int argc, char* argv[]) {
 
     vec1.Ones();
     vec2.Zeros();
+    vec3.Ones();
     mat.Apply(vec1, &vec2);
 
 
     // Dot product
     // Size = 2*size
     // Flop = 2 per element
-    vec1.Dot(vec2);
+    vec3.Dot(vec2);
 
     _rocalution_sync();
     dot_tick += rocalution_time();
 
-      vec1.Dot(vec2);
+      vec3.Dot(vec2);
 
     _rocalution_sync();    
     dot_tack += rocalution_time();
@@ -338,17 +344,18 @@ int main(int argc, char* argv[]) {
 
     vec1.Ones();
     vec2.Zeros();
+    vec3.Ones();
     mat.Apply(vec1, &vec2);
     
     // Norm
     // Size = size
     // Flop = 2 per element
-    vec1.Norm();
+    vec3.Norm();
     
     _rocalution_sync();
     norm_tick += rocalution_time();
 
-      vec1.Norm();
+      vec3.Norm();
 
     _rocalution_sync();
     norm_tack += rocalution_time();
@@ -356,17 +363,18 @@ int main(int argc, char* argv[]) {
     
     vec1.Ones();
     vec2.Zeros();
+    vec3.Ones();
     mat.Apply(vec1, &vec2);
 
     // Vector Update 1
     // Size = 3xsize
     // Flop = 2 per element
-    vec1.ScaleAdd(double(5.5), vec2);
+    vec3.ScaleAdd(double(5.5), vec2);
 
     _rocalution_sync();
     updatev1_tick += rocalution_time();
     
-      vec1.ScaleAdd(double(5.5), vec2);
+      vec3.ScaleAdd(double(5.5), vec2);
 
     _rocalution_sync();
     updatev1_tack += rocalution_time(); 
@@ -374,23 +382,25 @@ int main(int argc, char* argv[]) {
     
     vec1.Ones();
     vec2.Zeros();
+    vec3.Ones();
     mat.Apply(vec1, &vec2);
   
     // Vector Update 2
     // Size = 3*size
     // Flop = 2 per element
-    vec1.AddScale(vec2, double(5.5));
+    vec3.AddScale(vec2, double(5.5));
 
     _rocalution_sync();
     updatev2_tick += rocalution_time();
     
-      vec1.AddScale(vec2, double(5.5));
+      vec3.AddScale(vec2, double(5.5));
 
     _rocalution_sync();
     updatev2_tack += rocalution_time();
    
     vec1.Ones();
     vec2.Zeros();
+    vec3.Ones();
     mat.Apply(vec1, &vec2);
     
     // Matrix-Vector Multiplication
