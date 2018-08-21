@@ -169,8 +169,15 @@ rocm_export_targets(TARGETS rocalution-targets
 rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
-#set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.3)")
-#set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.3")
+if(SUPPORT_HIP)
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5)")
+#  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hipsparse (>= 0.1.2)") enable this when we go live in rocm repo
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hipblas (>= 0.10.3.1)")
+  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5")
+#  set(CPACK_RPM_PACKAGE_REQUIRES "hipsparse >= 0.1.2") enabled this when we go live in rocm repo
+  set(CPACK_RPM_PACKAGE_REQUIRES "hipblas >= 0.10.3.1")
+endif()
+
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
 
 if(NOT CPACK_PACKAGING_INSTALL_PREFIX)
