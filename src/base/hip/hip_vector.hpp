@@ -115,9 +115,6 @@ private:
   int *index_array_;
   ValueType *index_buffer_;
 
-  ValueType *host_buffer_;
-  ValueType *device_buffer_;
-
   friend class HIPAcceleratorVector<float>;
   friend class HIPAcceleratorVector<double>;
   friend class HIPAcceleratorVector<std::complex<float> >;

@@ -12,6 +12,7 @@
 #include "hip_allocate_free.hpp"
 #include "hip_blas.hpp"
 
+#include <hipcub/hipcub.hpp>
 #include <hip/hip_runtime.h>
 
 namespace rocalution {
@@ -36,9 +37,6 @@ HIPAcceleratorVector<ValueType>::HIPAcceleratorVector(const Rocalution_Backend_D
 
   this->index_array_  = NULL;
   this->index_buffer_ = NULL;
-
-  this->host_buffer_ = NULL;
-  this->device_buffer_ = NULL;
 
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -75,9 +73,6 @@ void HIPAcceleratorVector<ValueType>::Allocate(const int n) {
     set_to_zero_hip(this->local_backend_.HIP_block_size, 
                     n, this->vec_);
 
-    allocate_host(this->local_backend_.HIP_warp, &this->host_buffer_);
-    allocate_hip(this->local_backend_.HIP_warp, &this->device_buffer_);
-
     this->size_ = n;
   }
 
@@ -94,9 +89,6 @@ void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType **ptr, const int size
   this->vec_ = *ptr;
   this->size_ = size;
 
-  allocate_host(this->local_backend_.HIP_warp, &this->host_buffer_);
-  allocate_hip(this->local_backend_.HIP_warp, &this->device_buffer_);
-
 }
 
 template <typename ValueType>
@@ -107,9 +99,6 @@ void HIPAcceleratorVector<ValueType>::LeaveDataPtr(ValueType **ptr) {
   hipDeviceSynchronize();
   *ptr = this->vec_;
   this->vec_ = NULL;
-
-  free_host(&this->host_buffer_);
-  free_hip(&this->device_buffer_);
 
   this->size_ = 0;
 
@@ -122,8 +111,6 @@ void HIPAcceleratorVector<ValueType>::Clear(void) {
   if (this->GetSize() > 0) {
 
     free_hip(&this->vec_);
-    free_hip(&this->device_buffer_);
-    free_host(&this->host_buffer_);
 
     this->size_ = 0;
 
@@ -1059,27 +1046,27 @@ ValueType HIPAcceleratorVector<ValueType>::Reduce(void) const {
 
   if (this->GetSize() > 0) {
 
-    if (this->local_backend_.HIP_warp == 32) {
-        reduce_hip<int, ValueType, 32, 256>(this->GetSize(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
-    } else if (this->local_backend_.HIP_warp == 64) {
-        reduce_hip<int, ValueType, 64, 256>(this->GetSize(), this->vec_, &res, this->host_buffer_, this->device_buffer_);
-    } else {
-        LOG_INFO("Unsupported warp size");
-        FATAL_ERROR(__FILE__, __LINE__);
-    }
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
+    void* buffer = NULL;
+    size_t size = 0;
+
+    ValueType* dres = NULL;
+    allocate_hip(1, &dres);
+
+    hipcub::DeviceReduce::Sum(buffer, size, this->vec_, dres, this->GetSize());
+
+    hipMalloc(&buffer, size);
+
+    hipcub::DeviceReduce::Sum(buffer, size, this->vec_, dres, this->GetSize());
+
+    hipFree(buffer);
+
+    hipMemcpy(&res, dres, sizeof(ValueType), hipMemcpyDeviceToHost);
+
+    free_hip(&dres);
 
   }
 
   return res;
-
-}
-
-template <>
-int HIPAcceleratorVector<int>::Reduce(void) const {
-
-  LOG_INFO("Reduce<int> not implemented");
-  FATAL_ERROR(__FILE__, __LINE__);
 
 }
 
