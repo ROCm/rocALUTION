@@ -294,7 +294,7 @@ void HIPAcceleratorMatrixDENSE<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) co
         hipMemcpy(hip_cast_mat->mat_.val, // dst
                    this->mat_.val,         // src
                    this->GetNnz()*sizeof(ValueType), // size
-                   hipMemcpyDeviceToHost);    
+                   hipMemcpyDeviceToDevice);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
     

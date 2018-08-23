@@ -347,13 +347,13 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
       hipMemcpy(hip_cast_mat->mat_.offset, // dst
                  this->mat_.offset,         // src
                  this->GetNDiag()*sizeof(int), // size
-                 hipMemcpyDeviceToHost);
+                 hipMemcpyDeviceToDevice);
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
       
       hipMemcpy(hip_cast_mat->mat_.val, // dst
                  this->mat_.val,         // src
                  this->GetNnz()*sizeof(ValueType), // size
-                 hipMemcpyDeviceToHost);    
+                 hipMemcpyDeviceToDevice);    
       CHECK_HIP_ERROR(__FILE__, __LINE__);     
     }
     

@@ -57,6 +57,7 @@ HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR(const Rocalution_Bac
 //  this->U_mat_info_ = 0;
 
   this->mat_descr_ = 0;
+  this->mat_info_  = 0;
 
   this->tmp_vec_ = NULL;
 
@@ -152,6 +153,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::SetDataPtrCSR(int **row_offset, int **c
   this->mat_.col = *col;
   this->mat_.val = *val;
 
+  this->ApplyAnalysis();
 }
 
 template <typename ValueType>
@@ -258,6 +260,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHost(const HostMatrix<ValueType
     
   }
 
+  this->ApplyAnalysis();
+
 }
 
 template <typename ValueType>
@@ -307,6 +311,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostAsync(const HostMatrix<Valu
     FATAL_ERROR(__FILE__, __LINE__);
     
   }
+
+  this->ApplyAnalysis();
 
 }
 
@@ -477,6 +483,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &s
     
   }
 
+  this->ApplyAnalysis();
+
 }
 
 template <typename ValueType>
@@ -539,6 +547,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromAsync(const BaseMatrix<ValueTyp
     
   }
 
+  this->ApplyAnalysis();
+
 }
 
 
@@ -568,19 +578,19 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) cons
         hipMemcpy(hip_cast_mat->mat_.row_offset, // dst
                    this->mat_.row_offset,         // src
                    (this->GetM()+1)*sizeof(int), // size
-                   hipMemcpyDeviceToHost);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(hip_cast_mat->mat_.col, // dst
                    this->mat_.col,         // src
                    this->GetNnz()*sizeof(int), // size
-                   hipMemcpyDeviceToHost);
+                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
         
         hipMemcpy(hip_cast_mat->mat_.val, // dst
                    this->mat_.val,         // src
                    this->GetNnz()*sizeof(ValueType), // size
-                   hipMemcpyDeviceToHost);    
+                   hipMemcpyDeviceToDevice);    
         CHECK_HIP_ERROR(__FILE__, __LINE__);     
       }
     
@@ -700,6 +710,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromCSR(const int *row_offsets, con
 
   }
 
+  this->ApplyAnalysis();
+
 }
 
 template <typename ValueType>
@@ -770,6 +782,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
             this->ncol_ = cast_mat_coo->ncol_;
             this->nnz_  = cast_mat_coo->nnz_;
 
+            this->ApplyAnalysis();
+
             return true;
         }
     }
@@ -794,6 +808,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
             this->nrow_ = cast_mat_ell->nrow_;
             this->ncol_ = cast_mat_ell->ncol_;
             this->nnz_  = nnz;
+
+            this->ApplyAnalysis();
 
             return true;
         }
@@ -920,6 +936,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostCSR(const int *row_offset, 
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
   }
+
+  this->ApplyAnalysis();
 
 }
 
@@ -1058,8 +1076,15 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permuta
 
   }
 
+  this->ApplyAnalysis();
+
   return true;
 
+}
+
+template <typename ValueType>
+void HIPAcceleratorMatrixCSR<ValueType>::ApplyAnalysis(void)
+{
 }
 
 template <typename ValueType>
@@ -1988,6 +2013,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractL(BaseMatrix<ValueType> *L) cons
   cast_L->nrow_ = this->GetM();
   cast_L->ncol_ = this->GetN();
   cast_L->nnz_ = nnz_L;
+
+  cast_L->ApplyAnalysis();
   
   return true;
   
@@ -2062,6 +2089,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType> 
   cast_L->nrow_ = this->GetM();
   cast_L->ncol_ = this->GetN();
   cast_L->nnz_ = nnz_L;
+
+  cast_L->ApplyAnalysis();
   
   return true;
 
@@ -2136,6 +2165,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractU(BaseMatrix<ValueType> *U) cons
   cast_U->ncol_ = this->GetN();
   cast_U->nnz_ = nnz_L;
 
+  cast_U->ApplyAnalysis();
+
   return true;
   
 }
@@ -2209,6 +2240,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractUDiagonal(BaseMatrix<ValueType> 
   cast_U->nrow_ = this->GetM();
   cast_U->ncol_ = this->GetN();
   cast_U->nnz_ = nnz_L;
+
+  cast_U->ApplyAnalysis();
   
   return true;
 
@@ -2620,6 +2653,9 @@ return false;
                                 this->mat_.row_offset, this->mat_.col);
   CHECK_CUSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 */
+
+  this->ApplyAnalysis();
+
   return true;
 
 }
@@ -2737,6 +2773,8 @@ return false;
 
   }
 
+  this->ApplyAnalysis();
+
   return true;
 
 }
@@ -2800,6 +2838,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off) {
 
   }
 
+  this->ApplyAnalysis();
+
   return true;
 
 }
@@ -2826,6 +2866,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Transpose(void)
                                    HIPSPARSE_INDEX_BASE_ZERO);
         CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
     }
+
+    this->ApplyAnalysis();
 
     return true;
 }

@@ -112,6 +112,7 @@ public:
   virtual bool Gershgorin(ValueType &lambda_min,
                           ValueType &lambda_max) const;
 
+  void ApplyAnalysis(void);
   virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const; 
   virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
                         BaseVector<ValueType> *out) const; 
@@ -133,6 +134,8 @@ private:
   hipsparseMatDescr_t L_mat_descr_;
   hipsparseMatDescr_t U_mat_descr_;
   hipsparseMatDescr_t mat_descr_;
+
+  csrmv2Info_t mat_info_;
 
   HIPAcceleratorVector<ValueType> *tmp_vec_;
 

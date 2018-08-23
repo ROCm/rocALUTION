@@ -336,19 +336,19 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *dst) con
     hipMemcpy(hip_cast_mat->mat_.row_offset, // dst
                this->mat_.row_offset,         // src
                (this->GetM()+1)*sizeof(int), // size
-               hipMemcpyDeviceToHost);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
     hipMemcpy(hip_cast_mat->mat_.col, // dst
                this->mat_.col,         // src
                this->GetNnz()*sizeof(int), // size
-               hipMemcpyDeviceToHost);
+               hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
 
     hipMemcpy(hip_cast_mat->mat_.val, // dst
                this->mat_.val,         // src
                this->GetNnz()*sizeof(ValueType), // size
-               hipMemcpyDeviceToHost);    
+               hipMemcpyDeviceToDevice);    
     CHECK_HIP_ERROR(__FILE__, __LINE__);     
    
     
