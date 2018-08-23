@@ -1258,7 +1258,16 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
   Rocalution_Backend_Descriptor backend = this->local_backend_;
 
   // delete current matrix
-  delete this->matrix_;
+  if(this->matrix_ == this->matrix_host_)
+  {
+    delete this->matrix_host_;
+    this->matrix_host_ = NULL;
+  }
+  else
+  {
+    delete this->matrix_accel_;
+    this->matrix_accel_ = NULL;
+  }
 
   if (src.matrix_ == src.matrix_host_) {
 
