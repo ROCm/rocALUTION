@@ -798,10 +798,10 @@ void HIPAcceleratorVector<ValueType>::AddScale(const BaseVector<ValueType> &x, c
     const HIPAcceleratorVector<ValueType> *cast_x = dynamic_cast<const HIPAcceleratorVector<ValueType>*> (&x);
     assert(cast_x != NULL);
 
-    hipblasStatus_t stat_t;
-    stat_t = hipblasTaxpy(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle), 
+    rocblas_status status;
+    status = rocblasTaxpy(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle), 
                           this->GetSize(), &alpha, cast_x->vec_, 1, this->vec_, 1);
-    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   }
 
@@ -925,11 +925,11 @@ void HIPAcceleratorVector<ValueType>::Scale(const ValueType alpha) {
 
   if (this->GetSize() > 0) {
 
-    hipblasStatus_t stat_t;
-    stat_t = hipblasTscal(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+    rocblas_status status;
+    status = rocblasTscal(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                           this->GetSize(), &alpha,
                           this->vec_, 1);
-    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   }
 
@@ -963,10 +963,10 @@ ValueType HIPAcceleratorVector<ValueType>::Dot(const BaseVector<ValueType> &x) c
 
   if (this->GetSize() > 0) {
 
-    hipblasStatus_t stat_t;
-    stat_t = hipblasTdot(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+    rocblas_status status;
+    status = rocblasTdot(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                          this->GetSize(), this->vec_, 1, cast_x->vec_, 1, &res);
-    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   }
 
@@ -994,10 +994,10 @@ ValueType HIPAcceleratorVector<ValueType>::DotNonConj(const BaseVector<ValueType
 
   if (this->GetSize() > 0) {
 
-      hipblasStatus_t stat_t;
-      stat_t = hipblasTdotc(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+      rocblas_status status;
+      status = rocblasTdotc(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                             this->GetSize(), this->vec_, 1, cast_x->vec_, 1, &res);
-      CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
+      CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   }
 
@@ -1020,10 +1020,10 @@ ValueType HIPAcceleratorVector<ValueType>::Norm(void) const {
 
   if (this->GetSize() > 0) {
 
-    hipblasStatus_t stat_t;
-    stat_t = hipblasTnrm2(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+    rocblas_status status;
+    status = rocblasTnrm2(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                           this->GetSize(), this->vec_, 1, &res);
-    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   }
 
@@ -1077,10 +1077,10 @@ ValueType HIPAcceleratorVector<ValueType>::Asum(void) const {
 
   if (this->GetSize() > 0) {
 
-    hipblasStatus_t stat_t;
-    stat_t = hipblasTasum(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+    rocblas_status status;
+    status = rocblasTasum(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                           this->GetSize(), this->vec_, 1, &res);
-    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   }
 
@@ -1104,11 +1104,11 @@ int HIPAcceleratorVector<ValueType>::Amax(ValueType &value) const {
 
   if (this->GetSize() > 0) {
 
-    hipblasStatus_t stat_t;
-    stat_t = hipblasTamax(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
+    rocblas_status status;
+    status = rocblasTamax(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                           this->GetSize(),
                           this->vec_, 1, &index);
-    CHECK_HIPBLAS_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
     hipMemcpy(&value, this->vec_+index, sizeof(ValueType), hipMemcpyDeviceToHost);
     CHECK_HIP_ERROR(__FILE__, __LINE__);

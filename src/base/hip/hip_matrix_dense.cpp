@@ -553,32 +553,32 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType> &in
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-    hipblasStatus_t status;
+    rocblas_status status;
 
     const ValueType alpha = static_cast<ValueType>(1);
     const ValueType beta  = static_cast<ValueType>(0);
 
     if (DENSE_IND_BASE == 0) {
 
-      status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                            HIPBLAS_OP_N,
+      status = rocblasTgemv(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                            rocblas_operation_none,
                             this->GetM(), this->GetN(),
                             &alpha,
                             this->mat_.val, this->GetM(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
-      CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
+      CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
     } else {
 
-      status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                            HIPBLAS_OP_T,
+      status = rocblasTgemv(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                            rocblas_operation_transpose,
                             this->GetN(), this->GetM(),
                             &alpha,
                             this->mat_.val, this->GetN(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
-      CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
+      CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
     }
 
@@ -603,31 +603,31 @@ void HIPAcceleratorMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType> 
     assert(cast_in != NULL);
     assert(cast_out!= NULL);
 
-    hipblasStatus_t status;
+    rocblas_status status;
 
     const ValueType beta  = static_cast<ValueType>(0);
 
     if (DENSE_IND_BASE == 0) {
 
-      status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                            HIPBLAS_OP_N,
+      status = rocblasTgemv(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                            rocblas_operation_none,
                             this->GetM(), this->GetN(),
                             &scalar,
                             this->mat_.val, this->GetM(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
-      CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
+      CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
     } else {
 
-      status = hipblasTgemv(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                            HIPBLAS_OP_T,
+      status = rocblasTgemv(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                            rocblas_operation_transpose,
                             this->GetN(), this->GetM(),
                             &scalar,
                             this->mat_.val, this->GetN(),
                             cast_in->vec_, 1,
                             &beta, cast_out->vec_, 1);
-      CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
+      CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
     }
 
@@ -647,30 +647,30 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::MatMatMult(const BaseMatrix<ValueType
   assert(cast_mat_B != NULL);
   assert(cast_mat_A->ncol_ == cast_mat_B->nrow_);
 
-  hipblasStatus_t status;
+  rocblas_status status;
 
   const ValueType alpha = static_cast<ValueType>(1);
   const ValueType beta  = static_cast<ValueType>(0);
 
   if (DENSE_IND_BASE == 0) {
 
-    status = hipblasTgemm(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                          HIPBLAS_OP_N, HIPBLAS_OP_N,
+    status = rocblasTgemm(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                          rocblas_operation_none, rocblas_operation_none,
                           cast_mat_A->nrow_, cast_mat_B->ncol_, cast_mat_A->ncol_,
                           &alpha, cast_mat_A->mat_.val, cast_mat_A->nrow_,
                           cast_mat_B->mat_.val, cast_mat_A->ncol_, &beta,
                           this->mat_.val, cast_mat_A->nrow_);
-    CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   } else {
 
-    status = hipblasTgemm(HIPBLAS_HANDLE(this->local_backend_.HIP_blas_handle),
-                          HIPBLAS_OP_T, HIPBLAS_OP_T,
+    status = rocblasTgemm(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                          rocblas_operation_transpose, rocblas_operation_transpose,
                           cast_mat_A->nrow_, cast_mat_B->ncol_, cast_mat_A->ncol_,
                           &alpha, cast_mat_A->mat_.val, cast_mat_A->ncol_,
                           cast_mat_B->mat_.val, cast_mat_B->ncol_, &beta,
                           this->mat_.val, cast_mat_A->nrow_);
-    CHECK_HIPBLAS_ERROR(status, __FILE__, __LINE__);
+    CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
   }
 

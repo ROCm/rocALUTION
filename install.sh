@@ -42,7 +42,6 @@ function display_help()
   echo "    [--host] build library for host backend only"
   echo "    [--no-openmp] build library without OpenMP"
   echo "    [--mpi] build library with MPI"
-  echo "    [--cuda] build library for cuda backend"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -66,7 +65,6 @@ build_clients=false
 build_host=false
 build_mpi=false
 build_omp=true
-build_cuda=false
 build_release=true
 
 # #################################################
@@ -76,7 +74,7 @@ build_release=true
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,host,no-openmp,mpi,cuda --options hicgd -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,host,no-openmp,mpi --options hicgd -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -116,9 +114,6 @@ while true; do
     --mpi)
         build_mpi=true
         shift ;;
-    --cuda)
-        build_cuda=true
-        shift ;;
     --) shift ; break ;;
     *)  echo "Unexpected command line parameter received; aborting";
         exit 1
@@ -149,11 +144,7 @@ if [[ "${install_dependencies}" == true ]]; then
   # Host build does not need hip_hcc, all other builds do
   if [[ "${build_host}" == false ]]; then
     library_dependencies_ubuntu+=("hip_hcc")
-    if [[ "${build_cuda}" == true ]]; then
-      library_dependencies_ubuntu+=("cuda") # "hipsparse-alt" "hipblas-alt") TODO
-    else
-      library_dependencies_ubuntu+=("hcc" "rocblas" "hipblas" "rocrand") # "hipsparse" TODO
-    fi
+    library_dependencies_ubuntu+=("hcc" "rocblas" "rocrand") # TODO rocsparse, rocprim
   fi
 
   # MPI
@@ -237,15 +228,8 @@ pushd .
   if [[ "${build_host}" == true ]]; then
     cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=OFF -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
   else
-    if [[ "${build_cuda}" == false ]]; then
-      # HIP
-      export HIP_PLATFORM=hcc
-      cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=ON -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
-    else
-      # CUDA
-      export HIP_PLATFORM=nvcc
-      cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=ON -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
-    fi
+    export HIP_PLATFORM=hcc
+    cmake ${cmake_common_options} ${cmake_client_options} -DSUPPORT_HIP=ON -DCMAKE_PREFIX_PATH="$(pwd)/../deps/deps-install" ../..
   fi
 
   make -j$(nproc)

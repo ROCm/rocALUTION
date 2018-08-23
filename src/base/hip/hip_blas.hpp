@@ -1,59 +1,59 @@
 #ifndef ROCALUTION_HIP_HIP_BLAS_HPP_
 #define ROCALUTION_HIP_HIP_BLAS_HPP_
 
-#include <hipblas.h>
+#include <rocblas.h>
 
 namespace rocalution {
 
-// hipblas axpy
+// rocblas axpy
 template <typename ValueType>
-hipblasStatus_t hipblasTaxpy(hipblasHandle_t handle,
+rocblas_status rocblasTaxpy(rocblas_handle handle,
                              int n, const ValueType *alpha,
                              const ValueType *x, int incx,
                              ValueType *y, int incy);
 
-// hipblas dot
+// rocblas dot
 template <typename ValueType>
-hipblasStatus_t hipblasTdot(hipblasHandle_t handle, int n,
+rocblas_status rocblasTdot(rocblas_handle handle, int n,
                             const ValueType *x, int incx,
                             const ValueType *y, int incy,
                             ValueType *result);
 
-// hipblas dotconj
+// rocblas dotconj
 template <typename ValueType>
-hipblasStatus_t hipblasTdotc(hipblasHandle_t handle, int n,
+rocblas_status rocblasTdotc(rocblas_handle handle, int n,
                              const ValueType *x, int incx,
                              const ValueType *y, int incy,
                              ValueType *result);
 
-// hipblas nrm2
+// rocblas nrm2
 template <typename ValueType>
-hipblasStatus_t hipblasTnrm2(hipblasHandle_t handle, int n,
+rocblas_status rocblasTnrm2(rocblas_handle handle, int n,
                              const ValueType *x, int incx,
                              ValueType *result);
 
-// hipblas scal
+// rocblas scal
 template <typename ValueType>
-hipblasStatus_t hipblasTscal(hipblasHandle_t handle, int n,
+rocblas_status rocblasTscal(rocblas_handle handle, int n,
                              const ValueType *alpha,
                              ValueType *x, int incx);
 
-// hipblas_amax
+// rocblas_amax
 template <typename ValueType>
-hipblasStatus_t hipblasTamax(hipblasHandle_t handle, int n,
+rocblas_status rocblasTamax(rocblas_handle handle, int n,
                              const ValueType *x, int incx,
                              int *result);
 
-// hipblas_asum
+// rocblas_asum
 template <typename ValueType>
-hipblasStatus_t hipblasTasum(hipblasHandle_t handle, int n,
+rocblas_status rocblasTasum(rocblas_handle handle, int n,
                              const ValueType *x, int incx,
                              ValueType *result);
 
-// hipblas_gemv
+// rocblas_gemv
 template <typename ValueType>
-hipblasStatus_t hipblasTgemv(hipblasHandle_t handle,
-                             hipblasOperation_t trans,
+rocblas_status rocblasTgemv(rocblas_handle handle,
+                             rocblas_operation trans,
                              int m, int n,
                              const ValueType *alpha,
                              const ValueType *A, int lda,
@@ -61,11 +61,11 @@ hipblasStatus_t hipblasTgemv(hipblasHandle_t handle,
                              const ValueType *beta,
                              ValueType *y, int incy);
 
-// hipblas_gemm
+// rocblas_gemm
 template <typename ValueType>
-hipblasStatus_t hipblasTgemm(hipblasHandle_t handle,
-                             hipblasOperation_t transa,
-                             hipblasOperation_t transb,
+rocblas_status rocblasTgemm(rocblas_handle handle,
+                             rocblas_operation transa,
+                             rocblas_operation transb,
                              int m, int n, int k,
                              const ValueType *alpha,
                              const ValueType *A, int lda,

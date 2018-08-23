@@ -2,233 +2,235 @@
 #include "../../utils/log.hpp"
 #include "hip_sparse.hpp"
 
-#include <hipsparse.h>
+#include <rocsparse.h>
 #include <complex>
 
 namespace rocalution {
 
-// hipsparse csrmv
+// rocsparse csrmv
 template <>
-hipsparseStatus_t hipsparseTcsrmv2(hipsparseHandle_t handle,
-                                   hipsparseOperation_t transA,
+rocsparse_status rocsparseTcsrmv(rocsparse_handle handle,
+                                 rocsparse_operation trans,
+                                 int m,
+                                 int n,
+                                 int nnz,
+                                 const float* alpha,
+                                 const rocsparse_mat_descr descr,
+                                 const float* csr_val,
+                                 const int* csr_row_ptr,
+                                 const int* csr_col_ind,
+                                 rocsparse_mat_info info,
+                                 const float* x,
+                                 const float* beta,
+                                 float* y)
+{
+    return rocsparse_scsrmv(handle, trans, m, n, nnz, alpha, descr, csr_val,
+                            csr_row_ptr, csr_col_ind, info, x, beta, y);
+}
+
+template <>
+rocsparse_status rocsparseTcsrmv(rocsparse_handle handle,
+                                 rocsparse_operation trans,
+                                 int m,
+                                 int n,
+                                 int nnz,
+                                 const double *alpha,
+                                 const rocsparse_mat_descr descr,
+                                 const double *csr_val,
+                                 const int *csr_row_ptr,
+                                 const int *csr_col_ind,
+                                 rocsparse_mat_info info,
+                                 const double *x,
+                                 const double *beta,
+                                 double *y)
+{
+    return rocsparse_dcsrmv(handle, trans, m, n, nnz, alpha, descr, csr_val,
+                            csr_row_ptr, csr_col_ind, info, x, beta, y);
+}
+
+// rocsparse coomv
+template <>
+rocsparse_status rocsparseTcoomv(rocsparse_handle handle,
+                                 rocsparse_operation trans,
+                                 int m,
+                                 int n,
+                                 int nnz,
+                                 const float *alpha,
+                                 const rocsparse_mat_descr descr,
+                                 const float *coo_val,
+                                 const int *coo_row_ind,
+                                 const int *coo_col_ind,
+                                 const float *x,
+                                 const float *beta,
+                                 float *y)
+{
+    return rocsparse_scoomv(handle, trans, m, n, nnz, alpha, descr, coo_val,
+                            coo_row_ind, coo_col_ind, x, beta, y);
+}
+
+template <>
+rocsparse_status rocsparseTcoomv(rocsparse_handle handle,
+                                 rocsparse_operation trans,
+                                 int m,
+                                 int n,
+                                 int nnz,
+                                 const double *alpha,
+                                 const rocsparse_mat_descr descr,
+                                 const double *coo_val,
+                                 const int *coo_row_ind,
+                                 const int *coo_col_ind,
+                                 const double *x,
+                                 const double *beta,
+                                 double *y)
+{
+    return rocsparse_dcoomv(handle, trans, m, n, nnz, alpha, descr, coo_val,
+                            coo_row_ind, coo_col_ind, x, beta, y);
+}
+
+// rocsparse ellmv
+template <>
+rocsparse_status rocsparseTellmv(rocsparse_handle handle,
+                                 rocsparse_operation trans,
+                                 int m,
+                                 int n,
+                                 const float *alpha,
+                                 const rocsparse_mat_descr descr,
+                                 const float *ell_val,
+                                 const int *ell_col_ind,
+                                 int ell_width,
+                                 const float *x,
+                                 const float *beta,
+                                 float *y)
+{
+    return rocsparse_sellmv(handle, trans, m, n, alpha, descr, ell_val, ell_col_ind,
+                            ell_width, x, beta, y);
+}
+
+template <>
+rocsparse_status rocsparseTellmv(rocsparse_handle handle,
+                                 rocsparse_operation trans,
+                                 int m,
+                                 int n,
+                                 const double *alpha,
+                                 const rocsparse_mat_descr descr,
+                                 const double *ell_val,
+                                 const int *ell_col_ind,
+                                 int ell_width,
+                                 const double *x,
+                                 const double *beta,
+                                 double *y)
+{
+    return rocsparse_dellmv(handle, trans, m, n, alpha, descr, ell_val, ell_col_ind,
+                            ell_width, x, beta, y);
+}
+
+// rocsparse csr2csc
+template <>
+rocsparse_status rocsparseTcsr2csc(rocsparse_handle handle,
                                    int m,
                                    int n,
                                    int nnz,
-                                   const float *alpha,
-                                   const hipsparseMatDescr_t descrA,
-                                   const float *csrSortedValA,
-                                   const int *csrSortedRowPtrA,
-                                   const int *csrSortedColIndA,
-                                   csrmv2Info_t info,
-                                   const float *x,
-                                   const float *beta,
-                                   float *y)
+                                   const float* csr_val,
+                                   const int* csr_row_ptr,
+                                   const int* csr_col_ind,
+                                   float* csc_val,
+                                   int* csc_row_ind,
+                                   int* csc_col_ptr,
+                                   rocsparse_action copy_values,
+                                   rocsparse_index_base idx_base,
+                                   void* temp_buffer)
 {
-    return hipsparseScsrmv2(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
-                            csrSortedRowPtrA, csrSortedColIndA, info, x, beta, y);
+    return rocsparse_scsr2csc(handle, m, n, nnz,
+                              csr_val, csr_row_ptr, csr_col_ind,
+                              csc_val, csc_row_ind, csc_col_ptr,
+                              copy_values, idx_base, temp_buffer);
 }
 
 template <>
-hipsparseStatus_t hipsparseTcsrmv2(hipsparseHandle_t handle,
-                                   hipsparseOperation_t transA,
+rocsparse_status rocsparseTcsr2csc(rocsparse_handle handle,
                                    int m,
                                    int n,
                                    int nnz,
-                                   const double *alpha,
-                                   const hipsparseMatDescr_t descrA,
-                                   const double *csrSortedValA,
-                                   const int *csrSortedRowPtrA,
-                                   const int *csrSortedColIndA,
-                                   csrmv2Info_t info,
-                                   const double *x,
-                                   const double *beta,
-                                   double *y)
+                                   const double* csr_val,
+                                   const int* csr_row_ptr,
+                                   const int* csr_col_ind,
+                                   double* csc_val,
+                                   int* csc_row_ind,
+                                   int* csc_col_ptr,
+                                   rocsparse_action copy_values,
+                                   rocsparse_index_base idx_base,
+                                   void* temp_buffer)
 {
-    return hipsparseDcsrmv2(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
-                            csrSortedRowPtrA, csrSortedColIndA, info, x, beta, y);
+    return rocsparse_dcsr2csc(handle, m, n, nnz,
+                              csr_val, csr_row_ptr, csr_col_ind,
+                              csc_val, csc_row_ind, csc_col_ptr,
+                              copy_values, idx_base, temp_buffer);
 }
 
-// hipsparse coomv
+// rocsparse csr2ell
 template <>
-hipsparseStatus_t hipsparseTcoomv(hipsparseHandle_t handle,
-                                  hipsparseOperation_t transA,
-                                  int m,
-                                  int n,
-                                  int nnz,
-                                  const float *alpha,
-                                  const hipsparseMatDescr_t descrA,
-                                  const float *cooSortedValA,
-                                  const int *cooSortedRowIndA,
-                                  const int *cooSortedColIndA,
-                                  const float *x,
-                                  const float *beta,
-                                  float *y)
+rocsparse_status rocsparseTcsr2ell(rocsparse_handle handle,
+                                   int m,
+                                   const rocsparse_mat_descr csr_descr,
+                                   const float *csr_val,
+                                   const int *csr_row_ptr,
+                                   const int *csr_col_ind,
+                                   const rocsparse_mat_descr ell_descr,
+                                   int ell_width,
+                                   float *ell_val,
+                                   int *ell_col_ind)
 {
-    return hipsparseScoomv(handle, transA, m, n, nnz, alpha, descrA, cooSortedValA,
-                           cooSortedRowIndA, cooSortedColIndA, x, beta, y);
-}
-
-template <>
-hipsparseStatus_t hipsparseTcoomv(hipsparseHandle_t handle,
-                                  hipsparseOperation_t transA,
-                                  int m,
-                                  int n,
-                                  int nnz,
-                                  const double *alpha,
-                                  const hipsparseMatDescr_t descrA,
-                                  const double *cooSortedValA,
-                                  const int *cooSortedRowIndA,
-                                  const int *cooSortedColIndA,
-                                  const double *x,
-                                  const double *beta,
-                                  double *y)
-{
-    return hipsparseDcoomv(handle, transA, m, n, nnz, alpha, descrA, cooSortedValA,
-                           cooSortedRowIndA, cooSortedColIndA, x, beta, y);
-}
-
-// hipsparse ellmv
-template <>
-hipsparseStatus_t hipsparseTellmv(hipsparseHandle_t handle,
-                                  hipsparseOperation_t transA,
-                                  int m,
-                                  int n,
-                                  const float *alpha,
-                                  const hipsparseMatDescr_t descrA,
-                                  const float *ellValA,
-                                  const int *ellColIndA,
-                                  int ellWidth,
-                                  const float *x,
-                                  const float *beta,
-                                  float *y)
-{
-    return hipsparseSellmv(handle, transA, m, n, alpha, descrA, ellValA, ellColIndA,
-                           ellWidth, x, beta, y);
+    return rocsparse_scsr2ell(handle, m, csr_descr, csr_val, csr_row_ptr, csr_col_ind,
+                              ell_descr, ell_width, ell_val, ell_col_ind);
 }
 
 template <>
-hipsparseStatus_t hipsparseTellmv(hipsparseHandle_t handle,
-                                  hipsparseOperation_t transA,
-                                  int m,
-                                  int n,
-                                  const double *alpha,
-                                  const hipsparseMatDescr_t descrA,
-                                  const double *ellValA,
-                                  const int *ellColIndA,
-                                  int ellWidth,
-                                  const double *x,
-                                  const double *beta,
-                                  double *y)
+rocsparse_status rocsparseTcsr2ell(rocsparse_handle handle,
+                                   int m,
+                                   const rocsparse_mat_descr csr_descr,
+                                   const double *csr_val,
+                                   const int *csr_row_ptr,
+                                   const int *csr_col_ind,
+                                   const rocsparse_mat_descr ell_descr,
+                                   int ell_width,
+                                   double *ell_val,
+                                   int *ell_col_ind)
 {
-    return hipsparseDellmv(handle, transA, m, n, alpha, descrA, ellValA, ellColIndA,
-                           ellWidth, x, beta, y);
+    return rocsparse_dcsr2ell(handle, m, csr_descr, csr_val, csr_row_ptr, csr_col_ind,
+                              ell_descr, ell_width, ell_val, ell_col_ind);
 }
 
-// hipsparse csr2csc
+// rocsparse ell2csr
 template <>
-hipsparseStatus_t hipsparseTcsr2csc(hipsparseHandle_t handle,
-                                    int m,
-                                    int n,
-                                    int nnz,
-                                    const float* csrSortedVal,
-                                    const int* csrSortedRowPtr,
-                                    const int* csrSortedColInd,
-                                    float* cscSortedVal,
-                                    int* cscSortedRowInd,
-                                    int* cscSortedColPtr,
-                                    hipsparseAction_t copyValues,
-                                    hipsparseIndexBase_t idxBase)
+rocsparse_status rocsparseTell2csr(rocsparse_handle handle,
+                                   int m,
+                                   int n,
+                                   const rocsparse_mat_descr ell_descr,
+                                   int ell_width,
+                                   const float* ell_val,
+                                   const int* ell_col_ind,
+                                   const rocsparse_mat_descr csr_descr,
+                                   float* csr_val,
+                                   const int* csr_row_ptr,
+                                   int* csr_col_ind)
 {
-    return hipsparseScsr2csc(handle, m, n, nnz,
-                             csrSortedVal, csrSortedRowPtr, csrSortedColInd,
-                             cscSortedVal, cscSortedRowInd, cscSortedColPtr,
-                             copyValues, idxBase);
+    return rocsparse_sell2csr(handle, m, n, ell_descr, ell_width, ell_val, ell_col_ind, csr_descr, csr_val, csr_row_ptr, csr_col_ind);
 }
 
 template <>
-hipsparseStatus_t hipsparseTcsr2csc(hipsparseHandle_t handle,
-                                    int m,
-                                    int n,
-                                    int nnz,
-                                    const double* csrSortedVal,
-                                    const int* csrSortedRowPtr,
-                                    const int* csrSortedColInd,
-                                    double* cscSortedVal,
-                                    int* cscSortedRowInd,
-                                    int* cscSortedColPtr,
-                                    hipsparseAction_t copyValues,
-                                    hipsparseIndexBase_t idxBase)
+rocsparse_status rocsparseTell2csr(rocsparse_handle handle,
+                                   int m,
+                                   int n,
+                                   const rocsparse_mat_descr ell_descr,
+                                   int ell_width,
+                                   const double* ell_val,
+                                   const int* ell_col_ind,
+                                   const rocsparse_mat_descr csr_descr,
+                                   double* csr_val,
+                                   const int* csr_row_ptr,
+                                   int* csr_col_ind)
 {
-    return hipsparseDcsr2csc(handle, m, n, nnz,
-                             csrSortedVal, csrSortedRowPtr, csrSortedColInd,
-                             cscSortedVal, cscSortedRowInd, cscSortedColPtr,
-                             copyValues, idxBase);
-}
-
-// hipsparse csr2ell
-template <>
-hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
-                                    int m,
-                                    const hipsparseMatDescr_t descrA,
-                                    const float *csrValA,
-                                    const int *csrRowPtrA,
-                                    const int *csrColIndA,
-                                    const hipsparseMatDescr_t descrC,
-                                    int ellWidthC,
-                                    float *ellValC,
-                                    int *ellColIndC)
-{
-    return hipsparseScsr2ell(handle, m, descrA, csrValA, csrRowPtrA, csrColIndA,
-                             descrC, ellWidthC, ellValC, ellColIndC);
-}
-
-template <>
-hipsparseStatus_t hipsparseTcsr2ell(hipsparseHandle_t handle,
-                                    int m,
-                                    const hipsparseMatDescr_t descrA,
-                                    const double *csrValA,
-                                    const int *csrRowPtrA,
-                                    const int *csrColIndA,
-                                    const hipsparseMatDescr_t descrC,
-                                    int ellWidthC,
-                                    double *ellValC,
-                                    int *ellColIndC)
-{
-    return hipsparseDcsr2ell(handle, m, descrA, csrValA, csrRowPtrA, csrColIndA,
-                             descrC, ellWidthC, ellValC, ellColIndC);
-}
-
-// hipsparse ell2csr
-template <>
-hipsparseStatus_t hipsparseTell2csr(hipsparseHandle_t handle,
-                                    int m,
-                                    int n,
-                                    const hipsparseMatDescr_t descrA,
-                                    int ellWidthA,
-                                    const float* ellValA,
-                                    const int* ellColIndA,
-                                    const hipsparseMatDescr_t descrC,
-                                    float* csrValC,
-                                    const int* csrRowPtrC,
-                                    int* csrColIndC)
-{
-    return hipsparseSell2csr(handle, m, n, descrA, ellWidthA, ellValA, ellColIndA, descrC, csrValC, csrRowPtrC, csrColIndC);
-}
-
-template <>
-hipsparseStatus_t hipsparseTell2csr(hipsparseHandle_t handle,
-                                    int m,
-                                    int n,
-                                    const hipsparseMatDescr_t descrA,
-                                    int ellWidthA,
-                                    const double* ellValA,
-                                    const int* ellColIndA,
-                                    const hipsparseMatDescr_t descrC,
-                                    double* csrValC,
-                                    const int* csrRowPtrC,
-                                    int* csrColIndC)
-{
-    return hipsparseDell2csr(handle, m, n, descrA, ellWidthA, ellValA, ellColIndA, descrC, csrValC, csrRowPtrC, csrColIndC);
+    return rocsparse_dell2csr(handle, m, n, ell_descr, ell_width, ell_val, ell_col_ind, csr_descr, csr_val, csr_row_ptr, csr_col_ind);
 }
 
 } // namespace rocalution

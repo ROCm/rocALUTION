@@ -6,7 +6,7 @@
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
-#include <hipsparse.h>
+#include <rocsparse.h>
 
 namespace rocalution {
 
@@ -131,11 +131,11 @@ private:
 
 //  cusparseSolveAnalysisInfo_t L_mat_info_;
 //  cusparseSolveAnalysisInfo_t U_mat_info_;
-  hipsparseMatDescr_t L_mat_descr_;
-  hipsparseMatDescr_t U_mat_descr_;
-  hipsparseMatDescr_t mat_descr_;
+  rocsparse_mat_descr L_mat_descr_;
+  rocsparse_mat_descr U_mat_descr_;
+  rocsparse_mat_descr mat_descr_;
 
-  csrmv2Info_t mat_info_;
+  rocsparse_mat_info mat_info_;
 
   HIPAcceleratorVector<ValueType> *tmp_vec_;
 

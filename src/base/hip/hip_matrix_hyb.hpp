@@ -5,7 +5,7 @@
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
-#include <hipsparse.h>
+#include <rocsparse.h>
 
 namespace rocalution {
 
@@ -52,8 +52,8 @@ private:
   int ell_nnz_;
   int coo_nnz_;
 
-  hipsparseMatDescr_t ell_mat_descr_;
-  hipsparseMatDescr_t coo_mat_descr_;
+  rocsparse_mat_descr ell_mat_descr_;
+  rocsparse_mat_descr coo_mat_descr_;
 
   friend class BaseVector<ValueType>;
   friend class AcceleratorVector<ValueType>;

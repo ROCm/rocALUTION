@@ -17,6 +17,7 @@
 
 #include <algorithm>
 
+#include <rocsparse.h>
 #include <hip/hip_runtime.h>
 
 namespace rocalution {
@@ -45,16 +46,16 @@ HIPAcceleratorMatrixCOO<ValueType>::HIPAcceleratorMatrixCOO(const Rocalution_Bac
 
   CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-  hipsparseStatus_t stat_t;
+  rocsparse_status status;
   
-  stat_t = hipsparseCreateMatDescr(&this->mat_descr_);
-  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  status = rocsparse_create_mat_descr(&this->mat_descr_);
+  CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
   
-  stat_t = hipsparseSetMatIndexBase(this->mat_descr_, HIPSPARSE_INDEX_BASE_ZERO);
-  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  status = rocsparse_set_mat_index_base(this->mat_descr_, rocsparse_index_base_zero);
+  CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
   
-  stat_t = hipsparseSetMatType(this->mat_descr_, HIPSPARSE_MATRIX_TYPE_GENERAL);
-  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  status = rocsparse_set_mat_type(this->mat_descr_, rocsparse_matrix_type_general);
+  CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
 }
 
@@ -67,10 +68,10 @@ HIPAcceleratorMatrixCOO<ValueType>::~HIPAcceleratorMatrixCOO() {
 
   this->Clear();
 
-  hipsparseStatus_t stat_t;
+  rocsparse_status status;
 
-  stat_t = hipsparseDestroyMatDescr(this->mat_descr_);
-  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+  status = rocsparse_destroy_mat_descr(this->mat_descr_);
+  CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
 }
 
@@ -719,7 +720,12 @@ bool HIPAcceleratorMatrixCOO<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 
     this->Clear();
 
-    if(csr_to_coo_hip(this->local_backend_.HIP_sparse_handle, cast_mat_csr->nnz_, cast_mat_csr->nrow_, cast_mat_csr->ncol_, cast_mat_csr->mat_, &this->mat_) == true)
+    if(csr_to_coo_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                      cast_mat_csr->nnz_,
+                      cast_mat_csr->nrow_,
+                      cast_mat_csr->ncol_,
+                      cast_mat_csr->mat_,
+                      &this->mat_) == true)
     {
         this->nrow_ = cast_mat_csr->nrow_;
         this->ncol_ = cast_mat_csr->ncol_;
@@ -751,15 +757,15 @@ void HIPAcceleratorMatrixCOO<ValueType>::Apply(const BaseVector<ValueType> &in, 
     ValueType alpha = 1.0;
     ValueType beta = 0.0;
 
-    hipsparseStatus_t stat_t;
-    stat_t = hipsparseTcoomv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
+    rocsparse_status status;
+    status = rocsparseTcoomv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                             rocsparse_operation_none,
                              this->GetM(), this->GetN(), this->GetNnz(), &alpha,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.row, this->mat_.col,
                              cast_in->vec_, &beta,
                              cast_out->vec_);
-    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
   }
 
@@ -784,15 +790,15 @@ void HIPAcceleratorMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
 
     ValueType beta = 1.0;
 
-    hipsparseStatus_t stat_t;
-    stat_t = hipsparseTcoomv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
+    rocsparse_status status;
+    status = rocsparseTcoomv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                             rocsparse_operation_none,
                              this->GetM(), this->GetN(), this->GetNnz(), &scalar,
                              this->mat_descr_,
                              this->mat_.val, this->mat_.row, this->mat_.col,
                              cast_in->vec_, &beta,
                              cast_out->vec_);
-    CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+    CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
   }
 

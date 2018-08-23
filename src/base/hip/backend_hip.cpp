@@ -17,8 +17,8 @@
 #include "hip_matrix_dense.hpp"
 
 #include <hip/hip_runtime_api.h>
-#include <hipblas.h>
-#include <hipsparse.h>
+#include <rocblas.h>
+#include <rocsparse.h>
 #include <complex>
 
 namespace rocalution {
@@ -28,13 +28,13 @@ bool rocalution_init_hip(void) {
   LOG_DEBUG(0, "rocalution_init_hip()",
             "* begin");
 
-  assert(_get_backend_descriptor()->HIP_blas_handle == NULL);
-  assert(_get_backend_descriptor()->HIP_sparse_handle == NULL);
+  assert(_get_backend_descriptor()->ROC_blas_handle == NULL);
+  assert(_get_backend_descriptor()->ROC_sparse_handle == NULL);
   //  assert(_get_backend_descriptor()->HIP_dev == -1);
 
   // create a handle
-  _get_backend_descriptor()->HIP_blas_handle = new hipblasHandle_t;
-  _get_backend_descriptor()->HIP_sparse_handle = new hipsparseHandle_t;
+  _get_backend_descriptor()->ROC_blas_handle = new rocblas_handle;
+  _get_backend_descriptor()->ROC_sparse_handle = new rocsparse_handle;
 
   // get last error (if any)
   hipGetLastError();
@@ -86,12 +86,12 @@ bool rocalution_init_hip(void) {
 
       if (hip_status_t == hipSuccess) {
 
-        if ((hipblasCreate(static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle)) == HIPBLAS_STATUS_SUCCESS) &&
-            (hipsparseCreate(static_cast<hipsparseHandle_t*>(_get_backend_descriptor()->HIP_sparse_handle)) == HIPSPARSE_STATUS_SUCCESS)) {
+        if ((rocblas_create_handle(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle)) == rocblas_status_success) &&
+            (rocsparse_create_handle(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle)) == rocsparse_status_success)) {
           _get_backend_descriptor()->HIP_dev = dev;
           break;
         } else
-          LOG_INFO("HIP device " << dev << " cannot create hipBLAS/hipSPARSE context");
+          LOG_INFO("HIP device " << dev << " cannot create rocBLAS/rocSPARSE context");
       }
 
     }
@@ -99,7 +99,7 @@ bool rocalution_init_hip(void) {
   }
 
   if (_get_backend_descriptor()->HIP_dev == -1) {
-    LOG_INFO("HIP and hipBLAS/hipSPARSE have NOT been initialized!");
+    LOG_INFO("HIP and rocBLAS/rocSPARSE have NOT been initialized!");
     return false;
   }
 
@@ -132,21 +132,21 @@ void rocalution_stop_hip(void) {
 
   if (_get_backend_descriptor()->accelerator) {
 
-    if (hipblasDestroy(*(static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle))) != HIPBLAS_STATUS_SUCCESS) {
-      LOG_INFO("Error in hipblasDestroy");
+    if (rocblas_destroy_handle(*(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle))) != rocblas_status_success) {
+      LOG_INFO("Error in rocblas_destroy_handle");
     }
 
-    if (hipsparseDestroy(*(static_cast<hipsparseHandle_t*>(_get_backend_descriptor()->HIP_sparse_handle))) != HIPSPARSE_STATUS_SUCCESS) {
-      LOG_INFO("Error in hipsparseDestroy");
+    if (rocsparse_destroy_handle(*(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle))) != rocsparse_status_success) {
+      LOG_INFO("Error in rocsparse_destroy_handle");
     }
 
   }
 
-  delete (static_cast<hipblasHandle_t*>(_get_backend_descriptor()->HIP_blas_handle));
-  delete (static_cast<hipsparseHandle_t*>(_get_backend_descriptor()->HIP_sparse_handle));
+  delete (static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle));
+  delete (static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle));
 
-  _get_backend_descriptor()->HIP_blas_handle = NULL; 
-  _get_backend_descriptor()->HIP_sparse_handle = NULL;
+  _get_backend_descriptor()->ROC_blas_handle = NULL; 
+  _get_backend_descriptor()->ROC_sparse_handle = NULL;
 
   _get_backend_descriptor()->HIP_dev = -1;
 

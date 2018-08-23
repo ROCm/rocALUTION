@@ -12,11 +12,11 @@
 #include <complex>
 
 #include <hip/hip_runtime.h>
-#include <hipblas.h>
-#include <hipsparse.h>
+#include <rocblas.h>
+#include <rocsparse.h>
 
-#define HIPBLAS_HANDLE(handle) *static_cast<hipblasHandle_t*>(handle)
-#define HIPSPARSE_HANDLE(handle) *static_cast<hipsparseHandle_t*>(handle)
+#define ROCBLAS_HANDLE(handle) *static_cast<rocblas_handle*>(handle)
+#define ROCSPARSE_HANDLE(handle) *static_cast<rocsparse_handle*>(handle)
 
 #define CHECK_HIP_ERROR(file, line) {                                   \
     hipError_t err_t;                                                   \
@@ -27,50 +27,52 @@
     }                                                                   \
   }   
 
-#define CHECK_HIPBLAS_ERROR(stat_t, file, line) {                       \
-  if (stat_t  != HIPBLAS_STATUS_SUCCESS) {                              \
-  LOG_INFO("hipBLAS error " << stat_t);                                 \
-  if (stat_t == HIPBLAS_STATUS_NOT_INITIALIZED)                         \
-    LOG_INFO("HIPBLAS_STATUS_NOT_INITIALIZED");                         \
-  if (stat_t == HIPBLAS_STATUS_ALLOC_FAILED)                            \
-    LOG_INFO("HIPBLAS_STATUS_ALLOC_FAILED");                            \
-  if (stat_t == HIPBLAS_STATUS_INVALID_VALUE)                           \
-    LOG_INFO("HIPBLAS_STATUS_INVALID_VALUE");                           \
-  if (stat_t == HIPBLAS_STATUS_MAPPING_ERROR)                           \
-    LOG_INFO("HIPBLAS_STATUS_MAPPING_ERROR");                           \
-  if (stat_t == HIPBLAS_STATUS_EXECUTION_FAILED)                        \
-    LOG_INFO("HIPBLAS_STATUS_EXECUTION_FAILED");                        \
-  if (stat_t == HIPBLAS_STATUS_INTERNAL_ERROR)                          \
-    LOG_INFO("HIPBLAS_STATUS_INTERNAL_ERROR");                          \
-  if (stat_t == HIPBLAS_STATUS_NOT_SUPPORTED)                           \
-    LOG_INFO("HIPBLAS_STATUS_NOT_SUPPORTED");                           \
-  LOG_INFO("File: " << file << "; line: " << line);                     \
-  exit(1);                                                              \
-  }                                                                     \
+#define CHECK_ROCBLAS_ERROR(stat_t, file, line)             \
+{                                                           \
+    if (stat_t != rocblas_status_success)                   \
+    {                                                       \
+        LOG_INFO("rocBLAS error " << stat_t);               \
+        if (stat_t == rocblas_status_invalid_handle)        \
+            LOG_INFO("rocblas_status_invalid_handle");      \
+        if (stat_t == rocblas_status_not_implemented)       \
+            LOG_INFO("rocblas_status_not_implemented");     \
+        if (stat_t == rocblas_status_invalid_pointer)       \
+            LOG_INFO("rocblas_status_invalid_pointer");     \
+        if (stat_t == rocblas_status_invalid_size)          \
+            LOG_INFO("rocblas_status_invalid_size");        \
+        if (stat_t == rocblas_status_memory_error)          \
+            LOG_INFO("rocblas_status_memory_error");        \
+        if (stat_t == rocblas_status_internal_error)        \
+            LOG_INFO("rocblas_status_internal_error");      \
+        LOG_INFO("File: " << file << "; line: " << line);   \
+        exit(1);                                            \
+    }                                                       \
 }
 
-#define CHECK_HIPSPARSE_ERROR(stat_t, file, line) {                     \
-  if (stat_t  != HIPSPARSE_STATUS_SUCCESS) {                            \
-  LOG_INFO("hipSPARSE error " << stat_t);                               \
-  if (stat_t == HIPSPARSE_STATUS_NOT_INITIALIZED)                       \
-    LOG_INFO("HIPSPARSE_STATUS_NOT_INITIALIZED");                       \
-  if (stat_t == HIPSPARSE_STATUS_ALLOC_FAILED)                          \
-    LOG_INFO("HIPSPARSE_STATUS_ALLOC_FAILED");                          \
-  if (stat_t == HIPSPARSE_STATUS_INVALID_VALUE)                         \
-    LOG_INFO("HIPSPARSE_STATUS_INVALID_VALUE");                         \
-  if (stat_t == HIPSPARSE_STATUS_ARCH_MISMATCH)                         \
-    LOG_INFO("HIPSPARSE_STATUS_ARCH_MISMATCH");                         \
-  if (stat_t == HIPSPARSE_STATUS_MAPPING_ERROR)                         \
-    LOG_INFO("HIPSPARSE_STATUS_MAPPING_ERROR");                         \
-  if (stat_t == HIPSPARSE_STATUS_EXECUTION_FAILED)                      \
-    LOG_INFO("HIPSPARSE_STATUS_EXECUTION_FAILED");                      \
-  if (stat_t == HIPSPARSE_STATUS_INTERNAL_ERROR)                        \
-    LOG_INFO("HIPSPARSE_STATUS_INTERNAL_ERROR");                        \
-  if (stat_t == HIPSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED)             \
-    LOG_INFO("HIPSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED");             \
-  LOG_INFO("File: " << file << "; line: " << line);                     \
-  exit(1);                                                              \
-  }                                                                     \
+#define CHECK_ROCSPARSE_ERROR(status, file, line)           \
+{                                                           \
+    if (status != rocsparse_status_success)                 \
+    {                                                       \
+        LOG_INFO("rocSPARSE error " << status);             \
+        if (status == rocsparse_status_invalid_handle)      \
+            LOG_INFO("rocsparse_status_invalid_handle");    \
+        if (status == rocsparse_status_not_implemented);    \
+            LOG_INFO("rocsparse_status_not_implemented");   \
+        if (status == rocsparse_status_invalid_pointer)     \
+            LOG_INFO("rocsparse_status_invalid_pointer");   \
+        if (status == rocsparse_status_invalid_size)        \
+            LOG_INFO("rocsparse_status_invalid_size");      \
+        if (status == rocsparse_status_memory_error)        \
+            LOG_INFO("rocsparse_status_memory_error");      \
+        if (status == rocsparse_status_internal_error)      \
+            LOG_INFO("rocsparse_status_internal_error");    \
+        if (status == rocsparse_status_invalid_value)       \
+            LOG_INFO("rocsparse_status_invalid_value");     \
+        if (status == rocsparse_status_arch_mismatch)       \
+            LOG_INFO("rocsparse_status_arch_mismatch");     \
+        LOG_INFO("File: " << file << "; line: " << line);   \
+        exit(1);                                            \
+    }                                                       \
 }   
 
 namespace rocalution {

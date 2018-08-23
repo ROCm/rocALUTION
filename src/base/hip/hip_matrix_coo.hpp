@@ -5,7 +5,7 @@
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
-#include <hipsparse.h>
+#include <rocsparse.h>
 
 namespace rocalution {
 
@@ -54,7 +54,7 @@ private:
 
   MatrixCOO<ValueType, int> mat_;
 
-  hipsparseMatDescr_t mat_descr_;
+  rocsparse_mat_descr mat_descr_;
 
   friend class HIPAcceleratorMatrixCSR<ValueType>;
 
