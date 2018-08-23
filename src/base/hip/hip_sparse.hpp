@@ -7,19 +7,20 @@ namespace rocalution {
 
 // hipsparse csrmv
 template <typename ValueType>
-hipsparseStatus_t hipsparseTcsrmv(hipsparseHandle_t handle,
-                                  hipsparseOperation_t transA,
-                                  int m,
-                                  int n,
-                                  int nnz,
-                                  const ValueType *alpha,
-                                  const hipsparseMatDescr_t descrA,
-                                  const ValueType *csrSortedValA,
-                                  const int *csrSortedRowPtrA,
-                                  const int *csrSortedColIndA,
-                                  const ValueType *x,
-                                  const ValueType *beta,
-                                  ValueType *y);
+hipsparseStatus_t hipsparseTcsrmv2(hipsparseHandle_t handle,
+                                   hipsparseOperation_t transA,
+                                   int m,
+                                   int n,
+                                   int nnz,
+                                   const ValueType *alpha,
+                                   const hipsparseMatDescr_t descrA,
+                                   const ValueType *csrSortedValA,
+                                   const int *csrSortedRowPtrA,
+                                   const int *csrSortedColIndA,
+                                   csrmv2Info_t info,
+                                   const ValueType *x,
+                                   const ValueType *beta,
+                                   ValueType *y);
 
 // hipsparse coomv
 template <typename ValueType>

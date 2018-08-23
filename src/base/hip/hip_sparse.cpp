@@ -9,41 +9,43 @@ namespace rocalution {
 
 // hipsparse csrmv
 template <>
-hipsparseStatus_t hipsparseTcsrmv(hipsparseHandle_t handle,
-                                  hipsparseOperation_t transA,
-                                  int m,
-                                  int n,
-                                  int nnz,
-                                  const float *alpha,
-                                  const hipsparseMatDescr_t descrA,
-                                  const float *csrSortedValA,
-                                  const int *csrSortedRowPtrA,
-                                  const int *csrSortedColIndA,
-                                  const float *x,
-                                  const float *beta,
-                                  float *y)
+hipsparseStatus_t hipsparseTcsrmv2(hipsparseHandle_t handle,
+                                   hipsparseOperation_t transA,
+                                   int m,
+                                   int n,
+                                   int nnz,
+                                   const float *alpha,
+                                   const hipsparseMatDescr_t descrA,
+                                   const float *csrSortedValA,
+                                   const int *csrSortedRowPtrA,
+                                   const int *csrSortedColIndA,
+                                   csrmv2Info_t info,
+                                   const float *x,
+                                   const float *beta,
+                                   float *y)
 {
-    return hipsparseScsrmv(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
-                           csrSortedRowPtrA, csrSortedColIndA, x, beta, y);
+    return hipsparseScsrmv2(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
+                            csrSortedRowPtrA, csrSortedColIndA, info, x, beta, y);
 }
 
 template <>
-hipsparseStatus_t hipsparseTcsrmv(hipsparseHandle_t handle,
-                                  hipsparseOperation_t transA,
-                                  int m,
-                                  int n,
-                                  int nnz,
-                                  const double *alpha,
-                                  const hipsparseMatDescr_t descrA,
-                                  const double *csrSortedValA,
-                                  const int *csrSortedRowPtrA,
-                                  const int *csrSortedColIndA,
-                                  const double *x,
-                                  const double *beta,
-                                  double *y)
+hipsparseStatus_t hipsparseTcsrmv2(hipsparseHandle_t handle,
+                                   hipsparseOperation_t transA,
+                                   int m,
+                                   int n,
+                                   int nnz,
+                                   const double *alpha,
+                                   const hipsparseMatDescr_t descrA,
+                                   const double *csrSortedValA,
+                                   const int *csrSortedRowPtrA,
+                                   const int *csrSortedColIndA,
+                                   csrmv2Info_t info,
+                                   const double *x,
+                                   const double *beta,
+                                   double *y)
 {
-    return hipsparseDcsrmv(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
-                           csrSortedRowPtrA, csrSortedColIndA, x, beta, y);
+    return hipsparseDcsrmv2(handle, transA, m, n, nnz, alpha, descrA, csrSortedValA,
+                            csrSortedRowPtrA, csrSortedColIndA, info, x, beta, y);
 }
 
 // hipsparse coomv

@@ -74,6 +74,9 @@ HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR(const Rocalution_Bac
   stat_t = hipsparseSetMatType(this->mat_descr_, HIPSPARSE_MATRIX_TYPE_GENERAL);
   CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
+  stat_t = hipsparseCreateCsrmv2Info(&this->mat_info_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
 }
 
 template <typename ValueType>
@@ -87,6 +90,9 @@ HIPAcceleratorMatrixCSR<ValueType>::~HIPAcceleratorMatrixCSR() {
   hipsparseStatus_t stat_t;
 
   stat_t = hipsparseDestroyMatDescr(this->mat_descr_);
+  CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+
+  stat_t = hipsparseDestroyCsrmv2Info(this->mat_info_);
   CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
 }
@@ -1085,6 +1091,21 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute( const BaseVector<int> &permuta
 template <typename ValueType>
 void HIPAcceleratorMatrixCSR<ValueType>::ApplyAnalysis(void)
 {
+    if(this->nnz_ > 0)
+    {
+        hipsparseStatus_t stat_t;
+
+        stat_t = hipsparseXcsrmv2_analysis(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                                           HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                                           this->nrow_,
+                                           this->ncol_,
+                                           this->nnz_,
+                                           this->mat_descr_,
+                                           this->mat_.row_offset,
+                                           this->mat_.col,
+                                           this->mat_info_);
+        CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
+    }
 }
 
 template <typename ValueType>
@@ -1107,14 +1128,15 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType> &in, 
     const ValueType beta = 0.0;
 
     hipsparseStatus_t stat_t;
-    stat_t = hipsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
-                             this->GetM(), this->GetN(), this->GetNnz(), &alpha,
-                             this->mat_descr_,
-                             this->mat_.val, 
-                             this->mat_.row_offset, this->mat_.col,
-                             cast_in->vec_, &beta,
-                             cast_out->vec_);
+    stat_t = hipsparseTcsrmv2(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                              HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                              this->GetM(), this->GetN(), this->GetNnz(), &alpha,
+                              this->mat_descr_,
+                              this->mat_.val, 
+                              this->mat_.row_offset, this->mat_.col,
+                              this->mat_info_,
+                              cast_in->vec_, &beta,
+                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
   }
@@ -1141,13 +1163,14 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &i
     const ValueType beta = 1.0;
 
     hipsparseStatus_t stat_t;
-    stat_t = hipsparseTcsrmv(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
-                             HIPSPARSE_OPERATION_NON_TRANSPOSE,
-                             this->GetM(), this->GetN(), this->GetNnz(), &scalar,
-                             this->mat_descr_,
-                             this->mat_.val, this->mat_.row_offset, this->mat_.col,
-                             cast_in->vec_, &beta,
-                             cast_out->vec_);
+    stat_t = hipsparseTcsrmv2(HIPSPARSE_HANDLE(this->local_backend_.HIP_sparse_handle),
+                              HIPSPARSE_OPERATION_NON_TRANSPOSE,
+                              this->GetM(), this->GetN(), this->GetNnz(), &scalar,
+                              this->mat_descr_,
+                              this->mat_.val, this->mat_.row_offset, this->mat_.col,
+                              this->mat_info_,
+                              cast_in->vec_, &beta,
+                              cast_out->vec_);
     CHECK_HIPSPARSE_ERROR(stat_t, __FILE__, __LINE__);
 
   }
