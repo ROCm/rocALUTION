@@ -27,7 +27,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # rocALUTION project
-project(rocalution VERSION 1.3.0.0 LANGUAGES CXX)
+project(rocalution VERSION 1.3.1.0 LANGUAGES CXX)
 set(rocalution_SOVERSION 1)
 
 # Set toolchain
