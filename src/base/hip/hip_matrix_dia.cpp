@@ -55,8 +55,8 @@ HIPAcceleratorMatrixDIA<ValueType>::~HIPAcceleratorMatrixDIA()
 template <typename ValueType>
 void HIPAcceleratorMatrixDIA<ValueType>::Info(void) const
 {
-    LOG_INFO("HIPAcceleratorMatrixDIA<ValueType> diag=" << this->mat_.num_diag << " nnz="
-                                                        << this->nnz_);
+    LOG_INFO(
+        "HIPAcceleratorMatrixDIA<ValueType> diag=" << this->mat_.num_diag << " nnz=" << this->nnz_);
 }
 
 template <typename ValueType>
@@ -343,10 +343,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyTo(BaseMatrix<ValueType>* dst) cons
 
         if(hip_cast_mat->nnz_ == 0)
         {
-            hip_cast_mat->AllocateDIA(this->nnz_,
-                                      this->nrow_,
-                                      this->ncol_,
-                                      this->mat_.num_diag);
+            hip_cast_mat->AllocateDIA(this->nnz_, this->nrow_, this->ncol_, this->mat_.num_diag);
         }
 
         assert(this->nnz_ == hip_cast_mat->nnz_);
@@ -548,10 +545,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::CopyToAsync(BaseMatrix<ValueType>* dst)
 
         if(hip_cast_mat->nnz_ == 0)
         {
-            hip_cast_mat->AllocateDIA(this->nnz_,
-                                      this->nrow_,
-                                      this->ncol_,
-                                      this->mat_.num_diag);
+            hip_cast_mat->AllocateDIA(this->nnz_, this->nrow_, this->ncol_, this->mat_.num_diag);
         }
 
         assert(this->nnz_ == hip_cast_mat->nnz_);

@@ -169,21 +169,19 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromHost(const HostMatrix<ValueTyp
         assert(this->nrow_ == cast_mat->nrow_);
         assert(this->ncol_ == cast_mat->ncol_);
 
-        hipMemcpy(this->mat_.row_offset,            
-                  cast_mat->mat_.row_offset,        
-                  (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpy(this->mat_.row_offset,
+                  cast_mat->mat_.row_offset,
+                  (this->nrow_ + 1) * sizeof(int),
                   hipMemcpyHostToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(this->mat_.col,               
-                  cast_mat->mat_.col,           
-                  this->nnz_ * sizeof(int), 
-                  hipMemcpyHostToDevice);
+        hipMemcpy(
+            this->mat_.col, cast_mat->mat_.col, this->nnz_ * sizeof(int), hipMemcpyHostToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(this->mat_.val,                     
-                  cast_mat->mat_.val,                 
-                  this->nnz_ * sizeof(ValueType), 
+        hipMemcpy(this->mat_.val,
+                  cast_mat->mat_.val,
+                  this->nnz_ * sizeof(ValueType),
                   hipMemcpyHostToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -218,21 +216,19 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToHost(HostMatrix<ValueType>* dst)
         assert(this->nrow_ == cast_mat->nrow_);
         assert(this->ncol_ == cast_mat->ncol_);
 
-        hipMemcpy(cast_mat->mat_.row_offset,        
-                  this->mat_.row_offset,            
-                  (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpy(cast_mat->mat_.row_offset,
+                  this->mat_.row_offset,
+                  (this->nrow_ + 1) * sizeof(int),
                   hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(cast_mat->mat_.col,           
-                  this->mat_.col,               
-                  this->nnz_ * sizeof(int), 
-                  hipMemcpyDeviceToHost);
+        hipMemcpy(
+            cast_mat->mat_.col, this->mat_.col, this->nnz_ * sizeof(int), hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(cast_mat->mat_.val,                 
-                  this->mat_.val,                     
-                  this->nnz_ * sizeof(ValueType), 
+        hipMemcpy(cast_mat->mat_.val,
+                  this->mat_.val,
+                  this->nnz_ * sizeof(ValueType),
                   hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -266,21 +262,21 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType>& 
         assert(this->nrow_ == hip_cast_mat->nrow_);
         assert(this->ncol_ == hip_cast_mat->ncol_);
 
-        hipMemcpy(this->mat_.row_offset,            
-                  hip_cast_mat->mat_.row_offset,    
-                  (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpy(this->mat_.row_offset,
+                  hip_cast_mat->mat_.row_offset,
+                  (this->nrow_ + 1) * sizeof(int),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(this->mat_.col,               
-                  hip_cast_mat->mat_.col,       
-                  this->nnz_ * sizeof(int), 
+        hipMemcpy(this->mat_.col,
+                  hip_cast_mat->mat_.col,
+                  this->nnz_ * sizeof(int),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(this->mat_.val,                     
-                  hip_cast_mat->mat_.val,             
-                  this->nnz_ * sizeof(ValueType), 
+        hipMemcpy(this->mat_.val,
+                  hip_cast_mat->mat_.val,
+                  this->nnz_ * sizeof(ValueType),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -324,21 +320,21 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyTo(BaseMatrix<ValueType>* dst) con
         assert(this->nrow_ == hip_cast_mat->nrow_);
         assert(this->ncol_ == hip_cast_mat->ncol_);
 
-        hipMemcpy(hip_cast_mat->mat_.row_offset,    
-                  this->mat_.row_offset,            
-                  (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpy(hip_cast_mat->mat_.row_offset,
+                  this->mat_.row_offset,
+                  (this->nrow_ + 1) * sizeof(int),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(hip_cast_mat->mat_.col,       
-                  this->mat_.col,               
-                  this->nnz_ * sizeof(int), 
+        hipMemcpy(hip_cast_mat->mat_.col,
+                  this->mat_.col,
+                  this->nnz_ * sizeof(int),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(hip_cast_mat->mat_.val,             
-                  this->mat_.val,                     
-                  this->nnz_ * sizeof(ValueType), 
+        hipMemcpy(hip_cast_mat->mat_.val,
+                  this->mat_.val,
+                  this->nnz_ * sizeof(ValueType),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -379,21 +375,19 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromHostAsync(const HostMatrix<Val
         assert(this->nrow_ == cast_mat->nrow_);
         assert(this->ncol_ == cast_mat->ncol_);
 
-        hipMemcpyAsync(this->mat_.row_offset,            
-                       cast_mat->mat_.row_offset,        
-                       (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpyAsync(this->mat_.row_offset,
+                       cast_mat->mat_.row_offset,
+                       (this->nrow_ + 1) * sizeof(int),
                        hipMemcpyHostToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpyAsync(this->mat_.col,               
-                       cast_mat->mat_.col,           
-                       this->nnz_ * sizeof(int), 
-                       hipMemcpyHostToDevice);
+        hipMemcpyAsync(
+            this->mat_.col, cast_mat->mat_.col, this->nnz_ * sizeof(int), hipMemcpyHostToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpyAsync(this->mat_.val,                     
-                       cast_mat->mat_.val,                 
-                       this->nnz_ * sizeof(ValueType), 
+        hipMemcpyAsync(this->mat_.val,
+                       cast_mat->mat_.val,
+                       this->nnz_ * sizeof(ValueType),
                        hipMemcpyHostToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -428,21 +422,19 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToHostAsync(HostMatrix<ValueType>*
         assert(this->nrow_ == cast_mat->nrow_);
         assert(this->ncol_ == cast_mat->ncol_);
 
-        hipMemcpyAsync(cast_mat->mat_.row_offset,        
-                       this->mat_.row_offset,            
-                       (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpyAsync(cast_mat->mat_.row_offset,
+                       this->mat_.row_offset,
+                       (this->nrow_ + 1) * sizeof(int),
                        hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpyAsync(cast_mat->mat_.col,           
-                       this->mat_.col,               
-                       this->nnz_ * sizeof(int), 
-                       hipMemcpyDeviceToHost);
+        hipMemcpyAsync(
+            cast_mat->mat_.col, this->mat_.col, this->nnz_ * sizeof(int), hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpyAsync(cast_mat->mat_.val,                 
-                       this->mat_.val,                     
-                       this->nnz_ * sizeof(ValueType), 
+        hipMemcpyAsync(cast_mat->mat_.val,
+                       this->mat_.val,
+                       this->nnz_ * sizeof(ValueType),
                        hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -476,21 +468,21 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyFromAsync(const BaseMatrix<ValueTy
         assert(this->nrow_ == hip_cast_mat->nrow_);
         assert(this->ncol_ == hip_cast_mat->ncol_);
 
-        hipMemcpy(this->mat_.row_offset,            
-                  hip_cast_mat->mat_.row_offset,    
-                  (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpy(this->mat_.row_offset,
+                  hip_cast_mat->mat_.row_offset,
+                  (this->nrow_ + 1) * sizeof(int),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(this->mat_.col,               
-                  hip_cast_mat->mat_.col,       
-                  this->nnz_ * sizeof(int), 
+        hipMemcpy(this->mat_.col,
+                  hip_cast_mat->mat_.col,
+                  this->nnz_ * sizeof(int),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(this->mat_.val,                     
-                  hip_cast_mat->mat_.val,             
-                  this->nnz_ * sizeof(ValueType), 
+        hipMemcpy(this->mat_.val,
+                  hip_cast_mat->mat_.val,
+                  this->nnz_ * sizeof(ValueType),
                   hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -534,21 +526,21 @@ void HIPAcceleratorMatrixMCSR<ValueType>::CopyToAsync(BaseMatrix<ValueType>* dst
         assert(this->nrow_ == hip_cast_mat->nrow_);
         assert(this->ncol_ == hip_cast_mat->ncol_);
 
-        hipMemcpy(hip_cast_mat->mat_.row_offset,    
-                  this->mat_.row_offset,            
-                  (this->nrow_ + 1) * sizeof(int), 
+        hipMemcpy(hip_cast_mat->mat_.row_offset,
+                  this->mat_.row_offset,
+                  (this->nrow_ + 1) * sizeof(int),
                   hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(hip_cast_mat->mat_.col,       
-                  this->mat_.col,               
-                  this->nnz_ * sizeof(int), 
+        hipMemcpy(hip_cast_mat->mat_.col,
+                  this->mat_.col,
+                  this->nnz_ * sizeof(int),
                   hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMemcpy(hip_cast_mat->mat_.val,             
-                  this->mat_.val,                     
-                  this->nnz_ * sizeof(ValueType), 
+        hipMemcpy(hip_cast_mat->mat_.val,
+                  this->mat_.val,
+                  this->nnz_ * sizeof(ValueType),
                   hipMemcpyDeviceToHost);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }

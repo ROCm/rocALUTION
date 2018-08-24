@@ -3,8 +3,6 @@
 
 #include "../backend_manager.hpp"
 
-#include <iostream>
-
 namespace rocalution {
 
 template <typename ValueType>
@@ -27,14 +25,15 @@ void rocalution_hip_sync(void);
 
 /// Build (and return) a vector on HIP
 template <typename ValueType>
-AcceleratorVector<ValueType>* _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+AcceleratorVector<ValueType>*
+_rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
 /// Build (and return) a matrix on HIP
 template <typename ValueType>
-AcceleratorMatrix<ValueType>* _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                               const unsigned int matrix_format);
+AcceleratorMatrix<ValueType>*
+_rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
+                                 const unsigned int matrix_format);
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_BACKEND_HIP_HPP_
