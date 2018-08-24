@@ -12,15 +12,15 @@ rocsparse_status rocsparseTcsrmv(rocsparse_handle handle,
                                  int m,
                                  int n,
                                  int nnz,
-                                 const ValueType *alpha,
+                                 const ValueType* alpha,
                                  const rocsparse_mat_descr descr,
-                                 const ValueType *csr_val,
-                                 const int *csr_row_ptr,
-                                 const int *csr_col_ind,
+                                 const ValueType* csr_val,
+                                 const int* csr_row_ptr,
+                                 const int* csr_col_ind,
                                  rocsparse_mat_info info,
-                                 const ValueType *x,
-                                 const ValueType *beta,
-                                 ValueType *y);
+                                 const ValueType* x,
+                                 const ValueType* beta,
+                                 ValueType* y);
 
 // rocsparse coomv
 template <typename ValueType>
@@ -29,14 +29,14 @@ rocsparse_status rocsparseTcoomv(rocsparse_handle handle,
                                  int m,
                                  int n,
                                  int nnz,
-                                 const ValueType *alpha,
+                                 const ValueType* alpha,
                                  const rocsparse_mat_descr descr,
-                                 const ValueType *coo_val,
-                                 const int *coo_row_ind,
-                                 const int *coo_col_ind,
-                                 const ValueType *x,
-                                 const ValueType *beta,
-                                 ValueType *y);
+                                 const ValueType* coo_val,
+                                 const int* coo_row_ind,
+                                 const int* coo_col_ind,
+                                 const ValueType* x,
+                                 const ValueType* beta,
+                                 ValueType* y);
 
 // rocsparse ellmv
 template <typename ValueType>
@@ -44,14 +44,14 @@ rocsparse_status rocsparseTellmv(rocsparse_handle handle,
                                  rocsparse_operation trans,
                                  int m,
                                  int n,
-                                 const ValueType *alpha,
+                                 const ValueType* alpha,
                                  const rocsparse_mat_descr descr,
-                                 const ValueType *ell_val,
-                                 const int *ell_col_ind,
+                                 const ValueType* ell_val,
+                                 const int* ell_col_ind,
                                  int ell_width,
-                                 const ValueType *x,
-                                 const ValueType *beta,
-                                 ValueType *y);
+                                 const ValueType* x,
+                                 const ValueType* beta,
+                                 ValueType* y);
 
 // rocsparse csr2csc
 template <typename ValueType>
@@ -74,13 +74,13 @@ template <typename ValueType>
 rocsparse_status rocsparseTcsr2ell(rocsparse_handle handle,
                                    int m,
                                    const rocsparse_mat_descr csr_descr,
-                                   const ValueType *csr_val,
-                                   const int *csr_row_ptr,
-                                   const int *csr_col_ind,
+                                   const ValueType* csr_val,
+                                   const int* csr_row_ptr,
+                                   const int* csr_col_ind,
                                    const rocsparse_mat_descr ell_descr,
                                    int ell_width,
-                                   ValueType *ell_val,
-                                   int *ell_col_ind);
+                                   ValueType* ell_val,
+                                   int* ell_col_ind);
 
 // rocsparse ell2csr
 template <typename ValueType>

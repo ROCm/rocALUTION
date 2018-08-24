@@ -8,52 +8,53 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HIPAcceleratorMatrixDIA : public HIPAcceleratorMatrix<ValueType> {
+class HIPAcceleratorMatrixDIA : public HIPAcceleratorMatrix<ValueType>
+{
+    public:
+    HIPAcceleratorMatrixDIA();
+    HIPAcceleratorMatrixDIA(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HIPAcceleratorMatrixDIA();
 
-public:
+    inline int GetNDiag(void) const { return mat_.num_diag; }
 
-  HIPAcceleratorMatrixDIA();
-  HIPAcceleratorMatrixDIA(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HIPAcceleratorMatrixDIA();
+    virtual void Info(void) const;
+    virtual unsigned int GetMatFormat(void) const { return DIA; }
 
-  inline int GetNDiag(void) const { return mat_.num_diag; }
+    virtual void Clear(void);
+    virtual void AllocateDIA(const int nnz, const int nrow, const int ncol, const int ndiag);
+    virtual void SetDataPtrDIA(int** offset,
+                               ValueType** val,
+                               const int nnz,
+                               const int nrow,
+                               const int ncol,
+                               const int num_diag);
+    virtual void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
 
-  virtual void Info(void) const;
-  virtual unsigned int GetMatFormat(void) const { return DIA; }
+    virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-  virtual void Clear(void);
-  virtual void AllocateDIA(const int nnz, const int nrow, const int ncol, const int ndiag);
-  virtual void SetDataPtrDIA(int **offset, ValueType **val,
-                     const int nnz, const int nrow, const int ncol, const int num_diag);
-  virtual void LeaveDataPtrDIA(int **offset, ValueType **val, int &num_diag);
+    virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+    virtual void CopyFromAsync(const BaseMatrix<ValueType>& mat);
+    virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
+    virtual void CopyToAsync(BaseMatrix<ValueType>* mat) const;
 
-  virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
+    virtual void CopyFromHost(const HostMatrix<ValueType>& src);
+    virtual void CopyFromHostAsync(const HostMatrix<ValueType>& src);
+    virtual void CopyToHost(HostMatrix<ValueType>* dst) const;
+    virtual void CopyToHostAsync(HostMatrix<ValueType>* dst) const;
 
-  virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
-  virtual void CopyFromAsync(const BaseMatrix<ValueType> &mat);
-  virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
-  virtual void CopyToAsync(BaseMatrix<ValueType> *mat) const;
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void ApplyAdd(const BaseVector<ValueType>& in,
+                          const ValueType scalar,
+                          BaseVector<ValueType>* out) const;
 
-  virtual void CopyFromHost(const HostMatrix<ValueType> &src);
-  virtual void CopyFromHostAsync(const HostMatrix<ValueType> &src);
-  virtual void CopyToHost(HostMatrix<ValueType> *dst) const;
-  virtual void CopyToHostAsync(HostMatrix<ValueType> *dst) const;
+    private:
+    MatrixDIA<ValueType, int> mat_;
 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                        BaseVector<ValueType> *out) const;
-
-private:
-
-  MatrixDIA<ValueType, int> mat_;
-
-  friend class BaseVector<ValueType>;
-  friend class AcceleratorVector<ValueType>;
-  friend class HIPAcceleratorVector<ValueType>;
-
+    friend class BaseVector<ValueType>;
+    friend class AcceleratorVector<ValueType>;
+    friend class HIPAcceleratorVector<ValueType>;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_HIP_MATRIX_DIA_HPP_

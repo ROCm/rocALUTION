@@ -13,11 +13,13 @@ namespace rocalution {
 
 template <typename ValueType, typename IndexType>
 bool csr_to_coo_hip(const rocsparse_handle handle,
-                    const IndexType nnz, const IndexType nrow, const IndexType ncol,
-                    const MatrixCSR<ValueType, IndexType> &src,
-                    MatrixCOO<ValueType, IndexType> *dst)
+                    const IndexType nnz,
+                    const IndexType nrow,
+                    const IndexType ncol,
+                    const MatrixCSR<ValueType, IndexType>& src,
+                    MatrixCOO<ValueType, IndexType>* dst)
 {
-    assert(nnz  > 0);
+    assert(nnz > 0);
     assert(nrow > 0);
     assert(ncol > 0);
 
@@ -34,12 +36,8 @@ bool csr_to_coo_hip(const rocsparse_handle handle,
     hipMemcpyAsync(dst->val, src.val, sizeof(ValueType) * nnz, hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-    rocsparse_status status = rocsparse_csr2coo(handle,
-                                                src.row_offset,
-                                                nnz,
-                                                nrow,
-                                                dst->row,
-                                                rocsparse_index_base_zero);
+    rocsparse_status status =
+        rocsparse_csr2coo(handle, src.row_offset, nnz, nrow, dst->row, rocsparse_index_base_zero);
     CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
     // Sync memcopy
@@ -50,11 +48,13 @@ bool csr_to_coo_hip(const rocsparse_handle handle,
 
 template <typename ValueType, typename IndexType>
 bool coo_to_csr_hip(const rocsparse_handle handle,
-                    const IndexType nnz, const IndexType nrow, const IndexType ncol,
-                    const MatrixCOO<ValueType, IndexType> &src,
-                    MatrixCSR<ValueType, IndexType> *dst)
+                    const IndexType nnz,
+                    const IndexType nrow,
+                    const IndexType ncol,
+                    const MatrixCOO<ValueType, IndexType>& src,
+                    MatrixCSR<ValueType, IndexType>* dst)
 {
-    assert(nnz  > 0);
+    assert(nnz > 0);
     assert(nrow > 0);
     assert(ncol > 0);
 
@@ -71,12 +71,8 @@ bool coo_to_csr_hip(const rocsparse_handle handle,
     hipMemcpyAsync(dst->val, src.val, sizeof(ValueType) * nnz, hipMemcpyDeviceToDevice);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-    rocsparse_status status = rocsparse_coo2csr(handle,
-                                                src.row,
-                                                nnz,
-                                                nrow,
-                                                dst->row_offset,
-                                                rocsparse_index_base_zero);
+    rocsparse_status status =
+        rocsparse_coo2csr(handle, src.row, nnz, nrow, dst->row_offset, rocsparse_index_base_zero);
     CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
     // Sync memcopy
@@ -87,14 +83,16 @@ bool coo_to_csr_hip(const rocsparse_handle handle,
 
 template <typename ValueType, typename IndexType>
 bool csr_to_ell_hip(const rocsparse_handle handle,
-                    IndexType nnz, IndexType nrow, IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixCSR<ValueType, IndexType>& src,
                     const rocsparse_mat_descr src_descr,
                     MatrixELL<ValueType, IndexType>* dst,
                     const rocsparse_mat_descr dst_descr,
                     IndexType* nnz_ell)
 {
-    assert(nnz  > 0);
+    assert(nnz > 0);
     assert(nrow > 0);
     assert(ncol > 0);
 
@@ -107,12 +105,8 @@ bool csr_to_ell_hip(const rocsparse_handle handle,
     rocsparse_status status;
 
     // Determine ELL width
-    status = rocsparse_csr2ell_width(handle,
-                                     nrow,
-                                     src_descr,
-                                     src.row_offset,
-                                     dst_descr,
-                                     &dst->max_row);
+    status =
+        rocsparse_csr2ell_width(handle, nrow, src_descr, src.row_offset, dst_descr, &dst->max_row);
     CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
     // Limit ELL size to 5 times CSR nnz
@@ -146,14 +140,16 @@ bool csr_to_ell_hip(const rocsparse_handle handle,
 
 template <typename ValueType, typename IndexType>
 bool ell_to_csr_hip(const rocsparse_handle handle,
-                    IndexType nnz, IndexType nrow, IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixELL<ValueType, IndexType>& src,
                     const rocsparse_mat_descr src_descr,
                     MatrixCSR<ValueType, IndexType>* dst,
                     const rocsparse_mat_descr dst_descr,
                     IndexType* nnz_csr)
 {
-    assert(nnz  > 0);
+    assert(nnz > 0);
     assert(nrow > 0);
     assert(ncol > 0);
 
@@ -169,15 +165,8 @@ bool ell_to_csr_hip(const rocsparse_handle handle,
     allocate_hip(nrow + 1, &dst->row_offset);
 
     // Determine CSR nnz
-    status = rocsparse_ell2csr_nnz(handle,
-                                   nrow,
-                                   ncol,
-                                   src_descr,
-                                   src.max_row,
-                                   src.col,
-                                   dst_descr,
-                                   dst->row_offset,
-                                   nnz_csr);
+    status = rocsparse_ell2csr_nnz(
+        handle, nrow, ncol, src_descr, src.max_row, src.col, dst_descr, dst->row_offset, nnz_csr);
     CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
     if(*nnz_csr < 0)
@@ -209,12 +198,15 @@ bool ell_to_csr_hip(const rocsparse_handle handle,
 
 template <typename ValueType, typename IndexType>
 bool csr_to_dia_hip(int blocksize,
-                    IndexType nnz, IndexType nrow, IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixCSR<ValueType, IndexType>& src,
                     MatrixDIA<ValueType, IndexType>* dst,
-                    IndexType* nnz_dia, IndexType* num_diag)
+                    IndexType* nnz_dia,
+                    IndexType* num_diag)
 {
-    assert(nnz  > 0);
+    assert(nnz > 0);
     assert(nrow > 0);
     assert(ncol > 0);
     assert(blocksize > 0);
@@ -246,17 +238,19 @@ bool csr_to_dia_hip(int blocksize,
     IndexType* d_num_diag = NULL;
     allocate_hip(1, &d_num_diag);
 
-    void* d_temp_storage = NULL;
+    void* d_temp_storage      = NULL;
     size_t temp_storage_bytes = 0;
 
     // Get reduction buffer size
-    hipcub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, diag_idx, d_num_diag, nrow + ncol);
+    hipcub::DeviceReduce::Sum(
+        d_temp_storage, temp_storage_bytes, diag_idx, d_num_diag, nrow + ncol);
 
     // Allocate hipcub buffer
     hipMalloc(&d_temp_storage, temp_storage_bytes);
 
     // Do reduction
-    hipcub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, diag_idx, d_num_diag, nrow + ncol);
+    hipcub::DeviceReduce::Sum(
+        d_temp_storage, temp_storage_bytes, diag_idx, d_num_diag, nrow + ncol);
 
     // Clear hipcub buffer
     hipFree(d_temp_storage);
@@ -288,30 +282,32 @@ bool csr_to_dia_hip(int blocksize,
     // Inclusive sum to obtain diagonal offsets
     IndexType* work = NULL;
     allocate_hip(nrow + ncol, &work);
-    d_temp_storage = NULL;
+    d_temp_storage     = NULL;
     temp_storage_bytes = 0;
 
-/*
-    // Obtain hipcub buffer size
-    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+    /*
+        // Obtain hipcub buffer size
+        hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow +
+       ncol);
 
-    // Allocate hipcub buffer
-    hipMalloc(&d_temp_storage, temp_storage_bytes);
+        // Allocate hipcub buffer
+        hipMalloc(&d_temp_storage, temp_storage_bytes);
 
-    // Do inclusive sum
-    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+        // Do inclusive sum
+        hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow +
+       ncol);
 
-    // Clear hipcub buffer
-    hipFree(d_temp_storage);
-*/
+        // Clear hipcub buffer
+        hipFree(d_temp_storage);
+    */
 
     // TODO remove when HIP PR575 bugfix goes live
-    std::vector<int> tmp(nrow+ncol);
-    hipMemcpy(&tmp[1], diag_idx, sizeof(int)*(nrow+ncol-1), hipMemcpyDeviceToHost);
+    std::vector<int> tmp(nrow + ncol);
+    hipMemcpy(&tmp[1], diag_idx, sizeof(int) * (nrow + ncol - 1), hipMemcpyDeviceToHost);
     tmp[0] = 0;
-    for(int i=1; i<nrow+ncol; ++i)
-        tmp[i] += tmp[i-1];
-    hipMemcpy(work, tmp.data(), sizeof(int)*(nrow+ncol), hipMemcpyHostToDevice);
+    for(int i = 1; i < nrow + ncol; ++i)
+        tmp[i] += tmp[i - 1];
+    hipMemcpy(work, tmp.data(), sizeof(int) * (nrow + ncol), hipMemcpyHostToDevice);
     // TODO END
 
     // Fill DIA structures
@@ -357,12 +353,16 @@ bool csr_to_dia_hip(int blocksize,
 
 template <typename ValueType, typename IndexType>
 bool csr_to_hyb_hip(int blocksize,
-                    IndexType nnz, IndexType nrow, IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixCSR<ValueType, IndexType>& src,
                     MatrixHYB<ValueType, IndexType>* dst,
-                    IndexType* nnz_hyb, IndexType* nnz_ell, IndexType* nnz_coo)
+                    IndexType* nnz_hyb,
+                    IndexType* nnz_ell,
+                    IndexType* nnz_coo)
 {
-    assert(nnz  > 0);
+    assert(nnz > 0);
     assert(nrow > 0);
     assert(ncol > 0);
     assert(blocksize > 0);
@@ -387,14 +387,15 @@ bool csr_to_hyb_hip(int blocksize,
     allocate_hip(*nnz_ell, &dst->ELL.val);
 
     // Array to gold COO part nnz per row
-    IndexType *coo_row_nnz = NULL;
+    IndexType* coo_row_nnz = NULL;
     allocate_hip(nrow + 1, &coo_row_nnz);
 
     // If there is no ELL part, its easy
     if(*nnz_ell == 0)
     {
         *nnz_coo = nnz;
-        hipMemcpy(coo_row_nnz, src.row_offset, sizeof(IndexType) * (nrow + 1), hipMemcpyDeviceToDevice);
+        hipMemcpy(
+            coo_row_nnz, src.row_offset, sizeof(IndexType) * (nrow + 1), hipMemcpyDeviceToDevice);
     }
     else
     {
@@ -412,28 +413,30 @@ bool csr_to_hyb_hip(int blocksize,
                            coo_row_nnz);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-/*
-        // Inclusive sum on coo_row_nnz
-        void* d_temp_storage = NULL;
-        size_t temp_storage_bytes = 0;
+        /*
+                // Inclusive sum on coo_row_nnz
+                void* d_temp_storage = NULL;
+                size_t temp_storage_bytes = 0;
 
-        // Obtain hipcub buffer size
-        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+                // Obtain hipcub buffer size
+                hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz,
+           coo_row_nnz + 1, nrow);
 
-        // Allocate hipcub buffer
-        hipMalloc(&d_temp_storage, temp_storage_bytes);
+                // Allocate hipcub buffer
+                hipMalloc(&d_temp_storage, temp_storage_bytes);
 
-        // Do inclusive sum
-        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+                // Do inclusive sum
+                hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz,
+           coo_row_nnz + 1, nrow);
 
-        // Clear hipcub buffer
-        hipFree(d_temp_storage);
+                // Clear hipcub buffer
+                hipFree(d_temp_storage);
 
-        set_to_zero_hip(blocksize, 1, coo_row_nnz);
+                set_to_zero_hip(blocksize, 1, coo_row_nnz);
 
-        // Copy result to host
-        hipMemcpy(nnz_coo, coo_row_nnz + nrow, sizeof(IndexType), hipMemcpyDeviceToHost);
-*/
+                // Copy result to host
+                hipMemcpy(nnz_coo, coo_row_nnz + nrow, sizeof(IndexType), hipMemcpyDeviceToHost);
+        */
         // TODO replace this once HIP PR575 bugfix goes live
         std::vector<IndexType> tmp(nrow + 1);
         hipMemcpy(&tmp[1], coo_row_nnz, sizeof(IndexType) * nrow, hipMemcpyDeviceToHost);
@@ -490,37 +493,49 @@ bool csr_to_hyb_hip(int blocksize,
 
 // csr_to_coo
 template bool csr_to_coo_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
-                             const MatrixCSR<float, int> &src,
-                             MatrixCOO<float, int> *dst);
+                             int nnz,
+                             int nrow,
+                             int ncol,
+                             const MatrixCSR<float, int>& src,
+                             MatrixCOO<float, int>* dst);
 
 template bool csr_to_coo_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
-                             const MatrixCSR<double, int> &src,
-                             MatrixCOO<double, int> *dst);
+                             int nnz,
+                             int nrow,
+                             int ncol,
+                             const MatrixCSR<double, int>& src,
+                             MatrixCOO<double, int>* dst);
 
 // coo_to_csr
 template bool coo_to_csr_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
-                             const MatrixCOO<float, int> &src,
-                             MatrixCSR<float, int> *dst);
+                             int nnz,
+                             int nrow,
+                             int ncol,
+                             const MatrixCOO<float, int>& src,
+                             MatrixCSR<float, int>* dst);
 
 template bool coo_to_csr_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
-                             const MatrixCOO<double, int> &src,
-                             MatrixCSR<double, int> *dst);
+                             int nnz,
+                             int nrow,
+                             int ncol,
+                             const MatrixCOO<double, int>& src,
+                             MatrixCSR<double, int>* dst);
 
 // csr_to_ell
 template bool csr_to_ell_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
-                             const MatrixCSR<float, int> &src,
+                             int nnz,
+                             int nrow,
+                             int ncol,
+                             const MatrixCSR<float, int>& src,
                              const rocsparse_mat_descr src_descr,
-                             MatrixELL<float, int> *dst,
+                             MatrixELL<float, int>* dst,
                              const rocsparse_mat_descr dst_descr,
-                             int *nnz_ell);
+                             int* nnz_ell);
 
 template bool csr_to_ell_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
+                             int nnz,
+                             int nrow,
+                             int ncol,
                              const MatrixCSR<double, int>& src,
                              const rocsparse_mat_descr src_descr,
                              MatrixELL<double, int>* dst,
@@ -529,7 +544,9 @@ template bool csr_to_ell_hip(const rocsparse_handle handle,
 
 // ell_to_csr
 template bool ell_to_csr_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
+                             int nnz,
+                             int nrow,
+                             int ncol,
                              const MatrixELL<float, int>& src,
                              const rocsparse_mat_descr src_descr,
                              MatrixCSR<float, int>* dst,
@@ -537,7 +554,9 @@ template bool ell_to_csr_hip(const rocsparse_handle handle,
                              int* nnz_csr);
 
 template bool ell_to_csr_hip(const rocsparse_handle handle,
-                             int nnz, int nrow, int ncol,
+                             int nnz,
+                             int nrow,
+                             int ncol,
                              const MatrixELL<double, int>& src,
                              const rocsparse_mat_descr src_descr,
                              MatrixCSR<double, int>* dst,
@@ -546,14 +565,18 @@ template bool ell_to_csr_hip(const rocsparse_handle handle,
 
 // csr_to_dia
 template bool csr_to_dia_hip(int blocksize,
-                             int nnz, int nrow, int ncol,
+                             int nnz,
+                             int nrow,
+                             int ncol,
                              const MatrixCSR<float, int>& src,
                              MatrixDIA<float, int>* dst,
                              int* nnz_dia,
                              int* num_diag);
 
 template bool csr_to_dia_hip(int blocksize,
-                             int nnz, int nrow, int ncol,
+                             int nnz,
+                             int nrow,
+                             int ncol,
                              const MatrixCSR<double, int>& src,
                              MatrixDIA<double, int>* dst,
                              int* nnz_dia,
@@ -561,15 +584,23 @@ template bool csr_to_dia_hip(int blocksize,
 
 // csr_to_hyb
 template bool csr_to_hyb_hip(int blocksize,
-                             int nnz, int nrow, int ncol,
+                             int nnz,
+                             int nrow,
+                             int ncol,
                              const MatrixCSR<float, int>& src,
                              MatrixHYB<float, int>* dst,
-                             int* nnz_hyb, int* nnz_ell, int* nnz_coo);
+                             int* nnz_hyb,
+                             int* nnz_ell,
+                             int* nnz_coo);
 
 template bool csr_to_hyb_hip(int blocksize,
-                             int nnz, int nrow, int ncol,
+                             int nnz,
+                             int nrow,
+                             int ncol,
                              const MatrixCSR<double, int>& src,
                              MatrixHYB<double, int>* dst,
-                             int* nnz_hyb, int* nnz_ell, int* nnz_coo);
+                             int* nnz_hyb,
+                             int* nnz_ell,
+                             int* nnz_coo);
 
 } // namespace rocalution

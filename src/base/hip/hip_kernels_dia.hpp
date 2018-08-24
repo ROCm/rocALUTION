@@ -12,74 +12,73 @@ namespace rocalution {
 // Efficient Sparse Matrix-Vector Multiplication
 // NVR-2008-004 / NVIDIA Technical Report
 template <typename ValueType, typename IndexType>
-__global__ void kernel_dia_spmv(const IndexType num_rows,
-                                const IndexType num_cols,
-                                const IndexType num_diags,
-                                const IndexType *Aoffsets,
-                                const ValueType *Aval,
-                                const ValueType *x,
-                                ValueType *y) {
+__global__ void kernel_dia_spmv(IndexType num_rows,
+                                IndexType num_cols,
+                                IndexType num_diags,
+                                const IndexType* __restrict__ Aoffsets,
+                                const ValueType* __restrict__ Aval,
+                                const ValueType* __restrict__ x,
+                                ValueType* __restrict__ y)
+{
+    int row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
-    int row = blockDim.x * blockIdx.x + threadIdx.x;
-
-    if (row < num_rows) {
-
-      ValueType sum;
-      make_ValueType(sum, 0.0);
-
-      for (IndexType n=0; n<num_diags; ++n) {
-
-        const IndexType ind = DIA_IND(row, n, num_rows, num_diags);
-        const IndexType col = row + Aoffsets[n];
-
-        if ((col >= 0) && (col < num_cols))
-          sum = sum + Aval[ind] * x[col];
-
-      }
-
-      y[row] = sum;
-
+    if(row >= num_rows)
+    {
+        return;
     }
 
+    ValueType sum;
+    make_ValueType(sum, 0);
+
+    for(IndexType n = 0; n < num_diags; ++n)
+    {
+        IndexType ind = DIA_IND(row, n, num_rows, num_diags);
+        IndexType col = row + Aoffsets[n];
+
+        if((col >= 0) && (col < num_cols))
+        {
+            sum = sum + Aval[ind] * x[col];
+        }
+    }
+
+    y[row] = sum;
 }
 
 // Nathan Bell and Michael Garland
 // Efficient Sparse Matrix-Vector Multiplication
 // NVR-2008-004 / NVIDIA Technical Report
 template <typename ValueType, typename IndexType>
-__global__ void kernel_dia_add_spmv(const IndexType num_rows,
-                                    const IndexType num_cols,
-                                    const IndexType num_diags,
-                                    const IndexType *Aoffsets,
-                                    const ValueType *Aval,
-                                    const ValueType scalar,
-                                    const ValueType *x,
-                                    ValueType *y) {
+__global__ void kernel_dia_add_spmv(IndexType num_rows,
+                                    IndexType num_cols,
+                                    IndexType num_diags,
+                                    const IndexType* __restrict__ Aoffsets,
+                                    const ValueType* __restrict__ Aval,
+                                    ValueType scalar,
+                                    const ValueType* __restrict__ x,
+                                    ValueType* __restrict__ y)
+{
+    int row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
-    int row = blockDim.x * blockIdx.x + threadIdx.x;
-
-    if (row < num_rows) {
-
-      ValueType sum;
-      make_ValueType(sum, 0.0);
-
-      for (IndexType n=0; n<num_diags; ++n) {
-
-        const IndexType ind = DIA_IND(row, n, num_rows, num_diags);
-        const IndexType col = row + Aoffsets[n];
-
-        if ((col >= 0) && (col < num_cols)) {
-
-          sum = sum + Aval[ind] * x[col];
-
-        }
-
-      }
-
-      y[row] = y[row] + scalar*sum;
-
+    if(row >= num_rows)
+    {
+        return;
     }
 
+    ValueType sum;
+    make_ValueType(sum, 0.0);
+
+    for(IndexType n = 0; n < num_diags; ++n)
+    {
+        IndexType ind = DIA_IND(row, n, num_rows, num_diags);
+        IndexType col = row + Aoffsets[n];
+
+        if((col >= 0) && (col < num_cols))
+        {
+            sum = sum + Aval[ind] * x[col];
+        }
+    }
+
+    y[row] = y[row] + scalar * sum;
 }
 
 } // namespace rocalution
