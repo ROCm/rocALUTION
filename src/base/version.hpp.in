@@ -1,9 +1,6 @@
 #ifndef ROCALUTION_VERSION_HPP_
 #define ROCALUTION_VERSION_HPP_
 
-// VERSION
-#define __ROCALUTION_VER_TYPE "M"
-
 // clang-format off
 #define __ROCALUTION_VER_MAJOR @rocalution_VERSION_MAJOR@
 #define __ROCALUTION_VER_MINOR @rocalution_VERSION_MINOR@
