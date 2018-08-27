@@ -9,7 +9,7 @@ ARG user_uid
 # Install dependent packages
 # Dependencies:
 # * hcc-config.cmake: pkg-config
-# * rocalution: hipblas hipsparse openmp
+# * rocalution: rocblas rocsparse openmp
 # * rocalution_mpi: mpi-default-bin mpi-default-dev
 # * rocalution-test: googletest
 # * rocalution-bench: libboost-program-options-dev
@@ -36,7 +36,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 #RUN sh -c 'echo deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main > /etc/apt/sources.list.d/rocm.list'
 #RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 #    rocblas \
-#    hipblas \
 #    rocrand \
 #    && \
 #    apt-get clean && \

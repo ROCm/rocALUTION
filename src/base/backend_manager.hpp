@@ -41,10 +41,10 @@ struct Rocalution_Backend_Descriptor {
 
   // HIP section
   // handles
-  // hipblasHandle_t casted in void **
-  void *HIP_blas_handle;
-  // hipsparseHandle_t casted in void **
-  void *HIP_sparse_handle;
+  // rocblas_handle casted in void **
+  void *ROC_blas_handle;
+  // rocsparse_handle casted in void **
+  void *ROC_sparse_handle;
 
   int HIP_dev;
   int HIP_warp;

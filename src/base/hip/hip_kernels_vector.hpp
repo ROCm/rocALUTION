@@ -8,278 +8,228 @@
 namespace rocalution {
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_scaleadd(const IndexType n, const ValueType alpha, const ValueType *x, ValueType *out) {
+__global__ void kernel_scaleadd(IndexType n,
+                                ValueType alpha,
+                                const ValueType* __restrict__ x,
+                                ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[ind] = alpha * out[ind] + x[ind];
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_scaleaddscale(const IndexType n, const ValueType alpha, const ValueType beta,
-                                     const ValueType *x, ValueType *out) {
+__global__ void kernel_scaleaddscale(IndexType n,
+                                     ValueType alpha,
+                                     ValueType beta,
+                                     const ValueType* __restrict__ x,
+                                     ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
-    out[ind] = alpha*out[ind] + beta*x[ind];
-
+    out[ind] = alpha * out[ind] + beta * x[ind];
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_scaleaddscale_offset(const IndexType n,
-                                            const IndexType src_offset, const IndexType dst_offset,
-                                            const ValueType alpha, const ValueType beta,
-                                            const ValueType *x, ValueType *out) {
+__global__ void kernel_scaleaddscale_offset(IndexType n,
+                                            IndexType src_offset,
+                                            IndexType dst_offset,
+                                            ValueType alpha,
+                                            ValueType beta,
+                                            const ValueType* __restrict__ x,
+                                            ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
-    out[ind+dst_offset] = alpha*out[ind+dst_offset] + beta*x[ind+src_offset];
-
+    out[ind + dst_offset] = alpha * out[ind + dst_offset] + beta * x[ind + src_offset];
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_scaleadd2(const IndexType n, const ValueType alpha, const ValueType beta, const ValueType gamma,
-                                 const ValueType *x, const ValueType *y, ValueType *out) {
+__global__ void kernel_scaleadd2(IndexType n,
+                                 ValueType alpha,
+                                 ValueType beta,
+                                 ValueType gamma,
+                                 const ValueType* __restrict__ x,
+                                 const ValueType* __restrict__ y,
+                                 ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
-    out[ind] = alpha*out[ind] + beta*x[ind] + gamma*y[ind];
-
+    out[ind] = alpha * out[ind] + beta * x[ind] + gamma * y[ind];
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_pointwisemult(const IndexType n, const ValueType *x, ValueType *out) {
+__global__ void
+kernel_pointwisemult(IndexType n, const ValueType* __restrict__ x, ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[ind] = out[ind] * x[ind];
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_pointwisemult2(const IndexType n, const ValueType *x, const ValueType *y, ValueType *out) {
+__global__ void kernel_pointwisemult2(IndexType n,
+                                      const ValueType* __restrict__ x,
+                                      const ValueType* __restrict__ y,
+                                      ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[ind] = y[ind] * x[ind];
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_copy_offset_from(const IndexType n, const IndexType src_offset, const IndexType dst_offset,
-                                        const ValueType *in, ValueType *out) {
+__global__ void kernel_copy_offset_from(IndexType n,
+                                        IndexType src_offset,
+                                        IndexType dst_offset,
+                                        const ValueType* __restrict__ in,
+                                        ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
-    out[ind+dst_offset] = in[ind+src_offset];
-
+    out[ind + dst_offset] = in[ind + src_offset];
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_permute(const IndexType n, const IndexType *permute,
-                               const ValueType *in, ValueType *out) {
+__global__ void kernel_permute(IndexType n,
+                               const IndexType* __restrict__ permute,
+                               const ValueType* __restrict__ in,
+                               ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[permute[ind]] = in[ind];
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_permute_backward(const IndexType n, const IndexType *permute,
-                                        const ValueType *in, ValueType *out) {
+__global__ void kernel_permute_backward(IndexType n,
+                                        const IndexType* __restrict__ permute,
+                                        const ValueType* __restrict__ in,
+                                        ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[ind] = in[permute[ind]];
-
-}
-
-// Reduction
-template <unsigned int WARP_SIZE, unsigned int BLOCK_SIZE, typename ValueType, typename IndexType>
-__global__ void kernel_reduce(const IndexType n, const ValueType *data, ValueType *out) {
-
-  IndexType gid = blockIdx.x * blockDim.x + threadIdx.x;
-  IndexType tid = threadIdx.x;
-  IndexType offset = WARP_SIZE * BLOCK_SIZE;
-
-  __shared__ ValueType sdata[BLOCK_SIZE];
-
-  ValueType sum;
-  make_ValueType(sum, 0.0);
-
-  for (IndexType i=gid; i<n; i+=offset) {
-    sum = sum + data[i];
-  }
-
-  sdata[tid] = sum;
-
-  __syncthreads();
-
-#pragma unroll
-  for (IndexType i=blockDim.x/2; i>0; i/=2) {
-
-    if (tid < i) {
-      sdata[tid] = sdata[tid] + sdata[tid+i];
-    }
-
-    __syncthreads();
-
-  }
-
-  if (tid == 0) {
-    out[blockIdx.x] = sdata[tid];
-  }
-
-}
-
-template <typename ValueType, typename IndexType, unsigned int BLOCK_SIZE>
-__global__ void kernel_max(const IndexType n, const ValueType *data, ValueType *out,
-                           const IndexType GROUP_SIZE, const IndexType LOCAL_SIZE) {
-
-    IndexType tid = threadIdx.x;
-
-    __shared__ ValueType sdata[BLOCK_SIZE];
-    sdata[tid] = ValueType(0);
-
-    // get global id
-    IndexType gid = GROUP_SIZE * blockIdx.x + tid;
-
-    for (IndexType i = 0; i < LOCAL_SIZE; ++i, gid += BLOCK_SIZE) {
-
-      if (gid < n) {
-        ValueType tmp = data[gid];
-        if (tmp > sdata[tid])
-          sdata[tid] = tmp;
-      }
-
-    }
-
-    __syncthreads();
-
-#pragma unroll
-    for (IndexType i = BLOCK_SIZE/2; i > 0; i /= 2) {
-
-      if (tid < i)
-        if (sdata[tid+i] > sdata[tid])
-          sdata[tid] = sdata[tid+i];
-
-      __syncthreads();
-
-    }
-
-    if (tid == 0)
-      out[blockIdx.x] = sdata[tid];
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_get_index_values(const IndexType size, const IndexType *index,
-                                        const ValueType *in, ValueType *out) {
+__global__ void kernel_get_index_values(IndexType size,
+                                        const IndexType* __restrict__ index,
+                                        const ValueType* __restrict__ in,
+                                        ValueType* __restrict__ out)
+{
+    IndexType i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType i = blockIdx.x*blockDim.x+threadIdx.x;
+    if(i >= size)
+    {
+        return;
+    }
 
-  if (i < size)
     out[i] = in[index[i]];
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_set_index_values(const IndexType size, const IndexType *index,
-                                        const ValueType *in, ValueType *out) {
+__global__ void kernel_set_index_values(IndexType size,
+                                        const IndexType* __restrict__ index,
+                                        const ValueType* __restrict__ in,
+                                        ValueType* __restrict__ out)
+{
+    IndexType i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType i = blockIdx.x*blockDim.x+threadIdx.x;
+    if(i >= size)
+    {
+        return;
+    }
 
-  if (i < size)
     out[index[i]] = in[i];
-
-}
-
-template <typename ValueType, typename IndexType, unsigned int BLOCK_SIZE>
-__global__ void kernel_amax(const IndexType n, const ValueType *data, ValueType *out,
-                            const IndexType GROUP_SIZE, const IndexType LOCAL_SIZE) {
-
-    IndexType tid = threadIdx.x;
-
-    __shared__ ValueType sdata[BLOCK_SIZE];
-    sdata[tid] = ValueType(0);
-
-    // get global id
-    IndexType gid = GROUP_SIZE * blockIdx.x + tid;
-
-    for (IndexType i = 0; i < LOCAL_SIZE; ++i, gid += BLOCK_SIZE) {
-
-      if (gid < n) {
-        ValueType tmp = data[gid];
-        tmp = max(tmp, ValueType(-1.0)*tmp);
-        if (tmp > sdata[tid])
-          sdata[tid] = tmp;
-      }
-
-    }
-
-    __syncthreads();
-
-#pragma unroll
-    for (IndexType i = BLOCK_SIZE/2; i > 0; i /= 2) {
-
-      if (tid < i) {
-        ValueType tmp = sdata[tid+i];
-        tmp = max(tmp, ValueType(-1.0)*tmp);
-        if (tmp > sdata[tid])
-          sdata[tid] = tmp;
-      }
-
-      __syncthreads();
-
-    }
-
-    if (tid == 0)
-      out[blockIdx.x] = sdata[tid];
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_power(const IndexType n, const double power, ValueType *out) {
+__global__ void kernel_power(IndexType n, double power, ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[ind] = hip_pow(out[ind], power);
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_copy_from_float(const IndexType n, const float *in, ValueType *out) {
+__global__ void
+kernel_copy_from_float(IndexType n, const float* __restrict__ in, ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[ind] = ValueType(in[ind]);
-
 }
 
 template <typename ValueType, typename IndexType>
-__global__ void kernel_copy_from_double(const IndexType n, const double *in, ValueType *out) {
+__global__ void
+kernel_copy_from_double(IndexType n, const double* __restrict__ in, ValueType* __restrict__ out)
+{
+    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-  IndexType ind = blockIdx.x * blockDim.x + threadIdx.x;
+    if(ind >= n)
+    {
+        return;
+    }
 
-  if (ind < n)
     out[ind] = ValueType(in[ind]);
-
 }
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_KERNELS_VECTOR_HPP_

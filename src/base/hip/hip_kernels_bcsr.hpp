@@ -5,7 +5,6 @@
 
 namespace rocalution {
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_KERNELS_BCSR_HPP_

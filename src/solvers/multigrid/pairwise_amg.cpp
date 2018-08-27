@@ -38,8 +38,8 @@ PairwiseAMG<OperatorType, VectorType, ValueType>::PairwiseAMG() {
   // disable scaling
   this->scaling_ = false;
 
-  // set default ordering to connectivity ordering
-  this->aggregation_ordering_ = Connectivity;
+  // disable ordering by default
+  this->aggregation_ordering_ = NoOrdering;
 
 }
 
@@ -94,8 +94,8 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType b
   LOG_DEBUG(this, "PairwiseAMG::SetBeta()",
             beta);
 
-  assert(beta > 0.0);
-  assert(beta < 1.0);
+  assert(beta > static_cast<ValueType>(0));
+  assert(beta < static_cast<ValueType>(1));
 
   this->beta_ = beta;
 

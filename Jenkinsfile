@@ -195,21 +195,9 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
 
-    // This invokes 'copy artifact plugin' to copy latest archive from hipsparse project
-    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
-      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipSPARSE/develop', flatten: true,
-      selector: [$class: 'StatusBuildSelector', stable: false],
-      target: "${paths.project_build_prefix}" ])
-
     // This invokes 'copy artifact plugin' to copy latest archive from rocblas project
     step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
       fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocBLAS/develop', flatten: true,
-      selector: [$class: 'StatusBuildSelector', stable: false],
-      target: "${paths.project_build_prefix}" ])
-
-    // This invokes 'copy artifact plugin' to copy latest archive from hipblas project
-    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
-      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/hipBLAS/develop', flatten: true,
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
   }
@@ -566,7 +554,7 @@ rocm_ubuntu_hip:
         project_name:'rocalution-ubuntu-hip',
         src_prefix:'src',
         build_prefix:'src',
-        build_command: 'sudo dpkg -i rocsparse-*.deb hipsparse-*.deb rocblas-*.deb hipblas-*.deb; ./install.sh -cd' )
+        build_command: 'sudo dpkg -i rocsparse-*.deb rocblas-*.deb ; ./install.sh -cd' )
 
     def print_version_closure = {
       sh  """

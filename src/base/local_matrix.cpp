@@ -1257,18 +1257,27 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
 
   Rocalution_Backend_Descriptor backend = this->local_backend_;
 
+  // delete current matrix
+  if(this->matrix_ == this->matrix_host_)
+  {
+    delete this->matrix_host_;
+    this->matrix_host_ = NULL;
+  }
+  else
+  {
+    delete this->matrix_accel_;
+    this->matrix_accel_ = NULL;
+  }
+
   if (src.matrix_ == src.matrix_host_) {
 
     // host
-    delete this->matrix_host_;
     this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, src.GetFormat());
     this->matrix_ = this->matrix_host_;
 
   } else {
 
     // accel
-    delete this->matrix_accel_;
-
     this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, src.GetFormat());
     this->matrix_ = this->matrix_accel_;
 

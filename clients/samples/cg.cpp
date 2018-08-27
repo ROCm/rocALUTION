@@ -42,8 +42,6 @@ int main(int argc, char* argv[]) {
   // Preconditioner
   Jacobi<LocalMatrix<double>, LocalVector<double>, double > p;
 
-  mat.ConvertToDIA();
-
   e.Ones();
   mat.Apply(e, &rhs);
   x.Zeros(); 
@@ -53,7 +51,7 @@ int main(int argc, char* argv[]) {
 
   ls.Build();
 
-  ls.Verbose(2);
+  ls.Verbose(1);
 
   mat.Info();
 

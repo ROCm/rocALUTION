@@ -10,8 +10,8 @@ namespace rocalution {
 // Compute non-zero entries per row
 __global__ void kernel_hyb_coo_nnz(int m,
                                    int ell_width,
-                                   const int* csr_row_ptr,
-                                   int* coo_row_nnz)
+                                   const int* __restrict__ csr_row_ptr,
+                                   int* __restrict__ coo_row_nnz)
 {
     int gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
@@ -20,24 +20,23 @@ __global__ void kernel_hyb_coo_nnz(int m,
         return;
     }
 
-    int row_nnz = csr_row_ptr[gid + 1] - csr_row_ptr[gid] - ell_width;
+    int row_nnz      = csr_row_ptr[gid + 1] - csr_row_ptr[gid] - ell_width;
     coo_row_nnz[gid] = row_nnz > 0 ? row_nnz : 0;
-
 }
 
 // CSR to HYB format conversion kernel
 template <typename ValueType>
 __global__ void kernel_hyb_csr2hyb(int m,
-                                   const ValueType* csr_val,
-                                   const int* csr_row_ptr,
-                                   const int* csr_col_ind,
+                                   const ValueType* __restrict__ csr_val,
+                                   const int* __restrict__ csr_row_ptr,
+                                   const int* __restrict__ csr_col_ind,
                                    int ell_width,
-                                   int* ell_col_ind,
-                                   ValueType* ell_val,
-                                   int* coo_row_ind,
-                                   int* coo_col_ind,
-                                   ValueType* coo_val,
-                                   int* workspace)
+                                   int* __restrict__ ell_col_ind,
+                                   ValueType* __restrict__ ell_val,
+                                   int* __restrict__ coo_row_ind,
+                                   int* __restrict__ coo_col_ind,
+                                   ValueType* __restrict__ coo_val,
+                                   int* __restrict__ workspace)
 {
     int ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
@@ -58,9 +57,9 @@ __global__ void kernel_hyb_csr2hyb(int m,
         if(p < ell_width)
         {
             // Fill ELL part
-            int idx = ELL_IND(ai, p++, m, ell_width);
-            ell_col_ind[idx]  = csr_col_ind[aj];
-            ell_val[idx]      = csr_val[aj];
+            int idx          = ELL_IND(ai, p++, m, ell_width);
+            ell_col_ind[idx] = csr_col_ind[aj];
+            ell_val[idx]     = csr_val[aj];
         }
         else
         {
@@ -75,17 +74,17 @@ __global__ void kernel_hyb_csr2hyb(int m,
     // Pad remaining ELL structure
     for(int aj = row_end - row_begin; aj < ell_width; ++aj)
     {
-        int idx = ELL_IND(ai, p++, m, ell_width);
-        ell_col_ind[idx]  = -1;
-        ell_val[idx]      = static_cast<ValueType>(0);
+        int idx          = ELL_IND(ai, p++, m, ell_width);
+        ell_col_ind[idx] = -1;
+        ell_val[idx]     = static_cast<ValueType>(0);
     }
 }
 
 template <typename IndexType>
 __global__ void kernel_dia_diag_idx(IndexType nrow,
-                                    IndexType* row_offset,
-                                    IndexType* col,
-                                    IndexType* diag_idx)
+                                    IndexType* __restrict__ row_offset,
+                                    IndexType* __restrict__ col,
+                                    IndexType* __restrict__ diag_idx)
 {
     IndexType row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
@@ -104,9 +103,9 @@ __global__ void kernel_dia_diag_idx(IndexType nrow,
 template <typename IndexType>
 __global__ void kernel_dia_fill_offset(IndexType nrow,
                                        IndexType ncol,
-                                       IndexType* diag_idx,
-                                       const IndexType* offset_map,
-                                       IndexType* offset)
+                                       IndexType* __restrict__ diag_idx,
+                                       const IndexType* __restrict__ offset_map,
+                                       IndexType* __restrict__ offset)
 {
     IndexType i = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
@@ -114,7 +113,7 @@ __global__ void kernel_dia_fill_offset(IndexType nrow,
     {
         return;
     }
-    
+
     if(diag_idx[i] == 1)
     {
         offset[offset_map[i]] = i - nrow;
@@ -125,11 +124,11 @@ __global__ void kernel_dia_fill_offset(IndexType nrow,
 template <typename ValueType, typename IndexType>
 __global__ void kernel_dia_convert(IndexType nrow,
                                    IndexType ndiag,
-                                   const IndexType* row_offset,
-                                   const IndexType* col,
-                                   const ValueType* val,
-                                   const IndexType* diag_idx,
-                                   ValueType* dia_val)
+                                   const IndexType* __restrict__ row_offset,
+                                   const IndexType* __restrict__ col,
+                                   const ValueType* __restrict__ val,
+                                   const IndexType* __restrict__ diag_idx,
+                                   ValueType* __restrict__ dia_val)
 {
     IndexType row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 

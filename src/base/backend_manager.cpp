@@ -242,7 +242,6 @@ void set_device_rocalution(int dev) {
 void info_rocalution(void) {
 
   LOG_INFO("rocALUTION ver " <<
-           __ROCALUTION_VER_TYPE <<
            __ROCALUTION_VER_MAJOR << "." <<
            __ROCALUTION_VER_MINOR << "." <<
            __ROCALUTION_VER_PATCH << 
