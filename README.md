@@ -31,7 +31,7 @@ You can test the installation by running a CG solver on a Laplace matrix:
 cd rocALUTION; cd build
 wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell−Boeing/laplace/gr3030.mtx.gz
 gzip -d gr_30_30.mtx.gz
-./bin/cg gr_30_30.mtx
+./examples/cg gr_30_30.mtx
 ```
 
 ## Overview
