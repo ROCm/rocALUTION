@@ -1,3 +1,0 @@
-pdflatex paralution-um && bibtex paralution-um && pdflatex paralution-um
-bibtex paralution-um && pdflatex paralution-um && bibtex paralution-um && pdflatex paralution-um
-

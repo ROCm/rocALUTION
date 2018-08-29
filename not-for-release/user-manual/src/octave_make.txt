@@ -1,5 +1,0 @@
-user@pc:~/paralution/src/plug-ins/MATLAB$ make octave
-mkoctfile --mex -c paralution_pcg.cpp -o octave_paralution_pcg.o -I../../../build/inc
-mkoctfile --mex octave_paralution_pcg.o -L../../../build/lib -lparalution
-mv octave_paralution_pcg.mex paralution_pcg.mex
-user@pc:~/paralution/src/plug-ins/MATLAB$
