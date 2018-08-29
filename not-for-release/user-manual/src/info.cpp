@@ -1,2 +1,0 @@
-mat.Info();
-vec.Info();

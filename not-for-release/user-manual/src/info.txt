@@ -1,3 +1,0 @@
-LocalMatrix name=G3_circuit.mtx; rows=1585478; cols=1585478; nnz=7660826; prec=64bit; asm=no; format=CSR; backends={CPU(OpenMP), GPU(CUDA)}; current=CPU(OpenMP)
-
-LocalVector name=x; size=900; prec=64bit; host backend={CPU(OpenMP)}; accelerator backend={No Accelerator}; current=CPU(OpenMP)
