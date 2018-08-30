@@ -53,7 +53,7 @@ if(SUPPORT_HIP)
       message(STATUS "Downloading rocPRIM.")
       download_project(PROJ    rocPRIM
            GIT_REPOSITORY      https://github.com/ROCmSoftwarePlatform/rocPRIM.git
-           GIT_TAG             master
+           GIT_TAG             caef132d64b29a7d857eb68af5323fc302d26766 # TODO change back to master once rocm docker image is updated
            INSTALL_DIR         ${ROCPRIM_ROOT}
            CMAKE_ARGS          -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_TEST=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hcc
            LOG_DOWNLOAD        TRUE
