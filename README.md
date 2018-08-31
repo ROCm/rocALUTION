@@ -29,7 +29,7 @@ make
 You can test the installation by running a CG solver on a Laplace matrix:
 ```
 cd rocALUTION; cd build
-wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell−Boeing/laplace/gr3030.mtx.gz
+wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
 gzip -d gr_30_30.mtx.gz
 ./examples/cg gr_30_30.mtx
 ```
