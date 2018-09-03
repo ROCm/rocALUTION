@@ -15,7 +15,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 AS<OperatorType, VectorType, ValueType>::AS() {
 
-  LOG_DEBUG(this, "AS::AS()",
+  log_debug(this, "AS::AS()",
             "default constructor");
 
   this->pos_ = NULL;
@@ -30,7 +30,7 @@ AS<OperatorType, VectorType, ValueType>::AS() {
 template <class OperatorType, class VectorType, typename ValueType>
 AS<OperatorType, VectorType, ValueType>::~AS() {
 
-  LOG_DEBUG(this, "AS::~AS()",
+  log_debug(this, "AS::~AS()",
             "destructor");
 
   this->Clear();
@@ -58,7 +58,7 @@ template <class OperatorType, class VectorType, typename ValueType>
 void AS<OperatorType, VectorType, ValueType>::Set(const int nb, const int overlap,
                                                   Solver<OperatorType, VectorType, ValueType> **preconds) {
 
-  LOG_DEBUG(this, "AS::Set()", nb << " " << overlap);
+  log_debug(this, "AS::Set()", nb, overlap, preconds);
 
   if ((this->build_ == true) || ( this->local_precond_ != NULL))
     this->Clear();
@@ -83,8 +83,8 @@ void AS<OperatorType, VectorType, ValueType>::Set(const int nb, const int overla
 template <class OperatorType, class VectorType, typename ValueType>
 void AS<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "AS::Build()",
-            this->build_ <<
+  log_debug(this, "AS::Build()",
+            this->build_,
             " #*# begin");
 
   assert(this->op_ != NULL);
@@ -160,10 +160,15 @@ void AS<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->build_ = true;
 
+  log_debug(this, "AS::Build()",
+            this->build_,
+            " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void AS<OperatorType, VectorType, ValueType>::Clear(void) {
+
+  log_debug(this, "AS::Clear()", this->build_);
 
   if (this->build_ == true) {
 
@@ -204,18 +209,15 @@ void AS<OperatorType, VectorType, ValueType>::Clear(void) {
     this->build_ = false;
 
   }
-
-  LOG_DEBUG(this, "AS::Build()",
-            this->build_ <<
-            " #*# end");
-
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void AS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "AS::Solve_()",
-            " #*# begin");
+  log_debug(this, "AS::Solve_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -249,7 +251,7 @@ void AS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vecto
 
   x->PointWiseMult(this->weight_);
 
-  LOG_DEBUG(this, "AS::Solve_()",
+  log_debug(this, "AS::Solve_()",
             " #*# end");
 
 }
@@ -257,7 +259,7 @@ void AS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vecto
 template <class OperatorType, class VectorType, typename ValueType>
 void AS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "AS::MoveToAcceleratorLocalData_()",
+  log_debug(this, "AS::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -278,7 +280,7 @@ void AS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void AS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "AS::MoveToHostLocalData_()",
+  log_debug(this, "AS::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -299,7 +301,7 @@ void AS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 RAS<OperatorType, VectorType, ValueType>::RAS() {
 
-  LOG_DEBUG(this, "RAS::RAS()",
+  log_debug(this, "RAS::RAS()",
             "default constructor");
 
 }
@@ -307,7 +309,7 @@ RAS<OperatorType, VectorType, ValueType>::RAS() {
 template <class OperatorType, class VectorType, typename ValueType>
 RAS<OperatorType, VectorType, ValueType>::~RAS() {
 
-  LOG_DEBUG(this, "RAS::~RAS()",
+  log_debug(this, "RAS::~RAS()",
             "destructor");
 
 }
@@ -333,8 +335,10 @@ void RAS<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void RAS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "RAS::Solve_()",
-            " #*# begin");
+  log_debug(this, "RAS::Solve_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -368,7 +372,7 @@ void RAS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vect
 
   }
 
-  LOG_DEBUG(this, "RAS::Solve_()",
+  log_debug(this, "RAS::Solve_()",
             " #*# end");
 
 }

@@ -20,7 +20,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 BiCGStabl<OperatorType, VectorType, ValueType>::BiCGStabl() {
 
-  LOG_DEBUG(this, "BiCGStabl::BiCGStabl()",
+  log_debug(this, "BiCGStabl::BiCGStabl()",
             "default constructor");
 
   this->l_ = 2;
@@ -30,7 +30,7 @@ BiCGStabl<OperatorType, VectorType, ValueType>::BiCGStabl() {
 template <class OperatorType, class VectorType, typename ValueType>
 BiCGStabl<OperatorType, VectorType, ValueType>::~BiCGStabl() {
 
-  LOG_DEBUG(this, "BiCGStabl::~BiCGStabl()",
+  log_debug(this, "BiCGStabl::~BiCGStabl()",
             "destructor");
 
   this->Clear();
@@ -87,8 +87,8 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void BiCGStabl<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "BiCGStabl::Build()",
-            this->build_ <<
+  log_debug(this, "BiCGStabl::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -140,8 +140,8 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::Build(void) {
   for (int i=0; i<this->l_; ++i)
     this->tau_[i] = new ValueType[this->l_];
 
-  LOG_DEBUG(this, "BiCGStabl::Build()",
-            this->build_ <<
+  log_debug(this, "BiCGStabl::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -149,7 +149,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void BiCGStabl<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "BiCGStabl::Clear()",
+  log_debug(this, "BiCGStabl::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -198,7 +198,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void BiCGStabl<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "BiCGStabl::ReBuildNumeric()",
+  log_debug(this, "BiCGStabl::ReBuildNumeric()",
             this->build_);
 
   if (this->build_ == true) {
@@ -244,7 +244,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SetOrder(const int l) {
 template <class OperatorType, class VectorType, typename ValueType>
 void BiCGStabl<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "BiCGStabl::MoveToHostLocalData_()",
+  log_debug(this, "BiCGStabl::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -269,7 +269,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void BiCGStabl<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "BiCGStabl::MoveToAcceleratorLocalData_()",
+  log_debug(this, "BiCGStabl::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -295,8 +295,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType &rhs,
                                                                      VectorType *x) {
 
-  LOG_DEBUG(this, "BiCGStabl::SolveNonPrecond_()",
-            " #*# begin");
+  log_debug(this, "BiCGStabl::SolveNonPrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -538,7 +540,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
   }
 
-  LOG_DEBUG(this, "BiCGStabl::SolveNonPrecond_()",
+  log_debug(this, "BiCGStabl::SolveNonPrecond_()",
             " #*# end");
 
 }
@@ -547,8 +549,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rhs,
                                                                   VectorType *x) {
 
-  LOG_DEBUG(this, "BiCGStabl::SolvePrecond_()",
-            " #*# begin");
+  log_debug(this, "BiCGStabl::SolvePrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -808,7 +812,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   }
 
-  LOG_DEBUG(this, "BiCGStabl::SolvePrecond_()",
+  log_debug(this, "BiCGStabl::SolvePrecond_()",
             " #*# end");
 
 }

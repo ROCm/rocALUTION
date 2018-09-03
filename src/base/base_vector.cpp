@@ -12,8 +12,7 @@ namespace rocalution {
 template <typename ValueType>
 BaseVector<ValueType>::BaseVector() {
 
-  LOG_DEBUG(this, "BaseVector::BaseVector()",
-            "default constructor");
+  log_debug(this, "BaseVector::BaseVector()");
 
   this->size_ = 0;
   this->index_size_ = 0;
@@ -23,8 +22,7 @@ BaseVector<ValueType>::BaseVector() {
 template <typename ValueType>
 BaseVector<ValueType>::~BaseVector() {
 
-  LOG_DEBUG(this, "BaseVector::~BaseVector()",
-            "default destructor");
+  log_debug(this, "BaseVector::~BaseVector()");
 
 }
 

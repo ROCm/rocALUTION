@@ -14,7 +14,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 AMG<OperatorType, VectorType, ValueType>::AMG() {
 
-  LOG_DEBUG(this, "AMG::AMG()",
+  log_debug(this, "AMG::AMG()",
             "default constructor");
 
   // parameter for strong couplings in smoothed aggregation
@@ -28,7 +28,7 @@ AMG<OperatorType, VectorType, ValueType>::AMG() {
 template <class OperatorType, class VectorType, typename ValueType>
 AMG<OperatorType, VectorType, ValueType>::~AMG() {
 
-  LOG_DEBUG(this, "AMG::AMG()",
+  log_debug(this, "AMG::AMG()",
             "destructor");
 
   this->Clear();
@@ -99,7 +99,7 @@ void AMG<OperatorType, VectorType, ValueType>::SetInterpolation(unsigned int int
 template <class OperatorType, class VectorType, typename ValueType>
 void AMG<OperatorType, VectorType, ValueType>::SetInterpRelax(const ValueType relax) {
 
-  LOG_DEBUG(this, "AMG::SetInterpRelax()",
+  log_debug(this, "AMG::SetInterpRelax()",
             relax);
 
   this->relax_ = relax;
@@ -109,7 +109,7 @@ void AMG<OperatorType, VectorType, ValueType>::SetInterpRelax(const ValueType re
 template <class OperatorType, class VectorType, typename ValueType>
 void AMG<OperatorType, VectorType, ValueType>::SetOverInterp(const ValueType overInterp) {
 
-  LOG_DEBUG(this, "AMG::SetOverInterp()",
+  log_debug(this, "AMG::SetOverInterp()",
             overInterp);
 
   this->over_interp_ = overInterp;
@@ -119,7 +119,7 @@ void AMG<OperatorType, VectorType, ValueType>::SetOverInterp(const ValueType ove
 template <class OperatorType, class VectorType, typename ValueType>
 void AMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueType eps) {
 
-  LOG_DEBUG(this, "AMG::SetCouplingStrength()",
+  log_debug(this, "AMG::SetCouplingStrength()",
             eps);
 
   this->eps_ = eps;
@@ -129,7 +129,7 @@ void AMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueTy
 template <class OperatorType, class VectorType, typename ValueType>
 void AMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
 
-  LOG_DEBUG(this, "AMG::BuildSmoothers()",
+  log_debug(this, "AMG::BuildSmoothers()",
             " #*# begin");
 
   // Smoother for each level
@@ -156,7 +156,7 @@ void AMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void AMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "AMG::ReBuildNumeric()",
+  log_debug(this, "AMG::ReBuildNumeric()",
             " #*# begin");
 
   assert(this->levels_ > 1);
@@ -256,7 +256,7 @@ void AMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType &op,
                                                          Operator<ValueType> *res,
                                                          OperatorType *coarse) {
 
-  LOG_DEBUG(this, "AMG::Aggregate()",
+  log_debug(this, "AMG::Aggregate()",
             this->build_);
 
   assert(pro    != NULL);

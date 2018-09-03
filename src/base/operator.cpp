@@ -12,8 +12,7 @@ namespace rocalution {
 template <typename ValueType>
 Operator<ValueType>::Operator() {
 
-  LOG_DEBUG(this, "Operator::Operator()",
-            "default constructor");
+  log_debug(this, "Operator::Operator()");
 
   this->object_name_ = "";
 
@@ -22,9 +21,7 @@ Operator<ValueType>::Operator() {
 template <typename ValueType>
 Operator<ValueType>::~Operator() {
 
-  LOG_DEBUG(this, "Operator::~Operator()",
-            "default destructor");
-
+  log_debug(this, "Operator::~Operator()");
 }
 
 template <typename ValueType>

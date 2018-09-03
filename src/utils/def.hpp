@@ -7,22 +7,15 @@
 // Uncomment for debug mode
 // #define DEBUG_MODE
 
-// Uncomment to log all msg to file
-// #define LOG_FILE
-
 // Uncomment to disable the assert()s
 // #define ASSERT_OFF
 
-// Uncomment to enable encryption for the log msg
-// #define LOG_ENC
-
 // Uncomment to log only on specific MPI rank
-// e.g. LOG_MPI_RANK 0 will log on rank=0 only;
 // When logging into a file, this will be unset
 #define LOG_MPI_RANK 0
 
-// Uncomment to disable automatic object tracking
-// #define OBJ_TRACKING_OFF
+// Comment to enable automatic object tracking
+#define OBJ_TRACKING_OFF
 
 // ******************
 // ******************
@@ -49,9 +42,5 @@
 #endif
 
 // TODO #define SUPPORT_COMPLEX
-
-#ifdef LOG_FILE
-#undef LOG_MPI_RANK
-#endif
 
 #endif // ROCALUTION_UTILS_DEF_HPP_

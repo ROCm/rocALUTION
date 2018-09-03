@@ -16,8 +16,7 @@ namespace rocalution {
 template <typename DataType>
 void allocate_host(int size, DataType** ptr)
 {
-
-    LOG_DEBUG(0, "allocate_host()", size);
+    log_debug(0, "allocate_host()", "* begin", size, ptr);
 
     if(size > 0)
     {
@@ -68,15 +67,15 @@ void allocate_host(int size, DataType** ptr)
         // *********************************************************
 
         assert(*ptr != NULL);
-
-        LOG_DEBUG(0, "allocate_host()", *ptr);
     }
+
+    log_debug(0, "allocate_host()", "* end", *ptr);
 }
 
 template <typename DataType>
 void free_host(DataType** ptr)
 {
-    LOG_DEBUG(0, "free_host()", *ptr);
+    log_debug(0, "free_host()", *ptr);
 
     assert(*ptr != NULL);
 
@@ -101,7 +100,7 @@ void free_host(DataType** ptr)
 template <typename DataType>
 void set_to_zero_host(int size, DataType* ptr)
 {
-    LOG_DEBUG(0, "set_to_zero_host()", "size =" << size << " ptr=" << ptr);
+    log_debug(0, "set_to_zero_host()", size, ptr);
 
     if(size > 0)
     {

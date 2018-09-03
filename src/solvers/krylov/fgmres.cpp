@@ -22,7 +22,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 FGMRES<OperatorType, VectorType, ValueType>::FGMRES()
 {
-    LOG_DEBUG(this, "FGMRES::FGMRES()", "default constructor");
+    log_debug(this, "FGMRES::FGMRES()", "default constructor");
 
     this->size_basis_ = 30;
 
@@ -37,7 +37,7 @@ FGMRES<OperatorType, VectorType, ValueType>::FGMRES()
 template <class OperatorType, class VectorType, typename ValueType>
 FGMRES<OperatorType, VectorType, ValueType>::~FGMRES()
 {
-    LOG_DEBUG(this, "FGMRES::~FGMRES()", "destructor");
+    log_debug(this, "FGMRES::~FGMRES()", "destructor");
 
     this->Clear();
 }
@@ -86,7 +86,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::PrintEnd_(void) const
 template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::Build(void)
 {
-    LOG_DEBUG(this, "FGMRES::Build()", this->build_ << " #*# begin");
+    log_debug(this, "FGMRES::Build()", this->build_, " #*# begin");
 
     if(this->build_ == true)
     {
@@ -132,13 +132,13 @@ void FGMRES<OperatorType, VectorType, ValueType>::Build(void)
 
     this->build_ = true;
 
-    LOG_DEBUG(this, "FGMRES::Build()", this->build_ << " #*# end");
+    log_debug(this, "FGMRES::Build()", this->build_, " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::Clear(void)
 {
-    LOG_DEBUG(this, "FGMRES::Clear()", this->build_);
+    log_debug(this, "FGMRES::Clear()", this->build_);
 
     if(this->build_ == true)
     {
@@ -178,7 +178,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::Clear(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 {
-    LOG_DEBUG(this, "FGMRES::ReBuildNumeric()", this->build_);
+    log_debug(this, "FGMRES::ReBuildNumeric()", this->build_);
 
     if(this->build_ == true)
     {
@@ -207,7 +207,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 {
-    LOG_DEBUG(this, "FGMRES::MoveToHostLocalData_()", this->build_);
+    log_debug(this, "FGMRES::MoveToHostLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -231,7 +231,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 {
-    LOG_DEBUG(this, "FGMRES::MoveToAcceleratorLocalData_()", this->build_);
+    log_debug(this, "FGMRES::MoveToAcceleratorLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -254,7 +254,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(vo
 template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::SetBasisSize(const int size_basis)
 {
-    LOG_DEBUG(this, "FGMRES:SetBasisSize()", size_basis);
+    log_debug(this, "FGMRES:SetBasisSize()", size_basis);
 
     assert(size_basis > 0);
     assert(this->build_ == false);
@@ -266,7 +266,9 @@ template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                    VectorType* x)
 {
-    LOG_DEBUG(this, "FGMRES::SolveNonPrecond_()", " #*# begin");
+    log_debug(this, "FGMRES::SolveNonPrecond_()", " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -303,7 +305,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorT
     // Initial residual
     if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
     {
-        LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
+        log_debug(this, "GMRES::SolvePrecond_()", " #*# end");
         return;
     }
 
@@ -399,14 +401,16 @@ void FGMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorT
         }
     }
 
-    LOG_DEBUG(this, "FGMRES::SolveNonPrecond_()", " #*# end");
+    log_debug(this, "FGMRES::SolveNonPrecond_()", " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void FGMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs,
                                                                 VectorType* x)
 {
-    LOG_DEBUG(this, "FGMRES::SolvePrecond_()", " #*# begin");
+    log_debug(this, "FGMRES::SolvePrecond_()", " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -444,7 +448,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType
     // Initial residual
     if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
     {
-        LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
+        log_debug(this, "GMRES::SolvePrecond_()", " #*# end");
         return;
     }
 
@@ -543,7 +547,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType
         }
     }
 
-    LOG_DEBUG(this, "FGMRES::SolvePrecond_()", " #*# end");
+    log_debug(this, "FGMRES::SolvePrecond_()", " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>

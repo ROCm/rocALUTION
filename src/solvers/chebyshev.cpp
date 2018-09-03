@@ -20,8 +20,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 Chebyshev<OperatorType, VectorType, ValueType>::Chebyshev() {
 
-  LOG_DEBUG(this, "Chebyshev::Chebyshev()",
-            "default constructor");
+  log_debug(this, "Chebyshev::Chebyshev()");
 
   this->init_lambda_ = false;
 
@@ -30,8 +29,7 @@ Chebyshev<OperatorType, VectorType, ValueType>::Chebyshev() {
 template <class OperatorType, class VectorType, typename ValueType>
 Chebyshev<OperatorType, VectorType, ValueType>::~Chebyshev() {
 
-  LOG_DEBUG(this, "Chebyshev::~Chebyshev()",
-            "destructor");
+  log_debug(this, "Chebyshev::~Chebyshev()");
 
   this->Clear();
 
@@ -41,9 +39,7 @@ template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::Set(const ValueType lambda_min, 
                                                          const ValueType lambda_max) {
 
-  LOG_DEBUG(this, "Chebyshev::Set()",
-            "lambda_min="  << lambda_min <<
-            " lambda_max=" << lambda_max);
+  log_debug(this, "Chebyshev::Set()", lambda_min, lambda_max);
 
   this->lambda_min_ = lambda_min;
   this->lambda_max_ = lambda_max;
@@ -102,9 +98,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "Chebyshev::Build()",
-            this->build_ <<
-            " #*# begin");
+  log_debug(this, "Chebyshev::Build()");
 
   if (this->build_ == true)
     this->Clear();
@@ -132,18 +126,12 @@ void Chebyshev<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->p_.CloneBackend(*this->op_);
   this->p_.Allocate("p", this->op_->GetM());
-
-  LOG_DEBUG(this, "Chebyshev::Build()",
-            this->build_ <<
-            " #*# end");
-
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "Chebyshev::Clear()",
-            this->build_);
+  log_debug(this, "Chebyshev::Clear()");
 
   if (this->build_ == true) {
 
@@ -168,8 +156,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "Chebyshev::ReBuildNumeric()",
-            this->build_);
+  log_debug(this, "Chebyshev::ReBuildNumeric()");
 
   if (this->build_ == true) {
 
@@ -197,8 +184,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "Chebyshev::MoveToHostLocalData_()",
-            this->build_);
+  log_debug(this, "Chebyshev::MoveToHostLocalData_()");
 
   if (this->build_ == true) {
 
@@ -216,8 +202,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "Chebyshev::MoveToAcceleratorLocalData_()",
-            this->build_);
+  log_debug(this, "Chebyshev::MoveToAcceleratorLocalData_()");
 
   if (this->build_ == true) {
 
@@ -236,8 +221,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType &rhs,
                                                                       VectorType *x) {
 
-  LOG_DEBUG(this, "Chebyshev::SolveNonPrecond_()",
-            " #*# begin");
+  log_debug(this, "Chebyshev::SolveNonPrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -263,7 +250,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
   if (this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false) {
 
-    LOG_DEBUG(this, "Chebyshev::SolveNonPrecond_()",
+    log_debug(this, "Chebyshev::SolveNonPrecond_()",
               " #*# end");
 
     return;
@@ -300,7 +287,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     res = this->Norm(*r);
   }
 
-  LOG_DEBUG(this, "Chebyshev::SolveNonPrecond_()",
+  log_debug(this, "Chebyshev::SolveNonPrecond_()",
             " #*# end");
 
 }
@@ -309,8 +296,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rhs,
                                                                    VectorType *x) {
 
-  LOG_DEBUG(this, "Chebyshev::SolvePrecond_()",
-            " #*# begin");
+  log_debug(this, "Chebyshev::SolvePrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -337,7 +326,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   if (this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false) {
 
-    LOG_DEBUG(this, "Chebyshev::SolvePrecond_()",
+    log_debug(this, "Chebyshev::SolvePrecond_()",
               " #*# end");
 
     return;
@@ -381,7 +370,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   }
 
-  LOG_DEBUG(this, "Chebyshev::SolvePrecond_()",
+  log_debug(this, "Chebyshev::SolvePrecond_()",
             " #*# end");
 
 }

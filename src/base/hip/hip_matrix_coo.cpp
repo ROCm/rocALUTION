@@ -33,7 +33,7 @@ template <typename ValueType>
 HIPAcceleratorMatrixCOO<ValueType>::HIPAcceleratorMatrixCOO(
     const Rocalution_Backend_Descriptor local_backend)
 {
-    LOG_DEBUG(this,
+    log_debug(this,
               "HIPAcceleratorMatrixCOO::HIPAcceleratorMatrixCOO()",
               "constructor with local_backend");
 
@@ -61,7 +61,7 @@ HIPAcceleratorMatrixCOO<ValueType>::HIPAcceleratorMatrixCOO(
 template <typename ValueType>
 HIPAcceleratorMatrixCOO<ValueType>::~HIPAcceleratorMatrixCOO()
 {
-    LOG_DEBUG(this, "HIPAcceleratorMatrixCOO::~HIPAcceleratorMatrixCOO()", "destructor");
+    log_debug(this, "HIPAcceleratorMatrixCOO::~HIPAcceleratorMatrixCOO()", "destructor");
 
     this->Clear();
 

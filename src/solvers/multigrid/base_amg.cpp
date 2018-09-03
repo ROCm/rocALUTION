@@ -20,7 +20,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 BaseAMG<OperatorType, VectorType, ValueType>::BaseAMG() {
 
-  LOG_DEBUG(this, "BaseAMG::BaseAMG()",
+  log_debug(this, "BaseAMG::BaseAMG()",
             "default constructor");
 
   this->coarse_size_ = 300;
@@ -45,7 +45,7 @@ BaseAMG<OperatorType, VectorType, ValueType>::BaseAMG() {
 template <class OperatorType, class VectorType, typename ValueType>
 BaseAMG<OperatorType, VectorType, ValueType>::~BaseAMG() {
 
-  LOG_DEBUG(this, "BaseAMG::BaseAMG()",
+  log_debug(this, "BaseAMG::BaseAMG()",
             "destructor");
 
   this->Clear();
@@ -55,7 +55,7 @@ BaseAMG<OperatorType, VectorType, ValueType>::~BaseAMG() {
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::SetCoarsestLevel(const int coarseSize) {
 
-  LOG_DEBUG(this, "BaseAMG::SetCoarsestLevel()",
+  log_debug(this, "BaseAMG::SetCoarsestLevel()",
             coarseSize);
 
   assert(this->build_ == false);
@@ -68,7 +68,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetCoarsestLevel(const int co
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSmoothers(const bool sm_manual) {
 
-  LOG_DEBUG(this, "BaseAMG::SetManualSmoothers()",
+  log_debug(this, "BaseAMG::SetManualSmoothers()",
             sm_manual);
 
   assert(this->build_ == false);
@@ -80,7 +80,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSmoothers(const bool
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSolver(const bool s_manual) {
 
-  LOG_DEBUG(this, "BaseAMG::SetManualSolver()",
+  log_debug(this, "BaseAMG::SetManualSolver()",
             s_manual);
 
   assert(this->build_ == false);
@@ -92,7 +92,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSolver(const bool s_
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::SetDefaultSmootherFormat(const unsigned int op_format) {
 
-  LOG_DEBUG(this, "BaseAMG::SetDefaultSmootherFormat()",
+  log_debug(this, "BaseAMG::SetDefaultSmootherFormat()",
             op_format);
 
   assert(this->build_ == false);
@@ -104,7 +104,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetDefaultSmootherFormat(cons
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::SetOperatorFormat(const unsigned int op_format) {
 
-  LOG_DEBUG(this, "BaseAMG::SetOperatorFormat()",
+  log_debug(this, "BaseAMG::SetOperatorFormat()",
             op_format);
 
   this->op_format_ = op_format;
@@ -123,8 +123,8 @@ int BaseAMG<OperatorType, VectorType, ValueType>::GetNumLevels() {
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "BaseAMG::Build()",
-            this->build_ <<
+  log_debug(this, "BaseAMG::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -136,7 +136,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->build_ = true;
 
-  LOG_DEBUG(this, "BaseAMG::Build()",
+  log_debug(this, "BaseAMG::Build()",
             "#*# allocate data");
 
   this->d_level_ = new VectorType*[this->levels_];
@@ -205,7 +205,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
     }
   }
 
-  LOG_DEBUG(this, "BaseAMG::Build()",
+  log_debug(this, "BaseAMG::Build()",
             "#*# setup smoothers");
 
   // Setup and build smoothers
@@ -221,7 +221,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
     this->smoother_level_[i]->Build();
   }
 
-  LOG_DEBUG(this, "BaseAMG::Build()",
+  log_debug(this, "BaseAMG::Build()",
             "#*# setup coarse solver");
 
   // Setup and build coarse grid solver
@@ -242,7 +242,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
   this->solver_coarse_->SetOperator(*this->op_level_[this->levels_-2]);
   this->solver_coarse_->Build();
 
-  LOG_DEBUG(this, "BaseAMG::Build()",
+  log_debug(this, "BaseAMG::Build()",
             "#*# convert operators");
 
   // Convert operator to op_format
@@ -250,8 +250,8 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
     for (int i=0; i<this->levels_-1;++i)
       this->op_level_[i]->ConvertTo(this->op_format_);
 
-  LOG_DEBUG(this, "BaseAMG::Build()",
-            this->build_ <<
+  log_debug(this, "BaseAMG::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -259,7 +259,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 
-  LOG_DEBUG(this, "BaseAMG::BuildHierarchy()",
+  log_debug(this, "BaseAMG::BuildHierarchy()",
             " #*# begin");
 
   if (this->hierarchy_ == false) {
@@ -343,7 +343,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 
   }
 
-  LOG_DEBUG(this, "BaseAMG::BuildHierarchy()",
+  log_debug(this, "BaseAMG::BuildHierarchy()",
             " #*# end");
 
 }
@@ -351,7 +351,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
 
-  LOG_DEBUG(this, "BaseAMG::BuildSmoothers()",
+  log_debug(this, "BaseAMG::BuildSmoothers()",
             " #*# begin");
 
   // Smoother for each level
@@ -371,12 +371,14 @@ void BaseAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
     this->sm_default_[i] = jac;
   }
 
+  log_debug(this, "BaseAMG::BuildSmoothers()",
+            " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseAMG<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "BaseAMG::Clear()",
+  log_debug(this, "BaseAMG::Clear()",
             this->build_);
 
   if (this->build_ == true) {

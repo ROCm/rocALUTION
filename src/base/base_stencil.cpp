@@ -12,8 +12,7 @@ namespace rocalution {
 template <typename ValueType>
 BaseStencil<ValueType>::BaseStencil() {
 
-  LOG_DEBUG(this, "BaseStencil::BaseStencil()",
-            "default constructor");
+  log_debug(this, "BaseStencil::BaseStencil()");
 
   this->ndim_ = 0;
   this->size_ = 0;
@@ -23,8 +22,7 @@ BaseStencil<ValueType>::BaseStencil() {
 template <typename ValueType>
 BaseStencil<ValueType>::~BaseStencil() {
 
-  LOG_DEBUG(this, "BaseStencil::~BaseStencil()",
-            "default destructor");
+  log_debug(this, "BaseStencil::~BaseStencil()");
 
 }
 

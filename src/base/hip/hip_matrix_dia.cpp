@@ -32,7 +32,7 @@ template <typename ValueType>
 HIPAcceleratorMatrixDIA<ValueType>::HIPAcceleratorMatrixDIA(
     const Rocalution_Backend_Descriptor local_backend)
 {
-    LOG_DEBUG(this,
+    log_debug(this,
               "HIPAcceleratorMatrixDIA::HIPAcceleratorMatrixDIA()",
               "constructor with local_backend");
 
@@ -47,7 +47,7 @@ HIPAcceleratorMatrixDIA<ValueType>::HIPAcceleratorMatrixDIA(
 template <typename ValueType>
 HIPAcceleratorMatrixDIA<ValueType>::~HIPAcceleratorMatrixDIA()
 {
-    LOG_DEBUG(this, "HIPAcceleratorMatrixDIA::HIPAcceleratorMatrixDIA()", "destructor");
+    log_debug(this, "HIPAcceleratorMatrixDIA::HIPAcceleratorMatrixDIA()", "destructor");
 
     this->Clear();
 }

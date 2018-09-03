@@ -22,7 +22,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 GMRES<OperatorType, VectorType, ValueType>::GMRES()
 {
-    LOG_DEBUG(this, "GMRES::GMRES()", "default constructor");
+    log_debug(this, "GMRES::GMRES()", "default constructor");
 
     this->size_basis_ = 30;
 
@@ -36,7 +36,7 @@ GMRES<OperatorType, VectorType, ValueType>::GMRES()
 template <class OperatorType, class VectorType, typename ValueType>
 GMRES<OperatorType, VectorType, ValueType>::~GMRES()
 {
-    LOG_DEBUG(this, "GMRES::~GMRES()", "destructor");
+    log_debug(this, "GMRES::~GMRES()", "destructor");
 
     this->Clear();
 }
@@ -85,7 +85,7 @@ void GMRES<OperatorType, VectorType, ValueType>::PrintEnd_(void) const
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::Build(void)
 {
-    LOG_DEBUG(this, "GMRES::Build()", this->build_ << " #*# begin");
+    log_debug(this, "GMRES::Build()", this->build_, " #*# begin");
 
     if(this->build_ == true)
     {
@@ -129,13 +129,13 @@ void GMRES<OperatorType, VectorType, ValueType>::Build(void)
 
     this->build_ = true;
 
-    LOG_DEBUG(this, "GMRES::Build()", this->build_ << " #*# end");
+    log_debug(this, "GMRES::Build()", this->build_, " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::Clear(void)
 {
-    LOG_DEBUG(this, "GMRES::Clear()", this->build_);
+    log_debug(this, "GMRES::Clear()", this->build_);
 
     if(this->build_ == true)
     {
@@ -168,7 +168,7 @@ void GMRES<OperatorType, VectorType, ValueType>::Clear(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 {
-    LOG_DEBUG(this, "GMRES::ReBuildNumeric()", this->build_);
+    log_debug(this, "GMRES::ReBuildNumeric()", this->build_);
 
     if(this->build_ == true)
     {
@@ -194,7 +194,7 @@ void GMRES<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 {
-    LOG_DEBUG(this, "GMRES::MoveToHostLocalData_()", this->build_);
+    log_debug(this, "GMRES::MoveToHostLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -214,7 +214,7 @@ void GMRES<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 {
-    LOG_DEBUG(this, "GMRES::MoveToAcceleratorLocalData_()", this->build_);
+    log_debug(this, "GMRES::MoveToAcceleratorLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -234,7 +234,7 @@ void GMRES<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(voi
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::SetBasisSize(const int size_basis)
 {
-    LOG_DEBUG(this, "GMRES:SetBasisSize()", size_basis);
+    log_debug(this, "GMRES:SetBasisSize()", size_basis);
 
     assert(size_basis > 0);
     assert(this->build_ == false);
@@ -249,7 +249,9 @@ template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                   VectorType* x)
 {
-    LOG_DEBUG(this, "GMRES::SolveNonPrecond_()", " #*# begin");
+    log_debug(this, "GMRES::SolveNonPrecond_()", " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -286,7 +288,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
     // Initial residual
     if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
     {
-        LOG_DEBUG(this, "GMRES::SolveNonPrecond_()", " #*# end");
+        log_debug(this, "GMRES::SolveNonPrecond_()", " #*# end");
         return;
     }
 
@@ -382,7 +384,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
         }
     }
 
-    LOG_DEBUG(this, "GMRES::SolveNonPrecond_()", " #*# end");
+    log_debug(this, "GMRES::SolveNonPrecond_()", " #*# end");
 }
 
 // GMRES implementation is based on the algorithm described in the book
@@ -391,7 +393,9 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# begin");
+    log_debug(this, "GMRES::SolvePrecond_()", " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -432,7 +436,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
     // Initial residual
     if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
     {
-        LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
+        log_debug(this, "GMRES::SolvePrecond_()", " #*# end");
         return;
     }
 
@@ -534,7 +538,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
         }
     }
 
-    LOG_DEBUG(this, "GMRES::SolvePrecond_()", " #*# end");
+    log_debug(this, "GMRES::SolvePrecond_()", " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>

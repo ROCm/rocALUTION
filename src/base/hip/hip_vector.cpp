@@ -29,7 +29,7 @@ template <typename ValueType>
 HIPAcceleratorVector<ValueType>::HIPAcceleratorVector(
     const Rocalution_Backend_Descriptor local_backend)
 {
-    LOG_DEBUG(
+    log_debug(
         this, "HIPAcceleratorVector::HIPAcceleratorVector()", "constructor with local_backend");
 
     this->vec_ = NULL;
@@ -44,7 +44,7 @@ HIPAcceleratorVector<ValueType>::HIPAcceleratorVector(
 template <typename ValueType>
 HIPAcceleratorVector<ValueType>::~HIPAcceleratorVector()
 {
-    LOG_DEBUG(this, "HIPAcceleratorVector::~HIPAcceleratorVector()", "destructor");
+    log_debug(this, "HIPAcceleratorVector::~HIPAcceleratorVector()", "destructor");
 
     this->Clear();
 }
