@@ -20,7 +20,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 CR<OperatorType, VectorType, ValueType>::CR() {
 
-  LOG_DEBUG(this, "CR::CR()",
+  log_debug(this, "CR::CR()",
             "default constructor");
 
 }
@@ -28,7 +28,7 @@ CR<OperatorType, VectorType, ValueType>::CR() {
 template <class OperatorType, class VectorType, typename ValueType>
 CR<OperatorType, VectorType, ValueType>::~CR() {
 
-  LOG_DEBUG(this, "CR::~CR()",
+  log_debug(this, "CR::~CR()",
             "destructor");
 
   this->Clear();
@@ -85,8 +85,8 @@ void CR<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void CR<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "CRG::Build()",
-            this->build_ <<
+  log_debug(this, "CRG::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -125,8 +125,8 @@ void CR<OperatorType, VectorType, ValueType>::Build(void) {
   this->v_.CloneBackend(*this->op_);
   this->v_.Allocate("v", this->op_->GetM());
 
-  LOG_DEBUG(this, "CR::Build()",
-            this->build_ <<
+  log_debug(this, "CR::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -134,7 +134,7 @@ void CR<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void CR<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "CR::Clear()",
+  log_debug(this, "CR::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -162,7 +162,7 @@ void CR<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void CR<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "CR::ReBuildNumeric()",
+  log_debug(this, "CR::ReBuildNumeric()",
             this->build_);
 
   if (this->build_ == true) {
@@ -191,7 +191,7 @@ void CR<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void CR<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "CR::MoveToHostLocalData_()",
+  log_debug(this, "CR::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -214,7 +214,7 @@ void CR<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void CR<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "CR::MoveToAcceleratorLocalData_()",
+  log_debug(this, "CR::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -238,8 +238,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType &rhs,
                                                               VectorType *x) {
 
-  LOG_DEBUG(this, "CR::SolveNonPrecond_()",
-            " #*# begin");
+  log_debug(this, "CR::SolveNonPrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -269,7 +271,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType 
 
   if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
-    LOG_DEBUG(this, "CR::SolveNonPrecond_()",
+    log_debug(this, "CR::SolveNonPrecond_()",
               " #*# end");
 
     return;
@@ -329,7 +331,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType 
 
   }
 
-  LOG_DEBUG(this, "CR::SolveNonPrecond_()",
+  log_debug(this, "CR::SolveNonPrecond_()",
             " #*# end");
 
 }
@@ -338,8 +340,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rhs,
                                                             VectorType *x) {
 
-  LOG_DEBUG(this, "CR::SolvePrecond_()",
-            " #*# begin");
+  log_debug(this, "CR::SolvePrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -377,7 +381,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rh
 
   if (this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false) {
 
-    LOG_DEBUG(this, "CR::SolvePrecond_()",
+    log_debug(this, "CR::SolvePrecond_()",
               " #*# end");
 
     return;
@@ -450,7 +454,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rh
 
   }
 
-  LOG_DEBUG(this, "CR::SolvePrecond_()",
+  log_debug(this, "CR::SolvePrecond_()",
             " #*# end");
 
 }

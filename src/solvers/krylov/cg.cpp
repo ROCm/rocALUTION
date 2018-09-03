@@ -20,13 +20,13 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 CG<OperatorType, VectorType, ValueType>::CG()
 {
-    LOG_DEBUG(this, "CG::CG()", "default constructor");
+    log_debug(this, "CG::CG()", "default constructor");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 CG<OperatorType, VectorType, ValueType>::~CG()
 {
-    LOG_DEBUG(this, "CG::~CG()", "destructor");
+    log_debug(this, "CG::~CG()", "destructor");
 
     this->Clear();
 }
@@ -75,7 +75,7 @@ void CG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::Build(void)
 {
-    LOG_DEBUG(this, "CG::Build()", this->build_ << " #*# begin");
+    log_debug(this, "CG::Build()", this->build_, " #*# begin");
 
     if(this->build_ == true)
     {
@@ -109,13 +109,13 @@ void CG<OperatorType, VectorType, ValueType>::Build(void)
     this->q_.CloneBackend(*this->op_);
     this->q_.Allocate("q", this->op_->GetM());
 
-    LOG_DEBUG(this, "CG::Build()", this->build_ << " #*# end");
+    log_debug(this, "CG::Build()", this->build_, " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::BuildMoveToAcceleratorAsync(void)
 {
-    LOG_DEBUG(this, "CG::BuildMoveToAcceleratorAsync()", this->build_ << " #*# begin");
+    log_debug(this, "CG::BuildMoveToAcceleratorAsync()", this->build_, " #*# begin");
 
     if(this->build_ == true)
     {
@@ -153,13 +153,13 @@ void CG<OperatorType, VectorType, ValueType>::BuildMoveToAcceleratorAsync(void)
     this->q_.Allocate("q", this->op_->GetM());
     this->q_.MoveToAcceleratorAsync();
 
-    LOG_DEBUG(this, "CG::BuildMoveToAcceleratorAsync()", this->build_ << " #*# end");
+    log_debug(this, "CG::BuildMoveToAcceleratorAsync()", this->build_, " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::Sync(void)
 {
-    LOG_DEBUG(this, "CG::Sync()", this->build_ << " #*# begin");
+    log_debug(this, "CG::Sync()", this->build_, " #*# begin");
 
     if(this->precond_ != NULL)
     {
@@ -171,12 +171,12 @@ void CG<OperatorType, VectorType, ValueType>::Sync(void)
     this->p_.Sync();
     this->q_.Sync();
 
-    LOG_DEBUG(this, "CG::Sync()", this->build_ << " #*# end");
+    log_debug(this, "CG::Sync()", this->build_, " #*# end");
 }
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::Clear(void)
 {
-    LOG_DEBUG(this, "CG::Clear()", this->build_);
+    log_debug(this, "CG::Clear()", this->build_);
 
     if(this->build_ == true)
     {
@@ -200,7 +200,7 @@ void CG<OperatorType, VectorType, ValueType>::Clear(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 {
-    LOG_DEBUG(this, "CG::ReBuildNumeric()", this->build_);
+    log_debug(this, "CG::ReBuildNumeric()", this->build_);
 
     if(this->build_ == true)
     {
@@ -225,7 +225,7 @@ void CG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 {
-    LOG_DEBUG(this, "CG::MoveToHostLocalData_()", this->build_);
+    log_debug(this, "CG::MoveToHostLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -244,7 +244,7 @@ void CG<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 {
-    LOG_DEBUG(this, "CG::MoveToAcceleratorLocalData_()", this->build_);
+    log_debug(this, "CG::MoveToAcceleratorLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -266,7 +266,10 @@ void CG<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs, VectorType* x)
 {
-    LOG_DEBUG(this, "CG::SolveNonPrecond_()", " #*# begin");
+    log_debug(this, "CG::SolveNonPrecond_()",
+              " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -294,7 +297,7 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
-        LOG_DEBUG(this, "CG::SolveNonPrecond_()", " #*# end");
+        log_debug(this, "CG::SolveNonPrecond_()", " #*# end");
         return;
     }
 
@@ -334,13 +337,16 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
         p->ScaleAdd(beta, *r);
     }
 
-    LOG_DEBUG(this, "CG::SolveNonPrecond_()", " #*# end");
+    log_debug(this, "CG::SolveNonPrecond_()", " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    LOG_DEBUG(this, "CG::SolvePrecond_()", " #*# begin");
+    log_debug(this, "CG::SolvePrecond_()",
+              " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -370,7 +376,7 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     // |b - Ax0|
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
-        LOG_DEBUG(this, "CG::SolvePrecond_()", " #*# end");
+        log_debug(this, "CG::SolvePrecond_()", " #*# end");
         return;
     }
 
@@ -416,7 +422,7 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
         p->ScaleAdd(beta, *z);
     }
 
-    LOG_DEBUG(this, "CG::SolvePrecond_()", " #*# end");
+    log_debug(this, "CG::SolvePrecond_()", " #*# end");
 }
 
 template class CG<LocalMatrix<double>, LocalVector<double>, double>;

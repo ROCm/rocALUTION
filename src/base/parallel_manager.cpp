@@ -253,7 +253,7 @@ bool ParallelManager::Status(void) const {
 
 void ParallelManager::WriteFileASCII(const std::string filename) const {
 
-  LOG_DEBUG(this, "ParallelManager::WriteFileASCII()",
+  log_debug(this, "ParallelManager::WriteFileASCII()",
             filename);
 
   assert(this->Status());
@@ -340,7 +340,7 @@ void ParallelManager::WriteFileASCII(const std::string filename) const {
 
 void ParallelManager::ReadFileASCII(const std::string filename) {
 
-  LOG_DEBUG(this, "ParallelManager::ReadFileASCII()",
+  log_debug(this, "ParallelManager::ReadFileASCII()",
             filename);
 
   assert(this->comm_ != NULL);

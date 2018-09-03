@@ -31,7 +31,7 @@ HostMatrixDENSE<ValueType>::HostMatrixDENSE() {
 template <typename ValueType>
 HostMatrixDENSE<ValueType>::HostMatrixDENSE(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostMatrixDENSE::HostMatrixDENSE()",
+  log_debug(this, "HostMatrixDENSE::HostMatrixDENSE()",
             "constructor with local_backend");
 
   this->mat_.val = NULL;
@@ -42,7 +42,7 @@ HostMatrixDENSE<ValueType>::HostMatrixDENSE(const Rocalution_Backend_Descriptor 
 template <typename ValueType>
 HostMatrixDENSE<ValueType>::~HostMatrixDENSE() {
 
-  LOG_DEBUG(this, "HostMatrixDENSE::~HostMatrixDENSE()",
+  log_debug(this, "HostMatrixDENSE::~HostMatrixDENSE()",
             "destructor");
 
   this->Clear();

@@ -27,7 +27,7 @@ HostStencilLaplace2D<ValueType>::HostStencilLaplace2D() {
 template <typename ValueType>
 HostStencilLaplace2D<ValueType>::HostStencilLaplace2D(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostStencilLaplace2D::HostStencilLaplace2D()",
+  log_debug(this, "HostStencilLaplace2D::HostStencilLaplace2D()",
             "constructor with local_backend");
 
   this->set_backend(local_backend);
@@ -38,7 +38,7 @@ HostStencilLaplace2D<ValueType>::HostStencilLaplace2D(const Rocalution_Backend_D
 template <typename ValueType>
 HostStencilLaplace2D<ValueType>::~HostStencilLaplace2D() {
 
-  LOG_DEBUG(this, "HostStencilLaplace2D::~HostStencilLaplace2D()",
+  log_debug(this, "HostStencilLaplace2D::~HostStencilLaplace2D()",
             "destructor");
 
 }

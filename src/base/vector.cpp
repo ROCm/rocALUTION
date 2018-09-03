@@ -11,7 +11,7 @@ namespace rocalution {
 template <typename ValueType>
 Vector<ValueType>::Vector()
 {
-    LOG_DEBUG(this, "Vector::Vector()", "default constructor");
+    log_debug(this, "Vector::Vector()");
 
     this->object_name_ = "";
 }
@@ -19,7 +19,7 @@ Vector<ValueType>::Vector()
 template <typename ValueType>
 Vector<ValueType>::~Vector()
 {
-    LOG_DEBUG(this, "Vector::~Vector()", "default destructor");
+    log_debug(this, "Vector::~Vector()");
 }
 
 template <typename ValueType>

@@ -24,7 +24,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 IDR<OperatorType, VectorType, ValueType>::IDR()
 {
-    LOG_DEBUG(this, "IDR::IDR()", "default constructor");
+    log_debug(this, "IDR::IDR()", "default constructor");
 
     this->s_     = 4;
     this->kappa_ = ValueType(0.7f);
@@ -41,7 +41,7 @@ IDR<OperatorType, VectorType, ValueType>::IDR()
 template <class OperatorType, class VectorType, typename ValueType>
 IDR<OperatorType, VectorType, ValueType>::~IDR()
 {
-    LOG_DEBUG(this, "IDR::~IDR()", "destructor");
+    log_debug(this, "IDR::~IDR()", "destructor");
 
     this->Clear();
 }
@@ -90,7 +90,7 @@ void IDR<OperatorType, VectorType, ValueType>::PrintEnd_(void) const
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::Build(void)
 {
-    LOG_DEBUG(this, "IDR::Build()", this->build_ << " #*# begin");
+    log_debug(this, "IDR::Build()", this->build_, " #*# begin");
 
     if(this->build_ == true)
     {
@@ -156,13 +156,13 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void)
 
     this->build_ = true;
 
-    LOG_DEBUG(this, "IDR::Build()", this->build_ << " #*# end");
+    log_debug(this, "IDR::Build()", this->build_, " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::Clear(void)
 {
-    LOG_DEBUG(this, "IDR::Clear()", this->build_);
+    log_debug(this, "IDR::Clear()", this->build_);
 
     if(this->build_ == true)
     {
@@ -205,7 +205,7 @@ void IDR<OperatorType, VectorType, ValueType>::Clear(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 {
-    LOG_DEBUG(this, "IDR::ReBuildNumeric()", this->build_);
+    log_debug(this, "IDR::ReBuildNumeric()", this->build_);
 
     if(this->build_ == true)
     {
@@ -236,7 +236,7 @@ void IDR<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(const int s)
 {
-    LOG_DEBUG(this, "IDR:SetShadowSpace()", s);
+    log_debug(this, "IDR:SetShadowSpace()", s);
 
     assert(this->build_ == false);
     assert(s > 0);
@@ -249,7 +249,7 @@ void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(const int s)
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 {
-    LOG_DEBUG(this, "IDR::MoveToHostLocalData_()", this->build_);
+    log_debug(this, "IDR::MoveToHostLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -273,7 +273,7 @@ void IDR<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 {
-    LOG_DEBUG(this, "IDR::MoveToAcceleratorLocalData_()", this->build_);
+    log_debug(this, "IDR::MoveToAcceleratorLocalData_()", this->build_);
 
     if(this->build_ == true)
     {
@@ -298,7 +298,9 @@ template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                 VectorType* x)
 {
-    LOG_DEBUG(this, "IDR::SolveNonPrecond_()", " #*# begin");
+    log_debug(this, "IDR::SolveNonPrecond_()", " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -337,7 +339,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
-        LOG_DEBUG(this, "::SolvePrecond_()", " #*# end");
+        log_debug(this, "::SolvePrecond_()", " #*# end");
         return;
     }
 
@@ -518,13 +520,15 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
         res_norm = this->Norm(*r);
     }
 
-    LOG_DEBUG(this, "IDR::SolveNonPrecond_()", " #*# end");
+    log_debug(this, "IDR::SolveNonPrecond_()", " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    LOG_DEBUG(this, "IDR::SolvePrecond_()", " #*# begin");
+    log_debug(this, "IDR::SolvePrecond_()", " #*# begin",
+              (const void*&)rhs,
+              x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -564,7 +568,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
-        LOG_DEBUG(this, "::SolvePrecond_()", " #*# end");
+        log_debug(this, "::SolvePrecond_()", " #*# end");
         return;
     }
 
@@ -751,7 +755,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
         res_norm = this->Norm(*r);
     }
 
-    LOG_DEBUG(this, "::SolvePrecond_()", " #*# end");
+    log_debug(this, "::SolvePrecond_()", " #*# end");
 }
 
 template class IDR<LocalMatrix<double>, LocalVector<double>, double>;

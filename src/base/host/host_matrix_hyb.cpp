@@ -29,7 +29,7 @@ HostMatrixHYB<ValueType>::HostMatrixHYB() {
 template <typename ValueType>
 HostMatrixHYB<ValueType>::HostMatrixHYB(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostMatrixHYB::HostMatrixHYB()",
+  log_debug(this, "HostMatrixHYB::HostMatrixHYB()",
             "constructor with local_backend");
 
   this->mat_.ELL.val = NULL;
@@ -50,7 +50,7 @@ HostMatrixHYB<ValueType>::HostMatrixHYB(const Rocalution_Backend_Descriptor loca
 template <typename ValueType>
 HostMatrixHYB<ValueType>::~HostMatrixHYB() {
 
-  LOG_DEBUG(this, "HostMatrixHYB::~HostMatrixHYB()",
+  log_debug(this, "HostMatrixHYB::~HostMatrixHYB()",
             "destructor");
 
   this->Clear();

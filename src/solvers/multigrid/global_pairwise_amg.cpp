@@ -21,7 +21,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::GlobalPairwiseAMG() {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::GlobalPairwiseAMG()",
+  log_debug(this, "GlobalPairwiseAMG::GlobalPairwiseAMG()",
             "default constructor");
 
   this->beta_ = ValueType(0.35f);
@@ -50,7 +50,7 @@ GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::GlobalPairwiseAMG() {
 template <class OperatorType, class VectorType, typename ValueType>
 GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::~GlobalPairwiseAMG() {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::GlobalPairwiseAMG()",
+  log_debug(this, "GlobalPairwiseAMG::GlobalPairwiseAMG()",
             "destructor");
 
   this->Clear();
@@ -97,7 +97,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) con
 template <class OperatorType, class VectorType, typename ValueType>
 void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType beta) {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::SetBeta()",
+  log_debug(this, "GlobalPairwiseAMG::SetBeta()",
             beta);
 
   this->beta_ = beta;
@@ -107,7 +107,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const Value
 template <class OperatorType, class VectorType, typename ValueType>
 void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(const double factor) {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::SetCoarseningFactor()",
+  log_debug(this, "GlobalPairwiseAMG::SetCoarseningFactor()",
             factor);
 
   this->coarsening_factor_ = factor;
@@ -117,7 +117,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor
 template <class OperatorType, class VectorType, typename ValueType>
 void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetOrdering(const _aggregation_ordering ordering) {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::SetOrdering()",
+  log_debug(this, "GlobalPairwiseAMG::SetOrdering()",
             ordering);
 
   assert(ordering >= 0 && ordering <= 5);
@@ -176,7 +176,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void
 template <class OperatorType, class VectorType, typename ValueType>
 void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::BuildHierarchy()",
+  log_debug(this, "GlobalPairwiseAMG::BuildHierarchy()",
             " #*# begin");
 
   if (this->hierarchy_ == false) {
@@ -277,7 +277,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void
 
   }
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::BuildHierarchy()",
+  log_debug(this, "GlobalPairwiseAMG::BuildHierarchy()",
             " #*# end");
 
 }
@@ -285,7 +285,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void
 template <class OperatorType, class VectorType, typename ValueType>
 void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::ClearLocal(void) {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::ClearLocal()",
+  log_debug(this, "GlobalPairwiseAMG::ClearLocal()",
             this->build_);
 
   if (this->build_ == true) {
@@ -319,8 +319,13 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const Ope
                                                                  ParallelManager *pm,
                                                                  LocalVector<int> *trans) {
 
-  LOG_DEBUG(this, "GlobalPairwiseAMG::Aggregate()",
-            this->build_);
+  log_debug(this, "GlobalPairwiseAMG::Aggregate()",
+            (const void*&)op,
+            pro,
+            res,
+            coarse,
+            pm,
+            trans);
 
   assert(pro    != NULL);
   assert(res    != NULL);

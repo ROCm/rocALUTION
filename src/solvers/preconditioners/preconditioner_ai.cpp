@@ -16,7 +16,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 AIChebyshev<OperatorType, VectorType, ValueType>::AIChebyshev() {
 
-  LOG_DEBUG(this, "AIChebyshev::AIChebyshev()",
+  log_debug(this, "AIChebyshev::AIChebyshev()",
             "default constructor");
 
   this->p_ = 0;
@@ -28,7 +28,7 @@ AIChebyshev<OperatorType, VectorType, ValueType>::AIChebyshev() {
 template <class OperatorType, class VectorType, typename ValueType>
 AIChebyshev<OperatorType, VectorType, ValueType>::~AIChebyshev() {
 
-  LOG_DEBUG(this, "AIChebyshev::~AIChebyshev()",
+  log_debug(this, "AIChebyshev::~AIChebyshev()",
             "destructor");
 
   this->Clear();
@@ -49,10 +49,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void AIChebyshev<OperatorType, VectorType, ValueType>::Set(const int p, const ValueType lambda_min, const ValueType lambda_max) {
 
-  LOG_DEBUG(this, "AIChebyshev::Set()",
-            "p=" << p <<
-            " lambda_min=" << lambda_min <<
-            " lambda_max=" << lambda_max);
+  log_debug(this, "AIChebyshev::Set()", p, lambda_min, lambda_max);
 
   assert(p > 0);
   assert(lambda_min != ValueType(0.0));
@@ -68,8 +65,8 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Set(const int p, const Va
 template <class OperatorType, class VectorType, typename ValueType>
 void AIChebyshev<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "AIChebyshev::Build()",
-            this->build_ <<
+  log_debug(this, "AIChebyshev::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -146,8 +143,8 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Build(void) {
 
   }
 
-  LOG_DEBUG(this, "AIChebyshev::Build()",
-            this->build_ <<
+  log_debug(this, "AIChebyshev::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -155,7 +152,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void AIChebyshev<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "AIChebyshev::Clear()",
+  log_debug(this, "AIChebyshev::Clear()",
             this->build_);
 
   this->AIChebyshev_.Clear();
@@ -166,7 +163,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void AIChebyshev<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "AIChebyshev::MoveToHostLocalData_()",
+  log_debug(this, "AIChebyshev::MoveToHostLocalData_()",
             this->build_);  
 
 
@@ -177,7 +174,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void
 template <class OperatorType, class VectorType, typename ValueType>
 void AIChebyshev<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "AIChebyshev::MoveToAcceleratorLocalData_()",
+  log_debug(this, "AIChebyshev::MoveToAcceleratorLocalData_()",
             this->build_);
 
 
@@ -190,7 +187,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Solve(const VectorType &r
                                                     VectorType *x) {
 
 
-  LOG_DEBUG(this, "AIChebyshev::Solve()",
+  log_debug(this, "AIChebyshev::Solve()",
             " #*# begin");
 
   assert(this->build_ == true);
@@ -200,7 +197,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Solve(const VectorType &r
 
   this->AIChebyshev_.Apply(rhs, x);
 
-  LOG_DEBUG(this, "AIChebyshev::Solve()",
+  log_debug(this, "AIChebyshev::Solve()",
             " #*# end");
 
 }
@@ -210,7 +207,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Solve(const VectorType &r
 template <class OperatorType, class VectorType, typename ValueType>
 FSAI<OperatorType, VectorType, ValueType>::FSAI() {
 
-  LOG_DEBUG(this, "FSAI::FSAI()",
+  log_debug(this, "FSAI::FSAI()",
             "default constructor");
 
 
@@ -226,7 +223,7 @@ FSAI<OperatorType, VectorType, ValueType>::FSAI() {
 template <class OperatorType, class VectorType, typename ValueType>
 FSAI<OperatorType, VectorType, ValueType>::~FSAI() {
   
-  LOG_DEBUG(this, "FSAI::~FSAI()",
+  log_debug(this, "FSAI::~FSAI()",
             "destructor");
 
   this->Clear();
@@ -250,7 +247,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::Set(const int power) {
 
-  LOG_DEBUG(this, "FSAI::Set()",
+  log_debug(this, "FSAI::Set()",
             power);
 
 
@@ -264,7 +261,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Set(const int power) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::Set(const OperatorType &pattern) {
 
-  LOG_DEBUG(this, "FSAI::Set()",
+  log_debug(this, "FSAI::Set()",
             "");
 
   assert(this->build_ == false);
@@ -276,8 +273,8 @@ void FSAI<OperatorType, VectorType, ValueType>::Set(const OperatorType &pattern)
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "FSAI::Build()",
-            this->build_ <<
+  log_debug(this, "FSAI::Build()",
+            this->build_,
             " #*# begin");
 
 
@@ -308,7 +305,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "FSAI::Clear()",
+  log_debug(this, "FSAI::Clear()",
             this->build_);
 
 
@@ -326,8 +323,8 @@ void FSAI<OperatorType, VectorType, ValueType>::Clear(void) {
 
   }
 
-  LOG_DEBUG(this, "FSAI::Build()",
-            this->build_ <<
+  log_debug(this, "FSAI::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -335,7 +332,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
 
-  LOG_DEBUG(this, "FSAI::SetPrecondMatrixFormat()",
+  log_debug(this, "FSAI::SetPrecondMatrixFormat()",
             mat_format);
 
 
@@ -347,7 +344,7 @@ void FSAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const uns
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "FSAI::MoveToHostLocalData_()",
+  log_debug(this, "FSAI::MoveToHostLocalData_()",
             this->build_);  
 
 
@@ -361,7 +358,7 @@ void FSAI<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "FSAI::MoveToAcceleratorLocalData_()",
+  log_debug(this, "FSAI::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->FSAI_L_.MoveToAccelerator();
@@ -375,7 +372,7 @@ void FSAI<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void
 template <class OperatorType, class VectorType, typename ValueType>
 void FSAI<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "FSAI::Solve()",
+  log_debug(this, "FSAI::Solve()",
             " #*# begin");
 
   assert(this->build_ == true);
@@ -385,7 +382,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vec
   this->FSAI_L_.Apply(rhs, &this->t_);
   this->FSAI_LT_.Apply(this->t_, x);
 
-  LOG_DEBUG(this, "FSAI::Solve()",
+  log_debug(this, "FSAI::Solve()",
             " #*# end");
 
 }
@@ -395,7 +392,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vec
 template <class OperatorType, class VectorType, typename ValueType>
 SPAI<OperatorType, VectorType, ValueType>::SPAI() {
 
-  LOG_DEBUG(this, "SPAI::SPAI()",
+  log_debug(this, "SPAI::SPAI()",
             "default constructor");
 
   this->op_mat_format_ = false;
@@ -406,7 +403,7 @@ SPAI<OperatorType, VectorType, ValueType>::SPAI() {
 template <class OperatorType, class VectorType, typename ValueType>
 SPAI<OperatorType, VectorType, ValueType>::~SPAI() {
 
-  LOG_DEBUG(this, "SPAI::~SPAI()",
+  log_debug(this, "SPAI::~SPAI()",
             "destructor");
 
 
@@ -428,8 +425,8 @@ void SPAI<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void SPAI<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "SPAI::Build()",
-            this->build_ <<
+  log_debug(this, "SPAI::Build()",
+            this->build_,
             " #*# begin");
 
 
@@ -447,8 +444,8 @@ void SPAI<OperatorType, VectorType, ValueType>::Build(void) {
   if (this->op_mat_format_ == true)
     this->SPAI_.ConvertTo(this->precond_mat_format_);
 
-  LOG_DEBUG(this, "SPAI::Build()",
-            this->build_ <<
+  log_debug(this, "SPAI::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -456,7 +453,7 @@ void SPAI<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void SPAI<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "SPAI::Clear()",
+  log_debug(this, "SPAI::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -475,7 +472,7 @@ void SPAI<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void SPAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
 
-  LOG_DEBUG(this, "SPAI::SetPrecondMatrixFormat()",
+  log_debug(this, "SPAI::SetPrecondMatrixFormat()",
             mat_format);
 
   this->op_mat_format_ = true;
@@ -486,7 +483,7 @@ void SPAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const uns
 template <class OperatorType, class VectorType, typename ValueType>
 void SPAI<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "SPAI::MoveToHostLocalData_()",
+  log_debug(this, "SPAI::MoveToHostLocalData_()",
             this->build_);  
 
   this->SPAI_.MoveToHost();
@@ -496,7 +493,7 @@ void SPAI<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void SPAI<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "SPAI::MoveToAcceleratorLocalData_()",
+  log_debug(this, "SPAI::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->SPAI_.MoveToAccelerator();
@@ -507,7 +504,7 @@ void SPAI<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void
 template <class OperatorType, class VectorType, typename ValueType>
 void SPAI<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "SPAI::Solve()",
+  log_debug(this, "SPAI::Solve()",
             " #*# begin");
 
   assert(this->build_ == true);
@@ -516,7 +513,7 @@ void SPAI<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vec
 
   this->SPAI_.Apply(rhs, x);
 
-  LOG_DEBUG(this, "SPAI::Solve()",
+  log_debug(this, "SPAI::Solve()",
             " #*# end");
 
 }
@@ -526,7 +523,7 @@ void SPAI<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vec
 template <class OperatorType, class VectorType, typename ValueType>
 TNS<OperatorType, VectorType, ValueType>::TNS() {
 
-  LOG_DEBUG(this, "TNS::TNS()",
+  log_debug(this, "TNS::TNS()",
             "default constructor");
 
   this->op_mat_format_ = false;
@@ -539,7 +536,7 @@ TNS<OperatorType, VectorType, ValueType>::TNS() {
 template <class OperatorType, class VectorType, typename ValueType>
 TNS<OperatorType, VectorType, ValueType>::~TNS() {
 
-  LOG_DEBUG(this, "TNS::~TNS()",
+  log_debug(this, "TNS::~TNS()",
             "destructor");
 
 
@@ -575,8 +572,8 @@ void TNS<OperatorType, VectorType, ValueType>::Set(const bool imp) {
 template <class OperatorType, class VectorType, typename ValueType>
 void TNS<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "TNS::Build()",
-            this->build_ <<
+  log_debug(this, "TNS::Build()",
+            this->build_,
             " #*# begin");
 
 
@@ -660,8 +657,8 @@ void TNS<OperatorType, VectorType, ValueType>::Build(void) {
     this->LT_.ConvertTo(this->precond_mat_format_);
   }
 
-  LOG_DEBUG(this, "TNS::Build()",
-            this->build_ <<
+  log_debug(this, "TNS::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -669,7 +666,7 @@ void TNS<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void TNS<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "TNS::Clear()",
+  log_debug(this, "TNS::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -695,7 +692,7 @@ void TNS<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void TNS<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
 
-  LOG_DEBUG(this, "TNS::SetPrecondMatrixFormat()",
+  log_debug(this, "TNS::SetPrecondMatrixFormat()",
             mat_format);
 
   this->op_mat_format_ = true;
@@ -706,7 +703,7 @@ void TNS<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsi
 template <class OperatorType, class VectorType, typename ValueType>
 void TNS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "TNS::MoveToHostLocalData_()",
+  log_debug(this, "TNS::MoveToHostLocalData_()",
             this->build_);  
 
   this->TNS_.MoveToHost();
@@ -721,7 +718,7 @@ void TNS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void TNS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "TNS::MoveToAcceleratorLocalData_()",
+  log_debug(this, "TNS::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->TNS_.MoveToHost();
@@ -737,7 +734,7 @@ void TNS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void TNS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "TNS::Solve()",
+  log_debug(this, "TNS::Solve()",
             " #*# begin");
 
   assert(this->build_ == true);
@@ -773,7 +770,7 @@ void TNS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs, Vect
 
   //  LOG_INFO(x->Norm());
 
-  LOG_DEBUG(this, "TNS::Solve()",
+  log_debug(this, "TNS::Solve()",
             " #*# end");
 
 }

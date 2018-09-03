@@ -11,8 +11,7 @@ namespace rocalution {
 template <typename ValueType>
 BaseMatrix<ValueType>::BaseMatrix() {
 
-  LOG_DEBUG(this, "BaseMatrix::BaseMatrix()",
-            "default constructor");
+  log_debug(this, "BaseMatrix::BaseMatrix()");
 
   this->nrow_ = 0;
   this->ncol_ = 0;
@@ -23,9 +22,7 @@ BaseMatrix<ValueType>::BaseMatrix() {
 template <typename ValueType>
 BaseMatrix<ValueType>::~BaseMatrix() {
 
-  LOG_DEBUG(this, "BaseMatrix::~BaseMatrix()",
-            "default destructor");
-
+  log_debug(this, "BaseMatrix::~BaseMatrix()");
 }
 
 template <typename ValueType>

@@ -14,16 +14,14 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 LU<OperatorType, VectorType, ValueType>::LU() {
 
-  LOG_DEBUG(this, "LU::LU()",
-            "default constructor");
+  log_debug(this, "LU::LU()");
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 LU<OperatorType, VectorType, ValueType>::~LU() {
 
-  LOG_DEBUG(this, "LU::~LU()",
-            "destructor");
+  log_debug(this, "LU::~LU()");
 
   this->Clear();
 
@@ -54,8 +52,8 @@ void LU<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void LU<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "LU::Build()",
-            this->build_ <<
+  log_debug(this, "LU::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -71,8 +69,8 @@ void LU<OperatorType, VectorType, ValueType>::Build(void) {
   this->lu_.CloneFrom(*this->op_);
   this->lu_.LUFactorize();
 
-  LOG_DEBUG(this, "LU::Build()",
-            this->build_ <<
+  log_debug(this, "LU::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -80,7 +78,7 @@ void LU<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void LU<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "LU::Clear()",
+  log_debug(this, "LU::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -95,7 +93,7 @@ void LU<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void LU<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "LU::MoveToHostLocalData_()",
+  log_debug(this, "LU::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true)
@@ -106,7 +104,7 @@ void LU<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void LU<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "LU::MoveToAcceleratorLocalData_()",
+  log_debug(this, "LU::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true)
@@ -117,8 +115,10 @@ void LU<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void LU<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "LU::Solve_()",
-            " #*# begin");
+  log_debug(this, "LU::Solve_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -126,7 +126,7 @@ void LU<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, Vect
 
   this->lu_.LUSolve(rhs, x);
 
-  LOG_DEBUG(this, "LU::Solve_()",
+  log_debug(this, "LU::Solve_()",
             " #*# end");
 
 }

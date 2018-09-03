@@ -19,8 +19,7 @@ template <class OperatorTypeH, class VectorTypeH, typename ValueTypeH,
 MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH, 
                  OperatorTypeL, VectorTypeL, ValueTypeL>::MixedPrecisionDC() {
 
-  LOG_DEBUG(this, "MixedPrecisionDC::MixedPrecisionDC()",
-            "default constructor");
+  log_debug(this, "MixedPrecisionDC::MixedPrecisionDC()");
 
   this->op_l_ = NULL;
   this->Solver_L_ = NULL;
@@ -32,8 +31,7 @@ template <class OperatorTypeH, class VectorTypeH, typename ValueTypeH,
 MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH, 
                  OperatorTypeL, VectorTypeL, ValueTypeL>::~MixedPrecisionDC() {
 
-  LOG_DEBUG(this, "MixedPrecisionDC::~MixedPrecisionDC()",
-            "destructor");
+  log_debug(this, "MixedPrecisionDC::~MixedPrecisionDC()");
 
   this->Clear();
 
@@ -45,8 +43,7 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
                       OperatorTypeL, VectorTypeL, ValueTypeL>::Set(Solver<OperatorTypeL, VectorTypeL, 
                                                                     ValueTypeL> &Solver_L) {
 
-  LOG_DEBUG(this, "MixedPrecisionDC::Set()",
-            "");
+  log_debug(this, "MixedPrecisionDC::Set()", (const void*&)Solver_L);
 
   this->Solver_L_ = &Solver_L;
   
@@ -99,8 +96,7 @@ template <class OperatorTypeH, class VectorTypeH, typename ValueTypeH,
 void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH, 
                       OperatorTypeL, VectorTypeL, ValueTypeL>::Build(void) {
 
-  LOG_DEBUG(this, "MixedPrecisionDC::Build()",
-            this->build_ <<
+  log_debug(this, "MixedPrecisionDC::Build()",
             " #*# begin");
 
   if (this->build_ == true)
@@ -162,8 +158,7 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
   this->op_l_->MoveToAccelerator();
   this->Solver_L_->MoveToAccelerator();
 
-  LOG_DEBUG(this, "MixedPrecisionDC::Build()",
-            this->build_ <<
+  log_debug(this, "MixedPrecisionDC::Build()",
             " #*# end");
 
 }
@@ -173,8 +168,7 @@ template <class OperatorTypeH, class VectorTypeH, typename ValueTypeH,
 void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH, 
                       OperatorTypeL, VectorTypeL, ValueTypeL>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "MixedPrecisionDC::ReBuildNumeric()",
-            this->build_);
+  log_debug(this, "MixedPrecisionDC::ReBuildNumeric()");
 
   if (this->build_ == true) {
 
@@ -203,8 +197,7 @@ template <class OperatorTypeH, class VectorTypeH, typename ValueTypeH,
 void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH, 
                       OperatorTypeL, VectorTypeL, ValueTypeL>::Clear(void) {
 
-  LOG_DEBUG(this, "MixedPrecisionDC::Clear()",
-            this->build_);
+  log_debug(this, "MixedPrecisionDC::Clear()");
 
   if (this->build_ == true) {
 
@@ -265,8 +258,10 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
                       OperatorTypeL, VectorTypeL, ValueTypeL>::SolveNonPrecond_(const VectorTypeH &rhs,
                                                                                 VectorTypeH *x) {
 
-  LOG_DEBUG(this, "MixedPrecisionDC::SolveNonPrecond_()",
-            " #*# begin");
+  log_debug(this, "MixedPrecisionDC::SolveNonPrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -285,7 +280,7 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
 
   if (this->iter_ctrl_.InitResidual(res) == false) {
 
-    LOG_DEBUG(this, "MixedPrecisionDC::SolveNonPrecond_()",
+    log_debug(this, "MixedPrecisionDC::SolveNonPrecond_()",
               " #*# end");
     return;
   }
@@ -332,7 +327,7 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
 
   }
 
-  LOG_DEBUG(this, "MixedPrecisionDC::SolveNonPrecond_()",
+  log_debug(this, "MixedPrecisionDC::SolveNonPrecond_()",
             " #*# end");
 
 }

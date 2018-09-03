@@ -19,7 +19,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 BlockJacobi<OperatorType, VectorType, ValueType>::BlockJacobi() {
 
-  LOG_DEBUG(this, "BlockJacobi::BlockJacobi()",
+  log_debug(this, "BlockJacobi::BlockJacobi()",
             "default constructor");
 
   this->local_precond_ = NULL;
@@ -29,7 +29,7 @@ BlockJacobi<OperatorType, VectorType, ValueType>::BlockJacobi() {
 template <class OperatorType, class VectorType, typename ValueType>
 BlockJacobi<OperatorType, VectorType, ValueType>::~BlockJacobi() {
 
-  LOG_DEBUG(this, "BlockJacobi::~BlockJacobi()",
+  log_debug(this, "BlockJacobi::~BlockJacobi()",
             "destructor");
 
   this->Clear();
@@ -48,8 +48,9 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::Init(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType> &precond) {
 
-  LOG_DEBUG(this, "BlockJacobi::Init()",
-            this->build_);
+  log_debug(this, "BlockJacobi::Init()",
+            this->build_,
+            (const void*&)precond);
 
   assert(this->local_precond_ == NULL);
   assert(this->build_ == false);
@@ -61,8 +62,8 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::Init(Solver<LocalMatrix<V
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "BlockJacobi::Build()",
-            this->build_ <<
+  log_debug(this, "BlockJacobi::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -77,8 +78,8 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::Build(void) {
   this->local_precond_->SetOperator(this->op_->GetInterior());
   this->local_precond_->Build();
 
-  LOG_DEBUG(this, "BlockJacobi::Build()",
-            this->build_ <<
+  log_debug(this, "BlockJacobi::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -86,7 +87,7 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "BlockJacobi::ReBuildNumeric()",
+  log_debug(this, "BlockJacobi::ReBuildNumeric()",
             this->build_);
 
   if (this->build_ == true) {
@@ -105,7 +106,7 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "BlockJacobi::Clear()",
+  log_debug(this, "BlockJacobi::Clear()",
             this->build_);
 
   if (this->local_precond_ != NULL)
@@ -114,23 +115,20 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::Clear(void) {
   this->local_precond_ = NULL;
 
   this->build_ = false;
-
-  LOG_DEBUG(this, "BlockJacobi::Build()",
-            this->build_ <<
-            " #*# end");
-
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                                    VectorType *x) {
 
-  LOG_DEBUG(this, "BlockJacobi::Solve()",
-            " #*# begin");
+  log_debug(this, "BlockJacobi::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   this->local_precond_->Solve(rhs.GetInterior(), &x->GetInterior());
 
-  LOG_DEBUG(this, "BlockJacobi::Solve()",
+  log_debug(this, "BlockJacobi::Solve()",
             " #*# end");
 
 }
@@ -139,12 +137,14 @@ template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::SolveZeroSol(const VectorType &rhs,
                                                                     VectorType *x) {
 
-  LOG_DEBUG(this, "BlockJacobi::SolveZeroSol()",
-            " #*# begin");
+  log_debug(this, "BlockJacobi::SolveZeroSol()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   this->local_precond_->SolveZeroSol(rhs.GetInterior(), &x->GetInterior());
 
-  LOG_DEBUG(this, "BlockJacobi::SolveZeroSol()",
+  log_debug(this, "BlockJacobi::SolveZeroSol()",
             " #*# end");
 
 }
@@ -152,7 +152,7 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::SolveZeroSol(const Vector
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "BlockJacobi::MoveToHostLocalData_()",
+  log_debug(this, "BlockJacobi::MoveToHostLocalData_()",
             this->build_);
 
   this->local_precond_->MoveToHost();
@@ -162,7 +162,7 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockJacobi<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "BlockJacobi::MoveToAcceleratorLocalData_()",
+  log_debug(this, "BlockJacobi::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->local_precond_->MoveToAccelerator();

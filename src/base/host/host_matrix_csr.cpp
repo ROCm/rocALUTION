@@ -47,7 +47,7 @@ HostMatrixCSR<ValueType>::HostMatrixCSR() {
 template <typename ValueType>
 HostMatrixCSR<ValueType>::HostMatrixCSR(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostMatrixCSR::HostMatrixCSR()",
+  log_debug(this, "HostMatrixCSR::HostMatrixCSR()",
             "constructor with local_backend");
 
   this->mat_.row_offset = NULL;  
@@ -63,7 +63,7 @@ HostMatrixCSR<ValueType>::HostMatrixCSR(const Rocalution_Backend_Descriptor loca
 template <typename ValueType>
 HostMatrixCSR<ValueType>::~HostMatrixCSR() {
 
-  LOG_DEBUG(this, "HostMatrixCSR::~HostMatrixCSR()",
+  log_debug(this, "HostMatrixCSR::~HostMatrixCSR()",
             "destructor");
 
   this->Clear();

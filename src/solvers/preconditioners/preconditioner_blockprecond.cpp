@@ -17,7 +17,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 BlockPreconditioner<OperatorType, VectorType, ValueType>::BlockPreconditioner() {
 
-  LOG_DEBUG(this, "BlockPreconditioner::BlockPreconditioner()",
+  log_debug(this, "BlockPreconditioner::BlockPreconditioner()",
             "default constructor");
 
   this->num_blocks_ = 0 ;
@@ -34,7 +34,7 @@ BlockPreconditioner<OperatorType, VectorType, ValueType>::BlockPreconditioner() 
 template <class OperatorType, class VectorType, typename ValueType>
 BlockPreconditioner<OperatorType, VectorType, ValueType>::~BlockPreconditioner() {
 
-  LOG_DEBUG(this, "BlockPreconditioner::~BlockPreconditioner()",
+  log_debug(this, "BlockPreconditioner::~BlockPreconditioner()",
             "destructor");
 
   this->Clear();
@@ -44,7 +44,7 @@ BlockPreconditioner<OperatorType, VectorType, ValueType>::~BlockPreconditioner()
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::Clear()",
+  log_debug(this, "BlockPreconditioner::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -114,8 +114,10 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Set(const int n,
                                                                    const int *size,
                                                                    Solver<OperatorType, VectorType, ValueType> **D_Solver) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::Set()",
-            n);
+  log_debug(this, "BlockPreconditioner::Set()",
+            n,
+            size,
+            D_Solver);
 
   assert(this->build_ == false);
 
@@ -137,8 +139,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Set(const int n,
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetDiagonalSolver(void) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::SetDiagonalSolver()",
-            "");
+  log_debug(this, "BlockPreconditioner::SetDiagonalSolver()");
 
   this->diag_solve_ = true;
 
@@ -147,8 +148,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetDiagonalSolver
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetLSolver(void) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::SetLSolver()",
-            "");
+  log_debug(this, "BlockPreconditioner::SetLSolver()");
 
   this->diag_solve_ = false;
 
@@ -157,8 +157,8 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetLSolver(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetExternalLastMatrix(const OperatorType &mat) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::SetExternalLastMatrix()",
-            "");
+  log_debug(this, "BlockPreconditioner::SetExternalLastMatrix()",
+            (const void*&)mat);
 
 
   assert(this->build_ == false);
@@ -173,8 +173,8 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetExternalLastMa
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetPermutation(const LocalVector<int> &perm) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::SetPermutation()",
-            "");
+  log_debug(this, "BlockPreconditioner::SetPermutation()",
+            (const void*&)perm);
 
   assert(perm.GetSize() > 0);
 
@@ -186,8 +186,8 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::SetPermutation(co
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::Build()",
-            this->build_ <<
+  log_debug(this, "BlockPreconditioner::Build()",
+            this->build_,
             " #*# begin");
 
   assert(this->build_ == false);
@@ -312,10 +312,9 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
 
   }
 
-  LOG_DEBUG(this, "BlockPreconditioner::Build()",
-            this->build_ <<
+  log_debug(this, "BlockPreconditioner::Build()",
+            this->build_,
             " #*# end");
-
 }
 
 
@@ -323,8 +322,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                                   VectorType *x) {
 
-  LOG_DEBUG(this, ":BlockPreconditioner:Solve()",
-            " #*# begin");
+  log_debug(this, ":BlockPreconditioner:Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
   
   assert(this->build_ == true);
 
@@ -438,7 +439,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Solve(const Vecto
   }
   
 
-  LOG_DEBUG(this, "BlockPreconditioner::Solve()",
+  log_debug(this, "BlockPreconditioner::Solve()",
             " #*# end");
 
 }
@@ -446,7 +447,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Solve(const Vecto
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::MoveToHostLocalData_()",
+  log_debug(this, "BlockPreconditioner::MoveToHostLocalData_()",
             this->build_);  
 
   if (this->build_ == true) {
@@ -471,7 +472,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::MoveToHostLocalDa
 template <class OperatorType, class VectorType, typename ValueType>
 void BlockPreconditioner<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "BlockPreconditioner::MoveToAcceleratorLocalData_()",
+  log_debug(this, "BlockPreconditioner::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true) {

@@ -20,7 +20,7 @@ namespace rocalution {
 template <typename ValueType>
 GlobalVector<ValueType>::GlobalVector()
 {
-    LOG_DEBUG(this, "GlobalVector::GlobalVector()", "default constructor");
+    log_debug(this, "GlobalVector::GlobalVector()");
 
 #ifndef SUPPORT_MULTINODE
     LOG_INFO("Multinode support disabled");
@@ -41,7 +41,7 @@ GlobalVector<ValueType>::GlobalVector()
 template <typename ValueType>
 GlobalVector<ValueType>::GlobalVector(const ParallelManager& pm)
 {
-    LOG_DEBUG(this, "GlobalVector::GlobalVector()", &pm);
+    log_debug(this, "GlobalVector::GlobalVector()", (const void*&)pm);
 
     assert(pm.Status() == true);
 
@@ -61,7 +61,7 @@ GlobalVector<ValueType>::GlobalVector(const ParallelManager& pm)
 template <typename ValueType>
 GlobalVector<ValueType>::~GlobalVector()
 {
-    LOG_DEBUG(this, "GlobalVector::~GlobalVector()", "default destructor");
+    log_debug(this, "GlobalVector::~GlobalVector()");
 
     this->Clear();
 
@@ -83,7 +83,7 @@ GlobalVector<ValueType>::~GlobalVector()
 template <typename ValueType>
 void GlobalVector<ValueType>::Clear(void)
 {
-    LOG_DEBUG(this, "GlobalVector::Clear()", "");
+    log_debug(this, "GlobalVector::Clear()");
 
     this->vector_interior_.Clear();
     this->vector_ghost_.Clear();
@@ -102,7 +102,7 @@ void GlobalVector<ValueType>::Clear(void)
 template <typename ValueType>
 void GlobalVector<ValueType>::SetParallelManager(const ParallelManager& pm)
 {
-    LOG_DEBUG(this, "GlobalVector::SetParallelManager()", &pm);
+    log_debug(this, "GlobalVector::SetParallelManager()", (const void*&)pm);
 
     assert(pm.Status() == true);
 
@@ -130,7 +130,7 @@ int GlobalVector<ValueType>::GetGhostSize(void) const
 template <typename ValueType>
 const LocalVector<ValueType>& GlobalVector<ValueType>::GetInterior() const
 {
-    LOG_DEBUG(this, "GlobalVector::GetInterior() const", "");
+    log_debug(this, "GlobalVector::GetInterior() const");
 
     return this->vector_interior_;
 }
@@ -138,7 +138,7 @@ const LocalVector<ValueType>& GlobalVector<ValueType>::GetInterior() const
 template <typename ValueType>
 LocalVector<ValueType>& GlobalVector<ValueType>::GetInterior()
 {
-    LOG_DEBUG(this, "GlobalVector::GetInterior()", "");
+    log_debug(this, "GlobalVector::GetInterior()");
 
     return this->vector_interior_;
 }
@@ -146,7 +146,7 @@ LocalVector<ValueType>& GlobalVector<ValueType>::GetInterior()
 template <typename ValueType>
 const LocalVector<ValueType>& GlobalVector<ValueType>::GetGhost() const
 {
-    LOG_DEBUG(this, "GlobalVector::GetGhost()", "");
+    log_debug(this, "GlobalVector::GetGhost()");
 
     return this->vector_ghost_;
 }
@@ -154,7 +154,7 @@ const LocalVector<ValueType>& GlobalVector<ValueType>::GetGhost() const
 template <typename ValueType>
 void GlobalVector<ValueType>::Allocate(std::string name, const IndexType2 size)
 {
-    LOG_DEBUG(this, "GlobalVector::Allocate()", name);
+    log_debug(this, "GlobalVector::Allocate()", name, size);
 
     assert(this->pm_ != NULL);
     assert(this->pm_->global_size_ == size);
@@ -189,7 +189,7 @@ void GlobalVector<ValueType>::Allocate(std::string name, const IndexType2 size)
 template <typename ValueType>
 void GlobalVector<ValueType>::Zeros(void)
 {
-    LOG_DEBUG(this, "GlobalVector::Zeros()", "");
+    log_debug(this, "GlobalVector::Zeros()");
 
     this->vector_interior_.Zeros();
 }
@@ -197,7 +197,7 @@ void GlobalVector<ValueType>::Zeros(void)
 template <typename ValueType>
 void GlobalVector<ValueType>::Ones(void)
 {
-    LOG_DEBUG(this, "GlobalVector::Ones()", "");
+    log_debug(this, "GlobalVector::Ones()");
 
     this->vector_interior_.Ones();
 }
@@ -205,7 +205,7 @@ void GlobalVector<ValueType>::Ones(void)
 template <typename ValueType>
 void GlobalVector<ValueType>::SetValues(const ValueType val)
 {
-    LOG_DEBUG(this, "GlobalVector::SetValues()", val);
+    log_debug(this, "GlobalVector::SetValues()", val);
 
     this->vector_interior_.SetValues(val);
 }
@@ -213,7 +213,7 @@ void GlobalVector<ValueType>::SetValues(const ValueType val)
 template <typename ValueType>
 void GlobalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, const IndexType2 size)
 {
-    LOG_DEBUG(this, "GlobalVector::SetDataPtr()", name);
+    log_debug(this, "GlobalVector::SetDataPtr()", ptr, name, size);
 
     assert(ptr != NULL);
     assert(*ptr != NULL);
@@ -252,7 +252,7 @@ void GlobalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, cons
 template <typename ValueType>
 void GlobalVector<ValueType>::LeaveDataPtr(ValueType** ptr)
 {
-    LOG_DEBUG(this, "GlobalVector::LeaveDataPtr()", "");
+    log_debug(this, "GlobalVector::LeaveDataPtr()", ptr);
 
     assert(*ptr == NULL);
     assert(this->vector_interior_.GetSize() > 0);
@@ -268,7 +268,7 @@ void GlobalVector<ValueType>::LeaveDataPtr(ValueType** ptr)
 template <typename ValueType>
 void GlobalVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType a, ValueType b)
 {
-    LOG_DEBUG(this, "GlobalVector::SetRandomUniform()", "");
+    log_debug(this, "GlobalVector::SetRandomUniform()", seed, a, b);
 
     this->vector_interior_.SetRandomUniform(seed, a, b);
 }
@@ -278,7 +278,7 @@ void GlobalVector<ValueType>::SetRandomNormal(unsigned long long seed,
                                               ValueType mean,
                                               ValueType var)
 {
-    LOG_DEBUG(this, "GlobalVector::SetRandomNormal()", "");
+    log_debug(this, "GlobalVector::SetRandomNormal()", seed, mean, var);
 
     this->vector_interior_.SetRandomUniform(seed, mean, var);
 }
@@ -286,7 +286,7 @@ void GlobalVector<ValueType>::SetRandomNormal(unsigned long long seed,
 template <typename ValueType>
 void GlobalVector<ValueType>::CopyFrom(const GlobalVector<ValueType>& src)
 {
-    LOG_DEBUG(this, "GlobalVector::CopyFrom()", "");
+    log_debug(this, "GlobalVector::CopyFrom()", (const void*&)src);
 
     assert(this != &src);
     assert(this->pm_ == src.pm_);
@@ -299,7 +299,7 @@ void GlobalVector<ValueType>::CopyFrom(const GlobalVector<ValueType>& src)
 template <typename ValueType>
 void GlobalVector<ValueType>::CloneFrom(const GlobalVector<ValueType>& src)
 {
-    LOG_DEBUG(this, "GlobalVector::CloneFrom()", "");
+    log_debug(this, "GlobalVector::CloneFrom()", (const void*&)src);
 
     FATAL_ERROR(__FILE__, __LINE__);
 }
@@ -307,7 +307,7 @@ void GlobalVector<ValueType>::CloneFrom(const GlobalVector<ValueType>& src)
 template <typename ValueType>
 void GlobalVector<ValueType>::MoveToAccelerator(void)
 {
-    LOG_DEBUG(this, "GlobalVector::MoveToAccelerator()", "");
+    log_debug(this, "GlobalVector::MoveToAccelerator()");
 
     this->vector_interior_.MoveToAccelerator();
     this->vector_ghost_.MoveToAccelerator();
@@ -316,7 +316,7 @@ void GlobalVector<ValueType>::MoveToAccelerator(void)
 template <typename ValueType>
 void GlobalVector<ValueType>::MoveToHost(void)
 {
-    LOG_DEBUG(this, "GlobalVector::MoveToHost()", "");
+    log_debug(this, "GlobalVector::MoveToHost()");
 
     this->vector_interior_.MoveToHost();
     this->vector_ghost_.MoveToHost();
@@ -325,6 +325,8 @@ void GlobalVector<ValueType>::MoveToHost(void)
 template <typename ValueType>
 ValueType& GlobalVector<ValueType>::operator[](const int i)
 {
+    log_debug(this, "GlobalVector::operator[]()", i);
+
     assert((i >= 0) && (i < this->pm_->local_size_));
 
     return this->vector_interior_[i];
@@ -333,6 +335,8 @@ ValueType& GlobalVector<ValueType>::operator[](const int i)
 template <typename ValueType>
 const ValueType& GlobalVector<ValueType>::operator[](const int i) const
 {
+    log_debug(this, "GlobalVector::operator[]() const", i);
+
     assert((i >= 0) && (i < this->pm_->local_size_));
 
     return this->vector_interior_[i];
@@ -379,6 +383,8 @@ void GlobalVector<ValueType>::Info(void) const
 template <typename ValueType>
 bool GlobalVector<ValueType>::Check(void) const
 {
+    log_debug(this, "GlobalVector::Check()");
+
     bool interior_check = this->vector_interior_.Check();
     bool ghost_check    = this->vector_ghost_.Check();
 
@@ -391,7 +397,7 @@ bool GlobalVector<ValueType>::Check(void) const
 template <typename ValueType>
 void GlobalVector<ValueType>::ReadFileASCII(const std::string filename)
 {
-    LOG_DEBUG(this, "GlobalVector::ReadFileASCII()", filename);
+    log_debug(this, "GlobalVector::ReadFileASCII()", filename);
 
     assert(this->pm_->Status() == true);
 
@@ -447,7 +453,7 @@ void GlobalVector<ValueType>::ReadFileASCII(const std::string filename)
 template <typename ValueType>
 void GlobalVector<ValueType>::WriteFileASCII(const std::string filename) const
 {
-    LOG_DEBUG(this, "GlobalVector::WriteFileASCII()", filename);
+    log_debug(this, "GlobalVector::WriteFileASCII()", filename);
 
     // Master rank writes the global headfile
     if(this->pm_->rank_ == 0)
@@ -483,7 +489,7 @@ void GlobalVector<ValueType>::WriteFileASCII(const std::string filename) const
 template <typename ValueType>
 void GlobalVector<ValueType>::ReadFileBinary(const std::string filename)
 {
-    LOG_DEBUG(this, "GlobalVector::ReadFileBinary()", filename);
+    log_debug(this, "GlobalVector::ReadFileBinary()", filename);
 
     assert(this->pm_->Status() == true);
 
@@ -539,7 +545,7 @@ void GlobalVector<ValueType>::ReadFileBinary(const std::string filename)
 template <typename ValueType>
 void GlobalVector<ValueType>::WriteFileBinary(const std::string filename) const
 {
-    LOG_DEBUG(this, "GlobalVector::WriteFileBinary()", filename);
+    log_debug(this, "GlobalVector::WriteFileBinary()", filename);
 
     // Master rank writes the global headfile
     if(this->pm_->rank_ == 0)
@@ -575,7 +581,7 @@ void GlobalVector<ValueType>::WriteFileBinary(const std::string filename) const
 template <typename ValueType>
 void GlobalVector<ValueType>::AddScale(const GlobalVector<ValueType>& x, const ValueType alpha)
 {
-    LOG_DEBUG(this, "GlobalVector::Addscale()", "");
+    log_debug(this, "GlobalVector::Addscale()", (const void*&)x, alpha);
 
     this->vector_interior_.AddScale(x.vector_interior_, alpha);
 }
@@ -587,7 +593,7 @@ void GlobalVector<ValueType>::ScaleAdd2(const ValueType alpha,
                                         const GlobalVector<ValueType>& y,
                                         const ValueType gamma)
 {
-    LOG_DEBUG(this, "GlobalVector::ScaleAdd2()", "");
+    log_debug(this, "GlobalVector::ScaleAdd2()", alpha, (const void*&)x, beta, (const void*&)y, gamma);
 
     this->vector_interior_.ScaleAdd2(alpha, x.vector_interior_, beta, y.vector_interior_, gamma);
 }
@@ -595,7 +601,7 @@ void GlobalVector<ValueType>::ScaleAdd2(const ValueType alpha,
 template <typename ValueType>
 void GlobalVector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector<ValueType>& x)
 {
-    LOG_DEBUG(this, "GlobalVector::ScaleAdd()", "");
+    log_debug(this, "GlobalVector::ScaleAdd()", alpha, (const void*&)x);
 
     this->vector_interior_.ScaleAdd(alpha, x.vector_interior_);
 }
@@ -603,7 +609,7 @@ void GlobalVector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector
 template <typename ValueType>
 void GlobalVector<ValueType>::Scale(const ValueType alpha)
 {
-    LOG_DEBUG(this, "GlobalVector::Scale()", "");
+    log_debug(this, "GlobalVector::Scale()", alpha);
 
     this->vector_interior_.Scale(alpha);
 }
@@ -611,7 +617,7 @@ void GlobalVector<ValueType>::Scale(const ValueType alpha)
 template <typename ValueType>
 ValueType GlobalVector<ValueType>::Dot(const GlobalVector<ValueType>& x) const
 {
-    LOG_DEBUG(this, "GlobalVector::Dot()", "");
+    log_debug(this, "GlobalVector::Dot()", (const void*&)x);
 
     ValueType local = this->vector_interior_.Dot(x.vector_interior_);
     ValueType global;
@@ -628,7 +634,7 @@ ValueType GlobalVector<ValueType>::Dot(const GlobalVector<ValueType>& x) const
 template <typename ValueType>
 ValueType GlobalVector<ValueType>::DotNonConj(const GlobalVector<ValueType>& x) const
 {
-    LOG_DEBUG(this, "GlobalVector::DotNonConj()", "");
+    log_debug(this, "GlobalVector::DotNonConj()", (const void*&)x);
 
     ValueType local = this->vector_interior_.DotNonConj(x.vector_interior_);
     ValueType global;
@@ -645,7 +651,7 @@ ValueType GlobalVector<ValueType>::DotNonConj(const GlobalVector<ValueType>& x) 
 template <typename ValueType>
 ValueType GlobalVector<ValueType>::Norm(void) const
 {
-    LOG_DEBUG(this, "GlobalVector::Norm()", "");
+    log_debug(this, "GlobalVector::Norm()");
 
     ValueType result = this->Dot(*this);
     return sqrt(result);
@@ -654,7 +660,7 @@ ValueType GlobalVector<ValueType>::Norm(void) const
 template <typename ValueType>
 ValueType GlobalVector<ValueType>::Reduce(void) const
 {
-    LOG_DEBUG(this, "GlobalVector::Reduce()", "");
+    log_debug(this, "GlobalVector::Reduce()");
 
     ValueType local = this->vector_interior_.Reduce();
     ValueType global;
@@ -671,7 +677,7 @@ ValueType GlobalVector<ValueType>::Reduce(void) const
 template <typename ValueType>
 ValueType GlobalVector<ValueType>::Asum(void) const
 {
-    LOG_DEBUG(this, "GlobalVector::Asum()", "");
+    log_debug(this, "GlobalVector::Asum()");
 
     ValueType local = this->vector_interior_.Asum();
     ValueType global;
@@ -688,14 +694,14 @@ ValueType GlobalVector<ValueType>::Asum(void) const
 template <typename ValueType>
 int GlobalVector<ValueType>::Amax(ValueType& value) const
 {
-    LOG_DEBUG(this, "GlobalVector::Amax()", "");
+    log_debug(this, "GlobalVector::Amax()", value);
     FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
 void GlobalVector<ValueType>::PointWiseMult(const GlobalVector<ValueType>& x)
 {
-    LOG_DEBUG(this, "GlobalVector::PointWiseMult()", "");
+    log_debug(this, "GlobalVector::PointWiseMult()", (const void*&)x);
 
     this->vector_interior_.PointWiseMult(x.vector_interior_);
 }
@@ -704,7 +710,7 @@ template <typename ValueType>
 void GlobalVector<ValueType>::PointWiseMult(const GlobalVector<ValueType>& x,
                                             const GlobalVector<ValueType>& y)
 {
-    LOG_DEBUG(this, "GlobalVector::PointWiseMult()", "");
+    log_debug(this, "GlobalVector::PointWiseMult()", (const void*&)x, (const void*&)y);
 
     this->vector_interior_.PointWiseMult(x.vector_interior_, y.vector_interior_);
 }
@@ -712,7 +718,7 @@ void GlobalVector<ValueType>::PointWiseMult(const GlobalVector<ValueType>& x,
 template <typename ValueType>
 void GlobalVector<ValueType>::UpdateGhostValuesAsync(const GlobalVector<ValueType>& in)
 {
-    LOG_DEBUG(this, "GlobalVector::UpdateGhostValuesAsync()", "#*# begin");
+    log_debug(this, "GlobalVector::UpdateGhostValuesAsync()", "#*# begin", (const void*&)in);
 
 #ifdef SUPPORT_MULTINODE
     int tag = 0;
@@ -757,13 +763,13 @@ void GlobalVector<ValueType>::UpdateGhostValuesAsync(const GlobalVector<ValueTyp
     }
 #endif
 
-    LOG_DEBUG(this, "GlobalVector::UpdateGhostValuesAsync()", "#*# end");
+    log_debug(this, "GlobalVector::UpdateGhostValuesAsync()", "#*# end");
 }
 
 template <typename ValueType>
 void GlobalVector<ValueType>::UpdateGhostValuesSync(void)
 {
-    LOG_DEBUG(this, "GlobalVector::UpdateGhostValuesSync()", "#*# begin");
+    log_debug(this, "GlobalVector::UpdateGhostValuesSync()", "#*# begin");
 
 #ifdef SUPPORT_MULTINODE
     // Sync before updating ghost values
@@ -773,13 +779,13 @@ void GlobalVector<ValueType>::UpdateGhostValuesSync(void)
     this->vector_ghost_.SetContinuousValues(0, this->pm_->GetNumReceivers(), this->recv_boundary_);
 #endif
 
-    LOG_DEBUG(this, "GlobalVector::UpdateGhostValuesSync()", "#*# end");
+    log_debug(this, "GlobalVector::UpdateGhostValuesSync()", "#*# end");
 }
 
 template <typename ValueType>
 void GlobalVector<ValueType>::Power(const double power)
 {
-    LOG_DEBUG(this, "GlobalVector::Power()", "");
+    log_debug(this, "GlobalVector::Power()", power);
 
     this->vector_interior_.Power(power);
 }

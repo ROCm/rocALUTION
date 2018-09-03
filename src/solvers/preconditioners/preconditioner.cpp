@@ -17,7 +17,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 Preconditioner<OperatorType, VectorType, ValueType>::Preconditioner() {
 
-  LOG_DEBUG(this, "Preconditioner::Preconditioner()",
+  log_debug(this, "Preconditioner::Preconditioner()",
             "default constructor");
 
 }
@@ -25,7 +25,7 @@ Preconditioner<OperatorType, VectorType, ValueType>::Preconditioner() {
 template <class OperatorType, class VectorType, typename ValueType>
 Preconditioner<OperatorType, VectorType, ValueType>::~Preconditioner() {
 
-  LOG_DEBUG(this, "Preconditioner::~Preconditioner()",
+  log_debug(this, "Preconditioner::~Preconditioner()",
             "destructor");
 
 }
@@ -44,8 +44,9 @@ template <class OperatorType, class VectorType, typename ValueType>
 void Preconditioner<OperatorType, VectorType, ValueType>::SolveZeroSol(const VectorType &rhs,
                                                                        VectorType *x) {
 
-  LOG_DEBUG(this, "Preconditioner::SolveZeroSol()",
-            "calling this->Solve()");
+  log_debug(this, "Preconditioner::SolveZeroSol()",
+            (const void*&)rhs,
+            x);
 
   this->Solve(rhs, x);
 
@@ -55,7 +56,7 @@ void Preconditioner<OperatorType, VectorType, ValueType>::SolveZeroSol(const Vec
 template <class OperatorType, class VectorType, typename ValueType>
 Jacobi<OperatorType, VectorType, ValueType>::Jacobi() {
 
-  LOG_DEBUG(this, "Jacobi::Jacobi()",
+  log_debug(this, "Jacobi::Jacobi()",
             "default constructor");
 
 }
@@ -63,7 +64,7 @@ Jacobi<OperatorType, VectorType, ValueType>::Jacobi() {
 template <class OperatorType, class VectorType, typename ValueType>
 Jacobi<OperatorType, VectorType, ValueType>::~Jacobi() {
 
-  LOG_DEBUG(this, "Jacobi::~Jacobi()",
+  log_debug(this, "Jacobi::~Jacobi()",
             "destructor");
 
   this->Clear();
@@ -80,8 +81,8 @@ void Jacobi<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void Jacobi<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "Jacobi::Build()",
-            this->build_ <<
+  log_debug(this, "Jacobi::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -95,8 +96,8 @@ void Jacobi<OperatorType, VectorType, ValueType>::Build(void) {
   this->inv_diag_entries_.CloneBackend(*this->op_);
   this->op_->ExtractInverseDiagonal(&this->inv_diag_entries_);
 
-  LOG_DEBUG(this, "Jacobi::Build()",
-            this->build_ <<
+  log_debug(this, "Jacobi::Build()",
+            this->build_,
             " #*# end");
 
 
@@ -105,8 +106,9 @@ void Jacobi<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void Jacobi<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType &op) {
 
-  LOG_DEBUG(this, "Jacobi::ResetOperator()",
-            this->build_);
+  log_debug(this, "Jacobi::ResetOperator()",
+            this->build_,
+            (const void*&)op);
 
   assert(this->op_ != NULL);
 
@@ -120,7 +122,7 @@ void Jacobi<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorTy
 template <class OperatorType, class VectorType, typename ValueType>
 void Jacobi<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "Jacobi::Clear()",
+  log_debug(this, "Jacobi::Clear()",
             this->build_);
 
   this->inv_diag_entries_.Clear();
@@ -132,8 +134,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void Jacobi<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                         VectorType *x) {
 
-  LOG_DEBUG(this, "Jacobi::Solve()",
-            " #*# begin");
+  log_debug(this, "Jacobi::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -148,16 +152,14 @@ void Jacobi<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 
   }
 
-  LOG_DEBUG(this, "Jacobi::Solve()",
+  log_debug(this, "Jacobi::Solve()",
             " #*# end");
-
-
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void Jacobi<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "Jacobi::MoveToHostLocalData_()",
+  log_debug(this, "Jacobi::MoveToHostLocalData_()",
             this->build_);  
 
   this->inv_diag_entries_.MoveToHost();
@@ -167,7 +169,7 @@ void Jacobi<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void Jacobi<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "Jacobi::MoveToAcceleratorLocalData_()",
+  log_debug(this, "Jacobi::MoveToAcceleratorLocalData_()",
             this->build_);
 
 
@@ -181,7 +183,7 @@ void Jacobi<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(vo
 template <class OperatorType, class VectorType, typename ValueType>
 GS<OperatorType, VectorType, ValueType>::GS() {
 
-  LOG_DEBUG(this, "GS::GS()",
+  log_debug(this, "GS::GS()",
             "default constructor");
 
 }
@@ -189,7 +191,7 @@ GS<OperatorType, VectorType, ValueType>::GS() {
 template <class OperatorType, class VectorType, typename ValueType>
 GS<OperatorType, VectorType, ValueType>::~GS() {
 
-  LOG_DEBUG(this, "GS::~GS()",
+  log_debug(this, "GS::~GS()",
             "destructor");
 
   this->Clear();
@@ -206,8 +208,8 @@ void GS<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void GS<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "GS::Build()",
-            this->build_ <<
+  log_debug(this, "GS::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -222,8 +224,8 @@ void GS<OperatorType, VectorType, ValueType>::Build(void) {
   this->GS_.LAnalyse(false);
   this->GS_.UAnalyse(false);
 
-  LOG_DEBUG(this, "GS::Build()",
-            this->build_ <<
+  log_debug(this, "GS::Build()",
+            this->build_,
             " #*# end");
 
 
@@ -232,8 +234,9 @@ void GS<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void GS<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType &op) {
 
-  LOG_DEBUG(this, "GS::ResetOperator()",
-            this->build_);
+  log_debug(this, "GS::ResetOperator()",
+            this->build_,
+            (const void*&)op);
 
   assert(this->op_ != NULL);
 
@@ -248,7 +251,7 @@ void GS<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType &
 template <class OperatorType, class VectorType, typename ValueType>
 void GS<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "GS::Clear()",
+  log_debug(this, "GS::Clear()",
             this->build_);
 
   this->GS_.Clear();
@@ -263,15 +266,17 @@ template <class OperatorType, class VectorType, typename ValueType>
 void GS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                         VectorType *x) {
 
-  LOG_DEBUG(this, "GS::Solve()",
-            " #*# begin");
+  log_debug(this, "GS::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
 
   this->GS_.LSolve(rhs, x);
 
-  LOG_DEBUG(this, "GS::Solve()",
+  log_debug(this, "GS::Solve()",
             " #*# end");
 
 
@@ -280,7 +285,7 @@ void GS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 template <class OperatorType, class VectorType, typename ValueType>
 void GS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "GS::MoveToHostLocalData_()",
+  log_debug(this, "GS::MoveToHostLocalData_()",
             this->build_);
 
   this->GS_.MoveToHost();
@@ -292,7 +297,7 @@ void GS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void GS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "GS::MoveToAcceleratorLocalData_()",
+  log_debug(this, "GS::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->GS_.MoveToAccelerator();
@@ -309,7 +314,7 @@ void GS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 SGS<OperatorType, VectorType, ValueType>::SGS() {
 
-  LOG_DEBUG(this, "SGS::SGS()",
+  log_debug(this, "SGS::SGS()",
             "default constructor");
 
 }
@@ -317,7 +322,7 @@ SGS<OperatorType, VectorType, ValueType>::SGS() {
 template <class OperatorType, class VectorType, typename ValueType>
 SGS<OperatorType, VectorType, ValueType>::~SGS() {
 
-  LOG_DEBUG(this, "SGS::~SGS()",
+  log_debug(this, "SGS::~SGS()",
             "destructor");
 
   this->Clear();
@@ -334,8 +339,8 @@ void SGS<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void SGS<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "SGS::Build()",
-            this->build_ <<
+  log_debug(this, "SGS::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -356,8 +361,8 @@ void SGS<OperatorType, VectorType, ValueType>::Build(void) {
   this->v_.CloneBackend(*this->op_);
   this->v_.Allocate("v", this->op_->GetM());
 
-  LOG_DEBUG(this, "SGS::Build()",
-            this->build_ <<
+  log_debug(this, "SGS::Build()",
+            this->build_,
             " #*# end");
 
 
@@ -366,8 +371,9 @@ void SGS<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void SGS<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType &op) {
 
-  LOG_DEBUG(this, "SGS::ResetOperator()",
-            this->build_);
+  log_debug(this, "SGS::ResetOperator()",
+            this->build_,
+            (const void*&)op);
 
   assert(this->op_ != NULL);
 
@@ -391,7 +397,7 @@ void SGS<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType 
 template <class OperatorType, class VectorType, typename ValueType>
 void SGS<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "SGS::Clear()",
+  log_debug(this, "SGS::Clear()",
             this->build_);
 
   this->SGS_.Clear();
@@ -409,8 +415,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void SGS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                      VectorType *x) {
 
-  LOG_DEBUG(this, "SGS::Solve()",
-            " #*# begin");
+  log_debug(this, "SGS::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -419,7 +427,7 @@ void SGS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
   this->v_.PointWiseMult(this->diag_entries_);
   this->SGS_.USolve(this->v_, x);
 
-  LOG_DEBUG(this, "SGS::Solve()",
+  log_debug(this, "SGS::Solve()",
             " #*# end");
 
 
@@ -428,7 +436,7 @@ void SGS<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 template <class OperatorType, class VectorType, typename ValueType>
 void SGS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "SGS::MoveToHostLocalData_()",
+  log_debug(this, "SGS::MoveToHostLocalData_()",
             this->build_);
 
   this->SGS_.MoveToHost();
@@ -443,7 +451,7 @@ void SGS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void SGS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "SGS::MoveToAcceleratorLocalData_()",
+  log_debug(this, "SGS::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->SGS_.MoveToAccelerator();
@@ -464,7 +472,7 @@ void SGS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 ILU<OperatorType, VectorType, ValueType>::ILU() {
 
-  LOG_DEBUG(this, "ILU::ILU()",
+  log_debug(this, "ILU::ILU()",
             "default constructor");
 
   this->p_ = 0;
@@ -475,7 +483,7 @@ ILU<OperatorType, VectorType, ValueType>::ILU() {
 template <class OperatorType, class VectorType, typename ValueType>
 ILU<OperatorType, VectorType, ValueType>::~ILU() {
 
-  LOG_DEBUG(this, "ILU::ILU()",
+  log_debug(this, "ILU::ILU()",
             "destructor");
 
   this->Clear();
@@ -496,9 +504,9 @@ void ILU<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILU<OperatorType, VectorType, ValueType>::Set(const int p, const bool level) {
 
-  LOG_DEBUG(this, "ILU::Set()",
-            "p=" << p <<
-            " level=" << level);
+  log_debug(this, "ILU::Set()",
+            p,
+            level);
 
 
   assert(p >= 0);
@@ -512,8 +520,8 @@ void ILU<OperatorType, VectorType, ValueType>::Set(const int p, const bool level
 template <class OperatorType, class VectorType, typename ValueType>
 void ILU<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "ILU::Build()",
-            this->build_ <<
+  log_debug(this, "ILU::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -530,8 +538,8 @@ void ILU<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->ILU_.LUAnalyse();
 
-  LOG_DEBUG(this, "ILU::Build()",
-            this->build_ <<
+  log_debug(this, "ILU::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -539,7 +547,7 @@ void ILU<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILU<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "ILU::Clear()",
+  log_debug(this, "ILU::Clear()",
             this->build_);
 
   this->ILU_.Clear();
@@ -551,7 +559,7 @@ void ILU<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILU<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "ILU::MoveToHostLocalData_()",
+  log_debug(this, "ILU::MoveToHostLocalData_()",
             this->build_);  
 
   this->ILU_.MoveToHost();
@@ -562,7 +570,7 @@ void ILU<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILU<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "ILU::MoveToAcceleratorLocalData_()",
+  log_debug(this, "ILU::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->ILU_.MoveToAccelerator();
@@ -575,8 +583,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void ILU<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                      VectorType *x) {
 
-  LOG_DEBUG(this, "ILU::Solve()",
-            " #*# begin");
+  log_debug(this, "ILU::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -584,7 +594,7 @@ void ILU<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 
   this->ILU_.LUSolve(rhs, x);
 
-  LOG_DEBUG(this, "ILU::Solve()",
+  log_debug(this, "ILU::Solve()",
             " #*# end");
 }
 
@@ -597,7 +607,7 @@ void ILU<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 template <class OperatorType, class VectorType, typename ValueType>
 ILUT<OperatorType, VectorType, ValueType>::ILUT() {
 
-  LOG_DEBUG(this, "ILUT::ILUT()",
+  log_debug(this, "ILUT::ILUT()",
             "default constructor");
 
 
@@ -609,7 +619,7 @@ ILUT<OperatorType, VectorType, ValueType>::ILUT() {
 template <class OperatorType, class VectorType, typename ValueType>
 ILUT<OperatorType, VectorType, ValueType>::~ILUT() {
 
-  LOG_DEBUG(this, "ILUT::~ILUT()",
+  log_debug(this, "ILUT::~ILUT()",
             "destructor");
 
   this->Clear();
@@ -630,7 +640,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILUT<OperatorType, VectorType, ValueType>::Set(const double t) {
 
-  LOG_DEBUG(this, "ILUT::Set()",
+  log_debug(this, "ILUT::Set()",
             t);
 
 
@@ -644,10 +654,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Set(const double t) {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILUT<OperatorType, VectorType, ValueType>::Set(const double t, const int maxrow) {
 
-  LOG_DEBUG(this, "ILUT::Set()",
-            "t=" << t <<
-            " maxrow=" << maxrow);
-
+  log_debug(this, "ILUT::Set()", t, maxrow);
 
   assert(t >= 0);
   assert(this->build_ == false);
@@ -660,8 +667,8 @@ void ILUT<OperatorType, VectorType, ValueType>::Set(const double t, const int ma
 template <class OperatorType, class VectorType, typename ValueType>
 void ILUT<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "ILUT::Build()",
-            this->build_ <<
+  log_debug(this, "ILUT::Build()",
+            this->build_,
             " #*# begin");
 
 
@@ -677,8 +684,8 @@ void ILUT<OperatorType, VectorType, ValueType>::Build(void) {
   this->ILUT_.ILUTFactorize(this->t_, this->max_row_);
   this->ILUT_.LUAnalyse();
 
-  LOG_DEBUG(this, "ILUT::Build()",
-            this->build_ <<
+  log_debug(this, "ILUT::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -686,7 +693,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILUT<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "ILUT::Clear()",
+  log_debug(this, "ILUT::Clear()",
             this->build_);
 
   this->ILUT_.Clear();
@@ -698,7 +705,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILUT<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "ILUT::MoveToHostLocalData_()",
+  log_debug(this, "ILUT::MoveToHostLocalData_()",
             this->build_);  
 
   this->ILUT_.MoveToHost();
@@ -708,7 +715,7 @@ void ILUT<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void ILUT<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "ILUT::MoveToAcceleratorLocalData_()",
+  log_debug(this, "ILUT::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->ILUT_.MoveToAccelerator();
@@ -720,8 +727,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void ILUT<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                      VectorType *x) {
 
-  LOG_DEBUG(this, "ILUT::Solve()",
-            " #*# begin");
+  log_debug(this, "ILUT::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -729,10 +738,8 @@ void ILUT<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 
   this->ILUT_.LUSolve(rhs, x);
 
-  LOG_DEBUG(this, "ILUT::Solve()",
-            " #*# begin");
-
-
+  log_debug(this, "ILUT::Solve()",
+            " #*# end");
 }
 
 
@@ -744,7 +751,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 template <class OperatorType, class VectorType, typename ValueType>
 IC<OperatorType, VectorType, ValueType>::IC() {
 
-  LOG_DEBUG(this, "IC::IC()",
+  log_debug(this, "IC::IC()",
             "default constructor");
 
 }
@@ -752,7 +759,7 @@ IC<OperatorType, VectorType, ValueType>::IC() {
 template <class OperatorType, class VectorType, typename ValueType>
 IC<OperatorType, VectorType, ValueType>::~IC() {
 
-  LOG_DEBUG(this, "IC::IC()",
+  log_debug(this, "IC::IC()",
             "destructor");
 
   this->Clear();
@@ -774,8 +781,8 @@ void IC<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void IC<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "IC::Build()",
-            this->build_ <<
+  log_debug(this, "IC::Build()",
+            this->build_,
             " #*# begin");
 
 
@@ -794,8 +801,8 @@ void IC<OperatorType, VectorType, ValueType>::Build(void) {
   this->IC_.ICFactorize(&this->inv_diag_entries_);
   this->IC_.LLAnalyse();
 
-  LOG_DEBUG(this, "IC::Build()",
-            this->build_ <<
+  log_debug(this, "IC::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -803,7 +810,7 @@ void IC<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void IC<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "IC::Clear()",
+  log_debug(this, "IC::Clear()",
             this->build_);
 
   this->inv_diag_entries_.Clear();
@@ -816,7 +823,7 @@ void IC<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void IC<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "IC::MoveToHostLocalData_()",
+  log_debug(this, "IC::MoveToHostLocalData_()",
             this->build_);  
 
   // this->inv_diag_entries_ is NOT needed on accelerator!
@@ -827,7 +834,7 @@ void IC<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void IC<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "IC::MoveToAcceleratorLocalData_()",
+  log_debug(this, "IC::MoveToAcceleratorLocalData_()",
             this->build_);
 
   // this->inv_diag_entries_ is NOT needed on accelerator!
@@ -840,8 +847,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void IC<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                     VectorType *x) {
 
-  LOG_DEBUG(this, "IC::Solve()",
-            " #*# begin");
+  log_debug(this, "IC::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -849,7 +858,7 @@ void IC<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 
   this->IC_.LLSolve(rhs, this->inv_diag_entries_, x);
   
-  LOG_DEBUG(this, "IC::Solve()",
+  log_debug(this, "IC::Solve()",
             " #*# end");
 
 }
@@ -860,7 +869,7 @@ void IC<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
 template <class OperatorType, class VectorType, typename ValueType>
 VariablePreconditioner<OperatorType, VectorType, ValueType>::VariablePreconditioner() {
 
-  LOG_DEBUG(this, "VariablePreconditioner::VariablePreconditioner()",
+  log_debug(this, "VariablePreconditioner::VariablePreconditioner()",
             "default constructor");
 
   this->num_precond_ = 0;
@@ -871,7 +880,7 @@ VariablePreconditioner<OperatorType, VectorType, ValueType>::VariablePreconditio
 template <class OperatorType, class VectorType, typename ValueType>
 VariablePreconditioner<OperatorType, VectorType, ValueType>::~VariablePreconditioner() {
 
-  LOG_DEBUG(this, "VariablePreconditioner::~VariablePreconditioner()",
+  log_debug(this, "VariablePreconditioner::~VariablePreconditioner()",
             "destructor");
 
   this->Clear();
@@ -913,8 +922,8 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::SetPreconditio
 template <class OperatorType, class VectorType, typename ValueType>
 void VariablePreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "VariablePreconditioner::Build()",
-            this->build_ <<
+  log_debug(this, "VariablePreconditioner::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -935,8 +944,8 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
     this->precond_[i]->Build();
   }
 
-  LOG_DEBUG(this, "VariablePreconditioner::Build()",
-            this->build_ <<
+  log_debug(this, "VariablePreconditioner::Build()",
+            this->build_,
             " #*# end");
 
 
@@ -946,7 +955,7 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void VariablePreconditioner<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "VariablePreconditioner::Clear()",
+  log_debug(this, "VariablePreconditioner::Clear()",
             this->build_);
 
   if (this->precond_ != NULL)
@@ -963,8 +972,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void VariablePreconditioner<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                         VectorType *x) {
 
-  LOG_DEBUG(this, "VariablePreconditioner::Solve()",
-            " #*# begin");
+  log_debug(this, "VariablePreconditioner::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
   assert(x != NULL);
@@ -976,7 +987,7 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::Solve(const Ve
     this->counter_ = 0;
 
 
-  LOG_DEBUG(this, "VariablePreconditioner::Solve()",
+  log_debug(this, "VariablePreconditioner::Solve()",
             " #*# end");
 
 
@@ -985,7 +996,7 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::Solve(const Ve
 template <class OperatorType, class VectorType, typename ValueType>
 void VariablePreconditioner<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "VariablePreconditioner::MoveToHostLocalData_()",
+  log_debug(this, "VariablePreconditioner::MoveToHostLocalData_()",
             this->build_);  
 
   if (this->build_ == true) {
@@ -1003,7 +1014,7 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::MoveToHostLoca
 template <class OperatorType, class VectorType, typename ValueType>
 void VariablePreconditioner<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "VariablePreconditioner::MoveToAcceleratorLocalData_()",
+  log_debug(this, "VariablePreconditioner::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true) {

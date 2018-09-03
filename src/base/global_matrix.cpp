@@ -22,8 +22,7 @@ namespace rocalution {
 template <typename ValueType>
 GlobalMatrix<ValueType>::GlobalMatrix() {
 
-  LOG_DEBUG(this, "GlobalMatrix::GlobalMatrix()",
-            "default constructor");
+  log_debug(this, "GlobalMatrix::GlobalMatrix()");
 
 #ifndef SUPPORT_MULTINODE
   LOG_INFO("Multinode support disabled");
@@ -39,8 +38,7 @@ GlobalMatrix<ValueType>::GlobalMatrix() {
 template <typename ValueType>
 GlobalMatrix<ValueType>::GlobalMatrix(const ParallelManager &pm) {
 
-  LOG_DEBUG(this, "GlobalMatrix::GlobalMatrix()",
-            &pm);
+  log_debug(this, "GlobalMatrix::GlobalMatrix()", (const void*&)pm);
 
   assert(pm.Status() == true);
 
@@ -55,8 +53,7 @@ GlobalMatrix<ValueType>::GlobalMatrix(const ParallelManager &pm) {
 template <typename ValueType>
 GlobalMatrix<ValueType>::~GlobalMatrix() {
 
-  LOG_DEBUG(this, "GlobalMatrix::~GlobalMatrix()",
-            "default destructor");
+  log_debug(this, "GlobalMatrix::~GlobalMatrix()");
 
   this->Clear();
 
@@ -65,8 +62,7 @@ GlobalMatrix<ValueType>::~GlobalMatrix() {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "GlobalMatrix::Clear()",
-            "");
+  log_debug(this, "GlobalMatrix::Clear()");
 
   this->matrix_interior_.Clear();
   this->matrix_ghost_.Clear();
@@ -141,8 +137,7 @@ int GlobalMatrix<ValueType>::GetGhostNnz(void) const {
 template <typename ValueType>
 const LocalMatrix<ValueType>& GlobalMatrix<ValueType>::GetInterior() const {
 
-  LOG_DEBUG(this, "GlobalMatrix::GetInterior() const",
-            "");
+  log_debug(this, "GlobalMatrix::GetInterior() const");
 
   return this->matrix_interior_;
 
@@ -151,8 +146,7 @@ const LocalMatrix<ValueType>& GlobalMatrix<ValueType>::GetInterior() const {
 template <typename ValueType>
 const LocalMatrix<ValueType>& GlobalMatrix<ValueType>::GetGhost() const {
 
-  LOG_DEBUG(this, "GlobalMatrix::GetGhost()",
-            "");
+  log_debug(this, "GlobalMatrix::GetGhost()");
 
   return this->matrix_ghost_;
 
@@ -161,8 +155,7 @@ const LocalMatrix<ValueType>& GlobalMatrix<ValueType>::GetGhost() const {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::SetParallelManager(const ParallelManager &pm) {
 
-  LOG_DEBUG(this, "GlobalMatrix::SetParallelManager()",
-            &pm);
+  log_debug(this, "GlobalMatrix::SetParallelManager()", (const void*&)pm);
 
   assert(pm.Status() == true);
 
@@ -173,8 +166,7 @@ void GlobalMatrix<ValueType>::SetParallelManager(const ParallelManager &pm) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::AllocateCSR(const std::string name, const int local_nnz, const int ghost_nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::AllocateCSR()",
-            name);
+  log_debug(this, "GlobalMatrix::AllocateCSR()", name, local_nnz, ghost_nnz);
 
   assert(this->pm_ != NULL);
   assert(local_nnz > 0);
@@ -202,8 +194,7 @@ void GlobalMatrix<ValueType>::AllocateCSR(const std::string name, const int loca
 template <typename ValueType>
 void GlobalMatrix<ValueType>::AllocateCOO(const std::string name, const int local_nnz, const int ghost_nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::AllocateCOO()",
-            name);
+  log_debug(this, "GlobalMatrix::AllocateCOO()", name, local_nnz, ghost_nnz);
 
   assert(this->pm_ != NULL);
   assert(local_nnz > 0);
@@ -233,8 +224,7 @@ void GlobalMatrix<ValueType>::SetDataPtrCSR(int **local_row_offset, int **local_
                                             int **ghost_row_offset, int **ghost_col, ValueType **ghost_val,
                                             std::string name, const int local_nnz, const int ghost_nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::SetDataPtrCSR()",
-            name);
+  log_debug(this, "GlobalMatrix::SetDataPtrCSR()", local_row_offset, local_col, local_val, ghost_row_offset, ghost_col, ghost_val, name, local_nnz, ghost_nnz);
 
   assert(local_row_offset != NULL);
   assert(local_col != NULL);
@@ -286,8 +276,17 @@ void GlobalMatrix<ValueType>::SetDataPtrCOO(int **local_row, int **local_col, Va
                                             int **ghost_row, int **ghost_col, ValueType **ghost_val,
                                             std::string name, const int local_nnz, const int ghost_nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::SetDataPtrCOO()",
-            name);
+  log_debug(this,
+            "GlobalMatrix::SetDataPtrCOO()",
+            local_row,
+            local_col,
+            local_val,
+            ghost_row,
+            ghost_col,
+            ghost_val,
+            name,
+            local_nnz,
+            ghost_nnz);
 
   assert(local_row != NULL);
   assert(local_col != NULL);
@@ -336,8 +335,13 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::SetLocalDataPtrCSR(int **row_offset, int **col, ValueType **val,
                                                  std::string name, const int nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::SetLocalDataPtrCSR()",
-            name);
+  log_debug(this,
+            "GlobalMatrix::SetLocalDataPtrCSR()",
+            row_offset,
+            col,
+            val,
+            name,
+            nnz);
 
   assert(row_offset != NULL);
   assert(col != NULL);
@@ -373,8 +377,13 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::SetLocalDataPtrCOO(int **row, int **col, ValueType **val,
                                                  std::string name, const int nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::SetLocalDataPtrCOO()",
-            name);
+  log_debug(this,
+            "GlobalMatrix::SetLocalDataPtrCOO()",
+            row,
+            col,
+            val,
+            name,
+            nnz);
 
   assert(row != NULL);
   assert(col != NULL);
@@ -410,8 +419,13 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::SetGhostDataPtrCSR(int **row_offset, int **col, ValueType **val,
                                                  std::string name, const int nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::SetGhostDataPtrCSR()",
-            name);
+  log_debug(this,
+            "GlobalMatrix::SetGhostDataPtrCSR()",
+            row_offset,
+            col,
+            val,
+            name,
+            nnz);
 
   assert(row_offset != NULL);
   assert(col != NULL);
@@ -448,8 +462,13 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::SetGhostDataPtrCOO(int **row, int **col, ValueType **val,
                                                  std::string name, const int nnz) {
 
-  LOG_DEBUG(this, "GlobalMatrix::SetGhostDataPtrCOO()",
-            name);
+  log_debug(this,
+            "GlobalMatrix::SetGhostDataPtrCOO()",
+            row,
+            col,
+            val,
+            name,
+            nnz);
 
   assert(row != NULL);
   assert(col != NULL);
@@ -487,8 +506,14 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::LeaveDataPtrCSR(int **local_row_offset, int **local_col, ValueType **local_val,
                                               int **ghost_row_offset, int **ghost_col, ValueType **ghost_val) {
 
-  LOG_DEBUG(this, "GlobalMatrix::LeaveDataPtrCSR()",
-            "");
+  log_debug(this,
+            "GlobalMatrix::LeaveDataPtrCSR()",
+            local_row_offset,
+            local_col,
+            local_val,
+            ghost_row_offset,
+            ghost_col,
+            ghost_val);
 
   assert(*local_row_offset == NULL);
   assert(*local_col == NULL);
@@ -517,8 +542,14 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::LeaveDataPtrCOO(int **local_row, int **local_col, ValueType **local_val,
                                               int **ghost_row, int **ghost_col, ValueType **ghost_val) {
 
-  LOG_DEBUG(this, "GlobalMatrix::LeaveDataPtrCOO()",
-            "");
+  log_debug(this,
+            "GlobalMatrix::LeaveDataPtrCOO()",
+            local_row,
+            local_col,
+            local_val,
+            ghost_row,
+            ghost_col,
+            ghost_val);
 
   assert(*local_row == NULL);
   assert(*local_col == NULL);
@@ -546,8 +577,11 @@ void GlobalMatrix<ValueType>::LeaveDataPtrCOO(int **local_row, int **local_col, 
 template <typename ValueType>
 void GlobalMatrix<ValueType>::LeaveLocalDataPtrCSR(int **row_offset, int **col, ValueType **val) {
 
-  LOG_DEBUG(this, "GlobalMatrix::LeaveLocalDataPtrCSR()",
-            "");
+  log_debug(this,
+            "GlobalMatrix::LeaveLocalDataPtrCSR()",
+            row_offset,
+            col,
+            val);
 
   assert(*row_offset == NULL);
   assert(*col == NULL);
@@ -566,8 +600,11 @@ void GlobalMatrix<ValueType>::LeaveLocalDataPtrCSR(int **row_offset, int **col, 
 template <typename ValueType>
 void GlobalMatrix<ValueType>::LeaveLocalDataPtrCOO(int **row, int **col, ValueType **val) {
 
-  LOG_DEBUG(this, "GlobalMatrix::LeaveLocalDataPtrCOO()",
-            "");
+  log_debug(this,
+            "GlobalMatrix::LeaveLocalDataPtrCOO()",
+            row,
+            col,
+            val);
 
   assert(*row == NULL);
   assert(*col == NULL);
@@ -586,8 +623,11 @@ void GlobalMatrix<ValueType>::LeaveLocalDataPtrCOO(int **row, int **col, ValueTy
 template <typename ValueType>
 void GlobalMatrix<ValueType>::LeaveGhostDataPtrCSR(int **row_offset, int **col, ValueType **val) {
 
-  LOG_DEBUG(this, "GlobalMatrix::LeaveGhostDataPtrCSR()",
-            "");
+  log_debug(this,
+            "GlobalMatrix::LeaveGhostDataPtrCSR()",
+            row_offset,
+            col,
+            val);
 
   assert(*row_offset == NULL);
   assert(*col == NULL);
@@ -606,8 +646,11 @@ void GlobalMatrix<ValueType>::LeaveGhostDataPtrCSR(int **row_offset, int **col, 
 template <typename ValueType>
 void GlobalMatrix<ValueType>::LeaveGhostDataPtrCOO(int **row, int **col, ValueType **val) {
 
-  LOG_DEBUG(this, "GlobalMatrix::LeaveGhostDataPtrCOO()",
-            "");
+  log_debug(this,
+            "GlobalMatrix::LeaveGhostDataPtrCOO()",
+            row,
+            col,
+            val);
 
   assert(*row == NULL);
   assert(*col == NULL);
@@ -626,8 +669,7 @@ void GlobalMatrix<ValueType>::LeaveGhostDataPtrCOO(int **row, int **col, ValueTy
 template <typename ValueType>
 void GlobalMatrix<ValueType>::MoveToAccelerator(void) {
 
-  LOG_DEBUG(this, "GlobalMatrix::MoveToAccelerator()",
-            "");
+  log_debug(this, "GlobalMatrix::MoveToAccelerator()");
 
   this->matrix_interior_.MoveToAccelerator();
   this->matrix_ghost_.MoveToAccelerator();
@@ -637,8 +679,7 @@ void GlobalMatrix<ValueType>::MoveToAccelerator(void) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::MoveToHost(void) {
 
-  LOG_DEBUG(this, "GlobalMatrix::MoveToHost()",
-            "");
+  log_debug(this, "GlobalMatrix::MoveToHost()");
 
   this->matrix_interior_.MoveToHost();
   this->matrix_ghost_.MoveToHost();
@@ -663,9 +704,6 @@ bool GlobalMatrix<ValueType>::is_accel(void) const {
 
 template <typename ValueType>
 void GlobalMatrix<ValueType>::Info(void) const {
-
-  LOG_DEBUG(this, "GlobalMatrix::Info()",
-            "");
 
   std::string current_backend_name;
 
@@ -698,6 +736,8 @@ void GlobalMatrix<ValueType>::Info(void) const {
 template <typename ValueType>
 bool GlobalMatrix<ValueType>::Check(void) const {
 
+  log_debug(this, "GlobalMatrix::Check()");
+
   bool interior_check = this->matrix_interior_.Check();
   bool ghost_check = this->matrix_ghost_.Check();
 
@@ -712,6 +752,8 @@ bool GlobalMatrix<ValueType>::Check(void) const {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::CloneFrom(const GlobalMatrix<ValueType> &src) {
 
+  log_debug(this, "GlobalMatrix::CloneFrom()");
+
   FATAL_ERROR(__FILE__, __LINE__);
 
 }
@@ -720,8 +762,7 @@ void GlobalMatrix<ValueType>::CloneFrom(const GlobalMatrix<ValueType> &src) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::CopyFrom(const GlobalMatrix<ValueType> &src) {
 
-  LOG_DEBUG(this, "GlobalMatrix::CopyFrom()",
-            "");
+  log_debug(this, "GlobalMatrix::CopyFrom()", (const void*&)src);
 
   assert(this != &src);
   assert(src.GetLocalNnz() != 0);
@@ -796,7 +837,7 @@ void GlobalMatrix<ValueType>::ConvertToDENSE(void) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
 
-  LOG_DEBUG(this, "GlobalMatrix::ConverTo()",
+  log_debug(this, "GlobalMatrix::ConverTo()",
             matrix_format);
 
   this->matrix_interior_.ConvertTo(matrix_format);
@@ -809,8 +850,7 @@ void GlobalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::Apply(const GlobalVector<ValueType> &in, GlobalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "GlobalMatrix::Apply()",
-            "");
+  log_debug(this, "GlobalMatrix::Apply()", (const void*&)in, out);
 
   assert (out != NULL);
   assert (&in != out);
@@ -834,8 +874,7 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::ApplyAdd(const GlobalVector<ValueType> &in, const ValueType scalar, 
                                        GlobalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "GlobalMatrix::ApplyAdd()",
-            "");
+  log_debug(this, "GlobalMatrix::ApplyAdd()", (const void*&)in, scalar, out);
 
   assert (out != NULL);
   assert (&in != out);
@@ -852,7 +891,7 @@ void GlobalMatrix<ValueType>::ApplyAdd(const GlobalVector<ValueType> &in, const 
 template <typename ValueType>
 void GlobalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
 
-  LOG_DEBUG(this, "GlobalMatrix::ReadFileMTX()",
+  log_debug(this, "GlobalMatrix::ReadFileMTX()",
             filename);
 
   assert(this->pm_->Status() == true);
@@ -909,7 +948,7 @@ void GlobalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 
-  LOG_DEBUG(this, "GlobalMatrix::WriteFileMTX()",
+  log_debug(this, "GlobalMatrix::WriteFileMTX()",
             filename);
 
   // Master rank writes the global headfile
@@ -952,7 +991,7 @@ void GlobalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
 
-  LOG_DEBUG(this, "GlobalMatrix::ReadFileCSR()",
+  log_debug(this, "GlobalMatrix::ReadFileCSR()",
             filename);
 
   assert(this->pm_->Status() == true);
@@ -1009,7 +1048,7 @@ void GlobalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 
-  LOG_DEBUG(this, "GlobalMatrix::WriteFileCSR()",
+  log_debug(this, "GlobalMatrix::WriteFileCSR()",
             filename);
 
   // Master rank writes the global headfile
@@ -1052,6 +1091,8 @@ void GlobalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::ExtractInverseDiagonal(GlobalVector<ValueType> *vec_inv_diag) const {
 
+  log_debug(this, "GlobalMatrix::ExtractInverseDiagonal()", vec_inv_diag);
+
   assert (vec_inv_diag != NULL);
   assert (vec_inv_diag->GetSize() == this->GetM());
 
@@ -1062,12 +1103,16 @@ void GlobalMatrix<ValueType>::ExtractInverseDiagonal(GlobalVector<ValueType> *ve
 template <typename ValueType>
 void GlobalMatrix<ValueType>::Sort(void) {
 
+  log_debug(this, "GlobalMatrix::Sort()");
+  
   this->matrix_interior_.Sort();
 
 }
 
 template <typename ValueType>
 void GlobalMatrix<ValueType>::Scale(const ValueType alpha) {
+
+  log_debug(this, "GlobalMatrix::Scale()", alpha);
 
   this->matrix_interior_.Scale(alpha);
   this->matrix_ghost_.Scale(alpha);
@@ -1077,6 +1122,8 @@ void GlobalMatrix<ValueType>::Scale(const ValueType alpha) {
 template <typename ValueType>
 void GlobalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, int &nc, LocalVector<int> *G, int &Gsize,
                                                          int **rG, int &rGsize, const int ordering) const {
+
+  log_debug(this, "GlobalMatrix::InitialPairwiseAggregation()", beta, nc, G, Gsize, rG, rGsize, ordering);
 
   // TODO asserts
 
@@ -1092,6 +1139,8 @@ template <typename ValueType>
 void GlobalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, int &nc, LocalVector<int> *G, int &Gsize,
                                                          int **rG, int &rGsize, const int ordering) const {
 
+  log_debug(this, "GlobalMatrix::FurtherPairwiseAggregation()", beta, nc, G, Gsize, rG, rGsize, ordering);
+
   // TODO asserts
 
   LocalMatrix<ValueType> tmp;
@@ -1105,6 +1154,8 @@ void GlobalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, i
 template <typename ValueType>
 void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType> *Ac, ParallelManager *pm, const int nrow, const int ncol,
                                               const LocalVector<int> &G, const int Gsize, const int *rG, const int rGsize) const {
+
+  log_debug(this, "GlobalMatrix::CoarsenOperator()", Ac, pm, nrow, ncol, (const void*&)G, Gsize, rG, rGsize);
 
   assert(Ac != NULL);
   assert(pm != NULL);
