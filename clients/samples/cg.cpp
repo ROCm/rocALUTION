@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 
   LocalMatrix<double> mat;
 
-  mat.ReadFileCSR(std::string(argv[1]));
+  mat.ReadFileMTX(std::string(argv[1]));
   mat.MoveToAccelerator();
   x.MoveToAccelerator();
   rhs.MoveToAccelerator();
