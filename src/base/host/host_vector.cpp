@@ -394,13 +394,8 @@ void HostVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType 
 
   assert(a <= b);
 
-  _set_omp_backend_threads(this->local_backend_, this->size_);
-
   // Fill this with random data from interval [a,b]
   srand(seed);
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
   for (int i=0; i<this->size_; ++i)
   {
     this->vec_[i] = a + (ValueType)rand() / (ValueType)RAND_MAX * (b - a);
@@ -411,13 +406,8 @@ void HostVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType 
 template <typename ValueType>
 void HostVector<ValueType>::SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var)
 {
-  _set_omp_backend_threads(this->local_backend_, this->size_);
-
   // Fill this with random data from interval [a,b]
   srand(seed);
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
   for (int i=0; i<this->size_; ++i)
   {
     // Box-Muller
