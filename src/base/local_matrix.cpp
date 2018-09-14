@@ -1024,7 +1024,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
   bool err = this->matrix_->ReadFileMTX(filename);
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
-    LOG_INFO("Computation of LocalMatrix::ReadFileMTX() failed");
+    LOG_INFO("Execution of LocalMatrix::ReadFileMTX() failed");
     this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
@@ -1080,7 +1080,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
   bool err = this->matrix_->WriteFileMTX(filename);
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == COO)) {
-    LOG_INFO("Computation of LocalMatrix::WriteFileMTX() failed");
+    LOG_INFO("Execution of LocalMatrix::WriteFileMTX() failed");
     this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
@@ -1096,7 +1096,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
     mat_host.ConvertToCOO();
 
     if (mat_host.matrix_->WriteFileMTX(filename) == false) {
-      LOG_INFO("Computation of LocalMatrix::WriteFileMTX() failed");
+      LOG_INFO("Execution of LocalMatrix::WriteFileMTX() failed");
       mat_host.Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
@@ -1116,7 +1116,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
   bool err = this->matrix_->ReadFileCSR(filename);
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
-    LOG_INFO("Computation of LocalMatrix::ReadFileCSR() failed");
+    LOG_INFO("Execution of LocalMatrix::ReadFileCSR() failed");
     this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
@@ -1132,7 +1132,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
     this->ConvertToCSR();
 
     if (this->matrix_->ReadFileCSR(filename) == false) {
-      LOG_INFO("Computation of LocalMatrix::ReadFileCSR() failed");
+      LOG_INFO("Execution of LocalMatrix::ReadFileCSR() failed");
       this->Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
@@ -1164,7 +1164,7 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
   bool err = this->matrix_->WriteFileCSR(filename);
 
   if ((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR)) {
-    LOG_INFO("Computation of LocalMatrix::WriteFileCSR() failed");
+    LOG_INFO("Execution of LocalMatrix::WriteFileCSR() failed");
     this->Info();
     FATAL_ERROR(__FILE__, __LINE__);
   }
@@ -1180,7 +1180,7 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
     mat_host.ConvertToCSR();
 
     if (mat_host.matrix_->WriteFileCSR(filename) == false) {
-      LOG_INFO("Computation of LocalMatrix::WriteFileCSR() failed");
+      LOG_INFO("Execution of LocalMatrix::WriteFileCSR() failed");
       mat_host.Info();
       FATAL_ERROR(__FILE__, __LINE__);
     }
