@@ -1,5 +1,5 @@
-#ifndef ROCALUTION_AMG_HPP_
-#define ROCALUTION_AMG_HPP_
+#ifndef ROCALUTION_SMOOTHED_AMG_HPP_
+#define ROCALUTION_SMOOTHED_AMG_HPP_
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
@@ -8,32 +8,23 @@
 
 namespace rocalution {
 
-enum _interp {
-  Aggregation,
-  SmoothedAggregation
-};
-
 template <class OperatorType, class VectorType, typename ValueType>
-class AMG : public BaseAMG<OperatorType, VectorType, ValueType> {
+class SAAMG : public BaseAMG<OperatorType, VectorType, ValueType> {
 
 public:
 
-  AMG();
-  virtual ~AMG();
+  SAAMG();
+  virtual ~SAAMG();
 
   virtual void Print(void) const;
 
-  /// Build AMG smoothers
+  /// Build SAAMG smoothers
   virtual void BuildSmoothers(void);
 
   /// Sets coupling strength
   virtual void SetCouplingStrength(const ValueType eps);
-  /// Sets the interpolation type
-  virtual void SetInterpolation(unsigned int interpType);
   /// Sets the relaxation parameter for smoothed aggregation
   virtual void SetInterpRelax(const ValueType relax);
-  /// Sets over-interpolation parameter for aggregation
-  virtual void SetOverInterp(const ValueType overInterp);
 
   /// Rebuild coarser operators with previous intergrid operators
   virtual void ReBuildNumeric(void);
@@ -56,16 +47,9 @@ private:
 
   /// Relaxation parameter for smoothed aggregation
   ValueType relax_;
-
-  /// Over-interpolation parameter for aggregation
-  ValueType over_interp_;
-
-  /// interpolation type for grid transfer operators
-  unsigned int interp_type_;
-
 };
 
 
 }
 
-#endif // ROCALUTION_AMG_HPP_
+#endif // ROCALUTION_SMOOTHED_AMG_HPP_

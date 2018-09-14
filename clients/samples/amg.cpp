@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   start = rocalution_time();
 
   // Linear Solver
-  AMG<LocalMatrix<double>, LocalVector<double>, double > ls;
+  SAAMG<LocalMatrix<double>, LocalVector<double>, double > ls;
 
   ls.SetOperator(mat);
 
@@ -46,8 +46,6 @@ int main(int argc, char* argv[]) {
   ls.SetCouplingStrength(0.001);
   // number of unknowns on coarsest level
   ls.SetCoarsestLevel(300);
-  // interpolation type for grid transfer operators
-  ls.SetInterpolation(SmoothedAggregation);
   // Relaxation parameter for smoothed interpolation aggregation
   ls.SetInterpRelax(2./3.);
   // Manual smoothers
@@ -83,13 +81,11 @@ int main(int argc, char* argv[]) {
     sm[i] = fp;
     
     gs[i] = new MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double >;
-    gs[i]->SetPrecondMatrixFormat(ELL);
     
     sm[i]->SetPreconditioner(*gs[i]);
     sm[i]->Verbose(0);
   }
 
-  ls.SetOperatorFormat(CSR);
   ls.SetSmoother(sm);
   ls.SetSolver(cgs);
   ls.SetSmootherPreIter(1);

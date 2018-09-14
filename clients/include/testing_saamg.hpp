@@ -3,8 +3,8 @@
  * ************************************************************************ */
 
 #pragma once
-#ifndef TESTING_SAMG_HPP
-#define TESTING_SAMG_HPP
+#ifndef TESTING_SAAMG_HPP
+#define TESTING_SAAMG_HPP
 
 #include "utility.hpp"
 
@@ -23,7 +23,7 @@ static bool check_residual(double res)
 }
 
 template <typename T>
-bool testing_samg(Arguments argus)
+bool testing_saamg(Arguments argus)
 {
     int ndim = argus.size;
     int pre_iter = argus.pre_smooth;
@@ -32,7 +32,6 @@ bool testing_samg(Arguments argus)
     unsigned int format = argus.format;
     int cycle = argus.cycle;
     bool scaling = argus.ordering;
-    unsigned int aggr = argus.aggr;
 
     // Initialize rocALUTION platform
     init_rocalution();
@@ -75,10 +74,9 @@ bool testing_samg(Arguments argus)
     FCG<LocalMatrix<T>, LocalVector<T>, T> ls;
 
     // AMG
-    AMG<LocalMatrix<T>, LocalVector<T>, T> p;
+    SAAMG<LocalMatrix<T>, LocalVector<T>, T> p;
 
-    // Setup AMG
-    p.SetInterpolation(aggr);
+    // Setup SAAMG
     p.SetCoarsestLevel(200);
     p.SetCycle(cycle);
     p.SetOperator(A);
@@ -147,4 +145,4 @@ bool testing_samg(Arguments argus)
     return success;
 }
 
-#endif // TESTING_SAMG_HPP
+#endif // TESTING_SAAMG_HPP

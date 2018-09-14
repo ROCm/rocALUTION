@@ -11,7 +11,8 @@ set(SOLVERS_SOURCES
   solvers/multigrid/base_multigrid.cpp
   solvers/multigrid/base_amg.cpp
   solvers/multigrid/multigrid.cpp
-  solvers/multigrid/amg.cpp
+  solvers/multigrid/unsmoothed_amg.cpp
+  solvers/multigrid/smoothed_amg.cpp
   solvers/multigrid/ruge_stueben_amg.cpp
   solvers/multigrid/pairwise_amg.cpp
   solvers/multigrid/global_pairwise_amg.cpp
@@ -47,7 +48,8 @@ set(SOLVERS_PUBLIC_HEADERS
   solvers/multigrid/base_multigrid.hpp
   solvers/multigrid/base_amg.hpp
   solvers/multigrid/multigrid.hpp
-  solvers/multigrid/amg.hpp
+  solvers/multigrid/unsmoothed_amg.hpp
+  solvers/multigrid/smoothed_amg.hpp
   solvers/multigrid/ruge_stueben_amg.hpp
   solvers/multigrid/pairwise_amg.hpp
   solvers/multigrid/global_pairwise_amg.hpp
