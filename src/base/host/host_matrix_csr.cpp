@@ -442,7 +442,7 @@ bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string filename) {
   }
   else
   {
-      LOG_INFO("WriteFileCSR: filename=" << filename << "; internal error");
+      LOG_INFO("ReadFileCSR: filename=" << filename << "; internal error");
   }
 
   LOG_INFO("ReadFileCSR: filename=" << filename << "; done");
