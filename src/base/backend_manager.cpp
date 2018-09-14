@@ -61,6 +61,7 @@ Rocalution_Backend_Descriptor _Backend_Descriptor = {
   // MPI rank/id
   0,
   // LOG
+  0,
   NULL   // FILE, file log
 };
 
@@ -111,8 +112,10 @@ int init_rocalution(int rank, int dev_per_node) {
 
   _rocalution_open_log_file();
 
-  LOG_DEBUG(0, "init_rocalution()",
-            "* begin");
+  log_debug(0, "init_rocalution()",
+            "* begin",
+            rank,
+            dev_per_node);
 
   if (_get_backend_descriptor()->init == true) {
     LOG_INFO("rocALUTION platform has been initialized - restarting");
@@ -158,7 +161,7 @@ int init_rocalution(int rank, int dev_per_node) {
 
   _get_backend_descriptor()->init = true ;
 
-  LOG_DEBUG(0, "init_rocalution()",
+  log_debug(0, "init_rocalution()",
             "* end");
 
   return 0;
@@ -166,7 +169,7 @@ int init_rocalution(int rank, int dev_per_node) {
 
 int stop_rocalution(void) {
 
-  LOG_DEBUG(0, "stop_rocalution()",
+  log_debug(0, "stop_rocalution()",
             "* begin");
 
   if(_get_backend_descriptor()->init == false)
@@ -195,7 +198,7 @@ int stop_rocalution(void) {
 
   _get_backend_descriptor()->init = false;
 
-  LOG_DEBUG(0, "stop_rocalution()",
+  log_debug(0, "stop_rocalution()",
             "* end");
 
   _rocalution_close_log_file();
@@ -205,7 +208,7 @@ int stop_rocalution(void) {
 
 void set_omp_threads_rocalution(int nthreads) {
 
-  LOG_DEBUG(0, "set_omp_threads_rocalution()",
+  log_debug(0, "set_omp_threads_rocalution()",
             nthreads);
 
   assert(_get_backend_descriptor()->init == true);
@@ -230,7 +233,7 @@ void set_omp_threads_rocalution(int nthreads) {
 
 void set_device_rocalution(int dev) {
 
-  LOG_DEBUG(0, "set_device_rocalution()",
+  log_debug(0, "set_device_rocalution()",
             dev);
 
   assert(_get_backend_descriptor()->init == false);
@@ -385,8 +388,7 @@ void _set_backend_descriptor(const struct Rocalution_Backend_Descriptor backend_
 template <typename ValueType>
 AcceleratorVector<ValueType>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor) {
 
-  LOG_DEBUG(0, "_rocalution_init_base_backend_vector()",
-            "");
+  log_debug(0, "_rocalution_init_base_backend_vector()");
 
   switch (backend_descriptor.backend) {
 
@@ -411,7 +413,7 @@ template <typename ValueType>
 AcceleratorMatrix<ValueType>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                    unsigned int matrix_format) {
 
-  LOG_DEBUG(0, "_rocalution_init_base_backend_matrix()",
+  log_debug(0, "_rocalution_init_base_backend_matrix()",
             matrix_format);
 
   switch (backend_descriptor.backend) {
@@ -437,7 +439,7 @@ template <typename ValueType>
 HostMatrix<ValueType>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                          unsigned int matrix_format) {
 
-  LOG_DEBUG(0, "_rocalution_init_base_host_matrix()",
+  log_debug(0, "_rocalution_init_base_host_matrix()",
             matrix_format);
 
   switch (matrix_format) {
@@ -515,15 +517,17 @@ size_t _rocalution_add_obj(class RocalutionObj* ptr) {
 
 #ifndef OBJ_TRACKING_OFF
   
-  LOG_DEBUG(0, "Creating new rocALUTION object, ptr=",
+  log_debug(0, "Creating new rocALUTION object, ptr=",
             ptr);
   
   Rocalution_Object_Data_Tracking.all_obj.push_back(ptr);
-  
-    LOG_DEBUG(0, "Creating new rocALUTION object, id=",
-              Rocalution_Object_Data_Tracking.all_obj.size()-1);
 
-  return (Rocalution_Object_Data_Tracking.all_obj.size()-1);
+  int id = Rocalution_Object_Data_Tracking.all_obj.size() - 1;
+
+  log_debug(0, "Creating new rocALUTION object, id=",
+            id);
+
+  return id;
 
 #else 
 
@@ -539,10 +543,10 @@ bool _rocalution_del_obj(class RocalutionObj* ptr,
 
 #ifndef OBJ_TRACKING_OFF
 
-  LOG_DEBUG(0, "Deleting rocALUTION object, ptr=",
+  log_debug(0, "Deleting rocALUTION object, ptr=",
             ptr);
 
-  LOG_DEBUG(0, "Deleting rocALUTION object, id=",
+  log_debug(0, "Deleting rocALUTION object, id=",
             id);
   
   if (Rocalution_Object_Data_Tracking.all_obj[id] == ptr)
@@ -566,7 +570,7 @@ void _rocalution_delete_all_obj(void) {
 
 #ifndef OBJ_TRACKING_OFF
 
-  LOG_DEBUG(0, "_rocalution_delete_all_obj()",
+  log_debug(0, "_rocalution_delete_all_obj()",
             "* begin");
 
   for (unsigned int i=0; 
@@ -576,14 +580,14 @@ void _rocalution_delete_all_obj(void) {
     if (Rocalution_Object_Data_Tracking.all_obj[i] != NULL)
       Rocalution_Object_Data_Tracking.all_obj[i]->Clear();
     
-    LOG_DEBUG(0, "clearing rocALUTION obj ptr=",
+    log_debug(0, "clearing rocALUTION obj ptr=",
               Rocalution_Object_Data_Tracking.all_obj[i]);
 
   }
 
   Rocalution_Object_Data_Tracking.all_obj.clear();
       
-  LOG_DEBUG(0, "_rocalution_delete_all_obj()",
+  log_debug(0, "_rocalution_delete_all_obj()",
             "* end");
 #endif
 

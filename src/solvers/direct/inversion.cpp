@@ -14,16 +14,14 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 Inversion<OperatorType, VectorType, ValueType>::Inversion() {
 
-  LOG_DEBUG(this, "Inversion::Inversion()",
-            "default constructor");
+  log_debug(this, "Inversion::Inversion()");
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 Inversion<OperatorType, VectorType, ValueType>::~Inversion() {
 
-  LOG_DEBUG(this, "Inversion::~Inversion()",
-            "destructor");
+  log_debug(this, "Inversion::~Inversion()");
 
   this->Clear();
 
@@ -54,8 +52,8 @@ void Inversion<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void Inversion<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "Inversion::Build()",
-            this->build_ <<
+  log_debug(this, "Inversion::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -71,8 +69,8 @@ void Inversion<OperatorType, VectorType, ValueType>::Build(void) {
   this->inverse_.CloneFrom(*this->op_);
   this->inverse_.Invert();
 
-  LOG_DEBUG(this, "Inversion::Build()",
-            this->build_ <<
+  log_debug(this, "Inversion::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -80,7 +78,7 @@ void Inversion<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void Inversion<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "Inversion::Clear()",
+  log_debug(this, "Inversion::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -95,7 +93,7 @@ void Inversion<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void Inversion<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "Inversion::MoveToHostLocalData_()",
+  log_debug(this, "Inversion::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true)
@@ -106,7 +104,7 @@ void Inversion<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void Inversion<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "Inversion::MoveToAcceleratorLocalData_()",
+  log_debug(this, "Inversion::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true)
@@ -117,8 +115,10 @@ void Inversion<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_
 template <class OperatorType, class VectorType, typename ValueType>
 void Inversion<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "Inversion::Solve_()",
-            " #*# begin");
+  log_debug(this, "Inversion::Solve_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -126,7 +126,7 @@ void Inversion<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rh
 
   this->inverse_.Apply(rhs, x);
 
-  LOG_DEBUG(this, "Inversion::Solve_()",
+  log_debug(this, "Inversion::Solve_()",
             " #*# end");
 
 }

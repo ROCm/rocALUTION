@@ -10,8 +10,7 @@ Rocalution_Object_Data Rocalution_Object_Data_Tracking;
 
 RocalutionObj::RocalutionObj() {
 
-  LOG_DEBUG(this, "RocalutionObj::RocalutionObj()",
-              "default constructor");
+  log_debug(this, "RocalutionObj::RocalutionObj()");
 
 #ifndef OBJ_TRACKING_OFF
 
@@ -27,8 +26,7 @@ RocalutionObj::RocalutionObj() {
 
 RocalutionObj::~RocalutionObj() { 
 
-  LOG_DEBUG(this, "RocalutionObj::RocalutionObj()",
-              "default destructor");
+  log_debug(this, "RocalutionObj::RocalutionObj()");
 
 #ifndef OBJ_TRACKING_OFF
 
@@ -51,8 +49,7 @@ RocalutionObj::~RocalutionObj() {
 template <typename ValueType>
 BaseRocalution<ValueType>::BaseRocalution() {
 
-  LOG_DEBUG(this, "BaseRocalution::BaseRocalution()",
-              "default constructor");
+  log_debug(this, "BaseRocalution::BaseRocalution()");
 
   // copy the backend description
   this->local_backend_ = *_get_backend_descriptor();
@@ -66,8 +63,7 @@ BaseRocalution<ValueType>::BaseRocalution() {
 template <typename ValueType>
 BaseRocalution<ValueType>::BaseRocalution(const BaseRocalution<ValueType> &src) {
 
-  LOG_DEBUG(this, "BaseRocalution::BaseRocalution()",
-            "copy constructor");
+  log_debug(this, "BaseRocalution::BaseRocalution()", (const void*&)src);
 
   LOG_INFO("no copy constructor");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -77,16 +73,13 @@ BaseRocalution<ValueType>::BaseRocalution(const BaseRocalution<ValueType> &src) 
 template <typename ValueType>
 BaseRocalution<ValueType>::~BaseRocalution() {
 
-  LOG_DEBUG(this, "BaseRocalution::~BaseRocalution()",
-            "default destructor");
-
+  log_debug(this, "BaseRocalution::~BaseRocalution()");
 }
 
 template<typename ValueType>
 BaseRocalution<ValueType>& BaseRocalution<ValueType>::operator=(const BaseRocalution<ValueType> &src) {
 
-  LOG_DEBUG(this, "BaseRocalution::operator=()",
-            "");
+  log_debug(this, "BaseRocalution::operator=()", (const void*&)src);
 
   LOG_INFO("no overloaded operator=()");
   FATAL_ERROR(__FILE__, __LINE__);
@@ -96,7 +89,7 @@ BaseRocalution<ValueType>& BaseRocalution<ValueType>::operator=(const BaseRocalu
 template<typename ValueType>
 void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType> &src) {
 
-  LOG_DEBUG(this, "BaseRocalution::CloneBackend()",
+  log_debug(this, "BaseRocalution::CloneBackend()",
             "with the same ValueType");
 
 
@@ -126,7 +119,7 @@ template <typename ValueType>
 template <typename ValueType2>
 void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType2> &src) {
 
-  LOG_DEBUG(this, "BaseRocalution::CloneBackend()",
+  log_debug(this, "BaseRocalution::CloneBackend()",
             "with different ValueType");
 
 

@@ -35,7 +35,7 @@ HostVector<ValueType>::HostVector() {
 template <typename ValueType>
 HostVector<ValueType>::HostVector(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostVector::HostVector()",
+  log_debug(this, "HostVector::HostVector()",
             "constructor with local_backend");
 
   this->vec_ = NULL ; 
@@ -48,7 +48,7 @@ HostVector<ValueType>::HostVector(const Rocalution_Backend_Descriptor local_back
 template <typename ValueType>
 HostVector<ValueType>::~HostVector() {
 
-  LOG_DEBUG(this, "HostVector::~HostVector()",
+  log_debug(this, "HostVector::~HostVector()",
             "destructor");
 
   this->Clear();

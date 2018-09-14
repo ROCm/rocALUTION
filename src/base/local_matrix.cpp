@@ -25,8 +25,7 @@ namespace rocalution {
 template <typename ValueType>
 LocalMatrix<ValueType>::LocalMatrix() {
 
-  LOG_DEBUG(this, "LocalMatrix::LocalMatrix()",
-            "default constructor");
+  log_debug(this, "LocalMatrix::LocalMatrix()");
 
   this->object_name_ = "";
 
@@ -42,8 +41,7 @@ LocalMatrix<ValueType>::LocalMatrix() {
 template <typename ValueType>
 LocalMatrix<ValueType>::~LocalMatrix() {
 
-  LOG_DEBUG(this, "LocalMatrix::~LocalMatrix()",
-            "default destructor");
+  log_debug(this, "LocalMatrix::~LocalMatrix()");
 
   this->Clear();
   delete this->matrix_;
@@ -81,7 +79,7 @@ unsigned int LocalMatrix<ValueType>::GetFormat(void) const {
 template <typename ValueType>
 void LocalMatrix<ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::Clear()",
+  log_debug(this, "LocalMatrix::Clear()",
             "");
 
   this->matrix_->Clear();
@@ -91,7 +89,7 @@ void LocalMatrix<ValueType>::Clear(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::Zeros(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::Zeros()",
+  log_debug(this, "LocalMatrix::Zeros()",
             "");
 
   if (this->GetNnz() > 0) {
@@ -149,8 +147,12 @@ void LocalMatrix<ValueType>::Zeros(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::AllocateCSR(const std::string name, const int nnz, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::AllocateCSR()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this,
+            "LocalMatrix::AllocateCSR()",
+            name,
+            nnz,
+            nrow,
+            ncol);
 
   assert (nnz >= 0);
   assert (nrow >= 0);
@@ -198,8 +200,7 @@ void LocalMatrix<ValueType>::AllocateCSR(const std::string name, const int nnz, 
 template <typename ValueType>
 void LocalMatrix<ValueType>::AllocateCOO(const std::string name, const int nnz, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::AllocateCOO()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::AllocateCOO()", name, nnz, nrow, ncol);
 
   assert (nnz >= 0);
   assert (nrow >= 0);
@@ -248,8 +249,7 @@ void LocalMatrix<ValueType>::AllocateCOO(const std::string name, const int nnz, 
 template <typename ValueType>
 void LocalMatrix<ValueType>::AllocateDIA(const std::string name, const int nnz, const int nrow, const int ncol, const int ndiag) {
 
-  LOG_DEBUG(this, "LocalMatrix::AllocateDIA()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol << " ndiag=" << ndiag);
+  log_debug(this, "LocalMatrix::AllocateDIA()", name, nnz, nrow, ncol, ndiag);
 
   assert (nnz >= 0);
   assert (nrow >= 0);
@@ -297,8 +297,7 @@ void LocalMatrix<ValueType>::AllocateDIA(const std::string name, const int nnz, 
 template <typename ValueType>
 void LocalMatrix<ValueType>::AllocateMCSR(const std::string name, const int nnz, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::AllocateMCSR()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::AllocateMCSR()", name, nnz, nrow, ncol);
 
   assert (nnz >= 0);
   assert (nrow >= 0);
@@ -346,8 +345,7 @@ void LocalMatrix<ValueType>::AllocateMCSR(const std::string name, const int nnz,
 template <typename ValueType>
 void LocalMatrix<ValueType>::AllocateELL(const std::string name, const int nnz, const int nrow, const int ncol, const int max_row) {
 
-  LOG_DEBUG(this, "LocalMatrix::AllocateELL()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol << " max_row=" << max_row);
+  log_debug(this, "LocalMatrix::AllocateELL()", name, nnz, nrow, ncol, max_row);
 
   assert (nnz >= 0);
   assert (nrow >= 0);
@@ -396,10 +394,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::AllocateHYB(const std::string name, const int ell_nnz, const int coo_nnz, const int ell_max_row,
                                          const int nrow, const int ncol) {
 
-    LOG_DEBUG(this, "LocalMatrix::AllocateHYB()",
-              "name=" << name << " ell_nnz=" << ell_nnz << " coo_nnz=" << coo_nnz
-              << " nrow=" << nrow << " ncol=" << ncol
-              << " ell_max_row=" << ell_max_row);
+    log_debug(this, "LocalMatrix::AllocateHYB()", name, ell_nnz, coo_nnz, ell_max_row, nrow, ncol);
 
   assert (ell_nnz >= 0);
   assert (coo_nnz >= 0);
@@ -448,8 +443,7 @@ void LocalMatrix<ValueType>::AllocateHYB(const std::string name, const int ell_n
 template <typename ValueType>
 void LocalMatrix<ValueType>::AllocateDENSE(const std::string name, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::AllocateDENSE()",
-            "name=" << name << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::AllocateDENSE()", name, nrow, ncol);
 
   assert (nrow >= 0);
   assert (ncol >= 0);
@@ -493,7 +487,7 @@ void LocalMatrix<ValueType>::AllocateDENSE(const std::string name, const int nro
 template <typename ValueType>
 bool LocalMatrix<ValueType>::Check(void) const {
 
-  LOG_DEBUG(this, "LocalMatrix::Check()",
+  log_debug(this, "LocalMatrix::Check()",
             "");
 
   bool check = false;
@@ -546,8 +540,7 @@ void LocalMatrix<ValueType>::SetDataPtrCOO(int **row, int **col, ValueType **val
                                            std::string name,
                                            const int nnz, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::SetDataPtrCOO()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::SetDataPtrCOO()", row, col, val, name, nnz, nrow, ncol);
 
   assert(row != NULL);
   assert(col != NULL);
@@ -581,8 +574,7 @@ void LocalMatrix<ValueType>::SetDataPtrCOO(int **row, int **col, ValueType **val
 template <typename ValueType>
 void LocalMatrix<ValueType>::LeaveDataPtrCOO(int **row, int **col, ValueType **val) {
 
-  LOG_DEBUG(this, "LocalMatrix::LeaveDataPtrCOO()",
-            "");
+  log_debug(this, "LocalMatrix::LeaveDataPtrCOO()", row, col, val);
 
   assert(*row == NULL);
   assert(*col == NULL);
@@ -607,8 +599,7 @@ void LocalMatrix<ValueType>::SetDataPtrCSR(int **row_offset, int **col, ValueTyp
                                            std::string name,
                                            const int nnz, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::SetDataPtrCSR()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::SetDataPtrCSR()", row_offset, col, val, name, nnz, nrow, ncol);
 
   assert(row_offset != NULL);
   assert(col != NULL);
@@ -642,8 +633,7 @@ void LocalMatrix<ValueType>::SetDataPtrCSR(int **row_offset, int **col, ValueTyp
 template <typename ValueType>
 void LocalMatrix<ValueType>::LeaveDataPtrCSR(int **row_offset, int **col, ValueType **val) {
 
-  LOG_DEBUG(this, "LocalMatrix::LeaveDataPtrCSR()",
-            "");
+  log_debug(this, "LocalMatrix::LeaveDataPtrCSR()", row_offset, col, val);
 
   assert(*row_offset == NULL);
   assert(*col == NULL);
@@ -668,8 +658,7 @@ void LocalMatrix<ValueType>::SetDataPtrMCSR(int **row_offset, int **col, ValueTy
                                             std::string name,
                                             const int nnz, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::SetDataPtrMCSR()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::SetDataPtrMCSR()", row_offset, col, val, name, nnz, nrow, ncol);
 
   assert(row_offset != NULL);
   assert(col != NULL);
@@ -703,8 +692,7 @@ void LocalMatrix<ValueType>::SetDataPtrMCSR(int **row_offset, int **col, ValueTy
 template <typename ValueType>
 void LocalMatrix<ValueType>::LeaveDataPtrMCSR(int **row_offset, int **col, ValueType **val) {
 
-  LOG_DEBUG(this, "LocalMatrix::LeaveDataPtrMCSR()",
-            "");
+  log_debug(this, "LocalMatrix::LeaveDataPtrMCSR()", row_offset, col, val);
 
   assert(*row_offset == NULL);
   assert(*col == NULL);
@@ -729,8 +717,7 @@ void LocalMatrix<ValueType>::SetDataPtrELL(int **col, ValueType **val,
                                            std::string name,
                                            const int nnz, const int nrow, const int ncol, const int max_row) {
 
-  LOG_DEBUG(this, "LocalMatrix::SetDataPtrELL()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol << " max_row=" << max_row);
+  log_debug(this, "LocalMatrix::SetDataPtrELL()", col, val, name, nnz, nrow, ncol, max_row);
 
   assert(col != NULL);
   assert(val != NULL);
@@ -762,8 +749,7 @@ void LocalMatrix<ValueType>::SetDataPtrELL(int **col, ValueType **val,
 template <typename ValueType>
 void LocalMatrix<ValueType>::LeaveDataPtrELL(int **col, ValueType **val, int &max_row) {
 
-  LOG_DEBUG(this, "LocalMatrix::LeaveDataPtrELL()",
-            "");
+  log_debug(this, "LocalMatrix::LeaveDataPtrELL()", col, val, max_row);
 
   assert(*col == NULL);
   assert(*val == NULL);
@@ -787,8 +773,7 @@ void LocalMatrix<ValueType>::SetDataPtrDIA(int **offset, ValueType **val,
                                            std::string name,
                                            const int nnz, const int nrow, const int ncol, const int num_diag) {
 
-  LOG_DEBUG(this, "LocalMatrix::SetDataPtrDIA()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol << " num_diag=" << num_diag);
+  log_debug(this, "LocalMatrix::SetDataPtrDIA()", offset, val, name, nnz, nrow, ncol, num_diag);
 
   assert(offset != NULL);
   assert(val != NULL);
@@ -825,8 +810,7 @@ void LocalMatrix<ValueType>::SetDataPtrDIA(int **offset, ValueType **val,
 template <typename ValueType>
 void LocalMatrix<ValueType>::LeaveDataPtrDIA(int **offset, ValueType **val, int &num_diag) {
 
-  LOG_DEBUG(this, "LocalMatrix::LeaveDataPtrDIA()",
-            "");
+  log_debug(this, "LocalMatrix::LeaveDataPtrDIA()", offset, val, num_diag);
 
   assert(*offset == NULL);
   assert(*val == NULL);
@@ -849,8 +833,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::SetDataPtrDENSE(ValueType **val, std::string name,
                                              const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::SetDataPtrDENSE()",
-            "name=" << name << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::SetDataPtrDENSE()", val, name, nrow, ncol);
 
   assert(val != NULL);
   assert(*val != NULL);
@@ -877,8 +860,7 @@ void LocalMatrix<ValueType>::SetDataPtrDENSE(ValueType **val, std::string name,
 template <typename ValueType>
 void LocalMatrix<ValueType>::LeaveDataPtrDENSE(ValueType **val) {
 
-  LOG_DEBUG(this, "LocalMatrix::LeaveDataPtrDENSE()",
-            "");
+  log_debug(this, "LocalMatrix::LeaveDataPtrDENSE()", val);
 
   assert(*val == NULL);
   assert(this->GetM() > 0);
@@ -899,8 +881,7 @@ void LocalMatrix<ValueType>::LeaveDataPtrDENSE(ValueType **val) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::CopyFromCSR(const int *row_offsets, const int *col, const ValueType *val) {
 
-  LOG_DEBUG(this, "LocalMatrix::CopyFromCSR()",
-            "");
+  log_debug(this, "LocalMatrix::CopyFromCSR()", row_offsets, col, val);
 
   assert(row_offsets != NULL);
   assert(col != NULL);
@@ -921,8 +902,7 @@ void LocalMatrix<ValueType>::CopyFromCSR(const int *row_offsets, const int *col,
 template <typename ValueType>
 void LocalMatrix<ValueType>::CopyToCSR(int *row_offsets, int *col, ValueType *val) const {
 
-  LOG_DEBUG(this, "LocalMatrix::CopyToCSR()",
-            "");
+  log_debug(this, "LocalMatrix::CopyToCSR()", row_offsets, col, val);
 
   assert(row_offsets != NULL);
   assert(col != NULL);
@@ -941,8 +921,7 @@ void LocalMatrix<ValueType>::CopyToCSR(int *row_offsets, int *col, ValueType *va
 template <typename ValueType>
 void LocalMatrix<ValueType>::CopyFromCOO(const int *row, const int *col, const ValueType *val) {
 
-  LOG_DEBUG(this, "LocalMatrix::CopyFromCOO()",
-            "");
+  log_debug(this, "LocalMatrix::CopyFromCOO()", row, col, val);
 
   assert(row != NULL);
   assert(col != NULL);
@@ -963,8 +942,7 @@ void LocalMatrix<ValueType>::CopyFromCOO(const int *row, const int *col, const V
 template <typename ValueType>
 void LocalMatrix<ValueType>::CopyToCOO(int *row, int *col, ValueType *val) const {
 
-  LOG_DEBUG(this, "LocalMatrix::CopyToCOO()",
-            "");
+  log_debug(this, "LocalMatrix::CopyToCOO()", row, col, val);
 
   assert(row != NULL);
   assert(col != NULL);
@@ -985,8 +963,7 @@ void LocalMatrix<ValueType>::CopyFromHostCSR(const int *row_offset, const int *c
                                              const std::string name,
                                              const int nnz, const int nrow, const int ncol) {
 
-  LOG_DEBUG(this, "LocalMatrix::CopyFromHostCSR()",
-            "name=" << name << " nnz=" << nnz << " nrow=" << nrow << " ncol=" << ncol);
+  log_debug(this, "LocalMatrix::CopyFromHostCSR()", row_offset, col, val, name, nnz, nrow, ncol);
 
   assert(nnz >= 0);
   assert(nrow >= 0);
@@ -1037,7 +1014,7 @@ void LocalMatrix<ValueType>::CopyFromHostCSR(const int *row_offset, const int *c
 template <typename ValueType>
 void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
 
-  LOG_DEBUG(this, "LocalMatrix::ReadFileMTX()",
+  log_debug(this, "LocalMatrix::ReadFileMTX()",
             filename);
 
   LOG_INFO("ReadFileMTX: filename="<< filename << "; reading...");
@@ -1093,7 +1070,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 
-  LOG_DEBUG(this, "LocalMatrix::WriteFileMTX()",
+  log_debug(this, "LocalMatrix::WriteFileMTX()",
             filename);
 
 #ifdef DEBUG_MODE
@@ -1131,7 +1108,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
 
-  LOG_DEBUG(this, "LocalMatrix::ReadFileCSR()",
+  log_debug(this, "LocalMatrix::ReadFileCSR()",
             filename);
 
   this->Clear();
@@ -1177,7 +1154,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 
-  LOG_DEBUG(this, "LocalMatrix::WriteFileCSR()",
+  log_debug(this, "LocalMatrix::WriteFileCSR()",
             filename);
 
 #ifdef DEBUG_MODE
@@ -1215,8 +1192,8 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const {
 template <typename ValueType>
 void LocalMatrix<ValueType>::CopyFrom(const LocalMatrix<ValueType> &src) {
 
-  LOG_DEBUG(this, "LocalMatrix::CopyFrom()",
-            "");
+  log_debug(this, "LocalMatrix::CopyFrom()",
+            (const void*&)src);
 
   assert(this != &src);
 
@@ -1227,8 +1204,8 @@ void LocalMatrix<ValueType>::CopyFrom(const LocalMatrix<ValueType> &src) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::CopyFromAsync(const LocalMatrix<ValueType> &src) {
 
-  LOG_DEBUG(this, "LocalMatrix::CopyFromAsync()",
-            "");
+  log_debug(this, "LocalMatrix::CopyFromAsync()",
+            (const void*&)src);
 
   assert(this->asyncf == false);
   assert(this != &src);
@@ -1242,8 +1219,8 @@ void LocalMatrix<ValueType>::CopyFromAsync(const LocalMatrix<ValueType> &src) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
 
-  LOG_DEBUG(this, "LocalMatrix::CloneFrom()",
-            "");
+  log_debug(this, "LocalMatrix::CloneFrom()",
+            (const void*&)src);
 
   assert(this != &src);
 
@@ -1294,8 +1271,8 @@ void LocalMatrix<ValueType>::CloneFrom(const LocalMatrix<ValueType> &src) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::UpdateValuesCSR(ValueType *val) {
 
-  LOG_DEBUG(this, "LocalMatrix::UpdateValues()",
-            "");
+  log_debug(this, "LocalMatrix::UpdateValues()",
+            val);
 
   assert(val != NULL);
   assert(this->GetNnz() > 0);
@@ -1386,8 +1363,7 @@ void LocalMatrix<ValueType>::Info(void) const {
 template <typename ValueType>
 void LocalMatrix<ValueType>::MoveToAccelerator(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::MoveToAccelerator()",
-            "");
+  log_debug(this, "LocalMatrix::MoveToAccelerator()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -1416,8 +1392,7 @@ void LocalMatrix<ValueType>::MoveToAccelerator(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::MoveToHost(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::MoveToHost()",
-            "");
+  log_debug(this, "LocalMatrix::MoveToHost()");
 
   if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
 
@@ -1443,8 +1418,7 @@ void LocalMatrix<ValueType>::MoveToHost(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::MoveToAcceleratorAsync(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::MoveToAcceleratorAsync()",
-            "");
+  log_debug(this, "LocalMatrix::MoveToAcceleratorAsync()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -1470,8 +1444,7 @@ void LocalMatrix<ValueType>::MoveToAcceleratorAsync(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::MoveToHostAsync(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::MoveToHostAsync()",
-            "");
+  log_debug(this, "LocalMatrix::MoveToHostAsync()");
 
   if ( (_rocalution_available_accelerator()) && (this->matrix_ == this->matrix_accel_)) {
 
@@ -1494,8 +1467,7 @@ void LocalMatrix<ValueType>::MoveToHostAsync(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::Sync(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::Sync()",
-            "");
+  log_debug(this, "LocalMatrix::Sync()");
 
   // check for active async transfer
   if (this->asyncf == true) {
@@ -1602,8 +1574,7 @@ void LocalMatrix<ValueType>::ConvertToDENSE(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
 
-  LOG_DEBUG(this, "LocalMatrix::ConvertTo()",
-            "");
+  log_debug(this, "LocalMatrix::ConvertTo()", matrix_format);
 
   assert((matrix_format == DENSE) ||
          (matrix_format == CSR) ||
@@ -1689,8 +1660,7 @@ void LocalMatrix<ValueType>::ConvertTo(const unsigned int matrix_format) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::Apply()",
-            "");
+  log_debug(this, "LocalMatrix::Apply()", (const void*&)in, out);
 
   assert(out != NULL);
 
@@ -1716,8 +1686,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const ValueType scalar,
                                       LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ApplyAdd()",
-            "");
+  log_debug(this, "LocalMatrix::ApplyAdd()", (const void*&)in, scalar, out);
 
   assert(out != NULL);
 
@@ -1742,8 +1711,8 @@ void LocalMatrix<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const Va
 template <typename ValueType>
 void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractDiagonal()",
-            "");
+  log_debug(this, "LocalMatrix::ExtractDiagonal()",
+            vec_diag);
 
   assert(vec_diag != NULL);
 
@@ -1803,8 +1772,8 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType> *vec_diag) c
 template <typename ValueType>
 void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType> *vec_inv_diag) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractInverseDiagonal()",
-            "");
+  log_debug(this, "LocalMatrix::ExtractInverseDiagonal()",
+            vec_inv_diag);
 
   assert(vec_inv_diag != NULL);
 
@@ -1868,9 +1837,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(const int row_offset,
                                               const int col_size,
                                               LocalMatrix<ValueType> *mat) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractSubMatrix()",
-            "row_offset=" <<  row_offset << " col_offset=" << col_offset
-            << " row_size=" << row_size << " col_size=" << col_size);
+  log_debug(this, "LocalMatrix::ExtractSubMatrix()", row_offset, col_offset, row_size, col_size, mat);
 
   assert(this != mat);
   assert(mat != NULL);
@@ -1971,8 +1938,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrices(const int row_num_blocks,
                                                 const int *col_offset,
                                                 LocalMatrix<ValueType> ***mat) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractSubMatrices()",
-            "row_num_blocks=" << row_num_blocks << " col_num_blocks=" << col_num_blocks);
+  log_debug(this, "LocalMatrix::ExtractSubMatrices()", row_num_blocks, col_num_blocks, row_offset, col_offset, mat);
 
   assert(row_num_blocks > 0);
   assert(col_num_blocks > 0);
@@ -2005,8 +1971,8 @@ void LocalMatrix<ValueType>::ExtractSubMatrices(const int row_num_blocks,
 template <typename ValueType>
 void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType> *U, const bool diag) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractU()",
-            diag);
+  log_debug(this, "LocalMatrix::ExtractU()",
+            U, diag);
 
   assert(U != NULL);
   assert(U != this);
@@ -2087,8 +2053,8 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType> *U, const bool diag
 template <typename ValueType>
 void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType> *L, const bool diag) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractL()",
-            diag);
+  log_debug(this, "LocalMatrix::ExtractL()",
+            L, diag);
 
   assert(L != NULL);
   assert(L != this);
@@ -2169,8 +2135,7 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType> *L, const bool diag
 template <typename ValueType>
 void LocalMatrix<ValueType>::LUAnalyse(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::LUAnalyse()",
-            "");
+  log_debug(this, "LocalMatrix::LUAnalyse()");
 
   if (this->GetNnz() > 0) {
     this->matrix_->LUAnalyse();
@@ -2181,8 +2146,7 @@ void LocalMatrix<ValueType>::LUAnalyse(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::LUAnalyseClear(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::LUAnalyseClear()",
-            "");
+  log_debug(this, "LocalMatrix::LUAnalyseClear()");
 
   if (this->GetNnz() > 0) {
     this->matrix_->LUAnalyseClear();
@@ -2193,8 +2157,7 @@ void LocalMatrix<ValueType>::LUAnalyseClear(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::LUSolve()",
-            "");
+  log_debug(this, "LocalMatrix::LUSolve()", (const void*&)in, out);
 
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
@@ -2263,8 +2226,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType> &in, LocalVect
 template <typename ValueType>
 void LocalMatrix<ValueType>::LLAnalyse(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::LLAnalyse()",
-            "");
+  log_debug(this, "LocalMatrix::LLAnalyse()");
 
   if (this->GetNnz() > 0) {
     this->matrix_->LLAnalyse();
@@ -2275,8 +2237,7 @@ void LocalMatrix<ValueType>::LLAnalyse(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::LLAnalyseClear(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::LLAnalyseClear()",
-            "");
+  log_debug(this, "LocalMatrix::LLAnalyseClear()");
 
   if (this->GetNnz() > 0) {
     this->matrix_->LLAnalyseClear();
@@ -2287,8 +2248,7 @@ void LocalMatrix<ValueType>::LLAnalyseClear(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::LLSolve()",
-            "");
+  log_debug(this, "LocalMatrix::LLSolve()", (const void*&)in, out);
 
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
@@ -2351,8 +2311,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const LocalVector<ValueType> &inv_diag,
                                      LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::LLSolve()",
-            "");
+  log_debug(this, "LocalMatrix::LLSolve()", (const void*&)in, (const void*&)inv_diag, out);
 
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
@@ -2423,7 +2382,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType> &in, const Loc
 template <typename ValueType>
 void LocalMatrix<ValueType>::LAnalyse(const bool diag_unit) {
 
-  LOG_DEBUG(this, "LocalMatrix::LAnalyse()",
+  log_debug(this, "LocalMatrix::LAnalyse()",
             diag_unit);
 
   if (this->GetNnz() > 0) {
@@ -2435,8 +2394,7 @@ void LocalMatrix<ValueType>::LAnalyse(const bool diag_unit) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::LAnalyseClear(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::LAnalyseClear()",
-            "");
+  log_debug(this, "LocalMatrix::LAnalyseClear()");
 
   if (this->GetNnz() > 0) {
     this->matrix_->LAnalyseClear();
@@ -2447,8 +2405,7 @@ void LocalMatrix<ValueType>::LAnalyseClear(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::LSolve()",
-            "");
+  log_debug(this, "LocalMatrix::LSolve()", (const void*&)in, out);
 
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
@@ -2510,8 +2467,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType> &in, LocalVecto
 template <typename ValueType>
 void LocalMatrix<ValueType>::UAnalyse(const bool diag_unit) {
 
-  LOG_DEBUG(this, "LocalMatrix::UAnalyse()",
-            "");
+  log_debug(this, "LocalMatrix::UAnalyse()", diag_unit);
 
   if (this->GetNnz() > 0) {
     this->matrix_->UAnalyse(diag_unit);
@@ -2522,8 +2478,7 @@ void LocalMatrix<ValueType>::UAnalyse(const bool diag_unit) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::UAnalyseClear(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::UAnalyseClear()",
-            "");
+  log_debug(this, "LocalMatrix::UAnalyseClear()");
 
   if (this->GetNnz() > 0) {
     this->matrix_->UAnalyseClear();
@@ -2534,8 +2489,7 @@ void LocalMatrix<ValueType>::UAnalyseClear(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::USolve()",
-            "");
+  log_debug(this, "LocalMatrix::USolve()", (const void*&)in, out);
 
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
@@ -2597,8 +2551,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType> &in, LocalVecto
 template <typename ValueType>
 void LocalMatrix<ValueType>::ILU0Factorize(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::ILU0Factorize()",
-            "");
+  log_debug(this, "LocalMatrix::ILU0Factorize()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -2659,8 +2612,7 @@ void LocalMatrix<ValueType>::ILU0Factorize(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 
-  LOG_DEBUG(this, "LocalMatrix::ILUTFactorize()",
-            "t=" << t << " maxrow=" << maxrow);
+  log_debug(this, "LocalMatrix::ILUTFactorize()", t, maxrow);
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -2724,8 +2676,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(const double t, const int maxrow) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 
-  LOG_DEBUG(this, "LocalMatrix::ILUpFactorize()",
-            "p=" << p << " level=" << level);
+  log_debug(this, "LocalMatrix::ILUpFactorize()", p, level);
 
   assert(p >= 0);
 
@@ -2858,8 +2809,8 @@ void LocalMatrix<ValueType>::ILUpFactorize(const int p, const bool level) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ICFactorize(LocalVector<ValueType> *inv_diag) {
 
-  LOG_DEBUG(this, "LocalMatrix::ICFactorize()",
-            "");
+  log_debug(this, "LocalMatrix::ICFactorize()",
+            inv_diag);
 
   assert(inv_diag != NULL);
 
@@ -2929,8 +2880,8 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
                                            int **size_colors,
                                            LocalVector<int> *permutation) const {
 
-  LOG_DEBUG(this, "LocalMatrix::MultiColoring()",
-            "");
+  log_debug(this, "LocalMatrix::MultiColoring()",
+            num_colors, size_colors, permutation);
 
   assert(*size_colors == NULL);
   assert(permutation != NULL);
@@ -2995,8 +2946,8 @@ void LocalMatrix<ValueType>::MultiColoring(int &num_colors,
 template <typename ValueType>
 void LocalMatrix<ValueType>::MaximalIndependentSet(int &size, LocalVector<int> *permutation) const {
 
-  LOG_DEBUG(this, "LocalMatrix::MaximalIndependentSet()",
-            "");
+  log_debug(this, "LocalMatrix::MaximalIndependentSet()",
+            size, permutation);
 
   assert(permutation != NULL);
   assert(this->GetM() == this->GetN());
@@ -3060,8 +3011,8 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int &size, LocalVector<int> *
 template <typename ValueType>
 void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *permutation) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ZeroBlockPermutation()",
-            "");
+  log_debug(this, "LocalMatrix::ZeroBlockPermutation()",
+            size, permutation);
 
   assert(permutation != NULL);
   assert(this->GetM() == this->GetN());
@@ -3124,8 +3075,8 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int &size, LocalVector<int> *p
 template <typename ValueType>
 void LocalMatrix<ValueType>::Householder(const int idx, ValueType &beta, LocalVector<ValueType> *vec) const {
 
-  LOG_DEBUG(this, "LocalMatrix::Householder()",
-            "");
+  log_debug(this, "LocalMatrix::Householder()",
+            idx, beta, vec);
 
   assert(idx >= 0);
   assert(vec != NULL);
@@ -3181,8 +3132,7 @@ void LocalMatrix<ValueType>::Householder(const int idx, ValueType &beta, LocalVe
 template <typename ValueType>
 void LocalMatrix<ValueType>::QRDecompose(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::QRDecompose()",
-            "");
+  log_debug(this, "LocalMatrix::QRDecompose()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -3239,8 +3189,7 @@ void LocalMatrix<ValueType>::QRDecompose(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalMatrix::QRSolve()",
-            "");
+  log_debug(this, "LocalMatrix::QRSolve()", (const void*&)in, out);
 
   assert(out != NULL);
   assert(in.GetSize() == this->GetN());
@@ -3304,8 +3253,8 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType> &in, LocalVect
 template <typename ValueType>
 void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
 
-  LOG_DEBUG(this, "LocalMatrix::Permute()",
-            "");
+  log_debug(this, "LocalMatrix::Permute()",
+            (const void*&)permutation);
 
   assert((permutation.GetSize() == this->GetM()) ||
           (permutation.GetSize() == this->GetN()));
@@ -3375,8 +3324,8 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int> &permutation) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation) {
 
-  LOG_DEBUG(this, "LocalMatrix::PermuteBackward()",
-            "");
+  log_debug(this, "LocalMatrix::PermuteBackward()",
+            (const void*&)permutation);
 
   assert((permutation.GetSize() == this->GetM()) ||
          (permutation.GetSize() == this->GetN()));
@@ -3446,8 +3395,8 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int> &permutation
 template <typename ValueType>
 void LocalMatrix<ValueType>::CMK(LocalVector<int> *permutation) const {
 
-  LOG_DEBUG(this, "LocalMatrix::CMK()",
-            "");
+  log_debug(this, "LocalMatrix::CMK()",
+            permutation);
 
   assert(permutation != NULL);
 
@@ -3513,8 +3462,8 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int> *permutation) const {
 template <typename ValueType>
 void LocalMatrix<ValueType>::RCMK(LocalVector<int> *permutation) const {
 
-  LOG_DEBUG(this, "LocalMatrix::RCMK()",
-            "");
+  log_debug(this, "LocalMatrix::RCMK()",
+            permutation);
 
   assert(permutation != NULL);
 
@@ -3580,8 +3529,8 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int> *permutation) const {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int> *permutation) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ConnectivityOrder()",
-            "");
+  log_debug(this, "LocalMatrix::ConnectivityOrder()",
+            permutation);
 
   assert(permutation != NULL);
 
@@ -3643,7 +3592,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int> *permutation) co
 template <typename ValueType>
 void LocalMatrix<ValueType>::SymbolicPower(const int p) {
 
-  LOG_DEBUG(this, "LocalMatrix::SymbolicPower()",
+  log_debug(this, "LocalMatrix::SymbolicPower()",
             p);
 
   assert(p >= 1);
@@ -3708,8 +3657,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const ValueType alpha,
                                        const ValueType beta, const bool structure) {
 
-  LOG_DEBUG(this, "LocalMatrix::MatrixAdd()",
-            "");
+  log_debug(this, "LocalMatrix::MatrixAdd()", (const void*&)mat, alpha, beta, structure);
 
   assert(&mat != this);
   assert(this->GetFormat() == mat.GetFormat());
@@ -3776,8 +3724,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
 template <typename ValueType>
 void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda_max) const {
 
-  LOG_DEBUG(this, "LocalMatrix::Gershgorin()",
-            "");
+  log_debug(this, "LocalMatrix::Gershgorin()", lambda_min, lambda_max);
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -3823,7 +3770,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda
 template <typename ValueType>
 void LocalMatrix<ValueType>::Scale(const ValueType alpha) {
 
-  LOG_DEBUG(this, "LocalMatrix::Scale()",
+  log_debug(this, "LocalMatrix::Scale()",
             alpha);
 
 #ifdef DEBUG_MODE
@@ -3885,7 +3832,7 @@ void LocalMatrix<ValueType>::Scale(const ValueType alpha) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ScaleDiagonal(const ValueType alpha) {
 
-  LOG_DEBUG(this, "LocalMatrix::ScaleDiagonal()",
+  log_debug(this, "LocalMatrix::ScaleDiagonal()",
             alpha);
 
 #ifdef DEBUG_MODE
@@ -3947,7 +3894,7 @@ void LocalMatrix<ValueType>::ScaleDiagonal(const ValueType alpha) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 
-  LOG_DEBUG(this, "LocalMatrix::ScaleOffDiagonal()",
+  log_debug(this, "LocalMatrix::ScaleOffDiagonal()",
             alpha);
 
 #ifdef DEBUG_MODE
@@ -4009,7 +3956,7 @@ void LocalMatrix<ValueType>::ScaleOffDiagonal(const ValueType alpha) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::AddScalar(const ValueType alpha) {
 
-  LOG_DEBUG(this, "LocalMatrix::AddScalar()",
+  log_debug(this, "LocalMatrix::AddScalar()",
             alpha);
 
 #ifdef DEBUG_MODE
@@ -4071,7 +4018,7 @@ void LocalMatrix<ValueType>::AddScalar(const ValueType alpha) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 
-  LOG_DEBUG(this, "LocalMatrix::AddScalarDiagonal()",
+  log_debug(this, "LocalMatrix::AddScalarDiagonal()",
             alpha);
 
 #ifdef DEBUG_MODE
@@ -4133,8 +4080,8 @@ void LocalMatrix<ValueType>::AddScalarDiagonal(const ValueType alpha) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 
-  LOG_DEBUG(this, "LocalMatrix::AddScalarOffDiagonal()",
-            "");
+  log_debug(this, "LocalMatrix::AddScalarOffDiagonal()",
+            alpha);
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -4195,8 +4142,7 @@ void LocalMatrix<ValueType>::AddScalarOffDiagonal(const ValueType alpha) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const LocalMatrix<ValueType> &B) {
 
-  LOG_DEBUG(this, "LocalMatrix::AddScalarDiagonal()",
-            "");
+  log_debug(this, "LocalMatrix::AddScalarDiagonal()", (const void*&)A, (const void*&)B);
 
   assert(&A != this);
   assert(&B != this);
@@ -4287,8 +4233,8 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType> &A, const L
 template <typename ValueType>
 void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType> &diag) {
 
-  LOG_DEBUG(this, "LocalMatrix::DiagonalMatrixMultR()",
-            "");
+  log_debug(this, "LocalMatrix::DiagonalMatrixMultR()",
+            (const void*&)diag);
 
   assert((diag.GetSize() == this->GetM()) ||
          (diag.GetSize() == this->GetN()));
@@ -4364,8 +4310,8 @@ void LocalMatrix<ValueType>::DiagonalMatrixMult(const LocalVector<ValueType> &di
 template <typename ValueType>
 void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &diag) {
 
-  LOG_DEBUG(this, "LocalMatrix::DiagonalMatrixMultL()",
-            "");
+  log_debug(this, "LocalMatrix::DiagonalMatrixMultL()",
+            (const void*&)diag);
 
   assert((diag.GetSize() == this->GetM()) ||
          (diag.GetSize() == this->GetN()));
@@ -4434,8 +4380,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType> &d
 template <typename ValueType>
 void LocalMatrix<ValueType>::Compress(const double drop_off) {
 
-  LOG_DEBUG(this, "LocalMatrix::Compress()",
-            "");
+  log_debug(this, "LocalMatrix::Compress()", drop_off);
 
   assert(rocalution_abs(drop_off) >= double(0.0));
 
@@ -4498,8 +4443,7 @@ void LocalMatrix<ValueType>::Compress(const double drop_off) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::Transpose(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::Transpose()",
-            "");
+  log_debug(this, "LocalMatrix::Transpose()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -4560,8 +4504,7 @@ void LocalMatrix<ValueType>::Transpose(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::Sort(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::Sort()",
-            "");
+  log_debug(this, "LocalMatrix::Sort()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -4624,8 +4567,7 @@ void LocalMatrix<ValueType>::Key(long int &row_key,
                                  long int &col_key,
                                  long int &val_key) const {
 
-  LOG_DEBUG(this, "LocalMatrix::Key()",
-            "");
+  log_debug(this, "LocalMatrix::Key()", row_key, col_key, val_key);
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -4676,8 +4618,8 @@ void LocalMatrix<ValueType>::Key(long int &row_key,
 template <typename ValueType>
 void LocalMatrix<ValueType>::AMGConnect(const ValueType eps, LocalVector<int> *connections) const {
 
-  LOG_DEBUG(this, "LocalMatrix::AMGConnect()",
-            eps);
+  log_debug(this, "LocalMatrix::AMGConnect()",
+            eps, connections);
 
   assert(eps > ValueType(0.0));
   assert(connections != NULL);
@@ -4737,8 +4679,8 @@ void LocalMatrix<ValueType>::AMGConnect(const ValueType eps, LocalVector<int> *c
 template <typename ValueType>
 void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int> &connections, LocalVector<int> *aggregates) const {
 
-  LOG_DEBUG(this, "LocalMatrix::AMGAggregate()",
-            "");
+  log_debug(this, "LocalMatrix::AMGAggregate()",
+            (const void*&)connections, aggregates);
 
   assert(aggregates != NULL);
 
@@ -4803,8 +4745,12 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(const ValueType relax,
                                                           LocalMatrix<ValueType> *prolong,
                                                           LocalMatrix<ValueType> *restrict) const {
 
-  LOG_DEBUG(this, "LocalMatrix::AMGSmoothedAggregation()",
-            relax);
+  log_debug(this, "LocalMatrix::AMGSmoothedAggregation()",
+            relax,
+            (const void*&)aggregates,
+            (const void*&)connections,
+            prolong,
+            restrict);
 
   assert(relax > ValueType(0.0));
   assert(prolong != NULL);
@@ -4898,8 +4844,10 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int> &aggregates,
                                                   LocalMatrix<ValueType> *prolong,
                                                   LocalMatrix<ValueType> *restrict) const {
 
-  LOG_DEBUG(this, "LocalMatrix::AMGAggregation()",
-            "");
+  log_debug(this, "LocalMatrix::AMGAggregation()",
+            (const void*&)aggregates,
+            prolong,
+            restrict);
 
   assert(prolong != NULL);
   assert(restrict != NULL);
@@ -4985,8 +4933,10 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::RugeStueben(const ValueType eps, LocalMatrix<ValueType> *prolong,
                                                               LocalMatrix<ValueType> *restrict) const {
 
-  LOG_DEBUG(this, "LocalMatrix::RugeStueben()",
-            "");
+  log_debug(this, "LocalMatrix::RugeStueben()",
+            eps,
+            prolong,
+            restrict);
 
   assert(eps < ValueType(1.0));
   assert(eps > ValueType(0.0));
@@ -5074,8 +5024,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::InitialPairwiseAggregation(const ValueType beta, int &nc, LocalVector<int> *G, int &Gsize,
                                                         int **rG, int &rGsize, const int ordering) const {
 
-  LOG_DEBUG(this, "LocalMatrix::InitialPairwiseAggregation()",
-            "");
+  log_debug(this, "LocalMatrix::InitialPairwiseAggregation()", beta, nc, G, Gsize, rG, rGsize, ordering);
 
   assert(*rG == NULL);
   assert(beta > ValueType(0.0));
@@ -5138,8 +5087,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
                                                         int &nc, LocalVector<int> *G, int &Gsize, int **rG,
                                                         int &rGsize, const int ordering) const {
 
-  LOG_DEBUG(this, "LocalMatrix::InitialPairwiseAggregation()",
-            "");
+  log_debug(this, "LocalMatrix::InitialPairwiseAggregation()", (const void*&)mat, beta, nc, G, Gsize, rG, rGsize, ordering);
 
   assert(*rG == NULL);
   assert(&mat != this);
@@ -5213,8 +5161,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const ValueType beta, int &nc, LocalVector<int> *G, int &Gsize,
                                                         int **rG, int &rGsize, const int ordering) const {
 
-  LOG_DEBUG(this, "LocalMatrix::FurtherPairwiseAggregation()",
-            "");
+  log_debug(this, "LocalMatrix::FurtherPairwiseAggregation()", beta, nc, G, Gsize, rG, rGsize, ordering);
 
   assert(*rG != NULL);
   assert(beta > ValueType(0.0));
@@ -5277,8 +5224,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
                                                         int &nc, LocalVector<int> *G, int &Gsize, int **rG,
                                                         int &rGsize, const int ordering) const {
 
-  LOG_DEBUG(this, "LocalMatrix::FurtherPairwiseAggregation()",
-            "");
+  log_debug(this, "LocalMatrix::FurtherPairwiseAggregation()", (const void*&)mat, beta, nc, G, Gsize, rG, rGsize, ordering);
 
   assert(*rG != NULL);
   assert(&mat != this);
@@ -5351,8 +5297,7 @@ template <typename ValueType>
 void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const int nrow, const int ncol, const LocalVector<int> &G,
                                              const int Gsize, const int *rG, const int rGsize) const {
 
-  LOG_DEBUG(this, "LocalMatrix::CoarsenOperator()",
-            "");
+  log_debug(this, "LocalMatrix::CoarsenOperator()", Ac, nrow, ncol, (const void*&)G, Gsize, rG, rGsize);
 
   assert(Ac != NULL);
   assert(Ac != this);
@@ -5432,8 +5377,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType> *Ac, const i
 template <typename ValueType>
 void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const int n, const int m) {
 
-  LOG_DEBUG(this, "LocalMatrix::CreateFromMap()",
-            n << " " << m);
+  log_debug(this, "LocalMatrix::CreateFromMap()", (const void*&)map, n, m);
 
   assert(map.GetSize() == (IndexType2) n);
   assert(m > 0);
@@ -5502,8 +5446,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 template <typename ValueType>
 void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const int n, const int m, LocalMatrix<ValueType> *pro) {
 
-  LOG_DEBUG(this, "LocalMatrix::CreateFromMap()",
-            n << " " << m);
+  log_debug(this, "LocalMatrix::CreateFromMap()", (const void*&)map, n, m, pro);
 
   assert(pro != NULL);
   assert(this != pro);
@@ -5573,8 +5516,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int> &map, const in
 template <typename ValueType>
 void LocalMatrix<ValueType>::LUFactorize(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::LUFactorize()",
-            "");
+  log_debug(this, "LocalMatrix::LUFactorize()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -5635,8 +5577,8 @@ void LocalMatrix<ValueType>::LUFactorize(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::FSAI(const int power, const LocalMatrix<ValueType> *pattern) {
 
-  LOG_DEBUG(this, "LocalMatrix::FSAI()",
-            power);
+  log_debug(this, "LocalMatrix::FSAI()",
+            power, pattern);
 
   assert(power > 0);
   assert(pattern != this);
@@ -5728,8 +5670,7 @@ void LocalMatrix<ValueType>::FSAI(const int power, const LocalMatrix<ValueType> 
 template <typename ValueType>
 void LocalMatrix<ValueType>::SPAI(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::SPAI()",
-            "");
+  log_debug(this, "LocalMatrix::SPAI()");
 
   assert(this->GetM() == this->GetN());
 
@@ -5792,8 +5733,7 @@ void LocalMatrix<ValueType>::SPAI(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::Invert(void) {
 
-  LOG_DEBUG(this, "LocalMatrix::Invert()",
-            "");
+  log_debug(this, "LocalMatrix::Invert()");
 
 #ifdef DEBUG_MODE
   this->Check();
@@ -5854,8 +5794,9 @@ void LocalMatrix<ValueType>::Invert(void) {
 template <typename ValueType>
 void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVector<ValueType> &vec) {
 
-  LOG_DEBUG(this, "LocalMatrix::ReplaceColumnVector()",
-            idx);
+  log_debug(this, "LocalMatrix::ReplaceColumnVector()",
+            idx,
+            (const void*&)vec);
 
   assert(vec.GetSize() == this->GetM());
   assert(idx >= 0);
@@ -5931,8 +5872,9 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(const int idx, const LocalVecto
 template <typename ValueType>
 void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<ValueType> *vec) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractColumnVector()",
-            idx);
+  log_debug(this, "LocalMatrix::ExtractColumnVector()",
+            idx,
+            vec);
 
   assert(vec != NULL);
   assert(vec->GetSize() == this->GetM());
@@ -5993,8 +5935,9 @@ void LocalMatrix<ValueType>::ExtractColumnVector(const int idx, LocalVector<Valu
 template <typename ValueType>
 void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<ValueType> &vec) {
 
-  LOG_DEBUG(this, "LocalMatrix::ReplaceRowVector()",
-            idx);
+  log_debug(this, "LocalMatrix::ReplaceRowVector()",
+            idx,
+            (const void*&)vec);
 
   assert(vec.GetSize() == this->GetN());
   assert(idx >= 0);
@@ -6070,8 +6013,9 @@ void LocalMatrix<ValueType>::ReplaceRowVector(const int idx, const LocalVector<V
 template <typename ValueType>
 void LocalMatrix<ValueType>::ExtractRowVector(const int idx, LocalVector<ValueType> *vec) const {
 
-  LOG_DEBUG(this, "LocalMatrix::ExtractRowVector()",
-            idx);
+  log_debug(this, "LocalMatrix::ExtractRowVector()",
+            idx,
+            vec);
 
   assert(vec != NULL);
   assert(vec->GetSize() == this->GetN());

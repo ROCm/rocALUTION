@@ -14,16 +14,14 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 QR<OperatorType, VectorType, ValueType>::QR() {
 
-  LOG_DEBUG(this, "QR::QR()",
-            "default constructor");
+  log_debug(this, "QR::QR()");
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 QR<OperatorType, VectorType, ValueType>::~QR() {
 
-  LOG_DEBUG(this, "QR::~QR()",
-            "destructor");
+  log_debug(this, "QR::~QR()");
 
   this->Clear();
 
@@ -54,8 +52,8 @@ void QR<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void QR<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "QR::Build()",
-            this->build_ <<
+  log_debug(this, "QR::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -71,8 +69,8 @@ void QR<OperatorType, VectorType, ValueType>::Build(void) {
   this->qr_.CloneFrom(*this->op_);
   this->qr_.QRDecompose();
 
-  LOG_DEBUG(this, "QR::Build()",
-            this->build_ <<
+  log_debug(this, "QR::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -80,7 +78,7 @@ void QR<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void QR<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "QR::Clear()",
+  log_debug(this, "QR::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -95,7 +93,7 @@ void QR<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void QR<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "QR::MoveToHostLocalData_()",
+  log_debug(this, "QR::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true)
@@ -106,7 +104,7 @@ void QR<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void QR<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "QR::MoveToAcceleratorLocalData_()",
+  log_debug(this, "QR::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true)
@@ -117,8 +115,10 @@ void QR<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void QR<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, VectorType *x) {
 
-  LOG_DEBUG(this, "QR::Solve_()",
-            " #*# begin");
+  log_debug(this, "QR::Solve_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -126,7 +126,7 @@ void QR<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs, Vect
 
   this->qr_.QRSolve(rhs, x);
 
-  LOG_DEBUG(this, "QR::Solve_()",
+  log_debug(this, "QR::Solve_()",
             " #*# end");
 
 }

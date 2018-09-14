@@ -35,7 +35,7 @@ template <typename ValueType>
 HIPAcceleratorMatrixHYB<ValueType>::HIPAcceleratorMatrixHYB(
     const Rocalution_Backend_Descriptor local_backend)
 {
-    LOG_DEBUG(this,
+    log_debug(this,
               "HIPAcceleratorMatrixHYB::HIPAcceleratorMatrixHYB()",
               "constructor with local_backend");
 
@@ -81,7 +81,7 @@ HIPAcceleratorMatrixHYB<ValueType>::HIPAcceleratorMatrixHYB(
 template <typename ValueType>
 HIPAcceleratorMatrixHYB<ValueType>::~HIPAcceleratorMatrixHYB()
 {
-    LOG_DEBUG(this, "HIPAcceleratorMatrixHYB::~HIPAcceleratorMatrixHYB()", "destructor");
+    log_debug(this, "HIPAcceleratorMatrixHYB::~HIPAcceleratorMatrixHYB()", "destructor");
 
     this->Clear();
 

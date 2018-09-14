@@ -21,7 +21,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 QMRCGStab<OperatorType, VectorType, ValueType>::QMRCGStab() {
 
-  LOG_DEBUG(this, "QMRCGStab::QMRCGStab()",
+  log_debug(this, "QMRCGStab::QMRCGStab()",
             "default constructor");
 
 }
@@ -29,7 +29,7 @@ QMRCGStab<OperatorType, VectorType, ValueType>::QMRCGStab() {
 template <class OperatorType, class VectorType, typename ValueType>
 QMRCGStab<OperatorType, VectorType, ValueType>::~QMRCGStab() {
 
-  LOG_DEBUG(this, "QMRCGStab::~QMRCGStab()",
+  log_debug(this, "QMRCGStab::~QMRCGStab()",
             "destructor");
 
   this->Clear();
@@ -86,8 +86,8 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void QMRCGStab<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "QMRCGStab::Build()",
-            this->build_ <<
+  log_debug(this, "QMRCGStab::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -130,8 +130,8 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::Build(void) {
   this->d_.CloneBackend(*this->op_);
   this->d_.Allocate("d", this->op_->GetM());
 
-  LOG_DEBUG(this, "QMRCGStab::Build()",
-            this->build_ <<
+  log_debug(this, "QMRCGStab::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -139,7 +139,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void QMRCGStab<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "QMRCGStab::Clear()",
+  log_debug(this, "QMRCGStab::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -171,7 +171,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void QMRCGStab<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "QMRCGStab::ReBuildNumeric()",
+  log_debug(this, "QMRCGStab::ReBuildNumeric()",
             this->build_);
 
   if (this->build_ == true) {
@@ -204,7 +204,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void QMRCGStab<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "QMRCGStab::MoveToHostLocalData_()",
+  log_debug(this, "QMRCGStab::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -227,7 +227,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void QMRCGStab<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "QMRCGStab::MoveToAcceleratorLocalData_()",
+  log_debug(this, "QMRCGStab::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -251,8 +251,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType &rhs,
                                                                      VectorType *x) {
 
-  LOG_DEBUG(this, "QMRCGStab::SolveNonPrecond_()",
-            " #*# begin");
+  log_debug(this, "QMRCGStab::SolveNonPrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -469,7 +471,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
   this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm(*r0)));
 
-  LOG_DEBUG(this, "QMRCGStab::SolveNonPrecond_()",
+  log_debug(this, "QMRCGStab::SolveNonPrecond_()",
             " #*# end");
 
 }
@@ -478,8 +480,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rhs,
                                                                   VectorType *x) {
 
-  LOG_DEBUG(this, "QMRCGStab::SolvePrecond_()",
-            " #*# begin");
+  log_debug(this, "QMRCGStab::SolvePrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -709,7 +713,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
   this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm(*r0)));
 
-  LOG_DEBUG(this, "QMRCGStab::SolvePrecond_()",
+  log_debug(this, "QMRCGStab::SolvePrecond_()",
             " #*# end");
 
 }

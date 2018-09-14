@@ -14,6 +14,53 @@ namespace rocalution {
 void _rocalution_open_log_file(void);
 void _rocalution_close_log_file(void);
 
+template <typename F, typename... Ts>
+void each_args(F f, Ts&... xs)
+{
+    (void)std::initializer_list<int>{((void)f(xs), 0)...};
+}
+
+struct log_arg
+{
+    log_arg(std::ostream& os, std::string& separator) : os_(os), separator_(separator) {}
+
+    /// Generic overload for () operator.
+    template <typename T>
+    void operator()(T& x) const
+    {
+        os_ << separator_ << x;
+    }
+
+    private:
+    std::ostream& os_;
+    std::string& separator_;
+};
+
+template <typename P, typename F, typename... Ts>
+void log_arguments(std::ostream& os, std::string& separator, int rank, P ptr, F fct, Ts&... xs)
+{
+    os << "\n[rank:" << rank << "]# ";
+    os << "Obj addr: " << ptr << "; ";
+    os << "fct: " << fct;
+    each_args(log_arg{os, separator}, xs...);
+}
+
+template <typename P, typename F, typename... Ts>
+void log_debug(P ptr, F fct, Ts&... xs)
+{
+    if(_get_backend_descriptor()->log_file != NULL)
+    {
+        std::string comma_separator = ", ";
+        std::ostream* os = _get_backend_descriptor()->log_file;
+        log_arguments(*os,
+                      comma_separator,
+                      _get_backend_descriptor()->rank,
+                      ptr,
+                      fct,
+                      xs...);
+    }
+}
+
 } // namespace rocalution
 
 // Do not edit
@@ -25,17 +72,7 @@ void _rocalution_close_log_file(void);
 #endif
 
 // Do not edit
-#ifdef LOG_FILE
-
-#define LOG_STREAM                                             \
-    ((_get_backend_descriptor()->log_file == NULL) ? std::cout \
-                                                   : *(_get_backend_descriptor()->log_file))
-
-#else
-
 #define LOG_STREAM std::cout
-
-#endif
 
 // LOG ERROR
 #define FATAL_ERROR(file, line)                                    \
@@ -57,20 +94,6 @@ void _rocalution_close_log_file(void);
 #else
 
 #define LOG_VERBOSE_INFO(level, stream) ;
-
-#endif
-
-// LOG DEBUG
-#ifdef DEBUG_MODE
-
-#define LOG_DEBUG(obj, fct, stream)                                           \
-    {                                                                         \
-        LOG_INFO("# Obj addr: " << obj << "; fct: " << fct << " " << stream); \
-    }
-
-#else
-
-#define LOG_DEBUG(obj, fct, stream) ;
 
 #endif
 

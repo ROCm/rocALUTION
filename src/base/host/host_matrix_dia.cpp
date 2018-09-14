@@ -29,7 +29,7 @@ HostMatrixDIA<ValueType>::HostMatrixDIA() {
 template <typename ValueType>
 HostMatrixDIA<ValueType>::HostMatrixDIA(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostMatrixDIA::HostMatrixDIA()",
+  log_debug(this, "HostMatrixDIA::HostMatrixDIA()",
             "constructor with local_backend");
 
   this->mat_.val = NULL;
@@ -42,7 +42,7 @@ HostMatrixDIA<ValueType>::HostMatrixDIA(const Rocalution_Backend_Descriptor loca
 template <typename ValueType>
 HostMatrixDIA<ValueType>::~HostMatrixDIA() {
 
-  LOG_DEBUG(this, "HostMatrixDIA::~HostMatrixDIA()",
+  log_debug(this, "HostMatrixDIA::~HostMatrixDIA()",
             "destructor");
 
   this->Clear();

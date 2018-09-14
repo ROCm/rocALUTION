@@ -14,7 +14,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 RugeStuebenAMG<OperatorType, VectorType, ValueType>::RugeStuebenAMG() {
 
-  LOG_DEBUG(this, "RugeStuebenAMG::RugeStuebenAMG()",
+  log_debug(this, "RugeStuebenAMG::RugeStuebenAMG()",
             "default constructor");
 
   // parameter for strong couplings in smoothed aggregation
@@ -25,7 +25,7 @@ RugeStuebenAMG<OperatorType, VectorType, ValueType>::RugeStuebenAMG() {
 template <class OperatorType, class VectorType, typename ValueType>
 RugeStuebenAMG<OperatorType, VectorType, ValueType>::~RugeStuebenAMG() {
 
-  LOG_DEBUG(this, "RugeStuebenAMG::RugeStuebenAMG()",
+  log_debug(this, "RugeStuebenAMG::RugeStuebenAMG()",
             "destructor");
 
   this->Clear();
@@ -70,7 +70,7 @@ void RugeStuebenAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const 
 template <class OperatorType, class VectorType, typename ValueType>
 void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueType eps) {
 
-  LOG_DEBUG(this, "RugeStuebenAMG::SetCouplingStrength()",
+  log_debug(this, "RugeStuebenAMG::SetCouplingStrength()",
             eps);
 
   this->eps_ = eps;
@@ -80,7 +80,7 @@ void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(co
 template <class OperatorType, class VectorType, typename ValueType>
 void RugeStuebenAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
 
-  LOG_DEBUG(this, "RugeStuebenAMG::BuildSmoothers()",
+  log_debug(this, "RugeStuebenAMG::BuildSmoothers()",
             " #*# begin");
 
   // Smoother for each level
@@ -101,12 +101,14 @@ void RugeStuebenAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
     this->sm_default_[i] = gs;
   }
 
+  log_debug(this, "RugeStuebenAMG::BuildSmoothers()",
+            " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void RugeStuebenAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "RugeStuebenAMG::ReBuildNumeric()",
+  log_debug(this, "RugeStuebenAMG::ReBuildNumeric()",
             " #*# begin");
 
   assert(this->levels_ > 1);
@@ -198,6 +200,8 @@ void RugeStuebenAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
     for (int i=0; i<this->levels_-1;++i)
       this->op_level_[i]->ConvertTo(this->op_format_);
 
+  log_debug(this, "RugeStuebenAMG::ReBuildNumeric()",
+            " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
@@ -206,8 +210,11 @@ void RugeStuebenAMG<OperatorType, VectorType, ValueType>::Aggregate(const Operat
                                                                     Operator<ValueType> *res,
                                                                     OperatorType *coarse) {
 
-  LOG_DEBUG(this, "RugeStuebenAMG::Aggregate()",
-            this->build_);
+  log_debug(this, "RugeStuebenAMG::Aggregate()",
+            (const void*&)op,
+            pro,
+            res,
+            coarse);
 
   assert(pro    != NULL);
   assert(res    != NULL);

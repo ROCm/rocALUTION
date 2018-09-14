@@ -17,7 +17,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 MultiElimination<OperatorType, VectorType, ValueType>::MultiElimination() {
 
-  LOG_DEBUG(this, "MultiElimination::MultiElimination()",
+  log_debug(this, "MultiElimination::MultiElimination()",
             "default constructor");
 
   this->diag_solver_init_ = false;
@@ -39,7 +39,7 @@ MultiElimination<OperatorType, VectorType, ValueType>::MultiElimination() {
 template <class OperatorType, class VectorType, typename ValueType>
 MultiElimination<OperatorType, VectorType, ValueType>::~MultiElimination() {
 
-  LOG_DEBUG(this, "MultiElimination::~MultiElimination()",
+  log_debug(this, "MultiElimination::~MultiElimination()",
             "destructor");
 
   this->Clear();
@@ -49,7 +49,7 @@ MultiElimination<OperatorType, VectorType, ValueType>::~MultiElimination() {
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "MultiElimination::Clear()",
+  log_debug(this, "MultiElimination::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -130,9 +130,7 @@ template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::Set(Solver<OperatorType, VectorType, ValueType> &AA_Solver,
                                                                 const int level, const double drop_off) {
 
-  LOG_DEBUG(this, "MultiElimination::Set()",
-            "level=" << level <<
-            " drop_off=" << drop_off);
+  log_debug(this, "MultiElimination::Set()", (const void*&)AA_Solver, level, drop_off);
 
   assert(level >= 0);
 
@@ -145,7 +143,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Set(Solver<OperatorT
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
 
-  LOG_DEBUG(this, "MultiElimination::SetPrecondMatrixFormat()",
+  log_debug(this, "MultiElimination::SetPrecondMatrixFormat()",
             mat_format);
 
   this->op_mat_format_ = true;
@@ -156,8 +154,8 @@ void MultiElimination<OperatorType, VectorType, ValueType>::SetPrecondMatrixForm
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "MultiElimination::Build()",
-            this->build_ <<
+  log_debug(this, "MultiElimination::Build()",
+            this->build_,
             " #*# begin");
 
   assert(this->build_ == false);
@@ -301,8 +299,8 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Build(void) {
     //    AA_.ConvertTo(this->precond_mat_format_);
   }
 
-  LOG_DEBUG(this, "MultiElimination::Build()",
-            this->build_ <<
+  log_debug(this, "MultiElimination::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -311,13 +309,12 @@ template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::Solve(const VectorType &rhs,
                                                                   VectorType *x) {
 
-  LOG_DEBUG(this, "MultiElimination::Solve()",
-            " #*# begin");
+  log_debug(this, "MultiElimination::Solve()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(this->build_ == true);
-
-  LOG_DEBUG(this, "MultiElimination::Solve()",
-            "level = " << this->GetLevel() << " with size=" << this->GetSizeDiagBlock() );
 
   this->rhs_.CopyFromPermute(rhs, this->permutation_);
 
@@ -355,7 +352,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Solve(const VectorTy
   x->CopyFromPermuteBackward(this->x_,
                              this->permutation_);
 
-  LOG_DEBUG(this, "MultiElimination::Solve()",
+  log_debug(this, "MultiElimination::Solve()",
             " #*# end");
 
 }
@@ -363,7 +360,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Solve(const VectorTy
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "MultiElimination::MoveToHostLocalData_()",
+  log_debug(this, "MultiElimination::MoveToHostLocalData_()",
             this->build_);
 
   this->A_.MoveToHost();
@@ -396,7 +393,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::MoveToHostLocalData_
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "MultiElimination::MoveToAcceleratorLocalData_()",
+  log_debug(this, "MultiElimination::MoveToAcceleratorLocalData_()",
             this->build_);
 
   this->A_.MoveToAccelerator();

@@ -25,7 +25,7 @@ namespace rocalution {
 
 bool rocalution_init_hip(void)
 {
-    LOG_DEBUG(0, "rocalution_init_hip()", "* begin");
+    log_debug(0, "rocalution_init_hip()", "* begin");
 
     assert(_get_backend_descriptor()->ROC_blas_handle == NULL);
     assert(_get_backend_descriptor()->ROC_sparse_handle == NULL);
@@ -128,14 +128,14 @@ bool rocalution_init_hip(void)
     _get_backend_descriptor()->HIP_max_threads =
         dev_prop.regsPerBlock > 0 ? dev_prop.regsPerBlock : 65536;
 
-    LOG_DEBUG(0, "rocalution_init_hip()", "* end");
+    log_debug(0, "rocalution_init_hip()", "* end");
 
     return true;
 }
 
 void rocalution_stop_hip(void)
 {
-    LOG_DEBUG(0, "rocalution_stop_hip()", "* begin");
+    log_debug(0, "rocalution_stop_hip()", "* begin");
 
     if(_get_backend_descriptor()->accelerator)
     {
@@ -160,7 +160,7 @@ void rocalution_stop_hip(void)
 
     _get_backend_descriptor()->HIP_dev = -1;
 
-    LOG_DEBUG(0, "rocalution_stop_hip()", "* end");
+    log_debug(0, "rocalution_stop_hip()", "* end");
 }
 
 void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_descriptor)

@@ -14,8 +14,7 @@ namespace rocalution {
 template <typename ValueType>
 LocalStencil<ValueType>::LocalStencil() {
 
-  LOG_DEBUG(this, "LocalStencil::LocalStencil()",
-            "default constructor");
+  log_debug(this, "LocalStencil::LocalStencil()");
 
   this->object_name_ = "";
 
@@ -28,8 +27,7 @@ LocalStencil<ValueType>::LocalStencil() {
 template <typename ValueType>
 LocalStencil<ValueType>::~LocalStencil() {
 
-  LOG_DEBUG(this, "LocalStencil::~LocalStencil()",
-            "default destructor");
+  log_debug(this, "LocalStencil::~LocalStencil()");
 
   delete this->stencil_;
 
@@ -38,8 +36,7 @@ LocalStencil<ValueType>::~LocalStencil() {
 template <typename ValueType>
 LocalStencil<ValueType>::LocalStencil(unsigned int type) {
 
-  LOG_DEBUG(this, "LocalStencil::LocalStencil()",
-            "constructor with stencil type");
+  log_debug(this, "LocalStencil::LocalStencil()", type);
 
   assert(type == Laplace2D); // the only one at the moment
 
@@ -85,8 +82,7 @@ template <typename ValueType>
 void LocalStencil<ValueType>::Clear(void) {
 
 
-  LOG_DEBUG(this, "LocalStencil::Clear()",
-            "");
+  log_debug(this, "LocalStencil::Clear()");
 
   this->stencil_->SetGrid(0);
 
@@ -96,7 +92,7 @@ void LocalStencil<ValueType>::Clear(void) {
 template <typename ValueType>
 void LocalStencil<ValueType>::SetGrid(const int size) {
 
-  LOG_DEBUG(this, "LocalStencil::SetGrid()",
+  log_debug(this, "LocalStencil::SetGrid()",
             size);
 
   assert (size >= 0);
@@ -109,8 +105,7 @@ void LocalStencil<ValueType>::SetGrid(const int size) {
 template <typename ValueType>
 void LocalStencil<ValueType>::Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalStencil::Apply()",
-            "");
+  log_debug(this, "LocalStencil::Apply()", (const void*&)in, out);
 
   assert(out != NULL);
 
@@ -125,8 +120,7 @@ template <typename ValueType>
 void LocalStencil<ValueType>::ApplyAdd(const LocalVector<ValueType> &in, const ValueType scalar, 
                                        LocalVector<ValueType> *out) const {
 
-  LOG_DEBUG(this, "LocalStencil::ApplyAdd()",
-            "");
+  log_debug(this, "LocalStencil::ApplyAdd()", (const void*&)in, scalar, out);
 
   assert(out != NULL);
 

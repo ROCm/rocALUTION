@@ -36,7 +36,7 @@ HostMatrixCOO<ValueType>::HostMatrixCOO() {
 template <typename ValueType>
 HostMatrixCOO<ValueType>::HostMatrixCOO(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostMatrixCOO::HostMatrixCOO()",
+  log_debug(this, "HostMatrixCOO::HostMatrixCOO()",
             "constructor with local_backend");
 
     this->mat_.row = NULL;  
@@ -49,7 +49,7 @@ HostMatrixCOO<ValueType>::HostMatrixCOO(const Rocalution_Backend_Descriptor loca
 template <typename ValueType>
 HostMatrixCOO<ValueType>::~HostMatrixCOO() {
 
-  LOG_DEBUG(this, "HostMatrixCOO::~HostMatrixCOO()",
+  log_debug(this, "HostMatrixCOO::~HostMatrixCOO()",
             "destructor");
 
   this->Clear();

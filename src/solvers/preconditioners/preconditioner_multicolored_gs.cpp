@@ -17,7 +17,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 MultiColoredSGS<OperatorType, VectorType, ValueType>::MultiColoredSGS() {
 
-  LOG_DEBUG(this, "MultiColoredSGS::MultiColoredSGS()",
+  log_debug(this, "MultiColoredSGS::MultiColoredSGS()",
             "default constructor");
 
   this->omega_ = ValueType(1.0);
@@ -27,7 +27,7 @@ MultiColoredSGS<OperatorType, VectorType, ValueType>::MultiColoredSGS() {
 template <class OperatorType, class VectorType, typename ValueType>
 MultiColoredSGS<OperatorType, VectorType, ValueType>::~MultiColoredSGS() {
 
-  LOG_DEBUG(this, "MultiColoredSGS::~MultiColoredSGS()",
+  log_debug(this, "MultiColoredSGS::~MultiColoredSGS()",
             "destructor");
 
   this->Clear();
@@ -39,7 +39,7 @@ MultiColoredSGS<OperatorType, VectorType, ValueType>::~MultiColoredSGS() {
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiColoredSGS<OperatorType, VectorType, ValueType>::SetRelaxation(const ValueType omega) {
 
-  LOG_DEBUG(this, "MultiColoredSGS::SetRelaxation()",
+  log_debug(this, "MultiColoredSGS::SetRelaxation()",
             omega);
 
   this->omega_ = omega ;
@@ -60,7 +60,7 @@ void MultiColoredSGS<OperatorType, VectorType, ValueType>::Print(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiColoredSGS<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "MultiColoredSGS::ReBuildNumeric()",
+  log_debug(this, "MultiColoredSGS::ReBuildNumeric()",
             this->build_);
 
   if (this->preconditioner_ != NULL) {
@@ -98,7 +98,7 @@ void MultiColoredSGS<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) 
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiColoredSGS<OperatorType, VectorType, ValueType>::PostAnalyse_(void) {
 
-  LOG_DEBUG(this, "MultiColoredSGS::PostAnalyse_()",
+  log_debug(this, "MultiColoredSGS::PostAnalyse_()",
             this->build_);
 
   assert(this->build_ == true);  
@@ -110,8 +110,7 @@ void MultiColoredSGS<OperatorType, VectorType, ValueType>::PostAnalyse_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiColoredSGS<OperatorType, VectorType, ValueType>::SolveL_(void) {
 
-  LOG_DEBUG(this, "MultiColoredSGS::SolveL_()",
-            "");
+  log_debug(this, "MultiColoredSGS::SolveL_()");
 
   assert(this->build_ == true);
 
@@ -134,8 +133,7 @@ void MultiColoredSGS<OperatorType, VectorType, ValueType>::SolveL_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiColoredSGS<OperatorType, VectorType, ValueType>::SolveD_(void) {
 
-  LOG_DEBUG(this, "MultiColoredSGS::SolveD_()",
-            "");
+  log_debug(this, "MultiColoredSGS::SolveD_()");
 
   assert(this->build_ == true);
 
@@ -153,8 +151,7 @@ void MultiColoredSGS<OperatorType, VectorType, ValueType>::SolveD_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiColoredSGS<OperatorType, VectorType, ValueType>::SolveR_(void) {
 
-  LOG_DEBUG(this, "MultiColoredSGS::SolveR_()",
-            "");
+  log_debug(this, "MultiColoredSGS::SolveR_()");
 
   assert(this->build_ == true);
   
@@ -178,8 +175,9 @@ template <class OperatorType, class VectorType, typename ValueType>
 void MultiColoredSGS<OperatorType, VectorType, ValueType>::Solve_(const VectorType &rhs,
                                                                   VectorType *x) {
 
-  LOG_DEBUG(this, "MultiColoredSGS::Solve_()",
-            "");
+  log_debug(this, "MultiColoredSGS::Solve_()",
+            (const void*&)rhs,
+            x);
 
   this->x_.CopyFromPermute(rhs,
                            this->permutation_);   

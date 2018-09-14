@@ -36,7 +36,7 @@ template <typename ValueType>
 HIPAcceleratorMatrixDENSE<ValueType>::HIPAcceleratorMatrixDENSE(
     const Rocalution_Backend_Descriptor local_backend)
 {
-    LOG_DEBUG(this,
+    log_debug(this,
               "HIPAcceleratorMatrixDENSE::HIPAcceleratorMatrixDENSE()",
               "constructor with local_backend");
 
@@ -49,7 +49,7 @@ HIPAcceleratorMatrixDENSE<ValueType>::HIPAcceleratorMatrixDENSE(
 template <typename ValueType>
 HIPAcceleratorMatrixDENSE<ValueType>::~HIPAcceleratorMatrixDENSE()
 {
-    LOG_DEBUG(this, "HIPAcceleratorMatrixDENSE::~HIPAcceleratorMatrixDENSE()", "destructor");
+    log_debug(this, "HIPAcceleratorMatrixDENSE::~HIPAcceleratorMatrixDENSE()", "destructor");
 
     this->Clear();
 }

@@ -19,7 +19,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 PairwiseAMG<OperatorType, VectorType, ValueType>::PairwiseAMG() {
 
-  LOG_DEBUG(this, "PairwiseAMG::PairwiseAMG()",
+  log_debug(this, "PairwiseAMG::PairwiseAMG()",
             "default constructor");
 
   this->beta_ = ValueType(0.25f);
@@ -46,7 +46,7 @@ PairwiseAMG<OperatorType, VectorType, ValueType>::PairwiseAMG() {
 template <class OperatorType, class VectorType, typename ValueType>
 PairwiseAMG<OperatorType, VectorType, ValueType>::~PairwiseAMG() {
 
-  LOG_DEBUG(this, "PairwiseAMG::PairwiseAMG()",
+  log_debug(this, "PairwiseAMG::PairwiseAMG()",
             "destructor");
 
   this->Clear();
@@ -91,7 +91,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void PairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType beta) {
 
-  LOG_DEBUG(this, "PairwiseAMG::SetBeta()",
+  log_debug(this, "PairwiseAMG::SetBeta()",
             beta);
 
   assert(beta > static_cast<ValueType>(0));
@@ -104,7 +104,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType b
 template <class OperatorType, class VectorType, typename ValueType>
 void PairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(const double factor) {
 
-  LOG_DEBUG(this, "PairwiseAMG::SetCoarseningFactor()",
+  log_debug(this, "PairwiseAMG::SetCoarseningFactor()",
             factor);
 
   assert(factor > 0.0);
@@ -117,7 +117,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(const
 template <class OperatorType, class VectorType, typename ValueType>
 void PairwiseAMG<OperatorType, VectorType, ValueType>::SetOrdering(unsigned int ordering) {
 
-  LOG_DEBUG(this, "PairwiseAMG::SetOrdering()",
+  log_debug(this, "PairwiseAMG::SetOrdering()",
             ordering);
 
   assert(ordering >= 0 && ordering <= 5);
@@ -129,7 +129,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::SetOrdering(unsigned int 
 template <class OperatorType, class VectorType, typename ValueType>
 void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 
-  LOG_DEBUG(this, "PairwiseAMG::BuildHierarchy()",
+  log_debug(this, "PairwiseAMG::BuildHierarchy()",
             " #*# begin");
 
   if (this->hierarchy_ == false) {
@@ -220,7 +220,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 
   }
 
-  LOG_DEBUG(this, "PairwiseAMG::BuildHierarchy()",
+  log_debug(this, "PairwiseAMG::BuildHierarchy()",
             " #*# end");
 
 }
@@ -228,7 +228,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
 
-  LOG_DEBUG(this, "PairwiseAMG::BuildSmoothers()",
+  log_debug(this, "PairwiseAMG::BuildSmoothers()",
             " #*# begin");
 
   // Smoother for each level
@@ -248,12 +248,14 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
     this->sm_default_[i] = jac;
   }
 
+  log_debug(this, "PairwiseAMG::BuildSmoothers()",
+            " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void PairwiseAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "PairwiseAMG::ReBuildNumeric()",
+  log_debug(this, "PairwiseAMG::ReBuildNumeric()",
             " #*# begin");
 
   assert(this->levels_ > 1);
@@ -309,12 +311,14 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
     for (int i=0; i<this->levels_-1;++i)
       this->op_level_[i]->ConvertTo(this->op_format_);
 
+  log_debug(this, "PairwiseAMG::ReBuildNumeric()",
+            " #*# end");
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
 void PairwiseAMG<OperatorType, VectorType, ValueType>::ClearLocal(void) {
 
-  LOG_DEBUG(this, "PairwiseAMG::ClearLocal()",
+  log_debug(this, "PairwiseAMG::ClearLocal()",
             this->build_);
 
   if (this->build_ == true) {
@@ -345,8 +349,12 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorT
                                                                  OperatorType *coarse,
                                                                  LocalVector<int> *trans) {
 
-  LOG_DEBUG(this, "PairwiseAMG::Aggregate()",
-            this->build_);
+  log_debug(this, "PairwiseAMG::Aggregate()",
+            (const void*&)op,
+            pro,
+            res,
+            coarse,
+            trans);
 
   assert(pro    != NULL);
   assert(res    != NULL);

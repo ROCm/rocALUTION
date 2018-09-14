@@ -20,7 +20,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 FCG<OperatorType, VectorType, ValueType>::FCG() {
 
-  LOG_DEBUG(this, "FCG::FCG()",
+  log_debug(this, "FCG::FCG()",
             "default constructor");
 
 }
@@ -28,7 +28,7 @@ FCG<OperatorType, VectorType, ValueType>::FCG() {
 template <class OperatorType, class VectorType, typename ValueType>
 FCG<OperatorType, VectorType, ValueType>::~FCG() {
 
-  LOG_DEBUG(this, "FCG::~FCG()",
+  log_debug(this, "FCG::~FCG()",
             "destructor");
 
   this->Clear();
@@ -85,8 +85,8 @@ void FCG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 template <class OperatorType, class VectorType, typename ValueType>
 void FCG<OperatorType, VectorType, ValueType>::Build(void) {
 
-  LOG_DEBUG(this, "FCG::Build()",
-            this->build_ <<
+  log_debug(this, "FCG::Build()",
+            this->build_,
             " #*# begin");
 
   if (this->build_ == true)
@@ -122,8 +122,8 @@ void FCG<OperatorType, VectorType, ValueType>::Build(void) {
   this->q_.CloneBackend(*this->op_);
   this->q_.Allocate("q", this->op_->GetM());
 
-  LOG_DEBUG(this, "FCG::Build()",
-            this->build_ <<
+  log_debug(this, "FCG::Build()",
+            this->build_,
             " #*# end");
 
 }
@@ -131,7 +131,7 @@ void FCG<OperatorType, VectorType, ValueType>::Build(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FCG<OperatorType, VectorType, ValueType>::Clear(void) {
 
-  LOG_DEBUG(this, "FCG::Clear()",
+  log_debug(this, "FCG::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -159,7 +159,7 @@ void FCG<OperatorType, VectorType, ValueType>::Clear(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FCG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  LOG_DEBUG(this, "FCG::Clear()",
+  log_debug(this, "FCG::Clear()",
             this->build_);
 
   if (this->build_ == true) {
@@ -187,7 +187,7 @@ void FCG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FCG<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
-  LOG_DEBUG(this, "FCG::MoveToHostLocalData_()",
+  log_debug(this, "FCG::MoveToHostLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -209,7 +209,7 @@ void FCG<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 template <class OperatorType, class VectorType, typename ValueType>
 void FCG<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) {
 
-  LOG_DEBUG(this, "FCG::MoveToAcceleratorLocalData_()",
+  log_debug(this, "FCG::MoveToAcceleratorLocalData_()",
             this->build_);
 
   if (this->build_ == true) {
@@ -235,8 +235,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType &rhs,
                                                                VectorType *x) {
 
-  LOG_DEBUG(this, "FCG::SolveNonPrecond_()",
-            " #*# begin");
+  log_debug(this, "FCG::SolveNonPrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -323,7 +325,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
   }
 
-  LOG_DEBUG(this, "FCG::SolveNonPrecond_()",
+  log_debug(this, "FCG::SolveNonPrecond_()",
             " #*# end");
 
 }
@@ -332,8 +334,10 @@ template <class OperatorType, class VectorType, typename ValueType>
 void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &rhs,
                                                             VectorType *x) {
 
-  LOG_DEBUG(this, "FCG::SolvePrecond_()",
-            " #*# begin");
+  log_debug(this, "FCG::SolvePrecond_()",
+            " #*# begin",
+            (const void*&)rhs,
+            x);
 
   assert(x != NULL);
   assert(x != &rhs);
@@ -427,7 +431,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType &r
 
   }
 
-  LOG_DEBUG(this, "FCG::SolvePrecond_()",
+  log_debug(this, "FCG::SolvePrecond_()",
             " #*# end");
 
 }

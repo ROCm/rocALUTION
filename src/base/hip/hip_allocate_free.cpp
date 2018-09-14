@@ -14,7 +14,7 @@ namespace rocalution {
 template <typename DataType>
 void allocate_host(int size, DataType** ptr)
 {
-    LOG_DEBUG(0, "allocate_host()", size);
+    log_debug(0, "allocate_host()", size, ptr);
 
     if(size > 0)
     {
@@ -25,8 +25,6 @@ void allocate_host(int size, DataType** ptr)
         hipMallocHost((void**)ptr, size * sizeof(DataType));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        LOG_DEBUG(0, "allocate_host()", *ptr);
-
         assert(*ptr != NULL);
     }
 }
@@ -34,7 +32,7 @@ void allocate_host(int size, DataType** ptr)
 template <typename DataType>
 void free_host(DataType** ptr)
 {
-    LOG_DEBUG(0, "free_host()", *ptr);
+    log_debug(0, "free_host()", *ptr);
 
     assert(*ptr != NULL);
 
@@ -49,7 +47,7 @@ void free_host(DataType** ptr)
 template <typename DataType>
 void allocate_hip(int size, DataType** ptr)
 {
-    LOG_DEBUG(0, "allocate_hip()", size);
+    log_debug(0, "allocate_hip()", size, ptr);
 
     if(size > 0)
     {
@@ -65,7 +63,7 @@ void allocate_hip(int size, DataType** ptr)
 template <typename DataType>
 void free_hip(DataType** ptr)
 {
-    LOG_DEBUG(0, "free_hip()", *ptr);
+    log_debug(0, "free_hip()", *ptr);
 
     assert(*ptr != NULL);
 
@@ -78,7 +76,7 @@ void free_hip(DataType** ptr)
 template <typename DataType>
 void set_to_zero_hip(int blocksize, int size, DataType* ptr)
 {
-    LOG_DEBUG(0, "set_to_zero_hip()", "size =" << size << " ptr=" << ptr);
+    log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
 
     if(size > 0)
     {
@@ -92,7 +90,7 @@ void set_to_zero_hip(int blocksize, int size, DataType* ptr)
 template <typename DataType>
 void set_to_one_hip(int blocksize, int size, DataType* ptr)
 {
-    LOG_DEBUG(0, "set_to_zero_hip()", "size =" << size << " ptr=" << ptr);
+    log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
 
     if(size > 0)
     {
@@ -112,7 +110,7 @@ void set_to_one_hip(int blocksize, int size, DataType* ptr)
 template <>
 void set_to_one_hip(int blocksize, int size, std::complex<double>* ptr)
 {
-    LOG_DEBUG(0, "set_to_zero_hip()", "size =" << size << " ptr=" << ptr);
+    log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
 
     if(size > 0)
     {
@@ -135,7 +133,7 @@ void set_to_one_hip(int blocksize, int size, std::complex<double>* ptr)
 template <>
 void set_to_one_hip(int blocksize, int size, std::complex<float>* ptr)
 {
-    LOG_DEBUG(0, "set_to_zero_hip()", "size =" << size << " ptr=" << ptr);
+    log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
 
     if(size > 0)
     {

@@ -56,6 +56,8 @@ struct Rocalution_Backend_Descriptor {
   // MPI rank/id
   int rank;
 
+  // Logging
+  int log_mode;
   std::ofstream *log_file;
 
 };

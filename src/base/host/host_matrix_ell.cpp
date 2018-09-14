@@ -29,7 +29,7 @@ HostMatrixELL<ValueType>::HostMatrixELL() {
 template <typename ValueType>
 HostMatrixELL<ValueType>::HostMatrixELL(const Rocalution_Backend_Descriptor local_backend) {
 
-  LOG_DEBUG(this, "HostMatrixELL::HostMatrixELL()",
+  log_debug(this, "HostMatrixELL::HostMatrixELL()",
             "constructor with local_backend");
 
   this->mat_.val = NULL;
@@ -43,7 +43,7 @@ HostMatrixELL<ValueType>::HostMatrixELL(const Rocalution_Backend_Descriptor loca
 template <typename ValueType>
 HostMatrixELL<ValueType>::~HostMatrixELL() {
 
-  LOG_DEBUG(this, "HostMatrixELL::~HostMatrixELL()",
+  log_debug(this, "HostMatrixELL::~HostMatrixELL()",
             "destructor");
 
   this->Clear();

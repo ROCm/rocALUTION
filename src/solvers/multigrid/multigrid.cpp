@@ -16,7 +16,7 @@ namespace rocalution {
 template <class OperatorType, class VectorType, typename ValueType>
 MultiGrid<OperatorType, VectorType, ValueType>::MultiGrid() {
 
-  LOG_DEBUG(this, "MultiGrid::MultiGrid()",
+  log_debug(this, "MultiGrid::MultiGrid()",
             "default constructor");
 
   this->scaling_ = true;
@@ -26,7 +26,7 @@ MultiGrid<OperatorType, VectorType, ValueType>::MultiGrid() {
 template <class OperatorType, class VectorType, typename ValueType>
 MultiGrid<OperatorType, VectorType, ValueType>::~MultiGrid() {
 
-  LOG_DEBUG(this, "MultiGrid::~MultiGrid()",
+  log_debug(this, "MultiGrid::~MultiGrid()",
             "destructor");
 
     delete[] this->restrict_op_level_;
@@ -37,8 +37,8 @@ MultiGrid<OperatorType, VectorType, ValueType>::~MultiGrid() {
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiGrid<OperatorType, VectorType, ValueType>::SetRestrictOperator(OperatorType **op) {
 
-  LOG_DEBUG(this, "MultiGrid::SetRestrictOperator()",
-            "");
+  log_debug(this, "MultiGrid::SetRestrictOperator()",
+            op);
 
   assert(this->build_ == false);
   assert(op != NULL);
@@ -54,8 +54,8 @@ void MultiGrid<OperatorType, VectorType, ValueType>::SetRestrictOperator(Operato
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiGrid<OperatorType, VectorType, ValueType>::SetProlongOperator(OperatorType **op) {
 
-  LOG_DEBUG(this, "MultiGrid::SetProlongOperator()",
-            "");
+  log_debug(this, "MultiGrid::SetProlongOperator()",
+            op);
 
   assert(this->build_ == false);
   assert(op != NULL);
@@ -71,8 +71,8 @@ void MultiGrid<OperatorType, VectorType, ValueType>::SetProlongOperator(Operator
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiGrid<OperatorType, VectorType, ValueType>::SetOperatorHierarchy(OperatorType **op) {
 
-  LOG_DEBUG(this, "MultiGrid::SetOperatorHierarchy()",
-            "");
+  log_debug(this, "MultiGrid::SetOperatorHierarchy()",
+            op);
   
   assert(this->build_ == false);
   assert(op != NULL );
