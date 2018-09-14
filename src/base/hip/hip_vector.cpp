@@ -72,6 +72,8 @@ void HIPAcceleratorVector<ValueType>::Allocate(const int n)
 
         this->size_ = n;
     }
+
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
