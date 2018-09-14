@@ -27,6 +27,8 @@ IDR<OperatorType, VectorType, ValueType>::IDR()
     log_debug(this, "IDR::IDR()", "default constructor");
 
     this->s_     = 4;
+    this->seed_  = time(NULL);
+
     this->kappa_ = ValueType(0.7f);
 
     this->c_ = NULL;
@@ -131,7 +133,7 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void)
         this->U_[i]->Allocate("u", this->op_->GetM());
         this->P_[i]->Allocate("P", this->op_->GetM());
 
-        this->P_[i]->SetRandomNormal((i+1)*time(NULL), 0.0, 1.0);
+        this->P_[i]->SetRandomNormal((i+1)*this->seed_, 0.0, 1.0);
     }
 
     if(this->precond_ != NULL)
@@ -244,6 +246,17 @@ void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(const int s)
     assert((IndexType2)s <= this->op_->GetM());
 
     this->s_ = s;
+}
+
+template <class OperatorType, class VectorType, typename ValueType>
+void IDR<OperatorType, VectorType, ValueType>::SetRandomSeed(unsigned long long seed)
+{
+    log_debug(this, "IDR::SetRandomSeed()", seed);
+
+    assert(this->build_ == false);
+    assert(seed > 0ULL);
+
+    this->seed_ = seed;
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
