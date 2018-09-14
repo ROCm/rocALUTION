@@ -220,7 +220,6 @@ void GS<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->GS_.CloneFrom(*this->op_);
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
   LOG_DEBUG(this, "GS::Build()",
             this->build_ <<
@@ -240,7 +239,6 @@ void GS<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType &
   this->GS_.Clear();
   this->GS_.CloneFrom(*this->op_);
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
 }
 
@@ -253,7 +251,6 @@ void GS<OperatorType, VectorType, ValueType>::Clear(void) {
 
   this->GS_.Clear();
   this->GS_.LAnalyseClear();
-  this->GS_.UAnalyseClear();
 
   this->build_ = false;
 
@@ -285,7 +282,6 @@ void GS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
   this->GS_.MoveToHost();
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
 }
 
@@ -297,7 +293,6 @@ void GS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) 
 
   this->GS_.MoveToAccelerator();
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
 }
 
