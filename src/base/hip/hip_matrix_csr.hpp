@@ -133,13 +133,15 @@ class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType>
     private:
     MatrixCSR<ValueType, int> mat_;
 
-    //  cusparseSolveAnalysisInfo_t L_mat_info_;
-    //  cusparseSolveAnalysisInfo_t U_mat_info_;
     rocsparse_mat_descr L_mat_descr_;
     rocsparse_mat_descr U_mat_descr_;
     rocsparse_mat_descr mat_descr_;
 
     rocsparse_mat_info mat_info_;
+
+    // Matrix buffer (csrilu0, csric0, csrsv)
+    size_t mat_buffer_size_;
+    void* mat_buffer_;
 
     HIPAcceleratorVector<ValueType>* tmp_vec_;
 
