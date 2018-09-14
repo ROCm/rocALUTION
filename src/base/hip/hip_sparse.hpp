@@ -22,6 +22,51 @@ rocsparse_status rocsparseTcsrmv(rocsparse_handle handle,
                                  const ValueType* beta,
                                  ValueType* y);
 
+// rocsparse csrsv buffer size
+template <typename ValueType>
+rocsparse_status rocsparseTcsrsv_buffer_size(rocsparse_handle handle,
+                                             rocsparse_operation trans,
+                                             int m,
+                                             int nnz,
+                                             const rocsparse_mat_descr descr,
+                                             const ValueType* csr_val,
+                                             const int* csr_row_ptr,
+                                             const int* csr_col_ind,
+                                             rocsparse_mat_info info,
+                                             size_t* buffer_size);
+
+// rocsparse csrsv analysis
+template <typename ValueType>
+rocsparse_status rocsparseTcsrsv_analysis(rocsparse_handle handle,
+                                          rocsparse_operation trans,
+                                          int m,
+                                          int nnz,
+                                          const rocsparse_mat_descr descr,
+                                          const ValueType* csr_val,
+                                          const int* csr_row_ptr,
+                                          const int* csr_col_ind,
+                                          rocsparse_mat_info info,
+                                          rocsparse_analysis_policy analysis,
+                                          rocsparse_solve_policy solve,
+                                          void* temp_buffer);
+
+// rocsparse csrsv
+template <typename ValueType>
+rocsparse_status rocsparseTcsrsv(rocsparse_handle handle,
+                                 rocsparse_operation trans,
+                                 int m,
+                                 int nnz,
+                                 const ValueType* alpha,
+                                 const rocsparse_mat_descr descr,
+                                 const ValueType* csr_val,
+                                 const int* csr_row_ptr,
+                                 const int* csr_col_ind,
+                                 rocsparse_mat_info info,
+                                 const ValueType* x,
+                                 ValueType* y,
+                                 rocsparse_solve_policy policy,
+                                 void* temp_buffer);
+
 // rocsparse coomv
 template <typename ValueType>
 rocsparse_status rocsparseTcoomv(rocsparse_handle handle,
@@ -52,6 +97,45 @@ rocsparse_status rocsparseTellmv(rocsparse_handle handle,
                                  const ValueType* x,
                                  const ValueType* beta,
                                  ValueType* y);
+
+// rocsparse csrilu0 buffer size
+template <typename ValueType>
+rocsparse_status rocsparseTcsrilu0_buffer_size(rocsparse_handle handle,
+                                               int m,
+                                               int nnz,
+                                               const rocsparse_mat_descr descr,
+                                               ValueType* csr_val,
+                                               const int* csr_row_ptr,
+                                               const int* csr_col_ind,
+                                               rocsparse_mat_info info,
+                                               size_t* buffer_size);
+
+// rocsparse csrilu0 analysis
+template <typename ValueType>
+rocsparse_status rocsparseTcsrilu0_analysis(rocsparse_handle handle,
+                                            int m,
+                                            int nnz,
+                                            const rocsparse_mat_descr descr,
+                                            ValueType* csr_val,
+                                            const int* csr_row_ptr,
+                                            const int* csr_col_ind,
+                                            rocsparse_mat_info info,
+                                            rocsparse_analysis_policy analysis,
+                                            rocsparse_solve_policy solve,
+                                            void* temp_buffer);
+
+// rocsparse csrilu0
+template <typename ValueType>
+rocsparse_status rocsparseTcsrilu0(rocsparse_handle handle,
+                                   int m,
+                                   int nnz,
+                                   const rocsparse_mat_descr descr,
+                                   ValueType* csr_val,
+                                   const int* csr_row_ptr,
+                                   const int* csr_col_ind,
+                                   rocsparse_mat_info info,
+                                   rocsparse_solve_policy policy,
+                                   void* temp_buffer);
 
 // rocsparse csr2csc
 template <typename ValueType>
