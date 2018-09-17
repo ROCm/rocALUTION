@@ -285,30 +285,17 @@ bool csr_to_dia_hip(int blocksize,
     d_temp_storage     = NULL;
     temp_storage_bytes = 0;
 
-    /*
-        // Obtain hipcub buffer size
-        hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow +
-       ncol);
+    // Obtain hipcub buffer size
+    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
-        // Allocate hipcub buffer
-        hipMalloc(&d_temp_storage, temp_storage_bytes);
+    // Allocate hipcub buffer
+    hipMalloc(&d_temp_storage, temp_storage_bytes);
 
-        // Do inclusive sum
-        hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow +
-       ncol);
+    // Do inclusive sum
+    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
-        // Clear hipcub buffer
-        hipFree(d_temp_storage);
-    */
-
-    // TODO remove when HIP PR575 bugfix goes live
-    std::vector<int> tmp(nrow + ncol);
-    hipMemcpy(&tmp[1], diag_idx, sizeof(int) * (nrow + ncol - 1), hipMemcpyDeviceToHost);
-    tmp[0] = 0;
-    for(int i = 1; i < nrow + ncol; ++i)
-        tmp[i] += tmp[i - 1];
-    hipMemcpy(work, tmp.data(), sizeof(int) * (nrow + ncol), hipMemcpyHostToDevice);
-    // TODO END
+    // Clear hipcub buffer
+    hipFree(d_temp_storage);
 
     // Fill DIA structures
     dim3 fill_blocks((nrow + ncol) / blocksize + 1);
@@ -413,43 +400,26 @@ bool csr_to_hyb_hip(int blocksize,
                            coo_row_nnz);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        /*
-                // Inclusive sum on coo_row_nnz
-                void* d_temp_storage = NULL;
-                size_t temp_storage_bytes = 0;
+        // Inclusive sum on coo_row_nnz
+        void* d_temp_storage = NULL;
+        size_t temp_storage_bytes = 0;
 
-                // Obtain hipcub buffer size
-                hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz,
-           coo_row_nnz + 1, nrow);
+        // Obtain hipcub buffer size
+        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
 
-                // Allocate hipcub buffer
-                hipMalloc(&d_temp_storage, temp_storage_bytes);
+        // Allocate hipcub buffer
+        hipMalloc(&d_temp_storage, temp_storage_bytes);
 
-                // Do inclusive sum
-                hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz,
-           coo_row_nnz + 1, nrow);
+        // Do inclusive sum
+        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
 
-                // Clear hipcub buffer
-                hipFree(d_temp_storage);
+        // Clear hipcub buffer
+        hipFree(d_temp_storage);
 
-                set_to_zero_hip(blocksize, 1, coo_row_nnz);
+        set_to_zero_hip(blocksize, 1, coo_row_nnz);
 
-                // Copy result to host
-                hipMemcpy(nnz_coo, coo_row_nnz + nrow, sizeof(IndexType), hipMemcpyDeviceToHost);
-        */
-        // TODO replace this once HIP PR575 bugfix goes live
-        std::vector<IndexType> tmp(nrow + 1);
-        hipMemcpy(&tmp[1], coo_row_nnz, sizeof(IndexType) * nrow, hipMemcpyDeviceToHost);
-
-        tmp[0] = 0;
-        for(IndexType i = 0; i < nrow; ++i)
-        {
-            tmp[i + 1] += tmp[i];
-        }
-
-        *nnz_coo = tmp[nrow];
-
-        hipMemcpy(coo_row_nnz, tmp.data(), sizeof(IndexType) * (nrow + 1), hipMemcpyHostToDevice);
+        // Copy result to host
+        hipMemcpy(nnz_coo, coo_row_nnz + nrow, sizeof(IndexType), hipMemcpyDeviceToHost);
     }
 
     *nnz_hyb = *nnz_coo + *nnz_ell;

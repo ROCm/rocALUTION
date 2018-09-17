@@ -169,7 +169,7 @@ void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_desc
 
     hipGetDeviceCount(&num_dev);
     hipGetLastError();
-    // TODO CHECK_HIP_ERROR(__FILE__, __LINE__);
+    CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     //    LOG_INFO("Number of HIP devices in the sytem: " << num_dev);
 
