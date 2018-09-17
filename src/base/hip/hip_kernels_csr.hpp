@@ -277,7 +277,7 @@ __global__ void kernel_calc_row_nnz(IndexType nrow,
 // Outputs:  row_nnz_dst   permuted number of non-zero elements per row
 template <typename IndexType>
 __global__ void kernel_permute_row_nnz(IndexType nrow,
-                                       const IndexType* __restrict__ row_nnz_src,
+                                       const IndexType* __restrict__ row_offset,
                                        const IndexType* __restrict__ perm_vec,
                                        IndexType* __restrict__ row_nnz_dst)
 {
@@ -288,7 +288,12 @@ __global__ void kernel_permute_row_nnz(IndexType nrow,
         return;
     }
 
-    row_nnz_dst[perm_vec[ai]] = row_nnz_src[ai];
+    if(ai == 0)
+    {
+        row_nnz_dst[0] = 0;
+    }
+
+    row_nnz_dst[perm_vec[ai] + 1] = row_offset[ai + 1] - row_offset[ai];
 }
 
 // Permutes rows
@@ -302,29 +307,31 @@ __global__ void kernel_permute_row_nnz(IndexType nrow,
 //           row_nnz:          number of non-zero elements per row
 // Outputs:  perm_col:         permuted column indices of elements
 //           perm_data:        permuted data vector
-template <typename ValueType, typename IndexType>
+template <typename ValueType, typename IndexType, unsigned int WF_SIZE>
 __global__ void kernel_permute_rows(IndexType nrow,
                                     const IndexType* __restrict__ row_offset,
                                     const IndexType* __restrict__ perm_row_offset,
                                     const IndexType* __restrict__ col,
                                     const ValueType* __restrict__ data,
                                     const IndexType* __restrict__ perm_vec,
-                                    const IndexType* __restrict__ row_nnz,
                                     IndexType* __restrict__ perm_col,
                                     ValueType* __restrict__ perm_data)
 {
-    IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    IndexType tid = hipThreadIdx_x;
+    IndexType gid = hipBlockIdx_x * hipBlockDim_x + tid;
+    IndexType lid = tid & (WF_SIZE - 1);
+    IndexType row = gid / WF_SIZE;
 
-    if(ai >= nrow)
+    if(row >= nrow)
     {
         return;
     }
 
-    IndexType num_elems  = row_nnz[ai];
-    IndexType perm_index = perm_row_offset[perm_vec[ai]];
-    IndexType prev_index = row_offset[ai];
+    IndexType perm_index = perm_row_offset[perm_vec[row]];
+    IndexType prev_index = row_offset[row];
+    IndexType num_elems  = row_offset[row + 1] - prev_index;
 
-    for(IndexType i = 0; i < num_elems; ++i)
+    for(IndexType i = lid; i < num_elems; i += WF_SIZE)
     {
         perm_data[perm_index + i] = data[prev_index + i];
         perm_col[perm_index + i]  = col[prev_index + i];
@@ -336,7 +343,6 @@ __global__ void kernel_permute_rows(IndexType nrow,
 // Inputs:   nrow:             number of rows in matrix
 //           row_offset:       row pointer
 //           perm_vec:         permutation vector
-//           row_nnz:          number of non-zero elements per row
 //           perm_col:         row-permuted column indices of elements
 //           perm_data:        row-permuted data
 // Outputs:  col:              fully permuted column indices of elements
@@ -345,7 +351,6 @@ template <unsigned int size, typename ValueType, typename IndexType>
 __global__ void kernel_permute_cols(IndexType nrow,
                                     const IndexType* __restrict__ row_offset,
                                     const IndexType* __restrict__ perm_vec,
-                                    const IndexType* __restrict__ row_nnz,
                                     const IndexType* __restrict__ perm_col,
                                     const ValueType* __restrict__ perm_data,
                                     IndexType* __restrict__ col,
@@ -358,23 +363,28 @@ __global__ void kernel_permute_cols(IndexType nrow,
         return;
     }
 
-    IndexType j;
-    IndexType num_elems  = row_nnz[ai];
     IndexType elem_index = row_offset[ai];
+    IndexType num_elems  = row_offset[ai + 1] - elem_index;
 
     IndexType ccol[size];
     ValueType cval[size];
 
+    col += elem_index;
+    data += elem_index;
+    perm_col += elem_index;
+    perm_data += elem_index;
+
     for(IndexType i = 0; i < num_elems; ++i)
     {
-        ccol[i] = col[elem_index + i];
-        cval[i] = data[elem_index + i];
+        ccol[i] = col[i];
+        cval[i] = data[i];
     }
 
     for(IndexType i = 0; i < num_elems; ++i)
     {
-        IndexType comp = perm_vec[perm_col[elem_index + i]];
+        IndexType comp = perm_vec[perm_col[i]];
 
+        IndexType j;
         for(j = i - 1; j >= 0; --j)
         {
             IndexType c = ccol[j];
@@ -389,14 +399,14 @@ __global__ void kernel_permute_cols(IndexType nrow,
             }
         }
 
-        cval[j + 1] = perm_data[elem_index + i];
+        cval[j + 1] = perm_data[i];
         ccol[j + 1] = comp;
     }
 
     for(IndexType i = 0; i < num_elems; ++i)
     {
-        col[elem_index + i]  = ccol[i];
-        data[elem_index + i] = cval[i];
+        col[i]  = ccol[i];
+        data[i] = cval[i];
     }
 }
 
@@ -405,7 +415,6 @@ __global__ void kernel_permute_cols(IndexType nrow,
 // Inputs:   nrow:             number of rows in matrix
 //           row_offset:       row pointer
 //           perm_vec:         permutation vector
-//           row_nnz:          number of non-zero elements per row
 //           perm_col:         row-permuted column indices of elements
 //           perm_data:        row-permuted data
 // Outputs:  col:              fully permuted column indices of elements
@@ -414,7 +423,6 @@ template <typename ValueType, typename IndexType>
 __global__ void kernel_permute_cols_fallback(IndexType nrow,
                                              const IndexType* __restrict__ row_offset,
                                              const IndexType* __restrict__ perm_vec,
-                                             const IndexType* __restrict__ row_nnz,
                                              const IndexType* __restrict__ perm_col,
                                              const ValueType* __restrict__ perm_data,
                                              IndexType* __restrict__ col,
@@ -427,21 +435,26 @@ __global__ void kernel_permute_cols_fallback(IndexType nrow,
         return;
     }
 
-    IndexType j;
-    IndexType num_elems  = row_nnz[ai];
     IndexType elem_index = row_offset[ai];
+    IndexType num_elems  = row_offset[ai + 1] - elem_index;
+
+    col += elem_index;
+    data += elem_index;
+    perm_col += elem_index;
+    perm_data += elem_index;
 
     for(IndexType i = 0; i < num_elems; ++i)
     {
-        IndexType comp = perm_vec[perm_col[elem_index + i]];
+        IndexType comp = perm_vec[perm_col[i]];
 
+        IndexType j;
         for(j = i - 1; j >= 0; --j)
         {
-            IndexType c = col[elem_index + j];
+            IndexType c = col[j];
             if(c > comp)
             {
-                data[elem_index + j + 1] = data[elem_index + j];
-                col[elem_index + j + 1]  = c;
+                data[j + 1] = data[j];
+                col[j + 1]  = c;
             }
             else
             {
@@ -449,8 +462,8 @@ __global__ void kernel_permute_cols_fallback(IndexType nrow,
             }
         }
 
-        data[elem_index + j + 1] = perm_data[elem_index + i];
-        col[elem_index + j + 1]  = comp;
+        data[j + 1] = perm_data[i];
+        col[j + 1]  = comp;
     }
 }
 

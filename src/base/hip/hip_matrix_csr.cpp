@@ -909,14 +909,10 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
 
     if(this->nnz_ > 0)
     {
-        int* d_nnzr       = NULL;
-        int* d_nnzrPerm   = NULL;
         int* d_nnzPerm    = NULL;
         int* d_offset     = NULL;
         ValueType* d_data = NULL;
 
-        allocate_hip<int>(this->nrow_, &d_nnzr);
-        allocate_hip<int>(this->nrow_, &d_nnzrPerm);
         allocate_hip<int>((this->nrow_ + 1), &d_nnzPerm);
         allocate_hip<ValueType>(this->nnz_, &d_data);
         allocate_hip<int>(this->nnz_, &d_offset);
@@ -929,82 +925,87 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_calc_row_nnz<int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           this->nrow_,
-                           this->mat_.row_offset,
-                           d_nnzr);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
         hipLaunchKernelGGL((kernel_permute_row_nnz<int>),
                            GridSize,
                            BlockSize,
                            0,
                            0,
                            this->nrow_,
-                           d_nnzr,
+                           this->mat_.row_offset,
                            cast_perm->vec_,
-                           d_nnzrPerm);
+                           d_nnzPerm);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        // TODO replace
-        std::vector<int> tmp(nrow + 1);
-        hipMemcpy(&tmp[1], d_nnzrPerm, sizeof(int) * nrow, hipMemcpyDeviceToHost);
+        // hipcub buffer
+        size_t size = 0;
+        void* buffer = NULL;
 
-        tmp[0] = 0;
-        for(int i = 0; i < nrow; ++i)
+        // Determine maximum
+        int* d_max = NULL;
+        allocate_hip(1, &d_max);
+        hipcub::DeviceReduce::Max(buffer, size, d_nnzPerm, d_max, nrow);
+        hipMalloc(&buffer, size);
+        hipcub::DeviceReduce::Max(buffer, size, d_nnzPerm, d_max, nrow);
+        hipFree(buffer);
+        buffer = NULL;
+
+        int maxnnzrow;
+        hipMemcpy(&maxnnzrow, d_max, sizeof(int), hipMemcpyDeviceToHost);
+        free_hip(&d_max);
+
+        // Inclusive sum
+        hipcub::DeviceScan::InclusiveSum(buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow);
+        hipMalloc(&buffer, size);
+        hipcub::DeviceScan::InclusiveSum(buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow);
+        hipFree(buffer);
+        buffer = NULL;
+
+        BlockSize = dim3(this->local_backend_.HIP_block_size);
+        GridSize  = dim3((this->local_backend_.HIP_warp * nrow - 1) / this->local_backend_.HIP_block_size + 1);
+
+        if(this->local_backend_.HIP_warp == 32)
         {
-            tmp[i + 1] += tmp[i];
+            hipLaunchKernelGGL((kernel_permute_rows<ValueType, int, 32>),
+                               GridSize,
+                               BlockSize,
+                               0,
+                               0,
+                               this->nrow_,
+                               this->mat_.row_offset,
+                               d_nnzPerm,
+                               this->mat_.col,
+                               this->mat_.val,
+                               cast_perm->vec_,
+                               d_offset,
+                               d_data);
+        }
+        else if(this->local_backend_.HIP_warp == 64)
+        {
+            hipLaunchKernelGGL((kernel_permute_rows<ValueType, int, 64>),
+                               GridSize,
+                               BlockSize,
+                               0,
+                               0,
+                               this->nrow_,
+                               this->mat_.row_offset,
+                               d_nnzPerm,
+                               this->mat_.col,
+                               this->mat_.val,
+                               cast_perm->vec_,
+                               d_offset,
+                               d_data);
+        }
+        else
+        {
+            LOG_INFO("Unsupported HIP warp size of " << this->local_backend_.HIP_warp);
+            FATAL_ERROR(__FILE__, __LINE__);
         }
 
-        hipMemcpy(d_nnzPerm, tmp.data(), sizeof(int) * (nrow + 1), hipMemcpyHostToDevice);
-
-        size_t size  = 0;
-        void* buffer = NULL;
-        /*
-            // TODO replace when PR575 is fixed in HIP
-
-            hipcub::DeviceScan::ExclusiveSum(buffer, size, row_nnz, row_nnz, row_size + 1);
-            hipMalloc(&buffer, size);
-            hipcub::DeviceScan::ExclusiveSum(buffer, size, row_nnz, row_nnz, row_size + 1);
-            hipFree(buffer);
-            buffer = NULL;
-        */
-
-        hipLaunchKernelGGL((kernel_permute_rows<ValueType, int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           this->nrow_,
-                           this->mat_.row_offset,
-                           d_nnzPerm,
-                           this->mat_.col,
-                           this->mat_.val,
-                           cast_perm->vec_,
-                           d_nnzr,
-                           d_offset,
-                           d_data);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&this->mat_.row_offset);
 
         this->mat_.row_offset = d_nnzPerm;
-
-        // Determine maximum
-        int* d_max = NULL;
-        allocate_hip(1, &d_max);
-        hipcub::DeviceReduce::Max(buffer, size, d_nnzr, d_max, nrow);
-        hipMalloc(&buffer, size);
-        hipcub::DeviceReduce::Max(buffer, size, d_nnzr, d_max, nrow);
-        hipFree(buffer);
-
-        int maxnnzrow;
-        hipMemcpy(&maxnnzrow, d_max, sizeof(int), hipMemcpyDeviceToHost);
-        free_hip(&d_max);
 
         if(maxnnzrow > 64)
         {
@@ -1016,7 +1017,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
                                this->nrow_,
                                this->mat_.row_offset,
                                cast_perm->vec_,
-                               d_nnzrPerm,
                                d_offset,
                                d_data,
                                this->mat_.col,
@@ -1032,7 +1032,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
                                this->nrow_,
                                this->mat_.row_offset,
                                cast_perm->vec_,
-                               d_nnzrPerm,
                                d_offset,
                                d_data,
                                this->mat_.col,
@@ -1048,7 +1047,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
                                this->nrow_,
                                this->mat_.row_offset,
                                cast_perm->vec_,
-                               d_nnzrPerm,
                                d_offset,
                                d_data,
                                this->mat_.col,
@@ -1064,7 +1062,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
                                this->nrow_,
                                this->mat_.row_offset,
                                cast_perm->vec_,
-                               d_nnzrPerm,
                                d_offset,
                                d_data,
                                this->mat_.col,
@@ -1080,7 +1077,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
                                this->nrow_,
                                this->mat_.row_offset,
                                cast_perm->vec_,
-                               d_nnzrPerm,
                                d_offset,
                                d_data,
                                this->mat_.col,
@@ -1096,7 +1092,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
                                this->nrow_,
                                this->mat_.row_offset,
                                cast_perm->vec_,
-                               d_nnzrPerm,
                                d_offset,
                                d_data,
                                this->mat_.col,
@@ -1106,8 +1101,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
 
         free_hip<int>(&d_offset);
         free_hip<ValueType>(&d_data);
-        free_hip<int>(&d_nnzrPerm);
-        free_hip<int>(&d_nnzr);
     }
 
     this->ApplyAnalysis();
