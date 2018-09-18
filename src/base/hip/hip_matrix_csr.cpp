@@ -1115,12 +1115,13 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAnalysis(void)
     {
         rocsparse_status status;
 
-        status = rocsparse_csrmv_analysis(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+        status = rocsparseTcsrmv_analysis(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                                           rocsparse_operation_none,
                                           this->nrow_,
                                           this->ncol_,
                                           this->nnz_,
                                           this->mat_descr_,
+                                          this->mat_.val,
                                           this->mat_.row_offset,
                                           this->mat_.col,
                                           this->mat_info_);

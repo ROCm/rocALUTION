@@ -5,6 +5,19 @@
 
 namespace rocalution {
 
+// rocsparse csrmv analysis
+template <typename ValueType>
+rocsparse_status rocsparseTcsrmv_analysis(rocsparse_handle handle,
+                                          rocsparse_operation trans,
+                                          int m,
+                                          int n,
+                                          int nnz,
+                                          const rocsparse_mat_descr descr,
+                                          const ValueType* csr_val,
+                                          const int* csr_row_ptr,
+                                          const int* csr_col_ind,
+                                          rocsparse_mat_info info);
+
 // rocsparse csrmv
 template <typename ValueType>
 rocsparse_status rocsparseTcsrmv(rocsparse_handle handle,

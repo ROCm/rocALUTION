@@ -7,6 +7,55 @@
 
 namespace rocalution {
 
+// rocsparse csrmv analysis
+template <>
+rocsparse_status rocsparseTcsrmv_analysis(rocsparse_handle handle,
+                                          rocsparse_operation trans,
+                                          int m,
+                                          int n,
+                                          int nnz,
+                                          const rocsparse_mat_descr descr,
+                                          const float* csr_val,
+                                          const int* csr_row_ptr,
+                                          const int* csr_col_ind,
+                                          rocsparse_mat_info info)
+{
+    return rocsparse_scsrmv_analysis(handle,
+                                     trans,
+                                     m,
+                                     n,
+                                     nnz,
+                                     descr,
+                                     csr_val,
+                                     csr_row_ptr,
+                                     csr_col_ind,
+                                     info);
+}
+
+template <>
+rocsparse_status rocsparseTcsrmv_analysis(rocsparse_handle handle,
+                                          rocsparse_operation trans,
+                                          int m,
+                                          int n,
+                                          int nnz,
+                                          const rocsparse_mat_descr descr,
+                                          const double* csr_val,
+                                          const int* csr_row_ptr,
+                                          const int* csr_col_ind,
+                                          rocsparse_mat_info info)
+{
+    return rocsparse_dcsrmv_analysis(handle,
+                                     trans,
+                                     m,
+                                     n,
+                                     nnz,
+                                     descr,
+                                     csr_val,
+                                     csr_row_ptr,
+                                     csr_col_ind,
+                                     info);
+}
+
 // rocsparse csrmv
 template <>
 rocsparse_status rocsparseTcsrmv(rocsparse_handle handle,
