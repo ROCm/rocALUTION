@@ -3724,7 +3724,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType> &mat, const 
 template <typename ValueType>
 void LocalMatrix<ValueType>::Gershgorin(ValueType &lambda_min, ValueType &lambda_max) const {
 
-  log_debug(this, "LocalMatrix::Gershgorin()", lambda_min, lambda_max);
+  log_debug(this, "LocalMatrix::Gershgorin()");
 
 #ifdef DEBUG_MODE
   this->Check();
