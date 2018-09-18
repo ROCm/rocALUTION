@@ -144,6 +144,8 @@ int main(int argc, char* argv[]) {
   tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
+  ls.Clear();
+
   // PCG + Chebyshev polynomial
   CG<LocalMatrix<double>, LocalVector<double>, double > cg;
   AIChebyshev<LocalMatrix<double>, LocalVector<double>, double > p;
@@ -165,6 +167,8 @@ int main(int argc, char* argv[]) {
 
   tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
+
+  cg.Clear();
 
   stop_rocalution();
 
