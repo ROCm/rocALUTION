@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 
   const int max_tests = 200;
 
-  mat.ReadFileCSR(std::string(argv[1]));
+  mat.ReadFileMTX(std::string(argv[1]));
 
   vec1.Allocate("x", mat.GetN());
   vec2.Allocate("y", mat.GetM());

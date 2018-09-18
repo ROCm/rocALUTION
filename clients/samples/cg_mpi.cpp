@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
     // Load undistributed matrix
     LocalMatrix<ValueType> lmat;
-    lmat.ReadFileCSR(argv[1]);
+    lmat.ReadFileMTX(argv[1]);
 
     // Global structures
     ParallelManager manager;
