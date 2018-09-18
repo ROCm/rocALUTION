@@ -954,10 +954,17 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::Clear(void) {
             this->build_);
 
   if (this->precond_ != NULL)
-    delete this->precond_;
+  {
+      for(int i=0; i<this->num_precond_; ++i)
+      {
+          this->precond_[i]->Clear();
+      }
+
+      delete[] this->precond_;
+      this->precond_ = NULL;
+  }
 
   this->num_precond_ = 0;
-  this->precond_ = NULL;
   this->counter_ = 0;
 
   this->build_ = false;
