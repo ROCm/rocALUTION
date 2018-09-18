@@ -21,7 +21,7 @@ public:
   virtual void Print(void) const;  
   virtual void Solve(const VectorType &rhs,
                      VectorType *x);
-  virtual void Set(const int p, const ValueType lambda_min, const ValueType lambda_max);
+  void Set(const int p, const ValueType lambda_min, const ValueType lambda_max);
   virtual void Build(void);
   virtual void Clear(void);  
 
