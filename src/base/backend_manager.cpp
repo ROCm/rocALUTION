@@ -535,7 +535,7 @@ size_t _rocalution_add_obj(class RocalutionObj* ptr) {
 
 #endif
 
-};
+}
 
 bool _rocalution_del_obj(class RocalutionObj* ptr,
                          size_t id) {
@@ -564,7 +564,7 @@ bool _rocalution_del_obj(class RocalutionObj* ptr,
 
 #endif
 
-};
+}
 
 void _rocalution_delete_all_obj(void) {
 
@@ -591,7 +591,7 @@ void _rocalution_delete_all_obj(void) {
             "* end");
 #endif
 
-};
+}
 
 bool _rocalution_check_if_any_obj(void) {
 
@@ -605,7 +605,7 @@ bool _rocalution_check_if_any_obj(void) {
   
   return true;
 
-};
+}
 
 
 template AcceleratorVector<float>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);

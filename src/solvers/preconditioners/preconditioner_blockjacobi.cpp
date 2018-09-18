@@ -177,4 +177,4 @@ template class BlockJacobi< GlobalMatrix<std::complex<double> >, GlobalVector<st
 template class BlockJacobi< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-};
+}
