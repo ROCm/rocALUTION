@@ -85,6 +85,22 @@ void Vector<ValueType>::CopyFromDouble(const LocalVector<double>& src)
 }
 
 template <typename ValueType>
+void Vector<ValueType>::CopyFrom(const LocalVector<ValueType>& src,
+                                 const int src_offset,
+                                 const int dst_offset,
+                                 const int size)
+{
+    LOG_INFO("Vector<ValueType>::CopyFrom(const LocalVector<ValueType>& src,"
+                                         "const int src_offset,"
+                                         "const int dst_offset,"
+                                         "const int size");
+    LOG_INFO("Mismatched types:");
+    this->Info();
+    src.Info();
+    FATAL_ERROR(__FILE__, __LINE__);
+}
+
+template <typename ValueType>
 void Vector<ValueType>::CloneFrom(const LocalVector<ValueType>& src)
 {
     LOG_INFO("Vector<ValueType>::CloneFrom(const LocalVector<ValueType> &src)");
@@ -140,6 +156,46 @@ void Vector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector<Value
 {
     LOG_INFO(
         "Vector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector<ValueType> &x)");
+    LOG_INFO("Mismatched types:");
+    this->Info();
+    x.Info();
+    FATAL_ERROR(__FILE__, __LINE__);
+}
+
+template <typename ValueType>
+void Vector<ValueType>::ScaleAddScale(const ValueType alpha,
+                                      const LocalVector<ValueType>& x,
+                                      const ValueType beta,
+                                      const int src_offset,
+                                      const int dst_offset,
+                                      const int size)
+{
+    LOG_INFO("Vector<ValueType>::ScaleAddScale(const ValueType alpha,"
+                                              "const LocalVector<ValueType> &x,"
+                                              "const ValueType beta,"
+                                              "const int src_offset,"
+                                              "const int dst_offset,"
+                                              "const int size)");
+    LOG_INFO("Mismatched types:");
+    this->Info();
+    x.Info();
+    FATAL_ERROR(__FILE__, __LINE__);
+}
+
+template <typename ValueType>
+void Vector<ValueType>::ScaleAddScale(const ValueType alpha,
+                                      const GlobalVector<ValueType>& x,
+                                      const ValueType beta,
+                                      const int src_offset,
+                                      const int dst_offset,
+                                      const int size)
+{
+    LOG_INFO("Vector<ValueType>::ScaleAddScale(const ValueType alpha,"
+                                              "const GlobalVector<ValueType> &x,"
+                                              "const ValueType beta,"
+                                              "const int src_offset,"
+                                              "const int dst_offset,"
+                                              "const int size)");
     LOG_INFO("Mismatched types:");
     this->Info();
     x.Info();
@@ -221,10 +277,10 @@ void Vector<ValueType>::PointWiseMult(const LocalVector<ValueType>& x,
 
 template <typename ValueType>
 void Vector<ValueType>::PointWiseMult(const GlobalVector<ValueType>& x,
-                                      const LocalVector<ValueType>& y)
+                                      const GlobalVector<ValueType>& y)
 {
     LOG_INFO("Vector<ValueType>::PointWiseMult(const GlobalVector<ValueType> &x, const "
-             "LocalVector<ValueType> &y)");
+             "GlobalVector<ValueType> &y)");
     LOG_INFO("Mismatched types:");
     this->Info();
     x.Info();
