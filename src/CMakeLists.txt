@@ -170,12 +170,12 @@ rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5)")
-#  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocsparse (>= 0.1.2)") enable this when we go live in rocm repo
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocblas (>= 0.14.1.0)")
-  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5")
-#  set(CPACK_RPM_PACKAGE_REQUIRES "rocsparse >= 0.1.2") enabled this when we go live in rocm repo
-  set(CPACK_RPM_PACKAGE_REQUIRES "rocblas >= 0.14.1.0")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5.18353)") # ROCm 1.9
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocsparse (>= 0.1.3.0)")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocblas (>= 0.14.2.4)")
+  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5.18353")
+  set(CPACK_RPM_PACKAGE_REQUIRES "rocsparse >= 0.1.3.0")
+  set(CPACK_RPM_PACKAGE_REQUIRES "rocblas >= 0.14.2.4")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
