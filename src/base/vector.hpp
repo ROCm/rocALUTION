@@ -83,6 +83,12 @@ class Vector : public BaseRocalution<ValueType>
     /// Copy values from double vector
     virtual void CopyFromDouble(const LocalVector<double>& src);
 
+    /// Copy data (not entire vector) from another local vector with specified src/dst offsets and
+    /// size
+    virtual void CopyFrom(const LocalVector<ValueType>& src,
+                          const int src_offset,
+                          const int dst_offset,
+                          const int size);
     /// Clone the entire vector (data+backend descr) from another local vector
     virtual void CloneFrom(const LocalVector<ValueType>& src);
 
@@ -105,6 +111,22 @@ class Vector : public BaseRocalution<ValueType>
     /// Perform vector update of type this = alpha*this + x*beta
     virtual void
     ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType>& x, const ValueType beta);
+    /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
+    /// of a vector
+    virtual void ScaleAddScale(const ValueType alpha,
+                               const LocalVector<ValueType>& x,
+                               const ValueType beta,
+                               const int src_offset,
+                               const int dst_offset,
+                               const int size);
+    /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
+    /// of a vector
+    virtual void ScaleAddScale(const ValueType alpha,
+                               const GlobalVector<ValueType>& x,
+                               const ValueType beta,
+                               const int src_offset,
+                               const int dst_offset,
+                               const int size);
 
     /// Perform vector update of type this = alpha*this + x*beta + y*gamma
     virtual void ScaleAdd2(const ValueType alpha,
@@ -157,7 +179,7 @@ class Vector : public BaseRocalution<ValueType>
     /// Perform point-wise multiplication (element-wise) of type this = x*y
     virtual void PointWiseMult(const LocalVector<ValueType>& x, const LocalVector<ValueType>& y);
     /// Perform point-wise multiplication (element-wise) of type this = x*y
-    virtual void PointWiseMult(const GlobalVector<ValueType>& x, const LocalVector<ValueType>& y);
+    virtual void PointWiseMult(const GlobalVector<ValueType>& x, const GlobalVector<ValueType>& y);
 
     /// Perform power operation to a vector
     virtual void Power(const double power) = 0;

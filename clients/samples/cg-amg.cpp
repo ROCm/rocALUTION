@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
   ls.Verbose(0);
 
   // AMG Preconditioner
-  PairwiseAMG<LocalMatrix<double>, LocalVector<double>, double > p;
+  UAAMG<LocalMatrix<double>, LocalVector<double>, double > p;
 
   p.InitMaxIter(1);
   p.Verbose(0);

@@ -39,6 +39,7 @@ function display_help()
   echo "    [-d|--dependencies] install build dependencies"
   echo "    [-c|--clients] build library clients too (combines with -i & -d)"
   echo "    [-g|--debug] -DCMAKE_BUILD_TYPE=Debug (default is =Release)"
+  echo "    [--build-dir] build directory (default is ./build)"
   echo "    [--host] build library for host backend only"
   echo "    [--no-openmp] build library without OpenMP"
   echo "    [--mpi] build library with MPI"
@@ -66,6 +67,7 @@ build_host=false
 build_mpi=false
 build_omp=true
 build_release=true
+build_dir=./build
 
 # #################################################
 # Parameter parsing
@@ -74,7 +76,7 @@ build_release=true
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,host,no-openmp,mpi --options hicgd -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi --options hicgd -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -105,6 +107,9 @@ while true; do
     -g|--debug)
         build_release=false
         shift ;;
+    --build-dir)
+        build_dir=${2}
+        shift 2 ;;
     --host)
         build_host=true
         shift ;;
@@ -121,7 +126,6 @@ while true; do
   esac
 done
 
-build_dir=./build
 printf "\033[32mCreating project build directory in: \033[33m${build_dir}\033[0m\n"
 
 # #################################################

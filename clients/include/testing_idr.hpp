@@ -14,7 +14,7 @@ using namespace rocalution;
 
 static bool check_residual(float res)
 {
-    return (res < 1.0f);
+    return (res < 1e-1f);
 }
 
 static bool check_residual(double res)
@@ -114,6 +114,7 @@ bool testing_idr(Arguments argus)
 
     ls.Init(1e-8, 0.0, 1e+8, 10000);
     ls.SetShadowSpace(l);
+    ls.SetRandomSeed(123456ULL);
     ls.Build();
 
     // Matrix format

@@ -76,10 +76,10 @@ class LocalVector : public Vector<ValueType>
 
     /// Copy data (not entire vector) from another local vector with specified src/dst offsets and
     /// size
-    void CopyFrom(const LocalVector<ValueType>& src,
-                  const int src_offset,
-                  const int dst_offset,
-                  const int size);
+    virtual void CopyFrom(const LocalVector<ValueType>& src,
+                          const int src_offset,
+                          const int dst_offset,
+                          const int size);
 
     /// Copy a local vector under specified permutation (forward permutation)
     void CopyFromPermute(const LocalVector<ValueType>& src, const LocalVector<int>& permutation);
@@ -117,12 +117,12 @@ class LocalVector : public Vector<ValueType>
     ScaleAddScale(const ValueType alpha, const LocalVector<ValueType>& x, const ValueType beta);
     /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
     /// of a vector
-    void ScaleAddScale(const ValueType alpha,
-                       const LocalVector<ValueType>& x,
-                       const ValueType beta,
-                       const int src_offset,
-                       const int dst_offset,
-                       const int size);
+    virtual void ScaleAddScale(const ValueType alpha,
+                               const LocalVector<ValueType>& x,
+                               const ValueType beta,
+                               const int src_offset,
+                               const int dst_offset,
+                               const int size);
 
     virtual void ScaleAdd2(const ValueType alpha,
                            const LocalVector<ValueType>& x,

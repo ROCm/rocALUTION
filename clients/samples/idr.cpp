@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
   ls.SetOperator(mat);
   ls.SetPreconditioner(p);
   ls.SetShadowSpace(4);
+  ls.SetRandomSeed(123456ULL);
 
   ls.Build();
 

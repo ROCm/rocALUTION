@@ -39,6 +39,6 @@ private:
 };
 
 
-};
+}
 
 #endif // ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_

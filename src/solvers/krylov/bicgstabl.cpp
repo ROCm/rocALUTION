@@ -313,6 +313,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
   VectorType **u = this->u_;
 
   int l = this->l_;
+  bool converged = false;
 
   ValueType alpha   = ValueType(0.0);
   ValueType beta    = ValueType(0.0);
@@ -339,105 +340,8 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
   // u_0 = 0
   u[0]->Zeros();
 
-  // BiCG part
-  for (int j=0; j<l; ++j) {
-
-    // rho = (r_j, r0)
-    rho = r[j]->Dot(*r0);
-
-    // beta = alpha * rho / rho_old
-    beta = alpha * rho / rho_old;
-
-    // rho_old = rho
-    rho_old = rho;
-
-    // u_i = r_i - beta * u_i
-    for (int i=0; i<=j; ++i)
-      u[i]->ScaleAdd(ValueType(-1.0)*beta, *r[i]);
-
-    // u_j+1 = A u_j
-    op->Apply(*u[j], u[j+1]);
-
-    // alpha = rho / (u_j+1, r0)
-    alpha = rho / u[j+1]->Dot(*r0);
-
-    // r_i = r_i - alpha * u_i+1
-    for (int i=0; i<=j; ++i)
-      r[i]->AddScale(*u[i+1], ValueType(-1.0)*alpha);
-
-    // r_j+1 = A r_j
-    op->Apply(*r[j], r[j+1]);
-
-    // x = x + alpha * u_0
-    x->AddScale(*u[0], alpha);
-
-  }
-
-  // modified Gram Schmidt
-  for (int j=0; j<l; ++j) {
-    for (int i=0; i<j; ++i) {
-
-      // tau_ij = (r_j+1, r_i+1) / sigma_i
-      tau[i][j] = r[j+1]->Dot(*r[i+1]) / sigma[i];
-
-      // r_j+1 = r_j+1 - tau_ij * r_i+1
-      r[j+1]->AddScale(*r[i+1], ValueType(-1.0)*tau[i][j]);
-
-    }
-
-    // sigma_j = (r_j+1, r_j+1)
-    sigma[j] = r[j+1]->Dot(*r[j+1]);
-
-    // gamma' = (r_0, r_j+1) / sigma_j
-    gamma1[j] = r[0]->Dot(*r[j+1]) / sigma[j];
-
-  }
-
-  // omega = gamma'_l-1; gamma_l-1 = gamma'_l-1
-  gamma0[l-1] = gamma1[l-1];
-  omega = gamma1[l-1];
-
-  // gamma_j = gamma'_j - sum(tau_ji * gamma_i) (i=j+1,...,l-1)
-  for (int j=l-2; j>=0; --j) {
-    gamma0[j] = gamma1[j];
-    for (int i=j+1; i<l; ++i)
-      gamma0[j] -= tau[j][i] * gamma0[i];
-  }
-
-  // gamma''_j = gamma_j+1 + sum(tau_ji * gamma_i+1) (i=j+1,...,l-2)
-  for(int j=0; j<l-1; ++j) {
-    gamma2[j] = gamma0[j+1];
-    for(int i=j+1; i<l-1; ++i)
-      gamma2[j] += tau[j][i] * gamma0[i+1];
-  }
-
-  // Update
-
-  // x = x + gamma_0 * r_0
-  x->AddScale(*r[0], gamma0[0]);
-
-  // r_0 = r_0 - gamma'_l-1 * r_l
-  r[0]->AddScale(*r[l], ValueType(-1.0)*gamma1[l-1]);
-
-  // u_0 = u_0 - gamma_l-1 * u_l
-  u[0]->AddScale(*u[l], ValueType(-1.0)*gamma0[l-1]);
-
-  for (int j=1; j<l; ++j) {
-
-    // u_0 = u_0 - gamma_j-1 * u_j
-    u[0]->AddScale(*u[j], ValueType(-1.0)*gamma0[j-1]);
-
-    // x = x + gamma''_j-1 * r_j
-    x->AddScale(*r[j], gamma2[j-1]);
-
-    // r_0 = r_0 - gamma'_j-1 * r_j
-    r[0]->AddScale(*r[j], ValueType(-1.0)*gamma1[j-1]);
-
-  }
-
-  res = this->Norm(*r[0]);
-  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
-
+  while(true)
+  {
     rho_old *= ValueType(-1.0) * omega;
 
     // BiCG part
@@ -446,11 +350,16 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
       // rho = (r_j, r0)
       rho = r[j]->Dot(*r0);
 
+      // Check for breakdown
+      if(rho == static_cast<ValueType>(0))
+      {
+          LOG_INFO("BiCGStab(l) rho == 0 !!!");
+          converged = true;
+          break;
+      }
+
       // beta = alpha * rho / rho_old
       beta = alpha * rho / rho_old;
-
-      // rho_old = rho
-      rho_old = rho;
 
       // u_i = r_i - beta * u_i
       for (int i=0; i<=j; ++i)
@@ -459,8 +368,22 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
       // u_j+1 = A u_j
       op->Apply(*u[j], u[j+1]);
 
-      // alpha = rho / (u_j+1, r0)
-      alpha = rho / u[j+1]->Dot(*r0);
+      // sigma = (u_j+1, r0)
+      rho_old = u[j+1]->Dot(*r0);
+
+      // Check for breakdown
+      if(rho_old == static_cast<ValueType>(0))
+      {
+          LOG_INFO("BiCGStab(l) sigma == 0 !!!");
+          converged = true;
+          break;
+      }
+
+      // alpha = rho / sigma
+      alpha = rho / rho_old;
+
+      // rho_old = rho
+      rho_old = rho;
 
       // r_i = r_i - alpha * u_i+1
       for (int i=0; i<=j; ++i)
@@ -472,6 +395,20 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
       // x = x + alpha * u_0
       x->AddScale(*u[0], alpha);
 
+      // Check convergence
+      res = this->Norm(*r[0]);
+
+      if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res)))
+      {
+          converged = true;
+          break;
+      }
+    }
+
+    // Check for convergence in BiCG part
+    if(converged == true)
+    {
+        break;
     }
 
     // modified Gram Schmidt
@@ -538,6 +475,10 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
     res = this->Norm(*r[0]);
 
+    if(this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+    {
+        break;
+    }
   }
 
   log_debug(this, "BiCGStabl::SolveNonPrecond_()",
@@ -568,6 +509,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
   VectorType **u = this->u_;
 
   int l = this->l_;
+  bool converged = false;
 
   ValueType alpha   = ValueType(0.0);
   ValueType beta    = ValueType(0.0);
@@ -585,12 +527,13 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
   op->Apply(*x, z);
   z->ScaleAdd(ValueType(-1.0), rhs);
 
-  ValueType res = this->Norm(*z);
-
-  this->iter_ctrl_.InitResidual(rocalution_abs(res));
-
   // M r0 = z
   this->precond_->SolveZeroSol(*z, r0);
+
+  // Using preconditioned residual
+  ValueType res = this->Norm(*r0);
+
+  this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
   // r_0 = r0
   r[0]->CopyFrom(*r0);
@@ -598,112 +541,8 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
   // u_0 = 0
   u[0]->Zeros();
 
-  // BiCG part
-  for (int j=0; j<l; ++j) {
-
-    // rho = (r_j, r0)
-    rho = r[j]->Dot(*r0);
-
-    // beta = alpha * rho / rho_old
-    beta = alpha * rho / rho_old;
-
-    // rho_old = rho
-    rho_old = rho;
-
-    // u_i = r_i - beta * u_i
-    for (int i=0; i<=j; ++i)
-      u[i]->ScaleAdd(ValueType(-1.0)*beta, *r[i]);
-
-    // z = A u_j
-    op->Apply(*u[j], z);
-
-    // M u_j+1 = z
-    this->precond_->SolveZeroSol(*z, u[j+1]);
-
-    // alpha = rho / (u_j+1, r0)
-    alpha = rho / u[j+1]->Dot(*r0);
-
-    // r_i = r_i - alpha * u_i+1
-    for (int i=0; i<=j; ++i)
-      r[i]->AddScale(*u[i+1], ValueType(-1.0)*alpha);
-
-    // z = A r_j
-    op->Apply(*r[j], z);
-
-    // M r_j+1 = z
-    this->precond_->SolveZeroSol(*z, r[j+1]);
-
-    // x = x + alpha * u_0
-    x->AddScale(*u[0], alpha);
-
-  }
-
-  // modified Gram Schmidt
-  for (int j=0; j<l; ++j) {
-    for (int i=0; i<j; ++i) {
-
-      // tau_ij = (r_j+1, r_i+1) / sigma_i
-      tau[i][j] = r[j+1]->Dot(*r[i+1]) / sigma[i];
-
-      // r_j+1 = r_j+1 - tau_ij * r_i+1
-      r[j+1]->AddScale(*r[i+1], ValueType(-1.0)*tau[i][j]);
-
-    }
-
-    // sigma_j = (r_j+1, r_j+1)
-    sigma[j] = r[j+1]->Dot(*r[j+1]);
-
-    // gamma' = (r_0, r_j+1) / sigma_j
-    gamma1[j] = r[0]->Dot(*r[j+1]) / sigma[j];
-
-  }
-
-  // omega = gamma'_l-1; gamma_l-1 = gamma'_l-1
-  gamma0[l-1] = gamma1[l-1];
-  omega = gamma1[l-1];
-
-  // gamma_j = gamma'_j - sum(tau_ji * gamma_i) (i=j+1,...,l-1)
-  for (int j=l-2; j>=0; --j) {
-    gamma0[j] = gamma1[j];
-    for (int i=j+1; i<l; ++i)
-      gamma0[j] -= tau[j][i] * gamma0[i];
-  }
-
-  // gamma''_j = gamma_j+1 + sum(tau_ji * gamma_i+1) (i=j+1,...,l-2)
-  for(int j=0; j<l-1; ++j) {
-    gamma2[j] = gamma0[j+1];
-    for(int i=j+1; i<l-1; ++i)
-      gamma2[j] += tau[j][i] * gamma0[i+1];
-  }
-
-  // Update
-
-  // x = x + gamma_0 * r_0
-  x->AddScale(*r[0], gamma0[0]);
-
-  // r_0 = r_0 - gamma'_l-1 * r_l
-  r[0]->AddScale(*r[l], ValueType(-1.0)*gamma1[l-1]);
-
-  // u_0 = u_0 - gamma_l-1 * u_l
-  u[0]->AddScale(*u[l], ValueType(-1.0)*gamma0[l-1]);
-
-  for (int j=1; j<l; ++j) {
-
-    // u_0 = u_0 - gamma_j-1 * u_j
-    u[0]->AddScale(*u[j], ValueType(-1.0)*gamma0[j-1]);
-
-    // x = x + gamma''_j-1 * r_j
-    x->AddScale(*r[j], gamma2[j-1]);
-
-    // r_0 = r_0 - gamma'_j-1 * r_j
-    r[0]->AddScale(*r[j], ValueType(-1.0)*gamma1[j-1]);
-
-  }
-
-  res = this->Norm(*r[0]);
-
-  while (!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_)) {
-
+  while(true)
+  {
     rho_old *= ValueType(-1.0) * omega;
 
     // BiCG part
@@ -712,11 +551,16 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
       // rho = (r_j, r0)
       rho = r[j]->Dot(*r0);
 
+      // Check for breakdown
+      if(rho == static_cast<ValueType>(0))
+      {
+          LOG_INFO("BiCGStab(l) rho == 0 !!!");
+          converged = true;
+          break;
+      }
+
       // beta = alpha * rho / rho_old
       beta = alpha * rho / rho_old;
-
-      // rho_old = rho
-      rho_old = rho;
 
       // u_i = r_i - beta * u_i
       for (int i=0; i<=j; ++i)
@@ -728,8 +572,22 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
       // M u_j+1 = z
       this->precond_->SolveZeroSol(*z, u[j+1]);
 
+      // sigma = (u_j+1, r0)
+      rho_old = u[j+1]->Dot(*r0);
+
+      // Check for breakdown
+      if(rho_old == static_cast<ValueType>(0))
+      {
+          LOG_INFO("BiCGStab(l) sigma == 0 !!!");
+          converged = true;
+          break;
+      }
+
       // alpha = rho / (u_j+1, r0)
-      alpha = rho / u[j+1]->Dot(*r0);
+      alpha = rho / rho_old;
+
+      // rho_old = rho
+      rho_old = rho;
 
       // r_i = r_i - alpha * u_i+1
       for (int i=0; i<=j; ++i)
@@ -744,6 +602,20 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
       // x = x + alpha * u_0
       x->AddScale(*u[0], alpha);
 
+      // Check convergence
+      res = this->Norm(*r[0]);
+
+      if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res)))
+      {
+          converged = true;
+          break;
+      }
+    }
+
+    // Check for convergence in BiCG part
+    if(converged == true)
+    {
+        break;
     }
 
     // modified Gram Schmidt
@@ -810,6 +682,10 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
     res = this->Norm(*r[0]);
 
+    if(this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+    {
+        break;
+    }
   }
 
   log_debug(this, "BiCGStabl::SolvePrecond_()",

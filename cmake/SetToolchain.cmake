@@ -19,14 +19,13 @@ else()
 endif()
 
 # Find HIP package
-find_package(HIP)
+find_package(HIP 1.5.18353) # ROCm 1.9
 if (NOT HIP_FOUND)
   message("-- HIP not found. Compiling WITHOUT HIP support.")
 else()
   option(SUPPORT_HIP "Compile WITH HIP support." ON)
   if (SUPPORT_HIP)
-    find_package(ROCBLAS REQUIRED)
-    find_package(ROCSPARSE REQUIRED)
-#    find_package(ROCPRIM REQUIRED)
+    find_package(ROCBLAS 0.14.2.4 REQUIRED) # ROCm 1.9
+    find_package(ROCSPARSE 0.1.3.0 REQUIRED) # ROCm 1.9
   endif()
 endif()

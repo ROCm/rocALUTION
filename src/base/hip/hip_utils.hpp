@@ -7,7 +7,6 @@
 
 #include <complex>
 #include <hip/hip_runtime.h>
-#include <hip/hip_complex.h>
 #include <rocblas.h>
 #include <rocsparse.h>
 

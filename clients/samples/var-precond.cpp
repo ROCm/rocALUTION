@@ -73,6 +73,10 @@ int main(int argc, char* argv[]) {
   tack = rocalution_time();
   std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
 
+  ls.Clear();
+
+  delete[] vp;
+
   stop_rocalution();
 
   return 0;

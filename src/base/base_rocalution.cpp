@@ -44,7 +44,7 @@ RocalutionObj::~RocalutionObj() {
 
 #endif
 
-};
+}
 
 template <typename ValueType>
 BaseRocalution<ValueType>::BaseRocalution() {

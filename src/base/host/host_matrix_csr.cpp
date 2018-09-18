@@ -13,6 +13,7 @@
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/math_functions.hpp"
 #include "../matrix_formats_ind.hpp"
+#include "version.hpp"
 
 #include <math.h>
 #include <string.h>
@@ -22,6 +23,8 @@
 #include <complex>
 #include <map>
 #include <vector>
+#include <typeinfo>
+#include <typeindex>
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -381,27 +384,70 @@ void HostMatrixCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *mat) const {
 template <typename ValueType>
 bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string filename) { 
 
-  LOG_INFO("ReadFileCSR: filename="<< filename << "; reading...");
+  LOG_INFO("ReadFileCSR: filename=" << filename << "; reading...");
 
-  std::ifstream out(filename.c_str(), std::ios::in | std::ios::binary);
+  std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
 
+  // Header
+  std::string header;
+  std::getline(in, header);
+
+  if(header != "#rocALUTION binary csr file")
+  {
+      LOG_INFO("ReadFileCSR: filename=" << filename << " is not a rocALUTION matrix");
+      return false;
+  }
+
+  // rocALUTION version
+  int version;
+  in.read((char*)&version, sizeof(int));
+
+/* TODO might need this in the future
+  if(version != __ROCALUTION_VER)
+  {
+      LOG_INFO("ReadFileCSR: filename=" << filename << "; file version mismatch");
+      return false;
+  }
+*/
+
+  // Read data
   int nrow;
   int ncol;
   int nnz;
 
-  out.read((char*)&nrow, sizeof(int));
-  out.read((char*)&ncol, sizeof(int));
-  out.read((char*)&nnz, sizeof(int));
+  in.read((char*)&nrow, sizeof(int));
+  in.read((char*)&ncol, sizeof(int));
+  in.read((char*)&nnz, sizeof(int));
 
   this->AllocateCSR(nnz, nrow, ncol);
 
-  out.read((char*)this->mat_.row_offset, (nrow+1)*sizeof(int));
-  out.read((char*)this->mat_.col, nnz*sizeof(int));
-  out.read((char*)this->mat_.val, nnz*sizeof(ValueType));
+  in.read((char*)this->mat_.row_offset, (nrow+1)*sizeof(int));
+  in.read((char*)this->mat_.col, nnz*sizeof(int));
 
-  LOG_INFO("ReadFileCSR: filename="<< filename << "; done");
+  // We read always in double precision
+  if(typeid(ValueType) == typeid(double))
+  {
+      in.read((char*)this->mat_.val, sizeof(ValueType) * nnz);
+  }
+  else if(typeid(ValueType) == typeid(float))
+  {
+      std::vector<double> tmp(nnz);
 
-  out.close();
+      in.read((char*)tmp.data(), sizeof(double) * nnz);
+
+      for(int i = 0; i < nnz; ++i)
+      {
+          this->mat_.val[i] = static_cast<ValueType>(tmp[i]);
+      }
+  }
+  else
+  {
+      LOG_INFO("ReadFileCSR: filename=" << filename << "; internal error");
+  }
+
+  LOG_INFO("ReadFileCSR: filename=" << filename << "; done");
+
+  in.close();
 
   return true;
 
@@ -459,19 +505,46 @@ bool HostMatrixCSR<ValueType>::WriteFileCSR(const std::string filename) const {
 
   std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
 
+  // Header
+  out << "#rocALUTION binary csr file" << std::endl;
+
+  // rocALUTION version
+  int version = __ROCALUTION_VER;
+  out.write((char*)&version, sizeof(int));
+
+  // Data
   out.write((char*)&this->nrow_, sizeof(int));
   out.write((char*)&this->ncol_, sizeof(int));
   out.write((char*)&this->nnz_, sizeof(int));
   out.write((char*)this->mat_.row_offset, (this->nrow_+1)*sizeof(int));
   out.write((char*)this->mat_.col, this->nnz_*sizeof(int));
-  out.write((char*)this->mat_.val, this->nnz_*sizeof(ValueType));
+
+  // We write always in double precision
+  if(typeid(ValueType) == typeid(double))
+  {
+      out.write((char*)this->mat_.val, this->nnz_ * sizeof(ValueType));
+  }
+  else if(typeid(ValueType) == typeid(float))
+  {
+      std::vector<double> tmp(this->nnz_);
+
+      for(int i = 0; i < this->nnz_; ++i)
+      {
+          tmp[i] = static_cast<double>(this->mat_.val[i]);
+      }
+
+      out.write((char*)tmp.data(), sizeof(double) * this->nnz_);
+  }
+  else
+  {
+      LOG_INFO("WriteFileCSR: filename=" << filename << "; internal error");
+  }
 
   LOG_INFO("WriteFileCSR: filename="<< filename << "; done");
 
   out.close();
 
   return true;
-
 }
 
 template <typename ValueType>

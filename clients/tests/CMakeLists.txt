@@ -25,7 +25,8 @@ set(ROCALUTION_TEST_SOURCES
 # AMG
   test_pairwise_amg.cpp
   test_ruge_stueben_amg.cpp
-  test_samg.cpp
+  test_saamg.cpp
+  test_uaamg.cpp
 )
 
 # MPI tests

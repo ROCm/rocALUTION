@@ -24,7 +24,9 @@ class IDR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     virtual void Clear(void);
 
     /// Set the size of the Shadow Space
-    virtual void SetShadowSpace(const int s);
+    void SetShadowSpace(const int s);
+    /// Set random seed for ONB creation (seed must be greater than 0)
+    void SetRandomSeed(unsigned long long seed);
 
     protected:
     virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
@@ -38,6 +40,7 @@ class IDR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
 
     private:
     int s_;
+    unsigned long long seed_;
 
     ValueType kappa_;
 

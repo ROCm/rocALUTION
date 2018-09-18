@@ -77,6 +77,8 @@ class GlobalVector : public Vector<ValueType>
                            const ValueType beta,
                            const GlobalVector<ValueType>& y,
                            const ValueType gamma);
+    // this = alpha * this + beta * x
+    virtual void ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType> &x, const ValueType beta);
     // this = alpha*this
     virtual void Scale(const ValueType alpha);
     // this^T x

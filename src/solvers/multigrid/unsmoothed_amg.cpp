@@ -1,5 +1,5 @@
 #include "../../utils/def.hpp"
-#include "amg.hpp"
+#include "unsmoothed_amg.hpp"
 
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
@@ -12,23 +12,21 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-AMG<OperatorType, VectorType, ValueType>::AMG() {
+UAAMG<OperatorType, VectorType, ValueType>::UAAMG() {
 
-  log_debug(this, "AMG::AMG()",
+  log_debug(this, "UAAMG::UAAMG()",
             "default constructor");
 
   // parameter for strong couplings in smoothed aggregation
   this->eps_   = ValueType(0.01f);
-  this->relax_ = ValueType(2.0f/3.0f);
   this->over_interp_ = ValueType(1.5f);
-  this->interp_type_ = SmoothedAggregation;
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-AMG<OperatorType, VectorType, ValueType>::~AMG() {
+UAAMG<OperatorType, VectorType, ValueType>::~UAAMG() {
 
-  log_debug(this, "AMG::AMG()",
+  log_debug(this, "UAAMG::UAAMG()",
             "destructor");
 
   this->Clear();
@@ -36,80 +34,44 @@ AMG<OperatorType, VectorType, ValueType>::~AMG() {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::Print(void) const {
+void UAAMG<OperatorType, VectorType, ValueType>::Print(void) const {
 
-  LOG_INFO("AMG solver");
-
-  LOG_INFO("AMG number of levels " << this->levels_);
-
-  switch(this->interp_type_) {
-    case Aggregation:
-      LOG_INFO("AMG using aggregation interpolation");
-      break;
-    case SmoothedAggregation:
-      LOG_INFO("AMG using smoothed aggregation interpolation");
-      break;
-  }
-
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
-  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
-  LOG_INFO("AMG with smoother:");
+  LOG_INFO("UAAMG solver");
+  LOG_INFO("UAAMG number of levels " << this->levels_);
+  LOG_INFO("UAAMG using unsmoothed aggregation");
+  LOG_INFO("UAAMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  LOG_INFO("UAAMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
+  LOG_INFO("UAAMG with smoother:");
   this->smoother_level_[0]->Print();
   
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::PrintStart_(void) const {
+void UAAMG<OperatorType, VectorType, ValueType>::PrintStart_(void) const {
 
   assert(this->levels_ > 0);
 
-  LOG_INFO("AMG solver starts");
-  LOG_INFO("AMG number of levels " << this->levels_);
-
-  switch(this->interp_type_) {
-    case Aggregation:
-      LOG_INFO("AMG using aggregation interpolation");
-      break;
-    case SmoothedAggregation:
-      LOG_INFO("AMG using smoothed aggregation interpolation");
-      break;
-  }
-
-  LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
-  LOG_INFO("AMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
-  LOG_INFO("AMG with smoother:");
+  LOG_INFO("UAAMG solver starts");
+  LOG_INFO("UAAMG number of levels " << this->levels_);
+  LOG_INFO("UAAMG using unsmoothed aggregation");
+  LOG_INFO("UAAMG coarsest operator size = " << this->op_level_[this->levels_-2]->GetM());
+  LOG_INFO("UAAMG coarsest level nnz = " <<this->op_level_[this->levels_-2]->GetNnz());
+  LOG_INFO("UAAMG with smoother:");
   this->smoother_level_[0]->Print();
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
+void UAAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 
-    LOG_INFO("AMG ends");
-
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::SetInterpolation(unsigned int interpType) {
-
-  this->interp_type_ = interpType;
+    LOG_INFO("UAAMG ends");
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::SetInterpRelax(const ValueType relax) {
+void UAAMG<OperatorType, VectorType, ValueType>::SetOverInterp(const ValueType overInterp) {
 
-  log_debug(this, "AMG::SetInterpRelax()",
-            relax);
-
-  this->relax_ = relax;
-
-}
-
-template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::SetOverInterp(const ValueType overInterp) {
-
-  log_debug(this, "AMG::SetOverInterp()",
+  log_debug(this, "UAAMG::SetOverInterp()",
             overInterp);
 
   this->over_interp_ = overInterp;
@@ -117,9 +79,9 @@ void AMG<OperatorType, VectorType, ValueType>::SetOverInterp(const ValueType ove
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueType eps) {
+void UAAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueType eps) {
 
-  log_debug(this, "AMG::SetCouplingStrength()",
+  log_debug(this, "UAAMG::SetCouplingStrength()",
             eps);
 
   this->eps_ = eps;
@@ -127,9 +89,9 @@ void AMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueTy
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
+void UAAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
 
-  log_debug(this, "AMG::BuildSmoothers()",
+  log_debug(this, "UAAMG::BuildSmoothers()",
             " #*# begin");
 
   // Smoother for each level
@@ -154,9 +116,9 @@ void AMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
+void UAAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
-  log_debug(this, "AMG::ReBuildNumeric()",
+  log_debug(this, "UAAMG::ReBuildNumeric()",
             " #*# begin");
 
   assert(this->levels_ > 1);
@@ -251,12 +213,12 @@ void AMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType &op,
+void UAAMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType &op,
                                                          Operator<ValueType> *pro,
                                                          Operator<ValueType> *res,
                                                          OperatorType *coarse) {
 
-  log_debug(this, "AMG::Aggregate()",
+  log_debug(this, "UAAMG::Aggregate()",
             this->build_);
 
   assert(pro    != NULL);
@@ -281,22 +243,7 @@ void AMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType &op,
 
   op.AMGConnect(eps, &connections);
   op.AMGAggregate(connections, &aggregates);
-
-  switch(this->interp_type_) {
-
-    case Aggregation:
-      op.AMGAggregation(aggregates, cast_pro, cast_res);
-      break;
-
-    case SmoothedAggregation:
-      op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, cast_res);
-      break;
-
-    default:
-      LOG_INFO("Aggregation type not valid");
-      FATAL_ERROR(__FILE__, __LINE__);
-
-  }
+  op.AMGAggregation(aggregates, cast_pro, cast_res);
 
   // Free unused vectors
   connections.Clear();
@@ -309,17 +256,17 @@ void AMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType &op,
   tmp.MatrixMult(*cast_res, op);
   coarse->MatrixMult(tmp, *cast_pro);
 
-  if (this->interp_type_ == Aggregation && this->over_interp_ > ValueType(1.0))
+  if (this->over_interp_ > ValueType(1.0))
     coarse->Scale(ValueType(1.0)/this->over_interp_);
 
 }
 
 
-template class AMG< LocalMatrix<double>, LocalVector<double>, double >;
-template class AMG< LocalMatrix<float>,  LocalVector<float>, float >;
+template class UAAMG< LocalMatrix<double>, LocalVector<double>, double >;
+template class UAAMG< LocalMatrix<float>,  LocalVector<float>, float >;
 #ifdef SUPPORT_COMPLEX
-template class AMG< LocalMatrix<std::complex<double> >, LocalVector<std::complex<double> >, std::complex<double> >;
-template class AMG< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >,  std::complex<float> >;
+template class UAAMG< LocalMatrix<std::complex<double> >, LocalVector<std::complex<double> >, std::complex<double> >;
+template class UAAMG< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
 }

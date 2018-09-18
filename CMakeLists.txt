@@ -27,7 +27,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # rocALUTION project
-project(rocalution VERSION 1.3.1.0 LANGUAGES CXX)
+project(rocalution VERSION 1.3.2.0 LANGUAGES CXX)
 set(rocalution_SOVERSION 1)
 
 # Set toolchain
@@ -50,7 +50,7 @@ option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
 include(cmake/Dependencies.cmake)
 
 # AMD targets
-set(AMDGPU_TARGETS gfx803;gfx900 CACHE STRING "List of specific machine types for library to target")
+set(AMDGPU_TARGETS gfx803;gfx900;gfx906 CACHE STRING "List of specific machine types for library to target")
 
 # rocALUTION library
 add_subdirectory(src)

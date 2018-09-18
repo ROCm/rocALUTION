@@ -11,12 +11,12 @@
 #include <rocalution.hpp>
 
 using namespace rocalution;
-
+/*
 static bool check_residual(float res)
 {
     return (res < 1e-3f);
 }
-
+*/
 static bool check_residual(double res)
 {
     return (res < 1e-6);

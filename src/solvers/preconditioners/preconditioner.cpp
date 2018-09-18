@@ -222,7 +222,6 @@ void GS<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->GS_.CloneFrom(*this->op_);
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
   log_debug(this, "GS::Build()",
             this->build_,
@@ -243,7 +242,6 @@ void GS<OperatorType, VectorType, ValueType>::ResetOperator(const OperatorType &
   this->GS_.Clear();
   this->GS_.CloneFrom(*this->op_);
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
 }
 
@@ -256,7 +254,6 @@ void GS<OperatorType, VectorType, ValueType>::Clear(void) {
 
   this->GS_.Clear();
   this->GS_.LAnalyseClear();
-  this->GS_.UAnalyseClear();
 
   this->build_ = false;
 
@@ -290,7 +287,6 @@ void GS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void) {
 
   this->GS_.MoveToHost();
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
 }
 
@@ -302,7 +298,6 @@ void GS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void) 
 
   this->GS_.MoveToAccelerator();
   this->GS_.LAnalyse(false);
-  this->GS_.UAnalyse(false);
 
 }
 
@@ -959,10 +954,17 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::Clear(void) {
             this->build_);
 
   if (this->precond_ != NULL)
-    delete this->precond_;
+  {
+      for(int i=0; i<this->num_precond_; ++i)
+      {
+          this->precond_[i]->Clear();
+      }
+
+      delete[] this->precond_;
+      this->precond_ = NULL;
+  }
 
   this->num_precond_ = 0;
-  this->precond_ = NULL;
   this->counter_ = 0;
 
   this->build_ = false;
