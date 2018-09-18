@@ -615,6 +615,14 @@ void GlobalVector<ValueType>::Scale(const ValueType alpha)
 }
 
 template <typename ValueType>
+void GlobalVector<ValueType>::ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType> &x, const ValueType beta)
+{
+    log_debug(this, "GlobalVector::ScaleAddScale()", alpha, (const void*&)x, beta);
+
+    this->vector_interior_.ScaleAddScale(alpha, x.vector_interior_, beta);
+}
+
+template <typename ValueType>
 ValueType GlobalVector<ValueType>::Dot(const GlobalVector<ValueType>& x) const
 {
     log_debug(this, "GlobalVector::Dot()", (const void*&)x);
