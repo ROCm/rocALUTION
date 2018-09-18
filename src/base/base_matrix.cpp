@@ -862,7 +862,7 @@ template <typename ValueType>
 void AcceleratorMatrix<ValueType>::CopyFromHostAsync(const HostMatrix<ValueType> &src) {
 
   // default is no async
-  this->CopyFromHostAsync(src);
+  this->CopyFromHost(src);
 
 }
 
@@ -871,7 +871,7 @@ template <typename ValueType>
 void AcceleratorMatrix<ValueType>::CopyToHostAsync(HostMatrix<ValueType> *dst) const {
 
   // default is no async
-  this->CopyToHostAsync(dst);
+  this->CopyToHost(dst);
 
 }
 

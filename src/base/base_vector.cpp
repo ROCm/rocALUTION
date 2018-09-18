@@ -165,7 +165,7 @@ template <typename ValueType>
 void AcceleratorVector<ValueType>::CopyToHostAsync(HostVector<ValueType> *dst) const {
 
   // default is no async
-  this->CopyToHostAsync(dst);
+  this->CopyToHost(dst);
 
 }
 
