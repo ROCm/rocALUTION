@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_FGMRES_FGMRES_HPP_
 #define ROCALUTION_FGMRES_FGMRES_HPP_
 

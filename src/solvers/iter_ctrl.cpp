@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "iter_ctrl.hpp"
 #include "../utils/log.hpp"
@@ -365,5 +370,4 @@ void IterationControl::PrintStatus(void) {
 
 }
 
-
-}
+} // namespace rocalution

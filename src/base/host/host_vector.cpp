@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_vector.hpp"
 #include "../base_vector.hpp"
@@ -1415,4 +1420,4 @@ template class HostVector<std::complex<float> >;
 
 template class HostVector<int>;
 
-}
+} // namespace rocalution

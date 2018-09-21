@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_BACKEND_MANAGER_HPP_
 #define ROCALUTION_BACKEND_MANAGER_HPP_
 
@@ -139,6 +144,6 @@ bool _rocalution_del_obj(class RocalutionObj* ptr,
 void _rocalution_delete_all_obj(void);
 bool _rocalution_check_if_any_obj(void);
 
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_BACKEND_MANAGER_HPP_

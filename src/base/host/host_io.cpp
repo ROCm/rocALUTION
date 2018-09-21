@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_io.hpp"
 #include "../../utils/allocate_free.hpp"
@@ -310,4 +315,5 @@ template bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
                                const int *row, const int *col, const std::complex<double> *val,
                                const char *filename);
 #endif
-}
+
+} // namespace rocalution

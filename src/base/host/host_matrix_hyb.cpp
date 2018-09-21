@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_matrix_hyb.hpp"
 #include "host_matrix_csr.hpp"
@@ -364,4 +369,4 @@ template class HostMatrixHYB<std::complex<float> >;
 template class HostMatrixHYB<std::complex<double> >;
 #endif
 
-}
+} // namespace rocalution

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "smoothed_amg.hpp"
 
@@ -263,4 +268,4 @@ template class SAAMG< LocalMatrix<std::complex<double> >, LocalVector<std::compl
 template class SAAMG< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

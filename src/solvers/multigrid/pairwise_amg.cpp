@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "../../utils/types.hpp"
 #include "pairwise_amg.hpp"
@@ -420,4 +425,4 @@ template class PairwiseAMG< LocalMatrix<std::complex<double> >, LocalVector<std:
 template class PairwiseAMG< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

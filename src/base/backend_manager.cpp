@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "version.hpp" 
 #include "backend_manager.hpp" 
@@ -636,4 +641,5 @@ template HostMatrix<std::complex<float> >* _rocalution_init_base_host_matrix(con
 template HostMatrix<std::complex<double> >* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                                                               unsigned int matrix_format);
 #endif
-}
+
+} // namespace rocalution

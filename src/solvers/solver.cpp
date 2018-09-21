@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "solver.hpp"
 
@@ -768,4 +773,4 @@ template class DirectLinearSolver< LocalStencil<std::complex<double> >,  LocalVe
 template class DirectLinearSolver< LocalStencil<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_DIRECT_LU_HPP_
 #define ROCALUTION_DIRECT_LU_HPP_
 
@@ -34,7 +39,6 @@ private:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_DIRECT_LU_HPP_

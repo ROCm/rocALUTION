@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "lu.hpp"
 
@@ -139,4 +144,4 @@ template class LU< LocalMatrix<std::complex<double> >,  LocalVector<std::complex
 template class LU< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner.hpp"
 #include "../solver.hpp"
@@ -1104,5 +1109,4 @@ template class VariablePreconditioner< LocalMatrix<std::complex<double> >,  Loca
 template class VariablePreconditioner< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-
-}
+} // namespace rocalution

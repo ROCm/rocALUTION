@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "fcg.hpp"
 #include "../iter_ctrl.hpp"
@@ -451,4 +456,4 @@ template class FCG< GlobalMatrix<std::complex<double> >,  GlobalVector<std::comp
 template class FCG< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

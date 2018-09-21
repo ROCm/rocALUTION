@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_multielimination.hpp"
 #include "preconditioner.hpp"
@@ -431,4 +436,4 @@ template class MultiElimination< LocalMatrix<std::complex<double> >,  LocalVecto
 template class MultiElimination< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

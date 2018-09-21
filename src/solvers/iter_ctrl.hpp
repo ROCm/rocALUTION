@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_ITER_CTRL_HPP_
 #define ROCALUTION_ITER_CTRL_HPP_
 
@@ -140,7 +145,6 @@ private:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_ITER_CTRL_HPP_

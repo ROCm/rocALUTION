@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_HOST_IO_HPP_
 #define ROCALUTION_HOST_IO_HPP_
 
@@ -12,7 +17,6 @@ template <typename ValueType>
 bool write_matrix_mtx(const int nrow, const int ncol, const int nnz,
                       const int *row, const int *col, const ValueType *val, const char *filename);
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_HOST_IO_HPP_

@@ -1,3 +1,12 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
+/*! \file
+ *  \brief rocalution.hpp includes other *.hpp and exposes a common interface
+ */
+
 #ifndef ROCALUTION_ROCALUTION_HPP_
 #define ROCALUTION_ROCALUTION_HPP_
 
@@ -58,6 +67,5 @@
 #include "utils/allocate_free.hpp"
 #include "utils/time_functions.hpp"
 #include "utils/types.hpp"
-
 
 #endif // ROCALUTION_ROCALUTION_HPP_

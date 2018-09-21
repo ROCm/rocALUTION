@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "base_stencil.hpp"
 #include "base_vector.hpp"
@@ -133,4 +138,4 @@ template class HIPAcceleratorStencil<std::complex<float> >;
 #endif
 template class HIPAcceleratorStencil<int>;
 
-}
+} // namespace rocalution

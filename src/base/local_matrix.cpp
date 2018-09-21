@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "local_matrix.hpp"
 #include "local_vector.hpp"
@@ -6081,4 +6086,4 @@ template class LocalMatrix<std::complex<double> >;
 template class LocalMatrix<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

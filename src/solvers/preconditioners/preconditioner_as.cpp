@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_as.hpp"
 #include "../solver.hpp"
@@ -392,4 +397,4 @@ template class RAS< LocalMatrix<std::complex<double> >, LocalVector<std::complex
 template class RAS< LocalMatrix<std::complex<float> >, LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

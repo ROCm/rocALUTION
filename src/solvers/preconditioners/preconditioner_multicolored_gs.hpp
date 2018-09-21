@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_
 #define ROCALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_
 
@@ -61,7 +66,6 @@ protected:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_PRECONDITIONER_MULTICOLORED_GS_HPP_

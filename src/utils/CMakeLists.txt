@@ -1,3 +1,7 @@
+# ########################################################################
+# Copyright 2018 Advanced Micro Devices, Inc.
+# ########################################################################
+
 set(UTILS_SOURCES
   utils/log.cpp
   utils/allocate_free.cpp

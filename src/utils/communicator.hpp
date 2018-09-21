@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef RCOALUTION_UTILS_COMMUNICATOR_HPP_
 #define ROCALUTION_UTILS_COMMUNICATOR_HPP_
 

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "global_matrix.hpp"
 #include "global_vector.hpp"
@@ -1378,4 +1383,4 @@ template class GlobalMatrix<std::complex<double> >;
 template class GlobalMatrix<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

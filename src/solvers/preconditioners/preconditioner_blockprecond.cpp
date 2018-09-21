@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_blockprecond.hpp"
 #include "preconditioner.hpp"
@@ -502,4 +507,4 @@ template class BlockPreconditioner< LocalMatrix<std::complex<double> >,  LocalVe
 template class BlockPreconditioner< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

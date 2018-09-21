@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_BACKEND_HIP_HPP_
 #define ROCALUTION_BACKEND_HIP_HPP_
 

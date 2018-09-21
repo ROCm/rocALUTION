@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_multicolored_ilu.hpp"
 #include "preconditioner_multicolored.hpp"
@@ -249,4 +254,4 @@ template class MultiColoredILU< LocalMatrix<std::complex<double> >,  LocalVector
 template class MultiColoredILU< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

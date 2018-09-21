@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_ai.hpp"
 #include "../solver.hpp"
@@ -804,4 +809,4 @@ template class TNS< LocalMatrix<std::complex<double> >,  LocalVector<std::comple
 template class TNS< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

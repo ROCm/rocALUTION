@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_conversion.hpp"
 #include "../matrix_formats.hpp"
@@ -1218,4 +1223,4 @@ template bool hyb_to_csr(const int omp_threads,
                          const MatrixHYB<int, int> &src,
                          MatrixCSR<int, int> *dst, int *nnz_csr);
 
-}
+} // namespace rocalution

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_BASE_AMG_HPP_
 #define ROCALUTION_BASE_AMG_HPP_
 

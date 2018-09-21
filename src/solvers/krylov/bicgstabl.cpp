@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "bicgstabl.hpp"
 #include "../iter_ctrl.hpp"
@@ -708,4 +713,4 @@ template class BiCGStabl< GlobalMatrix<std::complex<double> >,  GlobalVector<std
 template class BiCGStabl< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "operator.hpp"
 #include "vector.hpp"
@@ -122,4 +127,4 @@ template class Operator<std::complex<float> >;
 #endif
 template class Operator<int>;
 
-}
+} // namespace rocalution

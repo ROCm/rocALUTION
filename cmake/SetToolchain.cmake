@@ -1,3 +1,7 @@
+# ########################################################################
+# Copyright 2018 Advanced Micro Devices, Inc.
+# ########################################################################
+
 # Find OpenMP package
 find_package(OpenMP)
 if (NOT OPENMP_FOUND)

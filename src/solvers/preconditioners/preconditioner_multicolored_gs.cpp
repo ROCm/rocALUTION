@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_multicolored_gs.hpp"
 #include "preconditioner_multicolored.hpp"
@@ -277,4 +282,4 @@ template class MultiColoredGS< LocalMatrix<std::complex<double> >,  LocalVector<
 template class MultiColoredGS< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

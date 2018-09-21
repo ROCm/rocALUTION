@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "base_matrix.hpp"
 #include "base_vector.hpp"
@@ -919,4 +924,4 @@ template class HIPAcceleratorMatrix<std::complex<float> >;
 #endif
 template class HIPAcceleratorMatrix<int>;
 
-}
+} // namespace rocalution

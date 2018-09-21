@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "../utils/types.hpp"
 #include "mixed_precision.hpp"
@@ -351,4 +356,4 @@ void MixedPrecisionDC<OperatorTypeH, VectorTypeH, ValueTypeH,
 template class MixedPrecisionDC< LocalMatrix<double>, LocalVector<double>, double,
                                  LocalMatrix<float>,  LocalVector<float>, float >;
 
-}
+} // namespace rocalution

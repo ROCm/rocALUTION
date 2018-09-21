@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "../../utils/types.hpp"
 #include "base_amg.hpp"
@@ -501,4 +506,4 @@ template class BaseAMG< GlobalMatrix<std::complex<double> >, GlobalVector<std::c
 template class BaseAMG< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

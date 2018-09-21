@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_HIP_ALLOCATE_FREE_HPP_
 #define ROCALUTION_HIP_ALLOCATE_FREE_HPP_
 

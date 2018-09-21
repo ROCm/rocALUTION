@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_HIP_HIP_KERNELS_CONVERSION_HPP_
 #define ROCALUTION_HIP_HIP_KERNELS_CONVERSION_HPP_
 

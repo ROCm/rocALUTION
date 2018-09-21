@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "ruge_stueben_amg.hpp"
 
@@ -247,4 +252,4 @@ template class RugeStuebenAMG< LocalMatrix<std::complex<double> >, LocalVector<s
 template class RugeStuebenAMG< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

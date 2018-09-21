@@ -1,3 +1,7 @@
+# ########################################################################
+# Copyright 2018 Advanced Micro Devices, Inc.
+# ########################################################################
+
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
                "${PROJECT_BINARY_DIR}/include/version.hpp"

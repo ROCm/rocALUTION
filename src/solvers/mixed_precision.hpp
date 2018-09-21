@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_MIXED_PRECISION_HPP_
 #define ROCALUTION_MIXED_PRECISION_HPP_
 
@@ -51,7 +56,6 @@ private:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_MIXED_PRECISION_HPP_

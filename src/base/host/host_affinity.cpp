@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_affinity.hpp"
 
@@ -108,5 +113,4 @@ void rocalution_set_omp_affinity(bool aff) {
 
 }
 
-
-}
+} // namespace rocalution

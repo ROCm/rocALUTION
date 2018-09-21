@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_KRYLOV_BICGSTAB_HPP_
 #define ROCALUTION_KRYLOV_BICGSTAB_HPP_
 

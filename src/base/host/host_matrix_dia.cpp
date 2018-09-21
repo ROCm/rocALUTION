@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_matrix_dia.hpp"
 #include "host_matrix_csr.hpp"
@@ -364,4 +369,4 @@ template class HostMatrixDIA<std::complex<double> >;
 template class HostMatrixDIA<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

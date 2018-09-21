@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_PRECONDITIONER_HPP_
 #define ROCALUTION_PRECONDITIONER_HPP_
 
@@ -252,7 +257,6 @@ private:
   
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_PRECONDITIONER_HPP_

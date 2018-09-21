@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_stencil_laplace2d.hpp"
 #include "host_vector.hpp"
@@ -288,4 +293,4 @@ template class HostStencilLaplace2D<std::complex<double> >;
 template class HostStencilLaplace2D<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "base_vector.hpp"
 #include "backend_manager.hpp"
@@ -186,4 +191,4 @@ template class AcceleratorVector<std::complex<float> >;
 #endif
 template class AcceleratorVector<int>;
 
-}
+} // namespace rocalution

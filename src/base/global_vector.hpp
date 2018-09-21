@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_GLOBAL_VECTOR_HPP_
 #define ROCALUTION_GLOBAL_VECTOR_HPP_
 

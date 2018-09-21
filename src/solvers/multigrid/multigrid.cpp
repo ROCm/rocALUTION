@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "multigrid.hpp"
 
@@ -96,4 +101,4 @@ template class MultiGrid< GlobalMatrix<std::complex<double> >, GlobalVector<std:
 template class MultiGrid< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

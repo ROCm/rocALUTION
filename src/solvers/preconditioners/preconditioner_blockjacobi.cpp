@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_blockjacobi.hpp"
 #include "../solver.hpp"
@@ -177,4 +182,4 @@ template class BlockJacobi< GlobalMatrix<std::complex<double> >, GlobalVector<st
 template class BlockJacobi< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

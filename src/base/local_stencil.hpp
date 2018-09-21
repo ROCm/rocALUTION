@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_LOCAL_STENCIL_HPP_
 #define ROCALUTION_LOCAL_STENCIL_HPP_
 
@@ -68,7 +73,6 @@ private:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_LOCAL_STENCIL_HPP_

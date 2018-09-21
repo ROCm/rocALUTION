@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "local_stencil.hpp"
 #include "local_vector.hpp"
@@ -155,4 +160,4 @@ template class LocalStencil<std::complex<double> >;
 template class LocalStencil<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

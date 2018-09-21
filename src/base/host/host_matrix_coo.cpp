@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN64) && !defined(__CYGWIN__)
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_WARNINGS
@@ -626,4 +631,4 @@ template class HostMatrixCOO<std::complex<double> >;
 template class HostMatrixCOO<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

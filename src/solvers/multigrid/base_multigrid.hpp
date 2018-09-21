@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_BASE_MULTIGRID_HPP_
 #define ROCALUTION_BASE_MULTIGRID_HPP_
 
@@ -128,7 +133,6 @@ protected:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_BASE_MULTIGRID_HPP_

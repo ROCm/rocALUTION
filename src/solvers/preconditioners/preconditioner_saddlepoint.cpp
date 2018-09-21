@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "preconditioner_saddlepoint.hpp"
 #include "preconditioner.hpp"
@@ -338,4 +343,4 @@ template class DiagJacobiSaddlePointPrecond< LocalMatrix<std::complex<double> >,
 template class DiagJacobiSaddlePointPrecond< LocalMatrix<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

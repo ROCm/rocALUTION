@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_matrix_ell.hpp"
 #include "host_matrix_csr.hpp"
@@ -335,4 +340,4 @@ template class HostMatrixELL<std::complex<double> >;
 template class HostMatrixELL<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

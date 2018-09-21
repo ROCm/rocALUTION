@@ -1,3 +1,7 @@
+# ########################################################################
+# Copyright 2018 Advanced Micro Devices, Inc.
+# ########################################################################
+
 set(BASE_SOURCES
   base/base_rocalution.cpp
   base/operator.cpp

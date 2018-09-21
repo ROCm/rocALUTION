@@ -1,3 +1,7 @@
+# ########################################################################
+# Copyright 2018 Advanced Micro Devices, Inc.
+# ########################################################################
+
 set(SOLVERS_SOURCES
   solvers/krylov/cg.cpp
   solvers/krylov/fcg.cpp

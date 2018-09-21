@@ -1,3 +1,7 @@
+# ########################################################################
+# Copyright 2018 Advanced Micro Devices, Inc.
+# ########################################################################
+
 set(HOST_SOURCES
   base/host/host_matrix_csr.cpp
   base/host/host_matrix_mcsr.cpp

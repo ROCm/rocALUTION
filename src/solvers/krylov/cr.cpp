@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "cr.hpp"
 #include "../iter_ctrl.hpp"
@@ -481,4 +486,4 @@ template class CR< LocalStencil<std::complex<double> >,  LocalVector<std::comple
 template class CR< LocalStencil<std::complex<float> >,  LocalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

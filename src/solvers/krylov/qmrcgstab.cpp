@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "qmrcgstab.hpp"
 #include "../iter_ctrl.hpp"
@@ -733,4 +738,4 @@ template class QMRCGStab< GlobalMatrix<std::complex<double> >, GlobalVector<std:
 template class QMRCGStab< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >, std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

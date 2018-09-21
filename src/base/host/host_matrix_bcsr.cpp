@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "host_matrix_bcsr.hpp"
 #include "host_matrix_csr.hpp"
@@ -225,4 +230,4 @@ template class HostMatrixBCSR<std::complex<double> >;
 template class HostMatrixBCSR<std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "chebyshev.hpp"
 #include "iter_ctrl.hpp"
@@ -398,4 +403,4 @@ template class Chebyshev< LocalStencil<std::complex<double> >,  LocalVector<std:
 template class Chebyshev< LocalStencil<std::complex<float> >,   LocalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution

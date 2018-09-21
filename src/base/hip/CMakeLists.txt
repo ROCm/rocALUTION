@@ -1,3 +1,7 @@
+# ########################################################################
+# Copyright 2018 Advanced Micro Devices, Inc.
+# ########################################################################
+
 set(HIP_SOURCES
   base/hip/hip_conversion.cpp
   base/hip/hip_blas.cpp

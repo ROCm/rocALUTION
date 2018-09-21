@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_MULTIGRID_PAIRWISE_AMG_HPP_
 #define ROCALUTION_MULTIGRID_PAIRWISE_AMG_HPP_
 
@@ -81,7 +86,6 @@ private:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_MULTIGRID_PAIRWISE_AMG_HPP_

@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_KRYLOV_CHEBYSHEV_HPP_
 #define ROCALUTION_KRYLOV_CHEBYSHEV_HPP_
 
@@ -46,7 +51,6 @@ private:
 
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_KRYLOV_CHEBYSHEV_HPP_

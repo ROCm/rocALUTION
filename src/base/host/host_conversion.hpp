@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_HOST_CONVERSION_HPP_
 #define ROCALUTION_HOST_CONVERSION_HPP_
 
@@ -80,7 +85,6 @@ bool hyb_to_csr(const int omp_threads,
                 const MatrixHYB<ValueType, IndexType> &src,
                 MatrixCSR<ValueType, IndexType> *dst, IndexType *nnz_csr);
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_HOST_CONVERSION_HPP_

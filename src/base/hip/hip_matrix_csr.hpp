@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_HIP_MATRIX_CSR_HPP_
 #define ROCALUTION_HIP_MATRIX_CSR_HPP_
 

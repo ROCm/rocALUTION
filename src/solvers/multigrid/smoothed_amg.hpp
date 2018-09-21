@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_SMOOTHED_AMG_HPP_
 #define ROCALUTION_SMOOTHED_AMG_HPP_
 
@@ -49,7 +54,6 @@ private:
   ValueType relax_;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_SMOOTHED_AMG_HPP_

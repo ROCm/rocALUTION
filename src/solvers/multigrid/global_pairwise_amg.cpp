@@ -1,3 +1,8 @@
+/* ************************************************************************
+ * Copyright 2018 Advanced Micro Devices, Inc.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "../../utils/types.hpp"
 #include "global_pairwise_amg.hpp"
@@ -385,4 +390,4 @@ template class GlobalPairwiseAMG< GlobalMatrix<std::complex<double> >, GlobalVec
 template class GlobalPairwiseAMG< GlobalMatrix<std::complex<float> >,  GlobalVector<std::complex<float> >,  std::complex<float> >;
 #endif
 
-}
+} // namespace rocalution
