@@ -13,51 +13,48 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HostMatrixMCSR : public HostMatrix<ValueType> {
+class HostMatrixMCSR : public HostMatrix<ValueType>
+{
+    public:
+    HostMatrixMCSR();
+    HostMatrixMCSR(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HostMatrixMCSR();
 
-public:
+    virtual void Info(void) const;
+    virtual unsigned int GetMatFormat(void) const { return MCSR; }
 
-  HostMatrixMCSR();
-  HostMatrixMCSR(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixMCSR();
+    virtual void Clear(void);
+    virtual void AllocateMCSR(int nnz, int nrow, int ncol);
+    virtual void
+    SetDataPtrMCSR(int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol);
+    virtual void LeaveDataPtrMCSR(int** row_offset, int** col, ValueType** val);
 
-  virtual void Info(void) const;
-  virtual unsigned int GetMatFormat(void) const { return  MCSR; }
+    virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-  virtual void Clear(void);
-  virtual void AllocateMCSR(const int nnz, const int nrow, const int ncol);
-  virtual void SetDataPtrMCSR(int **row_offset, int **col, ValueType **val,
-                              const int nnz, const int nrow, const int ncol);
-  virtual void LeaveDataPtrMCSR(int **row_offset, int **col, ValueType **val);
+    virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+    virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
-  virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
+    virtual bool ILU0Factorize(void);
 
-  virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
-  virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+    virtual void LUAnalyse(void);
+    virtual void LUAnalyseClear(void);
+    virtual bool LUSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
 
-  virtual bool ILU0Factorize(void);
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-  virtual void LUAnalyse(void);
-  virtual void LUAnalyseClear(void);
-  virtual bool LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
+    private:
+    MatrixMCSR<ValueType, int> mat_;
 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                        BaseVector<ValueType> *out) const;
+    friend class BaseVector<ValueType>;
+    friend class HostVector<ValueType>;
+    friend class HostMatrixCSR<ValueType>;
+    friend class HostMatrixCOO<ValueType>;
+    friend class HostMatrixHYB<ValueType>;
+    friend class HostMatrixDENSE<ValueType>;
 
-private:
-
-  MatrixMCSR<ValueType, int> mat_;
-
-  friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-
-  friend class HIPAcceleratorMatrixMCSR<ValueType>;
-
+    friend class HIPAcceleratorMatrixMCSR<ValueType>;
 };
 
 } // namespace rocalution

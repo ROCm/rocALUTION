@@ -26,13 +26,9 @@ class HIPAcceleratorMatrixDIA : public HIPAcceleratorMatrix<ValueType>
     virtual unsigned int GetMatFormat(void) const { return DIA; }
 
     virtual void Clear(void);
-    virtual void AllocateDIA(const int nnz, const int nrow, const int ncol, const int ndiag);
-    virtual void SetDataPtrDIA(int** offset,
-                               ValueType** val,
-                               const int nnz,
-                               const int nrow,
-                               const int ncol,
-                               const int num_diag);
+    virtual void AllocateDIA(int nnz, int nrow, int ncol, int ndiag);
+    virtual void
+    SetDataPtrDIA(int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag);
     virtual void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
 
     virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
@@ -48,9 +44,8 @@ class HIPAcceleratorMatrixDIA : public HIPAcceleratorMatrix<ValueType>
     virtual void CopyToHostAsync(HostMatrix<ValueType>* dst) const;
 
     virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
-    virtual void ApplyAdd(const BaseVector<ValueType>& in,
-                          const ValueType scalar,
-                          BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
     private:
     MatrixDIA<ValueType, int> mat_;

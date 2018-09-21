@@ -107,7 +107,7 @@ void HIPAcceleratorMatrixHYB<ValueType>::Info(void) const
 
 template <typename ValueType>
 void HIPAcceleratorMatrixHYB<ValueType>::AllocateHYB(
-    const int ell_nnz, const int coo_nnz, const int ell_max_row, const int nrow, const int ncol)
+    int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)
 {
     assert(ell_nnz >= 0);
     assert(coo_nnz >= 0);
@@ -907,7 +907,7 @@ void HIPAcceleratorMatrixHYB<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixHYB<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                  const ValueType scalar,
+                                                  ValueType scalar,
                                                   BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)

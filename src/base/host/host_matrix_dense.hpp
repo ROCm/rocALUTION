@@ -13,61 +13,58 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HostMatrixDENSE : public HostMatrix<ValueType> {
+class HostMatrixDENSE : public HostMatrix<ValueType>
+{
+    public:
+    HostMatrixDENSE();
+    HostMatrixDENSE(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HostMatrixDENSE();
 
-public:
+    virtual void Info(void) const;
+    virtual unsigned int GetMatFormat(void) const { return DENSE; }
 
-  HostMatrixDENSE();
-  HostMatrixDENSE(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixDENSE();
+    virtual void Clear(void);
+    virtual void AllocateDENSE(int nrow, int ncol);
+    virtual void SetDataPtrDENSE(ValueType** val, int nrow, int ncol);
+    virtual void LeaveDataPtrDENSE(ValueType** val);
 
-  virtual void Info(void) const;
-  virtual unsigned int GetMatFormat(void) const { return  DENSE; }
+    virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-  virtual void Clear(void);
-  virtual void AllocateDENSE(const int nrow, const int ncol);
-  virtual void SetDataPtrDENSE(ValueType **val, const int nrow, const int ncol);
-  virtual void LeaveDataPtrDENSE(ValueType **val);
+    virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+    virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
-  virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-  virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
-  virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+    virtual bool MatMatMult(const BaseMatrix<ValueType>& A, const BaseMatrix<ValueType>& B);
 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                        BaseVector<ValueType> *out) const;
+    virtual bool Householder(int idx, ValueType& beta, BaseVector<ValueType>* vec) const;
+    virtual bool QRDecompose(void);
+    virtual bool QRSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
 
-  virtual bool MatMatMult(const BaseMatrix<ValueType> &A, const BaseMatrix<ValueType> &B);
+    virtual bool LUFactorize(void);
+    virtual bool LUSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
 
-  virtual bool Householder(const int idx, ValueType &beta, BaseVector<ValueType> *vec) const;
-  virtual bool QRDecompose(void);
-  virtual bool QRSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
+    virtual bool Invert(void);
 
-  virtual bool LUFactorize(void);
-  virtual bool LUSolve(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
+    virtual bool ReplaceColumnVector(int idx, const BaseVector<ValueType>& vec);
+    virtual bool ReplaceRowVector(int idx, const BaseVector<ValueType>& vec);
+    virtual bool ExtractColumnVector(int idx, BaseVector<ValueType>* vec) const;
+    virtual bool ExtractRowVector(int idx, BaseVector<ValueType>* vec) const;
 
-  virtual bool Invert(void);
+    private:
+    MatrixDENSE<ValueType> mat_;
 
-  virtual bool ReplaceColumnVector(const int idx, const BaseVector<ValueType> &vec);
-  virtual bool ReplaceRowVector(const int idx, const BaseVector<ValueType> &vec);
-  virtual bool ExtractColumnVector(const int idx, BaseVector<ValueType> *vec) const;
-  virtual bool ExtractRowVector(const int idx, BaseVector<ValueType> *vec) const;
+    friend class BaseVector<ValueType>;
+    friend class HostVector<ValueType>;
+    friend class HostMatrixCSR<ValueType>;
+    friend class HostMatrixCOO<ValueType>;
+    friend class HostMatrixELL<ValueType>;
+    friend class HostMatrixHYB<ValueType>;
+    friend class HostMatrixDIA<ValueType>;
 
-private:
-
-  MatrixDENSE<ValueType> mat_;
-
-  friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixELL<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDIA<ValueType>;
-
-  friend class HIPAcceleratorMatrixDENSE<ValueType>;
-
+    friend class HIPAcceleratorMatrixDENSE<ValueType>;
 };
 
 } // namespace rocalution

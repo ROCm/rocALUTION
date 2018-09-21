@@ -31,12 +31,12 @@ public:
   virtual void ReBuildNumeric(void);
   
   /// Initialize a multi-colored ILU(p,p+1) preconditioner
-  virtual void Set(const int p);
+  virtual void Set(int p);
 
   /// Initialize a multi-colored ILU(p,q) preconditioner;
   /// level==true will perform the factorization with levels; 
   /// level==false will perform the factorization only on the power(q)-pattern 
-  virtual void Set(const int p, const int q, const bool level=true);
+  virtual void Set(int p, int q, bool level=true);
 
 protected:
 

@@ -61,7 +61,7 @@ void HIPAcceleratorVector<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::Allocate(const int n)
+void HIPAcceleratorVector<ValueType>::Allocate(int n)
 {
     assert(n >= 0);
 
@@ -82,7 +82,7 @@ void HIPAcceleratorVector<ValueType>::Allocate(const int n)
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType** ptr, const int size)
+void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType** ptr, int size)
 {
     assert(*ptr != NULL);
     assert(size > 0);
@@ -434,9 +434,9 @@ void HIPAcceleratorVector<ValueType>::CopyFromAsync(const BaseVector<ValueType>&
 
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType>& src,
-                                               const int src_offset,
-                                               const int dst_offset,
-                                               const int size)
+                                               int src_offset,
+                                               int dst_offset,
+                                               int size)
 {
     assert(this->size_ > 0);
     assert(size > 0);
@@ -718,15 +718,14 @@ void HIPAcceleratorVector<ValueType>::Ones(void)
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::SetValues(const ValueType val)
+void HIPAcceleratorVector<ValueType>::SetValues(ValueType val)
 {
     LOG_INFO("HIPAcceleratorVector::SetValues NYI");
     FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::AddScale(const BaseVector<ValueType>& x,
-                                               const ValueType alpha)
+void HIPAcceleratorVector<ValueType>::AddScale(const BaseVector<ValueType>& x, ValueType alpha)
 {
     if(this->size_ > 0)
     {
@@ -749,15 +748,14 @@ void HIPAcceleratorVector<ValueType>::AddScale(const BaseVector<ValueType>& x,
 }
 
 template <>
-void HIPAcceleratorVector<int>::AddScale(const BaseVector<int>& x, const int alpha)
+void HIPAcceleratorVector<int>::AddScale(const BaseVector<int>& x, int alpha)
 {
     LOG_INFO("No int axpy function");
     FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::ScaleAdd(const ValueType alpha,
-                                               const BaseVector<ValueType>& x)
+void HIPAcceleratorVector<ValueType>::ScaleAdd(ValueType alpha, const BaseVector<ValueType>& x)
 {
     if(this->size_ > 0)
     {
@@ -785,9 +783,9 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd(const ValueType alpha,
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha,
+void HIPAcceleratorVector<ValueType>::ScaleAddScale(ValueType alpha,
                                                     const BaseVector<ValueType>& x,
-                                                    const ValueType beta)
+                                                    ValueType beta)
 {
     if(this->size_ > 0)
     {
@@ -816,12 +814,12 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha,
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha,
+void HIPAcceleratorVector<ValueType>::ScaleAddScale(ValueType alpha,
                                                     const BaseVector<ValueType>& x,
-                                                    const ValueType beta,
-                                                    const int src_offset,
-                                                    const int dst_offset,
-                                                    const int size)
+                                                    ValueType beta,
+                                                    int src_offset,
+                                                    int dst_offset,
+                                                    int size)
 {
     if(this->size_ > 0)
     {
@@ -856,11 +854,11 @@ void HIPAcceleratorVector<ValueType>::ScaleAddScale(const ValueType alpha,
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::ScaleAdd2(const ValueType alpha,
+void HIPAcceleratorVector<ValueType>::ScaleAdd2(ValueType alpha,
                                                 const BaseVector<ValueType>& x,
-                                                const ValueType beta,
+                                                ValueType beta,
                                                 const BaseVector<ValueType>& y,
-                                                const ValueType gamma)
+                                                ValueType gamma)
 {
     if(this->size_ > 0)
     {
@@ -895,7 +893,7 @@ void HIPAcceleratorVector<ValueType>::ScaleAdd2(const ValueType alpha,
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::Scale(const ValueType alpha)
+void HIPAcceleratorVector<ValueType>::Scale(ValueType alpha)
 {
     if(this->size_ > 0)
     {
@@ -910,7 +908,7 @@ void HIPAcceleratorVector<ValueType>::Scale(const ValueType alpha)
 }
 
 template <>
-void HIPAcceleratorVector<int>::Scale(const int alpha)
+void HIPAcceleratorVector<int>::Scale(int alpha)
 {
     LOG_INFO("No int CUBLAS scale function");
     FATAL_ERROR(__FILE__, __LINE__);
@@ -1292,7 +1290,7 @@ void HIPAcceleratorVector<ValueType>::CopyFromPermuteBackward(const BaseVector<V
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::SetIndexArray(const int size, const int* index)
+void HIPAcceleratorVector<ValueType>::SetIndexArray(int size, const int* index)
 {
     assert(size > 0);
     assert(this->size_ >= size);
@@ -1354,8 +1352,8 @@ void HIPAcceleratorVector<ValueType>::SetIndexValues(const ValueType* values)
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::GetContinuousValues(const int start,
-                                                          const int end,
+void HIPAcceleratorVector<ValueType>::GetContinuousValues(int start,
+                                                          int end,
                                                           ValueType* values) const
 {
     assert(start >= 0);
@@ -1368,8 +1366,8 @@ void HIPAcceleratorVector<ValueType>::GetContinuousValues(const int start,
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::SetContinuousValues(const int start,
-                                                          const int end,
+void HIPAcceleratorVector<ValueType>::SetContinuousValues(int start,
+                                                          int end,
                                                           const ValueType* values)
 {
     assert(start >= 0);
@@ -1383,7 +1381,7 @@ void HIPAcceleratorVector<ValueType>::SetContinuousValues(const int start,
 
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::ExtractCoarseMapping(
-    const int start, const int end, const int* index, const int nc, int* size, int* map) const
+    int start, int end, const int* index, int nc, int* size, int* map) const
 {
     LOG_INFO("ExtractCoarseMapping() NYI for HIP");
     FATAL_ERROR(__FILE__, __LINE__);
@@ -1391,14 +1389,14 @@ void HIPAcceleratorVector<ValueType>::ExtractCoarseMapping(
 
 template <typename ValueType>
 void HIPAcceleratorVector<ValueType>::ExtractCoarseBoundary(
-    const int start, const int end, const int* index, const int nc, int* size, int* boundary) const
+    int start, int end, const int* index, int nc, int* size, int* boundary) const
 {
     LOG_INFO("ExtractCoarseBoundary() NYI for HIP");
     FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::Power(const double power)
+void HIPAcceleratorVector<ValueType>::Power(double power)
 {
     if(this->size_ > 0)
     {
@@ -1413,7 +1411,7 @@ void HIPAcceleratorVector<ValueType>::Power(const double power)
 }
 
 template <>
-void HIPAcceleratorVector<int>::Power(const double power)
+void HIPAcceleratorVector<int>::Power(double power)
 {
     if(this->size_ > 0)
     {

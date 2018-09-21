@@ -22,7 +22,7 @@ public:
 
   virtual void Print(void) const;
 
-  void Set(const ValueType lambda_min, const ValueType lambda_max);
+  void Set(ValueType lambda_min, ValueType lambda_max);
 
   virtual void Build(void);
   virtual void ReBuildNumeric(void);

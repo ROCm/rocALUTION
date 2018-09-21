@@ -24,8 +24,8 @@ class HIPAcceleratorMatrixDENSE : public HIPAcceleratorMatrix<ValueType>
     virtual unsigned int GetMatFormat(void) const { return DENSE; }
 
     virtual void Clear(void);
-    virtual void AllocateDENSE(const int nrow, const int ncol);
-    virtual void SetDataPtrDENSE(ValueType** val, const int nrow, const int ncol);
+    virtual void AllocateDENSE(int nrow, int ncol);
+    virtual void SetDataPtrDENSE(ValueType** val, int nrow, int ncol);
     virtual void LeaveDataPtrDENSE(ValueType** val);
 
     virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
@@ -41,16 +41,15 @@ class HIPAcceleratorMatrixDENSE : public HIPAcceleratorMatrix<ValueType>
     virtual void CopyToHostAsync(HostMatrix<ValueType>* dst) const;
 
     virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
-    virtual void ApplyAdd(const BaseVector<ValueType>& in,
-                          const ValueType scalar,
-                          BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
     virtual bool MatMatMult(const BaseMatrix<ValueType>& A, const BaseMatrix<ValueType>& B);
 
-    virtual bool ReplaceColumnVector(const int idx, const BaseVector<ValueType>& vec);
-    virtual bool ReplaceRowVector(const int idx, const BaseVector<ValueType>& vec);
-    virtual bool ExtractColumnVector(const int idx, BaseVector<ValueType>* vec) const;
-    virtual bool ExtractRowVector(const int idx, BaseVector<ValueType>* vec) const;
+    virtual bool ReplaceColumnVector(int idx, const BaseVector<ValueType>& vec);
+    virtual bool ReplaceRowVector(int idx, const BaseVector<ValueType>& vec);
+    virtual bool ExtractColumnVector(int idx, BaseVector<ValueType>* vec) const;
+    virtual bool ExtractRowVector(int idx, BaseVector<ValueType>* vec) const;
 
     private:
     MatrixDENSE<ValueType> mat_;

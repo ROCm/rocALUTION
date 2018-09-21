@@ -172,7 +172,7 @@ void Solver<OperatorType, VectorType, ValueType>::MoveToAccelerator(void) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void Solver<OperatorType, VectorType, ValueType>::Verbose(const int verb) {
+void Solver<OperatorType, VectorType, ValueType>::Verbose(int verb) {
 
   log_debug(this, "Solver::Verbose()",
             verb);
@@ -202,10 +202,10 @@ IterativeLinearSolver<OperatorType, VectorType, ValueType>::~IterativeLinearSolv
 
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Init(const double abs_tol,
-                                                                      const double rel_tol,
-                                                                      const double div_tol,
-                                                                      const int max_iter) {
+void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Init(double abs_tol,
+                                                                      double rel_tol,
+                                                                      double div_tol,
+                                                                      int max_iter) {
 
   log_debug(this, "IterativeLinearSolver::Init()", abs_tol, rel_tol, div_tol, max_iter);
 
@@ -214,11 +214,11 @@ void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Init(const doub
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Init(const double abs_tol,
-                                                                      const double rel_tol,
-                                                                      const double div_tol,
-                                                                      const int min_iter,
-                                                                      const int max_iter) {
+void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Init(double abs_tol,
+                                                                      double rel_tol,
+                                                                      double div_tol,
+                                                                      int min_iter,
+                                                                      int max_iter) {
 
   log_debug(this, "IterativeLinearSolver::Init()", abs_tol, rel_tol, div_tol, min_iter, max_iter);
 
@@ -227,7 +227,7 @@ void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Init(const doub
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitMinIter(const int min_iter) {
+void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitMinIter(int min_iter) {
 
   log_debug(this, "IterativeLinearSolver::InitMinIter()",
             min_iter);
@@ -237,7 +237,7 @@ void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitMinIter(con
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitMaxIter(const int max_iter) {
+void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitMaxIter(int max_iter) {
 
   log_debug(this, "IterativeLinearSolver::InitMaxIter()",
             max_iter);
@@ -247,9 +247,9 @@ void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitMaxIter(con
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitTol(const double abs,
-                                                                const double rel,
-                                                                const double div) {
+void IterativeLinearSolver<OperatorType, VectorType, ValueType>::InitTol(double abs,
+                                                                double rel,
+                                                                double div) {
 
   log_debug(this, "IterativeLinearSolver::Init()", abs, rel, div);
 
@@ -317,7 +317,7 @@ void IterativeLinearSolver<OperatorType, VectorType, ValueType>::RecordHistory(s
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Verbose(const int verb) {
+void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Verbose(int verb) {
 
   log_debug(this, "IterativeLinearSolver::Verbose()",
             verb);
@@ -329,7 +329,7 @@ void IterativeLinearSolver<OperatorType, VectorType, ValueType>::Verbose(const i
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IterativeLinearSolver<OperatorType, VectorType, ValueType>::SetResidualNorm(const int resnorm) {
+void IterativeLinearSolver<OperatorType, VectorType, ValueType>::SetResidualNorm(int resnorm) {
 
   log_debug(this, "IterativeLinearSolver::SetResidualNorm()",
             resnorm);
@@ -427,7 +427,7 @@ FixedPoint<OperatorType, VectorType, ValueType>::~FixedPoint() {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void FixedPoint<OperatorType, VectorType, ValueType>::SetRelaxation(const ValueType omega) {
+void FixedPoint<OperatorType, VectorType, ValueType>::SetRelaxation(ValueType omega) {
 
   log_debug(this, "FixedPoint::SetRelaxation()",
             omega);
@@ -662,7 +662,7 @@ DirectLinearSolver<OperatorType, VectorType, ValueType>::~DirectLinearSolver() {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void DirectLinearSolver<OperatorType, VectorType, ValueType>::Verbose(const int verb) {
+void DirectLinearSolver<OperatorType, VectorType, ValueType>::Verbose(int verb) {
 
   log_debug(this, "DirectLinearSolver::Verbose()",
             verb);

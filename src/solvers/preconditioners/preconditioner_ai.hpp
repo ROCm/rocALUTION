@@ -26,7 +26,7 @@ public:
   virtual void Print(void) const;  
   virtual void Solve(const VectorType &rhs,
                      VectorType *x);
-  void Set(const int p, const ValueType lambda_min, const ValueType lambda_max);
+  void Set(int p, ValueType lambda_min, ValueType lambda_max);
   virtual void Build(void);
   virtual void Clear(void);  
 
@@ -57,13 +57,13 @@ public:
   virtual void Print(void) const;
   virtual void Solve(const VectorType &rhs, VectorType *x);
   /// Initialize the FSAI with powered system matrix sparsity pattern
-  virtual void Set(const int power);
+  virtual void Set(int power);
   /// Initialize the FSAI with external sparsity pattern
   virtual void Set(const OperatorType &pattern);
   virtual void Build(void);
   virtual void Clear(void);
 
-  virtual void SetPrecondMatrixFormat(const unsigned int mat_format);
+  virtual void SetPrecondMatrixFormat(unsigned int mat_format);
 
 protected:
 
@@ -102,7 +102,7 @@ public:
   virtual void Build(void);
   virtual void Clear(void);
 
-  virtual void SetPrecondMatrixFormat(const unsigned int mat_format);
+  virtual void SetPrecondMatrixFormat(unsigned int mat_format);
 
 
 protected:
@@ -133,12 +133,12 @@ public:
   virtual ~TNS();
 
   virtual void Print(void) const;  
-  virtual void Set(const bool imp);
+  virtual void Set(bool imp);
   virtual void Solve(const VectorType &rhs, VectorType *x);
   virtual void Build(void);
   virtual void Clear(void);
 
-  virtual void SetPrecondMatrixFormat(const unsigned int mat_format);
+  virtual void SetPrecondMatrixFormat(unsigned int mat_format);
 
 
 protected:

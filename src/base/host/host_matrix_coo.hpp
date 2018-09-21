@@ -13,64 +13,60 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HostMatrixCOO : public HostMatrix<ValueType> {
+class HostMatrixCOO : public HostMatrix<ValueType>
+{
+    public:
+    HostMatrixCOO();
+    HostMatrixCOO(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HostMatrixCOO();
 
-public:
+    virtual void Info(void) const;
+    virtual unsigned int GetMatFormat(void) const { return COO; }
 
-  HostMatrixCOO();
-  HostMatrixCOO(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixCOO();
+    virtual void Clear(void);
+    virtual void AllocateCOO(int nnz, int nrow, int ncol);
 
-  virtual void Info(void) const;
-  virtual unsigned int GetMatFormat(void) const { return  COO; }
+    virtual void SetDataPtrCOO(int** row, int** col, ValueType** val, int nnz, int nrow, int ncol);
+    virtual void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
 
-  virtual void Clear(void);
-  virtual void AllocateCOO(const int nnz, const int nrow, const int ncol);
+    virtual bool Scale(ValueType alpha);
+    virtual bool ScaleDiagonal(ValueType alpha);
+    virtual bool ScaleOffDiagonal(ValueType alpha);
+    virtual bool AddScalar(ValueType alpha);
+    virtual bool AddScalarDiagonal(ValueType alpha);
+    virtual bool AddScalarOffDiagonal(ValueType alpha);
 
-  virtual void SetDataPtrCOO(int **row, int **col, ValueType **val,
-                             const int nnz, const int nrow, const int ncol);
-  virtual void LeaveDataPtrCOO(int **row, int **col, ValueType **val);
+    virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-  virtual bool Scale(const ValueType alpha);
-  virtual bool ScaleDiagonal(const ValueType alpha);
-  virtual bool ScaleOffDiagonal(const ValueType alpha);
-  virtual bool AddScalar(const ValueType alpha);
-  virtual bool AddScalarDiagonal(const ValueType alpha);
-  virtual bool AddScalarOffDiagonal(const ValueType alpha);
+    virtual bool Sort(void);
+    virtual bool Permute(const BaseVector<int>& permutation);
+    virtual bool PermuteBackward(const BaseVector<int>& permutation);
 
-  virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
+    virtual void CopyFromCOO(const int* row, const int* col, const ValueType* val);
+    virtual void CopyToCOO(int* row, int* col, ValueType* val) const;
 
-  virtual bool Sort(void);
-  virtual bool Permute(const BaseVector<int> &permutation);
-  virtual bool PermuteBackward(const BaseVector<int> &permutation);
+    virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+    virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
-  virtual void CopyFromCOO(const int *row, const int *col, const ValueType *val);
-  virtual void CopyToCOO(int *row, int *col, ValueType *val) const;
+    virtual bool ReadFileMTX(const std::string);
+    virtual bool WriteFileMTX(const std::string) const;
 
-  virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
-  virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-  virtual bool ReadFileMTX(const std::string);
-  virtual bool WriteFileMTX(const std::string) const;
+    private:
+    MatrixCOO<ValueType, int> mat_;
 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const; 
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar, 
-                        BaseVector<ValueType> *out) const; 
+    friend class BaseVector<ValueType>;
+    friend class HostVector<ValueType>;
+    friend class HostMatrixCSR<ValueType>;
+    friend class HostMatrixDIA<ValueType>;
+    friend class HostMatrixELL<ValueType>;
+    friend class HostMatrixHYB<ValueType>;
+    friend class HostMatrixDENSE<ValueType>;
 
-private:
-
-  MatrixCOO<ValueType, int> mat_;
-
-  friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixDIA<ValueType>;
-  friend class HostMatrixELL<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-
-  friend class HIPAcceleratorMatrixCOO<ValueType>;
-
+    friend class HIPAcceleratorMatrixCOO<ValueType>;
 };
 
 } // namespace rocalution

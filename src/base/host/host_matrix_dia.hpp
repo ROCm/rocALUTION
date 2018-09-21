@@ -13,48 +13,45 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HostMatrixDIA : public HostMatrix<ValueType> {
+class HostMatrixDIA : public HostMatrix<ValueType>
+{
+    public:
+    HostMatrixDIA();
+    HostMatrixDIA(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HostMatrixDIA();
 
-public:
+    inline int GetNDiag(void) const { return mat_.num_diag; }
 
-  HostMatrixDIA();
-  HostMatrixDIA(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixDIA();
+    virtual void Info(void) const;
+    virtual unsigned int GetMatFormat(void) const { return DIA; }
 
-  inline int GetNDiag(void) const { return mat_.num_diag; }
+    virtual void Clear(void);
+    virtual void AllocateDIA(int nnz, int nrow, int ncol, int ndiag);
+    virtual void
+    SetDataPtrDIA(int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag);
+    virtual void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
 
-  virtual void Info(void) const;
-  virtual unsigned int GetMatFormat(void) const { return  DIA; }
+    virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-  virtual void Clear(void);
-  virtual void AllocateDIA(const int nnz, const int nrow, const int ncol, const int ndiag);
-  virtual void SetDataPtrDIA(int **offset, ValueType **val,
-                     const int nnz, const int nrow, const int ncol, const int num_diag);
-  virtual void LeaveDataPtrDIA(int **offset, ValueType **val, int &num_diag);
+    virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+    virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
-  virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-  virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
-  virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+    private:
+    MatrixDIA<ValueType, int> mat_;
 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                        BaseVector<ValueType> *out) const;
+    friend class BaseVector<ValueType>;
+    friend class HostVector<ValueType>;
+    friend class HostMatrixCSR<ValueType>;
+    friend class HostMatrixCOO<ValueType>;
+    friend class HostMatrixELL<ValueType>;
+    friend class HostMatrixHYB<ValueType>;
+    friend class HostMatrixDENSE<ValueType>;
 
-private:
-
-  MatrixDIA<ValueType, int> mat_;
-
-  friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixELL<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-
-  friend class HIPAcceleratorMatrixDIA<ValueType>;
-
+    friend class HIPAcceleratorMatrixDIA<ValueType>;
 };
 
 } // namespace rocalution

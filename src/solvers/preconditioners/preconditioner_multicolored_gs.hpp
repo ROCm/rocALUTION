@@ -28,7 +28,7 @@ public:
   virtual void ReBuildNumeric(void);
 
   /// Set the relaxation parameter for the SOR/SSOR scheme
-  virtual void SetRelaxation(const ValueType omega);
+  virtual void SetRelaxation(ValueType omega);
 
 protected:
 

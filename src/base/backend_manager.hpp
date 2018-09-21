@@ -23,67 +23,68 @@ class HostMatrix;
 
 /// Backend descriptor - keeps information about the
 /// hardware - OpenMP (threads); HIP (blocksizes, handles, etc);
-struct Rocalution_Backend_Descriptor {
+struct Rocalution_Backend_Descriptor
+{
+    // set by initbackend();
+    bool init;
 
-  // set by initbackend();
-  bool init;
+    // current backend
+    int backend;
+    bool accelerator;
+    bool disable_accelerator;
 
-  // current backend
-  int backend;
-  bool accelerator;
-  bool disable_accelerator;
+    // OpenMP threads
+    int OpenMP_threads;
+    // OpenMP threads before ROCALUTION init
+    int OpenMP_def_threads;
+    // OpenMP nested before ROCALUTION init
+    int OpenMP_def_nested;
+    // Host affinity (true-yes/false-no)
+    bool OpenMP_affinity;
+    // Host threshold size
+    int OpenMP_threshold;
 
-  // OpenMP threads
-  int OpenMP_threads;
-  // OpenMP threads before ROCALUTION init
-  int OpenMP_def_threads;
-  // OpenMP nested before ROCALUTION init
-  int OpenMP_def_nested;
-  // Host affinity (true-yes/false-no)
-  bool OpenMP_affinity;
-  // Host threshold size
-  int OpenMP_threshold;
+    // HIP section
+    // handles
+    // rocblas_handle casted in void **
+    void* ROC_blas_handle;
+    // rocsparse_handle casted in void **
+    void* ROC_sparse_handle;
 
-  // HIP section
-  // handles
-  // rocblas_handle casted in void **
-  void *ROC_blas_handle;
-  // rocsparse_handle casted in void **
-  void *ROC_sparse_handle;
+    int HIP_dev;
+    int HIP_warp;
+    int HIP_block_size;
+    int HIP_max_threads;
+    int HIP_num_procs;
+    int HIP_threads_per_proc;
 
-  int HIP_dev;
-  int HIP_warp;
-  int HIP_block_size;
-  int HIP_max_threads;
-  int HIP_num_procs;
-  int HIP_threads_per_proc;
+    // MPI rank/id
+    int rank;
 
-  // MPI rank/id
-  int rank;
-
-  // Logging
-  int log_mode;
-  std::ofstream *log_file;
-
+    // Logging
+    int log_mode;
+    std::ofstream* log_file;
 };
-  
+
 /// Global backend descriptor
 extern struct Rocalution_Backend_Descriptor _Backend_Descriptor;
 
 /// Host name
-extern const std::string _rocalution_host_name [1];
+extern const std::string _rocalution_host_name[1];
 
 /// Backend names
-extern const std::string _rocalution_backend_name [2];
+extern const std::string _rocalution_backend_name[2];
 
 /// Backend IDs
-enum _rocalution_backend_id {None=0,
-                             HIP=1};
-
-
+enum _rocalution_backend_id
+{
+    None = 0,
+    HIP  = 1
+};
 
 /// Initialization of the rocalution platform
 int init_rocalution(int rank = -1, int dev_per_node = 1);
+
 /// Shutdown the rocalution platform
 int stop_rocalution(void);
 
@@ -109,10 +110,10 @@ void info_rocalution(const struct Rocalution_Backend_Descriptor backend_descript
 bool _rocalution_available_accelerator(void);
 
 /// Disable/Enable the accelerator
-void disable_accelerator_rocalution(bool onoff=true);
+void disable_accelerator_rocalution(bool onoff = true);
 
 /// Return backend descriptor
-struct Rocalution_Backend_Descriptor *_get_backend_descriptor(void);
+struct Rocalution_Backend_Descriptor* _get_backend_descriptor(void);
 
 /// Set backend descriptor
 void _set_backend_descriptor(const struct Rocalution_Backend_Descriptor backend_descriptor);
@@ -123,24 +124,26 @@ void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor backend
 
 /// Build (and return) a vector on the selected in the descriptor accelerator
 template <typename ValueType>
-AcceleratorVector<ValueType>* _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+AcceleratorVector<ValueType>*
+_rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
 /// Build (and return) a matrix on the host
 template <typename ValueType>
-HostMatrix<ValueType>* _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                         unsigned int matrix_format);
+HostMatrix<ValueType>*
+_rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
+                                  unsigned int matrix_format);
 
 /// Build (and return) a matrix on the selected in the descriptor accelerator
 template <typename ValueType>
-AcceleratorMatrix<ValueType>* _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                                                   unsigned int matrix_format);
+AcceleratorMatrix<ValueType>*
+_rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
+                                     unsigned int matrix_format);
 
 /// Sync the active async transfers
 void _rocalution_sync(void);
 
 size_t _rocalution_add_obj(class RocalutionObj* ptr);
-bool _rocalution_del_obj(class RocalutionObj* ptr,
-                         size_t id);
+bool _rocalution_del_obj(class RocalutionObj* ptr, size_t id);
 void _rocalution_delete_all_obj(void);
 bool _rocalution_check_if_any_obj(void);
 

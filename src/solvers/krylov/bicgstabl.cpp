@@ -237,7 +237,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::ReBuildNumeric(void) {
 
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BiCGStabl<OperatorType, VectorType, ValueType>::SetOrder(const int l) {
+void BiCGStabl<OperatorType, VectorType, ValueType>::SetOrder(int l) {
 
   assert(this->build_ == false);
   assert(l > 0);

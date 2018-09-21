@@ -115,7 +115,7 @@ void BlockPreconditioner<OperatorType, VectorType, ValueType>::Print(void) const
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BlockPreconditioner<OperatorType, VectorType, ValueType>::Set(const int n,
+void BlockPreconditioner<OperatorType, VectorType, ValueType>::Set(int n,
                                                                    const int *size,
                                                                    Solver<OperatorType, VectorType, ValueType> **D_Solver) {
 

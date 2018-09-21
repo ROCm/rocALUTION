@@ -100,7 +100,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) con
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType beta) {
+void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(ValueType beta) {
 
   log_debug(this, "GlobalPairwiseAMG::SetBeta()",
             beta);
@@ -110,7 +110,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const Value
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(const double factor) {
+void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(double factor) {
 
   log_debug(this, "GlobalPairwiseAMG::SetCoarseningFactor()",
             factor);

@@ -70,7 +70,7 @@ BaseMultiGrid<OperatorType, VectorType, ValueType>::~BaseMultiGrid() {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::InitLevels(const int levels) {
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::InitLevels(int levels) {
 
   log_debug(this, "BaseMultiGrid::InitLevels()",
             levels);
@@ -104,7 +104,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSmoother(IterativeLi
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSmootherPreIter(const int iter) {
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSmootherPreIter(int iter) {
 
   log_debug(this, "BaseMultiGrid::SetSmootherPreIter()",
             iter);
@@ -114,7 +114,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSmootherPreIter(cons
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSmootherPostIter(const int iter) {
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSmootherPostIter(int iter) {
 
   log_debug(this, "BaseMultiGrid::SetSmootherPostIter()",
             iter);
@@ -136,7 +136,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSolver(Solver<Operat
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetScaling(const bool scaling) {
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetScaling(bool scaling) {
 
   log_debug(this, "BaseMultiGrid::SetScaling()",
             scaling);
@@ -146,7 +146,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetScaling(const bool s
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetHostLevels(const int levels) {
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetHostLevels(int levels) {
 
   log_debug(this, "BaseMultiGrid::SetHostLevels()",
             levels);
@@ -171,7 +171,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetCycle(unsigned int c
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetKcycleFull(const bool kcycle_full) {
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetKcycleFull(bool kcycle_full) {
 
   log_debug(this, "BaseMultiGrid::SetKcycleFull()",
             kcycle_full);
@@ -608,7 +608,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Solve(const VectorType 
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseMultiGrid<OperatorType, VectorType, ValueType>::Restrict_(const VectorType &fine,
                                                                    VectorType *coarse,
-                                                                   const int level) {
+                                                                   int level) {
 
   log_debug(this, "BaseMultiGrid::Restrict_()",
             (const void*&)fine,
@@ -622,7 +622,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Restrict_(const VectorT
 template <class OperatorType, class VectorType, typename ValueType>
 void BaseMultiGrid<OperatorType, VectorType, ValueType>::Prolong_(const VectorType &coarse,
                                                                   VectorType *fine,
-                                                                  const int level) {
+                                                                  int level) {
   log_debug(this, "BaseMultiGrid::Prolong_()",
             (const void*&)coarse,
             fine,

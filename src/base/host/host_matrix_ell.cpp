@@ -17,327 +17,324 @@
 #ifdef _OPENMP
 #include <omp.h>
 #else
-#define omp_set_num_threads(num);
+#define omp_set_num_threads(num) ;
 #endif
 
 namespace rocalution {
 
 template <typename ValueType>
-HostMatrixELL<ValueType>::HostMatrixELL() {
-
-  // no default constructors
-  LOG_INFO("no default constructor");
-  FATAL_ERROR(__FILE__, __LINE__);
-
+HostMatrixELL<ValueType>::HostMatrixELL()
+{
+    // no default constructors
+    LOG_INFO("no default constructor");
+    FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
-HostMatrixELL<ValueType>::HostMatrixELL(const Rocalution_Backend_Descriptor local_backend) {
+HostMatrixELL<ValueType>::HostMatrixELL(const Rocalution_Backend_Descriptor local_backend)
+{
+    log_debug(this, "HostMatrixELL::HostMatrixELL()", "constructor with local_backend");
 
-  log_debug(this, "HostMatrixELL::HostMatrixELL()",
-            "constructor with local_backend");
+    this->mat_.val     = NULL;
+    this->mat_.col     = NULL;
+    this->mat_.max_row = 0;
 
-  this->mat_.val = NULL;
-  this->mat_.col = NULL;
-  this->mat_.max_row = 0;
-
-  this->set_backend(local_backend);
-
+    this->set_backend(local_backend);
 }
 
 template <typename ValueType>
-HostMatrixELL<ValueType>::~HostMatrixELL() {
+HostMatrixELL<ValueType>::~HostMatrixELL()
+{
+    log_debug(this, "HostMatrixELL::~HostMatrixELL()", "destructor");
 
-  log_debug(this, "HostMatrixELL::~HostMatrixELL()",
-            "destructor");
-
-  this->Clear();
-
-}
-
-template <typename ValueType>
-void HostMatrixELL<ValueType>::Info(void) const {
-
-  LOG_INFO("HostMatrixELL<ValueType>");
-
-}
-
-template <typename ValueType>
-void HostMatrixELL<ValueType>::Clear() {
-
-  if (this->nnz_ > 0) {
-
-    free_host(&this->mat_.val);
-    free_host(&this->mat_.col);
-
-    this->nrow_ = 0;
-    this->ncol_ = 0;
-    this->nnz_  = 0;
-
-  }
-
-}
-
-template <typename ValueType>
-void HostMatrixELL<ValueType>::AllocateELL(const int nnz, const int nrow, const int ncol, const int max_row) {
-
-  assert( nnz   >= 0);
-  assert( ncol  >= 0);
-  assert( nrow  >= 0);
-  assert( max_row >= 0);
-
-  if (this->nnz_ > 0)
     this->Clear();
+}
 
-  if (nnz > 0) {
+template <typename ValueType>
+void HostMatrixELL<ValueType>::Info(void) const
+{
+    LOG_INFO("HostMatrixELL<ValueType>");
+}
 
-    assert(nnz == max_row * nrow);
+template <typename ValueType>
+void HostMatrixELL<ValueType>::Clear()
+{
+    if(this->nnz_ > 0)
+    {
+        free_host(&this->mat_.val);
+        free_host(&this->mat_.col);
 
-    allocate_host(nnz, &this->mat_.val);
-    allocate_host(nnz, &this->mat_.col);
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
+    }
+}
 
-    set_to_zero_host(nnz, this->mat_.val);
-    set_to_zero_host(nnz, this->mat_.col);
+template <typename ValueType>
+void HostMatrixELL<ValueType>::AllocateELL(int nnz, int nrow, int ncol, int max_row)
+{
+    assert(nnz >= 0);
+    assert(ncol >= 0);
+    assert(nrow >= 0);
+    assert(max_row >= 0);
+
+    if(this->nnz_ > 0)
+    {
+        this->Clear();
+    }
+
+    if(nnz > 0)
+    {
+        assert(nnz == max_row * nrow);
+
+        allocate_host(nnz, &this->mat_.val);
+        allocate_host(nnz, &this->mat_.col);
+
+        set_to_zero_host(nnz, this->mat_.val);
+        set_to_zero_host(nnz, this->mat_.col);
+
+        this->mat_.max_row = max_row;
+        this->nrow_        = nrow;
+        this->ncol_        = ncol;
+        this->nnz_         = nnz;
+    }
+}
+
+template <typename ValueType>
+void HostMatrixELL<ValueType>::SetDataPtrELL(
+    int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row)
+{
+    assert(*col != NULL);
+    assert(*val != NULL);
+    assert(nnz > 0);
+    assert(nrow > 0);
+    assert(ncol > 0);
+    assert(max_row > 0);
+    assert(max_row * nrow == nnz);
+
+    this->Clear();
 
     this->mat_.max_row = max_row;
-    this->nrow_ = nrow;
-    this->ncol_ = ncol;
-    this->nnz_  = nnz;
+    this->nrow_        = nrow;
+    this->ncol_        = ncol;
+    this->nnz_         = nnz;
 
-  }
-
+    this->mat_.col = *col;
+    this->mat_.val = *val;
 }
 
 template <typename ValueType>
-void HostMatrixELL<ValueType>::SetDataPtrELL(int **col, ValueType **val,
-                                             const int nnz, const int nrow, const int ncol, const int max_row) {
+void HostMatrixELL<ValueType>::LeaveDataPtrELL(int** col, ValueType** val, int& max_row)
+{
+    assert(this->nrow_ > 0);
+    assert(this->ncol_ > 0);
+    assert(this->nnz_ > 0);
+    assert(this->mat_.max_row > 0);
+    assert(this->mat_.max_row * this->nrow_ == this->nnz_);
 
-  assert(*col != NULL);
-  assert(*val != NULL);
-  assert(nnz > 0);
-  assert(nrow > 0);
-  assert(ncol > 0);
-  assert(max_row > 0);
-  assert(max_row*nrow == nnz);
+    // see free_host function for details
+    *col = this->mat_.col;
+    *val = this->mat_.val;
 
-  this->Clear();
+    this->mat_.col = NULL;
+    this->mat_.val = NULL;
 
-  this->mat_.max_row = max_row;
-  this->nrow_ = nrow;
-  this->ncol_ = ncol;
-  this->nnz_  = nnz;
+    max_row = this->mat_.max_row;
 
-  this->mat_.col = *col;
-  this->mat_.val = *val;
-
+    this->mat_.max_row = 0;
+    this->nrow_        = 0;
+    this->ncol_        = 0;
+    this->nnz_         = 0;
 }
 
 template <typename ValueType>
-void HostMatrixELL<ValueType>::LeaveDataPtrELL(int **col, ValueType **val, int &max_row) {
+void HostMatrixELL<ValueType>::CopyFrom(const BaseMatrix<ValueType>& mat)
+{
+    // copy only in the same format
+    assert(this->GetMatFormat() == mat.GetMatFormat());
 
-  assert(this->nrow_ > 0);
-  assert(this->ncol_ > 0);
-  assert(this->nnz_ > 0);
-  assert(this->mat_.max_row > 0);
-  assert(this->mat_.max_row*this->nrow_ == this->nnz_);
+    if(const HostMatrixELL<ValueType>* cast_mat =
+           dynamic_cast<const HostMatrixELL<ValueType>*>(&mat))
+    {
+        this->AllocateELL(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_, cast_mat->mat_.max_row);
 
-  // see free_host function for details
-  *col = this->mat_.col;
-  *val = this->mat_.val;
+        assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_) &&
+               (this->ncol_ == cast_mat->ncol_));
 
-  this->mat_.col = NULL;
-  this->mat_.val = NULL;
+        if(this->nnz_ > 0)
+        {
+            _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
-  max_row = this->mat_.max_row;
-
-  this->mat_.max_row = 0;
-  this->nrow_ = 0;
-  this->ncol_ = 0;
-  this->nnz_  = 0;
-
-}
-
-template <typename ValueType>
-void HostMatrixELL<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
-
-  // copy only in the same format
-  assert(this->GetMatFormat() == mat.GetMatFormat());
-
-  if (const HostMatrixELL<ValueType> *cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*> (&mat)) {
-
-    this->AllocateELL(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_, cast_mat->mat_.max_row);
-
-    assert((this->nnz_  == cast_mat->nnz_)  &&
-           (this->nrow_ == cast_mat->nrow_) &&
-           (this->ncol_ == cast_mat->ncol_));
-
-    if (this->nnz_ > 0) {
-
-      _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-      int nnz  = this->nnz_;
+            int nnz = this->nnz_;
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-      for (int i=0; i<nnz; ++i)
-        this->mat_.val[i] = cast_mat->mat_.val[i];
+            for(int i = 0; i < nnz; ++i)
+            {
+                this->mat_.val[i] = cast_mat->mat_.val[i];
+            }
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-      for (int i=0; i<nnz; ++i)
-        this->mat_.col[i] = cast_mat->mat_.col[i];
-
+            for(int i = 0; i < nnz; ++i)
+            {
+                this->mat_.col[i] = cast_mat->mat_.col[i];
+            }
+        }
     }
-
-  } else {
-
-    // Host matrix knows only host matrices
-    // -> dispatching
-    mat.CopyTo(this);
-
-  }
-
+    else
+    {
+        // Host matrix knows only host matrices
+        // -> dispatching
+        mat.CopyTo(this);
+    }
 }
 
 template <typename ValueType>
-void HostMatrixELL<ValueType>::CopyTo(BaseMatrix<ValueType> *mat) const {
-
-  mat->CopyFrom(*this);
-
+void HostMatrixELL<ValueType>::CopyTo(BaseMatrix<ValueType>* mat) const
+{
+    mat->CopyFrom(*this);
 }
 
 template <typename ValueType>
-bool HostMatrixELL<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
-
-  this->Clear();
-
-  // empty matrix is empty matrix
-  if (mat.GetNnz() == 0)
-    return true;
-
-  if (const HostMatrixELL<ValueType> *cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*> (&mat)) {
-
-    this->CopyFrom(*cast_mat);
-    return true;
-
-  }
-
-  if (const HostMatrixCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&mat)) {
-
+bool HostMatrixELL<ValueType>::ConvertFrom(const BaseMatrix<ValueType>& mat)
+{
     this->Clear();
-    int nnz = 0;
 
-    if (csr_to_ell(this->local_backend_.OpenMP_threads,
-                   cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_,
-                   cast_mat->mat_, &this->mat_, &nnz) == true) {
-
-      this->nrow_ = cast_mat->nrow_;
-      this->ncol_ = cast_mat->ncol_;
-      this->nnz_ = nnz;
-
-      return true;
-
+    // empty matrix is empty matrix
+    if(mat.GetNnz() == 0)
+    {
+        return true;
     }
 
-  }
+    if(const HostMatrixELL<ValueType>* cast_mat =
+           dynamic_cast<const HostMatrixELL<ValueType>*>(&mat))
+    {
+        this->CopyFrom(*cast_mat);
+        return true;
+    }
 
-  return false;
+    if(const HostMatrixCSR<ValueType>* cast_mat =
+           dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
+    {
+        this->Clear();
+        int nnz = 0;
 
+        if(csr_to_ell(this->local_backend_.OpenMP_threads,
+                      cast_mat->nnz_,
+                      cast_mat->nrow_,
+                      cast_mat->ncol_,
+                      cast_mat->mat_,
+                      &this->mat_,
+                      &nnz) == true)
+        {
+            this->nrow_ = cast_mat->nrow_;
+            this->ncol_ = cast_mat->ncol_;
+            this->nnz_  = nnz;
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 template <typename ValueType>
-void HostMatrixELL<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
+void HostMatrixELL<ValueType>::Apply(const BaseVector<ValueType>& in,
+                                     BaseVector<ValueType>* out) const
+{
+    if(this->nnz_ > 0)
+    {
+        assert(in.GetSize() >= 0);
+        assert(out->GetSize() >= 0);
+        assert(in.GetSize() == this->ncol_);
+        assert(out->GetSize() == this->nrow_);
 
-  if (this->nnz_ > 0) {
+        const HostVector<ValueType>* cast_in = dynamic_cast<const HostVector<ValueType>*>(&in);
+        HostVector<ValueType>* cast_out      = dynamic_cast<HostVector<ValueType>*>(out);
 
-    assert(in.  GetSize() >= 0);
-    assert(out->GetSize() >= 0);
-    assert(in.  GetSize() == this->ncol_);
-    assert(out->GetSize() == this->nrow_);
+        assert(cast_in != NULL);
+        assert(cast_out != NULL);
 
-    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
-    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
-
-    assert(cast_in != NULL);
-    assert(cast_out!= NULL);
-
-    _set_omp_backend_threads(this->local_backend_, this->nrow_);
+        _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int ai=0; ai<this->nrow_; ++ai) {
-      ValueType sum = ValueType(0.0);
+        for(int ai = 0; ai < this->nrow_; ++ai)
+        {
+            ValueType sum = ValueType(0.0);
 
-      for (int n=0; n<this->mat_.max_row; ++n) {
+            for(int n = 0; n < this->mat_.max_row; ++n)
+            {
+                int aj     = ELL_IND(ai, n, this->nrow_, this->mat_.max_row);
+                int col_aj = this->mat_.col[aj];
 
-        int aj = ELL_IND(ai, n, this->nrow_, this->mat_.max_row);
-        int col_aj = this->mat_.col[aj];
+                if(col_aj >= 0)
+                {
+                    sum += this->mat_.val[aj] * cast_in->vec_[col_aj];
+                }
+                else
+                {
+                    break;
+                }
+            }
 
-        if (col_aj >= 0)
-          sum += this->mat_.val[aj] * cast_in->vec_[col_aj];
-        else
-          break;
-
-      }
-
-      cast_out->vec_[ai] = sum;
-
+            cast_out->vec_[ai] = sum;
+        }
     }
-
-  }
-
 }
 
 template <typename ValueType>
-void HostMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                                        BaseVector<ValueType> *out) const {
+void HostMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
+                                        ValueType scalar,
+                                        BaseVector<ValueType>* out) const
+{
+    if(this->nnz_ > 0)
+    {
+        assert(in.GetSize() >= 0);
+        assert(out->GetSize() >= 0);
+        assert(in.GetSize() == this->ncol_);
+        assert(out->GetSize() == this->nrow_);
 
-  if (this->nnz_ > 0) {
+        const HostVector<ValueType>* cast_in = dynamic_cast<const HostVector<ValueType>*>(&in);
+        HostVector<ValueType>* cast_out      = dynamic_cast<HostVector<ValueType>*>(out);
 
-    assert(in.  GetSize() >= 0);
-    assert(out->GetSize() >= 0);
-    assert(in.  GetSize() == this->ncol_);
-    assert(out->GetSize() == this->nrow_);
+        assert(cast_in != NULL);
+        assert(cast_out != NULL);
 
-    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
-    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
-
-    assert(cast_in != NULL);
-    assert(cast_out!= NULL);
-
-    _set_omp_backend_threads(this->local_backend_, this->nrow_);
+        _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int ai=0; ai<this->nrow_; ++ai) {
-      for (int n=0; n<this->mat_.max_row; ++n) {
+        for(int ai = 0; ai < this->nrow_; ++ai)
+        {
+            for(int n = 0; n < this->mat_.max_row; ++n)
+            {
+                int aj     = ELL_IND(ai, n, this->nrow_, this->mat_.max_row);
+                int col_aj = this->mat_.col[aj];
 
-        int aj = ELL_IND(ai, n, this->nrow_, this->mat_.max_row);
-        int col_aj = this->mat_.col[aj];
-
-        if (col_aj >= 0)
-          cast_out->vec_[ai] += scalar * this->mat_.val[aj] * cast_in->vec_[col_aj];
-        else
-          break;
-
-      }
-
+                if(col_aj >= 0)
+                {
+                    cast_out->vec_[ai] += scalar * this->mat_.val[aj] * cast_in->vec_[col_aj];
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
     }
-
-  }
-
 }
-
 
 template class HostMatrixELL<double>;
 template class HostMatrixELL<float>;
 #ifdef SUPPORT_COMPLEX
-template class HostMatrixELL<std::complex<double> >;
-template class HostMatrixELL<std::complex<float> >;
+template class HostMatrixELL<std::complex<double>>;
+template class HostMatrixELL<std::complex<float>>;
 #endif
 
 } // namespace rocalution

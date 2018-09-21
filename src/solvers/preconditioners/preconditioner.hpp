@@ -138,7 +138,7 @@ public:
   /// Platforms - Parallel Solvers and Preconditioners", PhD Thesis, 2012, KIT) 
   /// level==true build the structure based on levels; level==false build the
   /// structure only based on the power(p+1)
-  virtual void Set(const int p, const bool level=true);
+  virtual void Set(int p, bool level=true);
   virtual void Build(void);
   virtual void Clear(void);  
 
@@ -172,10 +172,10 @@ public:
                      VectorType *x);
 
   /// ILUT with threshold
-  virtual void Set(const double t);
+  virtual void Set(double t);
 
   /// ILUT with threshold and maximum number of elements per row
-  virtual void Set(const double t, const int maxrow);
+  virtual void Set(double t, int maxrow);
 
   virtual void Build(void);
   virtual void Clear(void);  
@@ -240,7 +240,7 @@ public:
   virtual void Build(void);
   virtual void Clear(void);
 
-  virtual void SetPreconditioner(const int n,
+  virtual void SetPreconditioner(int n,
                                  Solver<OperatorType, VectorType, ValueType> **precond);
 
 protected:

@@ -61,9 +61,7 @@ void HIPAcceleratorMatrixBCSR<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixBCSR<ValueType>::AllocateBCSR(const int nnz,
-                                                       const int nrow,
-                                                       const int ncol)
+void HIPAcceleratorMatrixBCSR<ValueType>::AllocateBCSR(int nnz, int nrow, int ncol)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -298,7 +296,7 @@ void HIPAcceleratorMatrixBCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixBCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                   const ValueType scalar,
+                                                   ValueType scalar,
                                                    BaseVector<ValueType>* out) const
 {
     FATAL_ERROR(__FILE__, __LINE__);

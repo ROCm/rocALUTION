@@ -27,7 +27,7 @@ public:
   virtual void BuildSmoothers(void);
 
   /// Sets coupling strength
-  virtual void SetCouplingStrength(const ValueType eps);
+  virtual void SetCouplingStrength(ValueType eps);
 
   /// Rebuild coarser operators with previous intergrid operators
   virtual void ReBuildNumeric(void);

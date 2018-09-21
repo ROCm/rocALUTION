@@ -502,7 +502,7 @@ void ILU<OperatorType, VectorType, ValueType>::Print(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void ILU<OperatorType, VectorType, ValueType>::Set(const int p, const bool level) {
+void ILU<OperatorType, VectorType, ValueType>::Set(int p, bool level) {
 
   log_debug(this, "ILU::Set()",
             p,
@@ -638,7 +638,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Print(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void ILUT<OperatorType, VectorType, ValueType>::Set(const double t) {
+void ILUT<OperatorType, VectorType, ValueType>::Set(double t) {
 
   log_debug(this, "ILUT::Set()",
             t);
@@ -652,7 +652,7 @@ void ILUT<OperatorType, VectorType, ValueType>::Set(const double t) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void ILUT<OperatorType, VectorType, ValueType>::Set(const double t, const int maxrow) {
+void ILUT<OperatorType, VectorType, ValueType>::Set(double t, int maxrow) {
 
   log_debug(this, "ILUT::Set()", t, maxrow);
 
@@ -902,7 +902,7 @@ void VariablePreconditioner<OperatorType, VectorType, ValueType>::Print(void) co
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void VariablePreconditioner<OperatorType, VectorType, ValueType>::SetPreconditioner(const int n,
+void VariablePreconditioner<OperatorType, VectorType, ValueType>::SetPreconditioner(int n,
                                                                                     Solver<OperatorType, VectorType, ValueType> **precond) {
 
 

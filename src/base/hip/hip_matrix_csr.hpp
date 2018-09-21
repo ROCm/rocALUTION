@@ -28,13 +28,9 @@ class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType>
     virtual void Clear(void);
     virtual bool Zeros(void);
 
-    virtual void AllocateCSR(const int nnz, const int nrow, const int ncol);
-    virtual void SetDataPtrCSR(int** row_offset,
-                               int** col,
-                               ValueType** val,
-                               const int nnz,
-                               const int nrow,
-                               const int ncol);
+    virtual void AllocateCSR(int nnz, int nrow, int ncol);
+    virtual void
+    SetDataPtrCSR(int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol);
     virtual void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
 
     virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
@@ -52,26 +48,22 @@ class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType>
     virtual void CopyFromCSR(const int* row_offsets, const int* col, const ValueType* val);
     virtual void CopyToCSR(int* row_offsets, int* col, ValueType* val) const;
 
-    virtual void CopyFromHostCSR(const int* row_offset,
-                                 const int* col,
-                                 const ValueType* val,
-                                 const int nnz,
-                                 const int nrow,
-                                 const int ncol);
+    virtual void CopyFromHostCSR(
+        const int* row_offset, const int* col, const ValueType* val, int nnz, int nrow, int ncol);
 
     virtual bool Permute(const BaseVector<int>& permutation);
 
-    virtual bool Scale(const ValueType alpha);
-    virtual bool ScaleDiagonal(const ValueType alpha);
-    virtual bool ScaleOffDiagonal(const ValueType alpha);
-    virtual bool AddScalar(const ValueType alpha);
-    virtual bool AddScalarDiagonal(const ValueType alpha);
-    virtual bool AddScalarOffDiagonal(const ValueType alpha);
+    virtual bool Scale(ValueType alpha);
+    virtual bool ScaleDiagonal(ValueType alpha);
+    virtual bool ScaleOffDiagonal(ValueType alpha);
+    virtual bool AddScalar(ValueType alpha);
+    virtual bool AddScalarDiagonal(ValueType alpha);
+    virtual bool AddScalarOffDiagonal(ValueType alpha);
 
-    virtual bool ExtractSubMatrix(const int row_offset,
-                                  const int col_offset,
-                                  const int row_size,
-                                  const int col_size,
+    virtual bool ExtractSubMatrix(int row_offset,
+                                  int col_offset,
+                                  int row_size,
+                                  int col_size,
                                   BaseMatrix<ValueType>* mat) const;
 
     virtual bool ExtractDiagonal(BaseVector<ValueType>* vec_diag) const;
@@ -91,10 +83,8 @@ class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType>
 
     virtual bool MatMatMult(const BaseMatrix<ValueType>& A, const BaseMatrix<ValueType>& B);
 
-    virtual bool MatrixAdd(const BaseMatrix<ValueType>& mat,
-                           const ValueType alpha,
-                           const ValueType beta,
-                           const bool structure);
+    virtual bool
+    MatrixAdd(const BaseMatrix<ValueType>& mat, ValueType alpha, ValueType beta, bool structure);
 
     virtual bool ILU0Factorize(void);
 
@@ -111,11 +101,11 @@ class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType>
                          const BaseVector<ValueType>& inv_diag,
                          BaseVector<ValueType>* out) const;
 
-    virtual void LAnalyse(const bool diag_unit = false);
+    virtual void LAnalyse(bool diag_unit = false);
     virtual void LAnalyseClear(void);
     virtual bool LSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
 
-    virtual void UAnalyse(const bool diag_unit = false);
+    virtual void UAnalyse(bool diag_unit = false);
     virtual void UAnalyseClear(void);
     virtual bool USolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
 
@@ -123,15 +113,14 @@ class HIPAcceleratorMatrixCSR : public HIPAcceleratorMatrix<ValueType>
 
     void ApplyAnalysis(void);
     virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
-    virtual void ApplyAdd(const BaseVector<ValueType>& in,
-                          const ValueType scalar,
-                          BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-    virtual bool Compress(const double drop_off);
+    virtual bool Compress(double drop_off);
 
-    virtual bool ReplaceColumnVector(const int idx, const BaseVector<ValueType>& vec);
-    virtual bool ExtractColumnVector(const int idx, BaseVector<ValueType>* vec) const;
-    virtual bool ExtractRowVector(const int idx, BaseVector<ValueType>* vec) const;
+    virtual bool ReplaceColumnVector(int idx, const BaseVector<ValueType>& vec);
+    virtual bool ExtractColumnVector(int idx, BaseVector<ValueType>* vec) const;
+    virtual bool ExtractRowVector(int idx, BaseVector<ValueType>* vec) const;
 
     virtual bool Transpose(void);
 

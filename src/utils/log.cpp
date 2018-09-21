@@ -22,24 +22,25 @@ void _rocalution_open_log_file(void)
             {
                 _rocalution_close_log_file();
             }
-    
+
             assert(_get_backend_descriptor()->log_file == NULL);
-    
+
             _get_backend_descriptor()->log_file = new std::ofstream;
-    
+
             std::ostringstream str_double;
             str_double.precision(20);
             str_double << rocalution_time();
             std::string mid_name = str_double.str();
-    
+
             std::ostringstream rank;
             rank << _get_backend_descriptor()->rank;
             std::string rank_name = rank.str();
-    
+
             std::string str_name;
             str_name = "rocalution-rank-" + rank_name + "-" + mid_name + ".log";
-    
-            _get_backend_descriptor()->log_file->open(str_name.c_str(), std::ios::out | std::ios::trunc);
+
+            _get_backend_descriptor()->log_file->open(str_name.c_str(),
+                                                      std::ios::out | std::ios::trunc);
         }
     }
 }

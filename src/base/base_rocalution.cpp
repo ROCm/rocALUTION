@@ -13,185 +13,163 @@ namespace rocalution {
 /// Global obj tracking structure
 Rocalution_Object_Data Rocalution_Object_Data_Tracking;
 
-RocalutionObj::RocalutionObj() {
-
-  log_debug(this, "RocalutionObj::RocalutionObj()");
+RocalutionObj::RocalutionObj()
+{
+    log_debug(this, "RocalutionObj::RocalutionObj()");
 
 #ifndef OBJ_TRACKING_OFF
-
-  this->global_obj_id = _rocalution_add_obj(this); 
-
-#else 
-
-  this->global_obj_id = 0;
-
+    this->global_obj_id = _rocalution_add_obj(this);
+#else
+    this->global_obj_id = 0;
 #endif
-
 }
 
-RocalutionObj::~RocalutionObj() { 
-
-  log_debug(this, "RocalutionObj::RocalutionObj()");
+RocalutionObj::~RocalutionObj()
+{
+    log_debug(this, "RocalutionObj::RocalutionObj()");
 
 #ifndef OBJ_TRACKING_OFF
+    bool status = false;
+    status      = _rocalution_del_obj(this, this->global_obj_id);
 
-  bool status = false ;
-  status = _rocalution_del_obj(this, this->global_obj_id);
+    if(status != true)
+    {
+        LOG_INFO("Error: rocALUTION tracking problem");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+#else
+// nothing
+#endif
+}
 
-  if (status != true) {
-    LOG_INFO("Error: rocALUTION tracking problem");
+template <typename ValueType>
+BaseRocalution<ValueType>::BaseRocalution()
+{
+    log_debug(this, "BaseRocalution::BaseRocalution()");
+
+    // copy the backend description
+    this->local_backend_ = *_get_backend_descriptor();
+
+    this->asyncf = false;
+
+    assert(_get_backend_descriptor()->init == true);
+}
+
+template <typename ValueType>
+BaseRocalution<ValueType>::BaseRocalution(const BaseRocalution<ValueType>& src)
+{
+    log_debug(this, "BaseRocalution::BaseRocalution()", (const void*&)src);
+
+    LOG_INFO("no copy constructor");
     FATAL_ERROR(__FILE__, __LINE__);
-  }
-
-#else 
-
-  // nothing
-
-#endif
-
 }
 
 template <typename ValueType>
-BaseRocalution<ValueType>::BaseRocalution() {
-
-  log_debug(this, "BaseRocalution::BaseRocalution()");
-
-  // copy the backend description
-  this->local_backend_ = *_get_backend_descriptor();
-
-  this->asyncf = false;
-  
-  assert(_get_backend_descriptor()->init == true);
-
+BaseRocalution<ValueType>::~BaseRocalution()
+{
+    log_debug(this, "BaseRocalution::~BaseRocalution()");
 }
 
 template <typename ValueType>
-BaseRocalution<ValueType>::BaseRocalution(const BaseRocalution<ValueType> &src) {
+BaseRocalution<ValueType>& BaseRocalution<ValueType>::
+operator=(const BaseRocalution<ValueType>& src)
+{
+    log_debug(this, "BaseRocalution::operator=()", (const void*&)src);
 
-  log_debug(this, "BaseRocalution::BaseRocalution()", (const void*&)src);
-
-  LOG_INFO("no copy constructor");
-  FATAL_ERROR(__FILE__, __LINE__);
-
+    LOG_INFO("no overloaded operator=()");
+    FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
-BaseRocalution<ValueType>::~BaseRocalution() {
+void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType>& src)
+{
+    log_debug(this, "BaseRocalution::CloneBackend()", "with the same ValueType");
 
-  log_debug(this, "BaseRocalution::~BaseRocalution()");
+    assert(this != &src);
+
+    this->local_backend_ = src.local_backend_;
+    this->pm_            = src.pm_;
+
+    if(src.is_host())
+    {
+        // move to host
+        this->MoveToHost();
+    }
+    else
+    {
+        assert(src.is_accel());
+
+        // move to accelerator
+        this->MoveToAccelerator();
+    }
 }
-
-template<typename ValueType>
-BaseRocalution<ValueType>& BaseRocalution<ValueType>::operator=(const BaseRocalution<ValueType> &src) {
-
-  log_debug(this, "BaseRocalution::operator=()", (const void*&)src);
-
-  LOG_INFO("no overloaded operator=()");
-  FATAL_ERROR(__FILE__, __LINE__);
-
-}
-
-template<typename ValueType>
-void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType> &src) {
-
-  log_debug(this, "BaseRocalution::CloneBackend()",
-            "with the same ValueType");
-
-
-  assert(this != &src);
-
-  this->local_backend_ = src.local_backend_; 
-  this->pm_ = src.pm_;
-
-  if (src.is_host()) {
-
-    // move to host
-    this->MoveToHost();
-    
-  } else {
-
-    assert(src.is_accel());
-
-    // move to accelerator
-    this->MoveToAccelerator();
-
-  }
-
-}
-
 
 template <typename ValueType>
 template <typename ValueType2>
-void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType2> &src) {
+void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType2>& src)
+{
+    log_debug(this, "BaseRocalution::CloneBackend()", "with different ValueType");
 
-  log_debug(this, "BaseRocalution::CloneBackend()",
-            "with different ValueType");
+    this->local_backend_ = src.local_backend_;
+    this->pm_            = src.pm_;
 
+    if(src.is_host())
+    {
+        // move to host
+        this->MoveToHost();
+    }
+    else
+    {
+        assert(src.is_accel());
 
-  this->local_backend_ = src.local_backend_; 
-  this->pm_ = src.pm_;
+        // move to accelerator
+        this->MoveToAccelerator();
+    }
+}
 
-  if (src.is_host()) {
-
-    // move to host
-    this->MoveToHost();
-    
-  } else {
-
-    assert(src.is_accel());
-
-    // move to accelerator
+template <typename ValueType>
+void BaseRocalution<ValueType>::MoveToAcceleratorAsync(void)
+{
+    // default call
     this->MoveToAccelerator();
-
-  }
-
 }
 
-template<typename ValueType>
-void BaseRocalution<ValueType>::MoveToAcceleratorAsync(void) {
-
-  // default call
-  this->MoveToAccelerator();
-
+template <typename ValueType>
+void BaseRocalution<ValueType>::MoveToHostAsync(void)
+{
+    // default call
+    this->MoveToHost();
 }
 
-template<typename ValueType>
-void BaseRocalution<ValueType>::MoveToHostAsync(void) {
-
-  // default call
-  this->MoveToHost();
-
+template <typename ValueType>
+void BaseRocalution<ValueType>::Sync(void)
+{
+    _rocalution_sync();
+    this->asyncf = false;
 }
-
-template<typename ValueType>
-void BaseRocalution<ValueType>::Sync(void) {
-
-  _rocalution_sync();
-  this->asyncf = false;
-
-}
-
 
 template class BaseRocalution<double>;
 template class BaseRocalution<float>;
 #ifdef SUPPORT_COMPLEX
-template class BaseRocalution<std::complex<double> >;
-template class BaseRocalution<std::complex<float> >;
+template class BaseRocalution<std::complex<double>>;
+template class BaseRocalution<std::complex<float>>;
 #endif
 template class BaseRocalution<int>;
 
-template void BaseRocalution<int>::CloneBackend(const BaseRocalution<double> &src);
-template void BaseRocalution<int>::CloneBackend(const BaseRocalution<float> &src);
+template void BaseRocalution<int>::CloneBackend(const BaseRocalution<double>& src);
+template void BaseRocalution<int>::CloneBackend(const BaseRocalution<float>& src);
 
-template void BaseRocalution<float>::CloneBackend(const BaseRocalution<double> &src);
-template void BaseRocalution<double>::CloneBackend(const BaseRocalution<float> &src);
+template void BaseRocalution<float>::CloneBackend(const BaseRocalution<double>& src);
+template void BaseRocalution<double>::CloneBackend(const BaseRocalution<float>& src);
 
 #ifdef SUPPORT_COMPLEX
-template void BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<double> > &src);
-template void BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<float> > &src);
+template void BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
+template void BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
 
-template void BaseRocalution<std::complex<float> >::CloneBackend(const BaseRocalution<std::complex<double> > &src);
-template void BaseRocalution<std::complex<double> >::CloneBackend(const BaseRocalution<std::complex<float> > &src);
+template void
+BaseRocalution<std::complex<float>>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
+template void
+BaseRocalution<std::complex<double>>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
 
 #endif
 

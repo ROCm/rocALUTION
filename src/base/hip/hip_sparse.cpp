@@ -25,16 +25,8 @@ rocsparse_status rocsparseTcsrmv_analysis(rocsparse_handle handle,
                                           const int* csr_col_ind,
                                           rocsparse_mat_info info)
 {
-    return rocsparse_scsrmv_analysis(handle,
-                                     trans,
-                                     m,
-                                     n,
-                                     nnz,
-                                     descr,
-                                     csr_val,
-                                     csr_row_ptr,
-                                     csr_col_ind,
-                                     info);
+    return rocsparse_scsrmv_analysis(
+        handle, trans, m, n, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info);
 }
 
 template <>
@@ -49,16 +41,8 @@ rocsparse_status rocsparseTcsrmv_analysis(rocsparse_handle handle,
                                           const int* csr_col_ind,
                                           rocsparse_mat_info info)
 {
-    return rocsparse_dcsrmv_analysis(handle,
-                                     trans,
-                                     m,
-                                     n,
-                                     nnz,
-                                     descr,
-                                     csr_val,
-                                     csr_row_ptr,
-                                     csr_col_ind,
-                                     info);
+    return rocsparse_dcsrmv_analysis(
+        handle, trans, m, n, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info);
 }
 
 // rocsparse csrmv
@@ -139,16 +123,8 @@ rocsparse_status rocsparseTcsrsv_buffer_size(rocsparse_handle handle,
                                              rocsparse_mat_info info,
                                              size_t* buffer_size)
 {
-    return rocsparse_scsrsv_buffer_size(handle,
-                                        trans,
-                                        m,
-                                        nnz,
-                                        descr,
-                                        csr_val,
-                                        csr_row_ptr,
-                                        csr_col_ind,
-                                        info,
-                                        buffer_size);
+    return rocsparse_scsrsv_buffer_size(
+        handle, trans, m, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info, buffer_size);
 }
 
 template <>
@@ -163,16 +139,8 @@ rocsparse_status rocsparseTcsrsv_buffer_size(rocsparse_handle handle,
                                              rocsparse_mat_info info,
                                              size_t* buffer_size)
 {
-    return rocsparse_dcsrsv_buffer_size(handle,
-                                        trans,
-                                        m,
-                                        nnz,
-                                        descr,
-                                        csr_val,
-                                        csr_row_ptr,
-                                        csr_col_ind,
-                                        info,
-                                        buffer_size);
+    return rocsparse_dcsrsv_buffer_size(
+        handle, trans, m, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info, buffer_size);
 }
 
 // rocsparse csrsv analysis
@@ -385,15 +353,8 @@ rocsparse_status rocsparseTcsrilu0_buffer_size(rocsparse_handle handle,
                                                rocsparse_mat_info info,
                                                size_t* buffer_size)
 {
-    return rocsparse_scsrilu0_buffer_size(handle,
-                                          m,
-                                          nnz,
-                                          descr,
-                                          csr_val,
-                                          csr_row_ptr,
-                                          csr_col_ind,
-                                          info,
-                                          buffer_size);
+    return rocsparse_scsrilu0_buffer_size(
+        handle, m, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info, buffer_size);
 }
 
 template <>
@@ -407,15 +368,8 @@ rocsparse_status rocsparseTcsrilu0_buffer_size(rocsparse_handle handle,
                                                rocsparse_mat_info info,
                                                size_t* buffer_size)
 {
-    return rocsparse_dcsrilu0_buffer_size(handle,
-                                          m,
-                                          nnz,
-                                          descr,
-                                          csr_val,
-                                          csr_row_ptr,
-                                          csr_col_ind,
-                                          info,
-                                          buffer_size);
+    return rocsparse_dcsrilu0_buffer_size(
+        handle, m, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info, buffer_size);
 }
 
 // rocsparse csrilu0 analysis
@@ -484,16 +438,8 @@ rocsparse_status rocsparseTcsrilu0(rocsparse_handle handle,
                                    rocsparse_solve_policy policy,
                                    void* temp_buffer)
 {
-    return rocsparse_scsrilu0(handle,
-                              m,
-                              nnz,
-                              descr,
-                              csr_val,
-                              csr_row_ptr,
-                              csr_col_ind,
-                              info,
-                              policy,
-                              temp_buffer);
+    return rocsparse_scsrilu0(
+        handle, m, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info, policy, temp_buffer);
 }
 
 template <>
@@ -508,16 +454,8 @@ rocsparse_status rocsparseTcsrilu0(rocsparse_handle handle,
                                    rocsparse_solve_policy policy,
                                    void* temp_buffer)
 {
-    return rocsparse_dcsrilu0(handle,
-                              m,
-                              nnz,
-                              descr,
-                              csr_val,
-                              csr_row_ptr,
-                              csr_col_ind,
-                              info,
-                              policy,
-                              temp_buffer);
+    return rocsparse_dcsrilu0(
+        handle, m, nnz, descr, csr_val, csr_row_ptr, csr_col_ind, info, policy, temp_buffer);
 }
 
 // rocsparse csr2csc

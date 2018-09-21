@@ -40,16 +40,16 @@ class Vector : public BaseRocalution<ValueType>
     virtual bool Check(void) const = 0;
 
     /// Clear (free) the vector
-    virtual void Clear() = 0;
+    virtual void Clear(void) = 0;
 
     /// Set the values of the vector to zero
-    virtual void Zeros() = 0;
+    virtual void Zeros(void) = 0;
 
     /// Set the values of the vector to one
-    virtual void Ones() = 0;
+    virtual void Ones(void) = 0;
 
     /// Set the values of the vector to given argument
-    virtual void SetValues(const ValueType val) = 0;
+    virtual void SetValues(ValueType val) = 0;
 
     /// Set random values from interval [a,b]
     virtual void SetRandomUniform(unsigned long long seed,
@@ -62,16 +62,16 @@ class Vector : public BaseRocalution<ValueType>
                                  ValueType var = static_cast<ValueType>(1)) = 0;
 
     /// Read vector from ASCII file
-    virtual void ReadFileASCII(const std::string) = 0;
+    virtual void ReadFileASCII(const std::string filename) = 0;
 
     /// Write vector to ASCII file
-    virtual void WriteFileASCII(const std::string) const = 0;
+    virtual void WriteFileASCII(const std::string filename) const = 0;
 
     /// Read vector from binary file
-    virtual void ReadFileBinary(const std::string) = 0;
+    virtual void ReadFileBinary(const std::string filename) = 0;
 
     /// Write vector to binary file
-    virtual void WriteFileBinary(const std::string) const = 0;
+    virtual void WriteFileBinary(const std::string filename) const = 0;
 
     /// Copy values from another local vector
     virtual void CopyFrom(const LocalVector<ValueType>& src);
@@ -90,10 +90,8 @@ class Vector : public BaseRocalution<ValueType>
 
     /// Copy data (not entire vector) from another local vector with specified src/dst offsets and
     /// size
-    virtual void CopyFrom(const LocalVector<ValueType>& src,
-                          const int src_offset,
-                          const int dst_offset,
-                          const int size);
+    virtual void
+    CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
     /// Clone the entire vector (data+backend descr) from another local vector
     virtual void CloneFrom(const LocalVector<ValueType>& src);
 
@@ -101,53 +99,51 @@ class Vector : public BaseRocalution<ValueType>
     virtual void CloneFrom(const GlobalVector<ValueType>& src);
 
     /// Perform vector update of type this = this + alpha*x
-    virtual void AddScale(const LocalVector<ValueType>& x, const ValueType alpha);
+    virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);
     /// Perform vector update of type this = this + alpha*x
-    virtual void AddScale(const GlobalVector<ValueType>& x, const ValueType alpha);
+    virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
 
     /// Perform vector update of type this = alpha*this + x
-    virtual void ScaleAdd(const ValueType alpha, const LocalVector<ValueType>& x);
+    virtual void ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x);
     /// Perform vector update of type this = alpha*this + x
-    virtual void ScaleAdd(const ValueType alpha, const GlobalVector<ValueType>& x);
+    virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);
 
     /// Perform vector update of type this = alpha*this + x*beta
-    virtual void
-    ScaleAddScale(const ValueType alpha, const LocalVector<ValueType>& x, const ValueType beta);
+    virtual void ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
     /// Perform vector update of type this = alpha*this + x*beta
-    virtual void
-    ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType>& x, const ValueType beta);
+    virtual void ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
     /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
     /// of a vector
-    virtual void ScaleAddScale(const ValueType alpha,
+    virtual void ScaleAddScale(ValueType alpha,
                                const LocalVector<ValueType>& x,
-                               const ValueType beta,
-                               const int src_offset,
-                               const int dst_offset,
-                               const int size);
+                               ValueType beta,
+                               int src_offset,
+                               int dst_offset,
+                               int size);
     /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
     /// of a vector
-    virtual void ScaleAddScale(const ValueType alpha,
+    virtual void ScaleAddScale(ValueType alpha,
                                const GlobalVector<ValueType>& x,
-                               const ValueType beta,
-                               const int src_offset,
-                               const int dst_offset,
-                               const int size);
+                               ValueType beta,
+                               int src_offset,
+                               int dst_offset,
+                               int size);
 
     /// Perform vector update of type this = alpha*this + x*beta + y*gamma
-    virtual void ScaleAdd2(const ValueType alpha,
+    virtual void ScaleAdd2(ValueType alpha,
                            const LocalVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const LocalVector<ValueType>& y,
-                           const ValueType gamma);
+                           ValueType gamma);
     /// Perform vector update of type this = alpha*this + x*beta + y*gamma
-    virtual void ScaleAdd2(const ValueType alpha,
+    virtual void ScaleAdd2(ValueType alpha,
                            const GlobalVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const GlobalVector<ValueType>& y,
-                           const ValueType gamma);
+                           ValueType gamma);
 
     /// Perform vector scaling this = alpha*this
-    virtual void Scale(const ValueType alpha) = 0;
+    virtual void Scale(ValueType alpha) = 0;
 
     /// Performs exlusive scan
     virtual void ExclusiveScan(const LocalVector<ValueType>& x);
@@ -187,7 +183,7 @@ class Vector : public BaseRocalution<ValueType>
     virtual void PointWiseMult(const GlobalVector<ValueType>& x, const GlobalVector<ValueType>& y);
 
     /// Perform power operation to a vector
-    virtual void Power(const double power) = 0;
+    virtual void Power(double power) = 0;
 };
 
 } // namespace rocalution

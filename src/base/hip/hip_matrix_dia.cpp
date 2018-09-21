@@ -65,10 +65,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(const int nnz,
-                                                     const int nrow,
-                                                     const int ncol,
-                                                     const int ndiag)
+void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(int nnz, int nrow, int ncol, int ndiag)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -98,12 +95,8 @@ void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(const int nnz,
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixDIA<ValueType>::SetDataPtrDIA(int** offset,
-                                                       ValueType** val,
-                                                       const int nnz,
-                                                       const int nrow,
-                                                       const int ncol,
-                                                       const int num_diag)
+void HIPAcceleratorMatrixDIA<ValueType>::SetDataPtrDIA(
+    int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag)
 {
     assert(*offset != NULL);
     assert(*val != NULL);
@@ -680,7 +673,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixDIA<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                  const ValueType scalar,
+                                                  ValueType scalar,
                                                   BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)

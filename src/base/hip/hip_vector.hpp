@@ -25,20 +25,18 @@ class HIPAcceleratorVector : public AcceleratorVector<ValueType>
 
     virtual void Info(void) const;
 
-    virtual void Allocate(const int n);
-    virtual void SetDataPtr(ValueType** ptr, const int size);
+    virtual void Allocate(int n);
+    virtual void SetDataPtr(ValueType** ptr, int size);
     virtual void LeaveDataPtr(ValueType** ptr);
     virtual void Clear(void);
     virtual void Zeros(void);
     virtual void Ones(void);
-    virtual void SetValues(const ValueType val);
+    virtual void SetValues(ValueType val);
 
     virtual void CopyFrom(const BaseVector<ValueType>& src);
     virtual void CopyFromAsync(const BaseVector<ValueType>& src);
-    virtual void CopyFrom(const BaseVector<ValueType>& src,
-                          const int src_offset,
-                          const int dst_offset,
-                          const int size);
+    virtual void
+    CopyFrom(const BaseVector<ValueType>& src, int src_offset, int dst_offset, int size);
 
     virtual void CopyTo(BaseVector<ValueType>* dst) const;
     virtual void CopyToAsync(BaseVector<ValueType>* dst) const;
@@ -62,26 +60,25 @@ class HIPAcceleratorVector : public AcceleratorVector<ValueType>
     virtual void PermuteBackward(const BaseVector<int>& permutation);
 
     // this = this + alpha*x
-    virtual void AddScale(const BaseVector<ValueType>& x, const ValueType alpha);
+    virtual void AddScale(const BaseVector<ValueType>& x, ValueType alpha);
     // this = alpha*this + x
-    virtual void ScaleAdd(const ValueType alpha, const BaseVector<ValueType>& x);
+    virtual void ScaleAdd(ValueType alpha, const BaseVector<ValueType>& x);
     // this = alpha*this + x*beta
-    virtual void
-    ScaleAddScale(const ValueType alpha, const BaseVector<ValueType>& x, const ValueType beta);
-    virtual void ScaleAddScale(const ValueType alpha,
+    virtual void ScaleAddScale(ValueType alpha, const BaseVector<ValueType>& x, ValueType beta);
+    virtual void ScaleAddScale(ValueType alpha,
                                const BaseVector<ValueType>& x,
-                               const ValueType beta,
-                               const int src_offset,
-                               const int dst_offset,
-                               const int size);
+                               ValueType beta,
+                               int src_offset,
+                               int dst_offset,
+                               int size);
     // this = alpha*this + x*beta + y*gamma
-    virtual void ScaleAdd2(const ValueType alpha,
+    virtual void ScaleAdd2(ValueType alpha,
                            const BaseVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const BaseVector<ValueType>& y,
-                           const ValueType gamma);
+                           ValueType gamma);
     // this = alpha*this
-    virtual void Scale(const ValueType alpha);
+    virtual void Scale(ValueType alpha);
 
     virtual void ExclusiveScan(const BaseVector<ValueType>& x);
     // this^T x
@@ -99,29 +96,25 @@ class HIPAcceleratorVector : public AcceleratorVector<ValueType>
     // point-wise multiplication
     virtual void PointWiseMult(const BaseVector<ValueType>& x);
     virtual void PointWiseMult(const BaseVector<ValueType>& x, const BaseVector<ValueType>& y);
-    virtual void Power(const double power);
+    virtual void Power(double power);
 
     // set index array
-    virtual void SetIndexArray(const int size, const int* index);
+    virtual void SetIndexArray(int size, const int* index);
     // get index values
     virtual void GetIndexValues(ValueType* values) const;
     // set index values
     virtual void SetIndexValues(const ValueType* values);
     // get continuous index values
-    virtual void GetContinuousValues(const int start, const int end, ValueType* values) const;
+    virtual void GetContinuousValues(int start, int end, ValueType* values) const;
     // set continuous index values
-    virtual void SetContinuousValues(const int start, const int end, const ValueType* values);
+    virtual void SetContinuousValues(int start, int end, const ValueType* values);
 
     // get coarse boundary mapping
-    virtual void ExtractCoarseMapping(
-        const int start, const int end, const int* index, const int nc, int* size, int* map) const;
+    virtual void
+    ExtractCoarseMapping(int start, int end, const int* index, int nc, int* size, int* map) const;
     // get coarse boundary index
-    virtual void ExtractCoarseBoundary(const int start,
-                                       const int end,
-                                       const int* index,
-                                       const int nc,
-                                       int* size,
-                                       int* boundary) const;
+    virtual void ExtractCoarseBoundary(
+        int start, int end, const int* index, int nc, int* size, int* boundary) const;
 
     private:
     ValueType* vec_;

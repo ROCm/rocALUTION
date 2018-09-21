@@ -22,29 +22,29 @@ public:
 
   /// Initialize with absolute/relative/divergence 
   /// tolerance and maximum number of iterations
-  void Init(const double abs,
-            const double rel,
-            const double div,
-            const int max);
+  void Init(double abs,
+            double rel,
+            double div,
+            int max);
 
   /// Initialize with absolute/relative/divergence 
   /// tolerance and minimum/maximum number of iterations
-  void Init(const double abs,
-            const double rel,
-            const double div,
-            const int min,
-            const int max);
+  void Init(double abs,
+            double rel,
+            double div,
+            int min,
+            int max);
 
   /// Initialize with absolute/relative/divergence tolerance
-  void InitTolerance(const double abs,
-                     const double rel,
-                     const double div);
+  void InitTolerance(double abs,
+                     double rel,
+                     double div);
 
   /// Set the minimum number of iterations
-  void InitMinimumIterations(const int min);
+  void InitMinimumIterations(int min);
 
   /// Set the maximal number of iterations
-  void InitMaximumIterations(const int max);
+  void InitMaximumIterations(int max);
 
   /// Get the minimum number of iterations
   int GetMinimumIterations(void) const;
@@ -53,20 +53,20 @@ public:
   int GetMaximumIterations(void) const;
 
   /// Initialize the initial residual
-  bool InitResidual(const double res);
+  bool InitResidual(double res);
 
   /// Clear (reset)
   void Clear(void);
 
   /// Check the residual (this count also the number of iterations)
-  bool CheckResidual(const double res);
+  bool CheckResidual(double res);
 
   /// Check the residual and index value for the inf norm 
   /// (this count also the number of iterations)
-  bool CheckResidual(const double res, const int index);
+  bool CheckResidual(double res, int index);
 
   /// Check the residual (without counting the number of iterations)
-  bool CheckResidualNoCount(const double res) const;
+  bool CheckResidualNoCount(double res) const;
 
   /// Record the history of the residual
   void RecordHistory(void);
@@ -75,7 +75,7 @@ public:
   void WriteHistoryToFile(const std::string filename) const;
 
    /// Provide verbose output of the solver (iter, residual)
-  void Verbose(const int verb=1);
+  void Verbose(int verb=1);
 
   /// Print the initialized information of the iteration control
   void PrintInit(void);

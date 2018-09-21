@@ -94,7 +94,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void PairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType beta) {
+void PairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(ValueType beta) {
 
   log_debug(this, "PairwiseAMG::SetBeta()",
             beta);
@@ -107,7 +107,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::SetBeta(const ValueType b
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void PairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(const double factor) {
+void PairwiseAMG<OperatorType, VectorType, ValueType>::SetCoarseningFactor(double factor) {
 
   log_debug(this, "PairwiseAMG::SetCoarseningFactor()",
             factor);

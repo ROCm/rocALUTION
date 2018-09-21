@@ -38,11 +38,11 @@ public:
   virtual void BuildSmoothers(void);
 
   /// Sets beta for pairwise aggregation
-  virtual void SetBeta(const ValueType beta);
+  virtual void SetBeta(ValueType beta);
   /// Sets reordering for aggregation
   virtual void SetOrdering(unsigned int ordering);
   /// Sets target coarsening factor
-  virtual void SetCoarseningFactor(const double factor);
+  virtual void SetCoarseningFactor(double factor);
 
   /// Rebuild coarser operators with previous intergrid operators
   virtual void ReBuildNumeric(void);

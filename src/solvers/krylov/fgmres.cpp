@@ -257,7 +257,7 @@ void FGMRES<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(vo
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void FGMRES<OperatorType, VectorType, ValueType>::SetBasisSize(const int size_basis)
+void FGMRES<OperatorType, VectorType, ValueType>::SetBasisSize(int size_basis)
 {
     log_debug(this, "FGMRES:SetBasisSize()", size_basis);
 

@@ -62,7 +62,7 @@ public:
   /// verb == 0 no output
   /// verb == 1 print info about the solver (start,end);
   /// verb == 2 print (iter, residual) via iteration control;
-  virtual void Verbose(const int verb=1);
+  virtual void Verbose(int verb=1);
 
 protected:
 
@@ -108,35 +108,35 @@ public:
 
   /// Initialize the solver with absolute/relative/divergence 
   /// tolerance and maximum number of iterations
-  void Init(const double abs_tol,
-            const double rel_tol,
-            const double div_tol,
-            const int max_iter);
+  void Init(double abs_tol,
+            double rel_tol,
+            double div_tol,
+            int max_iter);
 
   /// Initialize the solver with absolute/relative/divergence 
   /// tolerance and minimum/maximum number of iterations
-  void Init(const double abs_tol,
-            const double rel_tol,
-            const double div_tol,
-            const int min_iter,
-            const int max_iter);
+  void Init(double abs_tol,
+            double rel_tol,
+            double div_tol,
+            int min_iter,
+            int max_iter);
 
   /// Set the minimum number of iterations
-  void InitMinIter(const int min_iter);
+  void InitMinIter(int min_iter);
 
   /// Set the maximum number of iterations
-  void InitMaxIter(const int max_iter);
+  void InitMaxIter(int max_iter);
 
   /// Set the absolute/relative/divergence tolerance
-  void InitTol(const double abs,
-               const double rel,
-               const double div);
+  void InitTol(double abs,
+               double rel,
+               double div);
 
   /// Set the residual norm to L1, L2 or Inf norm
   /// resnorm == 1 L1 Norm
   /// resnorm == 2 L2 Norm (default)
   /// resnorm == 3 Inf Norm
-  void SetResidualNorm(const int resnorm);
+  void SetResidualNorm(int resnorm);
 
   /// Record the residual history
   void RecordResidualHistory(void);
@@ -144,7 +144,7 @@ public:
   /// Write the history to file
   void RecordHistory(const std::string filename) const;
 
-  virtual void Verbose(const int verb=1);
+  virtual void Verbose(int verb=1);
 
   virtual void Solve(const VectorType &rhs,
                      VectorType *x);
@@ -206,7 +206,7 @@ public:
   virtual void ReBuildNumeric(void);
 
   /// Set a relaxation parameter of the iterative solver
-  virtual void SetRelaxation(const ValueType omega);
+  virtual void SetRelaxation(ValueType omega);
 
   virtual void Build(void);
 
@@ -241,7 +241,7 @@ public:
   DirectLinearSolver();
   virtual ~DirectLinearSolver();
 
-  virtual void Verbose(const int verb=1);
+  virtual void Verbose(int verb=1);
 
   virtual void Solve(const VectorType &rhs,
                      VectorType *x);

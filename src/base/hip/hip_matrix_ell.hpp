@@ -28,13 +28,9 @@ class HIPAcceleratorMatrixELL : public HIPAcceleratorMatrix<ValueType>
     virtual unsigned int GetMatFormat(void) const { return ELL; }
 
     virtual void Clear(void);
-    virtual void AllocateELL(const int nnz, const int nrow, const int ncol, const int max_row);
-    virtual void SetDataPtrELL(int** col,
-                               ValueType** val,
-                               const int nnz,
-                               const int nrow,
-                               const int ncol,
-                               const int max_row);
+    virtual void AllocateELL(int nnz, int nrow, int ncol, int max_row);
+    virtual void
+    SetDataPtrELL(int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row);
     virtual void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
 
     virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
@@ -50,9 +46,8 @@ class HIPAcceleratorMatrixELL : public HIPAcceleratorMatrix<ValueType>
     virtual void CopyToHostAsync(HostMatrix<ValueType>* dst) const;
 
     virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
-    virtual void ApplyAdd(const BaseVector<ValueType>& in,
-                          const ValueType scalar,
-                          BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
     private:
     MatrixELL<ValueType, int> mat_;

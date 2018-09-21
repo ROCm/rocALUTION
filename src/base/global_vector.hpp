@@ -43,14 +43,14 @@ class GlobalVector : public Vector<ValueType>
     LocalVector<ValueType>& GetInterior();
     const LocalVector<ValueType>& GetGhost() const;
 
-    virtual void Allocate(std::string name, const IndexType2 size);
+    virtual void Allocate(std::string name, IndexType2 size);
     virtual void Clear(void);
 
     void SetParallelManager(const ParallelManager& pm);
 
     virtual void Zeros(void);
     virtual void Ones(void);
-    virtual void SetValues(const ValueType val);
+    virtual void SetValues(ValueType val);
     virtual void SetRandomUniform(unsigned long long seed,
                                   ValueType a = static_cast<ValueType>(-1),
                                   ValueType b = static_cast<ValueType>(1));
@@ -60,10 +60,10 @@ class GlobalVector : public Vector<ValueType>
     void CloneFrom(const GlobalVector<ValueType>& src);
 
     // Accessing operator - only for host data
-    ValueType& operator[](const int i);
-    const ValueType& operator[](const int i) const;
+    ValueType& operator[](int i);
+    const ValueType& operator[](int i) const;
 
-    void SetDataPtr(ValueType** ptr, std::string name, const IndexType2 size);
+    void SetDataPtr(ValueType** ptr, std::string name, IndexType2 size);
     void LeaveDataPtr(ValueType** ptr);
 
     virtual void CopyFrom(const GlobalVector<ValueType>& src);
@@ -73,19 +73,19 @@ class GlobalVector : public Vector<ValueType>
     virtual void WriteFileBinary(const std::string filename) const;
 
     // this = this + alpha*x
-    virtual void AddScale(const GlobalVector<ValueType>& x, const ValueType alpha);
+    virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
     // this = alpha*this + x
-    virtual void ScaleAdd(const ValueType alpha, const GlobalVector<ValueType>& x);
+    virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);
     // this = alpha*this + x*beta + y*gamma
-    virtual void ScaleAdd2(const ValueType alpha,
+    virtual void ScaleAdd2(ValueType alpha,
                            const GlobalVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const GlobalVector<ValueType>& y,
-                           const ValueType gamma);
+                           ValueType gamma);
     // this = alpha * this + beta * x
-    virtual void ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType> &x, const ValueType beta);
+    virtual void ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
     // this = alpha*this
-    virtual void Scale(const ValueType alpha);
+    virtual void Scale(ValueType alpha);
     // this^T x
     virtual ValueType Dot(const GlobalVector<ValueType>& x) const;
     // this^T x
@@ -102,7 +102,7 @@ class GlobalVector : public Vector<ValueType>
     virtual void PointWiseMult(const GlobalVector<ValueType>& x);
     virtual void PointWiseMult(const GlobalVector<ValueType>& x, const GlobalVector<ValueType>& y);
 
-    virtual void Power(const double power);
+    virtual void Power(double power);
 
     // Restriction operator based on restriction mapping vector
     void Restriction(const GlobalVector<ValueType>& vec_fine, const LocalVector<int>& map);

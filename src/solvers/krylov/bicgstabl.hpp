@@ -27,7 +27,7 @@ public:
   virtual void Clear(void);
 
   /// Set the order
-  virtual void SetOrder(const int l);
+  virtual void SetOrder(int l);
 
 protected:
 

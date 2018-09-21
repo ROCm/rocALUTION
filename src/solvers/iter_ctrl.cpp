@@ -56,14 +56,14 @@ void IterationControl::Clear(void) {
 
 }
 
-void IterationControl::Init(const double abs, const double rel, const double div, const int max) {
+void IterationControl::Init(double abs, double rel, double div, int max) {
 
   this->InitTolerance(abs, rel, div);
   this->InitMaximumIterations(max);
 
 }
 
-void IterationControl::Init(const double abs, const double rel, const double div, const int min, const int max) {
+void IterationControl::Init(double abs, double rel, double div, int min, int max) {
 
   this->InitTolerance(abs, rel, div);
   this->InitMinimumIterations(min);
@@ -71,7 +71,7 @@ void IterationControl::Init(const double abs, const double rel, const double div
 
 }
 
-bool IterationControl::InitResidual(const double res) {
+bool IterationControl::InitResidual(double res) {
 
   this->init_res_ = true;
   this->initial_residual_ = res;
@@ -103,7 +103,7 @@ bool IterationControl::InitResidual(const double res) {
   return true;
 }
 
-void IterationControl::InitTolerance(const double abs, const double rel, const double div) {
+void IterationControl::InitTolerance(double abs, double rel, double div) {
 
   this->absolute_tol_   = abs;
   this->relative_tol_   = rel;
@@ -123,7 +123,7 @@ void IterationControl::InitTolerance(const double abs, const double rel, const d
 
 }
 
-void IterationControl::InitMinimumIterations(const int min) {
+void IterationControl::InitMinimumIterations(int min) {
 
   assert(min >= 0);
   assert(min <= this->maximum_iter_);
@@ -132,7 +132,7 @@ void IterationControl::InitMinimumIterations(const int min) {
 
 }
 
-void IterationControl::InitMaximumIterations(const int max) {
+void IterationControl::InitMaximumIterations(int max) {
 
   assert(max >= 0);
   assert(max >= this->minimum_iter_);
@@ -177,7 +177,7 @@ int IterationControl::GetSolverStatus(void) {
 
 }
 
-bool IterationControl::CheckResidual(const double res) {
+bool IterationControl::CheckResidual(double res) {
 
   assert(this->init_res_ == true);
 
@@ -234,14 +234,14 @@ bool IterationControl::CheckResidual(const double res) {
 
 }
 
-bool IterationControl::CheckResidual(const double res, const int index) {
+bool IterationControl::CheckResidual(double res, int index) {
 
   this->current_index_ = index;
   return this->CheckResidual(res);
 
 }
 
-bool IterationControl::CheckResidualNoCount(const double res) const {
+bool IterationControl::CheckResidualNoCount(double res) const {
 
   assert(this->init_res_ == true);
 
@@ -275,7 +275,7 @@ void IterationControl::RecordHistory(void) {
 
 }
 
-void IterationControl::Verbose(const int verb) {
+void IterationControl::Verbose(int verb) {
 
   this->verb_ = verb;
 

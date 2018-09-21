@@ -74,7 +74,7 @@ void UAAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void UAAMG<OperatorType, VectorType, ValueType>::SetOverInterp(const ValueType overInterp) {
+void UAAMG<OperatorType, VectorType, ValueType>::SetOverInterp(ValueType overInterp) {
 
   log_debug(this, "UAAMG::SetOverInterp()",
             overInterp);
@@ -84,7 +84,7 @@ void UAAMG<OperatorType, VectorType, ValueType>::SetOverInterp(const ValueType o
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void UAAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueType eps) {
+void UAAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(ValueType eps) {
 
   log_debug(this, "UAAMG::SetCouplingStrength()",
             eps);

@@ -258,7 +258,7 @@ void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_desc
 template <typename ValueType>
 AcceleratorMatrix<ValueType>*
 _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 const unsigned int matrix_format)
+                                 unsigned int matrix_format)
 {
     assert(backend_descriptor.backend == HIP);
 
@@ -308,17 +308,17 @@ _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor back
 
 template AcceleratorMatrix<float>*
 _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 const unsigned int matrix_format);
+                                 unsigned int matrix_format);
 template AcceleratorMatrix<double>*
 _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 const unsigned int matrix_format);
+                                 unsigned int matrix_format);
 #ifdef SUPPORT_COMPLEX
 template AcceleratorMatrix<std::complex<float>>*
 _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 const unsigned int matrix_format);
+                                 unsigned int matrix_format);
 template AcceleratorMatrix<std::complex<double>>*
 _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 const unsigned int matrix_format);
+                                 unsigned int matrix_format);
 #endif
 
 } // namespace rocalution

@@ -80,10 +80,7 @@ void HIPAcceleratorMatrixELL<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixELL<ValueType>::AllocateELL(const int nnz,
-                                                     const int nrow,
-                                                     const int ncol,
-                                                     const int max_row)
+void HIPAcceleratorMatrixELL<ValueType>::AllocateELL(int nnz, int nrow, int ncol, int max_row)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -128,7 +125,7 @@ void HIPAcceleratorMatrixELL<ValueType>::Clear()
 
 template <typename ValueType>
 void HIPAcceleratorMatrixELL<ValueType>::SetDataPtrELL(
-    int** col, ValueType** val, const int nnz, const int nrow, const int ncol, const int max_row)
+    int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row)
 {
     assert(*col != NULL);
     assert(*val != NULL);
@@ -671,7 +668,7 @@ void HIPAcceleratorMatrixELL<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixELL<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                  const ValueType scalar,
+                                                  ValueType scalar,
                                                   BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)

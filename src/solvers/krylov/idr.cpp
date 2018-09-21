@@ -241,7 +241,7 @@ void IDR<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(const int s)
+void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(int s)
 {
     log_debug(this, "IDR:SetShadowSpace()", s);
 

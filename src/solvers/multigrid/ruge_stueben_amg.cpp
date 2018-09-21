@@ -73,7 +73,7 @@ void RugeStuebenAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueType eps) {
+void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(ValueType eps) {
 
   log_debug(this, "RugeStuebenAMG::SetCouplingStrength()",
             eps);

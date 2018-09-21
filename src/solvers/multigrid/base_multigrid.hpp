@@ -38,10 +38,10 @@ public:
   virtual void SetSmoother(IterativeLinearSolver<OperatorType, VectorType, ValueType> **smoother);
 
   /// Set the number of pre-smoothing steps
-  virtual void SetSmootherPreIter(const int iter);
+  virtual void SetSmootherPreIter(int iter);
 
   /// Set the number of post-smoothing steps
-  virtual void SetSmootherPostIter(const int iter);
+  virtual void SetSmootherPostIter(int iter);
 
   /// Set thre restriction method by operator for each level
   virtual void SetRestrictOperator(OperatorType **op) = 0;
@@ -53,19 +53,19 @@ public:
   virtual void SetOperatorHierarchy(OperatorType **op) = 0;
 
   /// Enable/disable scaling of intergrid transfers
-  virtual void SetScaling(const bool scaling);
+  virtual void SetScaling(bool scaling);
 
   /// Force computation of coarser levels on the host backend
-  virtual void SetHostLevels(const int levels);
+  virtual void SetHostLevels(int levels);
 
   /// Set the MultiGrid Cycle (default: Vcycle)
   virtual void SetCycle(unsigned int cycle);
 
   /// Set the MultiGrid Kcycle on all levels or only on finest level
-  virtual void SetKcycleFull(const bool kcycle_full);
+  virtual void SetKcycleFull(bool kcycle_full);
 
   /// Set the depth of the multigrid solver
-  virtual void InitLevels(const int levels);
+  virtual void InitLevels(int levels);
 
   /// Called by default the V-cycle
   virtual void Solve(const VectorType &rhs,
@@ -77,10 +77,10 @@ public:
 protected:
 
   // Restricts from level 'level' to 'level-1'
-  virtual void Restrict_(const VectorType &fine, VectorType *coarse, const int level);
+  virtual void Restrict_(const VectorType &fine, VectorType *coarse, int level);
 
   // Prolongs from level 'level' to 'level+1'
-  virtual void Prolong_(const VectorType &coarse, VectorType *fine, const int level);
+  virtual void Prolong_(const VectorType &coarse, VectorType *fine, int level);
 
   void Vcycle_(const VectorType &rhs, VectorType *x);
   void Wcycle_(const VectorType &rhs, VectorType *x);

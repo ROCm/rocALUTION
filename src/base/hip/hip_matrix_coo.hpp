@@ -26,10 +26,9 @@ class HIPAcceleratorMatrixCOO : public HIPAcceleratorMatrix<ValueType>
     virtual unsigned int GetMatFormat(void) const { return COO; }
 
     virtual void Clear(void);
-    virtual void AllocateCOO(const int nnz, const int nrow, const int ncol);
+    virtual void AllocateCOO(int nnz, int nrow, int ncol);
 
-    virtual void SetDataPtrCOO(
-        int** row, int** col, ValueType** val, const int nnz, const int nrow, const int ncol);
+    virtual void SetDataPtrCOO(int** row, int** col, ValueType** val, int nnz, int nrow, int ncol);
     virtual void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
 
     virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
@@ -51,9 +50,8 @@ class HIPAcceleratorMatrixCOO : public HIPAcceleratorMatrix<ValueType>
     virtual void CopyToCOO(int* row, int* col, ValueType* val) const;
 
     virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
-    virtual void ApplyAdd(const BaseVector<ValueType>& in,
-                          const ValueType scalar,
-                          BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
     private:
     MatrixCOO<ValueType, int> mat_;

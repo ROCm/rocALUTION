@@ -73,7 +73,7 @@ void SAAMG<OperatorType, VectorType, ValueType>::PrintEnd_(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void SAAMG<OperatorType, VectorType, ValueType>::SetInterpRelax(const ValueType relax) {
+void SAAMG<OperatorType, VectorType, ValueType>::SetInterpRelax(ValueType relax) {
 
   log_debug(this, "SAAMG::SetInterpRelax()",
             relax);
@@ -83,7 +83,7 @@ void SAAMG<OperatorType, VectorType, ValueType>::SetInterpRelax(const ValueType 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void SAAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(const ValueType eps) {
+void SAAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(ValueType eps) {
 
   log_debug(this, "SAAMG::SetCouplingStrength()",
             eps);

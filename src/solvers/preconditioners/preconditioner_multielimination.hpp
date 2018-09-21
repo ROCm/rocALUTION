@@ -38,11 +38,11 @@ public:
   /// AA_Solvers - defines the last-block solver;
   /// drop_off - defines drop-off tolerance
   virtual void Set(Solver<OperatorType, VectorType, ValueType> &AA_Solver,
-                   const int level, const double drop_off = double(0.0));
+                   int level, double drop_off = double(0.0));
 
   /// Set a specific matrix type of the decomposed block matrices;
   /// if not set, CSR matrix format will be used
-  virtual void SetPrecondMatrixFormat(const unsigned int mat_format);
+  virtual void SetPrecondMatrixFormat(unsigned int mat_format);
 
   virtual void Build(void);
 

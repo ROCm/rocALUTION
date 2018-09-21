@@ -27,50 +27,45 @@ class GlobalVector;
 
 // Local Stencil
 template <typename ValueType>
-class LocalStencil : public Operator<ValueType> {
+class LocalStencil : public Operator<ValueType>
+{
+    public:
+    LocalStencil();
+    LocalStencil(unsigned int type);
+    virtual ~LocalStencil();
 
-public:
+    virtual void Info() const;
 
-  LocalStencil();
-  LocalStencil(unsigned int type);
-  virtual ~LocalStencil();
+    virtual int GetNDim(void) const;
+    virtual IndexType2 GetM(void) const;
+    virtual IndexType2 GetN(void) const;
+    virtual IndexType2 GetNnz(void) const;
 
-  virtual void Info() const;
+    virtual void SetGrid(int size);
 
-  virtual int GetNDim(void) const;
-  virtual IndexType2 GetM(void) const;
-  virtual IndexType2 GetN(void) const;
-  virtual IndexType2 GetNnz(void) const;
+    virtual void Clear();
 
-  virtual void SetGrid(const int size);
+    virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const LocalVector<ValueType>& in, ValueType scalar, LocalVector<ValueType>* out) const;
 
-  virtual void Clear();
+    virtual void MoveToAccelerator(void);
+    virtual void MoveToHost(void);
 
-  virtual void Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const; 
-  virtual void ApplyAdd(const LocalVector<ValueType> &in, const ValueType scalar, 
-                        LocalVector<ValueType> *out) const; 
+    protected:
+    virtual bool is_host(void) const { return true; };
+    virtual bool is_accel(void) const { return false; };
 
-  virtual void MoveToAccelerator(void);
-  virtual void MoveToHost(void);
+    private:
+    std::string object_name_;
 
-protected:
+    BaseStencil<ValueType>* stencil_;
 
-  virtual bool is_host(void) const {return true;};
-  virtual bool is_accel(void) const {return false;};
+    HostStencil<ValueType>* stencil_host_;
+    AcceleratorStencil<ValueType>* stencil_accel_;
 
-private:
-  
-  std::string object_name_ ;
-
-  BaseStencil<ValueType> *stencil_;
-
-  HostStencil<ValueType> *stencil_host_;
-  AcceleratorStencil<ValueType> *stencil_accel_;
-
-  
-  friend class LocalVector<ValueType>;
-  friend class GlobalVector<ValueType>;
-
+    friend class LocalVector<ValueType>;
+    friend class GlobalVector<ValueType>;
 };
 
 } // namespace rocalution

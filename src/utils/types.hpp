@@ -16,7 +16,7 @@
 
 namespace rocalution {
 
-inline static int IndexTypeToInt(const IndexType2 idx)
+inline static int IndexTypeToInt(IndexType2 idx)
 {
     assert(idx <= std::numeric_limits<int>::max());
 

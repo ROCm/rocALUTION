@@ -83,7 +83,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixCOO<ValueType>::AllocateCOO(const int nnz, const int nrow, const int ncol)
+void HIPAcceleratorMatrixCOO<ValueType>::AllocateCOO(int nnz, int nrow, int ncol)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -112,7 +112,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::AllocateCOO(const int nnz, const int nr
 
 template <typename ValueType>
 void HIPAcceleratorMatrixCOO<ValueType>::SetDataPtrCOO(
-    int** row, int** col, ValueType** val, const int nnz, const int nrow, const int ncol)
+    int** row, int** col, ValueType** val, int nnz, int nrow, int ncol)
 {
     assert(*row != NULL);
     assert(*col != NULL);
@@ -747,7 +747,7 @@ void HIPAcceleratorMatrixCOO<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixCOO<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                  const ValueType scalar,
+                                                  ValueType scalar,
                                                   BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)

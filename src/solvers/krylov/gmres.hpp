@@ -26,7 +26,7 @@ class GMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     virtual void Clear(void);
 
     /// Set the size of the Krylov-space basis
-    virtual void SetBasisSize(const int size_basis);
+    virtual void SetBasisSize(int size_basis);
 
     protected:
     virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);

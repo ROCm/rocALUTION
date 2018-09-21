@@ -29,7 +29,7 @@ class IDR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     virtual void Clear(void);
 
     /// Set the size of the Shadow Space
-    void SetShadowSpace(const int s);
+    void SetShadowSpace(int s);
     /// Set random seed for ONB creation (seed must be greater than 0)
     void SetRandomSeed(unsigned long long seed);
 

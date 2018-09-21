@@ -60,7 +60,7 @@ void AS<OperatorType, VectorType, ValueType>::Print(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AS<OperatorType, VectorType, ValueType>::Set(const int nb, const int overlap,
+void AS<OperatorType, VectorType, ValueType>::Set(int nb, int overlap,
                                                   Solver<OperatorType, VectorType, ValueType> **preconds) {
 
   log_debug(this, "AS::Set()", nb, overlap, preconds);

@@ -25,7 +25,7 @@ public:
   virtual void Print(void) const;  
   virtual void Clear(void);  
 
-  virtual void Set(const int n,
+  virtual void Set(int n,
                    const int *size,
                    Solver<OperatorType, VectorType, ValueType> **D_solver);
 

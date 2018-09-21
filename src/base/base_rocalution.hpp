@@ -19,109 +19,103 @@ template <typename ValueType>
 class GlobalMatrix;
 class ParallelManager;
 
-class RocalutionObj {
+class RocalutionObj
+{
+    public:
+    RocalutionObj();
+    virtual ~RocalutionObj();
 
-public:
+    /// Clear (free all data) the object
+    virtual void Clear() = 0;
 
-  RocalutionObj();
-  virtual ~RocalutionObj();
-
-  /// Clear (free all data) the object
-  virtual void Clear() = 0;
-
-protected:
-  size_t global_obj_id;
-
+    protected:
+    size_t global_obj_id;
 };
 
 /// Global data for all ROCALUTION objects
-struct Rocalution_Object_Data {
-  
-  std::vector<class RocalutionObj*> all_obj;
-
+struct Rocalution_Object_Data
+{
+    std::vector<class RocalutionObj*> all_obj;
 };
 
 /// Global obj tracking structure
 extern struct Rocalution_Object_Data Rocalution_Object_Data_Tracking;
 
-/// Base class for operator and vector 
+/// Base class for operator and vector
 /// (i.e. global/local matrix/stencil/vector) classes,
-/// all the backend-related interface and data 
+/// all the backend-related interface and data
 /// are defined here
 template <typename ValueType>
-class BaseRocalution : public RocalutionObj {
+class BaseRocalution : public RocalutionObj
+{
+    public:
+    BaseRocalution();
+    BaseRocalution(const BaseRocalution<ValueType>& src);
+    virtual ~BaseRocalution();
 
-public:
+    BaseRocalution<ValueType>& operator=(const BaseRocalution<ValueType>& src);
 
-  BaseRocalution();
-  BaseRocalution(const BaseRocalution<ValueType> &src);
-  virtual ~BaseRocalution();
+    /// Move the object to the Accelerator backend
+    virtual void MoveToAccelerator(void) = 0;
 
-  BaseRocalution<ValueType>& operator=(const BaseRocalution<ValueType> &src);
+    /// Move the object to the Host backend
+    virtual void MoveToHost(void) = 0;
 
-  /// Move the object to the Accelerator backend
-  virtual void MoveToAccelerator(void) = 0;
+    /// Move the object to the Accelerator backend with async move
+    virtual void MoveToAcceleratorAsync(void);
 
-  /// Move the object to the Host backend
-  virtual void MoveToHost(void) = 0;
+    /// Move the object to the Host backend with async move
+    virtual void MoveToHostAsync(void);
 
-  /// Move the object to the Accelerator backend with async move
-  virtual void MoveToAcceleratorAsync(void);
+    // Sync (the async move)
+    virtual void Sync(void);
 
-  /// Move the object to the Host backend with async move
-  virtual void MoveToHostAsync(void);
+    /// Clone the Backend descriptor from another object
+    virtual void CloneBackend(const BaseRocalution<ValueType>& src);
 
-  // Sync (the async move)
-  virtual void Sync(void);
+    /// Clone the Backend descriptor from another object with different template ValueType
+    template <typename ValueType2>
+    void CloneBackend(const BaseRocalution<ValueType2>& src);
 
-  /// Clone the Backend descriptor from another object
-  virtual void CloneBackend(const BaseRocalution<ValueType> &src);
+    /// Print the object information (properties, backends)
+    virtual void Info(void) const = 0;
 
-  /// Clone the Backend descriptor from another object with different template ValueType
-  template <typename ValueType2>
-  void CloneBackend(const BaseRocalution<ValueType2> &src);
+    /// Clear (free all data) the object
+    virtual void Clear(void) = 0;
 
-  /// Print the object information (properties, backends)
-  virtual void Info() const = 0;
+    protected:
+    /// Name of the object
+    std::string object_name_;
 
-  /// Clear (free all data) the object
-  virtual void Clear() = 0;
+    /// Parallel Manager
+    const ParallelManager* pm_;
 
-protected:
+    /// Backend descriptor
+    Rocalution_Backend_Descriptor local_backend_;
 
-  /// Name of the object
-  std::string object_name_;
+    /// Return true if the object is on the host
+    virtual bool is_host(void) const = 0;
 
-  /// Parallel Manager
-  const ParallelManager *pm_;
+    /// Return true if the object is on the accelerator
+    virtual bool is_accel(void) const = 0;
 
-  /// Backend descriptor 
-  Rocalution_Backend_Descriptor local_backend_;
+    // active async transfer
+    bool asyncf;
 
-  /// Return true if the object is on the host
-  virtual bool is_host(void) const = 0;
+    friend class BaseRocalution<double>;
+    friend class BaseRocalution<float>;
+    friend class BaseRocalution<std::complex<double>>;
+    friend class BaseRocalution<std::complex<float>>;
 
-  /// Return true if the object is on the accelerator
-  virtual bool is_accel(void) const = 0;
+    friend class BaseRocalution<int>;
 
-  // active async transfer
-  bool asyncf;
+    friend class GlobalVector<int>;
+    friend class GlobalVector<float>;
+    friend class GlobalVector<double>;
 
-  friend class BaseRocalution<double>;
-  friend class BaseRocalution<float>;
-  friend class BaseRocalution<std::complex<double> >;
-  friend class BaseRocalution<std::complex<float> >;
-
-  friend class BaseRocalution<int>;
-
-  friend class GlobalVector<int>;
-  friend class GlobalVector<float>;
-  friend class GlobalVector<double>;
-
-  friend class GlobalMatrix<int>;
-  friend class GlobalMatrix<float>;
-  friend class GlobalMatrix<double>;
-
+    friend class GlobalMatrix<int>;
+    friend class GlobalMatrix<float>;
+    friend class GlobalMatrix<double>;
 };
 
 } // namespace rocalution

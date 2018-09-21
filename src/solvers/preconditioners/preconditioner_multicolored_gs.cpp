@@ -42,7 +42,7 @@ MultiColoredSGS<OperatorType, VectorType, ValueType>::~MultiColoredSGS() {
 // TODO
 // not optimal implementation - scale the diagonal vectors in the building phase
 template <class OperatorType, class VectorType, typename ValueType>
-void MultiColoredSGS<OperatorType, VectorType, ValueType>::SetRelaxation(const ValueType omega) {
+void MultiColoredSGS<OperatorType, VectorType, ValueType>::SetRelaxation(ValueType omega) {
 
   log_debug(this, "MultiColoredSGS::SetRelaxation()",
             omega);

@@ -13,48 +13,44 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HostMatrixELL : public HostMatrix<ValueType> {
+class HostMatrixELL : public HostMatrix<ValueType>
+{
+    public:
+    HostMatrixELL();
+    HostMatrixELL(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HostMatrixELL();
 
-public:
+    inline int GetMaxRow(void) const { return mat_.max_row; }
 
-  HostMatrixELL();
-  HostMatrixELL(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixELL();
+    virtual void Info(void) const;
+    virtual unsigned int GetMatFormat(void) const { return ELL; }
 
-  inline int GetMaxRow(void) const { return mat_.max_row; }
+    virtual void Clear(void);
+    virtual void AllocateELL(int nnz, int nrow, int ncol, int max_row);
+    virtual void
+    SetDataPtrELL(int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row);
+    virtual void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
 
-  virtual void Info(void) const;
-  virtual unsigned int GetMatFormat(void) const { return  ELL; }
+    virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-  virtual void Clear(void);
-  virtual void AllocateELL(const int nnz, const int nrow, const int ncol, const int max_row);
-  virtual void SetDataPtrELL(int **col, ValueType **val,
-                     const int nnz, const int nrow, const int ncol, const int max_row);
-  virtual void LeaveDataPtrELL(int **col, ValueType **val, int &max_row);
+    virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+    virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-  virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
+    private:
+    MatrixELL<ValueType, int> mat_;
 
-  virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
-  virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+    friend class BaseVector<ValueType>;
+    friend class HostVector<ValueType>;
+    friend class HostMatrixCSR<ValueType>;
+    friend class HostMatrixCOO<ValueType>;
+    friend class HostMatrixHYB<ValueType>;
+    friend class HostMatrixDENSE<ValueType>;
 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                        BaseVector<ValueType> *out) const;
-
-private:
-
-  MatrixELL<ValueType, int> mat_;
-
-  friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-
-  friend class HIPAcceleratorMatrixELL<ValueType>;
-
+    friend class HIPAcceleratorMatrixELL<ValueType>;
 };
 
 } // namespace rocalution

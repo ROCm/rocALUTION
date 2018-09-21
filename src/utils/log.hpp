@@ -56,13 +56,8 @@ void log_debug(P ptr, F fct, Ts&... xs)
     if(_get_backend_descriptor()->log_file != NULL)
     {
         std::string comma_separator = ", ";
-        std::ostream* os = _get_backend_descriptor()->log_file;
-        log_arguments(*os,
-                      comma_separator,
-                      _get_backend_descriptor()->rank,
-                      ptr,
-                      fct,
-                      xs...);
+        std::ostream* os            = _get_backend_descriptor()->log_file;
+        log_arguments(*os, comma_separator, _get_backend_descriptor()->rank, ptr, fct, xs...);
     }
 }
 

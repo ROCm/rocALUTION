@@ -22,212 +22,203 @@
 namespace rocalution {
 
 template <typename ValueType>
-HostMatrixBCSR<ValueType>::HostMatrixBCSR() {
-
-  // no default constructors
-  LOG_INFO("no default constructor");
-  FATAL_ERROR(__FILE__, __LINE__);
-
+HostMatrixBCSR<ValueType>::HostMatrixBCSR()
+{
+    // no default constructors
+    LOG_INFO("no default constructor");
+    FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
-HostMatrixBCSR<ValueType>::HostMatrixBCSR(const Rocalution_Backend_Descriptor local_backend) {
+HostMatrixBCSR<ValueType>::HostMatrixBCSR(const Rocalution_Backend_Descriptor local_backend)
+{
+    log_debug(this, "HostMatrixBCSR::HostMatrixBCSR()", "constructor with local_backend");
 
-  log_debug(this, "HostMatrixBCSR::HostMatrixBCSR()",
-            "constructor with local_backend");
+    this->set_backend(local_backend);
 
-  this->set_backend(local_backend);
-
-  // not implemented yet
-  FATAL_ERROR(__FILE__, __LINE__);
+    // not implemented yet
+    FATAL_ERROR(__FILE__, __LINE__);
 }
 
 template <typename ValueType>
-HostMatrixBCSR<ValueType>::~HostMatrixBCSR() {
+HostMatrixBCSR<ValueType>::~HostMatrixBCSR()
+{
+    log_debug(this, "HostMatrixBCSR::~HostMatrixBCSR()", "destructor");
 
-  log_debug(this, "HostMatrixBCSR::~HostMatrixBCSR()",
-            "destructor");
-
-  this->Clear();
-
-}
-
-template <typename ValueType>
-void HostMatrixBCSR<ValueType>::Info(void) const {
-
-  //TODO
-  LOG_INFO("HostMatrixBCSR<ValueType>");
-
-}
-
-template <typename ValueType>
-void HostMatrixBCSR<ValueType>::Clear() {
-
-  if (this->nnz_ > 0) {
-
-    this->nrow_ = 0;
-    this->ncol_ = 0;
-    this->nnz_  = 0;
-
-  }
-
-}
-
-template <typename ValueType>
-void HostMatrixBCSR<ValueType>::AllocateBCSR(const int nnz, const int nrow, const int ncol) {
-
-  assert( nnz   >= 0);
-  assert( ncol  >= 0);
-  assert( nrow  >= 0);
-
-  if (this->nnz_ > 0)
     this->Clear();
-
-  if (nnz > 0) {
-
-    this->nrow_ = nrow;
-    this->ncol_ = ncol;
-    this->nnz_  = nnz;
-
-  }
-
 }
 
 template <typename ValueType>
-void HostMatrixBCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType> &mat) {
+void HostMatrixBCSR<ValueType>::Info(void) const
+{
+    // TODO
+    LOG_INFO("HostMatrixBCSR<ValueType>");
+}
 
-  // copy only in the same format
-  assert(this->GetMatFormat() == mat.GetMatFormat());
+template <typename ValueType>
+void HostMatrixBCSR<ValueType>::Clear()
+{
+    if(this->nnz_ > 0)
+    {
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
+    }
+}
 
-  if (const HostMatrixBCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*> (&mat)) {
-    
-    this->AllocateBCSR(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_);
+template <typename ValueType>
+void HostMatrixBCSR<ValueType>::AllocateBCSR(int nnz, int nrow, int ncol)
+{
+    assert(nnz >= 0);
+    assert(ncol >= 0);
+    assert(nrow >= 0);
 
-    assert((this->nnz_  == cast_mat->nnz_)  &&
-           (this->nrow_ == cast_mat->nrow_) &&
-           (this->ncol_ == cast_mat->ncol_) );
-
-    if (this->nnz_ > 0) {
-
-      _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-      // TODO
-      FATAL_ERROR(__FILE__, __LINE__);
-
+    if(this->nnz_ > 0)
+    {
+        this->Clear();
     }
 
-  } else {
-
-    // Host matrix knows only host matrices
-    // -> dispatching
-    mat.CopyTo(this);
-
-  }
-
+    if(nnz > 0)
+    {
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nnz;
+    }
 }
 
 template <typename ValueType>
-void HostMatrixBCSR<ValueType>::CopyTo(BaseMatrix<ValueType> *mat) const {
+void HostMatrixBCSR<ValueType>::CopyFrom(const BaseMatrix<ValueType>& mat)
+{
+    // copy only in the same format
+    assert(this->GetMatFormat() == mat.GetMatFormat());
 
-  mat->CopyFrom(*this);
+    if(const HostMatrixBCSR<ValueType>* cast_mat =
+           dynamic_cast<const HostMatrixBCSR<ValueType>*>(&mat))
+    {
+        this->AllocateBCSR(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_);
 
+        assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_) &&
+               (this->ncol_ == cast_mat->ncol_));
+
+        if(this->nnz_ > 0)
+        {
+            _set_omp_backend_threads(this->local_backend_, this->nrow_);
+
+            // TODO
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+    }
+    else
+    {
+        // Host matrix knows only host matrices
+        // -> dispatching
+        mat.CopyTo(this);
+    }
 }
 
 template <typename ValueType>
-bool HostMatrixBCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType> &mat) {
+void HostMatrixBCSR<ValueType>::CopyTo(BaseMatrix<ValueType>* mat) const
+{
+    mat->CopyFrom(*this);
+}
 
-  this->Clear();
-
-  // empty matrix is empty matrix
-  if (mat.GetNnz() == 0)
-    return true;
-
-  if (const HostMatrixBCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*> (&mat)) {
-
-    this->CopyFrom(*cast_mat);
-    return true;
-
-  }
-
-  if (const HostMatrixCSR<ValueType> *cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*> (&mat)) {
-
+template <typename ValueType>
+bool HostMatrixBCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>& mat)
+{
     this->Clear();
-    int nnz = 0;
 
-    // TODO
-    //      csr_to_bcsr(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_,
-    //                 cast_mat->mat_, &this->mat_, &nnz);
-    FATAL_ERROR(__FILE__, __LINE__);
+    // empty matrix is empty matrix
+    if(mat.GetNnz() == 0)
+    {
+        return true;
+    }
 
-    this->nrow_ = cast_mat->nrow_;
-    this->ncol_ = cast_mat->ncol_;
-    this->nnz_ = nnz;
+    if(const HostMatrixBCSR<ValueType>* cast_mat =
+           dynamic_cast<const HostMatrixBCSR<ValueType>*>(&mat))
+    {
+        this->CopyFrom(*cast_mat);
+        return true;
+    }
 
-  return true;
+    if(const HostMatrixCSR<ValueType>* cast_mat =
+           dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
+    {
+        this->Clear();
+        int nnz = 0;
 
-  }
+        // TODO
+        //      csr_to_bcsr(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_,
+        //                 cast_mat->mat_, &this->mat_, &nnz);
+        FATAL_ERROR(__FILE__, __LINE__);
 
-  return false;
+        this->nrow_ = cast_mat->nrow_;
+        this->ncol_ = cast_mat->ncol_;
+        this->nnz_  = nnz;
 
+        return true;
+    }
+
+    return false;
 }
 
 template <typename ValueType>
-void HostMatrixBCSR<ValueType>::Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const {
+void HostMatrixBCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
+                                      BaseVector<ValueType>* out) const
+{
+    if(this->nnz_ > 0)
+    {
+        assert(in.GetSize() >= 0);
+        assert(out->GetSize() >= 0);
+        assert(in.GetSize() == this->ncol_);
+        assert(out->GetSize() == this->nrow_);
 
-  if (this->nnz_ > 0) {
+        //    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*>
+        //    (&in);
+        //    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*>
+        //    (out);
 
-    assert(in.  GetSize() >= 0);
-    assert(out->GetSize() >= 0);
-    assert(in.  GetSize() == this->ncol_);
-    assert(out->GetSize() == this->nrow_);
+        //    assert(cast_in != NULL);
+        //    assert(cast_out!= NULL);
 
-//    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in);
-//    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out);
+        _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
-//    assert(cast_in != NULL);
-//    assert(cast_out!= NULL);
-
-    _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-    // TODO
-    FATAL_ERROR(__FILE__, __LINE__);
-
-  }
-
+        // TODO
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
 }
 
 template <typename ValueType>
-void HostMatrixBCSR<ValueType>::ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                                         BaseVector<ValueType> *out) const {
+void HostMatrixBCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
+                                         ValueType scalar,
+                                         BaseVector<ValueType>* out) const
+{
+    if(this->nnz_ > 0)
+    {
+        assert(in.GetSize() >= 0);
+        assert(out->GetSize() >= 0);
+        assert(in.GetSize() == this->ncol_);
+        assert(out->GetSize() == this->nrow_);
 
-  if (this->nnz_ > 0) {
+        //    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*>
+        //    (&in) ;
+        //    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*>
+        //    (out) ;
 
-    assert(in.  GetSize() >= 0);
-    assert(out->GetSize() >= 0);
-    assert(in.  GetSize() == this->ncol_);
-    assert(out->GetSize() == this->nrow_);
+        //    assert(cast_in != NULL);
+        //    assert(cast_out!= NULL);
 
-//    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*> (&in) ; 
-//    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*> (out) ; 
+        _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
-//    assert(cast_in != NULL);
-//    assert(cast_out!= NULL);
-
-    _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-    // TODO
-    FATAL_ERROR(__FILE__, __LINE__);
-
-  }
-
+        // TODO
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
 }
-
 
 template class HostMatrixBCSR<double>;
 template class HostMatrixBCSR<float>;
 #ifdef SUPPORT_COMPLEX
-template class HostMatrixBCSR<std::complex<double> >;
-template class HostMatrixBCSR<std::complex<float> >;
+template class HostMatrixBCSR<std::complex<double>>;
+template class HostMatrixBCSR<std::complex<float>>;
 #endif
 
 } // namespace rocalution

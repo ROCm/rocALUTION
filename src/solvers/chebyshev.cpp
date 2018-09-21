@@ -41,8 +41,8 @@ Chebyshev<OperatorType, VectorType, ValueType>::~Chebyshev() {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void Chebyshev<OperatorType, VectorType, ValueType>::Set(const ValueType lambda_min, 
-                                                         const ValueType lambda_max) {
+void Chebyshev<OperatorType, VectorType, ValueType>::Set(ValueType lambda_min, 
+                                                         ValueType lambda_max) {
 
   log_debug(this, "Chebyshev::Set()", lambda_min, lambda_max);
 

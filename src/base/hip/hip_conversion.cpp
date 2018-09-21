@@ -18,9 +18,9 @@ namespace rocalution {
 
 template <typename ValueType, typename IndexType>
 bool csr_to_coo_hip(const rocsparse_handle handle,
-                    const IndexType nnz,
-                    const IndexType nrow,
-                    const IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixCSR<ValueType, IndexType>& src,
                     MatrixCOO<ValueType, IndexType>* dst)
 {
@@ -53,9 +53,9 @@ bool csr_to_coo_hip(const rocsparse_handle handle,
 
 template <typename ValueType, typename IndexType>
 bool coo_to_csr_hip(const rocsparse_handle handle,
-                    const IndexType nnz,
-                    const IndexType nrow,
-                    const IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixCOO<ValueType, IndexType>& src,
                     MatrixCSR<ValueType, IndexType>* dst)
 {
@@ -291,13 +291,15 @@ bool csr_to_dia_hip(int blocksize,
     temp_storage_bytes = 0;
 
     // Obtain hipcub buffer size
-    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+    hipcub::DeviceScan::ExclusiveSum(
+        d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Allocate hipcub buffer
     hipMalloc(&d_temp_storage, temp_storage_bytes);
 
     // Do inclusive sum
-    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+    hipcub::DeviceScan::ExclusiveSum(
+        d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Clear hipcub buffer
     hipFree(d_temp_storage);
@@ -406,17 +408,19 @@ bool csr_to_hyb_hip(int blocksize,
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Inclusive sum on coo_row_nnz
-        void* d_temp_storage = NULL;
+        void* d_temp_storage      = NULL;
         size_t temp_storage_bytes = 0;
 
         // Obtain hipcub buffer size
-        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+        hipcub::DeviceScan::InclusiveSum(
+            d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
 
         // Allocate hipcub buffer
         hipMalloc(&d_temp_storage, temp_storage_bytes);
 
         // Do inclusive sum
-        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+        hipcub::DeviceScan::InclusiveSum(
+            d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
 
         // Clear hipcub buffer
         hipFree(d_temp_storage);

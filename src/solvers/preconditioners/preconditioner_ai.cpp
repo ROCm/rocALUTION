@@ -52,7 +52,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Print(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void AIChebyshev<OperatorType, VectorType, ValueType>::Set(const int p, const ValueType lambda_min, const ValueType lambda_max) {
+void AIChebyshev<OperatorType, VectorType, ValueType>::Set(int p, ValueType lambda_min, ValueType lambda_max) {
 
   log_debug(this, "AIChebyshev::Set()", p, lambda_min, lambda_max);
 
@@ -84,7 +84,7 @@ void AIChebyshev<OperatorType, VectorType, ValueType>::Build(void) {
 
   this->AIChebyshev_.CloneFrom(*this->op_);
 
-  const ValueType q = (ValueType(1.0) - sqrt(this->lambda_min_/this->lambda_max_)) /
+  ValueType q = (ValueType(1.0) - sqrt(this->lambda_min_/this->lambda_max_)) /
                       (ValueType(1.0) + sqrt(this->lambda_min_/this->lambda_max_));
   ValueType c = ValueType(1.0) / sqrt(this->lambda_min_ * this->lambda_max_);
 
@@ -250,7 +250,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Print(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void FSAI<OperatorType, VectorType, ValueType>::Set(const int power) {
+void FSAI<OperatorType, VectorType, ValueType>::Set(int power) {
 
   log_debug(this, "FSAI::Set()",
             power);
@@ -335,7 +335,7 @@ void FSAI<OperatorType, VectorType, ValueType>::Clear(void) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void FSAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
+void FSAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format) {
 
   log_debug(this, "FSAI::SetPrecondMatrixFormat()",
             mat_format);
@@ -475,7 +475,7 @@ void SPAI<OperatorType, VectorType, ValueType>::Clear(void) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void SPAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
+void SPAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format) {
 
   log_debug(this, "SPAI::SetPrecondMatrixFormat()",
             mat_format);
@@ -566,7 +566,7 @@ void TNS<OperatorType, VectorType, ValueType>::Print(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void TNS<OperatorType, VectorType, ValueType>::Set(const bool imp) {
+void TNS<OperatorType, VectorType, ValueType>::Set(bool imp) {
 
   assert(this->build_ != true);
 
@@ -695,7 +695,7 @@ void TNS<OperatorType, VectorType, ValueType>::Clear(void) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void TNS<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
+void TNS<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format) {
 
   log_debug(this, "TNS::SetPrecondMatrixFormat()",
             mat_format);

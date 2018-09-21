@@ -46,17 +46,17 @@ class LocalVector : public Vector<ValueType>
     virtual bool Check(void) const;
 
     /// Allocate a local vector with name and size
-    virtual void Allocate(std::string name, const IndexType2 size);
+    virtual void Allocate(std::string name, IndexType2 size);
 
     /// Initialize a vector with externally allocated data
-    void SetDataPtr(ValueType** ptr, std::string name, const int size);
+    void SetDataPtr(ValueType** ptr, std::string name, int size);
     /// Get a pointer from the vector data and free the vector object
     void LeaveDataPtr(ValueType** ptr);
 
     virtual void Clear();
     virtual void Zeros();
     virtual void Ones();
-    virtual void SetValues(const ValueType val);
+    virtual void SetValues(ValueType val);
     virtual void SetRandomUniform(unsigned long long seed,
                                   ValueType a = static_cast<ValueType>(-1),
                                   ValueType b = static_cast<ValueType>(1));
@@ -65,9 +65,9 @@ class LocalVector : public Vector<ValueType>
                                  ValueType var  = static_cast<ValueType>(1));
 
     /// Access operator (only for host data!)
-    ValueType& operator[](const int i);
+    ValueType& operator[](int i);
     /// Access operator (only for host data!)
-    const ValueType& operator[](const int i) const;
+    const ValueType& operator[](int i) const;
 
     virtual void ReadFileASCII(const std::string filename);
     virtual void WriteFileASCII(const std::string filename) const;
@@ -81,10 +81,8 @@ class LocalVector : public Vector<ValueType>
 
     /// Copy data (not entire vector) from another local vector with specified src/dst offsets and
     /// size
-    virtual void CopyFrom(const LocalVector<ValueType>& src,
-                          const int src_offset,
-                          const int dst_offset,
-                          const int size);
+    virtual void
+    CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
 
     /// Copy a local vector under specified permutation (forward permutation)
     void CopyFromPermute(const LocalVector<ValueType>& src, const LocalVector<int>& permutation);
@@ -116,25 +114,24 @@ class LocalVector : public Vector<ValueType>
     /// Prolongation operator based on restriction(!) mapping vector
     void Prolongation(const LocalVector<ValueType>& vec_coarse, const LocalVector<int>& map);
 
-    virtual void AddScale(const LocalVector<ValueType>& x, const ValueType alpha);
-    virtual void ScaleAdd(const ValueType alpha, const LocalVector<ValueType>& x);
-    virtual void
-    ScaleAddScale(const ValueType alpha, const LocalVector<ValueType>& x, const ValueType beta);
+    virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);
+    virtual void ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x);
+    virtual void ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
     /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
     /// of a vector
-    virtual void ScaleAddScale(const ValueType alpha,
+    virtual void ScaleAddScale(ValueType alpha,
                                const LocalVector<ValueType>& x,
-                               const ValueType beta,
-                               const int src_offset,
-                               const int dst_offset,
-                               const int size);
+                               ValueType beta,
+                               int src_offset,
+                               int dst_offset,
+                               int size);
 
-    virtual void ScaleAdd2(const ValueType alpha,
+    virtual void ScaleAdd2(ValueType alpha,
                            const LocalVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const LocalVector<ValueType>& y,
-                           const ValueType gamma);
-    virtual void Scale(const ValueType alpha);
+                           ValueType gamma);
+    virtual void Scale(ValueType alpha);
     virtual void ExclusiveScan(const LocalVector<ValueType>& x);
     virtual ValueType Dot(const LocalVector<ValueType>& x) const;
     virtual ValueType DotNonConj(const LocalVector<ValueType>& x) const;
@@ -144,28 +141,24 @@ class LocalVector : public Vector<ValueType>
     virtual int Amax(ValueType& value) const;
     virtual void PointWiseMult(const LocalVector<ValueType>& x);
     virtual void PointWiseMult(const LocalVector<ValueType>& x, const LocalVector<ValueType>& y);
-    virtual void Power(const double power);
+    virtual void Power(double power);
 
     /// Sets index array
-    void SetIndexArray(const int size, const int* index);
+    void SetIndexArray(int size, const int* index);
     /// Gets index values
     void GetIndexValues(ValueType* values) const;
     /// Sets index values
     void SetIndexValues(const ValueType* values);
     /// Gets continuous index values
-    void GetContinuousValues(const int start, const int end, ValueType* values) const;
+    void GetContinuousValues(int start, int end, ValueType* values) const;
     /// Sets continuous index values
-    void SetContinuousValues(const int start, const int end, const ValueType* values);
+    void SetContinuousValues(int start, int end, const ValueType* values);
     /// Extract coarse boundary mapping
-    void ExtractCoarseMapping(
-        const int start, const int end, const int* index, const int nc, int* size, int* map) const;
+    void
+    ExtractCoarseMapping(int start, int end, const int* index, int nc, int* size, int* map) const;
     /// Extract coarse boundary index
-    void ExtractCoarseBoundary(const int start,
-                               const int end,
-                               const int* index,
-                               const int nc,
-                               int* size,
-                               int* boundary) const;
+    void ExtractCoarseBoundary(
+        int start, int end, const int* index, int nc, int* size, int* boundary) const;
 
     protected:
     virtual bool is_host(void) const;
@@ -183,19 +176,19 @@ class LocalVector : public Vector<ValueType>
 
     friend class LocalVector<double>;
     friend class LocalVector<float>;
-    friend class LocalVector<std::complex<double> >;
-    friend class LocalVector<std::complex<float> >;
+    friend class LocalVector<std::complex<double>>;
+    friend class LocalVector<std::complex<float>>;
     friend class LocalVector<int>;
 
     friend class LocalMatrix<double>;
     friend class LocalMatrix<float>;
-    friend class LocalMatrix<std::complex<double> >;
-    friend class LocalMatrix<std::complex<float> >;
+    friend class LocalMatrix<std::complex<double>>;
+    friend class LocalMatrix<std::complex<float>>;
 
     friend class LocalStencil<double>;
     friend class LocalStencil<float>;
-    friend class LocalStencil<std::complex<double> >;
-    friend class LocalStencil<std::complex<float> >;
+    friend class LocalStencil<std::complex<double>>;
+    friend class LocalStencil<std::complex<float>>;
 
     friend class GlobalVector<ValueType>;
     friend class LocalMatrix<ValueType>;

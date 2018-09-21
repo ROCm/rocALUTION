@@ -133,7 +133,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Print(void) const {
 
 template <class OperatorType, class VectorType, typename ValueType>
 void MultiElimination<OperatorType, VectorType, ValueType>::Set(Solver<OperatorType, VectorType, ValueType> &AA_Solver,
-                                                                const int level, const double drop_off) {
+                                                                int level, double drop_off) {
 
   log_debug(this, "MultiElimination::Set()", (const void*&)AA_Solver, level, drop_off);
 
@@ -146,7 +146,7 @@ void MultiElimination<OperatorType, VectorType, ValueType>::Set(Solver<OperatorT
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void MultiElimination<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
+void MultiElimination<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format) {
 
   log_debug(this, "MultiElimination::SetPrecondMatrixFormat()",
             mat_format);

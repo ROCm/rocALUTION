@@ -58,20 +58,20 @@ BaseAMG<OperatorType, VectorType, ValueType>::~BaseAMG() {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseAMG<OperatorType, VectorType, ValueType>::SetCoarsestLevel(const int coarseSize) {
+void BaseAMG<OperatorType, VectorType, ValueType>::SetCoarsestLevel(int coarse_size) {
 
   log_debug(this, "BaseAMG::SetCoarsestLevel()",
-            coarseSize);
+            coarse_size);
 
   assert(this->build_ == false);
   assert(this->hierarchy_ == false);
 
-  this->coarse_size_ = coarseSize;
+  this->coarse_size_ = coarse_size;
 
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSmoothers(const bool sm_manual) {
+void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSmoothers(bool sm_manual) {
 
   log_debug(this, "BaseAMG::SetManualSmoothers()",
             sm_manual);
@@ -83,7 +83,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSmoothers(const bool
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSolver(const bool s_manual) {
+void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSolver(bool s_manual) {
 
   log_debug(this, "BaseAMG::SetManualSolver()",
             s_manual);
@@ -95,7 +95,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetManualSolver(const bool s_
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseAMG<OperatorType, VectorType, ValueType>::SetDefaultSmootherFormat(const unsigned int op_format) {
+void BaseAMG<OperatorType, VectorType, ValueType>::SetDefaultSmootherFormat(unsigned int op_format) {
 
   log_debug(this, "BaseAMG::SetDefaultSmootherFormat()",
             op_format);
@@ -107,7 +107,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetDefaultSmootherFormat(cons
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseAMG<OperatorType, VectorType, ValueType>::SetOperatorFormat(const unsigned int op_format) {
+void BaseAMG<OperatorType, VectorType, ValueType>::SetOperatorFormat(unsigned int op_format) {
 
   log_debug(this, "BaseAMG::SetOperatorFormat()",
             op_format);

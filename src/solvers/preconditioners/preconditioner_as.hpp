@@ -20,7 +20,7 @@ public:
   virtual ~AS();
 
   virtual void Print(void) const;
-  virtual void Set(const int nb, const int overlap,
+  virtual void Set(int nb, int overlap,
                    Solver<OperatorType, VectorType, ValueType> **preconds);
   
   virtual void Solve(const VectorType &rhs,

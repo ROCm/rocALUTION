@@ -28,10 +28,10 @@ public:
 
   /// Set a specific matrix type of the decomposed block matrices;
   /// if not set, CSR matrix format will be used
-  virtual void SetPrecondMatrixFormat(const unsigned int mat_format);
+  virtual void SetPrecondMatrixFormat(unsigned int mat_format);
 
   /// Set if the preconditioner should be decomposed or not
-  virtual void SetDecomposition(const bool decomp);
+  virtual void SetDecomposition(bool decomp);
 
   virtual void Solve(const VectorType &rhs,
                      VectorType *x);

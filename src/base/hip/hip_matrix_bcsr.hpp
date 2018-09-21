@@ -24,7 +24,7 @@ class HIPAcceleratorMatrixBCSR : public HIPAcceleratorMatrix<ValueType>
     virtual unsigned int GetMatFormat(void) const { return BCSR; }
 
     virtual void Clear(void);
-    virtual void AllocateBCSR(const int nnz, const int nrow, const int ncol);
+    virtual void AllocateBCSR(int nnz, int nrow, int ncol);
 
     virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
@@ -35,9 +35,8 @@ class HIPAcceleratorMatrixBCSR : public HIPAcceleratorMatrix<ValueType>
     virtual void CopyToHost(HostMatrix<ValueType>* dst) const;
 
     virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
-    virtual void ApplyAdd(const BaseVector<ValueType>& in,
-                          const ValueType scalar,
-                          BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
     private:
     MatrixBCSR<ValueType, int> mat_;

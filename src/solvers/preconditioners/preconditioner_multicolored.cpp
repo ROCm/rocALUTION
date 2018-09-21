@@ -109,7 +109,7 @@ void MultiColored<OperatorType, VectorType, ValueType>::Clear(void) {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void MultiColored<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(const unsigned int mat_format) {
+void MultiColored<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format) {
 
   log_debug(this, "MultiColored::SetPrecondMatrixFormat()",
             mat_format);
@@ -120,7 +120,7 @@ void MultiColored<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(c
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void MultiColored<OperatorType, VectorType, ValueType>::SetDecomposition(const bool decomp) {
+void MultiColored<OperatorType, VectorType, ValueType>::SetDecomposition(bool decomp) {
 
   log_debug(this, "MultiColored::SetDecomposition()",
             decomp);

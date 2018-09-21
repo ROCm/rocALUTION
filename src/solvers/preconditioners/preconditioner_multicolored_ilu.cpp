@@ -54,7 +54,7 @@ void MultiColoredILU<OperatorType, VectorType, ValueType>::Print(void) const {
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void MultiColoredILU<OperatorType, VectorType, ValueType>::Set(const int p) {
+void MultiColoredILU<OperatorType, VectorType, ValueType>::Set(int p) {
 
   log_debug(this, "MultiColoredILU::Set()",
             p);
@@ -68,7 +68,7 @@ void MultiColoredILU<OperatorType, VectorType, ValueType>::Set(const int p) {
 } 
 
 template <class OperatorType, class VectorType, typename ValueType>
-void MultiColoredILU<OperatorType, VectorType, ValueType>::Set(const int p, const int q, const bool level) {
+void MultiColoredILU<OperatorType, VectorType, ValueType>::Set(int p, int q, bool level) {
 
   log_debug(this, "MultiColoredILU::Set()", p, q, level);
 

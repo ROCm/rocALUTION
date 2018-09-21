@@ -30,11 +30,7 @@ class HIPAcceleratorMatrixHYB : public HIPAcceleratorMatrix<ValueType>
     virtual unsigned int GetMatFormat(void) const { return HYB; }
 
     virtual void Clear(void);
-    virtual void AllocateHYB(const int ell_nnz,
-                             const int coo_nnz,
-                             const int ell_max_row,
-                             const int nrow,
-                             const int ncol);
+    virtual void AllocateHYB(int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
 
     virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
@@ -49,9 +45,8 @@ class HIPAcceleratorMatrixHYB : public HIPAcceleratorMatrix<ValueType>
     virtual void CopyToHostAsync(HostMatrix<ValueType>* dst) const;
 
     virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
-    virtual void ApplyAdd(const BaseVector<ValueType>& in,
-                          const ValueType scalar,
-                          BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
     private:
     MatrixHYB<ValueType, int> mat_;

@@ -13,42 +13,39 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HostMatrixBCSR : public HostMatrix<ValueType> {
+class HostMatrixBCSR : public HostMatrix<ValueType>
+{
+    public:
+    HostMatrixBCSR();
+    HostMatrixBCSR(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HostMatrixBCSR();
 
-public:
+    virtual void Info(void) const;
+    virtual unsigned int GetMatFormat(void) const { return BCSR; }
 
-  HostMatrixBCSR();
-  HostMatrixBCSR(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HostMatrixBCSR();
+    virtual void Clear(void);
+    virtual void AllocateBCSR(int nnz, int nrow, int ncol);
 
-  virtual void Info(void) const;
-  virtual unsigned int GetMatFormat(void) const { return  BCSR; }
+    virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-  virtual void Clear(void);
-  virtual void AllocateBCSR(const int nnz, const int nrow, const int ncol);
+    virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+    virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
-  virtual bool ConvertFrom(const BaseMatrix<ValueType> &mat);
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-  virtual void CopyFrom(const BaseMatrix<ValueType> &mat);
-  virtual void CopyTo(BaseMatrix<ValueType> *mat) const;
+    private:
+    MatrixBCSR<ValueType, int> mat_;
 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                        BaseVector<ValueType> *out) const;
+    friend class BaseVector<ValueType>;
+    friend class HostVector<ValueType>;
+    friend class HostMatrixCSR<ValueType>;
+    friend class HostMatrixCOO<ValueType>;
+    friend class HostMatrixHYB<ValueType>;
+    friend class HostMatrixDENSE<ValueType>;
 
-private:
-
-  MatrixBCSR<ValueType, int> mat_;
-
-  friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-  friend class HostMatrixCSR<ValueType>;
-  friend class HostMatrixCOO<ValueType>;
-  friend class HostMatrixHYB<ValueType>;
-  friend class HostMatrixDENSE<ValueType>;
-
-  friend class HIPAcceleratorMatrixBCSR<ValueType>;
-
+    friend class HIPAcceleratorMatrixBCSR<ValueType>;
 };
 
 } // namespace rocalution

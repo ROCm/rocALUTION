@@ -52,22 +52,16 @@ __device__ static __inline__ cuFloatComplex operator/(const cuFloatComplex& lhs,
 }
 #endif
 
-__device__ static __inline__ double hip_abs(const double val) { return abs(val); }
-__device__ static __inline__ float hip_abs(const float val) { return abs(val); }
+__device__ static __inline__ double hip_abs(double val) { return abs(val); }
+__device__ static __inline__ float hip_abs(float val) { return abs(val); }
 #ifdef SUPPORT_COMPLEX
 __device__ static __inline__ double hip_abs(const cuDoubleComplex& val) { return cuCabs(val); }
 __device__ static __inline__ float hip_abs(const cuFloatComplex& val) { return cuCabsf(val); }
 #endif
 
-__device__ static __inline__ double hip_pow(const double val, const double exp)
-{
-    return pow(val, exp);
-}
+__device__ static __inline__ double hip_pow(double val, double exp) { return pow(val, exp); }
 
-__device__ static __inline__ float hip_pow(const float val, const double exp)
-{
-    return powf(val, exp);
-}
+__device__ static __inline__ float hip_pow(float val, double exp) { return powf(val, exp); }
 
 __device__ static __inline__ void make_ValueType(float& val, const float& scalar)
 {

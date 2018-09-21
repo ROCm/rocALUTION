@@ -37,7 +37,7 @@ _rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor back
 template <typename ValueType>
 AcceleratorMatrix<ValueType>*
 _rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 const unsigned int matrix_format);
+                                 unsigned int matrix_format);
 
 } // namespace rocalution
 

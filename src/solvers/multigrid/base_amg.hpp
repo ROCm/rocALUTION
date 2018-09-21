@@ -32,17 +32,17 @@ public:
   virtual void BuildSmoothers(void);
 
   /// Sets coarsest level for hierarchy creation
-  virtual void SetCoarsestLevel(const int coarseSize);
+  virtual void SetCoarsestLevel(int coarse_size);
 
   /// Sets flag to pass smoothers manually for each level
-  virtual void SetManualSmoothers(const bool sm_manual);
+  virtual void SetManualSmoothers(bool sm_manual);
   /// Sets flag to pass coarse grid solver manually
-  virtual void SetManualSolver(const bool s_manual);
+  virtual void SetManualSolver(bool s_manual);
 
   /// Sets the smoother operator format
-  virtual void SetDefaultSmootherFormat(const unsigned int op_format);
+  virtual void SetDefaultSmootherFormat(unsigned int op_format);
   /// Sets the operator format
-  virtual void SetOperatorFormat(const unsigned int op_format);
+  virtual void SetOperatorFormat(unsigned int op_format);
 
   /// Returns the number of levels in hierarchy
   virtual int GetNumLevels();

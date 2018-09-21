@@ -13,30 +13,26 @@
 namespace rocalution {
 
 template <typename ValueType>
-class HostStencilLaplace2D : public HostStencil<ValueType> {
+class HostStencilLaplace2D : public HostStencil<ValueType>
+{
+    public:
+    HostStencilLaplace2D();
+    HostStencilLaplace2D(const Rocalution_Backend_Descriptor local_backend);
+    virtual ~HostStencilLaplace2D();
 
-public:
+    virtual int GetNnz(void) const;
+    virtual void Info(void) const;
+    virtual unsigned int GetStencilId(void) const { return Laplace2D; }
 
-  HostStencilLaplace2D();
-  HostStencilLaplace2D(const Rocalution_Backend_Descriptor local_backend);
-  virtual ~HostStencilLaplace2D();
+    virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const BaseVector<ValueType>& in, ValueType scalar, BaseVector<ValueType>* out) const;
 
-  virtual int GetNnz(void) const;
-  virtual void Info(void) const;
-  virtual unsigned int GetStencilId(void) const { return  Laplace2D; }
+    private:
+    friend class BaseVector<ValueType>;
+    friend class HostVector<ValueType>;
 
- 
-  virtual void Apply(const BaseVector<ValueType> &in, BaseVector<ValueType> *out) const;
-  virtual void ApplyAdd(const BaseVector<ValueType> &in, const ValueType scalar,
-                        BaseVector<ValueType> *out) const;
-
-private:
-
-  friend class BaseVector<ValueType>;
-  friend class HostVector<ValueType>;
-
-  //  friend class HIPAcceleratorStencilLaplace2D<ValueType>;
-
+    // friend class HIPAcceleratorStencilLaplace2D<ValueType>;
 };
 
 } // namespace rocalution

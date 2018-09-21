@@ -61,9 +61,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixMCSR<ValueType>::AllocateMCSR(const int nnz,
-                                                       const int nrow,
-                                                       const int ncol)
+void HIPAcceleratorMatrixMCSR<ValueType>::AllocateMCSR(int nnz, int nrow, int ncol)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -92,7 +90,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::AllocateMCSR(const int nnz,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixMCSR<ValueType>::SetDataPtrMCSR(
-    int** row_offset, int** col, ValueType** val, const int nnz, const int nrow, const int ncol)
+    int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
 {
     assert(*row_offset != NULL);
     assert(*col != NULL);
@@ -800,7 +798,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                   const ValueType scalar,
+                                                   ValueType scalar,
                                                    BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)

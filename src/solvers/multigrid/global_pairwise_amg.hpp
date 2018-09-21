@@ -27,11 +27,11 @@ public:
   virtual void ClearLocal(void);
 
   /// Sets beta for pairwise aggregation
-  virtual void SetBeta(const ValueType beta);
+  virtual void SetBeta(ValueType beta);
   /// Sets reordering for aggregation
   virtual void SetOrdering(const _aggregation_ordering ordering);
   /// Sets target coarsening factor
-  virtual void SetCoarseningFactor(const double factor);
+  virtual void SetCoarseningFactor(double factor);
 
   virtual void ReBuildNumeric(void);
 
