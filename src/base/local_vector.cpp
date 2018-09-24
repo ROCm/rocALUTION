@@ -759,7 +759,7 @@ ValueType LocalVector<ValueType>::Dot(const LocalVector<ValueType>& x) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -778,7 +778,7 @@ ValueType LocalVector<ValueType>::DotNonConj(const LocalVector<ValueType>& x) co
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -793,7 +793,7 @@ ValueType LocalVector<ValueType>::Norm(void) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -808,7 +808,7 @@ ValueType LocalVector<ValueType>::Reduce(void) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -823,7 +823,7 @@ ValueType LocalVector<ValueType>::Asum(void) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -838,7 +838,7 @@ int LocalVector<ValueType>::Amax(ValueType& value) const
     }
     else
     {
-        value = ValueType(0.0);
+        value = static_cast<ValueType>(0);
         return -1;
     }
 }

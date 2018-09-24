@@ -294,7 +294,7 @@ void HostMatrixHYB<ValueType>::Apply(const BaseVector<ValueType>& in,
 #endif
             for(int ai = 0; ai < this->nrow_; ++ai)
             {
-                cast_out->vec_[ai] = ValueType(0.0);
+                cast_out->vec_[ai] = static_cast<ValueType>(0);
 
                 for(int n = 0; n < this->mat_.ELL.max_row; ++n)
                 {

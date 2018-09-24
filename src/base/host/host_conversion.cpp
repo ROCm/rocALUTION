@@ -409,8 +409,8 @@ bool csr_to_ell(int omp_threads,
         {
             IndexType ind = ELL_IND(i, n, nrow, dst->max_row);
 
-            dst->val[ind] = ValueType(0.0);
-            dst->col[ind] = IndexType(-1);
+            dst->val[ind] = static_cast<ValueType>(0);
+            dst->col[ind] = static_cast<IndexType>(-1);
             ++n;
         }
     }

@@ -15,59 +15,52 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class BlockPreconditioner : public Preconditioner<OperatorType, VectorType, ValueType> {
+class BlockPreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
+{
+    public:
+    BlockPreconditioner();
+    virtual ~BlockPreconditioner();
 
-public:
+    virtual void Print(void) const;
+    virtual void Clear(void);
 
-  BlockPreconditioner();
-  virtual ~BlockPreconditioner();
+    virtual void
+    Set(int n, const int* size, Solver<OperatorType, VectorType, ValueType>** D_solver);
 
-  virtual void Print(void) const;  
-  virtual void Clear(void);  
+    virtual void SetDiagonalSolver(void);
+    virtual void SetLSolver(void);
 
-  virtual void Set(int n,
-                   const int *size,
-                   Solver<OperatorType, VectorType, ValueType> **D_solver);
+    virtual void SetExternalLastMatrix(const OperatorType& mat);
 
-  virtual void SetDiagonalSolver(void);
-  virtual void SetLSolver(void);
+    virtual void SetPermutation(const LocalVector<int>& perm);
 
-  virtual void SetExternalLastMatrix(const OperatorType &mat);
-  
-  virtual void SetPermutation(const LocalVector<int> &perm);
+    virtual void Build(void);
 
-  virtual void Build(void);
+    virtual void Solve(const VectorType& rhs, VectorType* x);
 
-  virtual void Solve(const VectorType &rhs,
-                     VectorType *x);
+    protected:
+    // The operator decomposition
+    OperatorType*** A_block_;
+    OperatorType* A_last_;
 
-protected:
+    /// Keep the precond matrix in CSR or not
+    bool op_mat_format_;
+    /// Precond matrix format
+    unsigned int precond_mat_format_;
 
-  // The operator decomposition
-  OperatorType ***A_block_;
-  OperatorType *A_last_;
+    VectorType** x_block_;
+    VectorType** tmp_block_;
+    VectorType x_;
 
-  /// Keep the precond matrix in CSR or not
-  bool op_mat_format_; 
-  /// Precond matrix format
-  unsigned int precond_mat_format_;
+    int num_blocks_;
+    int* block_sizes_;
 
-  VectorType **x_block_;  
-  VectorType **tmp_block_;  
-  VectorType x_;
+    Solver<OperatorType, VectorType, ValueType>** D_solver_;
 
-  int num_blocks_;
-  int *block_sizes_;
+    bool diag_solve_;
 
-  Solver<OperatorType, VectorType, ValueType> **D_solver_;
-
-
-  bool diag_solve_;
-
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void);
-  
-
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 };
 
 } // namespace rocalution

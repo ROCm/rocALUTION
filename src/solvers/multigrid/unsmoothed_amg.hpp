@@ -14,45 +14,41 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class UAAMG : public BaseAMG<OperatorType, VectorType, ValueType> {
+class UAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
+{
+    public:
+    UAAMG();
+    virtual ~UAAMG();
 
-public:
+    virtual void Print(void) const;
 
-  UAAMG();
-  virtual ~UAAMG();
+    /// Build UAAMG smoothers
+    virtual void BuildSmoothers(void);
 
-  virtual void Print(void) const;
+    /// Sets coupling strength
+    virtual void SetCouplingStrength(ValueType eps);
+    /// Sets over-interpolation parameter for aggregation
+    virtual void SetOverInterp(ValueType overInterp);
 
-  /// Build UAAMG smoothers
-  virtual void BuildSmoothers(void);
+    /// Rebuild coarser operators with previous intergrid operators
+    virtual void ReBuildNumeric(void);
 
-  /// Sets coupling strength
-  virtual void SetCouplingStrength(ValueType eps);
-  /// Sets over-interpolation parameter for aggregation
-  virtual void SetOverInterp(ValueType overInterp);
+    protected:
+    /// Constructs the prolongation, restriction and coarse operator
+    virtual void Aggregate(const OperatorType& op,
+                           Operator<ValueType>* pro,
+                           Operator<ValueType>* res,
+                           OperatorType* coarse);
 
-  /// Rebuild coarser operators with previous intergrid operators
-  virtual void ReBuildNumeric(void);
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-protected:
+    private:
+    /// Coupling strength
+    ValueType eps_;
 
-  /// Constructs the prolongation, restriction and coarse operator
-  virtual void Aggregate(const OperatorType &op,
-                         Operator<ValueType> *pro,
-                         Operator<ValueType> *res,
-                         OperatorType *coarse);
-
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
-
-private:
-
-  /// Coupling strength
-  ValueType eps_;
-
-  /// Over-interpolation parameter for aggregation
-  ValueType over_interp_;
-
+    /// Over-interpolation parameter for aggregation
+    ValueType over_interp_;
 };
 
 } // namespace rocalution

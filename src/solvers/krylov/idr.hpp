@@ -49,17 +49,17 @@ class IDR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
 
     ValueType kappa_;
 
-    ValueType *c_;
-    ValueType *f_;
-    ValueType *M_;
+    ValueType* c_;
+    ValueType* f_;
+    ValueType* M_;
 
     VectorType r_;
     VectorType v_;
     VectorType t_;
 
-    VectorType **G_;
-    VectorType **U_;
-    VectorType **P_;
+    VectorType** G_;
+    VectorType** U_;
+    VectorType** P_;
 };
 
 } // namespace rocalution

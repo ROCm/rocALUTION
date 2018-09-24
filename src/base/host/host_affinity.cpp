@@ -54,7 +54,7 @@ void rocalution_set_omp_affinity(bool aff)
 
         GetSystemInfo(&sysinfo);
 
-        numCPU = (int)sysinfo.dwNumberOfProcessors;
+        numCPU = static_cast<int>(sysinfo.dwNumberOfProcessors);
 #endif // windows
 
         if(numCPU == 0)

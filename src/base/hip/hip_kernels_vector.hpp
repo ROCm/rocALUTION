@@ -218,7 +218,7 @@ kernel_copy_from_float(IndexType n, const float* __restrict__ in, ValueType* __r
         return;
     }
 
-    out[ind] = ValueType(in[ind]);
+    out[ind] = static_cast<ValueType>(in[ind]);
 }
 
 template <typename ValueType, typename IndexType>
@@ -232,7 +232,7 @@ kernel_copy_from_double(IndexType n, const double* __restrict__ in, ValueType* _
         return;
     }
 
-    out[ind] = ValueType(in[ind]);
+    out[ind] = static_cast<ValueType>(in[ind]);
 }
 
 } // namespace rocalution

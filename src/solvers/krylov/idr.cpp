@@ -31,10 +31,10 @@ IDR<OperatorType, VectorType, ValueType>::IDR()
 {
     log_debug(this, "IDR::IDR()", "default constructor");
 
-    this->s_     = 4;
-    this->seed_  = time(NULL);
+    this->s_    = 4;
+    this->seed_ = time(NULL);
 
-    this->kappa_ = ValueType(0.7f);
+    this->kappa_ = static_cast<ValueType>(0.7);
 
     this->c_ = NULL;
     this->f_ = NULL;
@@ -138,7 +138,7 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void)
         this->U_[i]->Allocate("u", this->op_->GetM());
         this->P_[i]->Allocate("P", this->op_->GetM());
 
-        this->P_[i]->SetRandomNormal((i+1)*this->seed_, 0.0, 1.0);
+        this->P_[i]->SetRandomNormal((i + 1) * this->seed_, 0.0, 1.0);
     }
 
     if(this->precond_ != NULL)
@@ -316,9 +316,7 @@ template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                 VectorType* x)
 {
-    log_debug(this, "IDR::SolveNonPrecond_()", " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "IDR::SolveNonPrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -544,9 +542,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    log_debug(this, "IDR::SolvePrecond_()", " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "IDR::SolvePrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);

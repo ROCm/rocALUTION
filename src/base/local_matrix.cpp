@@ -2650,7 +2650,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(double t, int maxrow)
 #endif
 
     assert(maxrow > 0);
-    assert(t > double(0.0));
+    assert(t > 0.0);
 
     if(this->GetNnz() > 0)
     {
@@ -4420,7 +4420,7 @@ void LocalMatrix<ValueType>::Compress(double drop_off)
 {
     log_debug(this, "LocalMatrix::Compress()", drop_off);
 
-    assert(rocalution_abs(drop_off) >= double(0.0));
+    assert(rocalution_abs(drop_off) >= 0.0);
 
 #ifdef DEBUG_MODE
     this->Check();
@@ -4650,7 +4650,7 @@ void LocalMatrix<ValueType>::AMGConnect(ValueType eps, LocalVector<int>* connect
 {
     log_debug(this, "LocalMatrix::AMGConnect()", eps, connections);
 
-    assert(eps > ValueType(0.0));
+    assert(eps > static_cast<ValueType>(0));
     assert(connections != NULL);
 
     assert(((this->matrix_ == this->matrix_host_) &&
@@ -4792,7 +4792,7 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(ValueType relax,
               prolong,
               restrict);
 
-    assert(relax > ValueType(0.0));
+    assert(relax > static_cast<ValueType>(0));
     assert(prolong != NULL);
     assert(restrict != NULL);
     assert(this != prolong);
@@ -4978,8 +4978,8 @@ void LocalMatrix<ValueType>::RugeStueben(ValueType eps,
 {
     log_debug(this, "LocalMatrix::RugeStueben()", eps, prolong, restrict);
 
-    assert(eps < ValueType(1.0));
-    assert(eps > ValueType(0.0));
+    assert(eps < static_cast<ValueType>(1));
+    assert(eps > static_cast<ValueType>(0));
     assert(prolong != NULL);
     assert(restrict != NULL);
     assert(this != prolong);
@@ -5078,7 +5078,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(ValueType beta,
               ordering);
 
     assert(*rG == NULL);
-    assert(beta > ValueType(0.0));
+    assert(beta > static_cast<ValueType>(0));
     assert(G != NULL);
 
     assert(((this->matrix_ == this->matrix_host_) && (G->vector_ == G->vector_host_)) ||
@@ -5162,7 +5162,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
 
     assert(*rG == NULL);
     assert(&mat != this);
-    assert(beta > ValueType(0.0));
+    assert(beta > static_cast<ValueType>(0));
     assert(G != NULL);
 
     assert(((this->matrix_ == this->matrix_host_) && (mat.matrix_ == mat.matrix_host_) &&
@@ -5250,7 +5250,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(ValueType beta,
               ordering);
 
     assert(*rG != NULL);
-    assert(beta > ValueType(0.0));
+    assert(beta > static_cast<ValueType>(0));
     assert(G != NULL);
 
     assert(((this->matrix_ == this->matrix_host_) && (G->vector_ == G->vector_host_)) ||
@@ -5334,7 +5334,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
 
     assert(*rG != NULL);
     assert(&mat != this);
-    assert(beta > ValueType(0.0));
+    assert(beta > static_cast<ValueType>(0));
     assert(G != NULL);
 
     assert(((this->matrix_ == this->matrix_host_) && (mat.matrix_ == mat.matrix_host_) &&

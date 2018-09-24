@@ -15,89 +15,82 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class MultiColored : public Preconditioner<OperatorType, VectorType, ValueType> {
+class MultiColored : public Preconditioner<OperatorType, VectorType, ValueType>
+{
+    public:
+    MultiColored();
+    virtual ~MultiColored();
 
-public:
+    virtual void Clear(void);
 
-  MultiColored();
-  virtual ~MultiColored();
+    virtual void Build(void);
 
-  virtual void Clear(void);  
+    /// Set a specific matrix type of the decomposed block matrices;
+    /// if not set, CSR matrix format will be used
+    virtual void SetPrecondMatrixFormat(unsigned int mat_format);
 
-  virtual void Build(void);
+    /// Set if the preconditioner should be decomposed or not
+    virtual void SetDecomposition(bool decomp);
 
-  /// Set a specific matrix type of the decomposed block matrices;
-  /// if not set, CSR matrix format will be used
-  virtual void SetPrecondMatrixFormat(unsigned int mat_format);
+    virtual void Solve(const VectorType& rhs, VectorType* x);
 
-  /// Set if the preconditioner should be decomposed or not
-  virtual void SetDecomposition(bool decomp);
+    protected:
+    OperatorType* analyzer_op_;
+    OperatorType* preconditioner_;
 
-  virtual void Solve(const VectorType &rhs,
-                     VectorType *x);
+    OperatorType*** preconditioner_block_;
 
-protected:
+    VectorType** x_block_;
+    VectorType** diag_block_;
+    VectorType x_;
+    VectorType diag_;
 
-  OperatorType *analyzer_op_;
-  OperatorType *preconditioner_; 
+    Solver<OperatorType, VectorType, ValueType>** diag_solver_;
 
-  OperatorType ***preconditioner_block_; 
+    int num_blocks_;
+    int* block_sizes_;
 
-  VectorType **x_block_; 
-  VectorType **diag_block_; 
-  VectorType x_;
-  VectorType diag_;
+    /// Keep the precond matrix in CSR or not
+    bool op_mat_format_;
+    /// Precond matrix format
+    unsigned int precond_mat_format_;
 
-  Solver<OperatorType, VectorType, ValueType> **diag_solver_;
+    /// Decompose the preconditioner into blocks or not
+    bool decomp_;
 
-  int num_blocks_;
-  int *block_sizes_;
+    /// Extract the rhs into x under the permutation (see Analyse_()) and
+    /// decompose x into block (x_block_[])
+    virtual void ExtractRHSinX_(const VectorType& rhs, VectorType* x);
 
-  /// Keep the precond matrix in CSR or not
-  bool op_mat_format_; 
-  /// Precond matrix format
-  unsigned int precond_mat_format_;
+    /// Solve the lower-triangular (left) matrix
+    virtual void SolveL_(void) = 0;
+    /// Solve the diagonal part (only for SGS)
+    virtual void SolveD_(void) = 0;
+    /// Solve the upper-trianguler (right) matrix
+    virtual void SolveR_(void) = 0;
 
-  /// Decompose the preconditioner into blocks or not
-  bool decomp_;
+    /// Solve directly without block decomposition
+    virtual void Solve_(const VectorType& rhs, VectorType* x) = 0;
 
-  /// Extract the rhs into x under the permutation (see Analyse_()) and
-  /// decompose x into block (x_block_[])
-  virtual void ExtractRHSinX_(const VectorType &rhs,
-                              VectorType *x);
+    /// Insert the solution with backward permutation (from x_block_[])
+    virtual void InsertSolution_(VectorType* x);
 
-  /// Solve the lower-triangular (left) matrix
-  virtual void SolveL_(void) = 0;
-  /// Solve the diagonal part (only for SGS)
-  virtual void SolveD_(void) = 0;
-  /// Solve the upper-trianguler (right) matrix
-  virtual void SolveR_(void) = 0;
+    /// Build the analyzing matrix
+    virtual void Build_Analyser_(void);
+    /// Analyse the matrix (i.e. multi-coloring decomposition)
+    virtual void Analyse_(void);
+    /// Permute the preconditioning matrix
+    virtual void Permute_(void);
+    /// Factorize (i.e. build the preconditioner)
+    virtual void Factorize_(void);
+    /// Decompose the structure into blocks (preconditioner_block_[] for
+    /// the preconditioning matrix; and x_block_[] for the x vector)
+    virtual void Decompose_(void);
+    /// Post-analyzing if the preconditioner is not decomposed
+    virtual void PostAnalyse_(void);
 
-  /// Solve directly without block decomposition 
-  virtual void Solve_(const VectorType &rhs,
-                      VectorType *x) = 0;
-
-  /// Insert the solution with backward permutation (from x_block_[])
-  virtual void InsertSolution_(VectorType *x);
-
-  
-  /// Build the analyzing matrix
-  virtual void Build_Analyser_(void); 
-  /// Analyse the matrix (i.e. multi-coloring decomposition)
-  virtual void Analyse_(void);
-  /// Permute the preconditioning matrix
-  virtual void Permute_(void);
-  /// Factorize (i.e. build the preconditioner)
-  virtual void Factorize_(void);
-  /// Decompose the structure into blocks (preconditioner_block_[] for
-  /// the preconditioning matrix; and x_block_[] for the x vector)
-  virtual void Decompose_(void);
-  /// Post-analyzing if the preconditioner is not decomposed
-  virtual void PostAnalyse_(void);
-
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void) ;
-
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 };
 
 } // namespace rocalution

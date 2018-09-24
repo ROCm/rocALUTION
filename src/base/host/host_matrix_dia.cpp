@@ -276,7 +276,7 @@ void HostMatrixDIA<ValueType>::Apply(const BaseVector<ValueType>& in,
 #endif
         for(int i = 0; i < this->nrow_; ++i)
         {
-            ValueType sum = ValueType(0.0);
+            ValueType sum = static_cast<ValueType>(0);
 
             for(int j = 0; j < this->mat_.num_diag; ++j)
             {

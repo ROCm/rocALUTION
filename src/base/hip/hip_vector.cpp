@@ -1015,7 +1015,7 @@ int HIPAcceleratorVector<int>::Norm(void) const
 template <typename ValueType>
 ValueType HIPAcceleratorVector<ValueType>::Reduce(void) const
 {
-    ValueType res = (ValueType)0;
+    ValueType res = static_cast<ValueType>(0);
 
     if(this->size_ > 0)
     {

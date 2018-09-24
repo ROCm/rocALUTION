@@ -387,7 +387,7 @@ void HostMatrixCOO<ValueType>::Apply(const BaseVector<ValueType>& in,
 #endif
     for(int i = 0; i < this->nrow_; ++i)
     {
-        cast_out->vec_[i] = ValueType(0.0);
+        cast_out->vec_[i] = static_cast<ValueType>(0);
     }
 
     for(int i = 0; i < this->nnz_; ++i)

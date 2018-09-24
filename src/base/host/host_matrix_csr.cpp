@@ -722,7 +722,7 @@ void HostMatrixCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
 #endif
     for(int ai = 0; ai < this->nrow_; ++ai)
     {
-        ValueType sum = ValueType(0.0);
+        ValueType sum = static_cast<ValueType>(0);
         int row_beg   = this->mat_.row_offset[ai];
         int row_end   = this->mat_.row_offset[ai + 1];
 
@@ -816,7 +816,7 @@ bool HostMatrixCSR<ValueType>::ExtractInverseDiagonal(BaseVector<ValueType>* vec
         {
             if(ai == this->mat_.col[aj])
             {
-                cast_vec_inv_diag->vec_[ai] = ValueType(1.0) / this->mat_.val[aj];
+                cast_vec_inv_diag->vec_[ai] = static_cast<ValueType>(1) / this->mat_.val[aj];
                 break;
             }
         }
@@ -1483,7 +1483,7 @@ bool HostMatrixCSR<ValueType>::ILU0Factorize(void)
                 int col_j  = this->mat_.col[j];
                 int diag_j = diag_offset[col_j];
 
-                if(this->mat_.val[diag_j] != ValueType(0.0))
+                if(this->mat_.val[diag_j] != static_cast<ValueType>(0))
                 {
                     // multiplication factor
                     this->mat_.val[j] = this->mat_.val[j] / this->mat_.val[diag_j];
@@ -1569,7 +1569,7 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(double t, int maxrow)
 
         int row_begin   = this->mat_.row_offset[ai];
         int row_end     = this->mat_.row_offset[ai + 1];
-        double row_norm = double(0.0);
+        double row_norm = 0.0;
 
         // fill working array with ai-th row
         int m = 0;
@@ -1626,7 +1626,7 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(double t, int maxrow)
             if(aj < ai)
             {
                 // if zero diagonal entry do nothing
-                if(val[diag_offset[aj]] == ValueType(0.0))
+                if(val[diag_offset[aj]] == static_cast<ValueType>(0))
                 {
                     LOG_INFO("(ILUT) zero row");
                     continue;
@@ -1709,7 +1709,7 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(double t, int maxrow)
             }
 
             // clear working arrays
-            w[aj]          = ValueType(0.0);
+            w[aj]          = static_cast<ValueType>(0);
             nnz_entries[k] = -1;
             nnz_pos[aj]    = false;
         }
@@ -1793,11 +1793,11 @@ bool HostMatrixCSR<ValueType>::ICFactorize(BaseVector<ValueType>* inv_diag)
                 this->mat_.val[j] /=
                     this->mat_.val[this->mat_.row_offset[this->mat_.col[j] + 1] - 1];
             }
-            else if(this->mat_.val[j] > ValueType(0.0))
+            else if(this->mat_.val[j] > static_cast<ValueType>(0))
             {
                 // Fill diagonal part
                 this->mat_.val[j]  = sqrt(this->mat_.val[j]);
-                cast_diag->vec_[i] = ValueType(1.0) / this->mat_.val[j];
+                cast_diag->vec_[i] = static_cast<ValueType>(1) / this->mat_.val[j];
             }
             else
             {
@@ -2076,7 +2076,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& s
     //#pragma omp parallel for
     //#endif
     //  for (unsigned int i=0; i<this->nnz_; ++i)
-    //    this->mat_.val[i] = ValueType(1.0);
+    //    this->mat_.val[i] = static_cast<ValueType>(1);
 
     delete[] new_col;
 
@@ -2333,7 +2333,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& A
     //#pragma omp parallel for
     //#endif
     //      for (unsigned int i=0; i<this->nnz_; ++i)
-    //      this->mat_.val[i] = ValueType(1.0);
+    //      this->mat_.val[i] = static_cast<ValueType>(1);
 
     delete[] new_col;
 
@@ -2525,7 +2525,7 @@ bool HostMatrixCSR<ValueType>::ILUpFactorizeNumeric(int p, const BaseMatrix<Valu
 #endif
     for(int i = 0; i < cast_mat->nnz_; ++i)
     {
-        val[i] = ValueType(0.0);
+        val[i] = static_cast<ValueType>(0);
     }
 
 // fill levels and values
@@ -2561,7 +2561,7 @@ bool HostMatrixCSR<ValueType>::ILUpFactorizeNumeric(int p, const BaseMatrix<Valu
                 // aj = ak+1 to N
                 for(int aj = ak + 1; aj < cast_mat->mat_.row_offset[ai + 1]; ++aj)
                 {
-                    ValueType val_kj = ValueType(0.0);
+                    ValueType val_kj = static_cast<ValueType>(0);
                     int level_kj     = inf_level;
 
                     // find a_k,j
@@ -2595,7 +2595,7 @@ bool HostMatrixCSR<ValueType>::ILUpFactorizeNumeric(int p, const BaseMatrix<Valu
             if(levels[ak] > p)
             {
                 levels[ak] = inf_level;
-                val[ak]    = ValueType(0.0);
+                val[ak]    = static_cast<ValueType>(0);
             }
             else
             {
@@ -2796,8 +2796,8 @@ bool HostMatrixCSR<ValueType>::Gershgorin(ValueType& lambda_min, ValueType& lamb
 {
     _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
-    lambda_min = ValueType(0.0);
-    lambda_max = ValueType(0.0);
+    lambda_min = static_cast<ValueType>(0);
+    lambda_max = static_cast<ValueType>(0);
 
     // TODO (parallel max, min)
     //#ifdef _OPENMP
@@ -2806,8 +2806,8 @@ bool HostMatrixCSR<ValueType>::Gershgorin(ValueType& lambda_min, ValueType& lamb
 
     for(int ai = 0; ai < this->nrow_; ++ai)
     {
-        ValueType sum  = ValueType(0.0);
-        ValueType diag = ValueType(0.0);
+        ValueType sum  = static_cast<ValueType>(0);
+        ValueType diag = static_cast<ValueType>(0);
 
         for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
         {
@@ -3489,7 +3489,7 @@ bool HostMatrixCSR<ValueType>::CreateFromMap(const BaseVector<int>& map, int n, 
         }
 
         this->mat_.col[row_buffer[cast_map->vec_[i]]] = i;
-        this->mat_.val[i]                             = ValueType(1.0);
+        this->mat_.val[i]                             = static_cast<ValueType>(1);
         row_buffer[cast_map->vec_[i]]++;
     }
 
@@ -3541,7 +3541,7 @@ bool HostMatrixCSR<ValueType>::CreateFromMap(const BaseVector<int>& map,
 
         ++cast_pro->mat_.row_offset[i + 1];
         cast_pro->mat_.col[k] = cast_map->vec_[i];
-        cast_pro->mat_.val[k] = ValueType(1.0);
+        cast_pro->mat_.val[k] = static_cast<ValueType>(1);
         ++k;
     }
 
@@ -3817,7 +3817,7 @@ bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(ValueType relax,
         {
             // Diagonal of the filtered matrix is original matrix diagonal minus
             // its weak connections.
-            ValueType dia = ValueType(0.0);
+            ValueType dia = static_cast<ValueType>(0);
             for(int j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
             {
                 if(this->mat_.col[j] == i)
@@ -3830,7 +3830,7 @@ bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(ValueType relax,
                 }
             }
 
-            dia = ValueType(1.0) / dia;
+            dia = static_cast<ValueType>(1) / dia;
 
             int row_begin = cast_prolong->mat_.row_offset[i];
             int row_end   = row_begin;
@@ -3852,7 +3852,8 @@ bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(ValueType relax,
                     continue;
                 }
 
-                ValueType v = (c == i) ? ValueType(1.0) - relax : -relax * dia * this->mat_.val[j];
+                ValueType v =
+                    (c == i) ? static_cast<ValueType>(1) - relax : -relax * dia * this->mat_.val[j];
 
                 if(marker[g] < row_begin)
                 {
@@ -4006,13 +4007,13 @@ bool HostMatrixCSR<ValueType>::FSAI(int power, const BaseMatrix<ValueType>* patt
             int aj = this->mat_.row_offset[ai];
             if(this->mat_.col[aj] == ai)
             {
-                val[row_offset[ai]] = ValueType(1.0) / this->mat_.val[aj];
+                val[row_offset[ai]] = static_cast<ValueType>(1) / this->mat_.val[aj];
             }
         }
         else
         {
             // create submatrix taking only the lower tridiagonal part into account
-            std::vector<ValueType> Asub(nnz_row * nnz_row, ValueType(0.0));
+            std::vector<ValueType> Asub(nnz_row * nnz_row, static_cast<ValueType>(0));
 
             for(int k = 0; k < nnz_row; ++k)
             {
@@ -4044,8 +4045,8 @@ bool HostMatrixCSR<ValueType>::FSAI(int power, const BaseMatrix<ValueType>* patt
                 }
             }
 
-            std::vector<ValueType> mk(nnz_row, ValueType(0.0));
-            mk[nnz_row - 1] = ValueType(1.0);
+            std::vector<ValueType> mk(nnz_row, static_cast<ValueType>(0));
+            mk[nnz_row - 1] = static_cast<ValueType>(1);
 
             // compute inplace LU factorization of Asub
             for(int i = 0; i < nnz_row - 1; ++i)
@@ -4086,7 +4087,8 @@ bool HostMatrixCSR<ValueType>::FSAI(int power, const BaseMatrix<ValueType>* patt
 #endif
     for(int ai = 0; ai < nrow; ++ai)
     {
-        ValueType fac = sqrt(ValueType(1.0) / rocalution_abs(val[row_offset[ai + 1] - 1]));
+        ValueType fac =
+            sqrt(static_cast<ValueType>(1) / rocalution_abs(val[row_offset[ai + 1] - 1]));
 
         for(int aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
@@ -4273,11 +4275,11 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
         {
             if(this->mat_.col[j] == i)
             {
-                sign_diag = (this->mat_.val[j] < ValueType(0.0)) ? -1 : 1;
+                sign_diag = (this->mat_.val[j] < static_cast<ValueType>(0)) ? -1 : 1;
             }
         }
 
-        ValueType val = ValueType(0.0);
+        ValueType val = static_cast<ValueType>(0);
 
         // Look up val = max|a_ik| with i != k and a_ik < 0 if a_ii > 0 or a_ik > 0 if a_ii < 0
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
@@ -4297,7 +4299,7 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
         }
 
         // if val is zero -> i is independent of other grid points
-        if(val == ValueType(0.0))
+        if(val == static_cast<ValueType>(0))
         {
             connect[i] = 0;
             continue;
@@ -4513,8 +4515,8 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
             continue;
         }
 
-        ValueType amin = ValueType(0.0);
-        ValueType amax = ValueType(0.0);
+        ValueType amin = static_cast<ValueType>(0);
+        ValueType amax = static_cast<ValueType>(0);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {
@@ -4527,8 +4529,8 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
             amax = (amax > this->mat_.val[j]) ? amax : this->mat_.val[j];
         }
 
-        Amin[i] = amin = amin * ValueType(0.2f);
-        Amax[i] = amax = amax * ValueType(0.2f);
+        Amin[i] = amin = amin * static_cast<ValueType>(0.2);
+        Amax[i] = amax = amax * static_cast<ValueType>(0.2);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {
@@ -4567,14 +4569,14 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
         if(connect[i] == 1)
         {
             cast_prolong->mat_.col[row_head] = cidx[i];
-            cast_prolong->mat_.val[row_head] = ValueType(1.0);
+            cast_prolong->mat_.val[row_head] = static_cast<ValueType>(1);
             continue;
         }
 
-        ValueType diag  = ValueType(0.0);
-        ValueType a_num = ValueType(0.0), a_den = ValueType(0.0);
-        ValueType b_num = ValueType(0.0), b_den = ValueType(0.0);
-        ValueType d_neg = ValueType(0.0), d_pos = ValueType(0.0);
+        ValueType diag  = static_cast<ValueType>(0);
+        ValueType a_num = static_cast<ValueType>(0), a_den = static_cast<ValueType>(0);
+        ValueType b_num = static_cast<ValueType>(0), b_den = static_cast<ValueType>(0);
+        ValueType d_neg = static_cast<ValueType>(0), d_pos = static_cast<ValueType>(0);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {
@@ -4587,7 +4589,7 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
                 continue;
             }
 
-            if(v < ValueType(0.0))
+            if(v < static_cast<ValueType>(0))
             {
                 a_num += v;
                 if(S_val[j] && connect[c] == 1)
@@ -4613,8 +4615,8 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
             }
         }
 
-        ValueType cf_neg = ValueType(1.0);
-        ValueType cf_pos = ValueType(1.0);
+        ValueType cf_neg = static_cast<ValueType>(1);
+        ValueType cf_pos = static_cast<ValueType>(1);
 
         if(rocalution_abs(a_den - d_neg) > 1e-32)
         {
@@ -4626,15 +4628,15 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
             cf_pos = b_den / (b_den - d_pos);
         }
 
-        if(b_num > ValueType(0.0) && rocalution_abs(b_den) < 1e-32)
+        if(b_num > static_cast<ValueType>(0) && rocalution_abs(b_den) < 1e-32)
         {
             diag += b_num;
         }
 
-        ValueType alpha =
-            rocalution_abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : ValueType(0.0);
-        ValueType beta =
-            rocalution_abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : ValueType(0.0);
+        ValueType alpha = rocalution_abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den)
+                                                        : static_cast<ValueType>(0);
+        ValueType beta = rocalution_abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den)
+                                                       : static_cast<ValueType>(0);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {
@@ -4652,7 +4654,7 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
             }
 
             cast_prolong->mat_.col[row_head] = cidx[c];
-            cast_prolong->mat_.val[row_head] = (v < ValueType(0.0) ? alpha : beta) * v;
+            cast_prolong->mat_.val[row_head] = (v < static_cast<ValueType>(0) ? alpha : beta) * v;
             ++row_head;
         }
     }
@@ -4723,7 +4725,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType beta,
     // Build U
     for(int i = 0; i < this->nrow_; ++i)
     {
-        ValueType sum = ValueType(0.0);
+        ValueType sum = static_cast<ValueType>(0);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {
@@ -4737,7 +4739,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType beta,
             }
         }
 
-        sum *= ValueType(5.0);
+        sum *= static_cast<ValueType>(5);
 
         if(this->mat_.val[ind_diag[i]] > sum)
         {
@@ -4757,7 +4759,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType beta,
     }
 
     nc              = 0;
-    ValueType betam = ValueType(-1.0) * beta;
+    ValueType betam = -beta;
 
     // Ordering
     HostVector<int> perm(this->local_backend_);
@@ -4819,11 +4821,11 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType beta,
         (*rG)[nc]       = i;
 
         // Determine minimum and maximum offdiagonal entry and j index
-        ValueType min_a_ij = ValueType(0.0);
-        ValueType max_a_ij = ValueType(0.0);
+        ValueType min_a_ij = static_cast<ValueType>(0);
+        ValueType max_a_ij = static_cast<ValueType>(0);
         int min_j          = -1;
         bool neg           = false;
-        if(this->mat_.val[ind_diag[i]] < ValueType(0.0))
+        if(this->mat_.val[ind_diag[i]] < static_cast<ValueType>(0))
         {
             neg = true;
         }
@@ -4835,7 +4837,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType beta,
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             if(i == col_j)
@@ -4875,7 +4877,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType beta,
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             // Add j if conditions are fulfilled
@@ -4925,7 +4927,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
     // Build U
     for(int i = 0; i < this->nrow_; ++i)
     {
-        ValueType sum = ValueType(0.0);
+        ValueType sum = static_cast<ValueType>(0);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {
@@ -4944,7 +4946,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
             sum += rocalution_abs(cast_mat->mat_.val[j]);
         }
 
-        sum *= ValueType(5.0);
+        sum *= static_cast<ValueType>(5);
 
         if(this->mat_.val[ind_diag[i]] > sum)
         {
@@ -4964,7 +4966,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
     }
 
     nc              = 0;
-    ValueType betam = ValueType(-1.0) * beta;
+    ValueType betam = -beta;
 
     // Ordering
     HostVector<int> perm(this->local_backend_);
@@ -5026,11 +5028,11 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
         (*rG)[nc]       = i;
 
         // Determine minimum and maximum offdiagonal entry and j index
-        ValueType min_a_ij = ValueType(0.0);
-        ValueType max_a_ij = ValueType(0.0);
+        ValueType min_a_ij = static_cast<ValueType>(0);
+        ValueType max_a_ij = static_cast<ValueType>(0);
         int min_j          = -1;
         bool neg           = false;
-        if(this->mat_.val[ind_diag[i]] < ValueType(0.0))
+        if(this->mat_.val[ind_diag[i]] < static_cast<ValueType>(0))
         {
             neg = true;
         }
@@ -5042,7 +5044,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             if(i == col_j)
@@ -5078,7 +5080,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             if(val_j > max_a_ij)
@@ -5099,7 +5101,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
 
                 if(neg == true)
                 {
-                    val_j *= ValueType(-1.0);
+                    val_j *= static_cast<ValueType>(-1);
                 }
 
                 // Skip diagonal
@@ -5170,7 +5172,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(ValueType beta,
     set_to_zero_host(this->nrow_, U);
 
     nc              = 0;
-    ValueType betam = ValueType(-1.0) * beta;
+    ValueType betam = -beta;
 
     // Ordering
     HostVector<int> perm(this->local_backend_);
@@ -5245,7 +5247,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(ValueType beta,
         {
             if(i == this->mat_.col[j])
             {
-                if(this->mat_.val[j] < ValueType(0.0))
+                if(this->mat_.val[j] < static_cast<ValueType>(0))
                 {
                     neg = true;
                 }
@@ -5255,8 +5257,8 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(ValueType beta,
         }
 
         // Determine minimum and maximum offdiagonal entry and j index
-        ValueType min_a_ij = ValueType(0.0);
-        ValueType max_a_ij = ValueType(0.0);
+        ValueType min_a_ij = static_cast<ValueType>(0);
+        ValueType max_a_ij = static_cast<ValueType>(0);
         int min_j          = -1;
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
@@ -5266,7 +5268,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(ValueType beta,
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             if(i == col_j)
@@ -5307,7 +5309,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(ValueType beta,
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             // Add j if conditions are fulfilled
@@ -5379,7 +5381,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const BaseMatrix<Value
     set_to_zero_host(this->nrow_, U);
 
     nc              = 0;
-    ValueType betam = ValueType(-1.0) * beta;
+    ValueType betam = -beta;
 
     // Ordering
     HostVector<int> perm(this->local_backend_);
@@ -5454,7 +5456,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const BaseMatrix<Value
         {
             if(i == this->mat_.col[j])
             {
-                if(this->mat_.val[j] < ValueType(0.0))
+                if(this->mat_.val[j] < static_cast<ValueType>(0))
                 {
                     neg = true;
                 }
@@ -5464,8 +5466,8 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const BaseMatrix<Value
         }
 
         // Determine minimum and maximum offdiagonal entry and j index
-        ValueType min_a_ij = ValueType(0.0);
-        ValueType max_a_ij = ValueType(0.0);
+        ValueType min_a_ij = static_cast<ValueType>(0);
+        ValueType max_a_ij = static_cast<ValueType>(0);
         int min_j          = -1;
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
@@ -5475,7 +5477,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const BaseMatrix<Value
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             if(i == col_j)
@@ -5511,7 +5513,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const BaseMatrix<Value
 
             if(neg == true)
             {
-                val_j *= ValueType(-1.0);
+                val_j *= static_cast<ValueType>(-1);
             }
 
             if(val_j > max_a_ij)
@@ -5532,7 +5534,7 @@ bool HostMatrixCSR<ValueType>::FurtherPairwiseAggregation(const BaseMatrix<Value
 
                 if(neg == true)
                 {
-                    val_j *= ValueType(-1.0);
+                    val_j *= static_cast<ValueType>(-1);
                 }
 
                 // Skip diagonal
@@ -5750,7 +5752,7 @@ bool HostMatrixCSR<ValueType>::Key(long int& row_key, long int& col_key, long in
             col_sign = sgn(row_tmp - (col_mask | this->mat_.col[aj]));
             col_tmp  = col_mask | this->mat_.col[aj];
 
-            double double_val = double(rocalution_abs(this->mat_.val[aj]));
+            double double_val = rocalution_abs(this->mat_.val[aj]);
             long int val      = 0;
 
             assert(sizeof(long int) == sizeof(double));
@@ -5815,12 +5817,12 @@ bool HostMatrixCSR<ValueType>::ReplaceColumnVector(int idx, const BaseVector<Val
                 }
             }
 
-            if(add == true && cast_vec->vec_[i] != ValueType(0.0))
+            if(add == true && cast_vec->vec_[i] != static_cast<ValueType>(0))
             {
                 ++row_offset[i + 1];
             }
 
-            if(add == false && cast_vec->vec_[i] == ValueType(0.0))
+            if(add == false && cast_vec->vec_[i] == static_cast<ValueType>(0))
             {
                 --row_offset[i + 1];
             }
@@ -5859,7 +5861,7 @@ bool HostMatrixCSR<ValueType>::ReplaceColumnVector(int idx, const BaseVector<Val
                 }
             }
 
-            if(cast_vec->vec_[i] != ValueType(0.0))
+            if(cast_vec->vec_[i] != static_cast<ValueType>(0))
             {
                 col[k] = idx;
                 val[k] = cast_vec->vec_[i];
@@ -5904,7 +5906,7 @@ bool HostMatrixCSR<ValueType>::ExtractColumnVector(int idx, BaseVector<ValueType
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             // Initialize with zero
-            cast_vec->vec_[ai] = ValueType(0.0);
+            cast_vec->vec_[ai] = static_cast<ValueType>(0);
 
             for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
@@ -5945,7 +5947,7 @@ bool HostMatrixCSR<ValueType>::ReplaceRowVector(int idx, const BaseVector<ValueT
 
         for(int i = 0; i < ncol; ++i)
         {
-            if(cast_vec->vec_[i] != ValueType(0.0))
+            if(cast_vec->vec_[i] != static_cast<ValueType>(0))
             {
                 ++nnz_idx;
             }
@@ -5997,7 +5999,7 @@ bool HostMatrixCSR<ValueType>::ReplaceRowVector(int idx, const BaseVector<ValueT
 
                 for(int j = 0; j < ncol; ++j)
                 {
-                    if(cast_vec->vec_[j] != ValueType(0.0))
+                    if(cast_vec->vec_[j] != static_cast<ValueType>(0))
                     {
                         col[k] = j;
                         val[k] = cast_vec->vec_[j];

@@ -875,7 +875,8 @@ void GlobalMatrix<ValueType>::Apply(const GlobalVector<ValueType>& in,
 
     out->UpdateGhostValuesSync();
 
-    this->matrix_ghost_.ApplyAdd(out->vector_ghost_, (ValueType)1, &out->vector_interior_);
+    this->matrix_ghost_.ApplyAdd(
+        out->vector_ghost_, static_cast<ValueType>(1), &out->vector_interior_);
 }
 
 template <typename ValueType>

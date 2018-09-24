@@ -237,7 +237,7 @@ void HostMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType>& in,
 #endif
     for(int ai = 0; ai < this->nrow_; ++ai)
     {
-        cast_out->vec_[ai] = ValueType(0.0);
+        cast_out->vec_[ai] = static_cast<ValueType>(0);
         for(int aj = 0; aj < this->ncol_; ++aj)
         {
             cast_out->vec_[ai] +=
@@ -303,7 +303,7 @@ bool HostMatrixDENSE<ValueType>::MatMatMult(const BaseMatrix<ValueType>& A,
     {
         for(int j = 0; j < cast_mat_B->ncol_; ++j)
         {
-            ValueType sum = ValueType(0.0);
+            ValueType sum = static_cast<ValueType>(0);
 
             for(int k = 0; k < cast_mat_A->ncol_; ++k)
             {
@@ -327,7 +327,7 @@ bool HostMatrixDENSE<ValueType>::Householder(int idx,
     assert(cast_vec != NULL);
     assert(cast_vec->GetSize() >= this->nrow_ - idx);
 
-    ValueType s = ValueType(0.0);
+    ValueType s = static_cast<ValueType>(0);
 
     for(int i = 1; i < this->nrow_ - idx; ++i)
     {
@@ -339,15 +339,15 @@ bool HostMatrixDENSE<ValueType>::Householder(int idx,
         s += cast_vec->vec_[i - idx] * cast_vec->vec_[i - idx];
     }
 
-    if(s == ValueType(0.0))
+    if(s == static_cast<ValueType>(0))
     {
-        beta = ValueType(0.0);
+        beta = static_cast<ValueType>(0);
     }
     else
     {
         ValueType aii = this->mat_.val[DENSE_IND(idx, idx, this->nrow_, this->ncol_)];
 
-        if(aii <= ValueType(0.0))
+        if(aii <= static_cast<ValueType>(0))
         {
             aii -= sqrt(aii * aii + s);
         }
@@ -357,9 +357,9 @@ bool HostMatrixDENSE<ValueType>::Householder(int idx,
         }
 
         ValueType squared = aii * aii;
-        beta              = ValueType(2.0) * squared / (s + squared);
+        beta              = static_cast<ValueType>(2) * squared / (s + squared);
 
-        aii = ValueType(1.0) / aii;
+        aii = static_cast<ValueType>(1) / aii;
         for(int i = 1; i < this->nrow_ - idx; ++i)
         {
             cast_vec->vec_[i] *= aii;
@@ -385,7 +385,7 @@ bool HostMatrixDENSE<ValueType>::QRDecompose(void)
     {
         this->Householder(i, beta, &v);
 
-        if(beta != ValueType(0.0))
+        if(beta != static_cast<ValueType>(0))
         {
             for(int aj = i; aj < this->ncol_; ++aj)
             {
@@ -438,16 +438,16 @@ bool HostMatrixDENSE<ValueType>::QRSolve(const BaseVector<ValueType>& in,
     // Apply Q^T on copy_in
     for(int i = 0; i < size; ++i)
     {
-        ValueType sum = ValueType(1.0);
+        ValueType sum = static_cast<ValueType>(1);
         for(int j = i + 1; j < this->nrow_; ++j)
         {
             sum += this->mat_.val[DENSE_IND(j, i, this->nrow_, this->ncol_)] *
                    this->mat_.val[DENSE_IND(j, i, this->nrow_, this->ncol_)];
         }
 
-        sum = ValueType(2.0) / sum;
+        sum = static_cast<ValueType>(2) / sum;
 
-        if(sum != ValueType(2.0))
+        if(sum != static_cast<ValueType>(2))
         {
             ValueType sum2 = copy_in.vec_[i];
             for(int j = i + 1; j < this->nrow_; ++j)
@@ -468,7 +468,7 @@ bool HostMatrixDENSE<ValueType>::QRSolve(const BaseVector<ValueType>& in,
     // Backsolve Rx = Q^T b
     for(int i = size - 1; i >= 0; --i)
     {
-        ValueType sum = ValueType(0.0);
+        ValueType sum = static_cast<ValueType>(0);
         for(int j = i + 1; j < this->ncol_; ++j)
         {
             sum += this->mat_.val[DENSE_IND(i, j, this->nrow_, this->ncol_)] * cast_out->vec_[j];
@@ -504,7 +504,7 @@ bool HostMatrixDENSE<ValueType>::Invert(void)
         sol.Allocate(this->nrow_);
         rhs.Allocate(this->nrow_);
 
-        rhs.vec_[i] = ValueType(1.0);
+        rhs.vec_[i] = static_cast<ValueType>(1);
 
         this->QRSolve(rhs, &sol);
 

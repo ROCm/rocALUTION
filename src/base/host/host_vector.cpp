@@ -280,7 +280,7 @@ void HostVector<double>::CopyFromFloat(const BaseVector<float>& vec)
 #endif
         for(int i = 0; i < this->size_; ++i)
         {
-            this->vec_[i] = double(cast_vec->vec_[i]);
+            this->vec_[i] = static_cast<double>(cast_vec->vec_[i]);
         }
     }
     else
@@ -326,7 +326,7 @@ void HostVector<float>::CopyFromDouble(const BaseVector<double>& vec)
 #endif
         for(int i = 0; i < this->size_; ++i)
         {
-            this->vec_[i] = float(cast_vec->vec_[i]);
+            this->vec_[i] = static_cast<float>(cast_vec->vec_[i]);
         }
     }
     else
@@ -346,7 +346,7 @@ void HostVector<ValueType>::Zeros(void)
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        this->vec_[i] = ValueType(0.0);
+        this->vec_[i] = static_cast<ValueType>(0);
     }
 }
 
@@ -360,7 +360,7 @@ void HostVector<ValueType>::Ones(void)
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        this->vec_[i] = ValueType(1.0);
+        this->vec_[i] = static_cast<ValueType>(1);
     }
 }
 
@@ -387,7 +387,8 @@ void HostVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType 
     srand(seed);
     for(int i = 0; i < this->size_; ++i)
     {
-        this->vec_[i] = a + (ValueType)rand() / (ValueType)RAND_MAX * (b - a);
+        this->vec_[i] =
+            a + static_cast<ValueType>(rand()) / static_cast<ValueType>(RAND_MAX) * (b - a);
     }
 }
 
@@ -669,7 +670,7 @@ ValueType HostVector<ValueType>::Dot(const BaseVector<ValueType>& x) const
     assert(cast_x != NULL);
     assert(this->size_ == cast_x->size_);
 
-    ValueType dot = ValueType(0.0);
+    ValueType dot = static_cast<ValueType>(0);
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -694,8 +695,8 @@ HostVector<std::complex<float>>::Dot(const BaseVector<std::complex<float>>& x) c
     assert(cast_x != NULL);
     assert(this->size_ == cast_x->size_);
 
-    float dot_real = float(0.0);
-    float dot_imag = float(0.0);
+    float dot_real = 0.0f;
+    float dot_imag = 0.0f;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -723,8 +724,8 @@ HostVector<std::complex<double>>::Dot(const BaseVector<std::complex<double>>& x)
     assert(cast_x != NULL);
     assert(this->size_ == cast_x->size_);
 
-    double dot_real = double(0.0);
-    double dot_imag = double(0.0);
+    double dot_real = 0.0;
+    double dot_imag = 0.0;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -758,8 +759,8 @@ HostVector<std::complex<float>>::DotNonConj(const BaseVector<std::complex<float>
     assert(cast_x != NULL);
     assert(this->size_ == cast_x->size_);
 
-    float dot_real = float(0.0);
-    float dot_imag = float(0.0);
+    float dot_real = 0.0f;
+    float dot_imag = 0.0f;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -787,8 +788,8 @@ HostVector<std::complex<double>>::DotNonConj(const BaseVector<std::complex<doubl
     assert(cast_x != NULL);
     assert(this->size_ == cast_x->size_);
 
-    double dot_real = double(0.0);
-    double dot_imag = double(0.0);
+    double dot_real = 0.0;
+    double dot_imag = 0.0;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -809,7 +810,7 @@ HostVector<std::complex<double>>::DotNonConj(const BaseVector<std::complex<doubl
 template <typename ValueType>
 ValueType HostVector<ValueType>::Asum(void) const
 {
-    ValueType asum = ValueType(0.0);
+    ValueType asum = static_cast<ValueType>(0);
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -827,8 +828,8 @@ ValueType HostVector<ValueType>::Asum(void) const
 template <>
 std::complex<float> HostVector<std::complex<float>>::Asum(void) const
 {
-    float asum_real = float(0.0);
-    float asum_imag = float(0.0);
+    float asum_real = 0.0f;
+    float asum_imag = 0.0f;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -847,8 +848,8 @@ std::complex<float> HostVector<std::complex<float>>::Asum(void) const
 template <>
 std::complex<double> HostVector<std::complex<double>>::Asum(void) const
 {
-    double asum_real = double(0.0);
-    double asum_imag = double(0.0);
+    double asum_real = 0.0;
+    double asum_imag = 0.0;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -868,7 +869,7 @@ template <typename ValueType>
 int HostVector<ValueType>::Amax(ValueType& value) const
 {
     int index = 0;
-    value     = ValueType(0.0);
+    value     = static_cast<ValueType>(0);
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -897,7 +898,7 @@ int HostVector<ValueType>::Amax(ValueType& value) const
 template <typename ValueType>
 ValueType HostVector<ValueType>::Norm(void) const
 {
-    ValueType norm2 = ValueType(0.0);
+    ValueType norm2 = static_cast<ValueType>(0);
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -915,7 +916,7 @@ ValueType HostVector<ValueType>::Norm(void) const
 template <>
 std::complex<float> HostVector<std::complex<float>>::Norm(void) const
 {
-    float norm2 = float(0.0);
+    float norm2 = 0.0f;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -928,7 +929,7 @@ std::complex<float> HostVector<std::complex<float>>::Norm(void) const
                  this->vec_[i].imag() * this->vec_[i].imag();
     }
 
-    std::complex<float> res(sqrt(norm2), float(0.0));
+    std::complex<float> res(sqrt(norm2), 0.0f);
 
     return res;
 }
@@ -936,7 +937,7 @@ std::complex<float> HostVector<std::complex<float>>::Norm(void) const
 template <>
 std::complex<double> HostVector<std::complex<double>>::Norm(void) const
 {
-    double norm2 = double(0.0);
+    double norm2 = 0.0;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -949,7 +950,7 @@ std::complex<double> HostVector<std::complex<double>>::Norm(void) const
                  this->vec_[i].imag() * this->vec_[i].imag();
     }
 
-    std::complex<double> res(sqrt(norm2), double(0.0));
+    std::complex<double> res(sqrt(norm2), 0.0);
 
     return res;
 }
@@ -964,7 +965,7 @@ int HostVector<int>::Norm(void) const
 template <typename ValueType>
 ValueType HostVector<ValueType>::Reduce(void) const
 {
-    ValueType reduce = ValueType(0.0);
+    ValueType reduce = static_cast<ValueType>(0);
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -982,8 +983,8 @@ ValueType HostVector<ValueType>::Reduce(void) const
 template <>
 std::complex<float> HostVector<std::complex<float>>::Reduce(void) const
 {
-    float reduce_real = float(0.0);
-    float reduce_imag = float(0.0);
+    float reduce_real = 0.0f;
+    float reduce_imag = 0.0f;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -1002,8 +1003,8 @@ std::complex<float> HostVector<std::complex<float>>::Reduce(void) const
 template <>
 std::complex<double> HostVector<std::complex<double>>::Reduce(void) const
 {
-    double reduce_real = double(0.0);
-    double reduce_imag = double(0.0);
+    double reduce_real = 0.0;
+    double reduce_imag = 0.0;
 
     _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -1234,7 +1235,7 @@ bool HostVector<ValueType>::Prolongation(const BaseVector<ValueType>& vec_coarse
         }
         else
         {
-            this->vec_[i] = ValueType(0.0);
+            this->vec_[i] = static_cast<ValueType>(0);
         }
     }
 
@@ -1411,7 +1412,7 @@ void HostVector<ValueType>::Power(double power)
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        this->vec_[i] = pow(this->vec_[i], ValueType(power));
+        this->vec_[i] = pow(this->vec_[i], static_cast<ValueType>(power));
     }
 }
 
@@ -1425,7 +1426,7 @@ void HostVector<std::complex<float>>::Power(double power)
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        this->vec_[i] = pow(this->vec_[i], std::complex<float>(float(power)));
+        this->vec_[i] = pow(this->vec_[i], std::complex<float>(static_cast<float>(power)));
     }
 }
 

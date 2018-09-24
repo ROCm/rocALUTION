@@ -14,40 +14,36 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class RugeStuebenAMG : public BaseAMG<OperatorType, VectorType, ValueType> {
+class RugeStuebenAMG : public BaseAMG<OperatorType, VectorType, ValueType>
+{
+    public:
+    RugeStuebenAMG();
+    virtual ~RugeStuebenAMG();
 
-public:
+    virtual void Print(void) const;
 
-  RugeStuebenAMG();
-  virtual ~RugeStuebenAMG();
+    /// Build AMG smoothers
+    virtual void BuildSmoothers(void);
 
-  virtual void Print(void) const;
+    /// Sets coupling strength
+    virtual void SetCouplingStrength(ValueType eps);
 
-  /// Build AMG smoothers
-  virtual void BuildSmoothers(void);
+    /// Rebuild coarser operators with previous intergrid operators
+    virtual void ReBuildNumeric(void);
 
-  /// Sets coupling strength
-  virtual void SetCouplingStrength(ValueType eps);
+    protected:
+    /// Constructs the prolongation, restriction and coarse operator
+    virtual void Aggregate(const OperatorType& op,
+                           Operator<ValueType>* pro,
+                           Operator<ValueType>* res,
+                           OperatorType* coarse);
 
-  /// Rebuild coarser operators with previous intergrid operators
-  virtual void ReBuildNumeric(void);
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-protected:
-
-  /// Constructs the prolongation, restriction and coarse operator
-  virtual void Aggregate(const OperatorType &op,
-                         Operator<ValueType> *pro,
-                         Operator<ValueType> *res,
-                         OperatorType *coarse);
-
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
-
-private:
-
-  /// Coupling coefficient
-  ValueType eps_;
-
+    private:
+    /// Coupling coefficient
+    ValueType eps_;
 };
 
 } // namespace rocalution

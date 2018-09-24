@@ -11,32 +11,28 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class Inversion : public DirectLinearSolver<OperatorType, VectorType, ValueType> {
+class Inversion : public DirectLinearSolver<OperatorType, VectorType, ValueType>
+{
+    public:
+    Inversion();
+    virtual ~Inversion();
 
-public:
+    virtual void Print(void) const;
 
-  Inversion();
-  virtual ~Inversion();
+    virtual void Build(void);
+    virtual void Clear(void);
 
-  virtual void Print(void) const;
+    protected:
+    virtual void Solve_(const VectorType& rhs, VectorType* x);
 
-  virtual void Build(void);
-  virtual void Clear(void);
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-protected:
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 
-  virtual void Solve_(const VectorType &rhs, VectorType *x);
-
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
-
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void);
-
-private:
-
-  OperatorType inverse_;
-
+    private:
+    OperatorType inverse_;
 };
 
 } // namespace rocalution

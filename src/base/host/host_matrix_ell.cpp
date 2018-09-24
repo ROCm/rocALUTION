@@ -265,7 +265,7 @@ void HostMatrixELL<ValueType>::Apply(const BaseVector<ValueType>& in,
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            ValueType sum = ValueType(0.0);
+            ValueType sum = static_cast<ValueType>(0);
 
             for(int n = 0; n < this->mat_.max_row; ++n)
             {

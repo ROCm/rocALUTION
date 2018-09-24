@@ -13,37 +13,31 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class CR : public IterativeLinearSolver<OperatorType, VectorType, ValueType> {
+class CR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
+{
+    public:
+    CR();
+    virtual ~CR();
 
-public:
+    virtual void Print(void) const;
 
-  CR();
-  virtual ~CR();
+    virtual void Build(void);
+    virtual void ReBuildNumeric(void);
+    virtual void Clear(void);
 
-  virtual void Print(void) const;
+    protected:
+    virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
+    virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
-  virtual void Build(void);
-  virtual void ReBuildNumeric(void);
-  virtual void Clear(void);
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-protected:
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 
-  virtual void SolveNonPrecond_(const VectorType &rhs,
-                                VectorType *x);
-  virtual void SolvePrecond_(const VectorType &rhs,
-                             VectorType *x);
-
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
-
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void);
-
-private:
-
-  VectorType r_, z_, t_;
-  VectorType p_, q_, v_;
-
+    private:
+    VectorType r_, z_, t_;
+    VectorType p_, q_, v_;
 };
 
 } // namespace rocalution

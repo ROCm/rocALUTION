@@ -342,8 +342,8 @@ class LocalMatrix : public Operator<ValueType>
     /// if structure==false the sparsity pattern of the matrix is not changed;
     /// if structure==true a new sparsity pattern is computed
     void MatrixAdd(const LocalMatrix<ValueType>& mat,
-                   ValueType alpha = ValueType(1.0),
-                   ValueType beta  = ValueType(1.0),
+                   ValueType alpha = static_cast<ValueType>(1),
+                   ValueType beta  = static_cast<ValueType>(1),
                    bool structure  = false);
 
     /// Multiply two matrices, this = A * B

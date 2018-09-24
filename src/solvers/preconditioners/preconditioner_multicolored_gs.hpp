@@ -16,54 +16,46 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType> {
+class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType>
+{
+    public:
+    MultiColoredSGS();
+    virtual ~MultiColoredSGS();
 
-public:
+    virtual void Print(void) const;
 
-  MultiColoredSGS();
-  virtual ~MultiColoredSGS();
+    virtual void ReBuildNumeric(void);
 
-  virtual void Print(void) const;  
+    /// Set the relaxation parameter for the SOR/SSOR scheme
+    virtual void SetRelaxation(ValueType omega);
 
-  virtual void ReBuildNumeric(void);
+    protected:
+    virtual void PostAnalyse_(void);
 
-  /// Set the relaxation parameter for the SOR/SSOR scheme
-  virtual void SetRelaxation(ValueType omega);
+    virtual void SolveL_(void);
+    virtual void SolveD_(void);
+    virtual void SolveR_(void);
+    virtual void Solve_(const VectorType& rhs, VectorType* x);
 
-protected:
-
-  virtual void PostAnalyse_(void);
-
-  virtual void SolveL_(void);
-  virtual void SolveD_(void);
-  virtual void SolveR_(void);
-  virtual void Solve_(const VectorType &rhs,
-                      VectorType *x);  
-
-  ValueType omega_;
-
+    ValueType omega_;
 };
 
 template <class OperatorType, class VectorType, typename ValueType>
-class MultiColoredGS : public MultiColoredSGS<OperatorType, VectorType, ValueType> {
+class MultiColoredGS : public MultiColoredSGS<OperatorType, VectorType, ValueType>
+{
+    public:
+    MultiColoredGS();
+    virtual ~MultiColoredGS();
 
-public:
+    virtual void Print(void) const;
 
-  MultiColoredGS();
-  virtual ~MultiColoredGS();
+    protected:
+    virtual void PostAnalyse_(void);
 
-  virtual void Print(void) const;  
-
-protected:
-
-  virtual void PostAnalyse_(void);
-
-  virtual void SolveL_(void);
-  virtual void SolveD_(void);
-  virtual void SolveR_(void);
-  virtual void Solve_(const VectorType &rhs,
-                      VectorType *x);
-
+    virtual void SolveL_(void);
+    virtual void SolveD_(void);
+    virtual void SolveR_(void);
+    virtual void Solve_(const VectorType& rhs, VectorType* x);
 };
 
 } // namespace rocalution

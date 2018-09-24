@@ -31,7 +31,7 @@ bool operator<(const std::complex<ValueType>& lhs, const std::complex<ValueType>
         return false;
     }
 
-    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == static_cast<ValueType>(0));
 
     return lhs.real() < rhs.real();
 }
@@ -44,7 +44,7 @@ bool operator>(const std::complex<ValueType>& lhs, const std::complex<ValueType>
         return false;
     }
 
-    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == static_cast<ValueType>(0));
 
     return lhs.real() > rhs.real();
 }
@@ -57,7 +57,7 @@ bool operator<=(const std::complex<ValueType>& lhs, const std::complex<ValueType
         return true;
     }
 
-    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == static_cast<ValueType>(0));
 
     return lhs.real() <= rhs.real();
 }
@@ -70,7 +70,7 @@ bool operator>=(const std::complex<ValueType>& lhs, const std::complex<ValueType
         return true;
     }
 
-    assert(lhs.imag() == rhs.imag() && lhs.imag() == ValueType(0.0));
+    assert(lhs.imag() == rhs.imag() && lhs.imag() == static_cast<ValueType>(0));
 
     return lhs.real() >= rhs.real();
 }

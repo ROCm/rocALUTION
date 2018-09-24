@@ -33,7 +33,7 @@ double rocalution_time(void)
     QueryPerformanceCounter(&now);
     QueryPerformanceFrequency(&freq);
 
-    the_time_now = (now.QuadPart * 1000000.0) / static_cast<float>(freq.QuadPart);
+    the_time_now = (now.QuadPart * 1000000.0) / static_cast<double>(freq.QuadPart);
 #else
     // Linux
     struct timeval now;

@@ -13,69 +13,65 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType> {
+class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
+{
+    public:
+    GlobalPairwiseAMG();
+    virtual ~GlobalPairwiseAMG();
 
-public:
+    virtual void Print(void) const;
 
-  GlobalPairwiseAMG();
-  virtual ~GlobalPairwiseAMG();
+    /// Creates AMG hierarchy
+    virtual void BuildHierarchy(void);
+    virtual void ClearLocal(void);
 
-  virtual void Print(void) const;
+    /// Sets beta for pairwise aggregation
+    virtual void SetBeta(ValueType beta);
+    /// Sets reordering for aggregation
+    virtual void SetOrdering(const _aggregation_ordering ordering);
+    /// Sets target coarsening factor
+    virtual void SetCoarseningFactor(double factor);
 
-  /// Creates AMG hierarchy
-  virtual void BuildHierarchy(void);
-  virtual void ClearLocal(void);
+    virtual void ReBuildNumeric(void);
 
-  /// Sets beta for pairwise aggregation
-  virtual void SetBeta(ValueType beta);
-  /// Sets reordering for aggregation
-  virtual void SetOrdering(const _aggregation_ordering ordering);
-  /// Sets target coarsening factor
-  virtual void SetCoarseningFactor(double factor);
+    protected:
+    /// Constructs the prolongation, restriction and coarse operator
+    virtual void Aggregate(const OperatorType& op,
+                           Operator<ValueType>* pro,
+                           Operator<ValueType>* res,
+                           OperatorType* coarse,
+                           ParallelManager* pm,
+                           LocalVector<int>* trans);
 
-  virtual void ReBuildNumeric(void);
+    /// disabled function
+    virtual void Aggregate(const OperatorType& op,
+                           Operator<ValueType>* pro,
+                           Operator<ValueType>* res,
+                           OperatorType* coarse);
 
-protected:
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-  /// Constructs the prolongation, restriction and coarse operator
-  virtual void Aggregate(const OperatorType &op,
-                         Operator<ValueType> *pro,
-                         Operator<ValueType> *res,
-                         OperatorType *coarse,
-                         ParallelManager *pm,
-                         LocalVector<int> *trans);
+    private:
+    /// Beta factor
+    ValueType beta_;
 
-  /// disabled function
-  virtual void Aggregate(const OperatorType &op,
-                         Operator<ValueType> *pro,
-                         Operator<ValueType> *res,
-                         OperatorType *coarse);
+    /// Target factor for coarsening ratio
+    double coarsening_factor_;
+    /// Ordering for the aggregation scheme
+    int aggregation_ordering_;
 
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
+    /// Parallel Manager for coarser levels
+    ParallelManager** pm_level_;
 
-private:
+    /// Transfer mapping
+    LocalVector<int>** trans_level_;
 
-  /// Beta factor
-  ValueType beta_;
-
-  /// Target factor for coarsening ratio
-  double coarsening_factor_;
-  /// Ordering for the aggregation scheme
-  int aggregation_ordering_;
-
-  /// Parallel Manager for coarser levels
-  ParallelManager **pm_level_;
-
-  /// Transfer mapping
-  LocalVector<int> **trans_level_;
-
-  /// Dimension of the coarse operators
-  std::vector<int> dim_level_;
-  std::vector<int> Gsize_level_;
-  std::vector<int> rGsize_level_;
-  std::vector<int*> rG_level_;
-
+    /// Dimension of the coarse operators
+    std::vector<int> dim_level_;
+    std::vector<int> Gsize_level_;
+    std::vector<int> rGsize_level_;
+    std::vector<int*> rG_level_;
 };
 
 } // namespace rocalution

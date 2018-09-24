@@ -254,9 +254,7 @@ template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                   VectorType* x)
 {
-    log_debug(this, "GMRES::SolveNonPrecond_()", " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "GMRES::SolveNonPrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -398,9 +396,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
 template <class OperatorType, class VectorType, typename ValueType>
 void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    log_debug(this, "GMRES::SolvePrecond_()", " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "GMRES::SolvePrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);

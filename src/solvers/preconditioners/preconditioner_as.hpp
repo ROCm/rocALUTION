@@ -12,57 +12,48 @@ namespace rocalution {
 
 /// AS preconditioner
 template <class OperatorType, class VectorType, typename ValueType>
-class AS : public Preconditioner<OperatorType, VectorType, ValueType> {
+class AS : public Preconditioner<OperatorType, VectorType, ValueType>
+{
+    public:
+    AS();
+    virtual ~AS();
 
-public:
+    virtual void Print(void) const;
+    virtual void Set(int nb, int overlap, Solver<OperatorType, VectorType, ValueType>** preconds);
 
-  AS();
-  virtual ~AS();
+    virtual void Solve(const VectorType& rhs, VectorType* x);
 
-  virtual void Print(void) const;
-  virtual void Set(int nb, int overlap,
-                   Solver<OperatorType, VectorType, ValueType> **preconds);
-  
-  virtual void Solve(const VectorType &rhs,
-                     VectorType *x);
+    virtual void Build(void);
+    virtual void Clear(void);
 
+    protected:
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 
-  virtual void Build(void);
-  virtual void Clear(void);
+    int num_blocks_;
+    int overlap_;
+    int* pos_;
+    int* sizes_; // with overlap
 
-protected:
+    Solver<OperatorType, VectorType, ValueType>** local_precond_;
 
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void) ;
-
-  int num_blocks_;
-  int overlap_;
-  int *pos_;
-  int *sizes_; // with overlap
-
-  Solver<OperatorType, VectorType, ValueType> **local_precond_;
-
-  OperatorType **local_mat_;
-  VectorType **r_;
-  VectorType **z_;
-  VectorType weight_;
-
+    OperatorType** local_mat_;
+    VectorType** r_;
+    VectorType** z_;
+    VectorType weight_;
 };
 
 /// AS preconditioner
 template <class OperatorType, class VectorType, typename ValueType>
-class RAS : public AS<OperatorType, VectorType, ValueType> {
+class RAS : public AS<OperatorType, VectorType, ValueType>
+{
+    public:
+    RAS();
+    virtual ~RAS();
 
-public:
+    virtual void Print(void) const;
 
-  RAS();
-  virtual ~RAS();
-
-  virtual void Print(void) const;
-
-  virtual void Solve(const VectorType &rhs,
-                     VectorType *x);
-
+    virtual void Solve(const VectorType& rhs, VectorType* x);
 };
 
 } // namespace rocalution

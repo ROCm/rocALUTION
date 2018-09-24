@@ -12,35 +12,29 @@ namespace rocalution {
 
 //// BlockJacobi preconditioner for GlobalMatrix
 template <class OperatorType, class VectorType, typename ValueType>
-class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType> {
+class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType>
+{
+    public:
+    BlockJacobi();
+    virtual ~BlockJacobi();
 
-public:
+    virtual void Print(void) const;
+    virtual void Init(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>& precond);
 
-  BlockJacobi();
-  virtual ~BlockJacobi();
+    virtual void Solve(const VectorType& rhs, VectorType* x);
 
-  virtual void Print(void) const;
-  virtual void Init(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType> &precond);
+    virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
-  virtual void Solve(const VectorType &rhs,
-                     VectorType *x);
+    virtual void Build(void);
+    virtual void ReBuildNumeric(void);
+    virtual void Clear(void);
 
-  virtual void SolveZeroSol(const VectorType &rhs,
-                            VectorType *x);
+    protected:
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 
-  virtual void Build(void);
-  virtual void ReBuildNumeric(void);
-  virtual void Clear(void);
-
-protected:
-
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void) ;
-
-private:
-
-  Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType> *local_precond_;
-
+    private:
+    Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>* local_precond_;
 };
 
 } // namespace rocalution

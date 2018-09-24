@@ -63,29 +63,26 @@ __device__ static __inline__ double hip_pow(double val, double exp) { return pow
 
 __device__ static __inline__ float hip_pow(float val, double exp) { return powf(val, exp); }
 
-__device__ static __inline__ void make_ValueType(float& val, const float& scalar)
-{
-    val = (float)scalar;
-}
+__device__ static __inline__ void make_ValueType(float& val, const float& scalar) { val = scalar; }
 
 __device__ static __inline__ void make_ValueType(double& val, const double& scalar)
 {
-    val = (double)scalar;
+    val = scalar;
 }
 
 #ifdef SUPPORT_COMPLEX
 __device__ static __inline__ void make_ValueType(cuFloatComplex& val, const float& scalar)
 {
-    val = make_cuFloatComplex((float)scalar, (float)0);
+    val = make_cuFloatComplex(scalar, 0.0f);
 }
 
 __device__ static __inline__ void make_ValueType(cuDoubleComplex& val, const double& scalar)
 {
-    val = make_cuDoubleComplex((double)scalar, (double)0);
+    val = make_cuDoubleComplex(scalar, 0.0);
 }
 #endif
 
-__device__ static __inline__ void make_ValueType(int& val, const int& scalar) { val = (int)scalar; }
+__device__ static __inline__ void make_ValueType(int& val, const int& scalar) { val = scalar; }
 
 __device__ static __inline__ void assign_volatile_ValueType(const float* x, volatile float* y)
 {

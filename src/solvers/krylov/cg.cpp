@@ -271,10 +271,7 @@ void CG<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs, VectorType* x)
 {
-    log_debug(this, "CG::SolveNonPrecond_()",
-              " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "CG::SolveNonPrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -324,7 +321,7 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
         x->AddScale(*p, alpha);
 
         // r = r - alpha*q
-        r->AddScale(*q, ValueType(-1.0) * alpha);
+        r->AddScale(*q, -alpha);
 
         // Check convergence
         res_norm = this->Norm(*r);
@@ -348,10 +345,7 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    log_debug(this, "CG::SolvePrecond_()",
-              " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "CG::SolvePrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);

@@ -11,22 +11,20 @@
 namespace rocalution {
 
 template <class OperatorType, class VectorType, typename ValueType>
-class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType> {
-  
-public:
+class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType>
+{
+    public:
+    MultiGrid();
+    virtual ~MultiGrid();
 
-  MultiGrid();
-  virtual ~MultiGrid();
+    /// Set thre restriction method by operator for each level
+    virtual void SetRestrictOperator(OperatorType** op);
 
-  /// Set thre restriction method by operator for each level
-  virtual void SetRestrictOperator(OperatorType **op);
+    /// Set the prolongation operator for each level
+    virtual void SetProlongOperator(OperatorType** op);
 
-  /// Set the prolongation operator for each level
-  virtual void SetProlongOperator(OperatorType **op);
-
-  /// Set the operator for each level
-  virtual void SetOperatorHierarchy(OperatorType **op);
-
+    /// Set the operator for each level
+    virtual void SetOperatorHierarchy(OperatorType** op);
 };
 
 } // namespace rocalution
