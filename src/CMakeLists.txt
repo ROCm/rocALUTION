@@ -123,7 +123,7 @@ if(SUPPORT_HIP)
   set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  target_link_libraries(rocalution_hip PRIVATE rocblas rocsparse)
+  target_link_libraries(rocalution_hip PRIVATE rocblas ${ROCSPARSE_LIBRARIES})
 
   target_include_directories(rocalution_hip
                              PRIVATE
