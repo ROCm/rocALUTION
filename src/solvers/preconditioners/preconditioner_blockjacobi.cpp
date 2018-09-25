@@ -46,10 +46,10 @@ void BlockJacobi<OperatorType, VectorType, ValueType>::Print(void) const
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BlockJacobi<OperatorType, VectorType, ValueType>::Init(
+void BlockJacobi<OperatorType, VectorType, ValueType>::Set(
     Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>& precond)
 {
-    log_debug(this, "BlockJacobi::Init()", this->build_, (const void*&)precond);
+    log_debug(this, "BlockJacobi::Set()", this->build_, (const void*&)precond);
 
     assert(this->local_precond_ == NULL);
     assert(this->build_ == false);

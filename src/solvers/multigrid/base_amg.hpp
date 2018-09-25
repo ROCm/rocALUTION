@@ -13,6 +13,14 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class BaseAMG
+  * \brief Base class for all algebraic multigrid solvers
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class BaseAMG : public BaseMultiGrid<OperatorType, VectorType, ValueType>
 {
@@ -22,62 +30,66 @@ class BaseAMG : public BaseMultiGrid<OperatorType, VectorType, ValueType>
 
     virtual void Build(void);
     virtual void Clear(void);
+
+    /** \brief Clear all local data */
     virtual void ClearLocal(void);
 
-    /// Creates AMG hierarchy
+    /** \brief Create AMG hierarchy */
     virtual void BuildHierarchy(void);
 
-    /// Creates AMG smoothers
+    /** \brief Create AMG smoothers */
     virtual void BuildSmoothers(void);
 
-    /// Sets coarsest level for hierarchy creation
-    virtual void SetCoarsestLevel(int coarse_size);
+    /** \brief Set coarsest level for hierarchy creation */
+    void SetCoarsestLevel(int coarse_size);
 
-    /// Sets flag to pass smoothers manually for each level
-    virtual void SetManualSmoothers(bool sm_manual);
-    /// Sets flag to pass coarse grid solver manually
-    virtual void SetManualSolver(bool s_manual);
+    /** \brief Set flag to pass smoothers manually for each level */
+    void SetManualSmoothers(bool sm_manual);
+    /** \brief Set flag to pass coarse grid solver manually */
+    void SetManualSolver(bool s_manual);
 
-    /// Sets the smoother operator format
-    virtual void SetDefaultSmootherFormat(unsigned int op_format);
-    /// Sets the operator format
-    virtual void SetOperatorFormat(unsigned int op_format);
+    /** \brief Set the smoother operator format */
+    void SetDefaultSmootherFormat(unsigned int op_format);
+    /** \brief Set the operator format */
+    void SetOperatorFormat(unsigned int op_format);
 
-    /// Returns the number of levels in hierarchy
-    virtual int GetNumLevels();
+    /** \brief Returns the number of levels in hierarchy */
+    int GetNumLevels(void);
 
-    /// disabled function
+    /** \private */
     virtual void SetRestrictOperator(OperatorType** op);
-    /// disabled function
+    /** \private */
     virtual void SetProlongOperator(OperatorType** op);
-    /// disabled function
+    /** \private */
     virtual void SetOperatorHierarchy(OperatorType** op);
 
     protected:
-    /// Constructs the prolongation, restriction and coarse operator
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse) = 0;
+    /** \brief Constructs the prolongation, restriction and coarse operator */
+    virtual void Aggregate_(const OperatorType& op,
+                            Operator<ValueType>* pro,
+                            Operator<ValueType>* res,
+                            OperatorType* coarse) = 0;
 
-    /// maximal coarse grid size
+    /** \brief Maximal coarse grid size */
     int coarse_size_;
 
-    /// manual smoother or not
+    /** \brief Smoother is set manually or not */
     bool set_sm_;
+    /** \brief Smoother hierarchy */
     Solver<OperatorType, VectorType, ValueType>** sm_default_;
 
-    /// manual coarse grid solver or not
+    /** \brief Coarse grid solver is set manually or not */
     bool set_s_;
 
-    /// true if hierarchy is built
+    /** \brief Build flag for hierarchy */
     bool hierarchy_;
 
-    /// smoother operator format
+    /** \brief Smoother operator format */
     unsigned int sm_format_;
-    /// operator format
+    /** \brief Operator format */
     unsigned int op_format_;
 };
-}
+
+} // namespace rocalution
 
 #endif // ROCALUTION_BASE_AMG_HPP_

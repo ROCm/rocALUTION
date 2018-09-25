@@ -12,6 +12,19 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class CG
+  * \brief Conjugate Gradient Method
+  * \details
+  * The Conjugate Gradient method is the best known iterative method for solving sparse
+  * symmetric positive definite linear systems \f$Ax=b\f$. It is based on orthogonal
+  * projection onto the Krylov subspace \f$\mathcal{K}_{m}(r_{0}, A)\f$, where
+  * \f$r_{0}\f$ is the initial residual.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class CG : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
 {

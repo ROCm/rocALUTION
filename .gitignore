@@ -38,6 +38,9 @@ tags
 # build-in-source directory
 build
 
+# doc
+docBin
+
 # Visual Studio stuff
 *.vcxproj.user
 *.suo

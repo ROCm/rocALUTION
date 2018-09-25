@@ -12,7 +12,14 @@
 
 namespace rocalution {
 
-/// The base class for all solvers and preconditioners
+/** \ingroup solver_module
+  * \class Solver
+  * \brief Base class for all solvers and preconditioners
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class Solver : public RocalutionObj
 {
@@ -20,75 +27,77 @@ class Solver : public RocalutionObj
     Solver();
     virtual ~Solver();
 
-    /// Set the Operator of the solver
+    /** \brief Set the Operator of the solver */
     void SetOperator(const OperatorType& op);
 
-    /// Reset the operator; see ReBuildNumeric
+    /** \brief Reset the operator; see ReBuildNumeric() */
     virtual void ResetOperator(const OperatorType& op);
 
-    /// Print information about the solver
+    /** \brief Print information about the solver */
     virtual void Print(void) const = 0;
 
-    /// Solve Operator x = rhs
+    /** \brief Solve Operator x = rhs */
     virtual void Solve(const VectorType& rhs, VectorType* x) = 0;
 
-    /// Solve Operator x = rhs;
-    /// but set first the init x = 0
+    /** \brief Solve Operator x = rhs, setting initial x = 0 */
     virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
-    /// Clear (free all local data) the solver
+    /** \brief Clear (free all local data) the solver */
     virtual void Clear(void);
 
-    /// Build the solver (data allocation, structure computation,
-    /// numerical computation)
+    /** \brief Build the solver (data allocation, structure and numerical computation) */
     virtual void Build(void);
 
+    /** \brief Build the solver and move it to the accelerator asynchronously */
     virtual void BuildMoveToAcceleratorAsync(void);
+
+    /** \brief Synchronize the solver */
     virtual void Sync(void);
 
-    /// Rebuild only with numerical computation (no allocation or data
-    /// structure computation)
+    /** \brief Rebuild the solver only with numerical computation (no allocation or data
+      * structure computation)
+      */
     virtual void ReBuildNumeric(void);
 
-    /// Move all the data (i.e. move the solver) to the host
+    /** \brief Move all data (i.e. move the solver) to the host */
     virtual void MoveToHost(void);
-    /// Move all the data (i.e. move the solver) to the accelerator
+    /** \brief Move all data (i.e. move the solver) to the accelerator */
     virtual void MoveToAccelerator(void);
 
-    /// Provide verbose output of the solver:
-    /// verb == 0 no output
-    /// verb == 1 print info about the solver (start,end);
-    /// verb == 2 print (iter, residual) via iteration control;
+    /** \brief Provide verbose output of the solver
+      * \details
+      * verb = 0 no output <br>
+      * verb = 1 print info about the solver (start, end); <br>
+      * verb = 2 print (iter, residual) via iteration control;
+      */
     virtual void Verbose(int verb = 1);
 
     protected:
-    /// Pointer to the operator
+    /** \brief Pointer to the operator */
     const OperatorType* op_;
 
-    /// Pointer to the defined preconditioner
+    /** \brief Pointer to the defined preconditioner */
     Solver<OperatorType, VectorType, ValueType>* precond_;
 
-    /// Flag == true after building the solver (e.g. Build())
+    /** \brief Flag == true after building the solver (e.g. Build()) */
     bool build_;
 
-    /// Permutation vector (used if the solver performs
-    /// permutation/re-ordering techniques)
+    /** \brief Permutation vector (used if the solver performs permutation/re-ordering
+      * techniques)
+      */
     LocalVector<int> permutation_;
 
-    /// Verbose flag
-    /// verb == 0 no output
-    /// verb == 1 print info about the solver (start,end);
-    /// verb == 2 print (iter, residual) via iteration control;
+    /** \brief Verbose flag */
     int verb_;
 
-    /// Print starting msg of the solver
+    /** \brief Print starting message of the solver */
     virtual void PrintStart_(void) const = 0;
-    /// Print ending msg of the solver
+    /** \brief Print ending message of the solver */
     virtual void PrintEnd_(void) const = 0;
 
-    /// Move all local data to the host
+    /** \brief Move all local data to the host */
     virtual void MoveToHostLocalData_(void) = 0;
-    /// Move all local data to the accelerator
+    /** \brief Move all local data to the accelerator */
     virtual void MoveToAcceleratorLocalData_(void) = 0;
 };
 
@@ -185,7 +194,7 @@ class FixedPoint : public IterativeLinearSolver<OperatorType, VectorType, ValueT
     virtual void ReBuildNumeric(void);
 
     /// Set a relaxation parameter of the iterative solver
-    virtual void SetRelaxation(ValueType omega);
+    void SetRelaxation(ValueType omega);
 
     virtual void Build(void);
 

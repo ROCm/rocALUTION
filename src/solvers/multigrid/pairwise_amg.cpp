@@ -158,11 +158,11 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void)
         trans_list_.back()->CloneBackend(*this->op_);
 
         // Create prolongation and restriction operators
-        this->Aggregate(*this->op_,
-                        prolong_list_.back(),
-                        restrict_list_.back(),
-                        op_list_.back(),
-                        trans_list_.back());
+        this->Aggregate_(*this->op_,
+                         prolong_list_.back(),
+                         restrict_list_.back(),
+                         op_list_.back(),
+                         trans_list_.back());
 
         ++this->levels_;
 
@@ -180,11 +180,11 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void)
             prolong_list_.back()->CloneBackend(*this->op_);
             trans_list_.back()->CloneBackend(*this->op_);
 
-            this->Aggregate(*prev_op_,
-                            prolong_list_.back(),
-                            restrict_list_.back(),
-                            op_list_.back(),
-                            trans_list_.back());
+            this->Aggregate_(*prev_op_,
+                             prolong_list_.back(),
+                             restrict_list_.back(),
+                             op_list_.back(),
+                             trans_list_.back());
 
             ++this->levels_;
         }
@@ -347,13 +347,13 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::ClearLocal(void)
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType& op,
-                                                                 Operator<ValueType>* pro,
-                                                                 Operator<ValueType>* res,
-                                                                 OperatorType* coarse,
-                                                                 LocalVector<int>* trans)
+void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+                                                                  Operator<ValueType>* pro,
+                                                                  Operator<ValueType>* res,
+                                                                  OperatorType* coarse,
+                                                                  LocalVector<int>* trans)
 {
-    log_debug(this, "PairwiseAMG::Aggregate()", (const void*&)op, pro, res, coarse, trans);
+    log_debug(this, "PairwiseAMG::Aggregate_()", (const void*&)op, pro, res, coarse, trans);
 
     assert(pro != NULL);
     assert(res != NULL);
@@ -407,10 +407,10 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorT
 
 // disabled function
 template <class OperatorType, class VectorType, typename ValueType>
-void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType& op,
-                                                                 Operator<ValueType>* pro,
-                                                                 Operator<ValueType>* res,
-                                                                 OperatorType* coarse)
+void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+                                                                  Operator<ValueType>* pro,
+                                                                  Operator<ValueType>* res,
+                                                                  OperatorType* coarse)
 {
     FATAL_ERROR(__FILE__, __LINE__);
 }

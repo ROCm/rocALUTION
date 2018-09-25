@@ -10,7 +10,17 @@
 
 namespace rocalution {
 
-//// BlockJacobi preconditioner for GlobalMatrix
+/** \ingroup precond_module
+  * \class BlockJacobi
+  * \brief Block-Jacobi Preconditioner
+  * \details
+  * The Block-Jacobi preconditioner is designed to wrap any local preconditioner and
+  * apply it in a global block fashion locally on each interior matrix.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -19,7 +29,9 @@ class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType>
     virtual ~BlockJacobi();
 
     virtual void Print(void) const;
-    virtual void Init(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>& precond);
+
+    /** \brief Set local preconditioner */
+    void Set(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>& precond);
 
     virtual void Solve(const VectorType& rhs, VectorType* x);
 

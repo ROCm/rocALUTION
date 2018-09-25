@@ -13,6 +13,17 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class SAAMG
+  * \brief Smoothed Aggregation Algebraic MultiGrid Method
+  * \details
+  * The Smoothed Aggregation Algebraic MultiGrid method is based on smoothed
+  * aggregation based interpolation scheme.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class SAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
 {
@@ -21,33 +32,29 @@ class SAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     virtual ~SAAMG();
 
     virtual void Print(void) const;
-
-    /// Build SAAMG smoothers
     virtual void BuildSmoothers(void);
 
-    /// Sets coupling strength
-    virtual void SetCouplingStrength(ValueType eps);
-    /// Sets the relaxation parameter for smoothed aggregation
-    virtual void SetInterpRelax(ValueType relax);
+    /** \brief Set coupling strength */
+    void SetCouplingStrength(ValueType eps);
+    /** \brief Set the relaxation parameter */
+    void SetInterpRelax(ValueType relax);
 
-    /// Rebuild coarser operators with previous intergrid operators
     virtual void ReBuildNumeric(void);
 
     protected:
-    /// Constructs the prolongation, restriction and coarse operator
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse);
+    virtual void Aggregate_(const OperatorType& op,
+                            Operator<ValueType>* pro,
+                            Operator<ValueType>* res,
+                            OperatorType* coarse);
 
     virtual void PrintStart_(void) const;
     virtual void PrintEnd_(void) const;
 
     private:
-    /// Coupling strength
+    /** \brief Coupling strength */
     ValueType eps_;
 
-    /// Relaxation parameter for smoothed aggregation
+    /** \brief Relaxation parameter */
     ValueType relax_;
 };
 

@@ -36,18 +36,18 @@ class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
 
     protected:
     /// Constructs the prolongation, restriction and coarse operator
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse,
-                           ParallelManager* pm,
-                           LocalVector<int>* trans);
+    void Aggregate_(const OperatorType& op,
+                    Operator<ValueType>* pro,
+                    Operator<ValueType>* res,
+                    OperatorType* coarse,
+                    ParallelManager* pm,
+                    LocalVector<int>* trans);
 
     /// disabled function
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse);
+    virtual void Aggregate_(const OperatorType& op,
+                            Operator<ValueType>* pro,
+                            Operator<ValueType>* res,
+                            OperatorType* coarse);
 
     virtual void PrintStart_(void) const;
     virtual void PrintEnd_(void) const;

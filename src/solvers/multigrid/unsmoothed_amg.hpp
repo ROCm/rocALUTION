@@ -13,6 +13,17 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class UAAMG
+  * \brief Unsmoothed Aggregation Algebraic MultiGrid Method
+  * \details
+  * The Unsmoothed Aggregation Algebraic MultiGrid method is based on unsmoothed
+  * aggregation based interpolation scheme.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class UAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
 {
@@ -21,33 +32,29 @@ class UAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     virtual ~UAAMG();
 
     virtual void Print(void) const;
-
-    /// Build UAAMG smoothers
     virtual void BuildSmoothers(void);
 
-    /// Sets coupling strength
-    virtual void SetCouplingStrength(ValueType eps);
-    /// Sets over-interpolation parameter for aggregation
-    virtual void SetOverInterp(ValueType overInterp);
+    /** \brief Set coupling strength */
+    void SetCouplingStrength(ValueType eps);
+    /** \brief Set over-interpolation parameter for aggregation */
+    void SetOverInterp(ValueType overInterp);
 
-    /// Rebuild coarser operators with previous intergrid operators
     virtual void ReBuildNumeric(void);
 
     protected:
-    /// Constructs the prolongation, restriction and coarse operator
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse);
+    virtual void Aggregate_(const OperatorType& op,
+                            Operator<ValueType>* pro,
+                            Operator<ValueType>* res,
+                            OperatorType* coarse);
 
     virtual void PrintStart_(void) const;
     virtual void PrintEnd_(void) const;
 
     private:
-    /// Coupling strength
+    /** \brief Coupling strength */
     ValueType eps_;
 
-    /// Over-interpolation parameter for aggregation
+    /** \brief Over-interpolation parameter for aggregation */
     ValueType over_interp_;
 };
 

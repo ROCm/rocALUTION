@@ -215,12 +215,12 @@ void SAAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void SAAMG<OperatorType, VectorType, ValueType>::Aggregate(const OperatorType& op,
-                                                           Operator<ValueType>* pro,
-                                                           Operator<ValueType>* res,
-                                                           OperatorType* coarse)
+void SAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+                                                            Operator<ValueType>* pro,
+                                                            Operator<ValueType>* res,
+                                                            OperatorType* coarse)
 {
-    log_debug(this, "SAAMG::Aggregate()", this->build_);
+    log_debug(this, "SAAMG::Aggregate_()", this->build_);
 
     assert(pro != NULL);
     assert(res != NULL);

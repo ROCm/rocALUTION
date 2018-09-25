@@ -13,6 +13,17 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class RugeStuebenAMG
+  * \brief Ruge-Stueben Algebraic MultiGrid Method
+  * \details
+  * The Ruge-Stueben Algebraic MultiGrid method is based on the classic Ruge-Stueben
+  * coarsening with direct interpolation.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class RugeStuebenAMG : public BaseAMG<OperatorType, VectorType, ValueType>
 {
@@ -21,28 +32,24 @@ class RugeStuebenAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     virtual ~RugeStuebenAMG();
 
     virtual void Print(void) const;
-
-    /// Build AMG smoothers
     virtual void BuildSmoothers(void);
 
-    /// Sets coupling strength
-    virtual void SetCouplingStrength(ValueType eps);
+    /** \brief Set coupling strength */
+    void SetCouplingStrength(ValueType eps);
 
-    /// Rebuild coarser operators with previous intergrid operators
     virtual void ReBuildNumeric(void);
 
     protected:
-    /// Constructs the prolongation, restriction and coarse operator
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse);
+    virtual void Aggregate_(const OperatorType& op,
+                            Operator<ValueType>* pro,
+                            Operator<ValueType>* res,
+                            OperatorType* coarse);
 
     virtual void PrintStart_(void) const;
     virtual void PrintEnd_(void) const;
 
     private:
-    /// Coupling coefficient
+    /** \brief Coupling strength */
     ValueType eps_;
 };
 

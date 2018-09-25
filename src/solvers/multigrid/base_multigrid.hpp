@@ -19,6 +19,14 @@ enum _cycle
     Fcycle = 3
 };
 
+/** \ingroup solver_module
+  * \class BaseMultiGrid
+  * \brief Base class for all multigrid solvers
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class BaseMultiGrid : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
 {
@@ -28,67 +36,70 @@ class BaseMultiGrid : public IterativeLinearSolver<OperatorType, VectorType, Val
 
     virtual void Print(void) const;
 
-    /// disabled function
+    /** \private */
     virtual void SetPreconditioner(Solver<OperatorType, VectorType, ValueType>& precond);
 
-    /// Set the smoother for each level
-    virtual void SetSolver(Solver<OperatorType, VectorType, ValueType>& solver);
+    /** \brief Set the coarse grid solver */
+    void SetSolver(Solver<OperatorType, VectorType, ValueType>& solver);
 
-    /// Set the smoother for each level
-    virtual void SetSmoother(IterativeLinearSolver<OperatorType, VectorType, ValueType>** smoother);
+    /** \brief Set the smoother for each level */
+    void SetSmoother(IterativeLinearSolver<OperatorType, VectorType, ValueType>** smoother);
 
-    /// Set the number of pre-smoothing steps
-    virtual void SetSmootherPreIter(int iter);
+    /** \brief Set the number of pre-smoothing steps */
+    void SetSmootherPreIter(int iter);
 
-    /// Set the number of post-smoothing steps
-    virtual void SetSmootherPostIter(int iter);
+    /** \brief Set the number of post-smoothing steps */
+    void SetSmootherPostIter(int iter);
 
-    /// Set thre restriction method by operator for each level
+    /** \brief Set the restriction operator for each level */
     virtual void SetRestrictOperator(OperatorType** op) = 0;
 
-    /// Set the prolongation operator for each level
+    /** \brief Set the prolongation operator for each level */
     virtual void SetProlongOperator(OperatorType** op) = 0;
 
-    /// Set the operator for each level
+    /** \brief Set the operator for each level */
     virtual void SetOperatorHierarchy(OperatorType** op) = 0;
 
-    /// Enable/disable scaling of intergrid transfers
-    virtual void SetScaling(bool scaling);
+    /** \brief Enable/disable scaling of intergrid transfers */
+    void SetScaling(bool scaling);
 
-    /// Force computation of coarser levels on the host backend
-    virtual void SetHostLevels(int levels);
+    /** \brief Force computation of coarser levels on the host backend */
+    void SetHostLevels(int levels);
 
-    /// Set the MultiGrid Cycle (default: Vcycle)
-    virtual void SetCycle(unsigned int cycle);
+    /** \brief Set the MultiGrid Cycle (default: Vcycle) */
+    void SetCycle(unsigned int cycle);
 
-    /// Set the MultiGrid Kcycle on all levels or only on finest level
-    virtual void SetKcycleFull(bool kcycle_full);
+    /** \brief Set the MultiGrid Kcycle on all levels or only on finest level */
+    void SetKcycleFull(bool kcycle_full);
 
-    /// Set the depth of the multigrid solver
-    virtual void InitLevels(int levels);
+    /** \brief Set the depth of the multigrid solver */
+    void InitLevels(int levels);
 
-    /// Called by default the V-cycle
     virtual void Solve(const VectorType& rhs, VectorType* x);
 
     virtual void Build(void);
     virtual void Clear(void);
 
     protected:
-    // Restricts from level 'level' to 'level-1'
-    virtual void Restrict_(const VectorType& fine, VectorType* coarse, int level);
+    /** \brief Restricts from level 'level' to 'level-1' */
+    void Restrict_(const VectorType& fine, VectorType* coarse, int level);
 
-    // Prolongs from level 'level' to 'level+1'
-    virtual void Prolong_(const VectorType& coarse, VectorType* fine, int level);
+    /** \brief Prolongs from level 'level' to 'level+1' */
+    void Prolong_(const VectorType& coarse, VectorType* fine, int level);
 
+    /** \brief V-cycle */
     void Vcycle_(const VectorType& rhs, VectorType* x);
+    /** \brief W-cycle */
     void Wcycle_(const VectorType& rhs, VectorType* x);
+    /** \brief F-cycle */
     void Fcycle_(const VectorType& rhs, VectorType* x);
+    /** \brief K-cycle */
     void Kcycle_(const VectorType& rhs, VectorType* x);
 
-    /// disabled function
+    /** \private */
     virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
 
-    /// disabled function
+    /** \private */
     virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
     virtual void PrintStart_(void) const;
@@ -96,34 +107,50 @@ class BaseMultiGrid : public IterativeLinearSolver<OperatorType, VectorType, Val
 
     virtual void MoveToHostLocalData_(void);
     virtual void MoveToAcceleratorLocalData_(void);
-    virtual void MoveHostLevels(void);
 
+    /** \brief Move all level data to the host */
+    void MoveHostLevels_(void);
+
+    /** \brief Number of levels in the hierarchy */
     int levels_;
+    /** \brief Host levels */
     int host_level_;
+    /** \brief Current level */
     int current_level_;
+    /** \brief Intergrid transfer scaling */
     bool scaling_;
+    /** \brief Number of pre-smoothing steps */
     int iter_pre_smooth_;
+    /** \brief Number of post-smoothing steps */
     int iter_post_smooth_;
+    /** \brief Cycle type */
     unsigned int cycle_;
+    /** \brief K-cycle type */
     bool kcycle_full_;
 
+    /** \brief Residual norm */
     double res_norm_;
 
+    /** \brief Operator hierarchy */
     OperatorType** op_level_;
 
+    /** \brief Restriction operator hierarchy */
     Operator<ValueType>** restrict_op_level_;
+    /** \brief Prolongation operator hierarchy */
     Operator<ValueType>** prolong_op_level_;
 
-    VectorType** d_level_;
-    VectorType** r_level_;
-    VectorType** t_level_;
-    VectorType** s_level_;
-    VectorType** p_level_;
-    VectorType** q_level_;
-    VectorType** k_level_;
-    VectorType** l_level_;
+    VectorType** d_level_; /**< \private */
+    VectorType** r_level_; /**< \private */
+    VectorType** t_level_; /**< \private */
+    VectorType** s_level_; /**< \private */
+    VectorType** p_level_; /**< \private */
+    VectorType** q_level_; /**< \private */
+    VectorType** k_level_; /**< \private */
+    VectorType** l_level_; /**< \private */
 
+    /** \brief Coarse grid solver */
     Solver<OperatorType, VectorType, ValueType>* solver_coarse_;
+    /** \brief Smoother for each level */
     IterativeLinearSolver<OperatorType, VectorType, ValueType>** smoother_level_;
 };
 

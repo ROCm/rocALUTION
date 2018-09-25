@@ -21,6 +21,18 @@ enum _aggregation_ordering
     MultiColoring = 5
 };
 
+/** \ingroup solver_module
+  * \class PairwiseAMG
+  * \brief Pairwise Aggregation Algebraic MultiGrid Method
+  * \details
+  * The Pairwise Aggregation Algebraic MultiGrid method is based on a pairwise
+  * aggregation matching scheme based on "Notay, Y. An aggregation-based algebraic
+  * multigrid method, 2010."
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class PairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
 {
@@ -29,37 +41,32 @@ class PairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     virtual ~PairwiseAMG();
 
     virtual void Print(void) const;
-
-    /// Creates AMG hierarchy
     virtual void BuildHierarchy(void);
     virtual void ClearLocal(void);
-
-    /// Build AMG smoothers
     virtual void BuildSmoothers(void);
 
-    /// Sets beta for pairwise aggregation
-    virtual void SetBeta(ValueType beta);
-    /// Sets reordering for aggregation
-    virtual void SetOrdering(unsigned int ordering);
-    /// Sets target coarsening factor
-    virtual void SetCoarseningFactor(double factor);
+    /** \brief Set beta for pairwise aggregation */
+    void SetBeta(ValueType beta);
+    /** \brief Set re-ordering for aggregation */
+    void SetOrdering(unsigned int ordering);
+    /** \brief Set target coarsening factor */
+    void SetCoarseningFactor(double factor);
 
-    /// Rebuild coarser operators with previous intergrid operators
     virtual void ReBuildNumeric(void);
 
     protected:
-    /// Constructs the prolongation, restriction and coarse operator
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse,
-                           LocalVector<int>* trans);
+    /** \brief Constructs the prolongation, restriction and coarse operator */
+    void Aggregate_(const OperatorType& op,
+                    Operator<ValueType>* pro,
+                    Operator<ValueType>* res,
+                    OperatorType* coarse,
+                    LocalVector<int>* trans);
 
-    /// disabled function
-    virtual void Aggregate(const OperatorType& op,
-                           Operator<ValueType>* pro,
-                           Operator<ValueType>* res,
-                           OperatorType* coarse);
+    /** \private */
+    virtual void Aggregate_(const OperatorType& op,
+                            Operator<ValueType>* pro,
+                            Operator<ValueType>* res,
+                            OperatorType* coarse);
 
     virtual void PrintStart_(void) const;
     virtual void PrintEnd_(void) const;
@@ -68,15 +75,15 @@ class PairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     // Beta factor
     ValueType beta_;
 
-    /// Target factor for coarsening ratio
+    // Target factor for coarsening ratio
     double coarsening_factor_;
-    /// Ordering for the aggregation scheme
+    // Ordering for the aggregation scheme
     unsigned int aggregation_ordering_;
 
-    /// Transfer mapping
+    // Transfer mapping
     LocalVector<int>** trans_level_;
 
-    /// Dimension of the coarse operators
+    // Dimension of the coarse operators
     std::vector<int> dim_level_;
     std::vector<int> Gsize_level_;
     std::vector<int> rGsize_level_;

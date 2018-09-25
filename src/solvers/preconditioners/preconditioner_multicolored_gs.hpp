@@ -15,6 +15,20 @@
 
 namespace rocalution {
 
+/** \ingroup precond_module
+  * \class MultiColoredSGS
+  * \brief Multi-Colored Symmetric Gauss-Seidel / SSOR Preconditioner
+  * \details
+  * The Multi-Colored Symmetric Gauss-Seidel / SSOR preconditioner is based on the
+  * splitting of the original matrix. Higher parallelism in solving the forward and
+  * backward substitution is obtained by performing a multi-colored decomposition.
+  * Details on the Symmetric Gauss-Seidel / SSOR algorithm can be found in the SGS
+  * preconditioner.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType>
 {
@@ -26,8 +40,8 @@ class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType>
 
     virtual void ReBuildNumeric(void);
 
-    /// Set the relaxation parameter for the SOR/SSOR scheme
-    virtual void SetRelaxation(ValueType omega);
+    /** \brief Set the relaxation parameter for the SOR/SSOR scheme */
+    void SetRelaxation(ValueType omega);
 
     protected:
     virtual void PostAnalyse_(void);
@@ -37,9 +51,23 @@ class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType>
     virtual void SolveR_(void);
     virtual void Solve_(const VectorType& rhs, VectorType* x);
 
+    /** \brief Relaxation parameter */
     ValueType omega_;
 };
 
+/** \ingroup precond_module
+  * \class MultiColoredGS
+  * \brief Multi-Colored Gauss-Seidel / SOR Preconditioner
+  * \details
+  * The Multi-Colored Symmetric Gauss-Seidel / SOR preconditioner is based on the
+  * splitting of the original matrix. Higher parallelism in solving the forward
+  * substitution is obtained by performing a multi-colored decomposition. Details on the
+  * Gauss-Seidel / SOR algorithm can be found in the GS preconditioner.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColoredGS : public MultiColoredSGS<OperatorType, VectorType, ValueType>
 {

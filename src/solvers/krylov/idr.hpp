@@ -12,9 +12,18 @@
 
 namespace rocalution {
 
-/// IDR(s) - Induced Dimension Reduction method, taken from "An Elegant IDR(s)
-/// Variant that Efficiently Exploits Biorthogonality Properties" by Martin B.
-/// van Gijzen and Peter Sonneveld, Delft University of Technology
+/** \ingroup solver_module
+  * \class IDR
+  * \brief Induced Dimension Reduction Method
+  * \details
+  * The Induced Dimension Reduction method is a Krylov subspace method for solving
+  * sparse (non) symmetric linear systems \f$Ax=b\f$. IDR(s) generates residuals in a
+  * sequence of nested subspaces.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class IDR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
 {
@@ -28,9 +37,9 @@ class IDR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     virtual void ReBuildNumeric(void);
     virtual void Clear(void);
 
-    /// Set the size of the Shadow Space
+    /** \brief Set the size of the Shadow Space */
     void SetShadowSpace(int s);
-    /// Set random seed for ONB creation (seed must be greater than 0)
+    /** \brief Set random seed for ONB creation (seed must be greater than 0) */
     void SetRandomSeed(unsigned long long seed);
 
     protected:

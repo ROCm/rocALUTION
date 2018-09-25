@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     BlockJacobi<GlobalMatrix<double>, GlobalVector<double>, double> bj;
     ILUT<LocalMatrix<double>, LocalVector<double>, double> p;
 
-    bj.Init(p);
+    bj.Set(p);
 
     ls.SetPreconditioner(bj);
     ls.SetOperator(mat);

@@ -142,7 +142,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetHostLevels(int level
     assert(levels < this->levels_);
 
     this->host_level_ = levels;
-    this->MoveHostLevels();
+    this->MoveHostLevels_();
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
@@ -476,9 +476,9 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalD
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void BaseMultiGrid<OperatorType, VectorType, ValueType>::MoveHostLevels(void)
+void BaseMultiGrid<OperatorType, VectorType, ValueType>::MoveHostLevels_(void)
 {
-    log_debug(this, "BaseMultiGrid::MoveHostLevels()", this->build_);
+    log_debug(this, "BaseMultiGrid::MoveHostLevels_()", this->build_);
 
     // If coarsest level on accelerator
     if(this->host_level_ != 0)

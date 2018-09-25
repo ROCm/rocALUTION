@@ -103,7 +103,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::SetOperatorFormat(unsigned in
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-int BaseAMG<OperatorType, VectorType, ValueType>::GetNumLevels()
+int BaseAMG<OperatorType, VectorType, ValueType>::GetNumLevels(void)
 {
     assert(this->hierarchy_ != false);
 
@@ -297,7 +297,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void)
         prolong_list_.back()->CloneBackend(*this->op_);
 
         // Create prolongation and restriction operators
-        this->Aggregate(*this->op_, prolong_list_.back(), restrict_list_.back(), op_list_.back());
+        this->Aggregate_(*this->op_, prolong_list_.back(), restrict_list_.back(), op_list_.back());
 
         ++this->levels_;
 
@@ -313,7 +313,7 @@ void BaseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void)
             restrict_list_.back()->CloneBackend(*this->op_);
             prolong_list_.back()->CloneBackend(*this->op_);
 
-            this->Aggregate(
+            this->Aggregate_(
                 *prev_op_, prolong_list_.back(), restrict_list_.back(), op_list_.back());
 
             ++this->levels_;

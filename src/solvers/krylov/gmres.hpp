@@ -12,6 +12,20 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class GMRES
+  * \brief Generalized Minimum Residual Method
+  * \details
+  * The Generalized Minimum Residual method (GMRES) is a projection method for solving
+  * sparse (non) symmetric linear systems \f$Ax=b\f$. The solution is approximated in a
+  * Krylov subspace \f$\mathcal{K}=\mathcal{K}_{m}\f$ and
+  * \f$\mathcal{L}=A\mathcal{K}_{m}\f$ with minimal residual, where \f$\mathcal{K}_{m}\f$
+  * is the \f$m\f$-th Krylov subspace with \f$v_{1} = r_{0}/||r_{0}||_{2}\f$.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class GMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
 {
@@ -25,7 +39,7 @@ class GMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     virtual void ReBuildNumeric(void);
     virtual void Clear(void);
 
-    /// Set the size of the Krylov-space basis
+    /** \brief Set the size of the Krylov subspace basis */
     virtual void SetBasisSize(int size_basis);
 
     protected:
@@ -38,7 +52,9 @@ class GMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     virtual void MoveToHostLocalData_(void);
     virtual void MoveToAcceleratorLocalData_(void);
 
+    /** \brief Generate Givens rotation */
     void GenerateGivensRotation_(ValueType dx, ValueType dy, ValueType& c, ValueType& s) const;
+    /** \brief Apply Givens rotation */
     void ApplyGivensRotation_(ValueType c, ValueType s, ValueType& dx, ValueType& dy) const;
 
     private:

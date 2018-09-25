@@ -10,7 +10,14 @@
 
 namespace rocalution {
 
-/// Base preconditioner class
+/** \ingroup precond_module
+  * \class Preconditioner
+  * \brief Base class for all preconditioners
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
 {
@@ -25,7 +32,25 @@ class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
     virtual void PrintEnd_(void) const;
 };
 
-//// Jacobi preconditioner
+/** \ingroup precond_module
+  * \class Jacobi
+  * \brief Jacobi Method
+  * \details
+  * The Jacobi method is for solving a diagonally dominant system of linear equations
+  * \f$Ax=b\f$. It solves for each diagonal element iteratively until convergence, such
+  * that
+  * \f[
+  *   x_{i}^{(k+1)} = (1 - \omega)x_{i}^{(k)} + \frac{\omega}{a_{ii}}
+  *   \left(
+  *     b_{i} - \sum\limits_{j=1}^{i-1}{a_{ij}x_{j}^{(k)}} -
+  *     \sum\limits_{j=i}^{n}{a_{ij}x_{j}^{(k)}}
+  *   \right)
+  * \f]
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -48,7 +73,25 @@ class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
     VectorType inv_diag_entries_;
 };
 
-/// Gauss-Seidel (GS) preconditioner
+/** \ingroup precond_module
+  * \class GS
+  * \brief Gauss-Seidel / Successive Over-Relaxation Method
+  * \details
+  * The Gauss-Seidel / SOR method is for solving system of linear equations \f$Ax=b\f$.
+  * It approximates the solution iteratively with
+  * \f[
+  *    x_{i}^{(k+1)} = (1 - \omega) x_{i}^{(k)} + \frac{\omega}{a_{ii}}
+  *    \left(
+  *      b_{i} - \sum\limits_{j=1}^{i-1}{a_{ij}x_{j}^{(k+1)}} -
+  *      \sum\limits_{j=i}^{n}{a_{ij}x_{j}^{(k)}}
+  *    \right),
+  * \f]
+  * with \f$\omega \in (0,2)\f$.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class GS : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -71,7 +114,17 @@ class GS : public Preconditioner<OperatorType, VectorType, ValueType>
     OperatorType GS_;
 };
 
-/// Symmetric Gauss-Seidel (SGS) preconditioner
+/** \ingroup precond_module
+  * \class SGS
+  * \brief Symmetric Gauss-Seidel / Symmetric Successive Over-Relaxation Method
+  * \details
+  * The Symmetric Gauss-Seidel / SSOR method is for solving system of linear equations
+  * \f$Ax=b\f$. It approximates the solution iteratively.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -97,7 +150,17 @@ class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
     VectorType v_;
 };
 
-/// ILU preconditioner based on levels
+/** \ingroup precond_module
+  * \class ILU
+  * \brief Incomplete LU Factorization based on levels
+  * \details
+  * The Incomplete LU Factorization based on levels computes a sparse lower and sparse
+  * upper triangular matrix such that \f$A = LU - R\f$.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -108,11 +171,14 @@ class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
     virtual void Print(void) const;
     virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    /// Initialize ILU(p) factorization based on power (see power(q)-pattern method,
-    /// D. Lukarski "Parallel Sparse Linear Algebra for Multi-core and Many-core
-    /// Platforms - Parallel Solvers and Preconditioners", PhD Thesis, 2012, KIT)
-    /// level==true build the structure based on levels; level==false build the
-    /// structure only based on the power(p+1)
+    /** \brief Initialize ILU(p) factorization
+      * \details
+      * Initialize ILU(p) factorization based on power (see power(q)-pattern method,
+      * D. Lukarski "Parallel Sparse Linear Algebra for Multi-core and Many-core
+      * Platforms - Parallel Solvers and Preconditioners", PhD Thesis, 2012, KIT) <br>
+      * level = true build the structure based on levels <br>
+      * level = false build the structure only based on the power(p+1)
+      */
     virtual void Set(int p, bool level = true);
     virtual void Build(void);
     virtual void Clear(void);
@@ -127,8 +193,18 @@ class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
     bool level_;
 };
 
-/// ILUT(t,m) preconditioner based on threshold and maximum number
-/// of elements per row
+/** \ingroup precond_module
+  * \class ILUT
+  * \brief Incomplete LU Factorization based on threshold
+  * \details
+  * The Incomplete LU Factorization based on threshold computes a sparse lower and sparse
+  * upper triangular matrix such that \f$A = LU - R\f$. Fill-in values are dropped
+  * depending on a threshold and number of maximal fill-ins per row.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -139,10 +215,10 @@ class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
     virtual void Print(void) const;
     virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    /// ILUT with threshold
+    /** \brief Set drop-off threshold */
     virtual void Set(double t);
 
-    /// ILUT with threshold and maximum number of elements per row
+    /** \brief Set drop-off threshold and maximum fill-ins per row */
     virtual void Set(double t, int maxrow);
 
     virtual void Build(void);
@@ -158,7 +234,18 @@ class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
     int max_row_;
 };
 
-/// Incomplete Cholesky with no fill-ins IC0
+/** \ingroup precond_module
+  * \class IC
+  * \brief Incomplete Cholesky Factorization without fill-ins
+  * \details
+  * The Incomplete Cholesky Factorization computes a sparse lower triangular matrix
+  * such that \f$A=LL^{T} - R\f$. Additional fill-ins are dropped and the sparsity
+  * pattern of the original matrix is preserved.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class IC : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -180,7 +267,20 @@ class IC : public Preconditioner<OperatorType, VectorType, ValueType>
     VectorType inv_diag_entries_;
 };
 
-//// VariablePreconditioner preconditioner
+/** \ingroup precond_module
+  * \class VariablePreconditioner
+  * \brief Variable Preconditioner
+  * \details
+  * The Variable Preconditioner can hold a selection of preconditioners. Thus, any type
+  * of preconditioners can be combined. As example, the variable preconditioner can
+  * combine Jacobi, GS and ILU – then, the first iteration of the iterative solver will
+  * apply Jacobi, the second iteration will apply GS and the third iteration will apply
+  * ILU. After that, the solver will start again with Jacobi, GS, ILU.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class VariablePreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
 {
@@ -193,6 +293,7 @@ class VariablePreconditioner : public Preconditioner<OperatorType, VectorType, V
     virtual void Build(void);
     virtual void Clear(void);
 
+    /** \brief Set the preconditioner sequence */
     virtual void SetPreconditioner(int n, Solver<OperatorType, VectorType, ValueType>** precond);
 
     protected:

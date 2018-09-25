@@ -15,9 +15,18 @@
 
 namespace rocalution {
 
-/// ILU(p,q) preconditioner (see power(q)-pattern method, D. Lukarski "Parallel Sparse Linear
-/// Algebra for Multi-core and Many-core Platforms - Parallel Solvers and Preconditioners",
-/// PhD Thesis, 2012, KIT)
+/** \ingroup precond_module
+  * \class MultiColoredILU
+  * \brief Multi-Colored Incomplete LU Factorization Preconditioner
+  * \details
+  * Multi-Colored Incomplete LU Factorization based on p-levels based on ILU(p,q)
+  * preconditioner power(q)-pattern method. Details can be found in ILU preconditioner
+  * section.
+  *
+  * \tparam OperatorType
+  * \tparam VectorType
+  * \tparam ValueType
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColoredILU : public MultiColored<OperatorType, VectorType, ValueType>
 {
@@ -29,13 +38,14 @@ class MultiColoredILU : public MultiColored<OperatorType, VectorType, ValueType>
 
     virtual void ReBuildNumeric(void);
 
-    /// Initialize a multi-colored ILU(p,p+1) preconditioner
-    virtual void Set(int p);
+    /** \brief Initialize a multi-colored ILU(p, p+1) preconditioner */
+    void Set(int p);
 
-    /// Initialize a multi-colored ILU(p,q) preconditioner;
-    /// level==true will perform the factorization with levels;
-    /// level==false will perform the factorization only on the power(q)-pattern
-    virtual void Set(int p, int q, bool level = true);
+    /** \brief Initialize a multi-colored ILU(p, q) preconditioner
+      * \details level = true will perform the factorization with levels <br>
+      * level = false will perform the factorization only on the power(q)-pattern
+      */
+    void Set(int p, int q, bool level = true);
 
     protected:
     virtual void Build_Analyser_(void);
@@ -47,9 +57,13 @@ class MultiColoredILU : public MultiColored<OperatorType, VectorType, ValueType>
     virtual void SolveR_(void);
     virtual void Solve_(const VectorType& rhs, VectorType* x);
 
+    /** \brief power(q) pattern parameter */
     int q_;
+    /** \brief p-levels parameter */
     int p_;
+    /** \brief Perform factorization with levels or not */
     bool level_;
+    /** \brief Number of non-zeros */
     int nnz_;
 };
 
