@@ -257,7 +257,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     r->CopyFrom(*r0);
 
     // initial residual
-    tau2            = this->Norm(*r0);
+    tau2            = this->Norm_(*r0);
     double res_norm = rocalution_abs(tau2);
 
     this->iter_ctrl_.InitResidual(res_norm);
@@ -286,7 +286,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     // First quasi-minimization and update iterate
 
     // theta1 = ||r|| / tau2
-    theta1   = this->Norm(*r) / tau2;
+    theta1   = this->Norm_(*r) / tau2;
     theta1sq = theta1 * theta1;
 
     // c = 1 / sqrt(1 + theta1 * theta1)
@@ -321,7 +321,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     // Second quasi-minimization and update iterate
 
     // theta2 = ||r|| / tau1
-    theta2   = this->Norm(*r) / tau1;
+    theta2   = this->Norm_(*r) / tau1;
     theta2sq = theta2 * theta2;
 
     // c = 1 / sqrt(1 + theta2 * theta2)
@@ -377,7 +377,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
         // First quasi-minimization and update iterate
 
         // theta1 = ||r|| / tau2
-        theta1   = this->Norm(*r) / tau2;
+        theta1   = this->Norm_(*r) / tau2;
         theta1sq = theta1 * theta1;
 
         // c = 1 / sqrt(1 + theta1* theta1)
@@ -421,7 +421,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
         // Second quasi-minimization and update iterate
 
         // theta2 = ||r|| / tau
-        theta2   = this->Norm(*r) / tau1;
+        theta2   = this->Norm_(*r) / tau1;
         theta2sq = theta2 * theta2;
 
         // c = 1 / sqrt(1 + theta2 * theta2)
@@ -445,7 +445,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     op->Apply(*x, r0);
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm(*r0)));
+    this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm_(*r0)));
 
     log_debug(this, "QMRCGStab::SolveNonPrecond_()", " #*# end");
 }
@@ -485,7 +485,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     r->CopyFrom(*r0);
 
     // initial residual
-    tau2            = this->Norm(*r0);
+    tau2            = this->Norm_(*r0);
     double res_norm = rocalution_abs(tau2);
 
     this->iter_ctrl_.InitResidual(res_norm);
@@ -517,7 +517,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     // First quasi-minimization and update iterate
 
     // theta1 = ||r|| / tau2
-    theta1   = this->Norm(*r) / tau2;
+    theta1   = this->Norm_(*r) / tau2;
     theta1sq = theta1 * theta1;
 
     // c = 1 / sqrt(1 + theta1 * theta1)
@@ -555,7 +555,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     // Second quasi-minimization and update iterate
 
     // theta2 = ||r|| / tau1
-    theta2   = this->Norm(*r) / tau1;
+    theta2   = this->Norm_(*r) / tau1;
     theta2sq = theta2 * theta2;
 
     // c = 1 / sqrt(1 + theta2 * theta2)
@@ -614,7 +614,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
         // First quasi-minimization and update iterate
 
         // theta1 = ||r|| / tau2
-        theta1   = this->Norm(*r) / tau2;
+        theta1   = this->Norm_(*r) / tau2;
         theta1sq = theta1 * theta1;
 
         // c = 1 / sqrt(1 + theta1* theta1)
@@ -661,7 +661,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
         // Second quasi-minimization and update iterate
 
         // theta2 = ||r|| / tau
-        theta2   = this->Norm(*r) / tau1;
+        theta2   = this->Norm_(*r) / tau1;
         theta2sq = theta2 * theta2;
 
         // c = 1 / sqrt(1 + theta2 * theta2)
@@ -685,7 +685,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     op->Apply(*x, r0);
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm(*r0)));
+    this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm_(*r0)));
 
     log_debug(this, "QMRCGStab::SolvePrecond_()", " #*# end");
 }

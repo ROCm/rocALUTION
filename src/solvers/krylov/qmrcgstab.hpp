@@ -18,11 +18,14 @@ namespace rocalution {
   * \details
   * The Quasi-Minimal Residual Conjugate Gradient Stabilized method is a variant of the
   * Krylov subspace BiCGStab method for solving sparse (non) symmetric linear systems
-  * \f$Ax=b\f$.
+  * \f$Ax=b\f$. For further details, see "Liu, X., Gu, T., Hang, X., and Sheng, Z.
+  * A parallel version of QMRCGSTAB method for large linear systems in distributed
+  * parallel environments. Applied Mathematics and Computation 172, 2 (2006), 744 - 752.
+  * Special issue for The Beijing-HK Scientific Computing Meetings".
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class QMRCGStab : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

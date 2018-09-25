@@ -20,9 +20,9 @@ namespace rocalution {
   * restriction operators produce sub-matrices wich overlap. This leads to contributions
   * from two preconditioners on the overlapped area which are scaled by \f$1/2\f$.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class AS : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -77,9 +77,9 @@ class AS : public Preconditioner<OperatorType, VectorType, ValueType>
   * method is a mixture of block Jacobi and the AS scheme. In this case, the sub-matrices
   * contain overlapped areas from other blocks, too.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class RAS : public AS<OperatorType, VectorType, ValueType>

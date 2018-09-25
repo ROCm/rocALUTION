@@ -286,7 +286,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
     set_to_zero_host(size + 1, r);
 
     // r_0 = ||v_0||
-    r[0] = this->Norm(*v[0]);
+    r[0] = this->Norm_(*v[0]);
 
     // Initial residual
     if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
@@ -322,7 +322,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
             int ip1i = DENSE_IND(i + 1, i, size + 1, size);
 
             // H_i+1i = ||v_i+1||
-            H[ip1i] = this->Norm(*v[i + 1]);
+            H[ip1i] = this->Norm_(*v[i + 1]);
 
             // v_i+1 /= H_i+1i
             v[i + 1]->Scale(one / H[ip1i]);
@@ -378,7 +378,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
         set_to_zero_host(size + 1, r);
 
         // r_0 = ||v_0||
-        r[0] = this->Norm(*v[0]);
+        r[0] = this->Norm_(*v[0]);
 
         // Check convergence
         if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(r[0])))
@@ -432,7 +432,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
     set_to_zero_host(size + 1, r);
 
     // r_0 = ||v_0||
-    r[0] = this->Norm(*v[0]);
+    r[0] = this->Norm_(*v[0]);
 
     // Initial residual
     if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
@@ -471,7 +471,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
             int ip1i = DENSE_IND(i + 1, i, size + 1, size);
 
             // H_i+1i = ||v_i+1||
-            H[ip1i] = this->Norm(*v[i + 1]);
+            H[ip1i] = this->Norm_(*v[i + 1]);
 
             // v_i+1 /= H_i+1i
             v[i + 1]->Scale(one / H[ip1i]);
@@ -530,7 +530,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
         set_to_zero_host(size + 1, r);
 
         // r_0 = ||v_0||
-        r[0] = this->Norm(*v[0]);
+        r[0] = this->Norm_(*v[0]);
 
         // Check convergence
         if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(r[0])))

@@ -25,9 +25,9 @@ namespace rocalution {
   * Details on the Symmetric Gauss-Seidel / SSOR algorithm can be found in the SGS
   * preconditioner.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType>
@@ -64,9 +64,9 @@ class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType>
   * substitution is obtained by performing a multi-colored decomposition. Details on the
   * Gauss-Seidel / SOR algorithm can be found in the GS preconditioner.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColoredGS : public MultiColoredSGS<OperatorType, VectorType, ValueType>

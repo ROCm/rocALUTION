@@ -17,13 +17,14 @@ namespace rocalution {
   * \brief Conjugate Residual Method
   * \details
   * The Conjugate Residual method is an iterative method for solving sparse symmetric
-  * linear systems \f$Ax=b\f$. It is a Krylov subspace method and differs from the much
-  * more popular Conjugate Gradient method that the system matrix is not required to be
-  * positive definite.
+  * semi-positive definite linear systems \f$Ax=b\f$. It is a Krylov subspace method and
+  * differs from the much more popular Conjugate Gradient method that the system matrix
+  * is not required to be positive definite. The method can be preconditioned where the
+  * approximation should also be SPD or semi-positive definite.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class CR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

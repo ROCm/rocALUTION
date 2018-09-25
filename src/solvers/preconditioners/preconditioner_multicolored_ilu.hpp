@@ -23,9 +23,9 @@ namespace rocalution {
   * preconditioner power(q)-pattern method. Details can be found in ILU preconditioner
   * section.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColoredILU : public MultiColored<OperatorType, VectorType, ValueType>

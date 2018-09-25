@@ -316,9 +316,9 @@ void IterativeLinearSolver<OperatorType, VectorType, ValueType>::SetResidualNorm
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-ValueType IterativeLinearSolver<OperatorType, VectorType, ValueType>::Norm(const VectorType& vec)
+ValueType IterativeLinearSolver<OperatorType, VectorType, ValueType>::Norm_(const VectorType& vec)
 {
-    log_debug(this, "IterativeLinearSolver::Norm()", (const void*&)vec, this->res_norm_);
+    log_debug(this, "IterativeLinearSolver::Norm_()", (const void*&)vec, this->res_norm_);
 
     // L1 norm
     if(this->res_norm_ == 1)
@@ -539,7 +539,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const Vector
         this->op_->Apply(*x, &this->x_res_);
         this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-        ValueType res = this->Norm(this->x_res_);
+        ValueType res = this->Norm_(this->x_res_);
 
         if(this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false)
         {
@@ -557,7 +557,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const Vector
         this->op_->Apply(*x, &this->x_res_);
         this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-        res = this->Norm(this->x_res_);
+        res = this->Norm_(this->x_res_);
         while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
         {
             // Solve M x_old = x_res
@@ -569,7 +569,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const Vector
             // x_res = b - Ax
             this->op_->Apply(*x, &this->x_res_);
             this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
-            res = this->Norm(this->x_res_);
+            res = this->Norm_(this->x_res_);
         }
     }
 

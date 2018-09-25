@@ -236,7 +236,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     op->Apply(*x, r);
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    ValueType res = this->Norm(*r);
+    ValueType res = this->Norm_(*r);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false)
     {
@@ -257,7 +257,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     op->Apply(*x, r);
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    res = this->Norm(*r);
+    res = this->Norm_(*r);
     while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
     {
         beta = (c * alpha / two) * (c * alpha / two);
@@ -273,7 +273,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
         // compute residual = b - Ax
         op->Apply(*x, r);
         r->ScaleAdd(static_cast<ValueType>(-1), rhs);
-        res = this->Norm(*r);
+        res = this->Norm_(*r);
     }
 
     log_debug(this, "Chebyshev::SolveNonPrecond_()", " #*# end");
@@ -307,7 +307,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     op->Apply(*x, r);
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    ValueType res = this->Norm(*r);
+    ValueType res = this->Norm_(*r);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false)
     {
@@ -330,7 +330,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     // compute residual = b - Ax
     op->Apply(*x, r);
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
-    res = this->Norm(*r);
+    res = this->Norm_(*r);
 
     while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
     {
@@ -350,7 +350,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
         // compute residual = b - Ax
         op->Apply(*x, r);
         r->ScaleAdd(static_cast<ValueType>(-1), rhs);
-        res = this->Norm(*r);
+        res = this->Norm_(*r);
     }
 
     log_debug(this, "Chebyshev::SolvePrecond_()", " #*# end");

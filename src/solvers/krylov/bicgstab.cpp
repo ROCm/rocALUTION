@@ -254,8 +254,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // Initial residual norm for |b-Ax0|
-    ValueType res_norm = this->Norm(*r0);
-    //    ValueType res_norm = this->Norm(rhs);
+    ValueType res_norm = this->Norm_(*r0);
+    //    ValueType res_norm = this->Norm_(rhs);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -301,7 +301,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
             op->Apply(*x, p);
             p->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-            res_norm = this->Norm(*p);
+            res_norm = this->Norm_(*p);
 
             this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
@@ -315,7 +315,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
         r->AddScale(*t, -omega);
 
         // Check convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         {
             break;
@@ -375,8 +375,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // Initial residual norm for |b-Ax0|
-    ValueType res_norm = this->Norm(*r0);
-    //    ValueType res_norm = this->Norm(rhs);
+    ValueType res_norm = this->Norm_(*r0);
+    //    ValueType res_norm = this->Norm_(rhs);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -426,7 +426,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
             op->Apply(*x, p);
             p->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-            res_norm = this->Norm(*p);
+            res_norm = this->Norm_(*p);
             this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
             break;
@@ -439,7 +439,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
         r->AddScale(*t, -omega);
 
         // Check convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         {
             break;

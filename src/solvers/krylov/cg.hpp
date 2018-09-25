@@ -17,13 +17,14 @@ namespace rocalution {
   * \brief Conjugate Gradient Method
   * \details
   * The Conjugate Gradient method is the best known iterative method for solving sparse
-  * symmetric positive definite linear systems \f$Ax=b\f$. It is based on orthogonal
-  * projection onto the Krylov subspace \f$\mathcal{K}_{m}(r_{0}, A)\f$, where
-  * \f$r_{0}\f$ is the initial residual.
+  * symmetric positive definite (SPD) linear systems \f$Ax=b\f$. It is based on
+  * orthogonal projection onto the Krylov subspace \f$\mathcal{K}_{m}(r_{0}, A)\f$,
+  * where \f$r_{0}\f$ is the initial residual. The method can be preconditioned, where
+  * the approximation should also be SPD.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class CG : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

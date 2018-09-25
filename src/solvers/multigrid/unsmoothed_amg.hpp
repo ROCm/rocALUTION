@@ -18,11 +18,13 @@ namespace rocalution {
   * \brief Unsmoothed Aggregation Algebraic MultiGrid Method
   * \details
   * The Unsmoothed Aggregation Algebraic MultiGrid method is based on unsmoothed
-  * aggregation based interpolation scheme.
+  * aggregation based interpolation scheme, see "Stuben, K. Algebraic multigrid (AMG):
+  * An introduction with applications. Journal of Computational and Applied Mathematics
+  * 128 (2001), 281–309" for details.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class UAAMG : public BaseAMG<OperatorType, VectorType, ValueType>

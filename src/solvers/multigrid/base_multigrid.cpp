@@ -594,7 +594,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Solve(const VectorType&
     this->op_->Apply(*x, this->r_level_[0]);
     this->r_level_[0]->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    this->res_norm_ = rocalution_abs(this->Norm(*this->r_level_[0]));
+    this->res_norm_ = rocalution_abs(this->Norm_(*this->r_level_[0]));
 
     if(this->iter_ctrl_.InitResidual(this->res_norm_) == false)
     {
@@ -835,7 +835,7 @@ void BaseMultiGrid<OperatorType, VectorType, ValueType>::Vcycle_(const VectorTyp
             this->op_->Apply(*x, this->r_level_[this->current_level_]);
             this->r_level_[this->current_level_]->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-            this->res_norm_ = rocalution_abs(this->Norm(*this->r_level_[this->current_level_]));
+            this->res_norm_ = rocalution_abs(this->Norm_(*this->r_level_[this->current_level_]));
         }
     }
     else

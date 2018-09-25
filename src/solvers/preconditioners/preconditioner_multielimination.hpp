@@ -33,9 +33,9 @@ namespace rocalution {
   * recursion, we need to provide a solution procedure. By the design of the library,
   * this can be any kind of solver. 
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiElimination : public Preconditioner<OperatorType, VectorType, ValueType>

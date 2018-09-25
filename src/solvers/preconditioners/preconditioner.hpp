@@ -14,9 +14,9 @@ namespace rocalution {
   * \class Preconditioner
   * \brief Base class for all preconditioners
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
@@ -47,9 +47,9 @@ class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
   *   \right)
   * \f]
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -88,9 +88,9 @@ class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
   * \f]
   * with \f$\omega \in (0,2)\f$.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class GS : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -121,9 +121,9 @@ class GS : public Preconditioner<OperatorType, VectorType, ValueType>
   * The Symmetric Gauss-Seidel / SSOR method is for solving system of linear equations
   * \f$Ax=b\f$. It approximates the solution iteratively.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -157,9 +157,9 @@ class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
   * The Incomplete LU Factorization based on levels computes a sparse lower and sparse
   * upper triangular matrix such that \f$A = LU - R\f$.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -201,9 +201,9 @@ class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
   * upper triangular matrix such that \f$A = LU - R\f$. Fill-in values are dropped
   * depending on a threshold and number of maximal fill-ins per row.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -242,9 +242,9 @@ class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
   * such that \f$A=LL^{T} - R\f$. Additional fill-ins are dropped and the sparsity
   * pattern of the original matrix is preserved.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class IC : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -277,9 +277,9 @@ class IC : public Preconditioner<OperatorType, VectorType, ValueType>
   * apply Jacobi, the second iteration will apply GS and the third iteration will apply
   * ILU. After that, the solver will start again with Jacobi, GS, ILU.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class VariablePreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>

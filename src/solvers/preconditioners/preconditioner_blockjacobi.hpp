@@ -17,9 +17,9 @@ namespace rocalution {
   * The Block-Jacobi preconditioner is designed to wrap any local preconditioner and
   * apply it in a global block fashion locally on each interior matrix.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be GlobalMatrix
+  * \tparam VectorType - can be GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType>

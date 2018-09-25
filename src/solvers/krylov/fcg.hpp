@@ -21,11 +21,12 @@ namespace rocalution {
   * Gradient method with the only difference, that it allows the preconditioner
   * \f$M^{-1}\f$ to be not a constant operator. This can be especially helpful if the
   * operation \f$M^{-1}x\f$ is the result of another iterative process and not a constant
-  * operator.
+  * operator. For further details, see "Notay, Y. Flexible conjugate gradients. SIAM J.
+  * Sci. Comput 22 (2000), 1444–1460".
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class FCG : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

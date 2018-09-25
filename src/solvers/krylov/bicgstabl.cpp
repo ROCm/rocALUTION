@@ -303,7 +303,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     op->Apply(*x, r0);
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    ValueType res = this->Norm(*r0);
+    ValueType res = this->Norm_(*r0);
     this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
     // r_0 = r0
@@ -372,7 +372,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
             x->AddScale(*u[0], alpha);
 
             // Check convergence
-            res = this->Norm(*r[0]);
+            res = this->Norm_(*r[0]);
 
             if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res)))
             {
@@ -453,7 +453,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
             r[0]->AddScale(*r[j], -gamma1[j - 1]);
         }
 
-        res = this->Norm(*r[0]);
+        res = this->Norm_(*r[0]);
 
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
         {
@@ -506,7 +506,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     this->precond_->SolveZeroSol(*z, r0);
 
     // Using preconditioned residual
-    ValueType res = this->Norm(*r0);
+    ValueType res = this->Norm_(*r0);
 
     this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
@@ -582,7 +582,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
             x->AddScale(*u[0], alpha);
 
             // Check convergence
-            res = this->Norm(*r[0]);
+            res = this->Norm_(*r[0]);
 
             if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res)))
             {
@@ -663,7 +663,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
             r[0]->AddScale(*r[j], -gamma1[j - 1]);
         }
 
-        res = this->Norm(*r[0]);
+        res = this->Norm_(*r[0]);
 
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
         {

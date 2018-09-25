@@ -355,7 +355,7 @@ void MixedPrecisionDC<OperatorTypeH,
     this->op_h_->Apply(*this->x_h_, &this->r_h_);
     this->r_h_.ScaleAdd(static_cast<ValueTypeH>(-1), rhs);
 
-    ValueTypeH res = this->Norm(this->r_h_);
+    ValueTypeH res = this->Norm_(this->r_h_);
 
     if(this->iter_ctrl_.InitResidual(res) == false)
     {
@@ -404,7 +404,7 @@ void MixedPrecisionDC<OperatorTypeH,
         // initial residual = b - Ax
         this->op_h_->Apply(*this->x_h_, &this->r_h_);
         this->r_h_.ScaleAdd(static_cast<ValueTypeH>(-1), rhs);
-        res = this->Norm(this->r_h_);
+        res = this->Norm_(this->r_h_);
     }
 
     log_debug(this, "MixedPrecisionDC::SolveNonPrecond_()", " #*# end");

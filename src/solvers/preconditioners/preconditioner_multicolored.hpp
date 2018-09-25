@@ -18,9 +18,9 @@ namespace rocalution {
   * \class MultiColored
   * \brief Base class for all multi-colored preconditioners
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiColored : public Preconditioner<OperatorType, VectorType, ValueType>

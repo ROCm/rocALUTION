@@ -10,6 +10,17 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class MultiGrid
+  * \brief MultiGrid Method
+  * \details
+  * The MultiGrid method can be used with external data, such as externally computed
+  * restriction, prolongation and operator hierarchy.
+  *
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType>
 {
@@ -17,13 +28,8 @@ class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType>
     MultiGrid();
     virtual ~MultiGrid();
 
-    /// Set thre restriction method by operator for each level
     virtual void SetRestrictOperator(OperatorType** op);
-
-    /// Set the prolongation operator for each level
     virtual void SetProlongOperator(OperatorType** op);
-
-    /// Set the operator for each level
     virtual void SetOperatorHierarchy(OperatorType** op);
 };
 

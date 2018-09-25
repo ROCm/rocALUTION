@@ -20,9 +20,12 @@ namespace rocalution {
   * sparse (non) symmetric linear systems \f$Ax=b\f$. IDR(s) generates residuals in a
   * sequence of nested subspaces.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * The dimension of the shadow space can be set by SetShadowSpace(). The default size
+  * of the shadow space is 4.
+  *
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class IDR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

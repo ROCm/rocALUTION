@@ -17,14 +17,17 @@ namespace rocalution {
   * \brief Generalized Minimum Residual Method
   * \details
   * The Generalized Minimum Residual method (GMRES) is a projection method for solving
-  * sparse (non) symmetric linear systems \f$Ax=b\f$. The solution is approximated in a
-  * Krylov subspace \f$\mathcal{K}=\mathcal{K}_{m}\f$ and
+  * sparse (non) symmetric linear systems \f$Ax=b\f$, based on restarting technique. The
+  * solution is approximated in a Krylov subspace \f$\mathcal{K}=\mathcal{K}_{m}\f$ and
   * \f$\mathcal{L}=A\mathcal{K}_{m}\f$ with minimal residual, where \f$\mathcal{K}_{m}\f$
   * is the \f$m\f$-th Krylov subspace with \f$v_{1} = r_{0}/||r_{0}||_{2}\f$.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * The Krylov subspace basis size can be set using SetBasisSize(). The default size is
+  * 30.
+  *
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class GMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

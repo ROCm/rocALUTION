@@ -19,9 +19,9 @@ namespace rocalution {
   * preconditioner with values from a linear combination of matrix-valued
   * Chebyshev polynomials.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class AIChebyshev : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -56,12 +56,14 @@ class AIChebyshev : public Preconditioner<OperatorType, VectorType, ValueType>
   * approximation of \f$M^{-1}\f$ by minimizing the Frobenius norm \f$||I − GL||_{F}\f$,
   * where \f$L\f$ denotes the exact lower triangular part of \f$A\f$ and \f$G:=M^{-1}\f$.
   * The FSAI preconditioner is initialized by \f$q\f$, based on the sparsity pattern of
-  * \f$|A|\f$. However, it is also possible to supply external sparsity patterns in form
-  * of the LocalMatrix class.
+  * \f$|A^{q}|\f$. However, it is also possible to supply external sparsity patterns in form
+  * of the LocalMatrix class. Further details are given in "Kolotilina, L. Y., and Yeremin,
+  * A. Y. Factorized sparse approximate inverse preconditionings, 1. theory. SIAM J. Matrix
+  * Anal. Appl. 14 (1993), 45–58".
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class FSAI : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -111,11 +113,13 @@ class FSAI : public Preconditioner<OperatorType, VectorType, ValueType>
   * The SParse Approximate Inverse algorithm is an explicitly computed preconditioner for
   * general sparse linear systems. In its current implementation, only the sparsity
   * pattern of the system matrix is supported. The SPAI computation is based on the
-  * minimization of the Frobenius norm \f$||AM − I||_{F}\f$.
+  * minimization of the Frobenius norm \f$||AM − I||_{F}\f$. Further details are given in
+  * "Grote, M. J., and Huckle, T. Effective parallel preconditioning with sparse
+  * approximate inverses. PPSC (1995), 466–471".
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class SPAI : public Preconditioner<OperatorType, VectorType, ValueType>
@@ -158,9 +162,9 @@ class SPAI : public Preconditioner<OperatorType, VectorType, ValueType>
   * based on matrix-vector operations only. The matrix format for the stored matrices can
   * be specified.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class TNS : public Preconditioner<OperatorType, VectorType, ValueType>

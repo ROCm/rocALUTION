@@ -17,9 +17,9 @@ namespace rocalution {
   * \class BaseAMG
   * \brief Base class for all algebraic multigrid solvers
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class BaseAMG : public BaseMultiGrid<OperatorType, VectorType, ValueType>

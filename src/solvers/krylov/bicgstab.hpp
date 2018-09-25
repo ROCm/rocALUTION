@@ -17,9 +17,9 @@ namespace rocalution {
   * The Bi-Conjugate Gradient Stabilized method is a variation of CGS and solves sparse
   * (non) symmetric linear systems \f$Ax=b\f$.
   * 
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class BiCGStab : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

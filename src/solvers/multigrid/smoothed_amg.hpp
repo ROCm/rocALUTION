@@ -18,11 +18,13 @@ namespace rocalution {
   * \brief Smoothed Aggregation Algebraic MultiGrid Method
   * \details
   * The Smoothed Aggregation Algebraic MultiGrid method is based on smoothed
-  * aggregation based interpolation scheme.
+  * aggregation based interpolation scheme, see "Vanek, P., Mandel, J., and Brezina,
+  * M. Algebraic multigrid by smoothed aggregation for second and fourth order
+  * elliptic problems. Computing 56, 3 (1996), 179–196" for details.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class SAAMG : public BaseAMG<OperatorType, VectorType, ValueType>

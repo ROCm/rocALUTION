@@ -18,13 +18,17 @@ namespace rocalution {
   * \details
   * The Flexible Generalized Minimum Residual method (FGMRES) is a projection method for
   * solving sparse (non) symmetric linear systems \f$Ax=b\f$. It is similar to the GMRES
-  * method with the only difference, that it allows the preconditioner \f$M^{-1}\f$ to be
-  * not a constant operator. This can be especially helpful if the operation
-  * \f$M^{-1}x\f$ is the result of another iterative process and not a constant operator.
+  * method with the only difference, the FGMRES is based on a window shifting of the
+  * Krylov subspace and thus allows the preconditioner \f$M^{-1}\f$ to be not a constant
+  * operator. This can be especially helpful if the operation \f$M^{-1}x\f$ is the result
+  * of another iterative process and not a constant operator.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * The Krylov subspace basis
+  * size can be set using SetBasisSize(). The default size is 30.
+  *
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class FGMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>

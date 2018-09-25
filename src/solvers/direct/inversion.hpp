@@ -10,6 +10,16 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class Inversion
+  * \brief Matrix Inversion
+  * \details
+  * Full matrix inversion based on QR decomposition.
+  *
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class Inversion : public DirectLinearSolver<OperatorType, VectorType, ValueType>
 {

@@ -351,7 +351,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
     r->ScaleAdd(-one, rhs);
 
     // use for |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
+    ValueType res_norm = this->Norm_(*r);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -465,7 +465,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
             x->AddScale(*U[k], beta);
 
             // Residual norm
-            res_norm = this->Norm(*r);
+            res_norm = this->Norm_(*r);
 
             // Check inner loop for convergence
             if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res_norm)))
@@ -533,7 +533,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
         r->AddScale(*v, -omega);
 
         // Residual norm to check outer loop convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
     }
 
     log_debug(this, "IDR::SolveNonPrecond_()", " #*# end");
@@ -578,7 +578,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
     r->ScaleAdd(-one, rhs);
 
     // use for |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
+    ValueType res_norm = this->Norm_(*r);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -695,7 +695,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
             x->AddScale(*U[k], beta);
 
             // Residual norm
-            res_norm = this->Norm(*r);
+            res_norm = this->Norm_(*r);
 
             // Check inner loop for convergence
             if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res_norm)))
@@ -766,7 +766,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
         x->AddScale(*v, omega);
 
         // Residual norm to check outer loop convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
     }
 
     log_debug(this, "::SolvePrecond_()", " #*# end");

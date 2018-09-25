@@ -18,11 +18,13 @@ namespace rocalution {
   * \brief Ruge-Stueben Algebraic MultiGrid Method
   * \details
   * The Ruge-Stueben Algebraic MultiGrid method is based on the classic Ruge-Stueben
-  * coarsening with direct interpolation.
+  * coarsening with direct interpolation, see "Stuben, K. Algebraic multigrid (AMG): An
+  * introduction with applications. Journal of Computational and Applied Mathematics 128
+  * (2001), 281–309" for details.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class RugeStuebenAMG : public BaseAMG<OperatorType, VectorType, ValueType>

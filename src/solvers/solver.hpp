@@ -15,10 +15,30 @@ namespace rocalution {
 /** \ingroup solver_module
   * \class Solver
   * \brief Base class for all solvers and preconditioners
+  * \details
+  * Most of the solvers can be performed on linear operators LocalMatrix, LocalStencil
+  * and GlobalMatrix - i.e. the solvers can be performed locally (on a shared memory
+  * system) or in a distributed manner (on a cluster) via MPI. The only exception is the
+  * AMG (Algebraic Multigrid) solver which has two versions (one for LocalMatrix and one
+  * for GlobalMatrix class). The only pure local solvers (which do not support global/MPI
+  * operations) are the mixed-precision defect-correction solver and all direct solvers.
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * All solvers need three template parameters - Operators, Vectors and Scalar type.
+  *
+  * The Solver class is purely virtual and provides an interface for
+  * - SetOperator() to set the operator \f$A\f$, i.e. the user can pass the matrix here.
+  * - Build() to build the solver (including preconditioners, sub-solvers, etc.). The
+  *   user need to specify the operator first before calling Build().
+  * - Solve() to solve the system \f$Ax = b\f$. The user need to pass a right-hand-side
+  *   \f$b\f$ and a vector \f$x\f$, where the solution will be obtained.
+  * - Print() to show solver information.
+  * - ReBuildNumeric() to only re-build the solver numerically (if possible).
+  * - MoveToHost() and MoveToAccelerator() to offload the solver (including
+  *   preconditioners and sub-solvers) to the host/accelerator.
+  *
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class Solver : public RocalutionObj
@@ -66,9 +86,9 @@ class Solver : public RocalutionObj
 
     /** \brief Provide verbose output of the solver
       * \details
-      * verb = 0 no output <br>
-      * verb = 1 print info about the solver (start, end); <br>
-      * verb = 2 print (iter, residual) via iteration control;
+      * - verb = 0 -> no output
+      * - verb = 1 -> print info about the solver (start, end);
+      * - verb = 2 -> print (iter, residual) via iteration control;
       */
     virtual void Verbose(int verb = 1);
 
@@ -101,7 +121,54 @@ class Solver : public RocalutionObj
     virtual void MoveToAcceleratorLocalData_(void) = 0;
 };
 
-/// Base class for all linear (iterative) solvers
+/** \ingroup solver_module
+  * \class IterativeLinearSolver
+  * \brief Base class for all linear iterative solvers
+  * \details
+  * The iterative solvers are controlled by an iteration control object, which monitors
+  * the convergence properties of the solver, i.e. maximum number of iteration, relative
+  * tolerance, absolute tolerance and divergence tolerance. The iteration control can
+  * also record the residual history and store it in an ASCII file.
+  * - Init(), InitMinIter(), InitMaxIter() and InitTol() initialize the solver and set the
+  * stopping criteria.
+  * - RecordResidualHistory() and RecordHistory() start the recording of the residual and
+  * write it into a file.
+  * - Verbose() sets the level of verbose output of the solver (0 - no output, 2 - detailed
+  * output, including residual and iteration information).
+  * - SetPreconditioner() sets the preconditioning.
+  *
+  * All iterative solvers are controlled based on
+  * - Absolute stopping criteria, when \f$|r_{k}|_{L_{p}} \lt \epsilon_{abs}\f$
+  * - Relative stopping criteria, when \f$|r_{k}|_{L_{p}} / |r_{1}|_{L_{p}} \leq
+  *   \epsilon_{rel}\f$
+  * - Divergence stopping criteria, when \f$|r_{k}|_{L_{p}} / |r_{1}|_{L_{p}} \geq
+  *   \epsilon_{div}\f$
+  * - Maximum number of iteration \f$N\f$, when \f$k = N\f$
+  *
+  * where \f$k\f$ is the current iteration, \f$r_{k}\f$ the residual for the current
+  * iteration \f$k\f$ (i.e. \f$r_{k} = b - Ax_{k}\f$) and \f$r_{1}\f$ the starting
+  * residual (i.e. \f$r_{1} = b - Ax_{init}\f$). In addition, the minimum number of
+  * iterations \f$M\f$ can be specified. In this case, the solver will not stop to
+  * iterate, before \f$k \geq M\f$.
+  *
+  * The \f$L_{p}\f$ norm is used for the computation, where \f$p\f$ could be 1, 2 and
+  * \f$\infty\f$. The norm computation can be set with SetResidualNorm() with 1 for
+  * \f$L_{1}\f$, 2 for \f$L_{2}\f$ and 3 for \f$L_{\infty}\f$. For the computation with
+  * \f$L_{\infty}\f$, the index of the maximum value can be obtained with
+  * GetAmaxResidualIndex(). If this function is called and \f$L_{\infty}\f$ was not
+  * selected, this function will return -1.
+  *
+  * The reached criteria can be obtained with GetSolverStatus(), returning
+  * - 0, if no criteria has been reached yet
+  * - 1, if absolute tolerance has been reached
+  * - 2, if relative tolerance has been reached
+  * - 3, if divergence tolerance has been reached
+  * - 4, if maximum number of iteration has been reached
+  *
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class IterativeLinearSolver : public Solver<OperatorType, VectorType, ValueType>
 {
@@ -109,79 +176,100 @@ class IterativeLinearSolver : public Solver<OperatorType, VectorType, ValueType>
     IterativeLinearSolver();
     virtual ~IterativeLinearSolver();
 
-    /// Initialize the solver with absolute/relative/divergence
-    /// tolerance and maximum number of iterations
+    /** \brief Initialize the solver with absolute/relative/divergence tolerance and
+      * maximum number of iterations
+      */
     void Init(double abs_tol, double rel_tol, double div_tol, int max_iter);
 
-    /// Initialize the solver with absolute/relative/divergence
-    /// tolerance and minimum/maximum number of iterations
+    /** \brief Initialize the solver with absolute/relative/divergence tolerance and
+      * minimum/maximum number of iterations
+      */
     void Init(double abs_tol, double rel_tol, double div_tol, int min_iter, int max_iter);
 
-    /// Set the minimum number of iterations
+    /** \brief Set the minimum number of iterations */
     void InitMinIter(int min_iter);
 
-    /// Set the maximum number of iterations
+    /** \brief Set the maximum number of iterations */
     void InitMaxIter(int max_iter);
 
-    /// Set the absolute/relative/divergence tolerance
+    /** \brief Set the absolute/relative/divergence tolerance */
     void InitTol(double abs, double rel, double div);
 
-    /// Set the residual norm to L1, L2 or Inf norm
-    /// resnorm == 1 L1 Norm
-    /// resnorm == 2 L2 Norm (default)
-    /// resnorm == 3 Inf Norm
+    /** \brief Set the residual norm to \f$L_1\f$, \f$L_2\f$ or \f$L_\infty\f$ norm
+      * \details
+      * - resnorm = 1 -> \f$L_1\f$ norm
+      * - resnorm = 2 -> \f$L_2\f$ norm
+      * - resnorm = 3 -> \f$L_\infty\f$ norm
+      */
     void SetResidualNorm(int resnorm);
 
-    /// Record the residual history
+    /** \brief Record the residual history */
     void RecordResidualHistory(void);
 
-    /// Write the history to file
+    /** \brief Write the history to file */
     void RecordHistory(const std::string filename) const;
 
     virtual void Verbose(int verb = 1);
 
     virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    /// Set a preconditioner of the linear solver
+    /** \brief Set a preconditioner of the linear solver */
     virtual void SetPreconditioner(Solver<OperatorType, VectorType, ValueType>& precond);
 
-    /// Return the iteration count
+    /** \brief Return the iteration count */
     virtual int GetIterationCount(void);
 
-    /// Return the current residual
+    /** \brief Return the current residual */
     virtual double GetCurrentResidual(void);
 
-    /// Return the current status
+    /** \brief Return the current status */
     virtual int GetSolverStatus(void);
 
-    /// Return absolute maximum index of residual vector when using Linf norm
+    /** \brief Return absolute maximum index of residual vector when using
+      * \f$L_\infty\f$ norm
+      */
     virtual int GetAmaxResidualIndex(void);
 
     protected:
-    /// Iteration control (monitor)
-    IterationControl iter_ctrl_;
+    // Iteration control (monitor)
+    IterationControl iter_ctrl_; /**< \private */
 
-    /// Non-preconditioner solution procedure
+    /** \brief Non-preconditioner solution procedure */
     virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x) = 0;
 
-    /// Preconditioned solution procedure
+    /** \brief Preconditioned solution procedure */
     virtual void SolvePrecond_(const VectorType& rhs, VectorType* x) = 0;
 
-    /// Residual norm
-    /// res_norm = 1 L1 Norm
-    /// res_norm = 2 L2 Norm
-    /// res_norm = 3 Linf Norm
+    /** \brief Residual norm */
     int res_norm_;
 
-    /// Absolute maximum index of residual vector when using Linf norm
+    /** \brief Absolute maximum index of residual vector when using \f$L_\infty\f$ */
     int index_;
 
-    /// Computes the vector norm
-    ValueType Norm(const VectorType& vec);
+    /** \brief Computes the vector norm */
+    ValueType Norm_(const VectorType& vec);
 };
 
-/// Fixed-point iteration \f$x_{k+1}=x_k-\omega M^{-1} (A x_k - b)\f$,
-/// where the solution of \f$M^{-1}\f$ is provide by solver via SetPreconditioner()
+/** \ingroup solver_module
+  * \class FixedPoint
+  * \brief Fixed-Point Iteration Scheme
+  * \details
+  * The Fixed-Point iteration scheme is based on additive splitting of the matrix
+  * \f$A = M + N\f$. The scheme reads
+  * \f[
+  *   x_{k+1} = M^{-1} (b - N x_{k}).
+  * \f]
+  * It can also be reformulated as a weighted defect correction scheme
+  * \f[
+  *   x_{k+1} = x_{k} - \omega M^{-1} (Ax_{k} - b).
+  * \f]
+  * The inversion of \f$M\f$ can be performed by preconditioners (Jacobi, Gauss-Seidel,
+  * ILU, etc.) or by any type of solvers.
+  *
+  * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class FixedPoint : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
 {
@@ -193,17 +281,17 @@ class FixedPoint : public IterativeLinearSolver<OperatorType, VectorType, ValueT
 
     virtual void ReBuildNumeric(void);
 
-    /// Set a relaxation parameter of the iterative solver
+    /** \brief Set relaxation parameter \f$\omega\f$ */
     void SetRelaxation(ValueType omega);
 
     virtual void Build(void);
-
     virtual void Clear(void);
 
     protected:
+    /** \brief Relaxation parameter */
     ValueType omega_;
-    VectorType x_old_;
-    VectorType x_res_;
+    VectorType x_old_; /**< \private */
+    VectorType x_res_; /**< \private */
 
     virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
     virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
@@ -215,7 +303,20 @@ class FixedPoint : public IterativeLinearSolver<OperatorType, VectorType, ValueT
     virtual void MoveToAcceleratorLocalData_(void);
 };
 
-/// Base class for all linear (direct) solvers
+/** \ingroup solver_module
+  * \class DirectLinearSolver
+  * \brief Base class for all direct linear solvers
+  * \details
+  * The library provides three direct methods - LU, QR and Inversion (based on QR
+  * decomposition). The user can pass a sparse matrix, internally it will be converted to
+  * dense and then the selected method will be applied. These methods are not very
+  * optimal and due to the fact that the matrix is converted to a dense format, these
+  * methods should be used only for very small matrices.
+  *
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class DirectLinearSolver : public Solver<OperatorType, VectorType, ValueType>
 {
@@ -228,7 +329,7 @@ class DirectLinearSolver : public Solver<OperatorType, VectorType, ValueType>
     virtual void Solve(const VectorType& rhs, VectorType* x);
 
     protected:
-    /// Solution procedure
+    /** \brief Solve Operator x = rhs */
     virtual void Solve_(const VectorType& rhs, VectorType* x) = 0;
 };
 

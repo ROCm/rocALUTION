@@ -778,7 +778,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../src/base/local_vector.hpp \
-                         ../src/solvers/solver.hpp \
+                         ../src/solvers \
                          ../src/solvers/krylov \
                          ../src/solvers/direct \
                          ../src/solvers/multigrid \

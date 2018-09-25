@@ -29,9 +29,9 @@ enum _aggregation_ordering
   * aggregation matching scheme based on "Notay, Y. An aggregation-based algebraic
   * multigrid method, 2010."
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class PairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>

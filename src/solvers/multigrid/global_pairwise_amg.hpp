@@ -12,6 +12,18 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class GlobalPairwiseAMG
+  * \brief Pairwise Aggregation Algebraic MultiGrid Method (multi-node)
+  * \details
+  * The Pairwise Aggregation Algebraic MultiGrid method is based on a pairwise
+  * aggregation matching scheme based on "Notay, Y. An aggregation-based algebraic
+  * multigrid method, 2010." This version has multi-node support.
+  *
+  * \tparam OperatorType - can be GlobalMatrix
+  * \tparam VectorType - can be GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
 {
@@ -20,22 +32,20 @@ class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     virtual ~GlobalPairwiseAMG();
 
     virtual void Print(void) const;
-
-    /// Creates AMG hierarchy
     virtual void BuildHierarchy(void);
     virtual void ClearLocal(void);
 
-    /// Sets beta for pairwise aggregation
+    /** \brief Set beta for pairwise aggregation */
     virtual void SetBeta(ValueType beta);
-    /// Sets reordering for aggregation
+    /** \brief Set re-ordering for aggregation */
     virtual void SetOrdering(const _aggregation_ordering ordering);
-    /// Sets target coarsening factor
+    /** \brief Set target coarsening factor */
     virtual void SetCoarseningFactor(double factor);
 
     virtual void ReBuildNumeric(void);
 
     protected:
-    /// Constructs the prolongation, restriction and coarse operator
+    /** \brief Constructs the prolongation, restriction and coarse operator */
     void Aggregate_(const OperatorType& op,
                     Operator<ValueType>* pro,
                     Operator<ValueType>* res,
@@ -43,7 +53,7 @@ class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
                     ParallelManager* pm,
                     LocalVector<int>* trans);
 
-    /// disabled function
+    /** \private */
     virtual void Aggregate_(const OperatorType& op,
                             Operator<ValueType>* pro,
                             Operator<ValueType>* res,
@@ -53,21 +63,21 @@ class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     virtual void PrintEnd_(void) const;
 
     private:
-    /// Beta factor
+    // Beta factor
     ValueType beta_;
 
-    /// Target factor for coarsening ratio
+    // Target factor for coarsening ratio
     double coarsening_factor_;
-    /// Ordering for the aggregation scheme
+    // Ordering for the aggregation scheme
     int aggregation_ordering_;
 
-    /// Parallel Manager for coarser levels
+    // Parallel Manager for coarser levels
     ParallelManager** pm_level_;
 
-    /// Transfer mapping
+    // Transfer mapping
     LocalVector<int>** trans_level_;
 
-    /// Dimension of the coarse operators
+    // Dimension of the coarse operators
     std::vector<int> dim_level_;
     std::vector<int> Gsize_level_;
     std::vector<int> rGsize_level_;

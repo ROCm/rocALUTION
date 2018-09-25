@@ -10,6 +10,17 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class LU
+  * \brief LU Decomposition
+  * \details
+  * Lower-Upper Decomposition factors a given square matrix into lower and upper
+  * triangular matrix, such that \f$A = LU\f$.
+  *
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
 class LU : public DirectLinearSolver<OperatorType, VectorType, ValueType>
 {

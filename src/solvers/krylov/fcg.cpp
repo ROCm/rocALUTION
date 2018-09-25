@@ -241,7 +241,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // initial residual norm
-    ValueType res = this->Norm(*r);
+    ValueType res = this->Norm_(*r);
     this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
     // w = Ar
@@ -268,7 +268,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
     // r = r - alpha/rho * q
     r->AddScale(*q, -alpha / rho);
 
-    res = this->Norm(*r);
+    res = this->Norm_(*r);
 
     while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
     {
@@ -300,7 +300,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
         // r = r - alpha*q
         r->AddScale(*q, -alpha);
 
-        res = this->Norm(*r);
+        res = this->Norm_(*r);
     }
 
     log_debug(this, "FCG::SolveNonPrecond_()", " #*# end");
@@ -334,7 +334,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // initial residual norm
-    ValueType res = this->Norm(*r);
+    ValueType res = this->Norm_(*r);
     this->iter_ctrl_.InitResidual(rocalution_abs(res));
 
     // Mz = r
@@ -364,7 +364,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
     // r = r - alpha/rho * q
     r->AddScale(*q, -alpha / rho);
 
-    res = this->Norm(*r);
+    res = this->Norm_(*r);
 
     while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
     {
@@ -399,7 +399,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
         // r = r - alpha*q
         r->AddScale(*q, -alpha);
 
-        res = this->Norm(*r);
+        res = this->Norm_(*r);
     }
 
     log_debug(this, "FCG::SolvePrecond_()", " #*# end");

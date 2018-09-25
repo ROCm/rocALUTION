@@ -246,7 +246,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
     p->CopyFrom(*r);
 
     // use for |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
+    ValueType res_norm = this->Norm_(*r);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -256,7 +256,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
     }
 
     // use for |b|
-    //  this->iter_ctrl_.InitResidual(rhs.Norm());
+    //  this->iter_ctrl_.InitResidual(rhs.Norm_());
 
     // v=Ar
     op->Apply(*r, v);
@@ -276,7 +276,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
     // r = r - alpha * q
     r->AddScale(*q, -alpha);
 
-    res_norm = this->Norm(*r);
+    res_norm = this->Norm_(*r);
 
     while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
     {
@@ -305,7 +305,7 @@ void CR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
         // r = r - alpha * q
         r->AddScale(*q, -alpha);
 
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
     }
 
     log_debug(this, "CR::SolveNonPrecond_()", " #*# end");
@@ -348,7 +348,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     t->CopyFrom(*z);
 
     // use for |b-Ax0|
-    ValueType res_norm = this->Norm(*t);
+    ValueType res_norm = this->Norm_(*t);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -358,7 +358,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     }
 
     // use for |b|
-    //  this->iter_ctrl_.InitResidual(rhs.Norm());
+    //  this->iter_ctrl_.InitResidual(rhs.Norm_());
 
     // v=Ar
     op->Apply(*r, v);
@@ -384,7 +384,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     // t = t - alpha * q
     t->AddScale(*q, -alpha);
 
-    res_norm = this->Norm(*t);
+    res_norm = this->Norm_(*t);
 
     while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
     {
@@ -419,7 +419,7 @@ void CR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
         // t = t - alpha * q
         t->AddScale(*q, -alpha);
 
-        res_norm = this->Norm(*t);
+        res_norm = this->Norm_(*t);
     }
 
     log_debug(this, "CR::SolvePrecond_()", " #*# end");

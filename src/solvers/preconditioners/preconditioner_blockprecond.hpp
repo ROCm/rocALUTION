@@ -36,9 +36,9 @@ namespace rocalution {
   * inverse of the diagonal \f$A_{d} \ldots Z_{d}\f$ (Block-Jacobi type) by using
   * SetDiagonalSolver().
   *
-  * \tparam OperatorType
-  * \tparam VectorType
-  * \tparam ValueType
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
 template <class OperatorType, class VectorType, typename ValueType>
 class BlockPreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
