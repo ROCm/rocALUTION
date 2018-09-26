@@ -44,16 +44,16 @@ int main(int argc, char* argv[])
     MPI_Comm_size(comm, &num_procs);
 
     // Check command line parameters
-    if (num_procs < 2)
+    if(num_procs < 2)
     {
-      std::cerr << "Expecting at least 2 MPI processes" << std::endl;
-      return -1;
+        std::cerr << "Expecting at least 2 MPI processes" << std::endl;
+        return -1;
     }
 
-    if (argc < 2)
-    { 
-      std::cerr << argv[0] << " <global_matrix>" << std::endl;
-      return -1;
+    if(argc < 2)
+    {
+        std::cerr << argv[0] << " <global_matrix>" << std::endl;
+        return -1;
     }
 
     // Disable OpenMP thread affinity
@@ -84,56 +84,77 @@ int main(int argc, char* argv[])
     GlobalVector<ValueType> x(manager);
     GlobalVector<ValueType> e(manager);
 
-    // Move structures to accelerator, if available
-    mat.MoveToAccelerator();
-    rhs.MoveToAccelerator();
-    x.MoveToAccelerator();
-    e.MoveToAccelerator();
-
     // Allocate memory
     rhs.Allocate("rhs", mat.GetM());
     x.Allocate("x", mat.GetN());
     e.Allocate("sol", mat.GetN());
 
+    // Initialize rhs such that A 1 = rhs
     e.Ones();
     mat.Apply(e, &rhs);
+
+    // Initial zero guess
     x.Zeros();
 
+    // Linear solver
     CG<GlobalMatrix<double>, GlobalVector<double>, double> ls;
+    // Global preconditioner
     GlobalPairwiseAMG<GlobalMatrix<double>, GlobalVector<double>, double> p;
 
+    // Limit number of AMG preconditioner iterations to 1 iteration per CG iteration
     p.InitMaxIter(1);
+    // Disable AMG preconditioner verbosity output
     p.Verbose(0);
 
+    // Set solver preconditioner
     ls.SetPreconditioner(p);
+    // Set solver operator
     ls.SetOperator(mat);
+
+    // Build solver
     ls.Build();
+
+    // Move structures to accelerator, if available
+    mat.MoveToAccelerator();
+    rhs.MoveToAccelerator();
+    x.MoveToAccelerator();
+    e.MoveToAccelerator();
+    ls.MoveToAccelerator();
+
+    // Set verbosity output
     ls.Verbose(2);
 
     // Set host levels (requires solver built)
     p.SetHostLevels(3);
 
+    // Print matrix info
     mat.Info();
 
+    // Start time measurement
     double time = rocalution_time();
 
+    // Solve A x = rhs
     ls.Solve(rhs, &x);
 
+    // Stop time measurement
     time = rocalution_time() - time;
-    if (rank == 0)
+    if(rank == 0)
     {
-        std::cout << "Solving: " << time/1e6 << " sec" << std::endl;
+        std::cout << "Solving: " << time / 1e6 << " sec" << std::endl;
     }
 
+    // Compute error L2 norm
     e.ScaleAdd(-1.0, x);
     double nrm2 = e.Norm();
-    if (rank == 0)
+    if(rank == 0)
     {
         std::cout << "||e - x||_2 = " << nrm2 << std::endl;
     }
 
+    // Clear solver
     ls.Clear();
 
+    // Stop rocALUTION platform
     stop_rocalution();
 
     MPI_Finalize();

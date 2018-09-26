@@ -23,84 +23,116 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
+    // Check command line parameters for number of OMP threads
+    if(argc > 2)
+    {
+        set_omp_threads_rocalution(atoi(argv[2]));
+    }
 
-  if (argc > 2) {
-    set_omp_threads_rocalution(atoi(argv[2]));
-  } 
+    // Print rocALUTION info
+    info_rocalution();
 
-  info_rocalution();
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
+    LocalVector<double> e;
+    LocalMatrix<double> mat;
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
-  LocalMatrix<double> mat;
+    // Move objects to accelerator
+    mat.MoveToAccelerator();
+    x.MoveToAccelerator();
+    rhs.MoveToAccelerator();
+    e.MoveToAccelerator();
 
-  mat.ReadFileMTX(std::string(argv[1]));
+    // Allocate vectors
+    x.Allocate("x", mat.GetN());
+    rhs.Allocate("rhs", mat.GetM());
+    e.Allocate("e", mat.GetN());
 
-  mat.MoveToAccelerator();
-  x.MoveToAccelerator();
-  rhs.MoveToAccelerator();
+    // Linear Solver
+    FGMRES<LocalMatrix<double>, LocalVector<double>, double> ls;
 
-  x.Allocate("x", mat.GetN());
-  rhs.Allocate("rhs", mat.GetM());
+    // Variable Preconditioner
+    VariablePreconditioner<LocalMatrix<double>, LocalVector<double>, double> p;
 
-  // Linear Solver
-  FGMRES<LocalMatrix<double>, LocalVector<double>, double > ls;
+    Solver<LocalMatrix<double>, LocalVector<double>, double>** vp;
+    vp = new Solver<LocalMatrix<double>, LocalVector<double>, double>*[3];
 
-  // Variable Preconditioner
-  VariablePreconditioner<LocalMatrix<double>, LocalVector<double>, double > p;
+    // Preconditioners
+    MultiColoredSGS<LocalMatrix<double>, LocalVector<double>, double> p1;
+    MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double> p2;
+    ILU<LocalMatrix<double>, LocalVector<double>, double> p3;
 
-  Solver<LocalMatrix<double>, LocalVector<double>, double > **vp;
-  vp = new Solver<LocalMatrix<double>, LocalVector<double>, double > *[3];
+    vp[0] = &p1;
+    vp[1] = &p2;
+    vp[2] = &p3;
 
-  // Preconditioners
-  MultiColoredSGS<LocalMatrix<double>, LocalVector<double>, double > p1;
-  MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double > p2;
-  ILU<LocalMatrix<double>, LocalVector<double>, double > p3;
+    // Initialize rhs such that A 1 = rhs
+    e.Ones();
+    mat.Apply(e, &rhs);
 
-  vp[0] = &p1;
-  vp[1] = &p2;
-  vp[2] = &p3;
+    // Initial zero guess
+    x.Zeros();
 
-  double tick, tack;
-  
-  rhs.Ones();
-  x.Zeros(); 
+    // Set variable preconditioners
+    p.SetPreconditioner(3, vp);
 
-  p.SetPreconditioner(3, vp);
-  ls.SetOperator(mat);
-  ls.SetPreconditioner(p);
-  //  ls.Verbose(2);
+    // Set solver operator
+    ls.SetOperator(mat);
+    // Set solver preconditioner
+    ls.SetPreconditioner(p);
 
-  ls.Build();
+    // Build solver
+    ls.Build();
 
-  mat.Info();
+    // Verbosity output
+    ls.Verbose(1);
 
-  tick = rocalution_time();
+    // Print matrix info
+    mat.Info();
 
-  ls.Solve(rhs, &x);
+    // Start time measurement
+    double tick, tack;
+    tick = rocalution_time();
 
-  tack = rocalution_time();
-  std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
+    // Solve A x = rhs
+    ls.Solve(rhs, &x);
 
-  ls.Clear();
+    // Stop time measurement
+    tack = rocalution_time();
+    std::cout << "Solver execution:" << (tack - tick) / 1e6 << " sec" << std::endl;
 
-  delete[] vp;
+    // Clear solver
+    ls.Clear();
 
-  stop_rocalution();
+    delete[] vp;
 
-  return 0;
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    double error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
+
+    // Stop rocALUTION platform
+    stop_rocalution();
+
+    return 0;
 }

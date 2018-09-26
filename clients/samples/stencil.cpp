@@ -23,50 +23,73 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 
-  init_rocalution();
+    // Initialize rocALUTION
+    init_rocalution();
 
-  info_rocalution();
+    // Print rocALUTION info
+    info_rocalution();
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
+    LocalVector<double> e;
+    LocalStencil<double> stencil(Laplace2D);
 
-  LocalStencil<double> stencil(Laplace2D);
+    // Set up stencil grid
+    stencil.SetGrid(100); // 100x100
 
-  stencil.SetGrid(100); // 100x100
+    // Allocate vectors
+    x.Allocate("x", stencil.GetN());
+    rhs.Allocate("rhs", stencil.GetM());
+    e.Allocate("e", stencil.GetN());
 
-  x.Allocate("x", stencil.GetM());
-  rhs.Allocate("rhs", stencil.GetM());
+    // Linear Solver
+    CG<LocalStencil<double>, LocalVector<double>, double> ls;
 
-  // Linear Solver
-  CG<LocalStencil<double>, LocalVector<double>, double > ls;
+    // Initialize rhs such that A 1 = rhs
+    e.Ones();
+    stencil.Apply(e, &rhs);
 
-  rhs.Ones();
-  x.Zeros(); 
+    // Initial zero guess
+    x.Zeros();
 
-  ls.SetOperator(stencil);
+    // Set solver operator
+    ls.SetOperator(stencil);
 
-  ls.Build();
+    // Build solver
+    ls.Build();
 
-  stencil.Info();
+    // Print stencil info
+    stencil.Info();
 
-  double tick, tack;
-  tick = rocalution_time();
+    // Start time measurement
+    double tick, tack;
+    tick = rocalution_time();
 
-  ls.Solve(rhs, &x);
+    // Solve A x = rhs
+    ls.Solve(rhs, &x);
 
-  tack = rocalution_time();
-  std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
+    // Stop time measurement
+    tack = rocalution_time();
+    std::cout << "Solver execution:" << (tack - tick) / 1e6 << " sec" << std::endl;
 
-  ls.Clear();
+    // Clear solver
+    ls.Clear();
 
-  stop_rocalution();
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    double error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
 
-  return 0;
+    // Stop rocALUTION platform
+    stop_rocalution();
+
+    return 0;
 }

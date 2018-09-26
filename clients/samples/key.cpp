@@ -26,34 +26,41 @@
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix>" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix>" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
+    // rocALUTION objects
+    LocalMatrix<double> mat;
 
-  LocalMatrix<double> mat;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
-  mat.ReadFileMTX(std::string(argv[1]));
+    // Print matrix info
+    mat.Info();
 
-  mat.Info();
+    long int row_key;
+    long int col_key;
+    long int val_key;
 
-  long int row_key;
-  long int col_key;
-  long int val_key;
-  
-  mat.Key(row_key,
-          col_key,
-          val_key);
+    // Compute keys
+    mat.Key(row_key, col_key, val_key);
 
-  std::cout << "Row key = " << row_key << std::endl
-            << "Col key = " << col_key << std::endl
-            << "Val key = " << val_key << std::endl;
+    // Print keys
+    std::cout << "Row key = " << row_key << std::endl
+              << "Col key = " << col_key << std::endl
+              << "Val key = " << val_key << std::endl;
 
-  stop_rocalution();
+    // Stop rocALUTION platform
+    stop_rocalution();
 
-  return 0;
+    return 0;
 }

@@ -23,76 +23,105 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
+    // Check command line parameters for number of OMP threads
+    if(argc > 2)
+    {
+        set_omp_threads_rocalution(atoi(argv[2]));
+    }
 
-  if (argc > 2) {
-    set_omp_threads_rocalution(atoi(argv[2]));
-  } 
+    // Print rocALUTION info
+    info_rocalution();
 
-  info_rocalution();
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
+    LocalVector<double> e;
+    LocalMatrix<double> mat;
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
-  LocalMatrix<double> mat;
+    // Move objects to accelerator
+    mat.MoveToAccelerator();
+    rhs.MoveToAccelerator();
+    x.MoveToAccelerator();
+    e.MoveToAccelerator();
 
-  // read from file 
-  mat.ReadFileMTX(std::string(argv[1]));
+    // Allocate vectors
+    x.Allocate("x", mat.GetN());
+    rhs.Allocate("rhs", mat.GetM());
+    e.Allocate("e", mat.GetN());
 
-  mat.MoveToAccelerator();
-  rhs.MoveToAccelerator();
-  x.MoveToAccelerator();
+    // Linear Solver
+    FixedPoint<LocalMatrix<double>, LocalVector<double>, double> fp;
 
-  x.Allocate("x", mat.GetN());
-  rhs.Allocate("rhs", mat.GetM());
+    Jacobi<LocalMatrix<double>, LocalVector<double>, double> p;
+    //  MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double > p;
+    //  ILU<LocalMatrix<double>, LocalVector<double>, double > p;
+    //  MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double > p;
+    //  MultiColoredSGS<LocalMatrix<double>, LocalVector<double>, double > p;
 
-  FixedPoint<LocalMatrix<double>, LocalVector<double>, double > fp;
+    // Initialize rhs such that A 1 = rhs
+    e.Ones();
+    mat.Apply(e, &rhs);
 
-  Jacobi<LocalMatrix<double>, LocalVector<double>, double > p;
-  //  MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double > p;
-  //  ILU<LocalMatrix<double>, LocalVector<double>, double > p;
-  //  MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double > p;
-  //  MultiColoredSGS<LocalMatrix<double>, LocalVector<double>, double > p;
+    // Initial zero guess
+    x.Zeros();
 
-  double tick, tack;
+    // Set solver operator
+    fp.SetOperator(mat);
+    // Set solver preconditioner
+    fp.SetPreconditioner(p);
 
-  rhs.Ones();
-  x.Zeros();
+    // Set relaxation parameter omega
+    fp.SetRelaxation(2. / 3.);
 
-  fp.SetOperator(mat);
-  fp.SetPreconditioner(p);
+    // Verbosity output
+    fp.Verbose(1);
 
-  fp.SetRelaxation(1.3);
+    // Build solver
+    fp.Build();
 
-  //  fp.Verbose(2);
+    // Print matrix info
+    mat.Info();
 
-  fp.Build();
+    // Start time measurement
+    double tick, tack;
+    tick = rocalution_time();
 
-  mat.Info();
+    // Solve A x = rhs
+    fp.Solve(rhs, &x);
 
-  tick = rocalution_time();
+    // Stop time measurement
+    tack = rocalution_time();
+    std::cout << "Solver execution:" << (tack - tick) / 1e6 << " sec" << std::endl;
 
-  fp.Solve(rhs, &x);
+    // Clear solver
+    fp.Clear();
 
-  tack = rocalution_time();
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    double error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
 
-  std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
+    // Stop rocALUTION platform
+    stop_rocalution();
 
-  fp.Clear();
-
-  stop_rocalution();
-
-  return 0;
+    return 0;
 }
