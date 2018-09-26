@@ -915,13 +915,6 @@ void HIPAcceleratorVector<int>::Scale(int alpha)
 }
 
 template <typename ValueType>
-void HIPAcceleratorVector<ValueType>::ExclusiveScan(const BaseVector<ValueType>& x)
-{
-    LOG_INFO("HIPAcceleratorVector::ExclusiveScan() NYI");
-    FATAL_ERROR(__FILE__, __LINE__);
-}
-
-template <typename ValueType>
 ValueType HIPAcceleratorVector<ValueType>::Dot(const BaseVector<ValueType>& x) const
 {
     const HIPAcceleratorVector<ValueType>* cast_x =

@@ -80,7 +80,6 @@ class HIPAcceleratorVector : public AcceleratorVector<ValueType>
     // this = alpha*this
     virtual void Scale(ValueType alpha);
 
-    virtual void ExclusiveScan(const BaseVector<ValueType>& x);
     // this^T x
     virtual ValueType Dot(const BaseVector<ValueType>& x) const;
     // this^T x

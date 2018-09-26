@@ -730,21 +730,6 @@ void LocalVector<ValueType>::Scale(ValueType alpha)
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::ExclusiveScan(const LocalVector<ValueType>& x)
-{
-    log_debug(this, "LocalVector::ExclusiveScan()", (const void*&)x);
-
-    assert(this->GetSize() == x.GetSize());
-    assert(((this->vector_ == this->vector_host_) && (x.vector_ == x.vector_host_)) ||
-           ((this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)));
-
-    if(this->GetSize() > 0)
-    {
-        this->vector_->ExclusiveScan(*x.vector_);
-    }
-}
-
-template <typename ValueType>
 ValueType LocalVector<ValueType>::Dot(const LocalVector<ValueType>& x) const
 {
     log_debug(this, "LocalVector::Dot()", (const void*&)x);

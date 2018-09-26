@@ -1,0 +1,11 @@
+/** \defgroup solver_module Solver Module
+  * This module contains all solvers.
+  */
+
+/** \defgroup precond_module Preconditioner Module
+  * This module contains all preconditioners.
+  */
+
+/** \defgroup op_vec_module Operators and Vectors Module
+  * This module contains all operators and vectors.
+  */

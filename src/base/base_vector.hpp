@@ -117,8 +117,6 @@ class BaseVector
                            ValueType gamma) = 0;
     /// Perform vector scaling this = alpha*this
     virtual void Scale(ValueType alpha) = 0;
-    /// Performs exclusive scan
-    virtual void ExclusiveScan(const BaseVector<ValueType>& x) = 0;
     /// Compute dot (scalar) product, return this^T y
     virtual ValueType Dot(const BaseVector<ValueType>& x) const = 0;
     /// Compute non-conjugated dot (scalar) product, return this^T y

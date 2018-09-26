@@ -644,25 +644,6 @@ void HostVector<ValueType>::Scale(ValueType alpha)
 }
 
 template <typename ValueType>
-void HostVector<ValueType>::ExclusiveScan(const BaseVector<ValueType>& x)
-{
-    const HostVector<ValueType>* cast_x = dynamic_cast<const HostVector<ValueType>*>(&x);
-
-    assert(cast_x != NULL);
-    assert(this->size_ == cast_x->size_);
-
-    this->vec_[0] = cast_x->vec_[0];
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for(int i = 1; i < this->size_; ++i)
-    {
-        this->vec_[i] = cast_x->vec_[i] + this->vec_[i - 1];
-    }
-}
-
-template <typename ValueType>
 ValueType HostVector<ValueType>::Dot(const BaseVector<ValueType>& x) const
 {
     const HostVector<ValueType>* cast_x = dynamic_cast<const HostVector<ValueType>*>(&x);

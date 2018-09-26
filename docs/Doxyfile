@@ -777,7 +777,12 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../src/base/local_vector.hpp \
+INPUT                  = modules.dox \
+                         ../src/base/operator.hpp \
+                         ../src/base/vector.hpp \
+                         ../src/base/base_rocalution.hpp \
+                         ../src/base/local_vector.hpp \
+                         ../src/base/local_matrix.hpp \
                          ../src/solvers \
                          ../src/solvers/krylov \
                          ../src/solvers/direct \

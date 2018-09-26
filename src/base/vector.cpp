@@ -349,26 +349,6 @@ void Vector<ValueType>::ScaleAdd2(ValueType alpha,
     FATAL_ERROR(__FILE__, __LINE__);
 }
 
-template <typename ValueType>
-void Vector<ValueType>::ExclusiveScan(const LocalVector<ValueType>& x)
-{
-    LOG_INFO("ExclusiveScan(const LocalVector<ValueType>& x)");
-    LOG_INFO("Mismatched types:");
-    this->Info();
-    x.Info();
-    FATAL_ERROR(__FILE__, __LINE__);
-}
-
-template <typename ValueType>
-void Vector<ValueType>::ExclusiveScan(const GlobalVector<ValueType>& x)
-{
-    LOG_INFO("ExclusiveScan(const GlobalVector<ValueType>& x)");
-    LOG_INFO("Mismatched types:");
-    this->Info();
-    x.Info();
-    FATAL_ERROR(__FILE__, __LINE__);
-}
-
 template class Vector<double>;
 template class Vector<float>;
 #ifdef SUPPORT_COMPLEX
