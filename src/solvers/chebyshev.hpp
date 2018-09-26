@@ -40,7 +40,7 @@ namespace rocalution {
   * Pozo, R., Romine, C., and der Vorst, H. V. Templates for the Solution of Linear
   * Systems: Building Blocks for Iterative Methods, 2 ed. SIAM, Philadelphia, PA, 1994."
   * for details.
-  * 
+  *
   * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
   * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>

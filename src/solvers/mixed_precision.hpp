@@ -43,7 +43,7 @@ namespace rocalution {
   * computation of the residual system \f$Ad_{k} = r_{k}\f$ is performed on the
   * accelerator in single precision. In addition to the setup functions of the iterative
   * solver, the user need to specify the inner (\f$Ad_{k} = r_{k}\f$) solver.
-  * 
+  *
   * \tparam OperatorTypeH - can be LocalMatrix
   * \tparam VectorTypeH - can be LocalVector
   * \tparam ValueTypeH - can be double

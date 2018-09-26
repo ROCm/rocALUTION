@@ -45,8 +45,8 @@ IterationControl::IterationControl()
     this->reached_  = 0;
 
     this->initial_residual_ = 0.0;
-    this->current_res_   = 0.0;
-    this->current_index_ = -1;
+    this->current_res_      = 0.0;
+    this->current_index_    = -1;
 
     this->absolute_tol_   = 1e-15;
     this->relative_tol_   = 1e-6;

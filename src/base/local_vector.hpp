@@ -110,7 +110,8 @@ class LocalVector : public Vector<ValueType>
     virtual void CopyFromFloat(const LocalVector<float>& src);
     virtual void CopyFromDouble(const LocalVector<double>& src);
 
-    virtual void CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
+    virtual void
+    CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
 
     /** \brief Copy a vector under permutation (forward permutation) */
     void CopyFromPermute(const LocalVector<ValueType>& src, const LocalVector<int>& permutation);
