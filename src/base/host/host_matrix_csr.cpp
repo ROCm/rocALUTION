@@ -407,6 +407,12 @@ bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string filename)
 
     std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
 
+    if(!in.is_open())
+    {
+        LOG_INFO("ReadFileCSR: filename=" << filename << "; cannot open file");
+        return false;
+    }
+
     // Header
     std::string header;
     std::getline(in, header);
@@ -462,11 +468,19 @@ bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string filename)
     else
     {
         LOG_INFO("ReadFileCSR: filename=" << filename << "; internal error");
+        return false;
     }
 
-    LOG_INFO("ReadFileCSR: filename=" << filename << "; done");
+    // Check ifstream status
+    if(!in)
+    {
+        LOG_INFO("ReadFileCSR: filename=" << filename << "; could not read from file");
+        return false;
+    }
 
     in.close();
+
+    LOG_INFO("ReadFileCSR: filename=" << filename << "; done");
 
     return true;
 }
@@ -526,6 +540,12 @@ bool HostMatrixCSR<ValueType>::WriteFileCSR(const std::string filename) const
 
     std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
 
+    if(!out.is_open())
+    {
+        LOG_INFO("WriteFileCSR: filename=" << filename << "; cannot open file");
+        return false;
+    }
+
     // Header
     out << "#rocALUTION binary csr file" << std::endl;
 
@@ -559,11 +579,19 @@ bool HostMatrixCSR<ValueType>::WriteFileCSR(const std::string filename) const
     else
     {
         LOG_INFO("WriteFileCSR: filename=" << filename << "; internal error");
+        return false;
     }
 
-    LOG_INFO("WriteFileCSR: filename=" << filename << "; done");
+    // Check ofstream status
+    if(!out)
+    {
+        LOG_INFO("ReadFileCSR: filename=" << filename << "; could not write to file");
+        return false;
+    }
 
     out.close();
+
+    LOG_INFO("WriteFileCSR: filename=" << filename << "; done");
 
     return true;
 }

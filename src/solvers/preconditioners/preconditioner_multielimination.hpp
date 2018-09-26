@@ -49,7 +49,7 @@ namespace rocalution {
   * independent set. This procedure can be applied to the block matrix \f$\hat{A}\f$, in
   * this way we can perform the factorization recursively. In the last level of the
   * recursion, we need to provide a solution procedure. By the design of the library,
-  * this can be any kind of solver. 
+  * this can be any kind of solver.
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector
@@ -75,7 +75,8 @@ class MultiElimination : public Preconditioner<OperatorType, VectorType, ValueTy
       * \details AA_Solvers - defines the last-block solver <br>
       * drop_off - defines drop-off tolerance
       */
-    void Set(Solver<OperatorType, VectorType, ValueType>& AA_Solver, int level, double drop_off = 0.0);
+    void
+    Set(Solver<OperatorType, VectorType, ValueType>& AA_Solver, int level, double drop_off = 0.0);
 
     /** \brief Set a specific matrix type of the decomposed block matrices */
     void SetPrecondMatrixFormat(unsigned int mat_format);

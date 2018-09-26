@@ -115,7 +115,8 @@ class Vector : public BaseRocalution<ValueType>
     virtual void CopyFromDouble(const LocalVector<double>& src);
 
     /** \brief Copy data from another local vector with offsets and size */
-    virtual void CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
+    virtual void
+    CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
     /** \brief Clone the entire vector (data+backend descr) from another local vector */
     virtual void CloneFrom(const LocalVector<ValueType>& src);
 
