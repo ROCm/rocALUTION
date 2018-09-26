@@ -52,7 +52,11 @@ set(rocalution_SOVERSION 1)
 # Set toolchain
 include(cmake/SetToolchain.cmake)
 
+# RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE CACHE BOOLEAN "Add paths to linker search and installed rpath")
+
+# Force library install path to lib (CentOS 7 defaults to lib64)
+set(CMAKE_INSTALL_LIBDIR "lib" CACHE INTERNAL "Installation directory for libraries" FORCE)
 
 # Build flags
 set(CMAKE_CXX_STANDARD 11)
