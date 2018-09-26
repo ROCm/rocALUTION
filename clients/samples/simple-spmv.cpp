@@ -23,62 +23,85 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
+    // Check command line parameters for number of OMP threads
+    if(argc > 2)
+    {
+        set_omp_threads_rocalution(atoi(argv[2]));
+    }
 
-  if (argc > 2) {
-    set_omp_threads_rocalution(atoi(argv[2]));
-  } 
+    // Print rocALUTION info
+    info_rocalution();
 
-  info_rocalution();
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
+    LocalMatrix<double> mat;
 
-  LocalMatrix<double> mat;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
+    // Print matrix info
+    mat.Info();
 
-  mat.ReadFileMTX(std::string(argv[1]));
-  mat.Info();
+    // Allocate vectors
+    x.Allocate("x", mat.GetN());
+    rhs.Allocate("rhs", mat.GetM());
 
-  x.Allocate("x", mat.GetN());
-  rhs.Allocate("rhs", mat.GetM());
+    // Print vector info
+    x.Info();
+    rhs.Info();
 
-  x.Info();
-  rhs.Info();
+    // Set rhs to 1
+    rhs.Ones();
 
-  rhs.Ones();
-  
-  mat.Apply(rhs, &x);
+    // x = mat * rhs
+    mat.Apply(rhs, &x);
 
-  std::cout << "dot=" << x.Dot(rhs) << std::endl;
+    // Print dot product <x, rhs>
+    std::cout << "dot=" << x.Dot(rhs) << std::endl;
 
-  mat.ConvertToELL();
-  mat.Info();
+    // Convert matrix to ELL format
+    mat.ConvertToELL();
 
-  mat.MoveToAccelerator();
-  x.MoveToAccelerator();
-  rhs.MoveToAccelerator();
-  mat.Info();
+    // Print matrix info
+    mat.Info();
 
-  rhs.Ones();
-  
-  mat.Apply(rhs, &x);
+    // Move objects to accelerator
+    mat.MoveToAccelerator();
+    x.MoveToAccelerator();
+    rhs.MoveToAccelerator();
 
-  std::cout << "dot=" << x.Dot(rhs) << std::endl;
+    // Print matrix info
+    mat.Info();
 
-  stop_rocalution();
+    // Set rhs to 1
+    rhs.Ones();
 
-  return 0;
+    // x = mat * rhs
+    mat.Apply(rhs, &x);
+
+    // Print dot product <x, rhs>
+    std::cout << "dot=" << x.Dot(rhs) << std::endl;
+
+    // Stop rocALUTION platform
+    stop_rocalution();
+
+    return 0;
 }

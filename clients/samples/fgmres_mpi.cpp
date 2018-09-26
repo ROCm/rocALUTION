@@ -44,16 +44,16 @@ int main(int argc, char* argv[])
     MPI_Comm_size(comm, &num_procs);
 
     // Check command line parameters
-    if (num_procs < 2)
+    if(num_procs < 2)
     {
-      std::cerr << "Expecting at least 2 MPI processes" << std::endl;
-      return -1;
+        std::cerr << "Expecting at least 2 MPI processes" << std::endl;
+        return -1;
     }
 
-    if (argc < 2)
-    { 
-      std::cerr << argv[0] << " <global_matrix>" << std::endl;
-      return -1;
+    if(argc < 2)
+    {
+        std::cerr << argv[0] << " <global_matrix>" << std::endl;
+        return -1;
     }
 
     // Disable OpenMP thread affinity
@@ -117,14 +117,14 @@ int main(int argc, char* argv[])
     ls.Solve(rhs, &x);
 
     time = rocalution_time() - time;
-    if (rank == 0)
+    if(rank == 0)
     {
-        std::cout << "Solving: " << time/1e6 << " sec" << std::endl;
+        std::cout << "Solving: " << time / 1e6 << " sec" << std::endl;
     }
 
     e.ScaleAdd(-1.0, x);
     double nrm2 = e.Norm();
-    if (rank == 0)
+    if(rank == 0)
     {
         std::cout << "||e - x||_2 = " << nrm2 << std::endl;
     }

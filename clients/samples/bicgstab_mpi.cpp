@@ -44,16 +44,16 @@ int main(int argc, char* argv[])
     MPI_Comm_size(comm, &num_procs);
 
     // Check command line parameters
-    if (num_procs < 2)
+    if(num_procs < 2)
     {
-      std::cerr << "Expecting at least 2 MPI processes" << std::endl;
-      return -1;
+        std::cerr << "Expecting at least 2 MPI processes" << std::endl;
+        return -1;
     }
 
-    if (argc < 2)
-    { 
-      std::cerr << argv[0] << " <global_matrix>" << std::endl;
-      return -1;
+    if(argc < 2)
+    {
+        std::cerr << argv[0] << " <global_matrix>" << std::endl;
+        return -1;
     }
 
     // Disable OpenMP thread affinity
@@ -95,42 +95,62 @@ int main(int argc, char* argv[])
     x.Allocate("x", mat.GetN());
     e.Allocate("sol", mat.GetN());
 
+    // Initialize rhs such that A 1 = rhs
     e.Ones();
     mat.Apply(e, &rhs);
+
+    // Initial zero guess
     x.Zeros();
 
+    // Linear solver
     BiCGStab<GlobalMatrix<double>, GlobalVector<double>, double> ls;
+    // Block jacobi global preconditioner
     BlockJacobi<GlobalMatrix<double>, GlobalVector<double>, double> bj;
+    // Local preconditioner
     MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double> p;
 
+    // Set local preconditioner
     bj.Set(p);
 
+    // Set solver preconditioner
     ls.SetPreconditioner(bj);
+    // Set solver operator
     ls.SetOperator(mat);
+
+    // Build solver
     ls.Build();
+
+    // Verbosity output
     ls.Verbose(1);
 
+    // Print matrix info
     mat.Info();
 
+    // Start time measurement
     double time = rocalution_time();
 
+    // Solve A x = rhs
     ls.Solve(rhs, &x);
 
+    // Stop time measurement
     time = rocalution_time() - time;
-    if (rank == 0)
+    if(rank == 0)
     {
-        std::cout << "Solving: " << time/1e6 << " sec" << std::endl;
+        std::cout << "Solving: " << time / 1e6 << " sec" << std::endl;
     }
 
+    // Compute error L2 norm
     e.ScaleAdd(-1.0, x);
     double nrm2 = e.Norm();
-    if (rank == 0)
+    if(rank == 0)
     {
         std::cout << "||e - x||_2 = " << nrm2 << std::endl;
     }
 
+    // Clear solver
     ls.Clear();
 
+    // Stop rocALUTION platform
     stop_rocalution();
 
     MPI_Finalize();

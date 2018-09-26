@@ -23,106 +23,138 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
+    // Check command line parameters for number of OMP threads
+    if(argc > 2)
+    {
+        set_omp_threads_rocalution(atoi(argv[2]));
+    }
 
-  if (argc > 2) {
-    set_omp_threads_rocalution(atoi(argv[2]));
-  } 
+    // Print rocALUTION info
+    info_rocalution();
 
-  info_rocalution();
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
+    LocalVector<double> e;
+    LocalMatrix<double> mat;
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
-  LocalMatrix<double> mat;
+    // Move objects to accelerator
+    //  mat.MoveToAccelerator();
+    //  x.MoveToAccelerator();
+    //  rhs.MoveToAccelerator();
+    //  e.MoveToAccelerator();
 
-  mat.ReadFileMTX(std::string(argv[1]));
+    // Allocate vectors
+    x.Allocate("x", mat.GetN());
+    rhs.Allocate("rhs", mat.GetM());
+    e.Allocate("e", mat.GetN());
 
-  //  mat.MoveToAccelerator();
-  //  x.MoveToAccelerator();
-  //  rhs.MoveToAccelerator();
+    // Linear Solver
+    GMRES<LocalMatrix<double>, LocalVector<double>, double> ls;
 
-  x.Allocate("x", mat.GetN());
-  rhs.Allocate("rhs", mat.GetM());
+    // Preconditioner
+    BlockPreconditioner<LocalMatrix<double>, LocalVector<double>, double> p;
+    Solver<LocalMatrix<double>, LocalVector<double>, double>** p2;
 
-  // Linear Solver
-  GMRES<LocalMatrix<double>, LocalVector<double>, double > ls;
+    // Setup blocks
+    int n = 2;
+    int* size;
+    size = new int[n];
 
-  // Preconditioner
-  BlockPreconditioner<LocalMatrix<double>, LocalVector<double>, double > p;
-  Solver<LocalMatrix<double>, LocalVector<double>, double > **p2;
+    p2 = new Solver<LocalMatrix<double>, LocalVector<double>, double>*[n];
 
-  int n = 2;
-  int *size;
-  size = new int[n];
+    for(int i = 0; i < n; ++i)
+    {
+        size[i] = mat.GetM() / n;
 
-  p2 = new Solver<LocalMatrix<double>, LocalVector<double>, double >*[n];
+        MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double>* mc;
+        mc    = new MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double>;
+        p2[i] = mc;
 
-  for (int i=0; i<n; ++i) {
-    size[i] = mat.GetM() / n ;   
+        //    AMG<LocalMatrix<double>, LocalVector<double>, double > *amg;
+        //    amg = new AMG<LocalMatrix<double>, LocalVector<double>, double >;
+        //    amg->InitMaxIter(2);
+        //    amg->Verbose(0);
+        //    p2[i] = amg;
+    }
 
-    MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double > *mc;
-    mc = new MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double >;
-    p2[i] = mc;
+    double tick, tack;
 
+    // Initialize rhs such that A 1 = rhs
+    e.Ones();
+    mat.Apply(e, &rhs);
 
-    //    AMG<LocalMatrix<double>, LocalVector<double>, double > *amg;
-    //    amg = new AMG<LocalMatrix<double>, LocalVector<double>, double >;
-    //    amg->InitMaxIter(2);
-    //    amg->Verbose(0);
-    //    p2[i] = amg;
+    // Initial zero guess
+    x.Zeros();
 
-  }
+    // Set blocks and diagonal solver
+    p.Set(n, size, p2);
+    p.SetDiagonalSolver();
 
-  double tick, tack;
-  
-  rhs.Ones();
-  x.Zeros(); 
+    // Set solver operator
+    ls.SetOperator(mat);
+    // Set solver preconditioner
+    ls.SetPreconditioner(p);
 
-  p.Set(n, 
-        size,
-        p2);
-  p.SetDiagonalSolver();
+    // Verbosity output
+    //  ls.Verbose(2);
 
-  ls.SetOperator(mat);
-  ls.SetPreconditioner(p);
-  //  ls.Verbose(2);
+    // Build solver
+    ls.Build();
 
-  ls.Build();
+    // Print matrix info
+    mat.Info();
 
-  mat.Info();
+    // Start time measurement
+    tick = rocalution_time();
 
-  tick = rocalution_time();
+    // Solve A x = rhs
+    ls.Solve(rhs, &x);
 
-  ls.Solve(rhs, &x);
+    // Stop time measurement
+    tack = rocalution_time();
+    std::cout << "Solver execution:" << (tack - tick) / 1e6 << " sec" << std::endl;
 
-  tack = rocalution_time();
-  std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
+    // Clear solver
+    ls.Clear();
 
-  ls.Clear();
+    // Clear all allocated data
+    for(int i = 0; i < n; ++i)
+    {
+        delete p2[i];
+        p2[i] = NULL;
+    }
 
-  for (int i=0; i<n; ++i) {
-    delete p2[i];
-    p2[i] = NULL;
-  }
+    delete[] size;
+    delete[] p2;
+    p2 = NULL;
 
-  delete[] size;
-  delete[] p2;
-  p2 = NULL;
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    double error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
 
-  stop_rocalution();
+    // Stop rocALUTION platform
+    stop_rocalution();
 
-  return 0;
+    return 0;
 }

@@ -23,134 +23,179 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Time measurement
+    double tick, tack, start, end;
 
-  double tick, tack, start, end;
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
+    // Check command line parameters for number of OMP threads
+    if(argc > 2)
+    {
+        set_omp_threads_rocalution(atoi(argv[2]));
+    }
 
-  if (argc > 2)
-    set_omp_threads_rocalution(atoi(argv[2]));
+    // Print rocALUTION info
+    info_rocalution();
 
-  info_rocalution();
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
+    LocalVector<double> e;
+    LocalMatrix<double> mat;
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
-  LocalMatrix<double> mat;
+    // Allocate vectors
+    x.Allocate("x", mat.GetN());
+    rhs.Allocate("rhs", mat.GetM());
+    e.Allocate("e", mat.GetN());
 
-  mat.ReadFileMTX(std::string(argv[1]));
+    // Initialize rhs such that A 1 = rhs
+    e.Ones();
+    mat.Apply(e, &rhs);
 
-  x.Allocate("x", mat.GetN());
-  rhs.Allocate("rhs", mat.GetM());
+    // Initial zero guess
+    x.Zeros();
 
-  rhs.Ones();
-  x.Zeros(); 
+    // Start time measurement
+    tick  = rocalution_time();
+    start = rocalution_time();
 
-  tick = rocalution_time();
-  start = rocalution_time();
+    // Linear Solver
+    SAAMG<LocalMatrix<double>, LocalVector<double>, double> ls;
 
-  // Linear Solver
-  SAAMG<LocalMatrix<double>, LocalVector<double>, double > ls;
+    // Set solver operator
+    ls.SetOperator(mat);
 
-  ls.SetOperator(mat);
+    // Set coupling strength
+    ls.SetCouplingStrength(0.001);
+    // Set maximal number of unknowns on coarsest level
+    ls.SetCoarsestLevel(300);
+    // Set relaxation parameter for smoothed interpolation aggregation
+    ls.SetInterpRelax(2. / 3.);
+    // Set manual smoothers
+    ls.SetManualSmoothers(true);
+    // Set manual course grid solver
+    ls.SetManualSolver(true);
+    // Set grid transfer scaling
+    ls.SetScaling(true);
 
-  // coupling strength
-  ls.SetCouplingStrength(0.001);
-  // number of unknowns on coarsest level
-  ls.SetCoarsestLevel(300);
-  // Relaxation parameter for smoothed interpolation aggregation
-  ls.SetInterpRelax(2./3.);
-  // Manual smoothers
-  ls.SetManualSmoothers(true);
-  // Manual course grid solver
-  ls.SetManualSolver(true);
-  // grid transfer scaling
-  ls.SetScaling(true);
+    // Build AMG hierarchy
+    ls.BuildHierarchy();
 
-  ls.BuildHierarchy();
+    // Obtain number of AMG levels
+    int levels = ls.GetNumLevels();
 
-  int levels = ls.GetNumLevels();
+    // Smoother for each level
+    IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double>** sm = NULL;
+    MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>** gs        = NULL;
 
-  // Smoother for each level
-  IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double > **sm = NULL;
-  MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double > **gs = NULL;
+    // Coarse Grid Solver
+    CG<LocalMatrix<double>, LocalVector<double>, double> cgs;
+    cgs.Verbose(0);
 
-  // Coarse Grid Solver
-  CG<LocalMatrix<double>, LocalVector<double>, double > cgs;
-  cgs.Verbose(0);
+    sm = new IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double>*[levels - 1];
+    gs = new MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>*[levels - 1];
 
-  sm = new IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double >*[levels-1];
-  gs = new MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double >*[levels-1];
+    // Coarse grid solver with preconditioner
+    //  MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double > p;
+    //  cgs->SetPreconditioner(p);
 
-  // Preconditioner
-  //  MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double > p;
-  //  cgs->SetPreconditioner(p);
+    // Initialize smoother for each level
+    for(int i = 0; i < levels - 1; ++i)
+    {
+        // Smooth with MultiColoredGS using Fixed-Point iteration scheme
+        FixedPoint<LocalMatrix<double>, LocalVector<double>, double>* fp;
+        fp = new FixedPoint<LocalMatrix<double>, LocalVector<double>, double>;
+        fp->SetRelaxation(1.3);
+        sm[i] = fp;
 
-  for (int i=0; i<levels-1; ++i) {
-    FixedPoint<LocalMatrix<double>, LocalVector<double>, double > *fp;
-    fp = new FixedPoint<LocalMatrix<double>, LocalVector<double>, double >;
-    fp->SetRelaxation(1.3);
-    sm[i] = fp;
-    
-    gs[i] = new MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double >;
-    
-    sm[i]->SetPreconditioner(*gs[i]);
-    sm[i]->Verbose(0);
-  }
+        gs[i] = new MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>;
 
-  ls.SetSmoother(sm);
-  ls.SetSolver(cgs);
-  ls.SetSmootherPreIter(1);
-  ls.SetSmootherPostIter(2);
-  ls.Init(1e-10, 1e-8, 1e+8, 10000);
-  ls.Verbose(2);
-    
-  ls.Build();
-  
-  mat.MoveToAccelerator();
-  x.MoveToAccelerator();
-  rhs.MoveToAccelerator();
-  ls.MoveToAccelerator();
+        sm[i]->SetPreconditioner(*gs[i]);
+        sm[i]->Verbose(0);
+    }
 
-  mat.Info();
-  
-  tack = rocalution_time();
-  std::cout << "Building time:" << (tack-tick)/1000000 << " sec" << std::endl;
-  
-  tick = rocalution_time();
-  
-  ls.Solve(rhs, &x);
-  
-  tack = rocalution_time();
-  std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
-  
-  ls.Clear();
+    // Pass smoother and coarse grid solver to AMG
+    ls.SetSmoother(sm);
+    ls.SetSolver(cgs);
 
-  // Free all allocated data
-  for (int i=0; i<levels-1; ++i) {
-    delete gs[i];
-    delete sm[i];
-  }
-  delete[] gs;
-  delete[] sm;
+    // Set number of pre and post smoothing steps
+    ls.SetSmootherPreIter(1);
+    ls.SetSmootherPostIter(2);
 
-  ls.Clear();
+    // Initialize solver tolerances
+    ls.Init(1e-10, 1e-8, 1e+8, 10000);
 
-  end = rocalution_time();
-  std::cout << "Total runtime:" << (end-start)/1000000 << " sec" << std::endl;
+    // Verbosity output
+    ls.Verbose(2);
 
-  stop_rocalution();
+    // Build solver
+    ls.Build();
 
-  return 0;
+    // Move solver to the accelerator
+    mat.MoveToAccelerator();
+    x.MoveToAccelerator();
+    rhs.MoveToAccelerator();
+    e.MoveToAccelerator();
+    ls.MoveToAccelerator();
+
+    // Print matrix info
+    mat.Info();
+
+    // Stop building time measurement
+    tack = rocalution_time();
+    std::cout << "Building took: " << (tack - tick) / 1e6 << " sec" << std::endl;
+
+    // Start solving time measurement
+    tick = rocalution_time();
+
+    // Solve A x = rhs
+    ls.Solve(rhs, &x);
+
+    // Stop solving time measurement
+    tack = rocalution_time();
+    std::cout << "Solving took: " << (tack - tick) / 1e6 << " sec" << std::endl;
+
+    // Clear the solver
+    ls.Clear();
+
+    // Free all allocated data
+    for(int i = 0; i < levels - 1; ++i)
+    {
+        delete gs[i];
+        delete sm[i];
+    }
+
+    delete[] gs;
+    delete[] sm;
+
+    // End time measurement
+    end = rocalution_time();
+    std::cout << "Total runtime: " << (end - start) / 1e6 << " sec" << std::endl;
+
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    double error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
+
+    // Stop rocALUTION platform
+    stop_rocalution();
+
+    return 0;
 }

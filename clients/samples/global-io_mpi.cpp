@@ -29,8 +29,8 @@ using namespace rocalution;
 
 int main(int argc, char* argv[])
 {
-    if (argc < 2)
-    { 
+    if(argc < 2)
+    {
         std::cerr << argv[0] << " <parallelmanager> <matrix>" << std::endl;
         exit(1);
     }
@@ -45,7 +45,8 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &num_procs);
 
-    if (num_procs < 2) {
+    if(num_procs < 2)
+    {
         std::cerr << "Expecting more than 1 MPI process\n";
         MPI_Finalize();
         return -1;
@@ -112,14 +113,14 @@ int main(int argc, char* argv[])
     ls.Solve(rhs, &x);
 
     time = rocalution_time() - time;
-    if (rank == 0)
+    if(rank == 0)
     {
-      std::cout << "Solving: " << time/1e6 << " sec" << std::endl;
+        std::cout << "Solving: " << time / 1e6 << " sec" << std::endl;
     }
 
     e.ScaleAdd(-1.0, x);
     double nrm2 = e.Norm();
-    if (rank == 0)
+    if(rank == 0)
     {
         std::cout << "||e - x||_2 = " << nrm2 << std::endl;
     }

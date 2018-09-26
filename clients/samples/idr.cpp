@@ -23,80 +23,105 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix> [Num threads]" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
+    // Check command line parameters for number of OMP threads
+    if(argc > 2)
+    {
+        set_omp_threads_rocalution(atoi(argv[2]));
+    }
 
-  if (argc > 2) {
-    set_omp_threads_rocalution(atoi(argv[2]));
-  } 
+    // Print rocALUTION info
+    info_rocalution();
 
-  info_rocalution();
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
+    LocalVector<double> e;
+    LocalMatrix<double> mat;
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
-  LocalVector<double> e;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
-  LocalMatrix<double> mat;
+    // Move objects to accelerator
+    mat.MoveToAccelerator();
+    x.MoveToAccelerator();
+    rhs.MoveToAccelerator();
+    e.MoveToAccelerator();
 
-  mat.ReadFileMTX(std::string(argv[1]));
+    // Allocate vectors
+    x.Allocate("x", mat.GetN());
+    rhs.Allocate("rhs", mat.GetM());
+    e.Allocate("e", mat.GetN());
 
-  mat.MoveToAccelerator();
-  x.MoveToAccelerator();
-  rhs.MoveToAccelerator();
-  e.MoveToAccelerator();
+    // Linear Solver
+    IDR<LocalMatrix<double>, LocalVector<double>, double> ls;
 
-  x.Allocate("x", mat.GetN());
-  rhs.Allocate("rhs", mat.GetM());
-  e.Allocate("e", mat.GetN());
+    // Preconditioner
+    Jacobi<LocalMatrix<double>, LocalVector<double>, double> p;
 
-  // Linear Solver
-  IDR<LocalMatrix<double>, LocalVector<double>, double > ls;
+    // Initialize rhs such that A 1 = rhs
+    e.Ones();
+    mat.Apply(e, &rhs);
 
-  // Preconditioner
-  Jacobi<LocalMatrix<double>, LocalVector<double>, double > p;
+    // Initial zero guess
+    x.Zeros();
 
-  e.Ones();
-  mat.Apply(e, &rhs);
-  x.Zeros(); 
+    // Set solver operator
+    ls.SetOperator(mat);
+    // Set solver preconditioner
+    ls.SetPreconditioner(p);
 
-  ls.SetOperator(mat);
-  ls.SetPreconditioner(p);
-  ls.SetShadowSpace(4);
-  ls.SetRandomSeed(123456ULL);
+    // Set IDR shadow space
+    ls.SetShadowSpace(4);
 
-  ls.Build();
+    // Set IDR random seed
+    ls.SetRandomSeed(123456ULL);
 
-  ls.Verbose(1);
+    // Build solver
+    ls.Build();
 
-  mat.Info();
+    // Verbosity output
+    ls.Verbose(1);
 
-  double tick, tack;
-  tick = rocalution_time();
+    // Print matrix info
+    mat.Info();
 
-  ls.Solve(rhs, &x);
+    // Start time measurement
+    double tick, tack;
+    tick = rocalution_time();
 
-  tack = rocalution_time();
-  std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
+    // Solve A x = rhs
+    ls.Solve(rhs, &x);
 
-  ls.Clear();
+    // Stop time measurement
+    tack = rocalution_time();
+    std::cout << "Solver execution:" << (tack - tick) / 1e6 << " sec" << std::endl;
 
-  e.ScaleAdd(-1.0, x);
-  double error = e.Norm();
+    // Clear solver
+    ls.Clear();
 
-  std::cout << "||e - x||_2 = " << error << "\n";
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    double error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
 
-  stop_rocalution();
+    // Stop rocALUTION platform
+    stop_rocalution();
 
-  return 0;
+    return 0;
 }

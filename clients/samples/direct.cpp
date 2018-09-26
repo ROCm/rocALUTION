@@ -23,56 +23,82 @@
 
 #include <iostream>
 #include <cstdlib>
-
 #include <rocalution.hpp>
 
 using namespace rocalution;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // Check command line parameters
+    if(argc == 1)
+    {
+        std::cerr << argv[0] << " <matrix>" << std::endl;
+        exit(1);
+    }
 
-  if (argc == 1) { 
-    std::cerr << argv[0] << " <matrix>" << std::endl;
-    exit(1);
-  }
+    // Initialize rocALUTION
+    init_rocalution();
 
-  init_rocalution();
-  info_rocalution();
+    // Print rocALUTION info
+    info_rocalution();
 
-  LocalVector<double> x;
-  LocalVector<double> rhs;
+    // rocALUTION objects
+    LocalVector<double> x;
+    LocalVector<double> rhs;
+    LocalVector<double> e;
+    LocalMatrix<double> mat;
 
-  LocalMatrix<double> mat;
+    // Read matrix from MTX file
+    mat.ReadFileMTX(std::string(argv[1]));
 
-  mat.ReadFileMTX(std::string(argv[1]));
-  mat.MoveToAccelerator();
-  x.MoveToAccelerator();
-  rhs.MoveToAccelerator();
+    // Move objects to accelerator
+    // mat.MoveToAccelerator();
+    // x.MoveToAccelerator();
+    // rhs.MoveToAccelerator();
+    // e.MoveToAccelerator();
 
-  x.Allocate("x", mat.GetN());
-  rhs.Allocate("rhs", mat.GetM());
+    // Allocate vectors
+    x.Allocate("x", mat.GetN());
+    rhs.Allocate("rhs", mat.GetM());
+    e.Allocate("e", mat.GetN());
 
-  // Linear Solver
-  Inversion<LocalMatrix<double>, LocalVector<double>, double > ls;
+    // Direct solver
+    Inversion<LocalMatrix<double>, LocalVector<double>, double> ds;
 
-  rhs.Ones();
-  x.Zeros(); 
+    // Initialize rhs such that A 1 = rhs
+    e.Ones();
+    mat.Apply(e, &rhs);
 
-  ls.SetOperator(mat);
-  ls.Build();
+    // Set solver operator
+    ds.SetOperator(mat);
 
-  mat.Info();
+    // Build solver
+    ds.Build();
 
-  double tick, tack;
-  tick = rocalution_time();
+    // Print matrix info
+    mat.Info();
 
-  ls.Solve(rhs, &x);
+    // Start time measurement
+    double tick, tack;
+    tick = rocalution_time();
 
-  tack = rocalution_time();
-  std::cout << "Solver execution:" << (tack-tick)/1000000 << " sec" << std::endl;
+    // Solve A x = rhs
+    ds.Solve(rhs, &x);
 
-  ls.Clear();
+    // Stop time measurement
+    tack = rocalution_time();
+    std::cout << "Solver execution:" << (tack - tick) / 1e6 << " sec" << std::endl;
 
-  stop_rocalution();
+    // Clear solver
+    ds.Clear();
 
-  return 0;
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    double error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
+
+    // Stop rocALUTION platform
+    stop_rocalution();
+
+    return 0;
 }
