@@ -27,12 +27,15 @@
 #include "../../utils/log.hpp"
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/math_functions.hpp"
+#include "version.hpp"
 
 #include <typeinfo>
 #include <fstream>
 #include <math.h>
 #include <limits>
 #include <complex>
+#include <typeinfo>
+#include <typeindex>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -502,20 +505,75 @@ void HostVector<ValueType>::ReadFileBinary(const std::string filename)
 {
     LOG_INFO("ReadFileBinary: filename=" << filename << "; reading...");
 
-    std::ifstream out(filename.c_str(), std::ios::in | std::ios::binary);
+    std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
+
+    if(!in.is_open())
+    {
+        LOG_INFO("ReadFileBinary: filename=" << filename << "; cannot open file");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    // Header
+    std::string header;
+    std::getline(in, header);
+
+    if(header != "#rocALUTION binary vector file")
+    {
+        LOG_INFO("ReadFileBinary: filename=" << filename << " is not a rocALUTION vector");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    // rocALUTION version
+    int version;
+    in.read((char*)&version, sizeof(int));
+
+    /* TODO might need this in the future
+      if(version != __ROCALUTION_VER)
+      {
+          LOG_INFO("ReadFileBinary: filename=" << filename << "; file version mismatch");
+          FATAL_ERROR(__FILE__, __LINE__);
+      }
+    */
 
     this->Clear();
 
     int n;
-    out.read((char*)&n, sizeof(int));
+    in.read((char*)&n, sizeof(int));
 
     this->Allocate(n);
 
-    out.read((char*)this->vec_, n * sizeof(ValueType));
+    // We read always in double precision
+    if(typeid(ValueType) == typeid(double))
+    {
+        in.read((char*)this->vec_, sizeof(ValueType) * n);
+    }
+    else if(typeid(ValueType) == typeid(float))
+    {
+        std::vector<double> tmp(n);
+
+        in.read((char*)tmp.data(), sizeof(double) * n);
+
+        for(int i = 0; i < n; ++i)
+        {
+            this->vec_[i] = static_cast<ValueType>(tmp[i]);
+        }
+    }
+    else
+    {
+        LOG_INFO("ReadFileBinary: filename=" << filename << "; internal error");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    // Check ifstream status
+    if(!in)
+    {
+        LOG_INFO("ReadFileBinary: filename=" << filename << "; could not read from file");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    in.close();
 
     LOG_INFO("ReadFileBinary: filename=" << filename << "; done");
-
-    out.close();
 }
 
 template <typename ValueType>
@@ -525,8 +583,50 @@ void HostVector<ValueType>::WriteFileBinary(const std::string filename) const
 
     std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
 
+    if(!out.is_open())
+    {
+        LOG_INFO("WriteFileBinary: filename=" << filename << "; cannot open file");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    // Header
+    out << "#rocALUTION binary vector file" << std::endl;
+
+    // rocALUTION version
+    int version = __ROCALUTION_VER;
+    out.write((char*)&version, sizeof(int));
+
+    // Data
     out.write((char*)&this->size_, sizeof(int));
-    out.write((char*)this->vec_, this->size_ * sizeof(ValueType));
+
+    // We write always in double precision
+    if(typeid(ValueType) == typeid(double))
+    {
+        out.write((char*)this->vec_, sizeof(ValueType) * this->size_);
+    }
+    else if(typeid(ValueType) == typeid(float))
+    {
+        std::vector<double> tmp(this->size_);
+
+        for(int i = 0; i < this->size_; ++i)
+        {
+            tmp[i] = static_cast<double>(this->vec_[i]);
+        }
+
+        out.write((char*)tmp.data(), sizeof(double) * this->size_);
+    }
+    else
+    {
+        LOG_INFO("WriteFileBinary: filename=" << filename << "; internal error");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    // Check ifstream status
+    if(!out)
+    {
+        LOG_INFO("ReadFileBinary: filename=" << filename << "; could not write to file");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
 
     out.close();
 
