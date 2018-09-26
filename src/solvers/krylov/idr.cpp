@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "../../utils/types.hpp"
 #include "idr.hpp"
@@ -26,10 +49,10 @@ IDR<OperatorType, VectorType, ValueType>::IDR()
 {
     log_debug(this, "IDR::IDR()", "default constructor");
 
-    this->s_     = 4;
-    this->seed_  = time(NULL);
+    this->s_    = 4;
+    this->seed_ = time(NULL);
 
-    this->kappa_ = ValueType(0.7f);
+    this->kappa_ = static_cast<ValueType>(0.7);
 
     this->c_ = NULL;
     this->f_ = NULL;
@@ -133,7 +156,7 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void)
         this->U_[i]->Allocate("u", this->op_->GetM());
         this->P_[i]->Allocate("P", this->op_->GetM());
 
-        this->P_[i]->SetRandomNormal((i+1)*this->seed_, 0.0, 1.0);
+        this->P_[i]->SetRandomNormal((i + 1) * this->seed_, 0.0, 1.0);
     }
 
     if(this->precond_ != NULL)
@@ -236,7 +259,7 @@ void IDR<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
 }
 
 template <class OperatorType, class VectorType, typename ValueType>
-void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(const int s)
+void IDR<OperatorType, VectorType, ValueType>::SetShadowSpace(int s)
 {
     log_debug(this, "IDR:SetShadowSpace()", s);
 
@@ -311,9 +334,7 @@ template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                 VectorType* x)
 {
-    log_debug(this, "IDR::SolveNonPrecond_()", " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "IDR::SolveNonPrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -348,7 +369,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
     r->ScaleAdd(-one, rhs);
 
     // use for |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
+    ValueType res_norm = this->Norm_(*r);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -462,7 +483,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
             x->AddScale(*U[k], beta);
 
             // Residual norm
-            res_norm = this->Norm(*r);
+            res_norm = this->Norm_(*r);
 
             // Check inner loop for convergence
             if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res_norm)))
@@ -530,7 +551,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
         r->AddScale(*v, -omega);
 
         // Residual norm to check outer loop convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
     }
 
     log_debug(this, "IDR::SolveNonPrecond_()", " #*# end");
@@ -539,9 +560,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 template <class OperatorType, class VectorType, typename ValueType>
 void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    log_debug(this, "IDR::SolvePrecond_()", " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "IDR::SolvePrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -577,7 +596,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
     r->ScaleAdd(-one, rhs);
 
     // use for |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
+    ValueType res_norm = this->Norm_(*r);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -694,7 +713,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
             x->AddScale(*U[k], beta);
 
             // Residual norm
-            res_norm = this->Norm(*r);
+            res_norm = this->Norm_(*r);
 
             // Check inner loop for convergence
             if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res_norm)))
@@ -765,7 +784,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
         x->AddScale(*v, omega);
 
         // Residual norm to check outer loop convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
     }
 
     log_debug(this, "::SolvePrecond_()", " #*# end");

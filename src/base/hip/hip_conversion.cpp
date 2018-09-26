@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "hip_allocate_free.hpp"
 #include "hip_conversion.hpp"
@@ -13,9 +36,9 @@ namespace rocalution {
 
 template <typename ValueType, typename IndexType>
 bool csr_to_coo_hip(const rocsparse_handle handle,
-                    const IndexType nnz,
-                    const IndexType nrow,
-                    const IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixCSR<ValueType, IndexType>& src,
                     MatrixCOO<ValueType, IndexType>* dst)
 {
@@ -48,9 +71,9 @@ bool csr_to_coo_hip(const rocsparse_handle handle,
 
 template <typename ValueType, typename IndexType>
 bool coo_to_csr_hip(const rocsparse_handle handle,
-                    const IndexType nnz,
-                    const IndexType nrow,
-                    const IndexType ncol,
+                    IndexType nnz,
+                    IndexType nrow,
+                    IndexType ncol,
                     const MatrixCOO<ValueType, IndexType>& src,
                     MatrixCSR<ValueType, IndexType>* dst)
 {
@@ -286,13 +309,15 @@ bool csr_to_dia_hip(int blocksize,
     temp_storage_bytes = 0;
 
     // Obtain hipcub buffer size
-    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+    hipcub::DeviceScan::ExclusiveSum(
+        d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Allocate hipcub buffer
     hipMalloc(&d_temp_storage, temp_storage_bytes);
 
     // Do inclusive sum
-    hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+    hipcub::DeviceScan::ExclusiveSum(
+        d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
 
     // Clear hipcub buffer
     hipFree(d_temp_storage);
@@ -401,17 +426,19 @@ bool csr_to_hyb_hip(int blocksize,
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Inclusive sum on coo_row_nnz
-        void* d_temp_storage = NULL;
+        void* d_temp_storage      = NULL;
         size_t temp_storage_bytes = 0;
 
         // Obtain hipcub buffer size
-        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+        hipcub::DeviceScan::InclusiveSum(
+            d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
 
         // Allocate hipcub buffer
         hipMalloc(&d_temp_storage, temp_storage_bytes);
 
         // Do inclusive sum
-        hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+        hipcub::DeviceScan::InclusiveSum(
+            d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
 
         // Clear hipcub buffer
         hipFree(d_temp_storage);

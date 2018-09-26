@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_LOCAL_STENCIL_HPP_
 #define ROCALUTION_LOCAL_STENCIL_HPP_
 
@@ -22,53 +45,47 @@ class GlobalVector;
 
 // Local Stencil
 template <typename ValueType>
-class LocalStencil : public Operator<ValueType> {
+class LocalStencil : public Operator<ValueType>
+{
+    public:
+    LocalStencil();
+    LocalStencil(unsigned int type);
+    virtual ~LocalStencil();
 
-public:
+    virtual void Info() const;
 
-  LocalStencil();
-  LocalStencil(unsigned int type);
-  virtual ~LocalStencil();
+    virtual int GetNDim(void) const;
+    virtual IndexType2 GetM(void) const;
+    virtual IndexType2 GetN(void) const;
+    virtual IndexType2 GetNnz(void) const;
 
-  virtual void Info() const;
+    virtual void SetGrid(int size);
 
-  virtual int GetNDim(void) const;
-  virtual IndexType2 GetM(void) const;
-  virtual IndexType2 GetN(void) const;
-  virtual IndexType2 GetNnz(void) const;
+    virtual void Clear();
 
-  virtual void SetGrid(const int size);
+    virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+    virtual void
+    ApplyAdd(const LocalVector<ValueType>& in, ValueType scalar, LocalVector<ValueType>* out) const;
 
-  virtual void Clear();
+    virtual void MoveToAccelerator(void);
+    virtual void MoveToHost(void);
 
-  virtual void Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const; 
-  virtual void ApplyAdd(const LocalVector<ValueType> &in, const ValueType scalar, 
-                        LocalVector<ValueType> *out) const; 
+    protected:
+    virtual bool is_host(void) const { return true; };
+    virtual bool is_accel(void) const { return false; };
 
-  virtual void MoveToAccelerator(void);
-  virtual void MoveToHost(void);
+    private:
+    std::string object_name_;
 
-protected:
+    BaseStencil<ValueType>* stencil_;
 
-  virtual bool is_host(void) const {return true;};
-  virtual bool is_accel(void) const {return false;};
+    HostStencil<ValueType>* stencil_host_;
+    AcceleratorStencil<ValueType>* stencil_accel_;
 
-private:
-  
-  std::string object_name_ ;
-
-  BaseStencil<ValueType> *stencil_;
-
-  HostStencil<ValueType> *stencil_host_;
-  AcceleratorStencil<ValueType> *stencil_accel_;
-
-  
-  friend class LocalVector<ValueType>;
-  friend class GlobalVector<ValueType>;
-
+    friend class LocalVector<ValueType>;
+    friend class GlobalVector<ValueType>;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_LOCAL_STENCIL_HPP_

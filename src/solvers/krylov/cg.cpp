@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "cg.hpp"
 #include "../iter_ctrl.hpp"
@@ -266,10 +289,7 @@ void CG<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs, VectorType* x)
 {
-    log_debug(this, "CG::SolveNonPrecond_()",
-              " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "CG::SolveNonPrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -291,9 +311,9 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // Initial residual norm |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
+    ValueType res_norm = this->Norm_(*r);
     // Initial residual norm |b|
-    //    ValueType res_norm = this->Norm(rhs);
+    //    ValueType res_norm = this->Norm_(rhs);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -319,10 +339,10 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
         x->AddScale(*p, alpha);
 
         // r = r - alpha*q
-        r->AddScale(*q, ValueType(-1.0) * alpha);
+        r->AddScale(*q, -alpha);
 
         // Check convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         {
             break;
@@ -343,10 +363,7 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
 template <class OperatorType, class VectorType, typename ValueType>
 void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs, VectorType* x)
 {
-    log_debug(this, "CG::SolvePrecond_()",
-              " #*# begin",
-              (const void*&)rhs,
-              x);
+    log_debug(this, "CG::SolvePrecond_()", " #*# begin", (const void*&)rhs, x);
 
     assert(x != NULL);
     assert(x != &rhs);
@@ -369,9 +386,9 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // Initial residual norm |b-Ax0|
-    ValueType res_norm = this->Norm(*r);
+    ValueType res_norm = this->Norm_(*r);
     // Initial residual norm |b|
-    //    ValueType res_norm = this->Norm(rhs);
+    //    ValueType res_norm = this->Norm_(rhs);
 
     // |b - Ax0|
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
@@ -404,7 +421,7 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
         r->AddScale(*q, -alpha);
 
         // Check convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         {
             break;

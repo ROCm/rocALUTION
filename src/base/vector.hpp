@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_VECTOR_HPP_
 #define ROCALUTION_VECTOR_HPP_
 
@@ -15,7 +38,15 @@ class GlobalVector;
 template <typename ValueType>
 class LocalVector;
 
-// Vector
+/** \class Vector
+  * \brief Base class for all vectors
+  * \details
+  * The Vector class is the base class for all vector objects, i.e. LocalVector
+  * and GlobalVector classes.
+  *
+  * \tparam ValueType - can be int, float, double, std::complex<float> and
+  *                     std::complex<double>
+  */
 template <typename ValueType>
 class Vector : public BaseRocalution<ValueType>
 {
@@ -23,166 +54,154 @@ class Vector : public BaseRocalution<ValueType>
     Vector();
     virtual ~Vector();
 
-    /// Return the size of the vector
+    /** \brief Return the size of the vector */
     virtual IndexType2 GetSize(void) const = 0;
-    /// Return the size of the local vector
+    /** \brief Return the size of the local vector */
     virtual int GetLocalSize(void) const;
-    /// Return the size of the ghost vector
+    /** \brief Return the size of the ghost vector */
     virtual int GetGhostSize(void) const;
 
-    /// Return true if the vector is ok (empty vector is also ok)
-    /// and false if some of values are NaN
+    /** \brief Return true if the vector is ok (empty vector returns true) and false
+      * if some of values are NaN
+      */
     virtual bool Check(void) const = 0;
 
-    /// Clear (free) the vector
-    virtual void Clear() = 0;
+    virtual void Clear(void) = 0;
 
-    /// Set the values of the vector to zero
-    virtual void Zeros() = 0;
+    /** \brief Set all values of the vector to 0 */
+    virtual void Zeros(void) = 0;
 
-    /// Set the values of the vector to one
-    virtual void Ones() = 0;
+    /** \brief Set all values of the vector to 1 */
+    virtual void Ones(void) = 0;
 
-    /// Set the values of the vector to given argument
-    virtual void SetValues(const ValueType val) = 0;
+    /** \brief Set all values of the vector to given argument */
+    virtual void SetValues(ValueType val) = 0;
 
-    /// Set random values from interval [a,b]
+    /** \brief Fill the vector with random values from interval [a,b] */
     virtual void SetRandomUniform(unsigned long long seed,
                                   ValueType a = static_cast<ValueType>(-1),
                                   ValueType b = static_cast<ValueType>(1)) = 0;
 
-    /// Set random values from normal distribution
+    /** \brief Fill the vector with random values from normal distribution */
     virtual void SetRandomNormal(unsigned long long seed,
                                  ValueType mean = static_cast<ValueType>(0),
                                  ValueType var = static_cast<ValueType>(1)) = 0;
 
-    /// Read vector from ASCII file
-    virtual void ReadFileASCII(const std::string) = 0;
+    /** \brief Read vector from ASCII file */
+    virtual void ReadFileASCII(const std::string filename) = 0;
 
-    /// Write vector to ASCII file
-    virtual void WriteFileASCII(const std::string) const = 0;
+    /** \brief Write vector to ASCII file */
+    virtual void WriteFileASCII(const std::string filename) const = 0;
 
-    /// Read vector from binary file
-    virtual void ReadFileBinary(const std::string) = 0;
+    /** \brief Read vector from binary file */
+    virtual void ReadFileBinary(const std::string filename) = 0;
 
-    /// Write vector to binary file
-    virtual void WriteFileBinary(const std::string) const = 0;
+    /** \brief Write vector to binary file */
+    virtual void WriteFileBinary(const std::string filename) const = 0;
 
-    /// Copy values from another local vector
+    /** \brief Copy values from another local vector */
     virtual void CopyFrom(const LocalVector<ValueType>& src);
 
-    /// Copy values from another global vector
+    /** \brief Copy values from another global vector */
     virtual void CopyFrom(const GlobalVector<ValueType>& src);
 
-    /// Async copy
+    /** \brief Async copy from another local vector */
     virtual void CopyFromAsync(const LocalVector<ValueType>& src);
 
-    /// Copy values from float vector
+    /** \brief Copy values from another local float vector */
     virtual void CopyFromFloat(const LocalVector<float>& src);
 
-    /// Copy values from double vector
+    /** \brief Copy values from another local double vector */
     virtual void CopyFromDouble(const LocalVector<double>& src);
 
-    /// Copy data (not entire vector) from another local vector with specified src/dst offsets and
-    /// size
-    virtual void CopyFrom(const LocalVector<ValueType>& src,
-                          const int src_offset,
-                          const int dst_offset,
-                          const int size);
-    /// Clone the entire vector (data+backend descr) from another local vector
+    /** \brief Copy data from another local vector with offsets and size */
+    virtual void CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
+    /** \brief Clone the entire vector (data+backend descr) from another local vector */
     virtual void CloneFrom(const LocalVector<ValueType>& src);
 
-    /// Clone the entire vector (data+backend descr) from another global vector
+    /** \brief Clone the entire vector (data+backend descr) from another global vector */
     virtual void CloneFrom(const GlobalVector<ValueType>& src);
 
-    /// Perform vector update of type this = this + alpha*x
-    virtual void AddScale(const LocalVector<ValueType>& x, const ValueType alpha);
-    /// Perform vector update of type this = this + alpha*x
-    virtual void AddScale(const GlobalVector<ValueType>& x, const ValueType alpha);
+    /** \brief Perform vector update of type this = this + alpha * x */
+    virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);
+    /** \brief Perform vector update of type this = this + alpha * x */
+    virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
 
-    /// Perform vector update of type this = alpha*this + x
-    virtual void ScaleAdd(const ValueType alpha, const LocalVector<ValueType>& x);
-    /// Perform vector update of type this = alpha*this + x
-    virtual void ScaleAdd(const ValueType alpha, const GlobalVector<ValueType>& x);
+    /** \brief Perform vector update of type this = alpha * this + x */
+    virtual void ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x);
+    /** \brief Perform vector update of type this = alpha * this + x */
+    virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);
 
-    /// Perform vector update of type this = alpha*this + x*beta
-    virtual void
-    ScaleAddScale(const ValueType alpha, const LocalVector<ValueType>& x, const ValueType beta);
-    /// Perform vector update of type this = alpha*this + x*beta
-    virtual void
-    ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType>& x, const ValueType beta);
-    /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
-    /// of a vector
-    virtual void ScaleAddScale(const ValueType alpha,
+    /** \brief Perform vector update of type this = alpha * this + x * beta */
+    virtual void ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
+    /** \brief Perform vector update of type this = alpha * this + x * beta */
+    virtual void ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
+
+    /** \brief Perform vector update of type this = alpha * this + x * beta with offsets */
+    virtual void ScaleAddScale(ValueType alpha,
                                const LocalVector<ValueType>& x,
-                               const ValueType beta,
-                               const int src_offset,
-                               const int dst_offset,
-                               const int size);
-    /// Perform vector update of type this = alpha*this + x*beta with offsets for a specified part
-    /// of a vector
-    virtual void ScaleAddScale(const ValueType alpha,
+                               ValueType beta,
+                               int src_offset,
+                               int dst_offset,
+                               int size);
+    /** \brief Perform vector update of type this = alpha * this + x * beta with offsets */
+    virtual void ScaleAddScale(ValueType alpha,
                                const GlobalVector<ValueType>& x,
-                               const ValueType beta,
-                               const int src_offset,
-                               const int dst_offset,
-                               const int size);
+                               ValueType beta,
+                               int src_offset,
+                               int dst_offset,
+                               int size);
 
-    /// Perform vector update of type this = alpha*this + x*beta + y*gamma
-    virtual void ScaleAdd2(const ValueType alpha,
+    /** \brief Perform vector update of type this = alpha * this + x * beta + y * gamma */
+    virtual void ScaleAdd2(ValueType alpha,
                            const LocalVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const LocalVector<ValueType>& y,
-                           const ValueType gamma);
-    /// Perform vector update of type this = alpha*this + x*beta + y*gamma
-    virtual void ScaleAdd2(const ValueType alpha,
+                           ValueType gamma);
+    /** \brief Perform vector update of type this = alpha * this + x * beta + y * gamma */
+    virtual void ScaleAdd2(ValueType alpha,
                            const GlobalVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const GlobalVector<ValueType>& y,
-                           const ValueType gamma);
+                           ValueType gamma);
 
-    /// Perform vector scaling this = alpha*this
-    virtual void Scale(const ValueType alpha) = 0;
+    /** \brief Perform vector scaling this = alpha * this */
+    virtual void Scale(ValueType alpha) = 0;
 
-    /// Performs exlusive scan
-    virtual void ExclusiveScan(const LocalVector<ValueType>& x);
-    /// Performs exlusive scan
-    virtual void ExclusiveScan(const GlobalVector<ValueType>& x);
-
-    /// Compute dot (scalar) product, return this^T y
+    /** \brief Compute dot (scalar) product, return this^T y */
     virtual ValueType Dot(const LocalVector<ValueType>& x) const;
-    /// Compute dot (scalar) product, return this^T y
+    /** \brief Compute dot (scalar) product, return this^T y */
     virtual ValueType Dot(const GlobalVector<ValueType>& x) const;
 
-    /// Compute non-conjugate dot (scalar) product, return this^T y
+    /** \brief Compute non-conjugate dot (scalar) product, return this^T y */
     virtual ValueType DotNonConj(const LocalVector<ValueType>& x) const;
-    /// Compute non-conjugate dot (scalar) product, return this^T y
+    /** \brief Compute non-conjugate dot (scalar) product, return this^T y */
     virtual ValueType DotNonConj(const GlobalVector<ValueType>& x) const;
 
-    /// Compute L2 norm of the vector, return =  srqt(this^T this)
+    /** \brief Compute \f$L_2\f$ norm of the vector, return = srqt(this^T this) */
     virtual ValueType Norm(void) const = 0;
 
-    /// Reduce the vector
+    /** \brief Reduce the vector */
     virtual ValueType Reduce(void) const = 0;
 
-    /// Compute the sum of the absolute values of the vector (L1 norm), return =  sum(|this|)
+    /** \brief Compute the sum of absolute values of the vector, return = sum(|this|) */
     virtual ValueType Asum(void) const = 0;
 
-    /// Compute the absolute max value of the vector, return = index(max(|this|))
+    /** \brief Compute the absolute max of the vector, return = index(max(|this|)) */
     virtual int Amax(ValueType& value) const = 0;
 
-    /// Perform point-wise multiplication (element-wise) of type this = this * x
+    /** \brief Perform point-wise multiplication (element-wise) of this = this * x */
     virtual void PointWiseMult(const LocalVector<ValueType>& x);
-    /// Perform point-wise multiplication (element-wise) of type this = this * x
+    /** \brief Perform point-wise multiplication (element-wise) of this = this * x */
     virtual void PointWiseMult(const GlobalVector<ValueType>& x);
 
-    /// Perform point-wise multiplication (element-wise) of type this = x*y
+    /** \brief Perform point-wise multiplication (element-wise) of this = x * y */
     virtual void PointWiseMult(const LocalVector<ValueType>& x, const LocalVector<ValueType>& y);
-    /// Perform point-wise multiplication (element-wise) of type this = x*y
+    /** \brief Perform point-wise multiplication (element-wise) of this = x * y */
     virtual void PointWiseMult(const GlobalVector<ValueType>& x, const GlobalVector<ValueType>& y);
 
-    /// Perform power operation to a vector
-    virtual void Power(const double power) = 0;
+    /** \brief Perform power operation to a vector */
+    virtual void Power(double power) = 0;
 };
 
 } // namespace rocalution

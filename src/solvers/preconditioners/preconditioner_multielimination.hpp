@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_
 #define ROCALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_
 
@@ -9,87 +32,123 @@
 
 namespace rocalution {
 
-/// MultiElimination (I)LU factorization (see 12.5.1 Multi-Elimination ILU from 
-/// "Iterative Methods for Sparse Linear Systems", 2nd Edition, Yousef Saad);
-/// The ME-ILU preconditioner is build recursively 
+/** \ingroup precond_module
+  * \class MultiElimination
+  * \brief Multi-Elimination Incomplete LU Factorization Preconditioner
+  * \details
+  * The Multi-Elimination Incomplete LU preconditioner is based on the following
+  * decomposition
+  * \f[
+  *   A = \begin{pmatrix} D & F \\ E & C \end{pmatrix}
+  *     = \begin{pmatrix} I & 0 \\ ED^{-1} & I \end{pmatrix} \times
+  *       \begin{pmatrix} D & F \\ 0 & \hat{A} \end{pmatrix},
+  * \f]
+  * where \f$\hat{A} = C - ED^{-1} F\f$. To make the inversion of \f$D\f$ easier, we
+  * permute the preconditioning before the factorization with a permutation \f$P\f$ to
+  * obtain only diagonal elements in \f$D\f$. The permutation here is based on a maximal
+  * independent set. This procedure can be applied to the block matrix \f$\hat{A}\f$, in
+  * this way we can perform the factorization recursively. In the last level of the
+  * recursion, we need to provide a solution procedure. By the design of the library,
+  * this can be any kind of solver. 
+  *
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
-class MultiElimination : public Preconditioner<OperatorType, VectorType, ValueType> {
+class MultiElimination : public Preconditioner<OperatorType, VectorType, ValueType>
+{
+    public:
+    MultiElimination();
+    virtual ~MultiElimination();
 
-public:
+    /** \brief Returns the size of the first (diagonal) block of the preconditioner */
+    inline int GetSizeDiagBlock(void) const { return this->size_; }
 
-  MultiElimination();
-  virtual ~MultiElimination();
+    /** \brief Return the depth of the current level */
+    inline int GetLevel(void) const { return this->level_; }
 
-  /// Returns the size of the first (diagonal) block of the preconditioner
-  inline int GetSizeDiagBlock(void) const { return this->size_; }
+    virtual void Print(void) const;
+    virtual void Clear(void);
 
-  /// Return the depth of the current level
-  inline int GetLevel(void) const { return this->level_; }
+    /** \brief Initialize (recursively) ME-ILU with level (depth of recursion)
+      * \details AA_Solvers - defines the last-block solver <br>
+      * drop_off - defines drop-off tolerance
+      */
+    void Set(Solver<OperatorType, VectorType, ValueType>& AA_Solver, int level, double drop_off = 0.0);
 
-  virtual void Print(void) const;
-  virtual void Clear(void);
+    /** \brief Set a specific matrix type of the decomposed block matrices */
+    void SetPrecondMatrixFormat(unsigned int mat_format);
 
-  /// Initialize (recursively) ME-ILU with level (defines the depth of recursion);
-  /// AA_Solvers - defines the last-block solver;
-  /// drop_off - defines drop-off tolerance
-  virtual void Set(Solver<OperatorType, VectorType, ValueType> &AA_Solver,
-                   const int level, const double drop_off = double(0.0));
+    virtual void Build(void);
 
-  /// Set a specific matrix type of the decomposed block matrices;
-  /// if not set, CSR matrix format will be used
-  virtual void SetPrecondMatrixFormat(const unsigned int mat_format);
+    virtual void Solve(const VectorType& rhs, VectorType* x);
 
-  virtual void Build(void);
+    protected:
+    /** \brief A_ is decomposed into \f$[D,F;E,C]\f$, where \f$AA=C-ED^{-1}F\f$ and
+      * \f$E=ED^{-1}\f$
+      */
+    OperatorType A_;
+    /** \brief Operator \$D\$ */
+    OperatorType D_;
+    /** \brief Operator \$E\$ */
+    OperatorType E_;
+    /** \brief Operator \$F\$ */
+    OperatorType F_;
+    /** \brief Operator \$C\$ */
+    OperatorType C_;
+    /** \brief \f$AA=C-ED^{-1}F\f$ */
+    OperatorType AA_;
 
-  virtual void Solve(const VectorType &rhs,
-                     VectorType *x);
+    /** \brief The sizes of the AA_ matrix */
+    int AA_nrow_;
+    /** \brief The sizes of the AA_ matrix */
+    int AA_nnz_;
 
-protected:
+    /** \brief Keep the precond matrix in CSR or not */
+    bool op_mat_format_;
+    /** \brief Precond matrix format */
+    unsigned int precond_mat_format_;
 
-  /// A_ is decomposed into \f$ [D_, F_; E_, C_] \f$, where
-  /// \f$ AA = C - E D^{-1} F\f$;
-  /// \f$ E = E D^{-1} \f$;
-  OperatorType A_;
-  /// Diagonal part
-  OperatorType D_;
-  OperatorType E_,F_,C_;
-  /// \f$ AA = C - E D^{-1} F\f$;
-  OperatorType AA_;
+    /** \brief Vector x_ */
+    VectorType x_;
+    /** \brief Vector x_1_ */
+    VectorType x_1_;
+    /** \brief Vector x_2_ */
+    VectorType x_2_;
 
-  /// The sizes of the AA_ matrix
-  int AA_nrow_, AA_nnz_;
+    /** \brief Vector rhs_ */
+    VectorType rhs_;
+    /** \brief Vector rhs_1_ */
+    VectorType rhs_1_;
+    /** \brief Vector rhs_2_ */
+    VectorType rhs_2_;
 
-  /// Keep the precond matrix in CSR or not
-  bool op_mat_format_;
-  /// Precond matrix format
-  unsigned int precond_mat_format_;
+    /** \brief AA me preconditioner */
+    MultiElimination<OperatorType, VectorType, ValueType>* AA_me_;
+    /** \brief AA solver */
+    Solver<OperatorType, VectorType, ValueType>* AA_solver_;
 
-  VectorType x_;
-  VectorType x_1_;
-  VectorType x_2_;
+    /** \brief Diagonal solver init flag */
+    bool diag_solver_init_;
+    /** \brief Level */
+    int level_;
+    /** \brief Drop off */
+    double drop_off_;
 
-  VectorType rhs_;
-  VectorType rhs_1_;
-  VectorType rhs_2_;
+    /** \brief Inverse diagonal */
+    VectorType inv_vec_D_;
+    /** \brief Diagonal */
+    VectorType vec_D_;
+    /** \brief Permutation vector */
+    LocalVector<int> permutation_;
+    /** \brief Size */
+    int size_;
 
-  MultiElimination<OperatorType, VectorType, ValueType> *AA_me_;
-  Solver<OperatorType, VectorType, ValueType> *AA_solver_;
-
-  bool diag_solver_init_;
-  int level_;
-  double drop_off_;
-
-  VectorType inv_vec_D_;
-  VectorType vec_D_;
-  LocalVector<int> permutation_;
-  int size_;
-
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void);
-
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_PRECONDITIONER_MULTIELIMINATION_HPP_

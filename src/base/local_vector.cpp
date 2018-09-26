@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "backend_manager.hpp"
 #include "local_vector.hpp"
@@ -59,7 +82,7 @@ const LocalVector<ValueType>& LocalVector<ValueType>::GetInterior() const
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::Allocate(std::string name, const IndexType2 size)
+void LocalVector<ValueType>::Allocate(std::string name, IndexType2 size)
 {
     log_debug(this, "LocalVector::Allocate()", name, size);
 
@@ -122,7 +145,7 @@ bool LocalVector<ValueType>::Check(void) const
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, const int size)
+void LocalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, int size)
 {
     log_debug(this, "LocalVector::SetDataPtr()", ptr, name, size);
 
@@ -181,7 +204,7 @@ void LocalVector<ValueType>::Ones(void)
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::SetValues(const ValueType val)
+void LocalVector<ValueType>::SetValues(ValueType val)
 {
     log_debug(this, "LocalVector::SetValues()", val);
 
@@ -315,9 +338,11 @@ void LocalVector<ValueType>::MoveToAccelerator(void)
     log_debug(this, "LocalVector::MoveToAccelerator()");
 
     if(_rocalution_available_accelerator() == false)
+    {
         LOG_VERBOSE_INFO(
             4,
             "*** info: LocalVector::MoveToAccelerator() no accelerator available - doing nothing");
+    }
 
     if((_rocalution_available_accelerator() == true) && (this->vector_ == this->vector_host_))
     {
@@ -341,8 +366,10 @@ void LocalVector<ValueType>::MoveToHost(void)
     log_debug(this, "LocalVector::MoveToHost()");
 
     if(_rocalution_available_accelerator() == false)
+    {
         LOG_VERBOSE_INFO(
             4, "*** info: LocalVector::MoveToHost() no accelerator available - doing nothing");
+    }
 
     if((_rocalution_available_accelerator() == true) && (this->vector_ == this->vector_accel_))
     {
@@ -367,8 +394,11 @@ void LocalVector<ValueType>::MoveToAcceleratorAsync(void)
     assert(this->asyncf == false);
 
     if(_rocalution_available_accelerator() == false)
-        LOG_VERBOSE_INFO(4, "*** info: LocalVector::MoveToAcceleratorAsync() no accelerator "
-                            "available - doing nothing");
+    {
+        LOG_VERBOSE_INFO(4,
+                         "*** info: LocalVector::MoveToAcceleratorAsync() no accelerator "
+                         "available - doing nothing");
+    }
 
     if((_rocalution_available_accelerator() == true) && (this->vector_ == this->vector_host_))
     {
@@ -392,8 +422,11 @@ void LocalVector<ValueType>::MoveToHostAsync(void)
     assert(this->asyncf == false);
 
     if(_rocalution_available_accelerator() == false)
-        LOG_VERBOSE_INFO(4, "*** info: LocalVector::MoveToAcceleratorAsync() no accelerator "
-                            "available - doing nothing");
+    {
+        LOG_VERBOSE_INFO(4,
+                         "*** info: LocalVector::MoveToAcceleratorAsync() no accelerator "
+                         "available - doing nothing");
+    }
 
     if((_rocalution_available_accelerator() == true) && (this->vector_ == this->vector_accel_))
     {
@@ -430,8 +463,9 @@ void LocalVector<ValueType>::Sync(void)
                 delete this->vector_accel_;
                 this->vector_accel_ = NULL;
 
-                LOG_VERBOSE_INFO(4, "*** info: LocalVector::MoveToHostAsync() accelerator to host "
-                                    "transfer (synced)");
+                LOG_VERBOSE_INFO(4,
+                                 "*** info: LocalVector::MoveToHostAsync() accelerator to host "
+                                 "transfer (synced)");
             }
 
             // MoveToAcceleratorAsync();
@@ -443,8 +477,9 @@ void LocalVector<ValueType>::Sync(void)
                 this->vector_ = this->vector_accel_;
                 delete this->vector_host_;
                 this->vector_host_ = NULL;
-                LOG_VERBOSE_INFO(4, "*** info: LocalVector::MoveToAcceleratorAsync() host to "
-                                    "accelerator transfer (synced)");
+                LOG_VERBOSE_INFO(4,
+                                 "*** info: LocalVector::MoveToAcceleratorAsync() host to "
+                                 "accelerator transfer (synced)");
             }
         }
         else
@@ -459,7 +494,7 @@ void LocalVector<ValueType>::Sync(void)
 }
 
 template <typename ValueType>
-ValueType& LocalVector<ValueType>::operator[](const int i)
+ValueType& LocalVector<ValueType>::operator[](int i)
 {
     log_debug(this, "LocalVector::operator[]()", i);
 
@@ -470,7 +505,7 @@ ValueType& LocalVector<ValueType>::operator[](const int i)
 }
 
 template <typename ValueType>
-const ValueType& LocalVector<ValueType>::operator[](const int i) const
+const ValueType& LocalVector<ValueType>::operator[](int i) const
 {
     log_debug(this, "LocalVector::operator[]()", i);
 
@@ -525,7 +560,9 @@ void LocalVector<ValueType>::ReadFileASCII(const std::string name)
     // host only
     bool on_host = this->is_host();
     if(on_host == false)
+    {
         this->MoveToHost();
+    }
 
     assert(this->vector_ == this->vector_host_);
     this->vector_host_->ReadFileASCII(name);
@@ -533,7 +570,9 @@ void LocalVector<ValueType>::ReadFileASCII(const std::string name)
     this->object_name_ = name;
 
     if(on_host == false)
+    {
         this->MoveToAccelerator();
+    }
 }
 
 template <typename ValueType>
@@ -564,7 +603,9 @@ void LocalVector<ValueType>::ReadFileBinary(const std::string name)
     // host only
     bool on_host = this->is_host();
     if(on_host == false)
+    {
         this->MoveToHost();
+    }
 
     assert(this->vector_ == this->vector_host_);
     this->vector_host_->ReadFileBinary(name);
@@ -572,7 +613,9 @@ void LocalVector<ValueType>::ReadFileBinary(const std::string name)
     this->object_name_ = name;
 
     if(on_host == false)
+    {
         this->MoveToAccelerator();
+    }
 }
 
 template <typename ValueType>
@@ -596,7 +639,7 @@ void LocalVector<ValueType>::WriteFileBinary(const std::string name) const
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::AddScale(const LocalVector<ValueType>& x, const ValueType alpha)
+void LocalVector<ValueType>::AddScale(const LocalVector<ValueType>& x, ValueType alpha)
 {
     log_debug(this, "LocalVector::AddScale()", (const void*&)x, alpha);
 
@@ -611,7 +654,7 @@ void LocalVector<ValueType>::AddScale(const LocalVector<ValueType>& x, const Val
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::ScaleAdd(const ValueType alpha, const LocalVector<ValueType>& x)
+void LocalVector<ValueType>::ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x)
 {
     log_debug(this, "LocalVector::ScaleAdd()", alpha, (const void*&)x);
 
@@ -626,9 +669,9 @@ void LocalVector<ValueType>::ScaleAdd(const ValueType alpha, const LocalVector<V
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::ScaleAddScale(const ValueType alpha,
+void LocalVector<ValueType>::ScaleAddScale(ValueType alpha,
                                            const LocalVector<ValueType>& x,
-                                           const ValueType beta)
+                                           ValueType beta)
 {
     log_debug(this, "LocalVector::ScaleAddScale()", alpha, (const void*&)x, beta);
 
@@ -643,12 +686,12 @@ void LocalVector<ValueType>::ScaleAddScale(const ValueType alpha,
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::ScaleAddScale(const ValueType alpha,
+void LocalVector<ValueType>::ScaleAddScale(ValueType alpha,
                                            const LocalVector<ValueType>& x,
-                                           const ValueType beta,
-                                           const int src_offset,
-                                           const int dst_offset,
-                                           const int size)
+                                           ValueType beta,
+                                           int src_offset,
+                                           int dst_offset,
+                                           int size)
 {
     log_debug(this,
               "LocalVector::ScaleAddScale()",
@@ -671,13 +714,14 @@ void LocalVector<ValueType>::ScaleAddScale(const ValueType alpha,
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::ScaleAdd2(const ValueType alpha,
+void LocalVector<ValueType>::ScaleAdd2(ValueType alpha,
                                        const LocalVector<ValueType>& x,
-                                       const ValueType beta,
+                                       ValueType beta,
                                        const LocalVector<ValueType>& y,
-                                       const ValueType gamma)
+                                       ValueType gamma)
 {
-    log_debug(this, "LocalVector::ScaleAdd2()", alpha, (const void*&)x, beta, (const void*&)y, gamma);
+    log_debug(
+        this, "LocalVector::ScaleAdd2()", alpha, (const void*&)x, beta, (const void*&)y, gamma);
 
     assert(this->GetSize() == x.GetSize());
     assert(this->GetSize() == y.GetSize());
@@ -693,28 +737,13 @@ void LocalVector<ValueType>::ScaleAdd2(const ValueType alpha,
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::Scale(const ValueType alpha)
+void LocalVector<ValueType>::Scale(ValueType alpha)
 {
     log_debug(this, "LocalVector::Scale()", alpha);
 
     if(this->GetSize() > 0)
     {
         this->vector_->Scale(alpha);
-    }
-}
-
-template <typename ValueType>
-void LocalVector<ValueType>::ExclusiveScan(const LocalVector<ValueType>& x)
-{
-    log_debug(this, "LocalVector::ExclusiveScan()", (const void*&)x);
-
-    assert(this->GetSize() == x.GetSize());
-    assert(((this->vector_ == this->vector_host_) && (x.vector_ == x.vector_host_)) ||
-           ((this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)));
-
-    if(this->GetSize() > 0)
-    {
-        this->vector_->ExclusiveScan(*x.vector_);
     }
 }
 
@@ -733,7 +762,7 @@ ValueType LocalVector<ValueType>::Dot(const LocalVector<ValueType>& x) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -752,7 +781,7 @@ ValueType LocalVector<ValueType>::DotNonConj(const LocalVector<ValueType>& x) co
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -767,7 +796,7 @@ ValueType LocalVector<ValueType>::Norm(void) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -782,7 +811,7 @@ ValueType LocalVector<ValueType>::Reduce(void) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -797,7 +826,7 @@ ValueType LocalVector<ValueType>::Asum(void) const
     }
     else
     {
-        return ValueType(0.0);
+        return static_cast<ValueType>(0);
     }
 }
 
@@ -812,7 +841,7 @@ int LocalVector<ValueType>::Amax(ValueType& value) const
     }
     else
     {
-        value = ValueType(0.0);
+        value = static_cast<ValueType>(0);
         return -1;
     }
 }
@@ -853,9 +882,9 @@ void LocalVector<ValueType>::PointWiseMult(const LocalVector<ValueType>& x,
 
 template <typename ValueType>
 void LocalVector<ValueType>::CopyFrom(const LocalVector<ValueType>& src,
-                                      const int src_offset,
-                                      const int dst_offset,
-                                      const int size)
+                                      int src_offset,
+                                      int dst_offset,
+                                      int size)
 {
     log_debug(this, "LocalVector::CopyFrom()", (const void*&)src, src_offset, dst_offset, size);
 
@@ -877,7 +906,9 @@ void LocalVector<ValueType>::CopyFromData(const ValueType* data)
     assert(data != NULL);
 
     if(this->GetSize() > 0)
+    {
         this->vector_->CopyFromData(data);
+    }
 
     this->object_name_ = "Imported from vector";
 }
@@ -890,7 +921,9 @@ void LocalVector<ValueType>::CopyToData(ValueType* data) const
     assert(data != NULL);
 
     if(this->GetSize() > 0)
+    {
         this->vector_->CopyToData(data);
+    }
 }
 
 template <typename ValueType>
@@ -951,7 +984,10 @@ template <typename ValueType>
 void LocalVector<ValueType>::CopyFromPermuteBackward(const LocalVector<ValueType>& src,
                                                      const LocalVector<int>& permutation)
 {
-    log_debug(this, "LocalVector::CopyFromPermuteBackward()", (const void*&)src, (const void*&)permutation);
+    log_debug(this,
+              "LocalVector::CopyFromPermuteBackward()",
+              (const void*&)src,
+              (const void*&)permutation);
 
     assert(&src != this);
     assert(permutation.GetSize() == this->GetSize());
@@ -1066,7 +1102,7 @@ void LocalVector<ValueType>::Prolongation(const LocalVector<ValueType>& vec_coar
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::SetIndexArray(const int size, const int* index)
+void LocalVector<ValueType>::SetIndexArray(int size, const int* index)
 {
     log_debug(this, "LocalVector::SetIndexArray()", size, index);
 
@@ -1097,9 +1133,7 @@ void LocalVector<ValueType>::SetIndexValues(const ValueType* values)
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::GetContinuousValues(const int start,
-                                                 const int end,
-                                                 ValueType* values) const
+void LocalVector<ValueType>::GetContinuousValues(int start, int end, ValueType* values) const
 {
     log_debug(this, "LocalVector::GetContinuousValues()", start, end, values);
 
@@ -1112,9 +1146,7 @@ void LocalVector<ValueType>::GetContinuousValues(const int start,
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::SetContinuousValues(const int start,
-                                                 const int end,
-                                                 const ValueType* values)
+void LocalVector<ValueType>::SetContinuousValues(int start, int end, const ValueType* values)
 {
     log_debug(this, "LocalVector::SetContinuousValues()", start, end, values);
 
@@ -1128,7 +1160,7 @@ void LocalVector<ValueType>::SetContinuousValues(const int start,
 
 template <typename ValueType>
 void LocalVector<ValueType>::ExtractCoarseMapping(
-    const int start, const int end, const int* index, const int nc, int* size, int* map) const
+    int start, int end, const int* index, int nc, int* size, int* map) const
 {
     log_debug(this, "LocalVector::ExtractCoarseMapping()", start, end, index, nc, size, map);
 
@@ -1160,7 +1192,7 @@ void LocalVector<ValueType>::ExtractCoarseMapping(
 
 template <typename ValueType>
 void LocalVector<ValueType>::ExtractCoarseBoundary(
-    const int start, const int end, const int* index, const int nc, int* size, int* boundary) const
+    int start, int end, const int* index, int nc, int* size, int* boundary) const
 {
     log_debug(this, "LocalVector::ExtractCoarseBoundary()", start, end, index, nc, size, boundary);
 
@@ -1191,7 +1223,7 @@ void LocalVector<ValueType>::ExtractCoarseBoundary(
 }
 
 template <typename ValueType>
-void LocalVector<ValueType>::Power(const double power)
+void LocalVector<ValueType>::Power(double power)
 {
     log_debug(this, "LocalVector::Power()", power);
 

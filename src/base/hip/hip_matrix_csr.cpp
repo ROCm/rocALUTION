@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "hip_matrix_csr.hpp"
 #include "hip_matrix_coo.hpp"
@@ -58,7 +81,7 @@ HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR(
     this->mat_info_  = 0;
 
     this->mat_buffer_size_ = 0;
-    this->mat_buffer_ = NULL;
+    this->mat_buffer_      = NULL;
 
     this->tmp_vec_ = NULL;
 
@@ -102,7 +125,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixCSR<ValueType>::AllocateCSR(const int nnz, const int nrow, const int ncol)
+void HIPAcceleratorMatrixCSR<ValueType>::AllocateCSR(int nnz, int nrow, int ncol)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -131,7 +154,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::AllocateCSR(const int nnz, const int nr
 
 template <typename ValueType>
 void HIPAcceleratorMatrixCSR<ValueType>::SetDataPtrCSR(
-    int** row_offset, int** col, ValueType** val, const int nnz, const int nrow, const int ncol)
+    int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
 {
     assert(*row_offset != NULL);
     assert(*col != NULL);
@@ -198,7 +221,6 @@ void HIPAcceleratorMatrixCSR<ValueType>::Clear(void)
         this->LUAnalyseClear();
         this->LLAnalyseClear();
     }
-
 }
 
 template <typename ValueType>
@@ -855,12 +877,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ConvertFrom(const BaseMatrix<ValueType>
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostCSR(const int* row_offset,
-                                                         const int* col,
-                                                         const ValueType* val,
-                                                         const int nnz,
-                                                         const int nrow,
-                                                         const int ncol)
+void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostCSR(
+    const int* row_offset, const int* col, const ValueType* val, int nnz, int nrow, int ncol)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -937,7 +955,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // hipcub buffer
-        size_t size = 0;
+        size_t size  = 0;
         void* buffer = NULL;
 
         // Determine maximum
@@ -961,7 +979,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
         buffer = NULL;
 
         BlockSize = dim3(this->local_backend_.HIP_block_size);
-        GridSize  = dim3((this->local_backend_.HIP_warp * nrow - 1) / this->local_backend_.HIP_block_size + 1);
+        GridSize  = dim3(
+            (this->local_backend_.HIP_warp * nrow - 1) / this->local_backend_.HIP_block_size + 1);
 
         if(this->local_backend_.HIP_warp == 32)
         {
@@ -1148,8 +1167,8 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
         assert(cast_in != NULL);
         assert(cast_out != NULL);
 
-        const ValueType alpha = 1.0;
-        const ValueType beta  = 0.0;
+        ValueType alpha = 1.0;
+        ValueType beta  = 0.0;
 
         rocsparse_status status;
         status = rocsparseTcsrmv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -1172,7 +1191,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                  const ValueType scalar,
+                                                  ValueType scalar,
                                                   BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)
@@ -1190,7 +1209,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& i
         assert(cast_in != NULL);
         assert(cast_out != NULL);
 
-        const ValueType beta = 1.0;
+        ValueType beta = 1.0;
 
         rocsparse_status status;
         status = rocsparseTcsrmv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -1220,15 +1239,16 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ILU0Factorize(void)
 
         // Create buffer, if not already available
         size_t buffer_size = 0;
-        status = rocsparseTcsrilu0_buffer_size(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                               this->nrow_,
-                                               this->nnz_,
-                                               this->mat_descr_,
-                                               this->mat_.val,
-                                               this->mat_.row_offset,
-                                               this->mat_.col,
-                                               this->mat_info_,
-                                               &buffer_size);
+        status =
+            rocsparseTcsrilu0_buffer_size(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                          this->nrow_,
+                                          this->nnz_,
+                                          this->mat_descr_,
+                                          this->mat_.val,
+                                          this->mat_.row_offset,
+                                          this->mat_.col,
+                                          this->mat_info_,
+                                          &buffer_size);
 
         // Buffer is shared with ILU0 and other solve functions
         if(this->mat_buffer_ == NULL)
@@ -1240,17 +1260,18 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ILU0Factorize(void)
         assert(this->mat_buffer_size_ >= buffer_size);
         assert(this->mat_buffer_ != NULL);
 
-        status = rocsparseTcsrilu0_analysis(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                            this->nrow_,
-                                            this->nnz_,
-                                            this->mat_descr_,
-                                            this->mat_.val,
-                                            this->mat_.row_offset,
-                                            this->mat_.col,
-                                            this->mat_info_,
-                                            rocsparse_analysis_policy_reuse,
-                                            rocsparse_solve_policy_auto,
-                                            this->mat_buffer_);
+        status =
+            rocsparseTcsrilu0_analysis(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                       this->nrow_,
+                                       this->nnz_,
+                                       this->mat_descr_,
+                                       this->mat_.val,
+                                       this->mat_.row_offset,
+                                       this->mat_.col,
+                                       this->mat_info_,
+                                       rocsparse_analysis_policy_reuse,
+                                       rocsparse_solve_policy_auto,
+                                       this->mat_buffer_);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         status = rocsparseTcsrilu0(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -1484,7 +1505,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::LUSolve(const BaseVector<ValueType>& in
     {
         assert(this->L_mat_descr_ != 0);
         assert(this->U_mat_descr_ != 0);
-        assert(this->mat_info_    != 0);
+        assert(this->mat_info_ != 0);
 
         assert(in.GetSize() >= 0);
         assert(out->GetSize() >= 0);
@@ -1722,7 +1743,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::LLSolve(const BaseVector<ValueType>& in
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixCSR<ValueType>::LAnalyse(const bool diag_unit)
+void HIPAcceleratorMatrixCSR<ValueType>::LAnalyse(bool diag_unit)
 {
     rocsparse_status status;
 
@@ -1789,7 +1810,7 @@ void HIPAcceleratorMatrixCSR<ValueType>::LAnalyse(const bool diag_unit)
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixCSR<ValueType>::UAnalyse(const bool diag_unit)
+void HIPAcceleratorMatrixCSR<ValueType>::UAnalyse(bool diag_unit)
 {
     rocsparse_status status;
 
@@ -2085,11 +2106,8 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractInverseDiagonal(
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::ExtractSubMatrix(const int row_offset,
-                                                          const int col_offset,
-                                                          const int row_size,
-                                                          const int col_size,
-                                                          BaseMatrix<ValueType>* mat) const
+bool HIPAcceleratorMatrixCSR<ValueType>::ExtractSubMatrix(
+    int row_offset, int col_offset, int row_size, int col_size, BaseMatrix<ValueType>* mat) const
 {
     assert(mat != NULL);
 
@@ -2692,7 +2710,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MultiColoring(int& num_colors,
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::Scale(const ValueType alpha)
+bool HIPAcceleratorMatrixCSR<ValueType>::Scale(ValueType alpha)
 {
     if(this->nnz_ > 0)
     {
@@ -2709,7 +2727,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Scale(const ValueType alpha)
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::ScaleDiagonal(const ValueType alpha)
+bool HIPAcceleratorMatrixCSR<ValueType>::ScaleDiagonal(ValueType alpha)
 {
     if(this->nnz_ > 0)
     {
@@ -2734,7 +2752,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ScaleDiagonal(const ValueType alpha)
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::ScaleOffDiagonal(const ValueType alpha)
+bool HIPAcceleratorMatrixCSR<ValueType>::ScaleOffDiagonal(ValueType alpha)
 {
     if(this->nnz_ > 0)
     {
@@ -2759,7 +2777,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ScaleOffDiagonal(const ValueType alpha)
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarDiagonal(const ValueType alpha)
+bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarDiagonal(ValueType alpha)
 {
     if(this->nnz_ > 0)
     {
@@ -2784,7 +2802,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarDiagonal(const ValueType alpha
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarOffDiagonal(const ValueType alpha)
+bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarOffDiagonal(ValueType alpha)
 {
     if(this->nnz_ > 0)
     {
@@ -2809,7 +2827,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::AddScalarOffDiagonal(const ValueType al
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::AddScalar(const ValueType alpha)
+bool HIPAcceleratorMatrixCSR<ValueType>::AddScalar(ValueType alpha)
 {
     if(this->nnz_ > 0)
     {
@@ -2985,9 +3003,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Gershgorin(ValueType& lambda_min,
 
 template <typename ValueType>
 bool HIPAcceleratorMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType>& mat,
-                                                   const ValueType alpha,
-                                                   const ValueType beta,
-                                                   const bool structure)
+                                                   ValueType alpha,
+                                                   ValueType beta,
+                                                   bool structure)
 {
     return false;
 
@@ -3109,7 +3127,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType>& 
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::Compress(const double drop_off)
+bool HIPAcceleratorMatrixCSR<ValueType>::Compress(double drop_off)
 {
     if(this->nnz_ > 0)
     {
@@ -3258,7 +3276,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Transpose(void)
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(const int idx,
+bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(int idx,
                                                              const BaseVector<ValueType>& vec)
 {
     assert(vec.GetSize() == this->nrow_);
@@ -3337,7 +3355,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(const int idx,
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::ExtractColumnVector(const int idx,
+bool HIPAcceleratorMatrixCSR<ValueType>::ExtractColumnVector(int idx,
                                                              BaseVector<ValueType>* vec) const
 {
     assert(vec != NULL);
@@ -3370,8 +3388,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractColumnVector(const int idx,
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixCSR<ValueType>::ExtractRowVector(const int idx,
-                                                          BaseVector<ValueType>* vec) const
+bool HIPAcceleratorMatrixCSR<ValueType>::ExtractRowVector(int idx, BaseVector<ValueType>* vec) const
 {
     assert(vec != NULL);
     assert(vec->GetSize() == this->ncol_);

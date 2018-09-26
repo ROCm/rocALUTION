@@ -1,3 +1,26 @@
+# ########################################################################
+# Copyright (c) 2018 Advanced Micro Devices, Inc.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+# ########################################################################
+
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
                "${PROJECT_BINARY_DIR}/include/version.hpp"
@@ -119,7 +142,7 @@ if(SUPPORT_HIP)
   set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  target_link_libraries(rocalution_hip PRIVATE rocblas rocsparse)
+  target_link_libraries(rocalution_hip PRIVATE rocblas ${ROCSPARSE_LIBRARIES})
 
   target_include_directories(rocalution_hip
                              PRIVATE

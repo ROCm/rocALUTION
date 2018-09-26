@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_OPERATOR_HPP_
 #define ROCALUTION_OPERATOR_HPP_
 
@@ -19,51 +42,50 @@ class LocalVector;
 /// for applying an operator (e.g. matrix, stencil)
 /// from/to global and local vectors
 template <typename ValueType>
-class Operator : public BaseRocalution<ValueType> {
+class Operator : public BaseRocalution<ValueType>
+{
+    public:
+    Operator();
+    virtual ~Operator();
 
-public:
+    /// Return the number of rows in the matrix/stencil
+    virtual IndexType2 GetM(void) const = 0;
+    /// Return the number of columns in the matrix/stencil
+    virtual IndexType2 GetN(void) const = 0;
+    /// Return the number of non-zeros in the matrix/stencil
+    virtual IndexType2 GetNnz(void) const = 0;
 
-  Operator();
-  virtual ~Operator();
+    /// Return the number of rows in the local matrix/stencil
+    virtual int GetLocalM(void) const;
+    /// Return the number of columns in the local matrix/stencil
+    virtual int GetLocalN(void) const;
+    /// Return the number of non-zeros in the local matrix/stencil
+    virtual int GetLocalNnz(void) const;
 
-  /// Return the number of rows in the matrix/stencil
-  virtual IndexType2 GetM(void) const = 0;
-  /// Return the number of columns in the matrix/stencil
-  virtual IndexType2 GetN(void) const = 0;
-  /// Return the number of non-zeros in the matrix/stencil
-  virtual IndexType2 GetNnz(void) const = 0;
+    /// Return the number of rows in the ghost matrix/stencil
+    virtual int GetGhostM(void) const;
+    /// Return the number of columns in the ghost matrix/stencil
+    virtual int GetGhostN(void) const;
+    /// Return the number of non-zeros in the ghost matrix/stencil
+    virtual int GetGhostNnz(void) const;
 
-  /// Return the number of rows in the local matrix/stencil
-  virtual int GetLocalM(void) const;
-  /// Return the number of columns in the local matrix/stencil
-  virtual int GetLocalN(void) const;
-  /// Return the number of non-zeros in the local matrix/stencil
-  virtual int GetLocalNnz(void) const;
+    /// Apply the operator, out = Operator(in), where in, out are local vectors
+    virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
 
-  /// Return the number of rows in the ghost matrix/stencil
-  virtual int GetGhostM(void) const;
-  /// Return the number of columns in the ghost matrix/stencil
-  virtual int GetGhostN(void) const;
-  /// Return the number of non-zeros in the ghost matrix/stencil
-  virtual int GetGhostNnz(void) const;
+    /// Apply and add the operator, out = out + scalar*Operator(in), where in, out are local vectors
+    virtual void
+    ApplyAdd(const LocalVector<ValueType>& in, ValueType scalar, LocalVector<ValueType>* out) const;
 
-  /// Apply the operator, out = Operator(in), where in, out are local vectors
-  virtual void Apply(const LocalVector<ValueType> &in, LocalVector<ValueType> *out) const;
+    /// Apply the operator, out = Operator(in), where in, out are global vectors
+    virtual void Apply(const GlobalVector<ValueType>& in, GlobalVector<ValueType>* out) const;
 
-  /// Apply and add the operator, out = out + scalar*Operator(in), where in, out are local vectors
-  virtual void ApplyAdd(const LocalVector<ValueType> &in, const ValueType scalar,
-                        LocalVector<ValueType> *out) const;
-
-  /// Apply the operator, out = Operator(in), where in, out are global vectors
-  virtual void Apply(const GlobalVector<ValueType> &in, GlobalVector<ValueType> *out) const; 
-
-  /// Apply and add the operator, out = out + scalar*Operator(in), where in, out are global vectors
-  virtual void ApplyAdd(const GlobalVector<ValueType> &in, const ValueType scalar, 
-                        GlobalVector<ValueType> *out) const; 
-
+    /// Apply and add the operator, out = out + scalar*Operator(in), where in, out are global
+    /// vectors
+    virtual void ApplyAdd(const GlobalVector<ValueType>& in,
+                          ValueType scalar,
+                          GlobalVector<ValueType>* out) const;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_OPERTOR_HPP_

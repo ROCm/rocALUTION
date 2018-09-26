@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "bicgstab.hpp"
 #include "../iter_ctrl.hpp"
@@ -249,8 +272,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // Initial residual norm for |b-Ax0|
-    ValueType res_norm = this->Norm(*r0);
-    //    ValueType res_norm = this->Norm(rhs);
+    ValueType res_norm = this->Norm_(*r0);
+    //    ValueType res_norm = this->Norm_(rhs);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -296,7 +319,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
             op->Apply(*x, p);
             p->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-            res_norm = this->Norm(*p);
+            res_norm = this->Norm_(*p);
 
             this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
@@ -310,7 +333,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
         r->AddScale(*t, -omega);
 
         // Check convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         {
             break;
@@ -370,8 +393,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     // Initial residual norm for |b-Ax0|
-    ValueType res_norm = this->Norm(*r0);
-    //    ValueType res_norm = this->Norm(rhs);
+    ValueType res_norm = this->Norm_(*r0);
+    //    ValueType res_norm = this->Norm_(rhs);
 
     if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
     {
@@ -421,7 +444,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
             op->Apply(*x, p);
             p->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-            res_norm = this->Norm(*p);
+            res_norm = this->Norm_(*p);
             this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
 
             break;
@@ -434,7 +457,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
         r->AddScale(*t, -omega);
 
         // Check convergence
-        res_norm = this->Norm(*r);
+        res_norm = this->Norm_(*r);
         if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
         {
             break;

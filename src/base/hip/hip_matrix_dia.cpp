@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "hip_matrix_csr.hpp"
 #include "hip_matrix_dia.hpp"
@@ -60,10 +83,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(const int nnz,
-                                                     const int nrow,
-                                                     const int ncol,
-                                                     const int ndiag)
+void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(int nnz, int nrow, int ncol, int ndiag)
 {
     assert(nnz >= 0);
     assert(ncol >= 0);
@@ -93,12 +113,8 @@ void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(const int nnz,
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixDIA<ValueType>::SetDataPtrDIA(int** offset,
-                                                       ValueType** val,
-                                                       const int nnz,
-                                                       const int nrow,
-                                                       const int ncol,
-                                                       const int num_diag)
+void HIPAcceleratorMatrixDIA<ValueType>::SetDataPtrDIA(
+    int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag)
 {
     assert(*offset != NULL);
     assert(*val != NULL);
@@ -675,7 +691,7 @@ void HIPAcceleratorMatrixDIA<ValueType>::Apply(const BaseVector<ValueType>& in,
 
 template <typename ValueType>
 void HIPAcceleratorMatrixDIA<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                  const ValueType scalar,
+                                                  ValueType scalar,
                                                   BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)

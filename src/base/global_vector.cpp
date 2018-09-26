@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../utils/def.hpp"
 #include "global_vector.hpp"
 #include "local_vector.hpp"
@@ -152,7 +175,7 @@ const LocalVector<ValueType>& GlobalVector<ValueType>::GetGhost() const
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::Allocate(std::string name, const IndexType2 size)
+void GlobalVector<ValueType>::Allocate(std::string name, IndexType2 size)
 {
     log_debug(this, "GlobalVector::Allocate()", name, size);
 
@@ -168,6 +191,7 @@ void GlobalVector<ValueType>::Allocate(std::string name, const IndexType2 size)
     {
         this->recv_event_ = new MRequest[this->pm_->nrecv_];
     }
+
     if(this->send_event_ == NULL)
     {
         this->send_event_ = new MRequest[this->pm_->nsend_];
@@ -203,7 +227,7 @@ void GlobalVector<ValueType>::Ones(void)
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::SetValues(const ValueType val)
+void GlobalVector<ValueType>::SetValues(ValueType val)
 {
     log_debug(this, "GlobalVector::SetValues()", val);
 
@@ -211,7 +235,7 @@ void GlobalVector<ValueType>::SetValues(const ValueType val)
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, const IndexType2 size)
+void GlobalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, IndexType2 size)
 {
     log_debug(this, "GlobalVector::SetDataPtr()", ptr, name, size);
 
@@ -231,6 +255,7 @@ void GlobalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, cons
     {
         this->recv_event_ = new MRequest[this->pm_->nrecv_];
     }
+
     if(this->send_event_ == NULL)
     {
         this->send_event_ = new MRequest[this->pm_->nsend_];
@@ -323,7 +348,7 @@ void GlobalVector<ValueType>::MoveToHost(void)
 }
 
 template <typename ValueType>
-ValueType& GlobalVector<ValueType>::operator[](const int i)
+ValueType& GlobalVector<ValueType>::operator[](int i)
 {
     log_debug(this, "GlobalVector::operator[]()", i);
 
@@ -333,7 +358,7 @@ ValueType& GlobalVector<ValueType>::operator[](const int i)
 }
 
 template <typename ValueType>
-const ValueType& GlobalVector<ValueType>::operator[](const int i) const
+const ValueType& GlobalVector<ValueType>::operator[](int i) const
 {
     log_debug(this, "GlobalVector::operator[]() const", i);
 
@@ -389,7 +414,9 @@ bool GlobalVector<ValueType>::Check(void) const
     bool ghost_check    = this->vector_ghost_.Check();
 
     if(interior_check == true && ghost_check == true)
+    {
         return true;
+    }
 
     return false;
 }
@@ -412,7 +439,9 @@ void GlobalVector<ValueType>::ReadFileASCII(const std::string filename)
 
     // Go to this ranks line in the headfile
     for(int i = 0; i < this->pm_->rank_; ++i)
+    {
         headfile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
 
     std::string name;
     std::getline(headfile, name);
@@ -432,6 +461,7 @@ void GlobalVector<ValueType>::ReadFileASCII(const std::string filename)
     {
         this->recv_event_ = new MRequest[this->pm_->nrecv_];
     }
+
     if(this->send_event_ == NULL)
     {
         this->send_event_ = new MRequest[this->pm_->nsend_];
@@ -504,7 +534,9 @@ void GlobalVector<ValueType>::ReadFileBinary(const std::string filename)
 
     // Go to this ranks line in the headfile
     for(int i = 0; i < this->pm_->rank_; ++i)
+    {
         headfile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
 
     std::string name;
     std::getline(headfile, name);
@@ -524,6 +556,7 @@ void GlobalVector<ValueType>::ReadFileBinary(const std::string filename)
     {
         this->recv_event_ = new MRequest[this->pm_->nrecv_];
     }
+
     if(this->send_event_ == NULL)
     {
         this->send_event_ = new MRequest[this->pm_->nsend_];
@@ -579,7 +612,7 @@ void GlobalVector<ValueType>::WriteFileBinary(const std::string filename) const
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::AddScale(const GlobalVector<ValueType>& x, const ValueType alpha)
+void GlobalVector<ValueType>::AddScale(const GlobalVector<ValueType>& x, ValueType alpha)
 {
     log_debug(this, "GlobalVector::Addscale()", (const void*&)x, alpha);
 
@@ -587,19 +620,20 @@ void GlobalVector<ValueType>::AddScale(const GlobalVector<ValueType>& x, const V
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::ScaleAdd2(const ValueType alpha,
+void GlobalVector<ValueType>::ScaleAdd2(ValueType alpha,
                                         const GlobalVector<ValueType>& x,
-                                        const ValueType beta,
+                                        ValueType beta,
                                         const GlobalVector<ValueType>& y,
-                                        const ValueType gamma)
+                                        ValueType gamma)
 {
-    log_debug(this, "GlobalVector::ScaleAdd2()", alpha, (const void*&)x, beta, (const void*&)y, gamma);
+    log_debug(
+        this, "GlobalVector::ScaleAdd2()", alpha, (const void*&)x, beta, (const void*&)y, gamma);
 
     this->vector_interior_.ScaleAdd2(alpha, x.vector_interior_, beta, y.vector_interior_, gamma);
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector<ValueType>& x)
+void GlobalVector<ValueType>::ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x)
 {
     log_debug(this, "GlobalVector::ScaleAdd()", alpha, (const void*&)x);
 
@@ -607,7 +641,7 @@ void GlobalVector<ValueType>::ScaleAdd(const ValueType alpha, const GlobalVector
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::Scale(const ValueType alpha)
+void GlobalVector<ValueType>::Scale(ValueType alpha)
 {
     log_debug(this, "GlobalVector::Scale()", alpha);
 
@@ -615,7 +649,9 @@ void GlobalVector<ValueType>::Scale(const ValueType alpha)
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType> &x, const ValueType beta)
+void GlobalVector<ValueType>::ScaleAddScale(ValueType alpha,
+                                            const GlobalVector<ValueType>& x,
+                                            ValueType beta)
 {
     log_debug(this, "GlobalVector::ScaleAddScale()", alpha, (const void*&)x, beta);
 
@@ -791,7 +827,7 @@ void GlobalVector<ValueType>::UpdateGhostValuesSync(void)
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::Power(const double power)
+void GlobalVector<ValueType>::Power(double power)
 {
     log_debug(this, "GlobalVector::Power()", power);
 

@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #include "../../utils/def.hpp"
 #include "hip_matrix_csr.hpp"
 #include "hip_matrix_coo.hpp"
@@ -61,7 +84,7 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Info(void) const
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixDENSE<ValueType>::AllocateDENSE(const int nrow, const int ncol)
+void HIPAcceleratorMatrixDENSE<ValueType>::AllocateDENSE(int nrow, int ncol)
 {
     assert(ncol >= 0);
     assert(nrow >= 0);
@@ -96,9 +119,7 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Clear()
 }
 
 template <typename ValueType>
-void HIPAcceleratorMatrixDENSE<ValueType>::SetDataPtrDENSE(ValueType** val,
-                                                           const int nrow,
-                                                           const int ncol)
+void HIPAcceleratorMatrixDENSE<ValueType>::SetDataPtrDENSE(ValueType** val, int nrow, int ncol)
 {
     assert(*val != NULL);
     assert(nrow > 0);
@@ -541,8 +562,8 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType>& in
 
         rocblas_status status;
 
-        const ValueType alpha = static_cast<ValueType>(1);
-        const ValueType beta  = static_cast<ValueType>(0);
+        ValueType alpha = static_cast<ValueType>(1);
+        ValueType beta  = static_cast<ValueType>(0);
 
         if(DENSE_IND_BASE == 0)
         {
@@ -581,7 +602,7 @@ void HIPAcceleratorMatrixDENSE<ValueType>::Apply(const BaseVector<ValueType>& in
 
 template <typename ValueType>
 void HIPAcceleratorMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType>& in,
-                                                    const ValueType scalar,
+                                                    ValueType scalar,
                                                     BaseVector<ValueType>* out) const
 {
     if(this->nnz_ > 0)
@@ -601,7 +622,7 @@ void HIPAcceleratorMatrixDENSE<ValueType>::ApplyAdd(const BaseVector<ValueType>&
 
         rocblas_status status;
 
-        const ValueType beta = static_cast<ValueType>(0);
+        ValueType beta = static_cast<ValueType>(0);
 
         if(DENSE_IND_BASE == 0)
         {
@@ -655,8 +676,8 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::MatMatMult(const BaseMatrix<ValueType
 
     rocblas_status status;
 
-    const ValueType alpha = static_cast<ValueType>(1);
-    const ValueType beta  = static_cast<ValueType>(0);
+    ValueType alpha = static_cast<ValueType>(1);
+    ValueType beta  = static_cast<ValueType>(0);
 
     if(DENSE_IND_BASE == 0)
     {
@@ -699,7 +720,7 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::MatMatMult(const BaseMatrix<ValueType
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx,
+bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceColumnVector(int idx,
                                                                const BaseVector<ValueType>& vec)
 {
     assert(vec.GetSize() == this->nrow_);
@@ -730,7 +751,7 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceColumnVector(const int idx,
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceRowVector(const int idx,
+bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceRowVector(int idx,
                                                             const BaseVector<ValueType>& vec)
 {
     assert(vec.GetSize() == this->ncol_);
@@ -761,7 +782,7 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ReplaceRowVector(const int idx,
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractColumnVector(const int idx,
+bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractColumnVector(int idx,
                                                                BaseVector<ValueType>* vec) const
 {
     assert(vec != NULL);
@@ -793,7 +814,7 @@ bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractColumnVector(const int idx,
 }
 
 template <typename ValueType>
-bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractRowVector(const int idx,
+bool HIPAcceleratorMatrixDENSE<ValueType>::ExtractRowVector(int idx,
                                                             BaseVector<ValueType>* vec) const
 {
     assert(vec != NULL);

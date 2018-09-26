@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_GLOBAL_VECTOR_HPP_
 #define ROCALUTION_GLOBAL_VECTOR_HPP_
 
@@ -38,14 +61,14 @@ class GlobalVector : public Vector<ValueType>
     LocalVector<ValueType>& GetInterior();
     const LocalVector<ValueType>& GetGhost() const;
 
-    virtual void Allocate(std::string name, const IndexType2 size);
+    virtual void Allocate(std::string name, IndexType2 size);
     virtual void Clear(void);
 
     void SetParallelManager(const ParallelManager& pm);
 
     virtual void Zeros(void);
     virtual void Ones(void);
-    virtual void SetValues(const ValueType val);
+    virtual void SetValues(ValueType val);
     virtual void SetRandomUniform(unsigned long long seed,
                                   ValueType a = static_cast<ValueType>(-1),
                                   ValueType b = static_cast<ValueType>(1));
@@ -55,10 +78,10 @@ class GlobalVector : public Vector<ValueType>
     void CloneFrom(const GlobalVector<ValueType>& src);
 
     // Accessing operator - only for host data
-    ValueType& operator[](const int i);
-    const ValueType& operator[](const int i) const;
+    ValueType& operator[](int i);
+    const ValueType& operator[](int i) const;
 
-    void SetDataPtr(ValueType** ptr, std::string name, const IndexType2 size);
+    void SetDataPtr(ValueType** ptr, std::string name, IndexType2 size);
     void LeaveDataPtr(ValueType** ptr);
 
     virtual void CopyFrom(const GlobalVector<ValueType>& src);
@@ -68,19 +91,19 @@ class GlobalVector : public Vector<ValueType>
     virtual void WriteFileBinary(const std::string filename) const;
 
     // this = this + alpha*x
-    virtual void AddScale(const GlobalVector<ValueType>& x, const ValueType alpha);
+    virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
     // this = alpha*this + x
-    virtual void ScaleAdd(const ValueType alpha, const GlobalVector<ValueType>& x);
+    virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);
     // this = alpha*this + x*beta + y*gamma
-    virtual void ScaleAdd2(const ValueType alpha,
+    virtual void ScaleAdd2(ValueType alpha,
                            const GlobalVector<ValueType>& x,
-                           const ValueType beta,
+                           ValueType beta,
                            const GlobalVector<ValueType>& y,
-                           const ValueType gamma);
+                           ValueType gamma);
     // this = alpha * this + beta * x
-    virtual void ScaleAddScale(const ValueType alpha, const GlobalVector<ValueType> &x, const ValueType beta);
+    virtual void ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
     // this = alpha*this
-    virtual void Scale(const ValueType alpha);
+    virtual void Scale(ValueType alpha);
     // this^T x
     virtual ValueType Dot(const GlobalVector<ValueType>& x) const;
     // this^T x
@@ -97,7 +120,7 @@ class GlobalVector : public Vector<ValueType>
     virtual void PointWiseMult(const GlobalVector<ValueType>& x);
     virtual void PointWiseMult(const GlobalVector<ValueType>& x, const GlobalVector<ValueType>& y);
 
-    virtual void Power(const double power);
+    virtual void Power(double power);
 
     // Restriction operator based on restriction mapping vector
     void Restriction(const GlobalVector<ValueType>& vec_fine, const LocalVector<int>& map);

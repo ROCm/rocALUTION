@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_BASE_AMG_HPP_
 #define ROCALUTION_BASE_AMG_HPP_
 
@@ -8,77 +31,83 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class BaseAMG
+  * \brief Base class for all algebraic multigrid solvers
+  *
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
-class BaseAMG : public BaseMultiGrid<OperatorType, VectorType, ValueType> {
-  
-public:
+class BaseAMG : public BaseMultiGrid<OperatorType, VectorType, ValueType>
+{
+    public:
+    BaseAMG();
+    virtual ~BaseAMG();
 
-  BaseAMG();
-  virtual ~BaseAMG();
+    virtual void Build(void);
+    virtual void Clear(void);
 
-  virtual void Build(void);
-  virtual void Clear(void);
-  virtual void ClearLocal(void);
+    /** \brief Clear all local data */
+    virtual void ClearLocal(void);
 
-  /// Creates AMG hierarchy
-  virtual void BuildHierarchy(void);
+    /** \brief Create AMG hierarchy */
+    virtual void BuildHierarchy(void);
 
-  /// Creates AMG smoothers
-  virtual void BuildSmoothers(void);
+    /** \brief Create AMG smoothers */
+    virtual void BuildSmoothers(void);
 
-  /// Sets coarsest level for hierarchy creation
-  virtual void SetCoarsestLevel(const int coarseSize);
+    /** \brief Set coarsest level for hierarchy creation */
+    void SetCoarsestLevel(int coarse_size);
 
-  /// Sets flag to pass smoothers manually for each level
-  virtual void SetManualSmoothers(const bool sm_manual);
-  /// Sets flag to pass coarse grid solver manually
-  virtual void SetManualSolver(const bool s_manual);
+    /** \brief Set flag to pass smoothers manually for each level */
+    void SetManualSmoothers(bool sm_manual);
+    /** \brief Set flag to pass coarse grid solver manually */
+    void SetManualSolver(bool s_manual);
 
-  /// Sets the smoother operator format
-  virtual void SetDefaultSmootherFormat(const unsigned int op_format);
-  /// Sets the operator format
-  virtual void SetOperatorFormat(const unsigned int op_format);
+    /** \brief Set the smoother operator format */
+    void SetDefaultSmootherFormat(unsigned int op_format);
+    /** \brief Set the operator format */
+    void SetOperatorFormat(unsigned int op_format);
 
-  /// Returns the number of levels in hierarchy
-  virtual int GetNumLevels();
+    /** \brief Returns the number of levels in hierarchy */
+    int GetNumLevels(void);
 
-  /// disabled function
-  virtual void SetRestrictOperator(OperatorType **op);
-  /// disabled function
-  virtual void SetProlongOperator(OperatorType **op);
-  /// disabled function
-  virtual void SetOperatorHierarchy(OperatorType **op);
+    /** \private */
+    virtual void SetRestrictOperator(OperatorType** op);
+    /** \private */
+    virtual void SetProlongOperator(OperatorType** op);
+    /** \private */
+    virtual void SetOperatorHierarchy(OperatorType** op);
 
-protected:
+    protected:
+    /** \brief Constructs the prolongation, restriction and coarse operator */
+    virtual void Aggregate_(const OperatorType& op,
+                            Operator<ValueType>* pro,
+                            Operator<ValueType>* res,
+                            OperatorType* coarse) = 0;
 
-  /// Constructs the prolongation, restriction and coarse operator
-  virtual void Aggregate(const OperatorType &op,
-                         Operator<ValueType> *pro,
-                         Operator<ValueType> *res,
-                         OperatorType *coarse) = 0;
+    /** \brief Maximal coarse grid size */
+    int coarse_size_;
 
+    /** \brief Smoother is set manually or not */
+    bool set_sm_;
+    /** \brief Smoother hierarchy */
+    Solver<OperatorType, VectorType, ValueType>** sm_default_;
 
-  /// maximal coarse grid size
-  int coarse_size_;
+    /** \brief Coarse grid solver is set manually or not */
+    bool set_s_;
 
-  /// manual smoother or not
-  bool set_sm_;
-  Solver<OperatorType, VectorType, ValueType> **sm_default_;
+    /** \brief Build flag for hierarchy */
+    bool hierarchy_;
 
-  /// manual coarse grid solver or not
-  bool set_s_;
-
-  /// true if hierarchy is built
-  bool hierarchy_;
-
-  /// smoother operator format
-  unsigned int sm_format_;
-  /// operator format
-  unsigned int op_format_;
-
+    /** \brief Smoother operator format */
+    unsigned int sm_format_;
+    /** \brief Operator format */
+    unsigned int op_format_;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_BASE_AMG_HPP_

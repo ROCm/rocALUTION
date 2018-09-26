@@ -1,3 +1,26 @@
+/* ************************************************************************
+ * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * ************************************************************************ */
+
 #ifndef ROCALUTION_KRYLOV_BICGSTABL_HPP_
 #define ROCALUTION_KRYLOV_BICGSTABL_HPP_
 
@@ -7,49 +30,56 @@
 
 namespace rocalution {
 
+/** \ingroup solver_module
+  * \class BiCGStabl
+  * \brief Bi-Conjugate Gradient Stabilized (l) Method
+  * \details
+  * The Bi-Conjugate Gradient Stabilized (l) method is a generalization of BiCGStab for
+  * solving sparse (non) symmetric linear systems \f$Ax=b\f$. It minimizes residuals over
+  * \f$l\f$-dimensional Krylov subspaces. The degree \f$l\f$ can be set with SetOrder().
+  * For more details, see "G, G. L., Sleijpen, G., and Fokkema, D. Bicgstab(l) For Linear
+  * Equations Involving Unsymmetric Matrices With Complex Spectrum, 1993".
+  *
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
 template <class OperatorType, class VectorType, typename ValueType>
-class BiCGStabl : public IterativeLinearSolver<OperatorType, VectorType, ValueType> {
+class BiCGStabl : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
+{
+    public:
+    BiCGStabl();
+    virtual ~BiCGStabl();
 
-public:
+    virtual void Print(void) const;
 
-  BiCGStabl();
-  virtual ~BiCGStabl();
+    virtual void Build(void);
+    virtual void ReBuildNumeric(void);
+    virtual void Clear(void);
 
-  virtual void Print(void) const;
+    /** \brief Set the order */
+    virtual void SetOrder(int l);
 
-  virtual void Build(void);
-  virtual void ReBuildNumeric(void);
-  virtual void Clear(void);
+    protected:
+    virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
+    virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
-  /// Set the order
-  virtual void SetOrder(const int l);
+    virtual void PrintStart_(void) const;
+    virtual void PrintEnd_(void) const;
 
-protected:
+    virtual void MoveToHostLocalData_(void);
+    virtual void MoveToAcceleratorLocalData_(void);
 
-  virtual void SolveNonPrecond_(const VectorType &rhs,
-                                VectorType *x);
-  virtual void SolvePrecond_(const VectorType &rhs,
-                             VectorType *x);
+    private:
+    int l_;
 
-  virtual void PrintStart_(void) const;
-  virtual void PrintEnd_(void) const;
+    ValueType *gamma0_, *gamma1_, *gamma2_, *sigma_;
+    ValueType** tau_;
 
-  virtual void MoveToHostLocalData_(void);
-  virtual void MoveToAcceleratorLocalData_(void);
-
-private:
-
-  int l_;
-
-  ValueType *gamma0_, *gamma1_, *gamma2_, *sigma_;
-  ValueType **tau_;
-
-  VectorType r0_, z_;
-  VectorType **r_, **u_;
-
+    VectorType r0_, z_;
+    VectorType **r_, **u_;
 };
 
-
-}
+} // namespace rocalution
 
 #endif // ROCALUTION_KRYLOV_BICGSTABL_HPP_
