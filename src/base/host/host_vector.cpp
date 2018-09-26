@@ -621,7 +621,7 @@ void HostVector<ValueType>::WriteFileBinary(const std::string filename) const
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
-    // Check ifstream status
+    // Check ofstream status
     if(!out)
     {
         LOG_INFO("ReadFileBinary: filename=" << filename << "; could not write to file");
