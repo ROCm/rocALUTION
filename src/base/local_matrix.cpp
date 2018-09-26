@@ -4581,28 +4581,30 @@ void LocalMatrix<ValueType>::Sort(void)
             bool is_accel = this->is_accel();
             this->MoveToHost();
 
-            // Convert to CSR
-            unsigned int format = this->GetFormat();
-            this->ConvertToCSR();
-
+            // Try sorting on host
             if(this->matrix_->Sort() == false)
             {
-                LOG_INFO("Computation of LocalMatrix::Sort() failed");
-                this->Info();
-                FATAL_ERROR(__FILE__, __LINE__);
-            }
+                // Convert to CSR
+                unsigned int format = this->GetFormat();
+                this->ConvertToCSR();
 
-            if(format != CSR)
-            {
-                LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Sort() is performed in CSR format");
+                if(this->matrix_->Sort() == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::Sort() failed");
+                    this->Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
 
-                this->ConvertTo(format);
+                if(format != CSR)
+                {
+                    LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Sort() is performed in CSR format");
+                    this->ConvertTo(format);
+                }
             }
 
             if(is_accel == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Sort() is performed on the host");
-
                 this->MoveToAccelerator();
             }
         }
