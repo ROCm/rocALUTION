@@ -47,7 +47,8 @@ rocALUTION offers various backends for different (parallel) hardware.
 Syntax and structure of the library provide fast learning curves. With the help of the examples, anyone can try out the library - no knowledge in multi-core or GPU programming is required.
 
 #### Requirements
-There are no hardware or library requirements to install and run rocALUTION. If GPU devices are available, rocALUTION will use them.
+There are no hardware requirements to install and run rocALUTION. If GPU devices are available, rocALUTION will use them.
+In order to use rocALUTION on GPU devices, you will need to make sure that [rocBLAS][] and [rocSPARSE][] libraries are installed on your system. You can install them from ROCm repository, from github releases tab or manually compile them yourself.
 
 #### Iterative solvers
 *  Fixed-Point iteration schemes - Jacobi, (Symmetric) Gauss-Seidel, SOR, SSOR
@@ -86,3 +87,5 @@ All code based on rocALUTION is portable and independent of the hardware, it wil
 [HIP]: https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/
 [OpenMP]: http://www.openmp.org/
 [MPI]: https://www.open-mpi.org/
+[rocBLAS]: https://github.com/ROCmSoftwarePlatform/rocBLAS
+[rocSPARSE]: https://github.com/ROCmSoftwarePlatform/rocSPARSE
