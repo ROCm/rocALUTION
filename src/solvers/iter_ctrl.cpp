@@ -44,6 +44,7 @@ IterationControl::IterationControl()
     this->verb_     = 1;
     this->reached_  = 0;
 
+    this->initial_residual_ = 0.0;
     this->current_res_   = 0.0;
     this->current_index_ = -1;
 
