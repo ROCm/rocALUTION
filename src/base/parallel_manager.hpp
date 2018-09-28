@@ -37,48 +37,69 @@ class GlobalMatrix;
 template <typename ValueType>
 class GlobalVector;
 
-// ParallelManager
+/** \ingroup backend_module
+  * \brief Parallel Manager class
+  * \details
+  * The parallel manager class handles the communication and the mapping of the global
+  * operators. Each global operator and vector need to be initialized with a valid
+  * parallel manager in order to perform any operation. For many distributed simulations,
+  * the underlying operator is already distributed. This information need to be passed to
+  * the parallel manager.
+  */
 class ParallelManager : public RocalutionObj
 {
     public:
     ParallelManager();
     ~ParallelManager();
 
-    // ALL set functions must be called only once
+    /** \brief Set the MPI communicator */
     void SetMPICommunicator(const void* comm);
+    /** \brief Clear all allocated resources */
     void Clear(void);
 
+    /** \brief Return the global size */
     IndexType2 GetGlobalSize(void) const;
+    /** \brief Return the local size */
     int GetLocalSize(void) const;
 
+    /** \brief Return the number of receivers */
     int GetNumReceivers(void) const;
+    /** \brief Return the number of senders */
     int GetNumSenders(void) const;
+    /** \brief Return the number of involved processes */
     int GetNumProcs(void) const;
 
+    /** \brief Initialize the global size */
     void SetGlobalSize(IndexType2 size);
+    /** \brief Initialize the local size */
     void SetLocalSize(int size);
 
-    // Contains all boundary indices of current rank
+    /** \brief Set all boundary indices of this ranks process */
     void SetBoundaryIndex(int size, const int* index);
 
-    // Number of ranks, the current rank is receiving data from,
-    // array of the ranks, the current rank is receiving data from,
-    // offsets where the boundary for process 'receiver' starts
+    /** \brief Number of processes, the current process is receiving data from, array of
+      * the processes, the current process is receiving data from and offsets, where the
+      * boundary for process 'receiver' starts
+      */
     void SetReceivers(int nrecv, const int* recvs, const int* recv_offset);
-    // Number of ranks, the current rank is sending data to,
-    // array of the ranks, the current rank is sending data to,
-    // offsets where the ghost for process 'sender' starts
+
+    /** \brief Number of processes, the current process is sending data to, array of the
+      * processes, the current process is sending data to and offsets where the ghost
+      * part for process 'sender' starts
+      */
     void SetSenders(int nsend, const int* sends, const int* send_offset);
 
-    // Mapping local to global and global to local
+    /** \brief Mapping local to global */
     void LocalToGlobal(int proc, int local, int& global);
+    /** \brief Mapping global to local */
     void GlobalToLocal(int global, int& proc, int& local);
 
+    /** \brief Check sanity status of parallel manager */
     bool Status(void) const;
 
-    // Read file that contains all relevant PM data
+    /** \brief Read file that contains all relevant parallel manager data */
     void ReadFileASCII(const std::string filename);
-    // Write file that contains all relevant PM data
+    /** \brief Write file that contains all relevant parallel manager data */
     void WriteFileASCII(const std::string filename) const;
 
     private:

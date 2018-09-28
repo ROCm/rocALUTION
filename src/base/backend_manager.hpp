@@ -39,8 +39,8 @@ class AcceleratorMatrix;
 template <typename ValueType>
 class HostMatrix;
 
-/// Backend descriptor - keeps information about the
-/// hardware - OpenMP (threads); HIP (blocksizes, handles, etc);
+// Backend descriptor - keeps information about the
+// hardware - OpenMP (threads); HIP (blocksizes, handles, etc);
 struct Rocalution_Backend_Descriptor
 {
     // set by initbackend();
@@ -84,80 +84,144 @@ struct Rocalution_Backend_Descriptor
     std::ofstream* log_file;
 };
 
-/// Global backend descriptor
+// Global backend descriptor
 extern struct Rocalution_Backend_Descriptor _Backend_Descriptor;
 
-/// Host name
+// Host name
 extern const std::string _rocalution_host_name[1];
 
-/// Backend names
+// Backend names
 extern const std::string _rocalution_backend_name[2];
 
-/// Backend IDs
+// Backend IDs
 enum _rocalution_backend_id
 {
     None = 0,
     HIP  = 1
 };
 
-/// Initialization of the rocalution platform
+/** \ingroup backend_module
+  * \brief Initialize rocALUTION platform
+  * \details
+  * \p init_rocalution initializes the rocALUTION platform.
+  *
+  * @param[in]
+  * rank            specifies MPI rank when multi-node environment
+  * @param[in]
+  * dev_per_node    number of accelerator devices per node, when in multi-GPU environment
+  */
 int init_rocalution(int rank = -1, int dev_per_node = 1);
 
-/// Shutdown the rocalution platform
+/** \ingroup backend_module
+  * \brief Shutdown rocALUTION platform
+  * \details
+  * \p stop_rocalution shuts down the rocALUTION platform.
+  */
 int stop_rocalution(void);
 
-/// Select a device
+/** \ingroup backend_module
+  * \brief Set the accelerator device
+  * \details
+  * \p set_device_rocalution sets the accelerator device used for computation.
+  *
+  * @param[in]
+  * dev     accelerator device ID for computation
+  */
 void set_device_rocalution(int dev);
 
-/// Set the number of threads in the platform
+/** \ingroup backend_module
+  * \brief Set number of OpenMP threads
+  * \details
+  * \p set_omp_threads_rocalution sets the number of OpenMP threads for computation.
+  *
+  * @param[in]
+  * nthreads    number of OpenMP threads
+  */
 void set_omp_threads_rocalution(int nthreads);
 
-/// Set host affinity (true-on/false-off)
+/** \ingroup backend_module
+  * \brief Enable/disable OpenMP host affinity
+  * \details
+  * \p set_omp_affinity_rocalution enables / disables OpenMP host affinity.
+  *
+  * @param[in]
+  * affinity    boolean to turn on/off OpenMP host affinity
+  */
 void set_omp_affinity_rocalution(bool affinity);
 
-/// Set OpenMP threshold size
+/** \ingroup backend_module
+  * \brief Set OpenMP threshold size
+  * \details
+  * \p set_omp_threshold_rocalution sets the OpenMP threshold size.
+  *
+  * @param[in]
+  * threshold   OpenMP threshold size
+  */
 void set_omp_threshold_rocalution(int threshold);
 
-/// Print information about the platform
+/** \ingroup backend_module
+  * \brief Print info about rocALUTION
+  * \details
+  * \p info_rocalution prints information about the rocALUTION platform
+  */
 void info_rocalution(void);
 
-/// Print information about the platform via specific backend descriptor
+/** \ingroup backend_module
+  * \brief Print info about specific rocALUTION backend descriptor
+  * \details
+  * \p info_rocalution prints information about the rocALUTION platform of the specific
+  * backend descriptor.
+  *
+  * @param[in]
+  * backend_descriptor  rocALUTION backend descriptor
+  */
 void info_rocalution(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
-/// Return true if any accelerator is available
-bool _rocalution_available_accelerator(void);
-
-/// Disable/Enable the accelerator
+/** \ingroup backend_module
+  * \brief Disable/Enable the accelerator
+  * \details
+  * \p disable_accelerator_rocalution disables / enables the accelerator.
+  *
+  * @param[in]
+  * onoff   boolean to turn on/off the accelerator
+  */
 void disable_accelerator_rocalution(bool onoff = true);
 
-/// Return backend descriptor
+// Return true if any accelerator is available
+bool _rocalution_available_accelerator(void);
+
+// Return backend descriptor
 struct Rocalution_Backend_Descriptor* _get_backend_descriptor(void);
 
-/// Set backend descriptor
+// Set backend descriptor
 void _set_backend_descriptor(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
-/// Set the OMP threads based on the size threshold
+// Set the OMP threads based on the size threshold
 void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor backend_descriptor,
                               int size);
 
-/// Build (and return) a vector on the selected in the descriptor accelerator
+// Build (and return) a vector on the selected in the descriptor accelerator
 template <typename ValueType>
 AcceleratorVector<ValueType>*
 _rocalution_init_base_backend_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
-/// Build (and return) a matrix on the host
+// Build (and return) a matrix on the host
 template <typename ValueType>
 HostMatrix<ValueType>*
 _rocalution_init_base_host_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                   unsigned int matrix_format);
 
-/// Build (and return) a matrix on the selected in the descriptor accelerator
+// Build (and return) a matrix on the selected in the descriptor accelerator
 template <typename ValueType>
 AcceleratorMatrix<ValueType>*
 _rocalution_init_base_backend_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
                                      unsigned int matrix_format);
 
-/// Sync the active async transfers
+/** \ingroup backend_module
+  * \brief Sync rocALUTION
+  * \details
+  * \p _rocalution_sync blocks the host until all active asynchronous transfers are completed.
+  */
 void _rocalution_sync(void);
 
 size_t _rocalution_add_obj(class RocalutionObj* ptr);

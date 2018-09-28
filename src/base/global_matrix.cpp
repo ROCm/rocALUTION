@@ -710,17 +710,17 @@ void GlobalMatrix<ValueType>::MoveToHost(void)
 }
 
 template <typename ValueType>
-bool GlobalMatrix<ValueType>::is_host(void) const
+bool GlobalMatrix<ValueType>::is_host_(void) const
 {
-    assert(this->matrix_interior_.is_host() == this->matrix_ghost_.is_host());
-    return this->matrix_interior_.is_host();
+    assert(this->matrix_interior_.is_host_() == this->matrix_ghost_.is_host_());
+    return this->matrix_interior_.is_host_();
 }
 
 template <typename ValueType>
-bool GlobalMatrix<ValueType>::is_accel(void) const
+bool GlobalMatrix<ValueType>::is_accel_(void) const
 {
-    assert(this->matrix_interior_.is_accel() == this->matrix_ghost_.is_accel());
-    return this->matrix_interior_.is_accel();
+    assert(this->matrix_interior_.is_accel_() == this->matrix_ghost_.is_accel_());
+    return this->matrix_interior_.is_accel_();
 }
 
 template <typename ValueType>
@@ -728,13 +728,13 @@ void GlobalMatrix<ValueType>::Info(void) const
 {
     std::string current_backend_name;
 
-    if(this->is_host() == true)
+    if(this->is_host_() == true)
     {
         current_backend_name = _rocalution_host_name[0];
     }
     else
     {
-        assert(this->is_accel() == true);
+        assert(this->is_accel_() == true);
         current_backend_name = _rocalution_backend_name[this->local_backend_.backend];
     }
 
@@ -884,14 +884,14 @@ void GlobalMatrix<ValueType>::Apply(const GlobalVector<ValueType>& in,
 
     assert(this->GetM() == out->GetSize());
     assert(this->GetN() == in.GetSize());
-    assert(this->is_host() == in.is_host());
-    assert(this->is_host() == out->is_host());
+    assert(this->is_host_() == in.is_host_());
+    assert(this->is_host_() == out->is_host_());
 
-    out->UpdateGhostValuesAsync(in);
+    out->UpdateGhostValuesAsync_(in);
 
     this->matrix_interior_.Apply(in.vector_interior_, &out->vector_interior_);
 
-    out->UpdateGhostValuesSync();
+    out->UpdateGhostValuesSync_();
 
     this->matrix_ghost_.ApplyAdd(
         out->vector_ghost_, static_cast<ValueType>(1), &out->vector_interior_);
@@ -909,8 +909,8 @@ void GlobalMatrix<ValueType>::ApplyAdd(const GlobalVector<ValueType>& in,
 
     assert(this->GetM() == out->GetSize());
     assert(this->GetN() == in.GetSize());
-    assert(this->is_host() == in.is_host());
-    assert(this->is_host() == out->is_host());
+    assert(this->is_host_() == in.is_host_());
+    assert(this->is_host_() == out->is_host_());
 
     FATAL_ERROR(__FILE__, __LINE__);
 }
@@ -1347,7 +1347,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType>* Ac,
     LocalMatrix<ValueType> tmp;
     LocalMatrix<ValueType> host_interior;
 
-    if(this->is_accel())
+    if(this->is_accel_())
     {
         host_interior.ConvertTo(this->GetInterior().GetFormat());
         host_interior.CopyFrom(this->GetInterior());
@@ -1420,7 +1420,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType>* Ac,
     LocalMatrix<ValueType> tmp_ghost;
     LocalMatrix<ValueType> host_ghost;
 
-    if(this->is_accel())
+    if(this->is_accel_())
     {
         host_ghost.ConvertTo(this->GetGhost().GetFormat());
         host_ghost.CopyFrom(this->GetGhost());
@@ -1467,7 +1467,7 @@ void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType>* Ac,
 
     // Allocate
     Ac->Clear();
-    bool isaccel = Ac->is_accel();
+    bool isaccel = Ac->is_accel_();
     Ac->MoveToHost();
     Ac->SetParallelManager(*pm);
     Ac->SetDataPtrCSR(&Ac_interior_row_offset,

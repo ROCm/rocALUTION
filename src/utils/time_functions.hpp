@@ -26,7 +26,9 @@
 
 namespace rocalution {
 
-/// Return current time in microseconds
+/** \ingroup backend_module
+  * \brief Return current time in microseconds
+  */
 double rocalution_time(void);
 
 } // namespace rocalution

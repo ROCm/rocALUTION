@@ -227,8 +227,10 @@ class IterativeLinearSolver : public Solver<OperatorType, VectorType, ValueType>
     /** \brief Write the history to file */
     void RecordHistory(const std::string filename) const;
 
+    /** \brief Set the solver verbosity output */
     virtual void Verbose(int verb = 1);
 
+    /** \brief Solve Operator x = rhs */
     virtual void Solve(const VectorType& rhs, VectorType* x);
 
     /** \brief Set a preconditioner of the linear solver */

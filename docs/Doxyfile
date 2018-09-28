@@ -778,11 +778,18 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = modules.dox \
+                         ../src/base/backend_manager.hpp \
+                         ../src/base/parallel_manager.hpp \
+                         ../src/utils/allocate_free.hpp \
+                         ../src/utils/time_functions.hpp \
                          ../src/base/operator.hpp \
                          ../src/base/vector.hpp \
                          ../src/base/base_rocalution.hpp \
                          ../src/base/local_vector.hpp \
+                         ../src/base/global_vector.hpp \
                          ../src/base/local_matrix.hpp \
+                         ../src/base/global_matrix.hpp \
+                         ../src/base/local_stencil.hpp \
                          ../src/solvers \
                          ../src/solvers/krylov \
                          ../src/solvers/direct \

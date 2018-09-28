@@ -47,7 +47,7 @@ class RocalutionObj
     virtual void Clear() = 0;
 
     protected:
-    size_t global_obj_id;
+    size_t global_obj_id_;
 };
 
 // Global data for all ROCALUTION objects
@@ -119,13 +119,13 @@ class BaseRocalution : public RocalutionObj
     Rocalution_Backend_Descriptor local_backend_; /**< \private */
 
     /** \brief Return true if the object is on the host */
-    virtual bool is_host(void) const = 0;
+    virtual bool is_host_(void) const = 0;
 
     /** \brief Return true if the object is on the accelerator */
-    virtual bool is_accel(void) const = 0;
+    virtual bool is_accel_(void) const = 0;
 
     // active async transfer
-    bool asyncf; /**< \private */
+    bool asyncf_; /**< \private */
 
     friend class BaseRocalution<double>;
     friend class BaseRocalution<float>;

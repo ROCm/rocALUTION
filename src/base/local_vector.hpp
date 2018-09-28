@@ -187,8 +187,8 @@ class LocalVector : public Vector<ValueType>
         int start, int end, const int* index, int nc, int* size, int* boundary) const;
 
     protected:
-    virtual bool is_host(void) const;
-    virtual bool is_accel(void) const;
+    virtual bool is_host_(void) const;
+    virtual bool is_accel_(void) const;
 
     private:
     // Pointer from the base vector class to the current allocated vector (host_ or accel_)

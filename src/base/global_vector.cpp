@@ -372,13 +372,13 @@ void GlobalVector<ValueType>::Info(void) const
 {
     std::string current_backend_name;
 
-    if(this->is_host() == true)
+    if(this->is_host_() == true)
     {
         current_backend_name = _rocalution_host_name[0];
     }
     else
     {
-        assert(this->is_accel() == true);
+        assert(this->is_accel_() == true);
         current_backend_name = _rocalution_backend_name[this->local_backend_.backend];
     }
 
@@ -760,9 +760,9 @@ void GlobalVector<ValueType>::PointWiseMult(const GlobalVector<ValueType>& x,
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::UpdateGhostValuesAsync(const GlobalVector<ValueType>& in)
+void GlobalVector<ValueType>::UpdateGhostValuesAsync_(const GlobalVector<ValueType>& in)
 {
-    log_debug(this, "GlobalVector::UpdateGhostValuesAsync()", "#*# begin", (const void*&)in);
+    log_debug(this, "GlobalVector::UpdateGhostValuesAsync_()", "#*# begin", (const void*&)in);
 
 #ifdef SUPPORT_MULTINODE
     int tag = 0;
@@ -807,13 +807,13 @@ void GlobalVector<ValueType>::UpdateGhostValuesAsync(const GlobalVector<ValueTyp
     }
 #endif
 
-    log_debug(this, "GlobalVector::UpdateGhostValuesAsync()", "#*# end");
+    log_debug(this, "GlobalVector::UpdateGhostValuesAsync_()", "#*# end");
 }
 
 template <typename ValueType>
-void GlobalVector<ValueType>::UpdateGhostValuesSync(void)
+void GlobalVector<ValueType>::UpdateGhostValuesSync_(void)
 {
-    log_debug(this, "GlobalVector::UpdateGhostValuesSync()", "#*# begin");
+    log_debug(this, "GlobalVector::UpdateGhostValuesSync_()", "#*# begin");
 
 #ifdef SUPPORT_MULTINODE
     // Sync before updating ghost values
@@ -823,7 +823,7 @@ void GlobalVector<ValueType>::UpdateGhostValuesSync(void)
     this->vector_ghost_.SetContinuousValues(0, this->pm_->GetNumReceivers(), this->recv_boundary_);
 #endif
 
-    log_debug(this, "GlobalVector::UpdateGhostValuesSync()", "#*# end");
+    log_debug(this, "GlobalVector::UpdateGhostValuesSync_()", "#*# end");
 }
 
 template <typename ValueType>
@@ -847,17 +847,17 @@ void GlobalVector<ValueType>::Prolongation(const GlobalVector<ValueType>& vec_co
 }
 
 template <typename ValueType>
-bool GlobalVector<ValueType>::is_host(void) const
+bool GlobalVector<ValueType>::is_host_(void) const
 {
-    assert(this->vector_interior_.is_host() == this->vector_ghost_.is_host());
-    return this->vector_interior_.is_host();
+    assert(this->vector_interior_.is_host_() == this->vector_ghost_.is_host_());
+    return this->vector_interior_.is_host_();
 }
 
 template <typename ValueType>
-bool GlobalVector<ValueType>::is_accel(void) const
+bool GlobalVector<ValueType>::is_accel_(void) const
 {
-    assert(this->vector_interior_.is_accel() == this->vector_ghost_.is_accel());
-    return this->vector_interior_.is_accel();
+    assert(this->vector_interior_.is_accel_() == this->vector_ghost_.is_accel_());
+    return this->vector_interior_.is_accel_();
 }
 
 template class GlobalVector<double>;
