@@ -26,15 +26,52 @@
 
 namespace rocalution {
 
-/// Allocate buffer on the host
+/** \ingroup backend_module
+  * \brief Allocate buffer on the host
+  * \details
+  * \p allocate_host allocates a buffer on the host.
+  *
+  * @param[in]
+  * size    number of elements the buffer need to be allocated for
+  * @param[out]
+  * ptr     pointer to the position in memory where the buffer should be allocated,
+  *         it is expected that \p *ptr == \p NULL
+  *
+  * \tparam DataType can be char, int, unsigned int, float, double, std::complex<float>
+  *         or std::complex<double>.
+  */
 template <typename DataType>
 void allocate_host(int size, DataType** ptr);
 
-/// Free buffer on the host
+/** \ingroup backend_module
+  * \brief Free buffer on the host
+  * \details
+  * \p free_host deallocates a buffer on the host. \p *ptr will be set to NULL after
+  * successful deallocation.
+  *
+  * @param[inout]
+  * ptr     pointer to the position in memory where the buffer should be deallocated,
+  *         it is expected that \p *ptr != \p NULL
+  *
+  * \tparam DataType can be char, int, unsigned int, float, double, std::complex<float>
+  *         or std::complex<double>.
+  */
 template <typename DataType>
 void free_host(DataType** ptr);
 
-/// set a buffer to zero on the host
+/** \ingroup backend_module
+  * \brief Set a host buffer to zero
+  * \details
+  * \p set_to_zero_host sets a host buffer to zero.
+  *
+  * @param[in]
+  * size    number of elements
+  * @param[inout]
+  * ptr     pointer to the host buffer
+  *
+  * \tparam DataType can be char, int, unsigned int, float, double, std::complex<float>
+  *         or std::complex<double>.
+  */
 template <typename DataType>
 void set_to_zero_host(int size, DataType* ptr);
 

@@ -32,3 +32,7 @@
 /** \defgroup op_vec_module Operators and Vectors Module
   * This module contains all operators and vectors.
   */
+
+/** \defgroup backend_module Backend Module
+  * This module contains al backend related functions.
+  */

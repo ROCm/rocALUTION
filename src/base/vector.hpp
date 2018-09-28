@@ -38,11 +38,11 @@ class GlobalVector;
 template <typename ValueType>
 class LocalVector;
 
-/** \class Vector
-  * \brief Base class for all vectors
+/** \ingroup op_vec_module
+  * \class Vector
+  * \brief Vector class
   * \details
-  * The Vector class is the base class for all vector objects, i.e. LocalVector
-  * and GlobalVector classes.
+  * The Vector class defines the generic interface for local and global vectors.
   *
   * \tparam ValueType - can be int, float, double, std::complex<float> and
   *                     std::complex<double>

@@ -28,10 +28,10 @@
 
 namespace rocalution {
 
-/// Stencil Names
+// Stencil Names
 const std::string _stencil_type_names[1] = {"Laplace2D"};
 
-/// Stencil Enumeration
+// Stencil Enumeration
 enum _stencil_type
 {
     Laplace2D = 0

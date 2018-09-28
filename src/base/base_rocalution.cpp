@@ -36,9 +36,9 @@ RocalutionObj::RocalutionObj()
     log_debug(this, "RocalutionObj::RocalutionObj()");
 
 #ifndef OBJ_TRACKING_OFF
-    this->global_obj_id = _rocalution_add_obj(this);
+    this->global_obj_id_ = _rocalution_add_obj(this);
 #else
-    this->global_obj_id = 0;
+    this->global_obj_id_ = 0;
 #endif
 }
 
@@ -48,7 +48,7 @@ RocalutionObj::~RocalutionObj()
 
 #ifndef OBJ_TRACKING_OFF
     bool status = false;
-    status      = _rocalution_del_obj(this, this->global_obj_id);
+    status      = _rocalution_del_obj(this, this->global_obj_id_);
 
     if(status != true)
     {
@@ -68,7 +68,7 @@ BaseRocalution<ValueType>::BaseRocalution()
     // copy the backend description
     this->local_backend_ = *_get_backend_descriptor();
 
-    this->asyncf = false;
+    this->asyncf_ = false;
 
     assert(_get_backend_descriptor()->init == true);
 }
@@ -108,14 +108,14 @@ void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType>& sr
     this->local_backend_ = src.local_backend_;
     this->pm_            = src.pm_;
 
-    if(src.is_host())
+    if(src.is_host_())
     {
         // move to host
         this->MoveToHost();
     }
     else
     {
-        assert(src.is_accel());
+        assert(src.is_accel_());
 
         // move to accelerator
         this->MoveToAccelerator();
@@ -131,14 +131,14 @@ void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType2>& s
     this->local_backend_ = src.local_backend_;
     this->pm_            = src.pm_;
 
-    if(src.is_host())
+    if(src.is_host_())
     {
         // move to host
         this->MoveToHost();
     }
     else
     {
-        assert(src.is_accel());
+        assert(src.is_accel_());
 
         // move to accelerator
         this->MoveToAccelerator();
@@ -163,7 +163,7 @@ template <typename ValueType>
 void BaseRocalution<ValueType>::Sync(void)
 {
     _rocalution_sync();
-    this->asyncf = false;
+    this->asyncf_ = false;
 }
 
 template class BaseRocalution<double>;

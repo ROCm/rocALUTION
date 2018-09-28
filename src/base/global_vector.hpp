@@ -38,12 +38,22 @@ template <typename ValueType>
 class GlobalMatrix;
 struct MRequest;
 
-// Global vector
+/** \ingroup op_vec_module
+  * \class GlobalVector
+  * \brief GlobalVector class
+  * \details
+  * A GlobalVector is called global, because it can stay on a single or on multiple nodes
+  * in a network. For this type of communication, MPI is used.
+  *
+  * \tparam ValueType - can be int, float, double, std::complex<float> and
+  *                     std::complex<double>
+  */
 template <typename ValueType>
 class GlobalVector : public Vector<ValueType>
 {
     public:
     GlobalVector();
+    /** \brief Initialize a global vector with a parallel manager */
     GlobalVector(const ParallelManager& pm);
     virtual ~GlobalVector();
 
@@ -57,13 +67,18 @@ class GlobalVector : public Vector<ValueType>
     virtual int GetLocalSize(void) const;
     virtual int GetGhostSize(void) const;
 
+    /** \private */
     const LocalVector<ValueType>& GetInterior() const;
+    /** \private */
     LocalVector<ValueType>& GetInterior();
+    /** \private */
     const LocalVector<ValueType>& GetGhost() const;
 
+    /** \brief Allocate a global vector with name and size */
     virtual void Allocate(std::string name, IndexType2 size);
     virtual void Clear(void);
 
+    /** \brief Set the parallel manager of a global vector */
     void SetParallelManager(const ParallelManager& pm);
 
     virtual void Zeros(void);
@@ -77,11 +92,18 @@ class GlobalVector : public Vector<ValueType>
                                  ValueType var  = static_cast<ValueType>(1));
     void CloneFrom(const GlobalVector<ValueType>& src);
 
-    // Accessing operator - only for host data
+    /** \brief Access operator (only for host data) */
     ValueType& operator[](int i);
+    /** \brief Access operator (only for host data) */
     const ValueType& operator[](int i) const;
 
+    /** \brief Initialize the local part of a global vector with externally allocated
+      * data
+      */
     void SetDataPtr(ValueType** ptr, std::string name, IndexType2 size);
+    /** \brief Get a pointer to the data from the local part of a global vector and free
+      * the global vector object
+      */
     void LeaveDataPtr(ValueType** ptr);
 
     virtual void CopyFrom(const GlobalVector<ValueType>& src);
@@ -90,50 +112,40 @@ class GlobalVector : public Vector<ValueType>
     virtual void ReadFileBinary(const std::string filename);
     virtual void WriteFileBinary(const std::string filename) const;
 
-    // this = this + alpha*x
     virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
-    // this = alpha*this + x
     virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);
-    // this = alpha*this + x*beta + y*gamma
     virtual void ScaleAdd2(ValueType alpha,
                            const GlobalVector<ValueType>& x,
                            ValueType beta,
                            const GlobalVector<ValueType>& y,
                            ValueType gamma);
-    // this = alpha * this + beta * x
     virtual void ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
-    // this = alpha*this
     virtual void Scale(ValueType alpha);
-    // this^T x
     virtual ValueType Dot(const GlobalVector<ValueType>& x) const;
-    // this^T x
     virtual ValueType DotNonConj(const GlobalVector<ValueType>& x) const;
-    // sqrt(this^T this)
     virtual ValueType Norm(void) const;
-    // reduce
     virtual ValueType Reduce(void) const;
-    // L1 norm, sum(|this|)
     virtual ValueType Asum(void) const;
-    // Amax, max(|this|)
     virtual int Amax(ValueType& value) const;
-    // point-wise multiplication
     virtual void PointWiseMult(const GlobalVector<ValueType>& x);
     virtual void PointWiseMult(const GlobalVector<ValueType>& x, const GlobalVector<ValueType>& y);
 
     virtual void Power(double power);
 
-    // Restriction operator based on restriction mapping vector
+    /** \brief Restriction operator based on restriction mapping vector */
     void Restriction(const GlobalVector<ValueType>& vec_fine, const LocalVector<int>& map);
 
-    // Prolongation operator based on restriction(!) mapping vector
+    /** \brief Prolongation operator based on restriction mapping vector */
     void Prolongation(const GlobalVector<ValueType>& vec_coarse, const LocalVector<int>& map);
 
     protected:
-    virtual bool is_host(void) const;
-    virtual bool is_accel(void) const;
+    virtual bool is_host_(void) const;
+    virtual bool is_accel_(void) const;
 
-    void UpdateGhostValuesAsync(const GlobalVector<ValueType>& in);
-    void UpdateGhostValuesSync(void);
+    /** \brief Update ghost values asynchronously */
+    void UpdateGhostValuesAsync_(const GlobalVector<ValueType>& in);
+    /** \brief Update ghost values synchronously */
+    void UpdateGhostValuesSync_(void);
 
     private:
     MRequest* recv_event_;

@@ -110,7 +110,7 @@ void LocalMatrix<ValueType>::Zeros(void)
     {
         bool err = this->matrix_->Zeros();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Zeros() failed");
             this->Info();
@@ -120,7 +120,7 @@ void LocalMatrix<ValueType>::Zeros(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -484,7 +484,7 @@ bool LocalMatrix<ValueType>::Check(void) const
 
     bool check = false;
 
-    if(this->is_accel() == true)
+    if(this->is_accel_() == true)
     {
         LocalMatrix<ValueType> mat_host;
         mat_host.ConvertTo(this->GetFormat());
@@ -1006,7 +1006,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename)
 
     bool err = this->matrix_->ReadFileMTX(filename);
 
-    if((err == false) && (this->is_host() == true) && (this->GetFormat() == COO))
+    if((err == false) && (this->is_host_() == true) && (this->GetFormat() == COO))
     {
         LOG_INFO("Execution of LocalMatrix::ReadFileMTX() failed");
         this->Info();
@@ -1016,7 +1016,7 @@ void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename)
     if(err == false)
     {
         // Move to host
-        bool is_accel = this->is_accel();
+        bool is_accel = this->is_accel_();
         this->MoveToHost();
 
         // Convert to COO
@@ -1064,7 +1064,7 @@ void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const
 
     bool err = this->matrix_->WriteFileMTX(filename);
 
-    if((err == false) && (this->is_host() == true) && (this->GetFormat() == COO))
+    if((err == false) && (this->is_host_() == true) && (this->GetFormat() == COO))
     {
         LOG_INFO("Execution of LocalMatrix::WriteFileMTX() failed");
         this->Info();
@@ -1099,7 +1099,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename)
 
     bool err = this->matrix_->ReadFileCSR(filename);
 
-    if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+    if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
     {
         LOG_INFO("Execution of LocalMatrix::ReadFileCSR() failed");
         this->Info();
@@ -1109,7 +1109,7 @@ void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename)
     if(err == false)
     {
         // Move to host
-        bool is_accel = this->is_accel();
+        bool is_accel = this->is_accel_();
         this->MoveToHost();
 
         // Convert to CSR
@@ -1149,7 +1149,7 @@ void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const
 
     bool err = this->matrix_->WriteFileCSR(filename);
 
-    if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+    if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
     {
         LOG_INFO("Execution of LocalMatrix::WriteFileCSR() failed");
         this->Info();
@@ -1190,12 +1190,12 @@ void LocalMatrix<ValueType>::CopyFromAsync(const LocalMatrix<ValueType>& src)
 {
     log_debug(this, "LocalMatrix::CopyFromAsync()", (const void*&)src);
 
-    assert(this->asyncf == false);
+    assert(this->asyncf_ == false);
     assert(this != &src);
 
     this->matrix_->CopyFromAsync(*src.matrix_);
 
-    this->asyncf = true;
+    this->asyncf_ = true;
 }
 
 template <typename ValueType>
@@ -1298,13 +1298,13 @@ void LocalMatrix<ValueType>::UpdateValuesCSR(ValueType* val)
 }
 
 template <typename ValueType>
-bool LocalMatrix<ValueType>::is_host(void) const
+bool LocalMatrix<ValueType>::is_host_(void) const
 {
     return (this->matrix_ == this->matrix_host_);
 }
 
 template <typename ValueType>
-bool LocalMatrix<ValueType>::is_accel(void) const
+bool LocalMatrix<ValueType>::is_accel_(void) const
 {
     return (this->matrix_ == this->matrix_accel_);
 }
@@ -1434,7 +1434,7 @@ void LocalMatrix<ValueType>::MoveToAcceleratorAsync(void)
         this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(this->local_backend_,
                                                                               this->GetFormat());
         this->matrix_accel_->CopyFromAsync(*this->matrix_host_);
-        this->asyncf = true;
+        this->asyncf_ = true;
 
         LOG_VERBOSE_INFO(4,
                          "*** info: LocalMatrix::MoveToAcceleratorAsync() host to accelerator "
@@ -1454,7 +1454,7 @@ void LocalMatrix<ValueType>::MoveToHostAsync(void)
         this->matrix_host_ =
             _rocalution_init_base_host_matrix<ValueType>(this->local_backend_, this->GetFormat());
         this->matrix_host_->CopyFromAsync(*this->matrix_accel_);
-        this->asyncf = true;
+        this->asyncf_ = true;
 
         LOG_VERBOSE_INFO(
             4, "*** info: LocalMatrix::MoveToHostAsync() accelerator to host transfer (started)");
@@ -1473,7 +1473,7 @@ void LocalMatrix<ValueType>::Sync(void)
     log_debug(this, "LocalMatrix::Sync()");
 
     // check for active async transfer
-    if(this->asyncf == true)
+    if(this->asyncf_ == true)
     {
         // The Move*Async function is active
         if((this->matrix_accel_ != NULL) && (this->matrix_host_ != NULL))
@@ -1515,7 +1515,7 @@ void LocalMatrix<ValueType>::Sync(void)
         }
     }
 
-    this->asyncf = false;
+    this->asyncf_ = false;
 }
 
 template <typename ValueType>
@@ -1730,7 +1730,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType>* vec_diag) c
 
         bool err = this->matrix_->ExtractDiagonal(vec_diag->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ExtractDiagonal() failed");
             this->Info();
@@ -1760,7 +1760,7 @@ void LocalMatrix<ValueType>::ExtractDiagonal(LocalVector<ValueType>* vec_diag) c
                     2, "*** warning: LocalMatrix::ExtractDiagonal() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::ExtractDiagonal() is performed on the host");
@@ -1794,7 +1794,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType>* vec_
 
         bool err = this->matrix_->ExtractInverseDiagonal(vec_inv_diag->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ExtractInverseDiagonal() failed");
             this->Info();
@@ -1825,7 +1825,7 @@ void LocalMatrix<ValueType>::ExtractInverseDiagonal(LocalVector<ValueType>* vec_
                                  "performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2,
@@ -1869,13 +1869,13 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(
 
         // if the sub matrix has only 1 row
         // it is computed on the host
-        if((this->is_host() == true) || (row_size > 1))
+        if((this->is_host_() == true) || (row_size > 1))
         {
             err = this->matrix_->ExtractSubMatrix(
                 row_offset, col_offset, row_size, col_size, mat->matrix_);
         }
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ExtractSubMatrix() failed");
             this->Info();
@@ -1913,7 +1913,7 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(
                 mat->ConvertTo(this->GetFormat());
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 if(row_size > 1)
                 {
@@ -2025,7 +2025,7 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType>* U, bool diag) cons
             err = this->matrix_->ExtractU(U->matrix_);
         }
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ExtractU() failed");
             this->Info();
@@ -2068,7 +2068,7 @@ void LocalMatrix<ValueType>::ExtractU(LocalMatrix<ValueType>* U, bool diag) cons
                 U->ConvertTo(this->GetFormat());
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::ExtractU() is performed on the host");
@@ -2111,7 +2111,7 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType>* L, bool diag) cons
             err = this->matrix_->ExtractL(L->matrix_);
         }
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ExtractL() failed");
             this->Info();
@@ -2154,7 +2154,7 @@ void LocalMatrix<ValueType>::ExtractL(LocalMatrix<ValueType>* L, bool diag) cons
                 L->ConvertTo(this->GetFormat());
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::ExtractL() is performed on the host");
@@ -2214,7 +2214,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType>& in,
     {
         bool err = this->matrix_->LUSolve(*in.vector_, out->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::LUSolve() failed");
             this->Info();
@@ -2253,7 +2253,7 @@ void LocalMatrix<ValueType>::LUSolve(const LocalVector<ValueType>& in,
                 }
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LUSolve() is performed on the host");
 
@@ -2308,7 +2308,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType>& in,
     {
         bool err = this->matrix_->LLSolve(*in.vector_, out->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
             this->Info();
@@ -2341,7 +2341,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType>& in,
                                  "*** warning: LocalMatrix::LLSolve() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LLSolve() is performed on the host");
 
@@ -2375,7 +2375,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType>& in,
     {
         bool err = this->matrix_->LLSolve(*in.vector_, *inv_diag.vector_, out->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
             this->Info();
@@ -2412,7 +2412,7 @@ void LocalMatrix<ValueType>::LLSolve(const LocalVector<ValueType>& in,
                                  "*** warning: LocalMatrix::LLSolve() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LLSolve() is performed on the host");
 
@@ -2467,7 +2467,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType>& in,
     {
         bool err = this->matrix_->LSolve(*in.vector_, out->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::LSolve() failed");
             this->Info();
@@ -2500,7 +2500,7 @@ void LocalMatrix<ValueType>::LSolve(const LocalVector<ValueType>& in,
                                  "*** warning: LocalMatrix::LSolve() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::LSolve() is performed on the host");
 
@@ -2555,7 +2555,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType>& in,
     {
         bool err = this->matrix_->USolve(*in.vector_, out->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::USolve() failed");
             this->Info();
@@ -2588,7 +2588,7 @@ void LocalMatrix<ValueType>::USolve(const LocalVector<ValueType>& in,
                                  "*** warning: LocalMatrix::USolve() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::USolve() is performed on the host");
 
@@ -2611,7 +2611,7 @@ void LocalMatrix<ValueType>::ILU0Factorize(void)
     {
         bool err = this->matrix_->ILU0Factorize();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ILU0Factorize() failed");
             this->Info();
@@ -2621,7 +2621,7 @@ void LocalMatrix<ValueType>::ILU0Factorize(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -2674,7 +2674,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(double t, int maxrow)
     {
         bool err = this->matrix_->ILUTFactorize(t, maxrow);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ILUTFactorize() failed");
             this->Info();
@@ -2684,7 +2684,7 @@ void LocalMatrix<ValueType>::ILUTFactorize(double t, int maxrow)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -2749,7 +2749,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(int p, bool level)
 
                 bool err = this->matrix_->ILUpFactorizeNumeric(p, *structure.matrix_);
 
-                if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+                if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
                 {
                     LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
                     this->Info();
@@ -2759,7 +2759,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(int p, bool level)
                 if(err == false)
                 {
                     // Move to host
-                    bool is_accel = this->is_accel();
+                    bool is_accel = this->is_accel_();
                     this->MoveToHost();
                     structure.MoveToHost();
 
@@ -2806,7 +2806,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(int p, bool level)
 
                 bool err = this->matrix_->ILU0Factorize();
 
-                if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+                if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
                 {
                     LOG_INFO("Computation of LocalMatrix::ILUpFactorize() failed");
                     this->Info();
@@ -2816,7 +2816,7 @@ void LocalMatrix<ValueType>::ILUpFactorize(int p, bool level)
                 if(err == false)
                 {
                     // Move to host
-                    bool is_accel = this->is_accel();
+                    bool is_accel = this->is_accel_();
                     this->MoveToHost();
 
                     // Convert to CSR
@@ -2876,7 +2876,7 @@ void LocalMatrix<ValueType>::ICFactorize(LocalVector<ValueType>* inv_diag)
     {
         bool err = this->matrix_->ICFactorize(inv_diag->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ICFactorize() failed");
             this->Info();
@@ -2886,7 +2886,7 @@ void LocalMatrix<ValueType>::ICFactorize(LocalVector<ValueType>* inv_diag)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
             inv_diag->MoveToHost();
 
@@ -2953,7 +2953,7 @@ void LocalMatrix<ValueType>::MultiColoring(int& num_colors,
 
         bool err = this->matrix_->MultiColoring(num_colors, size_colors, permutation->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::MultiColoring() failed");
             this->Info();
@@ -2986,7 +2986,7 @@ void LocalMatrix<ValueType>::MultiColoring(int& num_colors,
                     2, "*** warning: LocalMatrix::MultiColoring() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::MultiColoring() is performed on the host");
@@ -3022,7 +3022,7 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int& size, LocalVector<int>* 
 
         bool err = this->matrix_->MaximalIndependentSet(size, permutation->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::MaximalIndependentSet() failed");
             this->Info();
@@ -3055,7 +3055,7 @@ void LocalMatrix<ValueType>::MaximalIndependentSet(int& size, LocalVector<int>* 
                     "*** warning: LocalMatrix::MaximalIndependentSet() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2,
@@ -3091,7 +3091,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int& size, LocalVector<int>* p
 
         bool err = this->matrix_->ZeroBlockPermutation(size, permutation->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ZeroBlockPermutation() failed");
             this->Info();
@@ -3124,7 +3124,7 @@ void LocalMatrix<ValueType>::ZeroBlockPermutation(int& size, LocalVector<int>* p
                     "*** warning: LocalMatrix::ZeroBlockPermutation() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::ZeroBlockPermutation() is performed on the host");
@@ -3153,7 +3153,7 @@ void LocalMatrix<ValueType>::Householder(int idx,
     {
         bool err = this->matrix_->Householder(idx, beta, vec->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
         {
             LOG_INFO("Computation of LocalMatrix::Householder() failed");
             this->Info();
@@ -3184,7 +3184,7 @@ void LocalMatrix<ValueType>::Householder(int idx,
                     2, "*** warning: LocalMatrix::Householder() is performed in DENSE format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::Householder() is performed on the host");
@@ -3208,7 +3208,7 @@ void LocalMatrix<ValueType>::QRDecompose(void)
     {
         bool err = this->matrix_->QRDecompose();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
         {
             LOG_INFO("Computation of LocalMatrix::QRDecompose() failed");
             this->Info();
@@ -3218,7 +3218,7 @@ void LocalMatrix<ValueType>::QRDecompose(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to DENSE
@@ -3274,7 +3274,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType>& in,
     {
         bool err = this->matrix_->QRSolve(*in.vector_, out->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
         {
             LOG_INFO("Computation of LocalMatrix::QRSolve() failed");
             this->Info();
@@ -3309,7 +3309,7 @@ void LocalMatrix<ValueType>::QRSolve(const LocalVector<ValueType>& in,
                     2, "*** warning: LocalMatrix::QRSolve() is performed in DENSE format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::QRSolve() is performed on the host");
 
@@ -3340,7 +3340,7 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int>& permutation)
     {
         bool err = this->matrix_->Permute(*permutation.vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Permute() failed");
             this->Info();
@@ -3374,7 +3374,7 @@ void LocalMatrix<ValueType>::Permute(const LocalVector<int>& permutation)
                 this->ConvertTo(format);
             }
 
-            if(permutation.is_accel() == true)
+            if(permutation.is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Permute() is performed on the host");
 
@@ -3409,7 +3409,7 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int>& permutation
     {
         bool err = this->matrix_->PermuteBackward(*permutation.vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == COO))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == COO))
         {
             LOG_INFO("Computation of LocalMatrix::PermuteBackward() failed");
             this->Info();
@@ -3443,7 +3443,7 @@ void LocalMatrix<ValueType>::PermuteBackward(const LocalVector<int>& permutation
                 this->ConvertTo(format);
             }
 
-            if(permutation.is_accel() == true)
+            if(permutation.is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::PermuteBackward() is performed on the host");
@@ -3478,7 +3478,7 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int>* permutation) const
     {
         bool err = this->matrix_->CMK(permutation->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::CMK() failed");
             this->Info();
@@ -3509,7 +3509,7 @@ void LocalMatrix<ValueType>::CMK(LocalVector<int>* permutation) const
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::CMK() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::CMK() is performed on the host");
 
@@ -3546,7 +3546,7 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int>* permutation) const
     {
         bool err = this->matrix_->RCMK(permutation->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::RCMK() failed");
             this->Info();
@@ -3577,7 +3577,7 @@ void LocalMatrix<ValueType>::RCMK(LocalVector<int>* permutation) const
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::RCMK() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::RCMK() is performed on the host");
 
@@ -3614,7 +3614,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int>* permutation) co
     {
         bool err = this->matrix_->ConnectivityOrder(permutation->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ConnectivityOrder() failed");
             this->Info();
@@ -3646,7 +3646,7 @@ void LocalMatrix<ValueType>::ConnectivityOrder(LocalVector<int>* permutation) co
                     2, "*** warning: LocalMatrix::ConnectivityOrder() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::ConnectivityOrder() is performed on the host");
@@ -3675,7 +3675,7 @@ void LocalMatrix<ValueType>::SymbolicPower(int p)
     {
         bool err = this->matrix_->SymbolicPower(p);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::SymbolicPower() failed");
             this->Info();
@@ -3685,7 +3685,7 @@ void LocalMatrix<ValueType>::SymbolicPower(int p)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -3745,7 +3745,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType>& mat,
 
     bool err = this->matrix_->MatrixAdd(*mat.matrix_, alpha, beta, structure);
 
-    if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+    if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
     {
         LOG_INFO("Computation of LocalMatrix::MatrixAdd() failed");
         this->Info();
@@ -3777,7 +3777,7 @@ void LocalMatrix<ValueType>::MatrixAdd(const LocalMatrix<ValueType>& mat,
             this->ConvertTo(mat.GetFormat());
         }
 
-        if(mat.is_accel() == true)
+        if(mat.is_accel_() == true)
         {
             LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::MatrixAdd() is performed on the host");
 
@@ -3803,7 +3803,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType& lambda_min, ValueType& lambda
     {
         bool err = this->matrix_->Gershgorin(lambda_min, lambda_max);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Gershgorin() failed");
             this->Info();
@@ -3832,7 +3832,7 @@ void LocalMatrix<ValueType>::Gershgorin(ValueType& lambda_min, ValueType& lambda
                     2, "*** warning: LocalMatrix::Gershgorin() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::Gershgorin() is performed on the host");
@@ -3854,7 +3854,7 @@ void LocalMatrix<ValueType>::Scale(ValueType alpha)
     {
         bool err = this->matrix_->Scale(alpha);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Scale() failed");
             this->Info();
@@ -3864,7 +3864,7 @@ void LocalMatrix<ValueType>::Scale(ValueType alpha)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -3912,7 +3912,7 @@ void LocalMatrix<ValueType>::ScaleDiagonal(ValueType alpha)
     {
         bool err = this->matrix_->ScaleDiagonal(alpha);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ScaleDiagonal() failed");
             this->Info();
@@ -3922,7 +3922,7 @@ void LocalMatrix<ValueType>::ScaleDiagonal(ValueType alpha)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -3972,7 +3972,7 @@ void LocalMatrix<ValueType>::ScaleOffDiagonal(ValueType alpha)
     {
         bool err = this->matrix_->ScaleOffDiagonal(alpha);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ScaleOffDiagonal() failed");
             this->Info();
@@ -3982,7 +3982,7 @@ void LocalMatrix<ValueType>::ScaleOffDiagonal(ValueType alpha)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -4032,7 +4032,7 @@ void LocalMatrix<ValueType>::AddScalar(ValueType alpha)
     {
         bool err = this->matrix_->AddScalar(alpha);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::AddScalar() failed");
             this->Info();
@@ -4042,7 +4042,7 @@ void LocalMatrix<ValueType>::AddScalar(ValueType alpha)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -4092,7 +4092,7 @@ void LocalMatrix<ValueType>::AddScalarDiagonal(ValueType alpha)
     {
         bool err = this->matrix_->AddScalarDiagonal(alpha);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::AddScalarDiagonal() failed");
             this->Info();
@@ -4102,7 +4102,7 @@ void LocalMatrix<ValueType>::AddScalarDiagonal(ValueType alpha)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -4152,7 +4152,7 @@ void LocalMatrix<ValueType>::AddScalarOffDiagonal(ValueType alpha)
     {
         bool err = this->matrix_->AddScalarOffDiagonal(alpha);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::AddScalarOffDiagonal() failed");
             this->Info();
@@ -4162,7 +4162,7 @@ void LocalMatrix<ValueType>::AddScalarOffDiagonal(ValueType alpha)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -4241,7 +4241,7 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType>& A,
 
     bool err = this->matrix_->MatMatMult(*A.matrix_, *B.matrix_);
 
-    if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+    if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
     {
         LOG_INFO("Computation of LocalMatrix::MatMatMult() failed");
         this->Info();
@@ -4278,7 +4278,7 @@ void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType>& A,
             this->ConvertTo(A.GetFormat());
         }
 
-        if(A.is_accel() == true)
+        if(A.is_accel_() == true)
         {
             LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::MatMatMult() is performed on the host");
 
@@ -4309,7 +4309,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType>& d
     {
         bool err = this->matrix_->DiagonalMatrixMultR(*diag.vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultR() failed");
             this->Info();
@@ -4344,7 +4344,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType>& d
                 this->ConvertTo(format);
             }
 
-            if(diag.is_accel() == true)
+            if(diag.is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::DiagonalMatrixMultR() is performed on the host");
@@ -4383,7 +4383,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType>& d
     {
         bool err = this->matrix_->DiagonalMatrixMultL(*diag.vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultL() failed");
             this->Info();
@@ -4418,7 +4418,7 @@ void LocalMatrix<ValueType>::DiagonalMatrixMultL(const LocalVector<ValueType>& d
                 this->ConvertTo(format);
             }
 
-            if(diag.is_accel() == true)
+            if(diag.is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::DiagonalMatrixMultL() is performed on the host");
@@ -4448,7 +4448,7 @@ void LocalMatrix<ValueType>::Compress(double drop_off)
     {
         bool err = this->matrix_->Compress(drop_off);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Compress() failed");
             this->Info();
@@ -4458,7 +4458,7 @@ void LocalMatrix<ValueType>::Compress(double drop_off)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -4508,7 +4508,7 @@ void LocalMatrix<ValueType>::Transpose(void)
     {
         bool err = this->matrix_->Transpose();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Transpose() failed");
             this->Info();
@@ -4518,7 +4518,7 @@ void LocalMatrix<ValueType>::Transpose(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -4568,7 +4568,7 @@ void LocalMatrix<ValueType>::Sort(void)
     {
         bool err = this->matrix_->Sort();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Sort() failed");
             this->Info();
@@ -4578,7 +4578,7 @@ void LocalMatrix<ValueType>::Sort(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Try sorting on host
@@ -4628,7 +4628,7 @@ void LocalMatrix<ValueType>::Key(long int& row_key, long int& col_key, long int&
     {
         bool err = this->matrix_->Key(row_key, col_key, val_key);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::Key() failed");
             this->Info();
@@ -4657,7 +4657,7 @@ void LocalMatrix<ValueType>::Key(long int& row_key, long int& col_key, long int&
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Key() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Key() is performed on the host");
             }
@@ -4686,7 +4686,7 @@ void LocalMatrix<ValueType>::AMGConnect(ValueType eps, LocalVector<int>* connect
     {
         bool err = this->matrix_->AMGConnect(eps, connections->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::AMGConnect() failed");
             this->Info();
@@ -4718,7 +4718,7 @@ void LocalMatrix<ValueType>::AMGConnect(ValueType eps, LocalVector<int>* connect
                     2, "*** warning: LocalMatrix::AMGConnect() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::AMGConnect() is performed on the host");
@@ -4752,7 +4752,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int>& connections,
     {
         bool err = this->matrix_->AMGAggregate(*connections.vector_, aggregates->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::AMGAggregate() failed");
             this->Info();
@@ -4786,7 +4786,7 @@ void LocalMatrix<ValueType>::AMGAggregate(const LocalVector<int>& connections,
                     2, "*** warning: LocalMatrix::AMGAggregate() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::AMGAggregate() is performed on the host");
@@ -4840,7 +4840,7 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(ValueType relax,
         bool err = this->matrix_->AMGSmoothedAggregation(
             relax, *aggregates.vector_, *connections.vector_, prolong->matrix_, restrict->matrix_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
             this->Info();
@@ -4885,7 +4885,7 @@ void LocalMatrix<ValueType>::AMGSmoothedAggregation(ValueType relax,
                 restrict->ConvertTo(this->GetFormat());
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2,
@@ -4935,7 +4935,7 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int>& aggregates,
         bool err =
             this->matrix_->AMGAggregation(*aggregates.vector_, prolong->matrix_, restrict->matrix_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::AMGAggregation() failed");
             this->Info();
@@ -4974,7 +4974,7 @@ void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int>& aggregates,
                 restrict->ConvertTo(this->GetFormat());
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::AMGAggregation() is performed on the host");
@@ -5019,7 +5019,7 @@ void LocalMatrix<ValueType>::RugeStueben(ValueType eps,
     {
         bool err = this->matrix_->RugeStueben(eps, prolong->matrix_, restrict->matrix_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::RugeStueben() failed");
             this->Info();
@@ -5055,7 +5055,7 @@ void LocalMatrix<ValueType>::RugeStueben(ValueType eps,
                 restrict->ConvertTo(this->GetFormat());
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::RugeStueben() is performed on the host");
@@ -5113,7 +5113,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(ValueType beta,
         bool err = this->matrix_->InitialPairwiseAggregation(
             beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
             this->Info();
@@ -5147,7 +5147,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(ValueType beta,
                                  "performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::InitialPairwiseAggregation() is "
@@ -5200,7 +5200,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
         bool err = this->matrix_->InitialPairwiseAggregation(
             *mat.matrix_, beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
             this->Info();
@@ -5238,7 +5238,7 @@ void LocalMatrix<ValueType>::InitialPairwiseAggregation(const LocalMatrix<ValueT
                                  "performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::InitialPairwiseAggregation() is "
@@ -5285,7 +5285,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(ValueType beta,
         bool err = this->matrix_->FurtherPairwiseAggregation(
             beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
             this->Info();
@@ -5319,7 +5319,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(ValueType beta,
                                  "performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::FurtherPairwiseAggregation() is "
@@ -5372,7 +5372,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
         bool err = this->matrix_->FurtherPairwiseAggregation(
             *mat.matrix_, beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::FurtherPairwiseAggregation() failed");
             this->Info();
@@ -5409,7 +5409,7 @@ void LocalMatrix<ValueType>::FurtherPairwiseAggregation(const LocalMatrix<ValueT
                                  "performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(2,
                                  "*** warning: LocalMatrix::FurtherPairwiseAggregation() is "
@@ -5455,7 +5455,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType>* Ac,
         bool err =
             this->matrix_->CoarsenOperator(Ac->matrix_, nrow, ncol, *G.vector_, Gsize, rG, rGsize);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::CoarsenOperator() failed");
             this->Info();
@@ -5499,7 +5499,7 @@ void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType>* Ac,
                 Ac->ConvertTo(this->GetFormat());
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::CoarsenOperator() is performed on the host");
@@ -5533,7 +5533,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map, int n, i
     {
         bool err = this->matrix_->CreateFromMap(*map.vector_, n, m);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
             this->Info();
@@ -5567,7 +5567,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map, int n, i
                 this->ConvertTo(format);
             }
 
-            if(map.is_accel() == true)
+            if(map.is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::CreateFromMap() is performed on the host");
@@ -5605,7 +5605,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map,
 
     bool err = this->matrix_->CreateFromMap(*map.vector_, n, m, pro->matrix_);
 
-    if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+    if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
     {
         LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
         this->Info();
@@ -5641,7 +5641,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map,
             pro->ConvertTo(format);
         }
 
-        if(map.is_accel() == true)
+        if(map.is_accel_() == true)
         {
             LOG_VERBOSE_INFO(2,
                              "*** warning: LocalMatrix::CreateFromMap() is performed on the host");
@@ -5670,7 +5670,7 @@ void LocalMatrix<ValueType>::LUFactorize(void)
     {
         bool err = this->matrix_->LUFactorize();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
         {
             LOG_INFO("Computation of LocalMatrix::LUFactorize() failed");
             this->Info();
@@ -5680,7 +5680,7 @@ void LocalMatrix<ValueType>::LUFactorize(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to DENSE
@@ -5747,7 +5747,7 @@ void LocalMatrix<ValueType>::FSAI(int power, const LocalMatrix<ValueType>* patte
             err = this->matrix_->FSAI(power, NULL);
         }
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::FSAI() failed");
             this->Info();
@@ -5757,7 +5757,7 @@ void LocalMatrix<ValueType>::FSAI(int power, const LocalMatrix<ValueType>* patte
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -5822,7 +5822,7 @@ void LocalMatrix<ValueType>::SPAI(void)
     {
         bool err = this->matrix_->SPAI();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::SPAI() failed");
             this->Info();
@@ -5832,7 +5832,7 @@ void LocalMatrix<ValueType>::SPAI(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to CSR
@@ -5880,7 +5880,7 @@ void LocalMatrix<ValueType>::Invert(void)
     {
         bool err = this->matrix_->Invert();
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == DENSE))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
         {
             LOG_INFO("Computation of LocalMatrix::Invert() failed");
             this->Info();
@@ -5890,7 +5890,7 @@ void LocalMatrix<ValueType>::Invert(void)
         if(err == false)
         {
             // Move to host
-            bool is_accel = this->is_accel();
+            bool is_accel = this->is_accel_();
             this->MoveToHost();
 
             // Convert to DENSE
@@ -5945,7 +5945,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(int idx, const LocalVector<Valu
     {
         bool err = this->matrix_->ReplaceColumnVector(idx, *vec.vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ReplaceColumnVector() failed");
             this->Info();
@@ -5986,7 +5986,7 @@ void LocalMatrix<ValueType>::ReplaceColumnVector(int idx, const LocalVector<Valu
                 }
             }
 
-            if(vec.is_accel() == true)
+            if(vec.is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::ReplaceColumnVector() is performed on the host");
@@ -6021,7 +6021,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(int idx, LocalVector<ValueType>
     {
         bool err = this->matrix_->ExtractColumnVector(idx, vec->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ExtractColumnVector() failed");
             this->Info();
@@ -6054,7 +6054,7 @@ void LocalMatrix<ValueType>::ExtractColumnVector(int idx, LocalVector<ValueType>
                     "*** warning: LocalMatrix::ExtractColumnVector() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::ExtractColumnVector() is performed on the host");
@@ -6084,7 +6084,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(int idx, const LocalVector<ValueTy
     {
         bool err = this->matrix_->ReplaceRowVector(idx, *vec.vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ReplaceRowVector() failed");
             this->Info();
@@ -6125,7 +6125,7 @@ void LocalMatrix<ValueType>::ReplaceRowVector(int idx, const LocalVector<ValueTy
                 }
             }
 
-            if(vec.is_accel() == true)
+            if(vec.is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::ReplaceRowVector() is performed on the host");
@@ -6160,7 +6160,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(int idx, LocalVector<ValueType>* v
     {
         bool err = this->matrix_->ExtractRowVector(idx, vec->vector_);
 
-        if((err == false) && (this->is_host() == true) && (this->GetFormat() == CSR))
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ExtractRowVector() failed");
             this->Info();
@@ -6192,7 +6192,7 @@ void LocalMatrix<ValueType>::ExtractRowVector(int idx, LocalVector<ValueType>* v
                     2, "*** warning: LocalMatrix::ExtractRowVector() is performed in CSR format");
             }
 
-            if(this->is_accel() == true)
+            if(this->is_accel_() == true)
             {
                 LOG_VERBOSE_INFO(
                     2, "*** warning: LocalMatrix::ExtractRowVector() is performed on the host");

@@ -127,7 +127,7 @@ bool LocalVector<ValueType>::Check(void) const
 
     bool check = false;
 
-    if(this->is_accel() == true)
+    if(this->is_accel_() == true)
     {
         LocalVector<ValueType> vec;
         vec.CopyFrom(*this);
@@ -224,7 +224,7 @@ void LocalVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType
     if(this->GetSize() > 0)
     {
         // host only
-        bool on_host = this->is_host();
+        bool on_host = this->is_host_();
         if(on_host == false)
         {
             this->MoveToHost();
@@ -251,7 +251,7 @@ void LocalVector<ValueType>::SetRandomNormal(unsigned long long seed, ValueType 
     if(this->GetSize() > 0)
     {
         // host only
-        bool on_host = this->is_host();
+        bool on_host = this->is_host_();
         if(on_host == false)
         {
             this->MoveToHost();
@@ -285,12 +285,12 @@ void LocalVector<ValueType>::CopyFromAsync(const LocalVector<ValueType>& src)
 {
     log_debug(this, "LocalVector::CopyFromAsync()", (const void*&)src);
 
-    assert(this->asyncf == false);
+    assert(this->asyncf_ == false);
     assert(this != &src);
 
     this->vector_->CopyFromAsync(*src.vector_);
 
-    this->asyncf = true;
+    this->asyncf_ = true;
 }
 
 template <typename ValueType>
@@ -310,13 +310,13 @@ void LocalVector<ValueType>::CopyFromDouble(const LocalVector<double>& src)
 }
 
 template <typename ValueType>
-bool LocalVector<ValueType>::is_host(void) const
+bool LocalVector<ValueType>::is_host_(void) const
 {
     return (this->vector_ == this->vector_host_);
 }
 
 template <typename ValueType>
-bool LocalVector<ValueType>::is_accel(void) const
+bool LocalVector<ValueType>::is_accel_(void) const
 {
     return (this->vector_ == this->vector_accel_);
 }
@@ -391,7 +391,7 @@ void LocalVector<ValueType>::MoveToAcceleratorAsync(void)
 {
     log_debug(this, "LocalVector::MoveToAcceleratorAsync()");
 
-    assert(this->asyncf == false);
+    assert(this->asyncf_ == false);
 
     if(_rocalution_available_accelerator() == false)
     {
@@ -407,7 +407,7 @@ void LocalVector<ValueType>::MoveToAcceleratorAsync(void)
         // Copy to accel
         this->vector_accel_->CopyFromAsync(*this->vector_host_);
 
-        this->asyncf = true;
+        this->asyncf_ = true;
 
         LOG_VERBOSE_INFO(
             4, "*** info: LocalVector::MoveToAcceleratorAsync() host to accelerator transfer");
@@ -419,7 +419,7 @@ void LocalVector<ValueType>::MoveToHostAsync(void)
 {
     log_debug(this, "LocalVector::MoveToHostAsync()");
 
-    assert(this->asyncf == false);
+    assert(this->asyncf_ == false);
 
     if(_rocalution_available_accelerator() == false)
     {
@@ -435,7 +435,7 @@ void LocalVector<ValueType>::MoveToHostAsync(void)
         // Copy to host
         this->vector_host_->CopyFromAsync(*this->vector_accel_);
 
-        this->asyncf = true;
+        this->asyncf_ = true;
 
         LOG_VERBOSE_INFO(
             4, "*** info: LocalVector::MoveToHostAsync() accelerator to host transfer (started)");
@@ -448,7 +448,7 @@ void LocalVector<ValueType>::Sync(void)
     log_debug(this, "LocalVector::Sync()");
 
     // check for active async transfer
-    if(this->asyncf == true)
+    if(this->asyncf_ == true)
     {
         // The Move*Async function is active
         if((this->vector_accel_ != NULL) && (this->vector_host_ != NULL))
@@ -490,7 +490,7 @@ void LocalVector<ValueType>::Sync(void)
         }
     }
 
-    this->asyncf = false;
+    this->asyncf_ = false;
 }
 
 template <typename ValueType>
@@ -558,7 +558,7 @@ void LocalVector<ValueType>::ReadFileASCII(const std::string name)
     this->Clear();
 
     // host only
-    bool on_host = this->is_host();
+    bool on_host = this->is_host_();
     if(on_host == false)
     {
         this->MoveToHost();
@@ -580,7 +580,7 @@ void LocalVector<ValueType>::WriteFileASCII(const std::string name) const
 {
     log_debug(this, "LocalVector::WriteFileASCII()", name);
 
-    if(this->is_host() == true)
+    if(this->is_host_() == true)
     {
         assert(this->vector_ == this->vector_host_);
         this->vector_host_->WriteFileASCII(name);
@@ -601,7 +601,7 @@ void LocalVector<ValueType>::ReadFileBinary(const std::string name)
     log_debug(this, "LocalVector::ReadFileBinary()", name);
 
     // host only
-    bool on_host = this->is_host();
+    bool on_host = this->is_host_();
     if(on_host == false)
     {
         this->MoveToHost();
@@ -623,7 +623,7 @@ void LocalVector<ValueType>::WriteFileBinary(const std::string name) const
 {
     log_debug(this, "LocalVector::WriteFileBinary()", name);
 
-    if(this->is_host() == true)
+    if(this->is_host_() == true)
     {
         assert(this->vector_ == this->vector_host_);
         this->vector_host_->WriteFileBinary(name);
@@ -1020,7 +1020,7 @@ void LocalVector<ValueType>::Restriction(const LocalVector<ValueType>& vec_fine,
     {
         bool err = this->vector_->Restriction(*vec_fine.vector_, *map.vector_);
 
-        if((err == false) && (this->is_host() == true))
+        if((err == false) && (this->is_host_() == true))
         {
             LOG_INFO("Computation of LocalVector::Restriction() fail");
             this->Info();
@@ -1069,7 +1069,7 @@ void LocalVector<ValueType>::Prolongation(const LocalVector<ValueType>& vec_coar
     {
         bool err = this->vector_->Prolongation(*vec_coarse.vector_, *map.vector_);
 
-        if((err == false) && (this->is_host() == true))
+        if((err == false) && (this->is_host_() == true))
         {
             LOG_INFO("Computation of LocalVector::Prolongation() fail");
             this->Info();
@@ -1170,7 +1170,7 @@ void LocalVector<ValueType>::ExtractCoarseMapping(
     assert(start >= 0);
     assert(end >= start);
 
-    bool on_host = this->is_host();
+    bool on_host = this->is_host_();
 
     if(on_host == true)
     {
@@ -1202,7 +1202,7 @@ void LocalVector<ValueType>::ExtractCoarseBoundary(
     assert(start >= 0);
     assert(end >= start);
 
-    bool on_host = this->is_host();
+    bool on_host = this->is_host_();
 
     if(on_host == true)
     {

@@ -43,23 +43,36 @@ class LocalVector;
 template <typename ValueType>
 class GlobalVector;
 
-// Local Stencil
+/** \ingroup op_vec_module
+  * \class LocalStencil
+  * \brief LocalStencil class
+  * \details
+  * A LocalStencil is called local, because it will always stay on a single system. The
+  * system can contain several CPUs via UMA or NUMA memory system or it can contain an
+  * accelerator.
+  *
+  * \tparam ValueType - can be int, float, double, std::complex<float> and
+  *                     std::complex<double>
+  */
 template <typename ValueType>
 class LocalStencil : public Operator<ValueType>
 {
     public:
     LocalStencil();
+    /** \brief Initialize a local stencil with a type */
     LocalStencil(unsigned int type);
     virtual ~LocalStencil();
 
     virtual void Info() const;
 
-    virtual int GetNDim(void) const;
+    /** \brief Return the dimension of the stencil */
+    int GetNDim(void) const;
     virtual IndexType2 GetM(void) const;
     virtual IndexType2 GetN(void) const;
     virtual IndexType2 GetNnz(void) const;
 
-    virtual void SetGrid(int size);
+    /** \brief Set the stencil grid size */
+    void SetGrid(int size);
 
     virtual void Clear();
 
@@ -71,8 +84,8 @@ class LocalStencil : public Operator<ValueType>
     virtual void MoveToHost(void);
 
     protected:
-    virtual bool is_host(void) const { return true; };
-    virtual bool is_accel(void) const { return false; };
+    virtual bool is_host_(void) const { return true; };
+    virtual bool is_accel_(void) const { return false; };
 
     private:
     std::string object_name_;

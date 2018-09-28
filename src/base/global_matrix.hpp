@@ -37,12 +37,22 @@ class LocalVector;
 template <typename ValueType>
 class LocalMatrix;
 
-// Global Matrix
+/** \ingroup op_vec_module
+  * \class GlobalMatrix
+  * \brief GlobalMatrix class
+  * \details
+  * A GlobalMatrix is called global, because it can stay on a single or on multiple nodes
+  * in a network. For this type of communication, MPI is used.
+  *
+  * \tparam ValueType - can be int, float, double, std::complex<float> and
+  *                     std::complex<double>
+  */
 template <typename ValueType>
 class GlobalMatrix : public Operator<ValueType>
 {
     public:
     GlobalMatrix();
+    /** \brief Initialize a global matrix with a parallel manager */
     GlobalMatrix(const ParallelManager& pm);
     virtual ~GlobalMatrix();
 
@@ -56,25 +66,32 @@ class GlobalMatrix : public Operator<ValueType>
     virtual int GetGhostN(void) const;
     virtual int GetGhostNnz(void) const;
 
-    // TODO
-    // do we need this to be public?
-    // can we have the GetGhost in the protected section?
+    /** \private */
     const LocalMatrix<ValueType>& GetInterior() const;
+    /** \private */
     const LocalMatrix<ValueType>& GetGhost() const;
 
-    virtual void MoveToAccelerator(void); // check for ghost local and boundary parts!
+    virtual void MoveToAccelerator(void);
     virtual void MoveToHost(void);
 
     virtual void Info(void) const;
+
+    /** \brief Return true if the matrix is ok (empty matrix is also ok) and false if
+      * there is something wrong with the strcture or some of values are NaN
+      */
     virtual bool Check(void) const;
 
-    // TODO
-    // can we have all Allocation/SetData function to be protected or private?
+    /** \brief Allocate CSR Matrix */
     void AllocateCSR(std::string name, int local_nnz, int ghost_nnz);
+    /** \brief Allocate COO Matrix */
     void AllocateCOO(std::string name, int local_nnz, int ghost_nnz);
+
     virtual void Clear(void);
+
+    /** \brief Set the parallel manager of a global vector */
     void SetParallelManager(const ParallelManager& pm);
 
+    /** \brief Initialize a CSR matrix on the host with externally allocated data */
     void SetDataPtrCSR(int** local_row_offset,
                        int** local_col,
                        ValueType** local_val,
@@ -84,6 +101,7 @@ class GlobalMatrix : public Operator<ValueType>
                        std::string name,
                        int local_nnz,
                        int ghost_nnz);
+    /** \brief Initialize a COO matrix on the host with externally allocated data */
     void SetDataPtrCOO(int** local_row,
                        int** local_col,
                        ValueType** local_val,
@@ -94,49 +112,63 @@ class GlobalMatrix : public Operator<ValueType>
                        int local_nnz,
                        int ghost_nnz);
     void
+    /** \brief Initialize a CSR matrix on the host with externally allocated local data */
     SetLocalDataPtrCSR(int** row_offset, int** col, ValueType** val, std::string name, int nnz);
+    /** \brief Initialize a COO matrix on the host with externally allocated local data */
     void SetLocalDataPtrCOO(int** row, int** col, ValueType** val, std::string name, int nnz);
     void
+    /** \brief Initialize a CSR matrix on the host with externally allocated ghost data */
     SetGhostDataPtrCSR(int** row_offset, int** col, ValueType** val, std::string name, int nnz);
+    /** \brief Initialize a COO matrix on the host with externally allocated ghost data */
     void SetGhostDataPtrCOO(int** row, int** col, ValueType** val, std::string name, int nnz);
 
+    /** \brief Leave a CSR matrix to host pointers */
     void LeaveDataPtrCSR(int** local_row_offset,
                          int** local_col,
                          ValueType** local_val,
                          int** ghost_row_offset,
                          int** ghost_col,
                          ValueType** ghost_val);
+    /** \brief Leave a COO matrix to host pointers */
     void LeaveDataPtrCOO(int** local_row,
                          int** local_col,
                          ValueType** local_val,
                          int** ghost_row,
                          int** ghost_col,
                          ValueType** ghost_val);
+    /** \brief Leave a local CSR matrix to host pointers */
     void LeaveLocalDataPtrCSR(int** row_offset, int** col, ValueType** val);
+    /** \brief Leave a local COO matrix to host pointers */
     void LeaveLocalDataPtrCOO(int** row, int** col, ValueType** val);
+    /** \brief Leave a CSR ghost matrix to host pointers */
     void LeaveGhostDataPtrCSR(int** row_offset, int** col, ValueType** val);
+    /** \brief Leave a COO ghost matrix to host pointers */
     void LeaveGhostDataPtrCOO(int** row, int** col, ValueType** val);
 
+    /** \brief Clone the entire matrix (values,structure+backend descr) from another
+      * GlobalMatrix
+      */
     void CloneFrom(const GlobalMatrix<ValueType>& src);
+    /** \brief Copy matrix (values and structure) from another GlobalMatrix */
     void CopyFrom(const GlobalMatrix<ValueType>& src);
 
-    /// Convert the matrix to CSR structure
+    /** \brief Convert the matrix to CSR structure */
     void ConvertToCSR(void);
-    /// Convert the matrix to MCSR structure
+    /** \brief Convert the matrix to MCSR structure */
     void ConvertToMCSR(void);
-    /// Convert the matrix to BCSR structure
+    /** \brief Convert the matrix to BCSR structure */
     void ConvertToBCSR(void);
-    /// Convert the matrix to COO structure
+    /** \brief Convert the matrix to COO structure */
     void ConvertToCOO(void);
-    /// Convert the matrix to ELL structure
+    /** \brief Convert the matrix to ELL structure */
     void ConvertToELL(void);
-    /// Convert the matrix to DIA structure
+    /** \brief Convert the matrix to DIA structure */
     void ConvertToDIA(void);
-    /// Convert the matrix to HYB structure
+    /** \brief Convert the matrix to HYB structure */
     void ConvertToHYB(void);
-    /// Convert the matrix to DENSE structure
+    /** \brief Convert the matrix to DENSE structure */
     void ConvertToDENSE(void);
-    /// Convert the matrix to specified matrix ID format
+    /** \brief Convert the matrix to specified matrix ID format */
     void ConvertTo(unsigned int matrix_format);
 
     virtual void Apply(const GlobalVector<ValueType>& in, GlobalVector<ValueType>* out) const;
@@ -144,25 +176,27 @@ class GlobalMatrix : public Operator<ValueType>
                           ValueType scalar,
                           GlobalVector<ValueType>* out) const;
 
-    /// Read matrix from MTX (Matrix Market Format) file
+    /** \brief Read matrix from MTX (Matrix Market Format) file */
     void ReadFileMTX(const std::string filename);
-    /// Write matrix to MTX (Matrix Market Format) file
+    /** \brief Write matrix to MTX (Matrix Market Format) file */
     void WriteFileMTX(const std::string filename) const;
-    /// Read matrix from CSR (ROCALUTION binary format) file
+    /** \brief Read matrix from CSR (ROCALUTION binary format) file */
     void ReadFileCSR(const std::string filename);
-    /// Write matrix to CSR (ROCALUTION binary format) file
+    /** \brief Write matrix to CSR (ROCALUTION binary format) file */
     void WriteFileCSR(const std::string filename) const;
 
-    /// Sort the matrix indices
+    /** \brief Sort the matrix indices */
     void Sort(void);
 
-    /// Extract the inverse (reciprocal) diagonal values of the matrix into a LocalVector
+    /** \brief Extract the inverse (reciprocal) diagonal values of the matrix into a
+      * GlobalVector
+      */
     void ExtractInverseDiagonal(GlobalVector<ValueType>* vec_inv_diag) const;
 
-    /// Scale all the values in the matrix
+    /** \brief Scale all the values in the matrix */
     void Scale(ValueType alpha);
 
-    /// Initial Pairwise Aggregation scheme
+    /** \brief Initial Pairwise Aggregation scheme */
     void InitialPairwiseAggregation(ValueType beta,
                                     int& nc,
                                     LocalVector<int>* G,
@@ -170,7 +204,7 @@ class GlobalMatrix : public Operator<ValueType>
                                     int** rG,
                                     int& rGsize,
                                     int ordering) const;
-    /// Further Pairwise Aggregation scheme
+    /** \brief Further Pairwise Aggregation scheme */
     void FurtherPairwiseAggregation(ValueType beta,
                                     int& nc,
                                     LocalVector<int>* G,
@@ -178,7 +212,7 @@ class GlobalMatrix : public Operator<ValueType>
                                     int** rG,
                                     int& rGsize,
                                     int ordering) const;
-    /// Build coarse operator for pairwise aggregation scheme
+    /** \brief Build coarse operator for pairwise aggregation scheme */
     void CoarsenOperator(GlobalMatrix<ValueType>* Ac,
                          ParallelManager* pm,
                          int nrow,
@@ -189,8 +223,8 @@ class GlobalMatrix : public Operator<ValueType>
                          int rGsize) const;
 
     protected:
-    virtual bool is_host(void) const;
-    virtual bool is_accel(void) const;
+    virtual bool is_host_(void) const;
+    virtual bool is_accel_(void) const;
 
     private:
     IndexType2 nnz_;
