@@ -36,9 +36,8 @@ namespace rocalution {
   * \brief Unsmoothed Aggregation Algebraic MultiGrid Method
   * \details
   * The Unsmoothed Aggregation Algebraic MultiGrid method is based on unsmoothed
-  * aggregation based interpolation scheme, see "Stuben, K. Algebraic multigrid (AMG):
-  * An introduction with applications. Journal of Computational and Applied Mathematics
-  * 128 (2001), 281–309" for details.
+  * aggregation based interpolation scheme.
+  * \cite stuben
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

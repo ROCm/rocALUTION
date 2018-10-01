@@ -37,6 +37,8 @@ namespace rocalution {
   * The Induced Dimension Reduction method is a Krylov subspace method for solving
   * sparse (non) symmetric linear systems \f$Ax=b\f$. IDR(s) generates residuals in a
   * sequence of nested subspaces.
+  * \cite IDR1
+  * \cite IDR2
   *
   * The dimension of the shadow space can be set by SetShadowSpace(). The default size
   * of the shadow space is 4.

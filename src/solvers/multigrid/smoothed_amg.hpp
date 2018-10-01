@@ -36,9 +36,8 @@ namespace rocalution {
   * \brief Smoothed Aggregation Algebraic MultiGrid Method
   * \details
   * The Smoothed Aggregation Algebraic MultiGrid method is based on smoothed
-  * aggregation based interpolation scheme, see "Vanek, P., Mandel, J., and Brezina,
-  * M. Algebraic multigrid by smoothed aggregation for second and fourth order
-  * elliptic problems. Computing 56, 3 (1996), 179–196" for details.
+  * aggregation based interpolation scheme.
+  * \cite vanek
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

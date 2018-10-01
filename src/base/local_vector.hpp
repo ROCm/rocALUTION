@@ -76,12 +76,74 @@ class LocalVector : public Vector<ValueType>
 
     virtual bool Check(void) const;
 
-    /** \brief Allocate a local vector with name and size */
+    /** \brief Allocate a local vector with name and size
+      * \details
+      * The local vector allocation function requires a name of the object (this is only
+      * for information purposes) and corresponding size description for vector objects.
+      *
+      * @param[in]
+      * name    object name
+      * @param[in]
+      * size    number of elements in the vector
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec;
+      *
+      *   vec.Allocate("my vector", 100);
+      *   vec.Clear();
+      * \endcode
+      */
     void Allocate(std::string name, IndexType2 size);
 
-    /** \brief Initialize a vector with externally allocated data */
+    /** \brief Initialize a LocalVector on the host with externally allocated data
+      * \details
+      * \p SetDataPtr has direct access to the raw data via pointers. Already allocated
+      * data can be set by passing the pointer.
+      *
+      * \note
+      * Setting data pointer will leave the original pointer empty (set to \p NULL).
+      *
+      * \par Example
+      * \code{.cpp}
+      *   // Allocate vector
+      *   ValueType* ptr_vec = new ValueType[200];
+      *
+      *   // Fill vector
+      *   // ...
+      *
+      *   // rocALUTION local vector object
+      *   LocalVector<ValueType> vec;
+      *
+      *   // Set the vector data, ptr_vec will become invalid
+      *   vec.SetDataPtr(&ptr_vec, "my_vector", 200);
+      * \endcode
+      */
     void SetDataPtr(ValueType** ptr, std::string name, int size);
-    /** \brief Get a pointer from the vector data and free the vector object */
+
+    /** \brief Leave a LocalVector to host pointers
+      * \details
+      * \p LeaveDataPtr has direct access to the raw data via pointers. A LocalVector
+      * object can leave its raw data to a host pointer. This will leave the LocalVector
+      * empty.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   // rocALUTION local vector object
+      *   LocalVector<ValueType> vec;
+      *
+      *   // Allocate the vector
+      *   vec.Allocate("my_vector", 100);
+      *
+      *   // Fill vector
+      *   // ...
+      *
+      *   ValueType* ptr_vec = NULL;
+      *
+      *   // Get (steal) the data from the vector, this will leave the local vector object empty
+      *   vec.LeaveDataPtr(&ptr_vec);
+      * \endcode
+      */
     void LeaveDataPtr(ValueType** ptr);
 
     virtual void Clear();
@@ -95,10 +157,38 @@ class LocalVector : public Vector<ValueType>
                                  ValueType mean = static_cast<ValueType>(0),
                                  ValueType var  = static_cast<ValueType>(1));
 
-    /** \brief Access operator (only for host data) */
+    /** \brief Access operator (only for host data)
+      * \details
+      * The elements in the vector can be accessed via [] operators, when the vector is
+      * allocated on the host.
+      *
+      * @param[in]
+      * i   access data at index \p i
+      *
+      * \returns    value at index \p i
+      *
+      * \par Example
+      * \code{.cpp}
+      *   // rocALUTION local vector object
+      *   LocalVector<ValueType> vec;
+      *
+      *   // Allocate vector
+      *   vec.Allocate("my_vector", 100);
+      *
+      *   // Initialize vector with 1
+      *   vec.Ones();
+      *
+      *   // Set even elements to -1
+      *   for(int i = 0; i < vec.GetSize(); i += 2)
+      *   {
+      *     vec[i] = -1;
+      *   }
+      * \endcode
+      */
+    /**@{*/
     ValueType& operator[](int i);
-    /** \brief Access operator (only for host data) */
     const ValueType& operator[](int i) const;
+    /**@}*/
 
     virtual void ReadFileASCII(const std::string filename);
     virtual void WriteFileASCII(const std::string filename) const;
@@ -122,13 +212,25 @@ class LocalVector : public Vector<ValueType>
 
     virtual void CloneFrom(const LocalVector<ValueType>& src);
 
-    /** \brief Copy (import) vector described in one array (values).
-      * The object data has to be allocated (call Allocate first)
+    /** \brief Copy (import) vector
+      * \details
+      * Copy (import) vector data that is described in one array (values). The object
+      * data has to be allocated with Allocate(), using the corresponding size of the
+      * data, first.
+      *
+      * @param[in]
+      * data    data to be imported.
       */
     void CopyFromData(const ValueType* data);
 
-    /** \brief Copy (export) vector described in one array (values).
-      * The output array has to be allocated
+    /** \brief Copy (export) vector
+      * \details
+      * Copy (export) vector data that is described in one array (values). The output
+      * array has to be allocated, using the corresponding size of the data, first.
+      * Size can be obtain by GetSize().
+      *
+      * @param[out]
+      * data    exported data.
       */
     void CopyToData(ValueType* data) const;
 

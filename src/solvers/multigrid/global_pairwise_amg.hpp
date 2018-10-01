@@ -35,8 +35,11 @@ namespace rocalution {
   * \brief Pairwise Aggregation Algebraic MultiGrid Method (multi-node)
   * \details
   * The Pairwise Aggregation Algebraic MultiGrid method is based on a pairwise
-  * aggregation matching scheme based on "Notay, Y. An aggregation-based algebraic
-  * multigrid method, 2010." This version has multi-node support.
+  * aggregation matching scheme. It delivers very efficient building phase which is
+  * suitable for Poisson-like equation. Most of the time it requires K-cycle for the
+  * solving phase to provide low number of iterations. This version has multi-node
+  * support.
+  * \cite pairwiseamg
   *
   * \tparam OperatorType - can be GlobalMatrix
   * \tparam VectorType - can be GlobalVector

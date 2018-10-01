@@ -69,36 +69,76 @@ class LocalMatrix : public Operator<ValueType>
     virtual IndexType2 GetN(void) const;
     virtual IndexType2 GetNnz(void) const;
 
-    /** \brief Return true if the matrix is ok (empty matrix is also ok) and false if
-      * there is something wrong with the strcture or some of values are NaN
+    /** \brief Perform a sanity check of the matrix
+      * \details
+      * Checks, if the matrix contains valid data, i.e. if the values are not infinity
+      * and not NaN (not a number) and if the structure of the matrix is correct (e.g. 
+      * indices cannot be negative, CSR and COO matrices have to be sorted, etc.).
+      *
+      * \retval true if the matrix is ok (empty matrix is also ok).
+      * \retval false if there is something wrong with the structure or values.
       */
     bool Check(void) const;
 
-    /** \brief Allocate CSR Matrix */
+    /** \brief Allocate a local matrix with name and sizes
+      * \details
+      * The local matrix allocation functions require a name of the object (this is only
+      * for information purposes) and corresponding number of non-zero elements, number
+      * of rows and number of columns. Furthermore, depending on the matrix format,
+      * additional parameters are required.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalMatrix<ValueType> mat;
+      *
+      *   mat.AllocateCSR("my CSR matrix", 456, 100, 100);
+      *   mat.Clear();
+      *
+      *   mat.AllocateCOO("my COO matrix", 200, 100, 100);
+      *   mat.Clear();
+      * \endcode
+      */
+    /**@{*/
     void AllocateCSR(const std::string name, int nnz, int nrow, int ncol);
-    /** \brief Allocate BCSR Matrix */
     void AllocateBCSR(void){};
-    /** \brief Allocate MCSR Matrix */
     void AllocateMCSR(const std::string name, int nnz, int nrow, int ncol);
-    /** \brief Allocate COO Matrix */
     void AllocateCOO(const std::string name, int nnz, int nrow, int ncol);
-    /** \brief Allocate DIA Matrix */
     void AllocateDIA(const std::string name, int nnz, int nrow, int ncol, int ndiag);
-    /** \brief Allocate ELL Matrix */
     void AllocateELL(const std::string name, int nnz, int nrow, int ncol, int max_row);
-    /** \brief Allocate HYB Matrix */
     void AllocateHYB(
         const std::string name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
-    /** \brief Allocate DENSE Matrix */
     void AllocateDENSE(const std::string name, int nrow, int ncol);
+    /**@}*/
 
-    /** \brief Initialize a COO matrix on the host with externally allocated data */
+    /** \brief Initialize a LocalMatrix on the host with externally allocated data
+      * \details
+      * \p SetDataPtr functions have direct access to the raw data via pointers. Already
+      * allocated data can be set by passing their pointers.
+      *
+      * \note
+      * Setting data pointers will leave the original pointers empty (set to \p NULL).
+      *
+      * \par Example
+      * \code{.cpp}
+      *   // Allocate a CSR matrix
+      *   int* csr_row_ptr   = new int[100 + 1];
+      *   int* csr_col_ind   = new int[345];
+      *   ValueType* csr_val = new ValueType[345];
+      *
+      *   // Fill the CSR matrix
+      *   // ...
+      *
+      *   // rocALUTION local matrix object
+      *   LocalMatrix<ValueType> mat;
+      *
+      *   // Set the CSR matrix data, csr_row_ptr, csr_col and csr_val pointers become
+      *   // invalid
+      *   mat.SetDataPtrCSR(&csr_row_ptr, &csr_col, &csr_val, "my_matrix", 345, 100, 100);
+      * \endcode
+      */
+    /**@{*/
     void SetDataPtrCOO(
         int** row, int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol);
-    /** \brief Leave a COO matrix to host pointers */
-    void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
-
-    /** \brief Initialize a CSR matrix on the host with externally allocated data */
     void SetDataPtrCSR(int** row_offset,
                        int** col,
                        ValueType** val,
@@ -106,10 +146,6 @@ class LocalMatrix : public Operator<ValueType>
                        int nnz,
                        int nrow,
                        int ncol);
-    /** \brief Leave a CSR matrix to host pointers */
-    void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
-
-    /** \brief Initialize a MCSR matrix on the host with externally allocated data */
     void SetDataPtrMCSR(int** row_offset,
                         int** col,
                         ValueType** val,
@@ -117,25 +153,47 @@ class LocalMatrix : public Operator<ValueType>
                         int nnz,
                         int nrow,
                         int ncol);
-    /** \brief Leave a MCSR matrix to host pointers */
-    void LeaveDataPtrMCSR(int** row_offset, int** col, ValueType** val);
-
-    /** \brief Initialize an ELL matrix on the host with externally allocated data */
     void SetDataPtrELL(
         int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol, int max_row);
-    /** \brief Leave an ELL matrix to host pointers */
-    void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
-
-    /** \brief Initialize a DIA matrix on the host with externally allocated data */
     void SetDataPtrDIA(
         int** offset, ValueType** val, std::string name, int nnz, int nrow, int ncol, int num_diag);
-    /** \brief Leave a DIA matrix to host pointers */
-    void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
-
-    /** \brief Initialize a DENSE matrix on the host with externally allocated data */
     void SetDataPtrDENSE(ValueType** val, std::string name, int nrow, int ncol);
-    /** \brief Leave a DENSE matrix to host pointers */
+    /**@}*/
+
+    /** \brief Leave a LocalMatrix to host pointers
+      * \details
+      * \p LeaveDataPtr functions have direct access to the raw data via pointers. A
+      * LocalMatrix object can leave its raw data to host pointers. This will leave the
+      * LocalMatrix empty.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   // rocALUTION CSR matrix object
+      *   LocalMatrix<ValueType> mat;
+      *
+      *   // Allocate the CSR matrix
+      *   mat.AllocateCSR("my_matrix", 345, 100, 100);
+      *
+      *   // Fill CSR matrix
+      *   // ...
+      *
+      *   int* csr_row_ptr   = NULL;
+      *   int* csr_col_ind   = NULL;
+      *   ValueType* csr_val = NULL;
+      *
+      *   // Get (steal) the data from the matrix, this will leave the local matrix
+      *   // object empty
+      *   mat.LeaveDataPtrCSR(&csr_row_ptr, &csr_col_ind, &csr_val);
+      * \endcode
+      */
+    /**@{*/
+    void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
+    void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
+    void LeaveDataPtrMCSR(int** row_offset, int** col, ValueType** val);
+    void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
+    void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
     void LeaveDataPtrDENSE(ValueType** val);
+    /**@}*/
 
     void Clear(void);
 
@@ -199,29 +257,124 @@ class LocalMatrix : public Operator<ValueType>
     /** \brief Perform (backward) permutation of the matrix */
     void PermuteBackward(const LocalVector<int>& permutation);
 
-    /** \brief Create permutation vector for CMK reordering of the matrix */
+    /** \brief Create permutation vector for CMK reordering of the matrix
+      * \details
+      * The Cuthill-McKee ordering minimize the bandwidth of a given sparse matrix.
+      *
+      * @param[out]
+      * permutation permutation vector for CMK reordering
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<int> cmk;
+      *
+      *   mat.CMK(&cmk);
+      *   mat.Permute(cmk);
+      * \endcode
+      */
     void CMK(LocalVector<int>* permutation) const;
-    /** \brief Create permutation vector for reverse CMK reordering of the matrix */
+
+    /** \brief Create permutation vector for reverse CMK reordering of the matrix
+      * \details
+      * The Reverse Cuthill-McKee ordering minimize the bandwidth of a given sparse
+      * matrix.
+      *
+      * @param[out]
+      * permutation permutation vector for reverse CMK reordering
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<int> rcmk;
+      *
+      *   mat.RCMK(&rcmk);
+      *   mat.Permute(rcmk);
+      * \endcode
+      */
     void RCMK(LocalVector<int>* permutation) const;
+
     /** \brief Create permutation vector for connectivity reordering of the matrix
-      * (increasing nnz per row)
+      * \details
+      * Connectivity ordering returns a permutation, that sorts the matrix by non-zero
+      * entries per row.
+      *
+      * @param[out]
+      * permutation permutation vector for connectivity reordering
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<int> conn;
+      *
+      *   mat.ConnectivityOrder(&conn);
+      *   mat.Permute(conn);
+      * \endcode
       */
     void ConnectivityOrder(LocalVector<int>* permutation) const;
 
-    /** \brief Perform multi-coloring decomposition of the matrix; Fills the number of
-      * colors, the corresponding sizes (the array is allocated in the function) and the
-      * permutation
+    /** \brief Perform multi-coloring decomposition of the matrix
+      * \details
+      * The Multi-Coloring algorithm builds a permutation (coloring of the matrix) in a
+      * way such that no two adjacent nodes in the sparse matrix have the same color.
+      *
+      * @param[out]
+      * num_colors  number of colors
+      * @param[out]
+      * size_colors pointer to array that holds the number of nodes for each color
+      * @param[out]
+      * permutation permutation vector for multi-coloring reordering
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<int> mc;
+      *   int num_colors;
+      *   int* block_colors = NULL;
+      *
+      *   mat.MultiColoring(num_colors, &block_colors, &mc);
+      *   mat.Permute(mc);
+      * \endcode
       */
     void MultiColoring(int& num_colors, int** size_colors, LocalVector<int>* permutation) const;
 
-    /** \brief Perform maximal independent set decomposition of the matrix; Fills the
-      * size of the maximal independent set and the corresponding permutation
+    /** \brief Perform maximal independent set decomposition of the matrix
+      * \details
+      * The Maximal Independent Set algorithm finds a set with maximal size, that
+      * contains elements that do not depend on other elements in this set.
+      *
+      * @param[out]
+      * size        number of independent sets
+      * @param[out]
+      * permutation permutation vector for maximal independent set reordering
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<int> mis;
+      *   int size;
+      *
+      *   mat.MaximalIndependentSet(size, &mis);
+      *   mat.Permute(mis);
+      * \endcode
       */
     void MaximalIndependentSet(int& size, LocalVector<int>* permutation) const;
 
-    /** \brief Return a permutation for saddle-point problems (zero diagonal entries),
-      * where all zero diagonal elements are mapped to the last block; the return size is
-      * the size of the first block
+    /** \brief Return a permutation for saddle-point problems (zero diagonal entries)
+      * \details
+      * For Saddle-Point problems, (i.e. matrices with zero diagonal entries), the Zero
+      * Block Permutation maps all zero-diagonal elements to the last block of the
+      * matrix.
+      *
+      * @param[out]
+      * size
+      * @param[out]
+      * permutation permutation vector for zero block permutation
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<int> zbp;
+      *   int size;
+      *
+      *   mat.ZeroBlockPermutation(size, &zbp);
+      *   mat.Permute(zbp);
+      * \endcode
+
       */
     void ZeroBlockPermutation(int& size, LocalVector<int>* permutation) const;
 
@@ -298,14 +451,95 @@ class LocalMatrix : public Operator<ValueType>
     /** \brief Matrix inversion using QR decomposition */
     void Invert(void);
 
-    /** \brief Read matrix from MTX (Matrix Market Format) file */
+    /** \brief Read matrix from MTX (Matrix Market Format) file
+      * \details
+      * Read a matrix from Matrix Market Format file.
+      *
+      * @param[in]
+      * filename    name of the file containing the MTX data.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalMatrix<ValueType> mat;
+      *   mat.ReadFileMTX("my_matrix.mtx");
+      * \endcode
+      */
     void ReadFileMTX(const std::string filename);
-    /** \brief Write matrix to MTX (Matrix Market Format) file */
+
+    /** \brief Write matrix to MTX (Matrix Market Format) file
+      * \details
+      * Write a matrix to Matrix Market Format file.
+      *
+      * @param[in]
+      * filename    name of the file to write the MTX data to.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalMatrix<ValueType> mat;
+      *
+      *   // Allocate and fill mat
+      *   // ...
+      *
+      *   mat.WriteFileMTX("my_matrix.mtx");
+      * \endcode
+      */
     void WriteFileMTX(const std::string filename) const;
 
-    /** \brief Read matrix from CSR (ROCALUTION binary format) file */
+    /** \brief Read matrix from CSR (rocALUTION binary format) file
+      * \details
+      * Read a CSR matrix from binary file. For details on the format, see
+      * WriteFileCSR().
+      *
+      * @param[in]
+      * filename    name of the file containing the data.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalMatrix<ValueType> mat;
+      *   mat.ReadFileCSR("my_matrix.csr");
+      * \endcode
+      */
     void ReadFileCSR(const std::string filename);
-    /** \brief Write matrix to CSR (ROCALUTION binary format) file */
+
+    /** \brief Write CSR matrix to binary file
+      * \details
+      * Write a CSR matrix to binary file.
+      *
+      * The binary format contains a header, the rocALUTION version and the matrix data
+      * as follows
+      * \code{.cpp}
+      *   // Header
+      *   out << "#rocALUTION binary csr file" << std::endl;
+      *
+      *   // rocALUTION version
+      *   out.write((char*)&version, sizeof(int));
+      *
+      *   // CSR matrix data
+      *   out.write((char*)&m, sizeof(int));
+      *   out.write((char*)&n, sizeof(int));
+      *   out.write((char*)&nnz, sizeof(int));
+      *   out.write((char*)csr_row_ptr, (m + 1) * sizeof(int));
+      *   out.write((char*)csr_col_ind, nnz * sizeof(int));
+      *   out.write((char*)csr_val, nnz * sizeof(double));
+      * \endcode
+      *
+      * \note
+      * Vector values array is always stored in double precision (e.g. double or
+      * std::complex<double>).
+      *
+      * @param[in]
+      * filename    name of the file to write the data to.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalMatrix<ValueType> mat;
+      *
+      *   // Allocate and fill mat
+      *   // ...
+      *
+      *   mat.WriteFileCSR("my_matrix.csr");
+      * \endcode
+      */
     void WriteFileCSR(const std::string filename) const;
 
     virtual void MoveToAccelerator(void);
@@ -314,14 +548,62 @@ class LocalMatrix : public Operator<ValueType>
     virtual void MoveToHostAsync(void);
     virtual void Sync(void);
 
-    /** \brief Copy matrix (values and structure) from another LocalMatrix */
+    /** \brief Copy matrix from another LocalMatrix
+      * \details
+      * \p CopyFrom copies values and structure from another local matrix. Source and
+      * destination matrix should be in the same format.
+      *
+      * \note
+      * This function allows cross platform copying. One of the objects could be
+      * allocated on the accelerator backend.
+      *
+      * @param[in]
+      * src Local matrix where values and structure should be copied from.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalMatrix<ValueType> mat1, mat2;
+      *
+      *   // Allocate and initialize mat1 and mat2
+      *   // ...
+      *
+      *   // Move mat1 to accelerator
+      *   // mat1.MoveToAccelerator();
+      *
+      *   // Now, mat1 is on the accelerator (if available)
+      *   // and mat2 is on the host
+      *
+      *   // Copy mat1 to mat2 (or vice versa) will move data between host and
+      *   // accelerator backend
+      *   mat1.CopyFrom(mat2);
+      * \endcode
+      */
     void CopyFrom(const LocalMatrix<ValueType>& src);
 
     /** \brief Async copy matrix (values and structure) from another LocalMatrix */
     void CopyFromAsync(const LocalMatrix<ValueType>& src);
 
-    /** \brief Clone the entire matrix (values,structure+backend descr) from another
-      * LocalMatrix
+    /** \brief Clone the matrix
+      * \details
+      * \p CloneFrom clones the entire matrix, including values, structure and backend
+      * descriptor from another LocalMatrix.
+      *
+      * @param[in]
+      * src LocalMatrix to clone from.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalMatrix<ValueType> mat;
+      *
+      *   // Allocate and initialize mat (host or accelerator)
+      *   // ...
+      *
+      *   LocalMatrix<ValueType> tmp;
+      *
+      *   // By cloning mat, tmp will have identical values and structure and will be on
+      *   // the same backend as mat
+      *   tmp.CloneFrom(mat);
+      * \endcode
       */
     void CloneFrom(const LocalMatrix<ValueType>& src);
 
@@ -348,7 +630,28 @@ class LocalMatrix : public Operator<ValueType>
       */
     void CopyToCOO(int* row, int* col, ValueType* val) const;
 
-    /** \brief Allocates and copies (import) a host CSR matrix */
+    /** \brief Allocates and copies (imports) a host CSR matrix
+      * \details
+      * If the CSR matrix data pointers are only accessible as constant, the user can
+      * create a LocalMatrix object and pass const CSR host pointers. The LocalMatrix
+      * will then be allocated and the data will be copied to the corresponding backend,
+      * where the original object was located at.
+      *
+      * @param[in]
+      * row_offset  CSR matrix row offset pointers.
+      * @param[in]
+      * col         CSR matrix column indices.
+      * @param[in]
+      * val         CSR matrix values array.
+      * @param[in]
+      * name        Matrix object name.
+      * @param[in]
+      * nnz         Number of non-zero elements.
+      * @param[in]
+      * nrow        Number of rows.
+      * @param[in]
+      * ncol        Number of columns.
+      */
     void CopyFromHostCSR(const int* row_offset,
                          const int* col,
                          const ValueType* val,
@@ -428,10 +731,27 @@ class LocalMatrix : public Operator<ValueType>
     /** \brief Transpose the matrix */
     void Transpose(void);
 
-    /** \brief Sort the matrix indices */
+    /** \brief Sort the matrix indices
+      * \details
+      * Sorts the matrix by indices.
+      * - For CSR matrices, column values are sorted.
+      * - For COO matrices, row indices are sorted.
+      */
     void Sort(void);
 
-    /** \brief Compute a unique hash key for the matrix arrays */
+    /** \brief Compute a unique hash key for the matrix arrays
+      * \details
+      * Typically, it is hard to compare if two matrices have the same structure (and
+      * values). To do so, rocALUTION provides a keying function, that generates three
+      * keys, for the row index, column index and values array.
+      * 
+      * @param[out]
+      * row_key row index array key
+      * @param[out]
+      * col_key column index array key
+      * @param[out]
+      * val_key values array key
+      */
     void Key(long int& row_key, long int& col_key, long int& val_key) const;
 
     /** \brief Replace a column vector of a matrix */

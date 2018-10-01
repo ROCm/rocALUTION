@@ -37,6 +37,7 @@ namespace rocalution {
   * \f$A_{i} = R_{i}^{T}AR_{i}\f$, where \f$R_{i}\f$ are restriction operators. Those
   * restriction operators produce sub-matrices wich overlap. This leads to contributions
   * from two preconditioners on the overlapped area which are scaled by \f$1/2\f$.
+  * \cite RAS
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector
@@ -94,6 +95,7 @@ class AS : public Preconditioner<OperatorType, VectorType, ValueType>
   * \f$A_{i} = R_{i}^{T}AR_{i}\f$, where \f$R_{i}\f$ are restriction operators. The RAS
   * method is a mixture of block Jacobi and the AS scheme. In this case, the sub-matrices
   * contain overlapped areas from other blocks, too.
+  * \cite RAS
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

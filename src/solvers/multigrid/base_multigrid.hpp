@@ -40,6 +40,7 @@ enum _cycle
 /** \ingroup solver_module
   * \class BaseMultiGrid
   * \brief Base class for all multigrid solvers
+  * \cite Trottenberg2003
   *
   * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
   * \tparam VectorType - can be LocalVector or GlobalVector

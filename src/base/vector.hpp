@@ -61,8 +61,13 @@ class Vector : public BaseRocalution<ValueType>
     /** \brief Return the size of the ghost vector */
     virtual int GetGhostSize(void) const;
 
-    /** \brief Return true if the vector is ok (empty vector returns true) and false
-      * if some of values are NaN
+    /** \brief Perform a sanity check of the vector
+      * \details
+      * Checks, if the vector contains valid data, i.e. if the values are not infinity
+      * and not NaN (not a number).
+      *
+      * \retval true if the vector is ok (empty vector is also ok).
+      * \retval false if there is something wrong with the values.
       */
     virtual bool Check(void) const = 0;
 
@@ -87,23 +92,125 @@ class Vector : public BaseRocalution<ValueType>
                                  ValueType mean = static_cast<ValueType>(0),
                                  ValueType var = static_cast<ValueType>(1)) = 0;
 
-    /** \brief Read vector from ASCII file */
+    /** \brief Read vector from ASCII file
+      * \details
+      * Read a vector from ASCII file.
+      *
+      * @param[in]
+      * filename    name of the file containing the ASCII data.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec;
+      *   vec.ReadFileASCII("my_vector.dat");
+      * \endcode
+      */
     virtual void ReadFileASCII(const std::string filename) = 0;
 
-    /** \brief Write vector to ASCII file */
+    /** \brief Write vector to ASCII file
+      * \details
+      * Write a vector to ASCII file.
+      *
+      * @param[in]
+      * filename    name of the file to write the ASCII data to.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec;
+      *
+      *   // Allocate and fill vec
+      *   // ...
+      *
+      *   vec.WriteFileASCII("my_vector.dat");
+      * \endcode
+      */
     virtual void WriteFileASCII(const std::string filename) const = 0;
 
-    /** \brief Read vector from binary file */
+    /** \brief Read vector from binary file
+      * \details
+      * Read a vector from binary file. For details on the format, see WriteFileBinary().
+      *
+      * @param[in]
+      * filename    name of the file containing the data.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec;
+      *   vec.ReadFileBinary("my_vector.bin");
+      * \endcode
+      */
     virtual void ReadFileBinary(const std::string filename) = 0;
 
-    /** \brief Write vector to binary file */
+    /** \brief Write vector to binary file
+      * \details
+      * Write a vector to binary file.
+      *
+      * The binary format contains a header, the rocALUTION version and the vector data
+      * as follows
+      * \code{.cpp}
+      *   // Header
+      *   out << "#rocALUTION binary vector file" << std::endl;
+      *
+      *   // rocALUTION version
+      *   out.write((char*)&version, sizeof(int));
+      *
+      *   // Vector data
+      *   out.write((char*)&size, sizeof(int));
+      *   out.write((char*)vec_val, size * sizeof(double));
+      * \endcode
+      *
+      * \note
+      * Vector values array is always stored in double precision (e.g. double or
+      * std::complex<double>).
+      *
+      * @param[in]
+      * filename    name of the file to write the data to.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec;
+      *
+      *   // Allocate and fill vec
+      *   // ...
+      *
+      *   vec.WriteFileBinary("my_vector.bin");
+      * \endcode
+      */
     virtual void WriteFileBinary(const std::string filename) const = 0;
 
-    /** \brief Copy values from another local vector */
+    /** \brief Copy vector from another vector
+      * \details
+      * \p CopyFrom copies values from another vector.
+      *
+      * \note
+      * This function allows cross platform copying. One of the objects could be
+      * allocated on the accelerator backend.
+      *
+      * @param[in]
+      * src Vector, where values should be copied from.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec1, vec2;
+      *
+      *   // Allocate and initialize vec1 and vec2
+      *   // ...
+      *
+      *   // Move vec1 to accelerator
+      *   // vec1.MoveToAccelerator();
+      *
+      *   // Now, vec1 is on the accelerator (if available)
+      *   // and vec2 is on the host
+      *
+      *   // Copy vec1 to vec2 (or vice versa) will move data between host and
+      *   // accelerator backend
+      *   vec1.CopyFrom(vec2);
+      * \endcode
+      */
+    /**@{*/
     virtual void CopyFrom(const LocalVector<ValueType>& src);
-
-    /** \brief Copy values from another global vector */
     virtual void CopyFrom(const GlobalVector<ValueType>& src);
+    /**@}*/
 
     /** \brief Async copy from another local vector */
     virtual void CopyFromAsync(const LocalVector<ValueType>& src);
@@ -114,14 +221,52 @@ class Vector : public BaseRocalution<ValueType>
     /** \brief Copy values from another local double vector */
     virtual void CopyFromDouble(const LocalVector<double>& src);
 
-    /** \brief Copy data from another local vector with offsets and size */
+    /** \brief Copy vector from another vector with offsets and size
+      * \details
+      * \p CopyFrom copies values with specific source and destination offsets and sizes
+      * from another vector.
+      *
+      * \note
+      * This function allows cross platform copying. One of the objects could be
+      * allocated on the accelerator backend.
+      *
+      * @param[in]
+      * src         Vector, where values should be copied from.
+      * @param[in]
+      * src_offset  source offset.
+      * @param[in]
+      * dst_offset  destination offset.
+      * @param[in]
+      * size        number of entries to be copied.
+      */
     virtual void
     CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
-    /** \brief Clone the entire vector (data+backend descr) from another local vector */
-    virtual void CloneFrom(const LocalVector<ValueType>& src);
 
-    /** \brief Clone the entire vector (data+backend descr) from another global vector */
+    /** \brief Clone the vector
+      * \details
+      * \p CloneFrom clones the entire vector, including data and backend descriptor from another Vector.
+      *
+      * @param[in]
+      * src Vector to clone from.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec;
+      *
+      *   // Allocate and initialize vec (host or accelerator)
+      *   // ...
+      *
+      *   LocalVector<ValueType> tmp;
+      *
+      *   // By cloning vec, tmp will have identical values and will be on the same
+      *   // backend as vec
+      *   tmp.CloneFrom(vec);
+      * \endcode
+      */
+    /**@{*/
+    virtual void CloneFrom(const LocalVector<ValueType>& src);
     virtual void CloneFrom(const GlobalVector<ValueType>& src);
+    /**@}*/
 
     /** \brief Perform vector update of type this = this + alpha * x */
     virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);

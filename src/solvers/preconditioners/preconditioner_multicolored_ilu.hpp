@@ -37,9 +37,10 @@ namespace rocalution {
   * \class MultiColoredILU
   * \brief Multi-Colored Incomplete LU Factorization Preconditioner
   * \details
-  * Multi-Colored Incomplete LU Factorization based on p-levels based on ILU(p,q)
-  * preconditioner power(q)-pattern method. Details can be found in ILU preconditioner
-  * section.
+  * Multi-Colored Incomplete LU Factorization based on the ILU(p) factorization with a
+  * power(q)-pattern method. This method provides a higher degree of parallelism of
+  * forward and backward substitution compared to the standard ILU(p) preconditioner.
+  * \cite Lukarski2012
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

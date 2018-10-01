@@ -50,6 +50,7 @@ namespace rocalution {
   * this way we can perform the factorization recursively. In the last level of the
   * recursion, we need to provide a solution procedure. By the design of the library,
   * this can be any kind of solver.
+  * \cite SAAD
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

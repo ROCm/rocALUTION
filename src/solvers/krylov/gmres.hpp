@@ -39,6 +39,7 @@ namespace rocalution {
   * solution is approximated in a Krylov subspace \f$\mathcal{K}=\mathcal{K}_{m}\f$ and
   * \f$\mathcal{L}=A\mathcal{K}_{m}\f$ with minimal residual, where \f$\mathcal{K}_{m}\f$
   * is the \f$m\f$-th Krylov subspace with \f$v_{1} = r_{0}/||r_{0}||_{2}\f$.
+  * \cite SAAD
   *
   * The Krylov subspace basis size can be set using SetBasisSize(). The default size is
   * 30.
