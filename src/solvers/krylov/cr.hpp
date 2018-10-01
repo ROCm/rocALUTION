@@ -39,6 +39,7 @@ namespace rocalution {
   * differs from the much more popular Conjugate Gradient method that the system matrix
   * is not required to be positive definite. The method can be preconditioned where the
   * approximation should also be SPD or semi-positive definite.
+  * \cite SAAD
   *
   * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
   * \tparam VectorType - can be LocalVector or GlobalVector

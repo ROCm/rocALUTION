@@ -305,7 +305,7 @@ Basics
 
 Design and Philosophy
 *********************
-The main idea of the rocALUTION objects is that they are separated from the actual hardware specification. Once you declare a matrix, a vector or a solver they are initially allocated on the host (CPU). Then, every object can be moved to a selected accelerator by a simple MoveToAccelerator() function. The whole execution mechanism is based on run-time type information (RTTI), which allows you to select where and how you want to perform the operations at run time. This is in contrast to the template-based libraries, which need this information at compile time.
+The main idea of the rocALUTION objects is that they are separated from the actual hardware specification. Once you declare a matrix, a vector or a solver they are initially allocated on the host (CPU). Then, every object can be moved to a selected accelerator by a simple :cpp:func:`rocalution::BaseRocalution::MoveToAccelerator` function. The whole execution mechanism is based on run-time type information (RTTI), which allows you to select where and how you want to perform the operations at run time. This is in contrast to the template-based libraries, which need this information at compile time.
 
 The philosophy of the library is to abstract the hardware-specific functions and routines from the actual program, that describes the algorithm. It is hard and almost impossible for most of the large simulation software based on sparse computation, to adapt and port their implementation in order to use every new technology. On the other hand, the new high performance accelerators and devices have the capability to decrease the computational time significantly in many critical parts.
 
@@ -317,15 +317,22 @@ Operators and Vectors
 *********************
 The main objects in rocALUTION are linear operators and vectors. All objects can be moved to an accelerator at run time. The linear operators are defined as local or global matrices (i.e. on a single node or distributed/multi-node) and local stencils (i.e. matrix-free linear operations). The only template parameter of the operators and vectors is the data type (ValueType). The operator data type could be float, double, complex float or complex double, while the vector data type can be int, float, double, complex float or complex double (int is used mainly for the permutation vectors). In the current version, cross ValueType object operations are not supported.
 
-Each of the objects contain a local copy of the hardware descriptor created by the init_rocalution() function. This allows the user to modify it according to his needs and to obtain two or more objects with different hardware specifications (e.g. different amount of OpenMP threads, HIP block sizes, etc.).
+Each of the objects contain a local copy of the hardware descriptor created by the :cpp:func:`rocalution::init_rocalution` function. This allows the user to modify it according to his needs and to obtain two or more objects with different hardware specifications (e.g. different amount of OpenMP threads, HIP block sizes, etc.).
 
 Local Operators and Vectors
 ```````````````````````````
 By Local Operators and Vectors we refer to Local Matrices and Stencils and to Local Vectors. By Local we mean the fact that they stay on a single system. The system can contain several CPUs via UMA or NUMA memory system, it can also contain an accelerator.
 
+.. doxygenclass:: rocalution::LocalMatrix
+.. doxygenclass:: rocalution::LocalStencil
+.. doxygenclass:: rocalution::LocalVector
+
 Global Operators and Vectors
 ````````````````````````````
 By Global Operators and Vectors we refer to Global Matrix and to Global Vectors. By Global we mean the fact they can stay on a single or multiple nodes in a network. For this type of computation, the communication is based on MPI.
+
+.. doxygenclass:: rocalution::GlobalMatrix
+.. doxygenclass:: rocalution::GlobalVector
 
 Functionality on the Accelerator
 ********************************
@@ -333,50 +340,32 @@ Naturally, not all routines and algorithms can be performed efficiently on many-
 
 Initialization of rocALUTION
 ****************************
-The body of a rocALUTION code is very simple, it should contain the header file and the namespace of the library. The program must contain an initialization call, which will check and allocate the hardware and a
-finalizing call which will release the allocated hardware.
+The body of a rocALUTION code is very simple, it should contain the header file and the namespace of the library. The program must contain an initialization call, which will check and allocate the hardware and a finalizing call which will release the allocated hardware.
 
-.. code-block:: cpp
-  :linenos:
-
-    #include <rocalution.hpp>
-
-    using namespace rocalution;
-
-    int main(int argc, char* argv[])
-    {
-        init_rocalution();
-
-        // ...
-
-        stop_rocalution();
-
-        return 0;
-    }
-
-The init_rocalution() function defines a backend descriptor with information about the hardware and its specifications. All objects created after that contain a copy of this descriptor. If the specifications of the global descriptor are changed (e.g. set different number of threads) and new objects are created, only the new objects will use the new configurations.
-
-For control, the library provides the following functions
-* set_device_rocalution() is a unified function to select a specific device. If you have compiled the library with a backend and for this backend there are several available devices, you can use this function to select a particular one. This function has to be called before init_rocalution().
-* set_omp_threads_rocalution() sets the number of OpenMP threads. This function has to be called after init_rocalution().
+.. doxygenfunction:: rocalution::init_rocalution
+.. doxygenfunction:: rocalution::stop_rocalution
 
 Thread-core Mapping
 ```````````````````
-The number of threads which rocALUTION will use can be set with set_omp_threads_rocalution() or by the global OpenMP environment variable (for Unix-like OS this is *OMP_NUM_THREADS*). During the initialization phase, the library provides affinity thread-core mapping:
-* If the number of cores (including SMT cores) is greater or equal than two times the number of threads, then all the threads can occupy every second core ID (e.g. 0, 2, 4, ...). This is to avoid having two threads working on the same physical core, when SMT is enabled.
-* If the number of threads is less or equal to the number of cores (including SMT), and the previous clause is false. Then the threads can occupy every core ID (e.g. 0, 1, 2, 3, ...).
-* If non of the above criteria is matched, then the default thread-core mapping is used (typically set by the OS).
-
-.. note:: The thread-core mapping is available only for Unix-like OS.
-.. note:: The user can disable the thread affinity by calling set_omp_affinity_rocalution(), before initializing the library (i.e. before init_rocalution()).
+.. doxygenfunction:: rocalution::set_omp_threads_rocalution
+.. doxygenfunction:: rocalution::set_omp_affinity_rocalution
 
 OpenMP Threshold Size
 `````````````````````
-Whenever you want to work on a small problem, you might observe that the OpenMP host backend is (slightly) slower than using no OpenMP. This is mainly attributed to the small amount of work, which every thread should perform and the large overhead of forking/joining threads. This can be avoid by the OpenMP threshold size parameter in rocALUTION. The default threshold is set to 10000, which means that all matrices under (and equal) this size will use only one thread (disregarding the number of OpenMP threads set in the system). The threshold can be modified with set_omp_threshold_rocalution().
+.. doxygenfunction:: rocalution::set_omp_threshold_rocalution
+
+Accelerator Selection
+`````````````````````
+.. doxygenfunction:: rocalution::set_device_rocalution
 
 Disable the Accelerator
 ```````````````````````
-If you want to disable the accelerator (without re-compiling the code), you need to call disable_accelerator_rocalution() before init_rocalution().
+.. doxygenfunction:: rocalution::disable_accelerator_rocalution
+
+Backend Information
+```````````````````
+.. doxygenfunction:: rocalution::info_rocalution(void)
+.. doxygenfunction:: rocalution::info_rocalution(const struct Rocalution_Backend_Descriptor)
 
 MPI and Multi-Accelerators
 ``````````````````````````
@@ -432,6 +421,8 @@ Logging
 *******
 TODO
 
+.. _rocalution_version:
+
 Versions
 ********
 For checking the rocALUTION version in your code, you can use the pre-defined macros.
@@ -446,26 +437,26 @@ For checking the rocALUTION version in your code, you can use the pre-defined ma
 
   #define __ROCALUTION_VER        // version
 
-The final *__PARALUTION_VER* gives the version number as `10000 * major + 100 * minor + patch`, see `src/base/version.hpp.in`.
+The final *__ROCALUTION_VER* gives the version number as `10000 * major + 100 * minor + patch`, see `src/base/version.hpp.in`.
 
 Single-node Computation
 -----------------------
 
 Introduction
 ************
-In this chapter, all base objects (matrices, vectors and stencils) for computation on a single-node (shared-memory) system is described. The compute node contains none, one or more accelerators. The compute node could be any kind of shared-memory (single, dual, quad CPU) system.
+In this chapter, all base objects (matrices, vectors and stencils) for computation on a single-node (shared-memory) system are described. The compute node contains none, one or more accelerators. The compute node could be any kind of shared-memory (single, dual, quad CPU) system.
 
 .. note:: The host and accelerator memory can be physically different.
 
 Code Structure
 **************
-The `Data` is an object, pointing to the BaseMatrix class. The pointing is coming from either a HostMatrix or an AcceleratorMatrix. The AcceleratorMatrix is created by an object with an implementation in the backend and a matrix format. Switching between host and accelerator matrix is performed in the LocalMatrix class. The LocalVector is organized in the same way.
+The `Data` is an object, pointing to the BaseMatrix class. The pointing is coming from either a HostMatrix or an AcceleratorMatrix. The AcceleratorMatrix is created by an object with an implementation in the backend and a matrix format. Switching between host and accelerator matrices is performed in the LocalMatrix class. The LocalVector is organized in the same way.
 
 Each matrix format has its own class for the host and for the accelerator backend. All matrix classes are derived from the BaseMatrix, which provides the base interface for computation as well as for data accessing.
 
 ValueType
 *********
-The value (data) type of the vectors and the matrices is defined as a template. The matrix can be of type float (32-bit), double (64-bit) and complex (64/128-bit). The vector can be float (32-bit), double (64-bit), complex (64/128-bit) and int (32/64-bit). The information about the precision of the data type is shown in the Info() function.
+The value (data) type of the vectors and the matrices is defined as a template. The matrix can be of type float (32-bit), double (64-bit) and complex (64/128-bit). The vector can be float (32-bit), double (64-bit), complex (64/128-bit) and int (32/64-bit). The information about the precision of the data type is shown in the :cpp:func:`rocalution::BaseRocalution::Info` function.
 
 Complex Support
 ***************
@@ -473,24 +464,28 @@ Currently, rocALUTION does not support complex computation.
 
 Allocation and Free
 *******************
-The allocation functions require a name of the object (this is only for information purposes) and corresponding size description for vector and matrix objects.
+.. doxygenfunction:: rocalution::LocalVector::Allocate
+.. doxygenfunction:: rocalution::LocalVector::Clear
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateCOO
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateCSR
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateBCSR
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateMCSR
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateELL
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateDIA
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateHYB
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::AllocateDENSE
 
-.. code-block:: cpp
+.. note:: More detailed information on the additional parameters required for matrix allocation is given in :ref:`matrix_formats`.
+.. doxygenfunction:: rocalution::LocalMatrix::Clear
 
-  LocalVector<ValueType> vec;
-
-  vec.Allocate("my vector", 100);
-  vec.Clear();
-
-.. code-block:: cpp
-
-  LocalMatrix<ValueType> mat;
-
-  mat.AllocateCSR("my CSR matrix", 456, 100, 100); // nnz, rows, columns
-  mat.Clear();
-
-  mat.AllocateCOO("my COO matrix", 200, 100, 100); // nnz, rows, columns
-  mat.Clear();
+.. _matrix_formats:
 
 Matrix Formats
 **************
@@ -525,8 +520,7 @@ Matrices, where most of the elements are equal to zero, are called sparse. In mo
 
 COO storage format
 ``````````````````
-The most intuitive sparse format is the coordinate format (COO). It represent the non-zero elements of the matrix by their coordinates, and requires two index arrays (one for row and one for column indexing) and
-the values array. A :math:`m \times n` matrix is represented by
+The most intuitive sparse format is the coordinate format (COO). It represents the non-zero elements of the matrix by their coordinates and requires two index arrays (one for row and one for column indexing) and the values array. A :math:`m \times n` matrix is represented by
 
 =========== ==================================================================
 m           number of rows (integer).
@@ -537,7 +531,8 @@ coo_row_ind array of ``nnz`` elements containing the row indices (integer).
 coo_col_ind array of ``nnz`` elements containing the column indices (integer).
 =========== ==================================================================
 
-The COO matrix is expected to be sorted by row indices and column indices per row. Furthermore, each pair of indices should appear only once.
+.. note:: The COO matrix is expected to be sorted by row indices and column indices per row. Furthermore, each pair of indices should appear only once.
+
 Consider the following :math:`3 \times 5` matrix and the corresponding COO structures, with :math:`m = 3, n = 5` and :math:`\text{nnz} = 8`:
 
 .. math::
@@ -560,7 +555,7 @@ where
 
 CSR storage format
 ``````````````````
-One of the most popular formats in many scientific codes is the compressed sparse row (CSR) format. In this format, we do not store the whole row indices but only the offsets to the positions. Thus, we can easily jump to any row and we can access sequentially all elements there. However, this format does not allow sequential accessing of the column entries.
+One of the most popular formats in many scientific codes is the compressed sparse row (CSR) format. In this format, instead of row indices, the row offsets to the beginning of each row are stored. Thus, each row elements can be accessed sequentially. However, this format does not allow sequential accessing of the column entries.
 The CSR storage format represents a :math:`m \times n` matrix by
 
 =========== =========================================================================
@@ -572,7 +567,8 @@ csr_row_ptr array of ``m+1`` elements that point to the start of every row (inte
 csr_col_ind array of ``nnz`` elements containing the column indices (integer).
 =========== =========================================================================
 
-The CSR matrix is expected to be sorted by column indices within each row. Furthermore, each pair of indices should appear only once.
+.. note:: The CSR matrix is expected to be sorted by column indices within each row. Furthermore, each pair of indices should appear only once.
+
 Consider the following :math:`3 \times 5` matrix and the corresponding CSR structures, with :math:`m = 3, n = 5` and :math:`\text{nnz} = 8`:
 
 .. math::
@@ -595,7 +591,8 @@ where
 
 ELL storage format
 ``````````````````
-The Ellpack-Itpack (ELL) storage format can be seen as a modification of the CSR without row offset pointers. Instead, a fixed number of elements per row is stored. It represents a :math:`m \times n` matrix by
+The Ellpack-Itpack (ELL) storage format can be seen as a modification of the CSR format without row offset pointers. Instead, a fixed number of elements per row is stored.
+It represents a :math:`m \times n` matrix by
 
 =========== ================================================================================
 m           number of rows (integer).
@@ -605,7 +602,8 @@ ell_val     array of ``m times ell_width`` elements containing the data (floatin
 ell_col_ind array of ``m times ell_width`` elements containing the column indices (integer).
 =========== ================================================================================
 
-The ELL matrix is assumed to be stored in column-major format. Rows with less than ``ell_width`` non-zero elements are padded with zeros (``ell_val``) and :math:`-1` (``ell_col_ind``).
+.. note:: The ELL matrix is assumed to be stored in column-major format. Rows with less than ``ell_width`` non-zero elements are padded with zeros (``ell_val``) and :math:`-1` (``ell_col_ind``).
+
 Consider the following :math:`3 \times 5` matrix and the corresponding ELL structures, with :math:`m = 3, n = 5` and :math:`\text{ell_width} = 3`:
 
 .. math::
@@ -625,29 +623,11 @@ where
     \text{ell_col_ind}[9] & = \{0, 1, 0, 1, 2, 3, 3, -1, 4\}
   \end{array}
 
-.. _HYB storage format:
-
-HYB storage format
-``````````````````
-The DIA and ELL formats cannot represent efficiently completely unstructured sparse matrices. To keep the memory footprint low, DIA requires the elements to belong to a few diagonals and ELL needs a fixed number of elements per row. For many applications this is a too strong restriction. A solution to this issue is to represent the more regular part of the matrix in such a format and the remaining part in COO format. The HYB format is a mixture between ELL and COO, where the maximum elements per row for the ELL part is computed by `nnz/num row`. It represents a :math:`m \times n` matrix by
-
-=========== =========================================================================================
-m           number of rows (integer).
-n           number of columns (integer).
-nnz         number of non-zero elements of the COO part (integer)
-ell_width   maximum number of non-zero elements per row of the ELL part (integer)
-ell_val     array of ``m times ell_width`` elements containing the ELL part data (floating point).
-ell_col_ind array of ``m times ell_width`` elements containing the ELL part column indices (integer).
-coo_val     array of ``nnz`` elements containing the COO part data (floating point).
-coo_row_ind array of ``nnz`` elements containing the COO part row indices (integer).
-coo_col_ind array of ``nnz`` elements containing the COO part column indices (integer).
-=========== =========================================================================================
-
 .. _DIA storage format:
 
 DIA storage format
 ``````````````````
-If all (or most) of the non-zero entries belong to a few diagonals of the matrix, we can store them with the corresponding offsets. Note, that the values in DIA format are stored as array with size :math:`D \times N_D`, where :math:`D` is the number of diagonals in the matrix and :math:`N_D` is the number of elements in the main diagonal. Since not all values in this array are occupied, the not accessible entries are denoted with star. They correspond to the offsets in the diagonal array (negative values represent offsets from the beginning of the array).
+If all (or most) of the non-zero entries belong to a few diagonals of the matrix, they can be stored with the corresponding offsets. The values in DIA format are stored as array with size :math:`D \times N_D`, where :math:`D` is the number of diagonals in the matrix and :math:`N_D` is the number of elements in the main diagonal. Since not all values in this array are occupied, the not accessible entries are denoted with :math:`\ast`. They correspond to the offsets in the diagonal array (negative values represent offsets from the beginning of the array).
 The DIA storage format represents a :math:`m \times n` matrix by
 
 ========== ====
@@ -679,6 +659,26 @@ where
     \text{dia_offset}[4] & = \{-1, 0, 1, 3\}
   \end{array}
 
+.. _HYB storage format:
+
+HYB storage format
+``````````````````
+The DIA and ELL formats cannot represent efficiently completely unstructured sparse matrices. To keep the memory footprint low, DIA requires the elements to belong to a few diagonals and ELL needs a fixed number of elements per row. For many applications this is a too strong restriction. A solution to this issue is to represent the more regular part of the matrix in such a format and the remaining part in COO format. The HYB format is a mixture between ELL and COO, where the maximum elements per row for the ELL part is computed by `nnz/m`. It represents a :math:`m \times n` matrix by
+
+=========== =========================================================================================
+m           number of rows (integer).
+n           number of columns (integer).
+nnz         number of non-zero elements of the COO part (integer)
+ell_width   maximum number of non-zero elements per row of the ELL part (integer)
+ell_val     array of ``m times ell_width`` elements containing the ELL part data (floating point).
+ell_col_ind array of ``m times ell_width`` elements containing the ELL part column indices (integer).
+coo_val     array of ``nnz`` elements containing the COO part data (floating point).
+coo_row_ind array of ``nnz`` elements containing the COO part row indices (integer).
+coo_col_ind array of ``nnz`` elements containing the COO part column indices (integer).
+=========== =========================================================================================
+
+For further details on matrix formats, see :cite:`SAAD`.
+
 Memory Usage
 ````````````
 The memory footprint of the different matrix formats is presented in the following table, considering a :math:`N \times N` matrix, where the number of non-zero entries is denoted with `nnz`.
@@ -697,45 +697,708 @@ For the ELL matrix :math:`M` characterizes the maximal number of non-zero elemen
 
 File I/O
 ********
-The user can read and write matrix files stored in Matrix Market format.
+.. doxygenfunction:: rocalution::LocalVector::ReadFileASCII
+.. doxygenfunction:: rocalution::LocalVector::WriteFileASCII
+.. doxygenfunction:: rocalution::LocalVector::ReadFileBinary
+.. doxygenfunction:: rocalution::LocalVector::WriteFileBinary
+.. doxygenfunction:: rocalution::LocalMatrix::ReadFileMTX
+.. doxygenfunction:: rocalution::LocalMatrix::WriteFileMTX
+.. doxygenfunction:: rocalution::LocalMatrix::ReadFileCSR
+.. doxygenfunction:: rocalution::LocalMatrix::WriteFileCSR
+
+.. note:: To obtain the rocALUTION version, see :ref:`rocalution_version`.
+
+For further details on the Matrix Market Format, see :cite:`mm`.
+
+Access
+******
+
+.. doxygenfunction:: rocalution::LocalVector::operator[](int)
+  :outline:
+.. doxygenfunction:: rocalution::LocalVector::operator[](int) const
+
+.. note:: Accessing elements via the *[]* operators is slow. Use this for debugging purposes only. There is no direct access to the elements of matrices due to the sparsity structure. Matrices can be imported by a copy function. For CSR matrices, this is :cpp:func:`rocalution::LocalMatrix::CopyFromCSR` and :cpp:func:`rocalution::LocalMatrix::CopyToCSR`.
 
 .. code-block:: cpp
 
+  // Allocate the CSR matrix
+  int* csr_row_ptr   = new int[100 + 1];
+  int* csr_col_ind   = new int[345];
+  ValueType* csr_val = new ValueType[345];
+
+  // Fill the CSR matrix
+  // ...
+
+  // rocALUTION local matrix object
   LocalMatrix<ValueType> mat;
-  mat.ReadFileMTX("my_matrix.mtx");
-  mat.WriteFileMTX("my_matrix.mtx");
 
-Binary format I/O is also supported for CSR storage format.
+  // Import CSR matrix to rocALUTION
+  mat.AllocateCSR("my_matrix", 345, 100, 100);
+  mat.CopyFromCSR(csr_row_ptr, csr_col, csr_val);
 
-.. code-block:: cpp
+Raw Access to the Data
+**********************
 
-  LocalMatrix<ValueType> mat;
-  mat.ReadFileCSR("my_matrix.csr");
-  mat.WriteFileCSR("my_matrix.csr");
+.. _SetDataPtr:
 
+SetDataPtr
+``````````
+For vector and matrix objects, direct access to the raw data can be obtained via pointers. Already allocated data can be set with *SetDataPtr*. Setting data pointers will leave the original pointers empty.
 
+.. doxygenfunction:: rocalution::LocalVector::SetDataPtr
+.. doxygenfunction:: rocalution::LocalMatrix::SetDataPtrCOO
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::SetDataPtrCSR
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::SetDataPtrMCSR
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::SetDataPtrELL
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::SetDataPtrDIA
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::SetDataPtrDENSE
 
+.. _LeaveDataPtr:
 
+LeaveDataPtr
+````````````
+With *LeaveDataPtr*, the raw data from the object can be obtained. This will leave the object empty.
 
+.. doxygenfunction:: rocalution::LocalVector::LeaveDataPtr
+.. doxygenfunction:: rocalution::LocalMatrix::LeaveDataPtrCOO
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::LeaveDataPtrCSR
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::LeaveDataPtrMCSR
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::LeaveDataPtrELL
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::LeaveDataPtrDIA
+  :outline:
+.. doxygenfunction:: rocalution::LocalMatrix::LeaveDataPtrDENSE
 
+.. note:: If the object is allocated on the host, then the pointers obtained from :ref:`SetDataPtr` and :ref:`LeaveDataPtr` will be on the host. If the vector object is on the accelerator, then the data pointers will be on the accelerator.
+.. note:: If the object is moved to and from the accelerator, then the original pointer will be invalid.
+.. note:: Never rely on old pointers, hidden object movement to and from the accelerator will make them invalid.
+.. note:: Whenever you pass or obtain pointers to/from a rocALUTION object, you need to use the same memory allocation/free functions. Please check the source code for that (for host *src/utils/allocate_free.cpp* and for HIP *src/base/hip/hip_allocate_free.cpp*)
 
-.. _rocsparse_logging:
+Copy CSR Matrix Host Data
+*************************
+.. doxygenfunction:: rocalution::LocalMatrix::CopyFromHostCSR
 
-Logging
+Copy Data
+*********
+The user can copy data to and from a local vector by using *CopyFromData()* *CopyToData()*.
+
+.. doxygenfunction:: rocalution::LocalVector::CopyFromData
+.. doxygenfunction:: rocalution::LocalVector::CopyToData
+
+Object Info
+***********
+.. doxygenfunction:: rocalution::BaseRocalution::Info
+
+Copy
+****
+All matrix and vector objects provide a *CopyFrom()* function. The destination object should have the same size or be empty. In the latter case, the object is allocated at the source platform.
+
+.. doxygenfunction:: rocalution::LocalVector::CopyFrom(const LocalVector<ValueType>&)
+.. doxygenfunction:: rocalution::LocalMatrix::CopyFrom
+
+.. note:: For vectors, the user can specify source and destination offsets and thus copy only a part of the whole vector into another vector.
+
+.. doxygenfunction:: rocalution::LocalVector::CopyFrom(const LocalVector<ValueType>&, int, int, int)
+
+Clone
+*****
+The copy operators allow you to copy the values of the object to another object, without changing the backend specification of the object. In many algorithms, you might need auxiliary vectors or matrices. These objects can be cloned with CloneFrom().
+
+CloneFrom
+`````````
+.. doxygenfunction:: rocalution::LocalVector::CloneFrom
+.. doxygenfunction:: rocalution::LocalMatrix::CloneFrom
+
+CloneBackend
+````````````
+.. doxygenfunction:: rocalution::BaseRocalution::CloneBackend(const BaseRocalution<ValueType>&)
+
+Check
+*****
+.. doxygenfunction:: rocalution::LocalVector::Check
+.. doxygenfunction:: rocalution::LocalMatrix::Check
+
+Checks, if the object contains valid data. For vectors, the function checks if the values are not infinity and not NaN (not a number). For matrices, this function checks the values and if the structure of the matrix is correct (e.g. indices cannot be negative, CSR and COO matrices have to be sorted, etc.).
+
+Sort
+****
+.. doxygenfunction:: rocalution::LocalMatrix::Sort
+
+Keying
+******
+.. doxygenfunction:: rocalution::LocalMatrix::Key
+
+Graph Analyzers
+***************
+The following functions are available for analyzing the connectivity in graph of the underlying sparse matrix.
+
+* (R)CMK Ordering
+* Maximal Independent Set
+* Multi-Coloring
+* Zero Block Permutation
+* Connectivity Ordering
+
+All graph analyzing functions return a permutation vector (integer type), which is supposed to be used with the :cpp:func:`rocalution::LocalMatrix::Permute` and :cpp:func:`rocalution::LocalMatrix::PermuteBackward` functions in the matrix and vector classes.
+
+For further details, see :cite:`SAAD`.
+
+Cuthill-McKee Ordering
+``````````````````````
+.. doxygenfunction:: rocalution::LocalMatrix::CMK
+.. doxygenfunction:: rocalution::LocalMatrix::RCMK
+
+Maximal Independent Set
+```````````````````````
+.. doxygenfunction:: rocalution::LocalMatrix::MaximalIndependentSet
+
+Multi-Coloring
+``````````````
+.. doxygenfunction:: rocalution::LocalMatrix::MultiColoring
+
+Zero Block Permutation
+``````````````````````
+.. doxygenfunction:: rocalution::LocalMatrix::ZeroBlockPermutation
+
+Connectivity Ordering
+`````````````````````
+.. doxygenfunction:: rocalution::LocalMatrix::ConnectivityOrder
+
+Basic Linear Algebra Operations
+*******************************
+For a full list of functions and routines involving operators and vectors, see the API specifications.
+
+Multi-node Computation
+----------------------
+
+Introduction
+************
+
+Code Structure
+**************
+
+Parallel Manager
+****************
+
+Global Matrices and Vectors
+***************************
+
+File I/O
+********
+
+Solvers
 -------
-Three different environment variables can be set to enable logging in rocSPARSE: ``ROCSPARSE_LAYER``, ``ROCSPARSE_LOG_TRACE_PATH`` and ``ROCSPARSE_LOG_BENCH_PATH``.
 
-``ROCSPARSE_LAYER`` is a bit mask, where several logging modes (:ref:`rocsparse_layer_mode_`) can be combined as follows:
+Code Structure
+**************
+.. doxygenclass:: rocalution::Solver
 
-================================  ===========================================
-``ROCSPARSE_LAYER`` unset         logging is disabled.
-``ROCSPARSE_LAYER`` set to ``1``  trace logging is enabled.
-``ROCSPARSE_LAYER`` set to ``2``  bench logging is enabled.
-``ROCSPARSE_LAYER`` set to ``3``  trace logging and bench logging is enabled.
-================================  ===========================================
+It provides an interface for
 
-When logging is enabled, each rocSPARSE function call will write the function name as well as function arguments to the logging stream. The default logging stream is ``stderr``.
+.. doxygenfunction:: rocalution::Solver::SetOperator
+.. doxygenfunction:: rocalution::Solver::Build
+.. doxygenfunction:: rocalution::Solver::Clear
+.. doxygenfunction:: rocalution::Solver::Solve
+.. doxygenfunction:: rocalution::Solver::Print
+.. doxygenfunction:: rocalution::Solver::ReBuildNumeric
+.. doxygenfunction:: rocalution::Solver::MoveToHost
+.. doxygenfunction:: rocalution::Solver::MoveToAccelerator
 
-If the user sets the environment variable ``ROCSPARSE_LOG_TRACE_PATH`` to the full path name for a file, the file is opened and trace logging is streamed to that file. If the user sets the environment variable ``ROCSPARSE_LOG_BENCH_PATH`` to the full path name for a file, the file is opened and bench logging is streamed to that file. If the file cannot be opened, logging output is stream to ``stderr``.
+Iterative Linear Solvers
+************************
+.. doxygenclass:: rocalution::IterativeLinearSolver
 
-Note that performance will degrade when logging is enabled. By default, the environment variable ``ROCSPARSE_LAYER`` is unset and logging is disabled.
+It provides an interface for
+
+.. doxygenfunction:: rocalution::IterativeLinearSolver::Init(double, double, double, int)
+.. doxygenfunction:: rocalution::IterativeLinearSolver::Init(double, double, double, int, int)
+.. doxygenfunction:: rocalution::IterativeLinearSolver::InitMinIter
+.. doxygenfunction:: rocalution::IterativeLinearSolver::InitMaxIter
+.. doxygenfunction:: rocalution::IterativeLinearSolver::InitTol
+.. doxygenfunction:: rocalution::IterativeLinearSolver::RecordResidualHistory
+.. doxygenfunction:: rocalution::IterativeLinearSolver::RecordHistory
+.. doxygenfunction:: rocalution::IterativeLinearSolver::Verbose
+.. doxygenfunction:: rocalution::IterativeLinearSolver::SetPreconditioner
+.. doxygenfunction:: rocalution::IterativeLinearSolver::SetResidualNorm
+.. doxygenfunction:: rocalution::IterativeLinearSolver::GetAmaxResidualIndex
+.. doxygenfunction:: rocalution::IterativeLinearSolver::GetSolverStatus
+
+Building and Solving Phase
+**************************
+Each iterative solver consists of a building step and a solving step. During the building step all necessary auxiliary data is allocated and the preconditioner is constructed. After that, the user can call the solving procedure, the solving step can be called several times.
+
+When the initial matrix associated with the solver is on the accelerator, the solver will try to build everything on the accelerator. However, some preconditioners and solvers (such as FSAI and AMG) need to be constructed on the host before they can be transferred to the accelerator. If the initial matrix is on the host and we want to run the solver on the accelerator then we need to move the solver to the accelerator as well as the matrix, the right-hand-side and the solution vector.
+
+.. note:: If you have a preconditioner associate with the solver, it will be moved automatically to the accelerator when you move the solver.
+
+.. code-block:: cpp
+
+  // CG solver
+  CG<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType> ls;
+  // Multi-Colored ILU preconditioner
+  MultiColoredILU<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType> p;
+
+  // Move matrix and vectors to the accelerator
+  mat.MoveToAccelerator();
+  rhs.MoveToAccelerator();
+  x.MoveToAccelerator();
+
+  // Set mat to be the operator
+  ls.SetOperator(mat);
+  // Set p as the preconditioner of ls
+  ls.SetPreconditioner(p);
+
+  // Build the solver and preconditioner on the accelerator
+  ls.Build();
+
+  // Compute the solution on the accelerator
+  ls.Solve(rhs, &x);
+
+.. code-block:: cpp
+
+  // CG solver
+  CG<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType> ls;
+  // Multi-Colored ILU preconditioner
+  MultiColoredILU<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType> p;
+
+  // Set mat to be the operator
+  ls.SetOperator(mat);
+  // Set p as the preconditioner of ls
+  ls.SetPreconditioner(p);
+
+  // Build the solver and preconditioner on the host
+  ls.Build();
+
+  // Move matrix and vectors to the accelerator
+  mat.MoveToAccelerator();
+  rhs.MoveToAccelerator();
+  x.MoveToAccelerator();
+
+  // Move linear solver to the accelerator
+  ls.MoveToAccelerator();
+
+  // Compute the solution on the accelerator
+  ls.Solve(rhs, &x);
+
+
+Clear Function and Destructor
+*****************************
+The :cpp:func:`rocalution::Solver::Clear` function clears all the data which is in the solver, including the associated preconditioner. Thus, the solver is not anymore associated with this preconditioner.
+
+.. note:: The preconditioner is not deleted (via destructor), only a :cpp:func:`rocalution::Preconditioner::Clear` is called.
+
+.. note:: When the destructor of the solver class is called, it automatically calls the *Clear()* function. Be careful, when declaring your solver and preconditioner in different places - we highly recommend to manually call the *Clear()* function of the solver and not to rely on the destructor of the solver.
+
+Numerical Update
+****************
+Some preconditioners require two phases in the their construction: an algebraic (e.g. compute a pattern or structure) and a numerical (compute the actual values) phase. In cases, where the structure of the input matrix is a constant (e.g. Newton-like methods) it is not necessary to fully re-construct the preconditioner. In this case, the user can apply a numerical update to the current preconditioner and pass the new operator with :cpp:func:`rocalution::Solver::ReBuildNumeric`. If the preconditioner/solver does not support the numerical update, then a full :cpp:func:`rocalution::Solver::Clear` and :cpp:func:`rocalution::Solver::Build` will be performed.
+
+Fixed-Point Iteration
+*********************
+.. doxygenclass:: rocalution::FixedPoint
+.. doxygenfunction:: rocalution::FixedPoint::SetRelaxation
+
+Krylov Subspace Solvers
+***********************
+
+CG
+``
+.. doxygenclass:: rocalution::CG
+
+For further details, see :cite:`SAAD`.
+
+CR
+``
+.. doxygenclass:: rocalution::CR
+
+For further details, see :cite:`SAAD`.
+
+GMRES
+`````
+.. doxygenclass:: rocalution::GMRES
+.. doxygenfunction:: rocalution::GMRES::SetBasisSize
+
+For further details, see :cite:`SAAD`.
+
+FGMRES
+``````
+.. doxygenclass:: rocalution::FGMRES
+.. doxygenfunction:: rocalution::FGMRES::SetBasisSize
+
+For further details, see :cite:`SAAD`.
+
+BiCGStab
+````````
+.. doxygenclass:: rocalution::BiCGStab
+
+For further details, see :cite:`SAAD`.
+
+IDR
+```
+.. doxygenclass:: rocalution::IDR
+.. doxygenfunction:: rocalution::IDR::SetShadowSpace
+
+For further details, see :cite:`IDR1` and :cite:`IDR2`.
+
+FCG
+```
+.. doxygenclass:: rocalution::FCG
+
+For further details, see :cite:`fcg`.
+
+QMRCGStab
+`````````
+.. doxygenclass:: rocalution::QMRCGStab
+
+For further details, see :cite:`qmrcgstab`.
+
+BiCGStab(l)
+```````````
+.. doxygenclass:: rocalution::BiCGStabl
+.. doxygenfunction:: rocalution::BiCGStabl::SetOrder
+
+For further details, see :cite:`bicgstabl`.
+
+Chebyshev Iteration Scheme
+**************************
+.. doxygenclass:: rocalution::Chebyshev
+
+For further details, see :cite:`templates`.
+
+Mixed-Precision Defect Correction Scheme
+****************************************
+.. doxygenclass:: rocalution::MixedPrecisionDC
+
+MultiGrid Solvers
+*****************
+The library provides algebraic multigrid as well as a skeleton for geometric multigrid methods. The BaseMultigrid class itself is not constructing the data for the method. It contains the solution procedure for V, W and K-cycles. The AMG has two different versions for Local (non-MPI) and for Global (MPI) type of computations.
+
+.. doxygenclass:: rocalution::BaseMultiGrid
+
+Geometric MultiGrid
+```````````````````
+.. doxygenclass:: rocalution::MultiGrid
+
+For further details, see :cite:`Trottenberg2003`.
+
+Algebraic MultiGrid
+```````````````````
+.. doxygenclass:: rocalution::BaseAMG
+.. doxygenfunction:: rocalution::BaseAMG::BuildHierarchy
+.. doxygenfunction:: rocalution::BaseAMG::BuildSmoothers
+.. doxygenfunction:: rocalution::BaseAMG::SetCoarsestLevel
+.. doxygenfunction:: rocalution::BaseAMG::SetManualSmoothers
+.. doxygenfunction:: rocalution::BaseAMG::SetManualSolver
+.. doxygenfunction:: rocalution::BaseAMG::SetDefaultSmootherFormat
+.. doxygenfunction:: rocalution::BaseAMG::SetOperatorFormat
+.. doxygenfunction:: rocalution::BaseAMG::GetNumLevels
+
+Unsmoothed Aggregation AMG
+==========================
+.. doxygenclass:: rocalution::UAAMG
+.. doxygenfunction:: rocalution::UAAMG::SetCouplingStrength
+.. doxygenfunction:: rocalution::UAAMG::SetOverInterp
+
+For further details, see :cite:`stuben`.
+
+Smoothed Aggregation AMG
+========================
+.. doxygenclass:: rocalution::SAAMG
+.. doxygenfunction:: rocalution::SAAMG::SetCouplingStrength
+.. doxygenfunction:: rocalution::SAAMG::SetInterpRelax
+
+For further details, see :cite:`vanek`.
+
+Ruge-Stueben AMG
+================
+.. doxygenclass:: rocalution::RugeStuebenAMG
+.. doxygenfunction:: rocalution::RugeStuebenAMG::SetCouplingStrength
+
+For further details, see :cite:`stuben`.
+
+Pairwise AMG
+============
+.. doxygenclass:: rocalution::PairwiseAMG
+.. doxygenclass:: rocalution::GlobalPairwiseAMG
+.. doxygenfunction:: rocalution::PairwiseAMG::SetBeta
+.. doxygenfunction:: rocalution::PairwiseAMG::SetOrdering
+.. doxygenfunction:: rocalution::PairwiseAMG::SetCoarseningFactor
+
+For further details, see :cite:`pairwiseamg`.
+
+Direct Linear Solvers
+*********************
+.. doxygenclass:: rocalution::DirectLinearSolver
+.. doxygenclass:: rocalution::LU
+.. doxygenclass:: rocalution::QR
+.. doxygenclass:: rocalution::Inversion
+
+.. note:: These methods can only be used with local-type problems.
+
+Preconditioners
+---------------
+In this chapter, all preconditioners are presented. All preconditioners support local operators. They can be used as a global preconditioner via block-jacobi scheme which works locally on each interior matrix. To provide fast application, all preconditioners require extra memory to keep the approximated operator.
+
+.. doxygenclass:: rocalution::Preconditioner
+
+Code Structure
+**************
+The preconditioners provide a solution to the system :math:`Mz = r`, where either the solution :math:`z` is directly computed by the approximation scheme or it is iteratively obtained with :math:`z = 0` initial guess.
+
+Jacobi Method
+*************
+.. doxygenclass:: rocalution::Jacobi
+.. note:: Damping parameter :math:`\omega` can be adjusted by :cpp:func:`rocalution::FixedPoint::SetRelaxation`.
+
+(Symmetric) Gauss-Seidel / (S)SOR Method
+****************************************
+.. doxygenclass:: rocalution::GS
+.. doxygenclass:: rocalution::SGS
+.. note:: Relaxation parameter :math:`\omega` can be adjusted by :cpp:func:`rocalution::FixedPoint::SetRelaxation`.
+
+Incomplete Factorizations
+*************************
+
+ILU
+```
+.. doxygenclass:: rocalution::ILU
+.. doxygenfunction:: rocalution::ILU::Set
+
+For further details, see :cite:`SAAD`.
+
+ILUT
+````
+.. doxygenclass:: rocalution::ILUT
+.. doxygenfunction:: rocalution::ILUT::Set(double)
+.. doxygenfunction:: rocalution::ILUT::Set(double, int)
+
+For further details, see :cite:`SAAD`.
+
+IC
+``
+.. doxygenclass:: rocalution::IC
+
+AI Chebyshev
+************
+.. doxygenclass:: rocalution::AIChebyshev
+.. doxygenfunction:: rocalution::AIChebyshev::Set
+
+For further details, see :cite:`chebpoly`.
+
+FSAI
+****
+.. doxygenclass:: rocalution::FSAI
+.. doxygenfunction:: rocalution::FSAI::Set(int)
+.. doxygenfunction:: rocalution::FSAI::Set(const OperatorType&)
+.. doxygenfunction:: rocalution::FSAI::SetPrecondMatrixFormat
+
+For further details, see :cite:`kolotilina`.
+
+SPAI
+****
+.. doxygenclass:: rocalution::SPAI
+.. doxygenfunction:: rocalution::SPAI::SetPrecondMatrixFormat
+
+For further details, see :cite:`grote`.
+
+TNS
+***
+.. doxygenclass:: rocalution::TNS
+.. doxygenfunction:: rocalution::TNS::Set
+.. doxygenfunction:: rocalution::TNS::SetPrecondMatrixFormat
+
+MultiColored Preconditioners
+****************************
+.. doxygenclass:: rocalution::MultiColored
+.. doxygenfunction:: rocalution::MultiColored::SetPrecondMatrixFormat
+.. doxygenfunction:: rocalution::MultiColored::SetDecomposition
+
+MultiColored (Symmetric) Gauss-Seidel / (S)SOR
+``````````````````````````````````````````````
+.. doxygenclass:: rocalution::MultiColoredGS
+.. doxygenclass:: rocalution::MultiColoredSGS
+.. doxygenfunction:: rocalution::MultiColoredSGS::SetRelaxation
+.. note:: The preconditioner matrix format can be changed using :cpp:func:`rocalution::MultiColored::SetPrecondMatrixFormat`.
+
+MultiColored Power(q)-pattern method ILU(p,q)
+`````````````````````````````````````````````
+.. doxygenclass:: rocalution::MultiColoredILU
+.. doxygenfunction:: rocalution::MultiColoredILU::Set(int)
+.. doxygenfunction:: rocalution::MultiColoredILU::Set(int, int, bool)
+.. note:: The preconditioner matrix format can be changed using :cpp:func:`rocalution::MultiColored::SetPrecondMatrixFormat`.
+
+For further details, see :cite:`Lukarski2012`.
+
+Multi-Elimination Incomplete LU
+*******************************
+.. doxygenclass:: rocalution::MultiElimination
+.. doxygenfunction:: rocalution::MultiElimination::GetSizeDiagBlock
+.. doxygenfunction:: rocalution::MultiElimination::GetLevel
+.. doxygenfunction:: rocalution::MultiElimination::Set
+.. doxygenfunction:: rocalution::MultiElimination::SetPrecondMatrixFormat
+
+For further details, see :cite:`SAAD`.
+
+Diagonal Preconditioner for Saddle-Point Problems
+*************************************************
+.. doxygenclass:: rocalution::DiagJacobiSaddlePointPrecond
+.. doxygenfunction:: rocalution::DiagJacobiSaddlePointPrecond::Set
+
+(Restricted) Additive Schwarz Preconditioner
+********************************************
+.. doxygenclass:: rocalution::AS
+.. doxygenfunction:: rocalution::AS::Set
+.. doxygenclass:: rocalution::RAS
+
+For further details, see :cite:`RAS`.
+
+Block-Jacobi (MPI) Preconditioner
+*********************************
+.. doxygenclass:: rocalution::BlockJacobi
+.. doxygenfunction:: rocalution::BlockJacobi::Set
+
+Block Preconditioner
+********************
+.. doxygenclass:: rocalution::BlockPreconditioner
+.. doxygenfunction:: rocalution::BlockPreconditioner::Set
+.. doxygenfunction:: rocalution::BlockPreconditioner::SetDiagonalSolver
+.. doxygenfunction:: rocalution::BlockPreconditioner::SetLSolver
+.. doxygenfunction:: rocalution::BlockPreconditioner::SetExternalLastMatrix
+.. doxygenfunction:: rocalution::BlockPreconditioner::SetPermutation
+
+
+Variable Preconditioner
+***********************
+.. doxygenclass:: rocalution::VariablePreconditioner
+.. doxygenfunction:: rocalution::VariablePreconditioner::SetPreconditioner
+
+Backends
+--------
+The support of accelerator devices is embedded in the structure of rocALUTION. The primary goal is to use this technology whenever possible to decrease the computational time.
+.. note:: Not all functions are ported and present on the accelerator backend. This limited functionality is natural, since not all operations can be performed efficiently on the accelerators (e.g. sequential algorithms, I/O from the file system, etc.).
+
+Currently, rocALUTION supports HIP capable GPUs starting with ROCm 1.9. Due to its design, the library can be easily extended to support future accelerator technologies. Such an extension of the library will not reflect the algorithms which are based on it.
+
+If a particular function is not implemented for the used accelerator, the library will move the object to the host and compute the routine there. In this case a warning message of level 2 will be printed. For example, if the user wants to perform an ILUT factorization on the HIP backend which is currently not available, the library will move the object to the host, perform the routine there and print the following warning message
+
+::
+
+  *** warning: LocalMatrix::ILUTFactorize() is performed on the host
+
+Moving Objects To and From the Accelerator
+******************************************
+All objects in rocALUTION can be moved to the accelerator and to the host.
+
+.. doxygenfunction:: rocalution::BaseRocalution::MoveToAccelerator
+.. doxygenfunction:: rocalution::BaseRocalution::MoveToHost
+
+.. code-block:: cpp
+
+  LocalMatrix<ValueType> mat;
+  LocalVector<ValueType> vec1, vec2;
+
+  // Perform matrix vector multiplication on the host
+  mat.Apply(vec1, &vec2);
+
+  // Move data to the accelerator
+  mat.MoveToAccelerator();
+  vec1.MoveToAccelerator();
+  vec2.MoveToAccelerator();
+
+  // Perform matrix vector multiplication on the accelerator
+  mat.Apply(vec1, &vec2);
+
+  // Move data to the host
+  mat.MoveToHost();
+  vec1.MoveToHost();
+  vec2.MoveToHost();
+
+Asynchronous Transfers
+**********************
+The rocALUTION library also provides asynchronous transfers of data between host and HIP backend.
+
+.. doxygenfunction:: rocalution::BaseRocalution::MoveToAcceleratorAsync
+.. doxygenfunction:: rocalution::BaseRocalution::MoveToHostAsync
+.. doxygenfunction:: rocalution::BaseRocalution::Sync
+
+This can be done with :cpp:func:`rocalution::LocalVector::CopyFromAsync` and :cpp:func:`rocalution::LocalMatrix::CopyFromAsync` or with `MoveToAcceleratorAsync()` and `MoveToHostAsync()`. These functions return immediately and perform the asynchronous transfer in background mode. The synchronization is done with `Sync()`.
+
+When using the `MoveToAcceleratorAsync()` and `MoveToHostAsync()` functions, the object will still point to its original location (i.e. host for calling `MoveToAcceleratorAsync()` and accelerator for `MoveToHostAsync()`). The object will switch to the new location after the `Sync()` function is called.
+
+.. note:: The objects should not be modified during an active asynchronous transfer. However, if this happens, the values after the synchronization might be wrong.
+.. note:: To use the asynchronous transfers, you need to enable the pinned memory allocation. Uncomment `#define ROCALUTION_HIP_PINNED_MEMORY` in `src/utils/allocate_free.hpp`.
+
+Systems without Accelerators
+****************************
+rocALUTION provides full code compatibility on systems without accelerators, the user can take the code from the GPU system, re-compile the same code on a machine without a GPU and it will provide the same results. Any calls to :cpp:func:`rocalution::BaseRocalution::MoveToAccelerator` and :cpp:func:`rocalution::BaseRocalution::MoveToHost` will be ignored.
+
+Memory Allocations
+------------------
+All data which is passed to and from rocALUTION is using the memory handling functions described in the code. By default, the library uses standard C++ *new* and *delete* functions for the host data. This can be changed by modifying `src/utils/allocate_free.cpp`.
+
+Allocation Problems
+*******************
+If the allocation fails, the library will report an error and exits. If the user requires a special treatment, it has to be placed in `src/utils/allocate_free.cpp`.
+
+Memory Alignment
+****************
+The library can also handle special memory alignment functions. This feature need to be uncommented before the compilation process in `src/utils/allocate_free.cpp`.
+
+Pinned Memory Allocation (HIP)
+******************************
+By default, the standard host memory allocation is realized by C++ *new* and *delete*. For faster PCI-Express transfers on HIP backend, the user can also use pinned host memory. This can be activated by uncommenting the corresponding macro in `src/utils/allocate_free.hpp`.
+
+Remarks
+-------
+
+Performance
+***********
+* Solvers can be built on the accelerator. In many cases, this is faster compared to building on the host.
+* Small-sized problems tend to perform better on the host (CPU), due to the good caching system, while large-sized problems typically perform better on the accelerator devices.
+* Avoid accessing vectors using [] operators. Use techniques based on :cpp:func:`rocalution::LocalVector::SetDataPtr` and :cpp:func:`rocalution::LocalVector::LeaveDataPtr` instead.
+* By default, the OpenMP backend picks the maximum number of threads available. However, if your CPU supports SMT, it will allow to run two times more threads than number of cores. This, in many cases, leads to lower performance. You may observe a performance increase by setting the number of threads (see :cpp:func:`rocalution::set_omp_threads_rocalution`) equal to the number of physical cores.
+* If you need to solve a system with multiple right-hand-sides, avoid constructing the solver/preconditioner every time.
+* If you are solving similar linear systems, you might want to consider to use the same preconditioner to avoid long building phases.
+* In most of the cases, the classical CSR matrix format performs very similar to all other formats on the CPU. On accelerators with many-cores (such as GPUs), formats such as DIA and ELL typically perform better. However, for general sparse matrices one could use HYB format to avoid large memory overhead. The multi-colored preconditioners can be performed in ELL for most of the matrices.
+* Not all matrix conversions are performed on the device, the platform will give you a warning if the object need to be moved.
+* If you are deploying the rocALUTION library into another software framework try to design your integration functions to avoid :cpp:func:`rocalution::init_rocalution` and :cpp:func:`rocalution::stop_rocalution` every time you call a solver in the library.
+* Be sure to compile the library with the correct optimization level (-O3).
+* Check, if your solver is really performed on the accelerator by printing the matrix information (:cpp:func:`rocalution::BaseRocalution::Info`) just before calling the :cpp:func:`rocalution::Solver::Solve` function.
+* Check the configuration of the library for your hardware with :cpp:func:`rocalution::info_rocalution`.
+* Mixed-Precision defect correction technique is recommended for accelerators (e.g. GPUs) with partial or no double precision support. The stopping criteria for the inner solver has to be tuned well for good performance.
+
+Accelerators
+************
+* Avoid PCI-Express communication whenever possible (such as copying data from/to the accelerator). Also check the internal structure of the functions.
+* Pinned memory allocation (page-locked) can be used for all host memory allocations when using the HIP backend. This provides faster transfers over the PCI-Express and allows asynchronous data movement. By default, this option is disabled. To enable the pinned memory allocation uncomment `#define ROCALUTION_HIP_PINNED_MEMORY` in file `src/utils/allocate_free.hpp`.
+* Asynchronous transfers are available for the HIP backend.
+
+Correctness
+***********
+* If you are assembling or modifying your matrix, you can check it in octave/MATLAB by just writing it into a matrix-market file and read it via `mmread()` function, see :cite:`mm-read`. You can also input a MATLAB/octave matrix in such a way.
+* Be sure, to set the correct relative and absolute tolerance values for your problem.
+* Check the computation of the relative stopping criteria, if it is based on :math:`|b-Ax^k|_2/|b-Ax^0|_2` or :math:`|b-Ax^k|_2/|b|_2`.
+* Solving very ill-conditioned problems by iterative methods without a proper preconditioning technique might produce wrong results. The solver could stop by showing a low relative tolerance based on the residual but this might be wrong.
+* Building the Krylov subspace for many ill-conditioned problems could be a tricky task. To ensure orthogonality in the subspace you might want to perform double orthogonalization (i.e. re-orthogonalization) to avoid rounding errors.
+* If you read/write matrices/vectors from files, check the ASCII format of the values (e.g. 34.3434 or 3.43434E + 01).
+
+API
+---
+
+Change Log
+----------
+
+1.3.2.0-beta for ROCm 1.9
+*************************
+* Initial pre-release version of the rocALUTION library
+
+Bibliography
+------------
+.. bibliography:: references.bib

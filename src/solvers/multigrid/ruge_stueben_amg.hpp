@@ -36,9 +36,10 @@ namespace rocalution {
   * \brief Ruge-Stueben Algebraic MultiGrid Method
   * \details
   * The Ruge-Stueben Algebraic MultiGrid method is based on the classic Ruge-Stueben
-  * coarsening with direct interpolation, see "Stuben, K. Algebraic multigrid (AMG): An
-  * introduction with applications. Journal of Computational and Applied Mathematics 128
-  * (2001), 281–309" for details.
+  * coarsening with direct interpolation. The solver provides high-efficiency in terms of
+  * complexity of the solver (i.e. number of iterations). However, most of the time it
+  * has a higher building step and requires higher memory usage.
+  * \cite stuben
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

@@ -191,11 +191,10 @@ class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
 
     /** \brief Initialize ILU(p) factorization
       * \details
-      * Initialize ILU(p) factorization based on power (see power(q)-pattern method,
-      * D. Lukarski "Parallel Sparse Linear Algebra for Multi-core and Many-core
-      * Platforms - Parallel Solvers and Preconditioners", PhD Thesis, 2012, KIT) <br>
-      * level = true build the structure based on levels <br>
-      * level = false build the structure only based on the power(p+1)
+      * Initialize ILU(p) factorization based on power.
+      * \cite SAAD
+      * - level = true build the structure based on levels
+      * - level = false build the structure only based on the power(p+1)
       */
     virtual void Set(int p, bool level = true);
     virtual void Build(void);
@@ -218,6 +217,7 @@ class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
   * The Incomplete LU Factorization based on threshold computes a sparse lower and sparse
   * upper triangular matrix such that \f$A = LU - R\f$. Fill-in values are dropped
   * depending on a threshold and number of maximal fill-ins per row.
+  * \cite SAAD
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

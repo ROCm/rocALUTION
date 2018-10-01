@@ -94,7 +94,33 @@ class BaseRocalution : public RocalutionObj
     /** \brief Sync (the async move) */
     virtual void Sync(void);
 
-    /** \brief Clone the Backend descriptor from another object */
+    /** \brief Clone the Backend descriptor from another object
+      * \details
+      * With \p CloneBackend, the backend can be cloned without copying any data. This is
+      * especially useful, if several objects should reside on the same backend, but keep
+      * their original data.
+      *
+      * @param[in]
+      * src Object, where the backend should be cloned from.
+      *
+      * \par Example
+      * \code{.cpp}
+      *   LocalVector<ValueType> vec;
+      *   LocalMatrix<ValueType> mat;
+      *
+      *   // Allocate and initialize vec and mat
+      *   // ...
+      *
+      *   LocalVector<ValueType> tmp;
+      *   // By cloning backend, tmp and vec will have the same backend as mat
+      *   tmp.CloneBackend(mat);
+      *   vec.CloneBackend(mat);
+      *
+      *   // The following matrix vector multiplication will be performed on the backend
+      *   // selected in mat
+      *   mat.Apply(vec, &tmp);
+      * \endcode
+      */
     virtual void CloneBackend(const BaseRocalution<ValueType>& src);
 
     // Clone the backend descriptor from another object with different
@@ -102,7 +128,17 @@ class BaseRocalution : public RocalutionObj
     template <typename ValueType2>
     void CloneBackend(const BaseRocalution<ValueType2>& src); /**< \private */
 
-    /** \brief Print the object information (properties, backends) */
+    /** \brief Print object information
+      * \details
+      * \p Info can print object information about any rocALUTION object. This
+      * information consists of object properties and backend data.
+      *
+      * \par Example
+      * \code{.cpp}
+      * mat.Info();
+      * vec.Info();
+      * \endcode
+      */
     virtual void Info(void) const = 0;
 
     /** \brief Clear (free all data) the object */

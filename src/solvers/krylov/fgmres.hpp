@@ -40,6 +40,7 @@ namespace rocalution {
   * Krylov subspace and thus allows the preconditioner \f$M^{-1}\f$ to be not a constant
   * operator. This can be especially helpful if the operation \f$M^{-1}x\f$ is the result
   * of another iterative process and not a constant operator.
+  * \cite SAAD
   *
   * The Krylov subspace basis
   * size can be set using SetBasisSize(). The default size is 30.

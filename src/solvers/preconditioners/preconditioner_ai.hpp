@@ -36,6 +36,7 @@ namespace rocalution {
   * The Approximate Inverse - Chebyshev Preconditioner is an inverse matrix
   * preconditioner with values from a linear combination of matrix-valued
   * Chebyshev polynomials.
+  * \cite chebpoly
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector
@@ -75,9 +76,11 @@ class AIChebyshev : public Preconditioner<OperatorType, VectorType, ValueType>
   * where \f$L\f$ denotes the exact lower triangular part of \f$A\f$ and \f$G:=M^{-1}\f$.
   * The FSAI preconditioner is initialized by \f$q\f$, based on the sparsity pattern of
   * \f$|A^{q}|\f$. However, it is also possible to supply external sparsity patterns in form
-  * of the LocalMatrix class. Further details are given in "Kolotilina, L. Y., and Yeremin,
-  * A. Y. Factorized sparse approximate inverse preconditionings, 1. theory. SIAM J. Matrix
-  * Anal. Appl. 14 (1993), 45–58".
+  * of the LocalMatrix class.
+  * \cite kolotilina
+  *
+  * \note
+  * The FSAI preconditioner is only suited for symmetric positive definite matrices.
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector
@@ -131,9 +134,8 @@ class FSAI : public Preconditioner<OperatorType, VectorType, ValueType>
   * The SParse Approximate Inverse algorithm is an explicitly computed preconditioner for
   * general sparse linear systems. In its current implementation, only the sparsity
   * pattern of the system matrix is supported. The SPAI computation is based on the
-  * minimization of the Frobenius norm \f$||AM − I||_{F}\f$. Further details are given in
-  * "Grote, M. J., and Huckle, T. Effective parallel preconditioning with sparse
-  * approximate inverses. PPSC (1995), 466–471".
+  * minimization of the Frobenius norm \f$||AM − I||_{F}\f$.
+  * \cite grote
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

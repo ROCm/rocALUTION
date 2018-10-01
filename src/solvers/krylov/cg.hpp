@@ -39,6 +39,7 @@ namespace rocalution {
   * orthogonal projection onto the Krylov subspace \f$\mathcal{K}_{m}(r_{0}, A)\f$,
   * where \f$r_{0}\f$ is the initial residual. The method can be preconditioned, where
   * the approximation should also be SPD.
+  * \cite SAAD
   *
   * \tparam OperatorType - can be LocalMatrix, GlobalMatrix or LocalStencil
   * \tparam VectorType - can be LocalVector or GlobalVector
