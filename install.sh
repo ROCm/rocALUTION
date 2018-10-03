@@ -126,9 +126,9 @@ install_packages( )
 
   # Host build
   if [[ "${build_host}" == false ]]; then
-    library_dependencies_ubuntu+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" "rocprim" ) # TODO
-    library_dependencies_centos+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" ) # TODO
-    library_dependencies_fedora+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" ) # TODO
+    library_dependencies_ubuntu+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" ) # TODO
+    library_dependencies_centos+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" ) # TODO
+    library_dependencies_fedora+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" ) # TODO
   fi
 
   # MPI
