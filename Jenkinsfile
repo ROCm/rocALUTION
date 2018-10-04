@@ -249,7 +249,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
 
             # Temp rocm lib mv because repo.radeon.com does not have debs for them
             mv ${paths.project_build_prefix}/*.deb ${docker_context}
-            dpkg -c ${docker_context}/*.deb
+            dpkg -i ${docker_context}/*.deb
         """
         archiveArtifacts artifacts: "${docker_context}/*.deb", fingerprint: true
 
