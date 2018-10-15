@@ -184,7 +184,7 @@ endif()
 # Export targets
 rocm_export_targets(TARGETS roc::rocalution
                     PREFIX rocalution
-                    DEPENDS PACKAGE hip
+                    DEPENDS PACKAGE HIP
                     NAMESPACE roc::
 )
 

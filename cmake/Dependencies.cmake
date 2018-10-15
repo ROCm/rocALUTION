@@ -37,7 +37,7 @@ if(SUPPORT_HIP)
     list(APPEND CMAKE_PREFIX_PATH /opt/rocm/hcc /opt/rocm/hip)
     # Ignore hcc warning: argument unused during compilation: '-isystem /opt/rocm/hip/include'
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-command-line-argument")
-    find_package(hip REQUIRED CONFIG PATHS /opt/rocm)
+    find_package(HIP REQUIRED CONFIG PATHS /opt/rocm)
     set(CMAKE_SHARED_LIBRARY_CREATE_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS})
     set(CMAKE_HIP_COMPILE_OPTIONS_PIC ${CMAKE_C_COMPILE_OPTIONS_PIC})
     set(CMAKE_HIP_COMPILE_OPTIONS_PIE ${CMAKE_C_COMPILE_OPTIONS_PIE})
