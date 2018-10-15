@@ -11,6 +11,7 @@ Welcome to rocALUTION's documentation!
    :caption: Contents:
 
    library
+   api
 
 Indices and tables
 ==================

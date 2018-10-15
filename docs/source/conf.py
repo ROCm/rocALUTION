@@ -51,6 +51,9 @@ templates_path = ['_templates']
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
 
+# Enable figure enumeration
+numfig = True
+
 # The master toctree document.
 master_doc = 'index'
 
