@@ -396,7 +396,7 @@ bool csr_to_ell(int omp_threads,
     *nnz_ell = dst->max_row * nrow;
 
     // Limit ELL size to 5 times CSR nnz
-    if(dst->max_row > 5 * nnz / nrow)
+    if(dst->max_row > 5 * (nnz / nrow))
     {
         return false;
     }
@@ -746,7 +746,7 @@ bool csr_to_dia(int omp_threads,
     *nnz_dia       = size * dst->num_diag;
 
     // Conversion fails if DIA nnz exceeds 5 times CSR nnz
-    if(dst->num_diag > 5 * nnz / size)
+    if(dst->num_diag > 5 * (nnz / size))
     {
         return false;
     }

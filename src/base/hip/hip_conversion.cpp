@@ -133,7 +133,7 @@ bool csr_to_ell_hip(const rocsparse_handle handle,
     CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
     // Limit ELL size to 5 times CSR nnz
-    if(dst->max_row > 5 * nnz / nrow)
+    if(dst->max_row > 5 * (nnz / nrow))
     {
         return false;
     }
@@ -286,7 +286,7 @@ bool csr_to_dia_hip(int blocksize,
 
     // Conversion fails if DIA nnz exceeds 5 times CSR nnz
     IndexType size = (nrow > ncol) ? nrow : ncol;
-    if(*num_diag > 5 * nnz / size)
+    if(*num_diag > 5 * (nnz / size))
     {
         free_hip(&diag_idx);
         return false;
