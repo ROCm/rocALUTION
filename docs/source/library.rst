@@ -1596,9 +1596,9 @@ Correctness
 Change Log
 ----------
 
-1.3.2.0-beta for ROCm 1.9
-*************************
-* Initial pre-release version of the rocALUTION library
+1.3.4.0 for ROCm 1.9.1
+**********************
+* Initial release version of the rocALUTION library
 
 Bibliography
 ------------
