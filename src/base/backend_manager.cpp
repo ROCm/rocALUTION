@@ -265,9 +265,11 @@ void set_device_rocalution(int dev)
 
 void info_rocalution(void)
 {
-    LOG_INFO("rocALUTION ver " << __ROCALUTION_VER_MAJOR << "." << __ROCALUTION_VER_MINOR << "."
+    LOG_INFO("rocALUTION ver " << __ROCALUTION_VER_MAJOR << "."
+                               << __ROCALUTION_VER_MINOR << "."
                                << __ROCALUTION_VER_PATCH
-                               << __ROCALUTION_VER_PRE);
+                               << __ROCALUTION_VER_PRE << "-"
+                               << __ROCALUTION_GIT_REV);
 
 #if defined(__gnu_linux__) || defined(linux) || defined(__linux) || defined(__linux__)
 

@@ -11,6 +11,7 @@
 #define __ROCALUTION_VER_MINOR @rocalution_VERSION_MINOR@
 #define __ROCALUTION_VER_PATCH @rocalution_VERSION_PATCH@
 #define __ROCALUTION_VER_TWEAK @rocalution_VERSION_TWEAK@
+#define __ROCALUTION_GIT_REV "@rocalution_GIT_REV@"
 // clang-format on
 
 // BETA or ALPHA

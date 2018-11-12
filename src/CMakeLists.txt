@@ -21,6 +21,14 @@
 #
 # ########################################################################
 
+# Get full git commit SHA-1
+set(GIT_COMMAND ${GIT_EXECUTABLE} rev-parse -q HEAD)
+execute_process(COMMAND ${GIT_COMMAND}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                OUTPUT_VARIABLE rocalution_GIT_REV
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET)
+
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
                "${PROJECT_BINARY_DIR}/include/version.hpp"
