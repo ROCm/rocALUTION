@@ -117,7 +117,7 @@ install_packages( )
 
   # dependencies needed for library and clients to build
   local library_dependencies_ubuntu=( "make" "cmake-curses-gui" "pkg-config" )
-  local library_dependencies_centos=( "epel-release" "make" "cmake3" "gcc-c++" )
+  local library_dependencies_centos=( "epel-release" "make" "cmake3" "gcc-c++" "rpm-build" )
   local library_dependencies_fedora=( "make" "cmake" "gcc-c++" "libcxx-devel" "rpm-build" )
 
   local client_dependencies_ubuntu=( "libboost-program-options-dev" )
