@@ -30,7 +30,7 @@
 
 namespace rocalution {
 
-template <unsigned int BLOCK_SIZE, unsigned int WARP_SIZE, typename ValueType, typename IndexType>
+template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
 __global__ void kernel_mcsr_spmv(IndexType nrow,
                                  const IndexType* __restrict__ row_offset,
                                  const IndexType* __restrict__ col,
@@ -40,56 +40,33 @@ __global__ void kernel_mcsr_spmv(IndexType nrow,
 {
     IndexType gid    = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     IndexType tid    = hipThreadIdx_x;
-    IndexType laneid = tid % WARP_SIZE;
-    IndexType warpid = gid / WARP_SIZE;
-    IndexType nwarps = hipGridDim_x * hipBlockDim_x / WARP_SIZE;
-
-    __shared__ volatile ValueType sdata[BLOCK_SIZE + WARP_SIZE / 2];
+    IndexType laneid = tid & (WF_SIZE - 1);
+    IndexType warpid = gid / WF_SIZE;
+    IndexType nwarps = hipGridDim_x * hipBlockDim_x / WF_SIZE;
 
     for(IndexType ai = warpid; ai < nrow; ai += nwarps)
     {
+        IndexType row_start = row_offset[ai];
+        IndexType row_end   = row_offset[ai + 1];
+
         ValueType sum;
         make_ValueType(sum, 0);
 
-        for(IndexType aj = row_offset[ai] + laneid; aj < row_offset[ai + 1]; aj += WARP_SIZE)
+        for(IndexType aj = row_start + laneid; aj < row_end; aj += WF_SIZE)
         {
-            sum += val[aj] * in[col[aj]];
+            sum = fma(val[aj], __ldg(in + col[aj]), sum);
         }
 
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-
-        __syncthreads();
-        if(WARP_SIZE > 32)
-            sum = add_volatile_ValueType(&sdata[tid + 32], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 16)
-            sum = add_volatile_ValueType(&sdata[tid + 16], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 8)
-            sum = add_volatile_ValueType(&sdata[tid + 8], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 4)
-            sum = add_volatile_ValueType(&sdata[tid + 4], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 2)
-            sum = add_volatile_ValueType(&sdata[tid + 2], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 1)
-            sum = add_volatile_ValueType(&sdata[tid + 1], &sum);
+        sum = wf_reduce_sum<WF_SIZE>(sum);
 
         if(laneid == 0)
         {
-            out[ai] = sum + val[ai] * in[ai];
+            out[ai] = fma(val[ai], in[ai], sum);
         }
     }
 }
 
-template <unsigned int BLOCK_SIZE, unsigned int WARP_SIZE, typename ValueType, typename IndexType>
+template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
 __global__ void kernel_mcsr_add_spmv(IndexType nrow,
                                      const IndexType* __restrict__ row_offset,
                                      const IndexType* __restrict__ col,
@@ -100,51 +77,25 @@ __global__ void kernel_mcsr_add_spmv(IndexType nrow,
 {
     IndexType gid    = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     IndexType tid    = hipThreadIdx_x;
-    IndexType laneid = tid % WARP_SIZE;
-    IndexType warpid = gid / WARP_SIZE;
-    IndexType nwarps = hipGridDim_x * hipBlockDim_x / WARP_SIZE;
-
-    __shared__ volatile ValueType sdata[BLOCK_SIZE + WARP_SIZE / 2];
+    IndexType laneid = tid % WF_SIZE;
+    IndexType warpid = gid / WF_SIZE;
+    IndexType nwarps = hipGridDim_x * hipBlockDim_x / WF_SIZE;
 
     for(IndexType ai = warpid; ai < nrow; ai += nwarps)
     {
         ValueType sum;
         make_ValueType(sum, 0.0);
 
-        for(IndexType aj = row_offset[ai] + laneid; aj < row_offset[ai + 1]; aj += WARP_SIZE)
+        for(IndexType aj = row_offset[ai] + laneid; aj < row_offset[ai + 1]; aj += WF_SIZE)
         {
-            sum += scalar * val[aj] * in[col[aj]];
+            sum = fma(scalar * val[aj], __ldg(in + col[aj]), sum);
         }
 
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-
-        __syncthreads();
-        if(WARP_SIZE > 32)
-            sum = add_volatile_ValueType(&sdata[tid + 32], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 16)
-            sum = add_volatile_ValueType(&sdata[tid + 16], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 8)
-            sum = add_volatile_ValueType(&sdata[tid + 8], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 4)
-            sum = add_volatile_ValueType(&sdata[tid + 4], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 2)
-            sum = add_volatile_ValueType(&sdata[tid + 2], &sum);
-        __syncthreads();
-        assign_volatile_ValueType(&sum, &sdata[tid]);
-        if(WARP_SIZE > 1)
-            sum = add_volatile_ValueType(&sdata[tid + 1], &sum);
+        sum = wf_reduce_sum<WF_SIZE>(sum);
 
         if(laneid == 0)
         {
-            out[ai] = out[ai] + sum + scalar * val[ai] * in[ai];
+            out[ai] = fma(scalar * val[ai], in[ai], out[ai] + sum);
         }
     }
 }
