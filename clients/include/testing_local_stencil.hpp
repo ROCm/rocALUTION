@@ -36,6 +36,7 @@ template <typename T>
 void testing_local_stencil_bad_args(void)
 {
     // Initialize rocALUTION
+    set_device_rocalution(device);
     init_rocalution();
 
     LocalStencil<T> stn(Laplace2D);

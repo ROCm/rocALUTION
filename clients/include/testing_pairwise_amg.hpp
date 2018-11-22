@@ -52,6 +52,7 @@ bool testing_pairwise_amg(Arguments argus)
     int ordering = argus.ordering;
 
     // Initialize rocALUTION platform
+    set_device_rocalution(device);
     init_rocalution();
 
     // rocALUTION structures

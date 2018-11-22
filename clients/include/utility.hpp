@@ -28,6 +28,8 @@
 #include <string>
 #include <algorithm>
 
+extern int device;
+
 /* ============================================================================================ */
 /*! \brief  Generate 2D laplacian on unit square in CSR format */
 template <typename T>

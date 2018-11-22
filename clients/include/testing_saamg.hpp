@@ -53,6 +53,7 @@ bool testing_saamg(Arguments argus)
     bool scaling = argus.ordering;
 
     // Initialize rocALUTION platform
+    set_device_rocalution(device);
     init_rocalution();
 
     // rocALUTION structures

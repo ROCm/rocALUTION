@@ -53,6 +53,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
     bool scaling = argus.ordering;
 
     // Initialize rocALUTION platform
+    set_device_rocalution(device);
     init_rocalution();
 
     // rocALUTION structures

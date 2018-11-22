@@ -38,6 +38,7 @@ void testing_local_matrix_bad_args(void)
     int safe_size = 100;
 
     // Initialize rocALUTION
+    set_device_rocalution(device);
     init_rocalution();
 
     LocalMatrix<T> mat1;
