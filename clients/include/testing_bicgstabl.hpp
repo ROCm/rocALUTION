@@ -50,6 +50,7 @@ bool testing_bicgstabl(Arguments argus)
     int l = argus.index;
 
     // Initialize rocALUTION platform
+    set_device_rocalution(device);
     init_rocalution();
 
     // rocALUTION structures

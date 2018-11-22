@@ -38,6 +38,7 @@ void testing_parallel_manager_bad_args(void)
     int safe_size = 100;
 
     // Initialize rocALUTION
+    set_device_rocalution(device);
     init_rocalution();
 
     ParallelManager pm;

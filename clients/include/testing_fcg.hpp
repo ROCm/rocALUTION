@@ -49,6 +49,7 @@ bool testing_fcg(Arguments argus)
     unsigned int format = argus.format;
 
     // Initialize rocALUTION platform
+    set_device_rocalution(device);
     init_rocalution();
 
     // rocALUTION structures

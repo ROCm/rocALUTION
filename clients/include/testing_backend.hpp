@@ -50,6 +50,7 @@ void testing_backend_init_order(void)
     ASSERT_DEATH(set_omp_threshold_rocalution(threshold), ".*Assertion.*");
 
     // Initialize rocalution platform
+    set_device_rocalution(device);
     init_rocalution();
 
     // Set OpenMP thread affinity after init_rocalution should terminate
