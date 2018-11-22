@@ -21,9 +21,13 @@
  *
  * ************************************************************************ */
 
+#include "utility.hpp"
+
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include <rocalution.hpp>
+
+int device;
 
 /* =====================================================================
       Main function:
@@ -31,6 +35,18 @@
 
 int main(int argc, char** argv)
 {
+    // Get device id from command line
+    device = 0;
+
+    for(int i = 1; i < argc; ++i)
+    {
+        if(strcmp(argv[i], "--device") == 0 && argc > i + 1)
+        {
+            device = atoi(argv[i + 1]);
+        }
+    }
+
+    rocalution::set_device_rocalution(device);
     rocalution::init_rocalution();
     rocalution::info_rocalution();
     rocalution::stop_rocalution();
