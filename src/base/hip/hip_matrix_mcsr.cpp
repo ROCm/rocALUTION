@@ -640,7 +640,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
         assert(cast_out != NULL);
 
         dim3 BlockSize(512);
-        dim3 GridSize(this->nrow_ / 512 + 1);
+        dim3 GridSize((this->nrow_ - 1) / 512 + 1);
 
         int nnz_per_row = this->nnz_ / this->nrow_;
 
@@ -648,7 +648,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
         {
             if(nnz_per_row < 4)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 2, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<2, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -662,7 +662,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else if(nnz_per_row < 8)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 4, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<4, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -676,7 +676,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else if(nnz_per_row < 16)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 8, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<8, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -690,7 +690,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else if(nnz_per_row < 32)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 16, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<16, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -704,7 +704,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 32, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<32, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -721,7 +721,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
         {
             if(nnz_per_row < 4)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 2, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<2, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -735,7 +735,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else if(nnz_per_row < 8)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 4, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<4, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -749,7 +749,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else if(nnz_per_row < 16)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 8, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<8, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -763,7 +763,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else if(nnz_per_row < 32)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 16, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<16, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -777,7 +777,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else if(nnz_per_row < 64)
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 32, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<32, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -791,7 +791,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
             }
             else
             {
-                hipLaunchKernelGGL((kernel_mcsr_spmv<512, 64, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_spmv<64, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -835,7 +835,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
         assert(cast_out != NULL);
 
         dim3 BlockSize(512);
-        dim3 GridSize(this->nrow_ / 512 + 1);
+        dim3 GridSize((this->nrow_ - 1) / 512 + 1);
 
         int nnz_per_row = this->nnz_ / this->nrow_;
 
@@ -843,7 +843,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
         {
             if(nnz_per_row < 4)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 2, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<2, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -858,7 +858,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else if(nnz_per_row < 8)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 4, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<4, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -873,7 +873,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else if(nnz_per_row < 16)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 8, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<8, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -888,7 +888,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else if(nnz_per_row < 32)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 16, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<16, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -903,7 +903,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 32, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<32, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -921,7 +921,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
         {
             if(nnz_per_row < 4)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 2, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<2, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -936,7 +936,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else if(nnz_per_row < 8)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 4, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<4, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -951,7 +951,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else if(nnz_per_row < 16)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 8, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<8, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -966,7 +966,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else if(nnz_per_row < 32)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 16, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<16, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -981,7 +981,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else if(nnz_per_row < 64)
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 32, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<32, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
@@ -996,7 +996,7 @@ void HIPAcceleratorMatrixMCSR<ValueType>::ApplyAdd(const BaseVector<ValueType>& 
             }
             else
             {
-                hipLaunchKernelGGL((kernel_mcsr_add_spmv<512, 64, ValueType, int>),
+                hipLaunchKernelGGL((kernel_mcsr_add_spmv<64, ValueType, int>),
                                    GridSize,
                                    BlockSize,
                                    0,
