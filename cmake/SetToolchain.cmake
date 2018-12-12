@@ -48,8 +48,8 @@ if (NOT HIP_FOUND)
 else()
   option(SUPPORT_HIP "Compile WITH HIP support." ON)
   if (SUPPORT_HIP)
-    find_package(ROCBLAS 0.14.2 REQUIRED) # ROCm 1.9
-    find_package(ROCSPARSE 1.0.0 REQUIRED) # ROCm 1.9
+    find_package(ROCBLAS 2.0.0 REQUIRED) # ROCm 2.0
+    find_package(ROCSPARSE 1.0.0 REQUIRED) # ROCm 2.0
 
     # Find HCC executable
     find_program(
