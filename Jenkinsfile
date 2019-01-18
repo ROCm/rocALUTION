@@ -197,7 +197,7 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
         """
     }
 
-    if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu' ) )
+    if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' ) )
     {
       stage('Clang Format')
       {
