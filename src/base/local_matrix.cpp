@@ -72,19 +72,19 @@ LocalMatrix<ValueType>::~LocalMatrix()
 template <typename ValueType>
 IndexType2 LocalMatrix<ValueType>::GetM(void) const
 {
-    return (IndexType2) this->matrix_->GetM();
+    return (IndexType2)this->matrix_->GetM();
 }
 
 template <typename ValueType>
 IndexType2 LocalMatrix<ValueType>::GetN(void) const
 {
-    return (IndexType2) this->matrix_->GetN();
+    return (IndexType2)this->matrix_->GetN();
 }
 
 template <typename ValueType>
 IndexType2 LocalMatrix<ValueType>::GetNnz(void) const
 {
-    return (IndexType2) this->matrix_->GetNnz();
+    return (IndexType2)this->matrix_->GetNnz();
 }
 
 template <typename ValueType>
@@ -4597,7 +4597,8 @@ void LocalMatrix<ValueType>::Sort(void)
 
                 if(format != CSR)
                 {
-                    LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Sort() is performed in CSR format");
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::Sort() is performed in CSR format");
                     this->ConvertTo(format);
                 }
             }
