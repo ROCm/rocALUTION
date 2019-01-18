@@ -54,8 +54,8 @@ int gen_2d_laplacian(int ndim, int** rowptr, int** col, T** val)
     {
         for(int j = 0; j < ndim; ++j)
         {
-            int idx = i * ndim + j;
-            (*rowptr)[idx]       = nnz;
+            int idx        = i * ndim + j;
+            (*rowptr)[idx] = nnz;
             // if no upper boundary element, connect with upper neighbor
             if(i != 0)
             {
@@ -105,7 +105,6 @@ int gen_2d_laplacian(int ndim, int** rowptr, int** col, T** val)
 class Arguments
 {
     public:
-
     // MPI variables
     int rank         = 0;
     int dev_per_node = 1;
@@ -134,10 +133,10 @@ class Arguments
     std::string precond  = "";
     std::string smoother = "";
 
-    int pre_smooth    = 2;
-    int post_smooth   = 2;
-    int ordering      = 1;
-    int cycle         = 0;
+    int pre_smooth  = 2;
+    int post_smooth = 2;
+    int ordering    = 1;
+    int cycle       = 0;
 
     unsigned int format;
 

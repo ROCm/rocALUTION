@@ -31,26 +31,20 @@
 
 using namespace rocalution;
 
-static bool check_residual(float res)
-{
-    return (res < 1e-2f);
-}
+static bool check_residual(float res) { return (res < 1e-2f); }
 
-static bool check_residual(double res)
-{
-    return (res < 1e-5);
-}
+static bool check_residual(double res) { return (res < 1e-5); }
 
 template <typename T>
 bool testing_uaamg(Arguments argus)
 {
-    int ndim = argus.size;
-    int pre_iter = argus.pre_smooth;
-    int post_iter = argus.post_smooth;
+    int ndim             = argus.size;
+    int pre_iter         = argus.pre_smooth;
+    int post_iter        = argus.post_smooth;
     std::string smoother = argus.smoother;
-    unsigned int format = argus.format;
-    int cycle = argus.cycle;
-    bool scaling = argus.ordering;
+    unsigned int format  = argus.format;
+    int cycle            = argus.cycle;
+    bool scaling         = argus.ordering;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);
@@ -68,7 +62,7 @@ bool testing_uaamg(Arguments argus)
     T* csr_val   = NULL;
 
     int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
-    int nnz = csr_ptr[nrow];
+    int nnz  = csr_ptr[nrow];
 
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
@@ -113,18 +107,23 @@ bool testing_uaamg(Arguments argus)
     cgs.Verbose(0);
 
     // Smoother for each level
-    IterativeLinearSolver<LocalMatrix<T>, LocalVector<T>, T> **sm = new IterativeLinearSolver<LocalMatrix<T>, LocalVector<T>, T>*[levels - 1];
+    IterativeLinearSolver<LocalMatrix<T>, LocalVector<T>, T>** sm =
+        new IterativeLinearSolver<LocalMatrix<T>, LocalVector<T>, T>*[levels - 1];
 
-    for(int i=0; i<levels-1; ++i)
+    for(int i = 0; i < levels - 1; ++i)
     {
-        FixedPoint<LocalMatrix<T>, LocalVector<T>, T> *fp = new FixedPoint<LocalMatrix<T>, LocalVector<T>, T>;
+        FixedPoint<LocalMatrix<T>, LocalVector<T>, T>* fp =
+            new FixedPoint<LocalMatrix<T>, LocalVector<T>, T>;
         sm[i] = fp;
 
-        Preconditioner<LocalMatrix<T>, LocalVector<T>, T> *smooth;
-        
-        if(smoother == "FSAI") smooth = new FSAI<LocalMatrix<T>, LocalVector<T>, T>;
-        else if(smoother == "ILU") smooth = new ILU<LocalMatrix<T>, LocalVector<T>, T>;
-        else return false;
+        Preconditioner<LocalMatrix<T>, LocalVector<T>, T>* smooth;
+
+        if(smoother == "FSAI")
+            smooth = new FSAI<LocalMatrix<T>, LocalVector<T>, T>;
+        else if(smoother == "ILU")
+            smooth = new ILU<LocalMatrix<T>, LocalVector<T>, T>;
+        else
+            return false;
 
         sm[i]->SetPreconditioner(*smooth);
         sm[i]->Verbose(0);

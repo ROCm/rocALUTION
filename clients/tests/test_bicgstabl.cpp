@@ -28,10 +28,11 @@
 
 typedef std::tuple<int, std::string, unsigned int, int> bicgstabl_tuple;
 
-int bicgstabl_size[] = {7, 63};
-std::string bicgstabl_precond[] = {"None", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
+int bicgstabl_size[]            = {7, 63};
+std::string bicgstabl_precond[] = {
+    "None", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
 unsigned int bicgstabl_format[] = {1, 2, 4, 5, 6, 7};
-int bicgstabl_level[] = {1, 2, 4};
+int bicgstabl_level[]           = {1, 2, 4};
 
 class parameterized_bicgstabl : public testing::TestWithParam<bicgstabl_tuple>
 {
@@ -45,10 +46,10 @@ class parameterized_bicgstabl : public testing::TestWithParam<bicgstabl_tuple>
 Arguments setup_bicgstabl_arguments(bicgstabl_tuple tup)
 {
     Arguments arg;
-    arg.size       = std::get<0>(tup);
-    arg.precond    = std::get<1>(tup);
-    arg.format     = std::get<2>(tup);
-    arg.index      = std::get<3>(tup);
+    arg.size    = std::get<0>(tup);
+    arg.precond = std::get<1>(tup);
+    arg.format  = std::get<2>(tup);
+    arg.index   = std::get<3>(tup);
     return arg;
 }
 

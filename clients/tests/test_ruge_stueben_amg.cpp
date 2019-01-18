@@ -28,12 +28,12 @@
 
 typedef std::tuple<int, std::string, int, int, unsigned int, int, int> rsamg_tuple;
 
-int rsamg_size[] = {63, 134};
+int rsamg_size[]             = {63, 134};
 std::string rsamg_smoother[] = {"ILU", "MCGS"};
-int rsamg_pre_iter[] = {1, 2};
-int rsamg_post_iter[] = {1, 2};
-int rsamg_cycle[] = {0, 1};
-int rsamg_scaling[] = {0, 1};
+int rsamg_pre_iter[]         = {1, 2};
+int rsamg_post_iter[]        = {1, 2};
+int rsamg_cycle[]            = {0, 1};
+int rsamg_scaling[]          = {0, 1};
 
 unsigned int rsamg_format[] = {1, 7};
 

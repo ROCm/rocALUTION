@@ -28,10 +28,10 @@
 
 typedef std::tuple<int, std::string, unsigned int, int> idr_tuple;
 
-int idr_size[] = {7, 63};
+int idr_size[]            = {7, 63};
 std::string idr_precond[] = {"None", "SPAI", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
 unsigned int idr_format[] = {1, 2, 4, 5, 6, 7};
-int idr_level[] = {1, 2, 4};
+int idr_level[]           = {1, 2, 4};
 
 class parameterized_idr : public testing::TestWithParam<idr_tuple>
 {
@@ -45,10 +45,10 @@ class parameterized_idr : public testing::TestWithParam<idr_tuple>
 Arguments setup_idr_arguments(idr_tuple tup)
 {
     Arguments arg;
-    arg.size       = std::get<0>(tup);
-    arg.precond    = std::get<1>(tup);
-    arg.format     = std::get<2>(tup);
-    arg.index      = std::get<3>(tup);
+    arg.size    = std::get<0>(tup);
+    arg.precond = std::get<1>(tup);
+    arg.format  = std::get<2>(tup);
+    arg.index   = std::get<3>(tup);
     return arg;
 }
 

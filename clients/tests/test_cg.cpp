@@ -28,8 +28,19 @@
 
 typedef std::tuple<int, std::string, unsigned int> cg_tuple;
 
-int cg_size[] = {7, 63};
-std::string cg_precond[] = {"None", "Chebyshev", "FSAI", "SPAI", "TNS", "Jacobi", "SGS", "ILU", "ILUT", "IC", "MCSGS", "MCILU"};
+int cg_size[]            = {7, 63};
+std::string cg_precond[] = {"None",
+                            "Chebyshev",
+                            "FSAI",
+                            "SPAI",
+                            "TNS",
+                            "Jacobi",
+                            "SGS",
+                            "ILU",
+                            "ILUT",
+                            "IC",
+                            "MCSGS",
+                            "MCILU"};
 unsigned int cg_format[] = {1, 2, 4, 5, 6, 7};
 
 class parameterized_cg : public testing::TestWithParam<cg_tuple>
@@ -44,9 +55,9 @@ class parameterized_cg : public testing::TestWithParam<cg_tuple>
 Arguments setup_cg_arguments(cg_tuple tup)
 {
     Arguments arg;
-    arg.size       = std::get<0>(tup);
-    arg.precond    = std::get<1>(tup);
-    arg.format     = std::get<2>(tup);
+    arg.size    = std::get<0>(tup);
+    arg.precond = std::get<1>(tup);
+    arg.format  = std::get<2>(tup);
     return arg;
 }
 

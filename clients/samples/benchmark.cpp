@@ -482,8 +482,7 @@ int main(int argc, char* argv[])
               << " GFlop/sec" << std::endl;
 
     std::cout << "Norm execution: " << (norm_tack - norm_tick) / max_tests / 1e3 << " msec"
-              << "; "
-              << max_tests * double(sizeof(double) * (size)) / (norm_tack - norm_tick) / 1e3
+              << "; " << max_tests * double(sizeof(double) * (size)) / (norm_tack - norm_tick) / 1e3
               << " Gbyte/sec; " << max_tests * double((2 * size)) / (norm_tack - norm_tick) / 1e3
               << " GFlop/sec" << std::endl;
 

@@ -28,8 +28,19 @@
 
 typedef std::tuple<int, std::string, unsigned int> cr_tuple;
 
-int cr_size[] = {7, 63};
-std::string cr_precond[] = {"None", "Chebyshev", "FSAI", "SPAI", "TNS", "Jacobi", "SGS", "ILU", "ILUT", "IC", "MCSGS", "MCILU"};
+int cr_size[]            = {7, 63};
+std::string cr_precond[] = {"None",
+                            "Chebyshev",
+                            "FSAI",
+                            "SPAI",
+                            "TNS",
+                            "Jacobi",
+                            "SGS",
+                            "ILU",
+                            "ILUT",
+                            "IC",
+                            "MCSGS",
+                            "MCILU"};
 unsigned int cr_format[] = {1, 2, 4, 5, 6, 7};
 
 class parameterized_cr : public testing::TestWithParam<cr_tuple>
@@ -44,9 +55,9 @@ class parameterized_cr : public testing::TestWithParam<cr_tuple>
 Arguments setup_cr_arguments(cr_tuple tup)
 {
     Arguments arg;
-    arg.size       = std::get<0>(tup);
-    arg.precond    = std::get<1>(tup);
-    arg.format     = std::get<2>(tup);
+    arg.size    = std::get<0>(tup);
+    arg.precond = std::get<1>(tup);
+    arg.format  = std::get<2>(tup);
     return arg;
 }
 /* TODO there _MIGHT_ be some issue with float accuracy

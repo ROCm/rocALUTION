@@ -62,14 +62,16 @@ void testing_parallel_manager_bad_args(void)
     {
         int* null_int = nullptr;
         ASSERT_DEATH(pm.SetReceivers(safe_size, null_int, idata), ".*Assertion.*recvs != NULL*");
-        ASSERT_DEATH(pm.SetReceivers(safe_size, idata, null_int), ".*Assertion.*recv_offset != NULL*");
+        ASSERT_DEATH(pm.SetReceivers(safe_size, idata, null_int),
+                     ".*Assertion.*recv_offset != NULL*");
     }
 
     // SetSenders
     {
         int* null_int = nullptr;
         ASSERT_DEATH(pm.SetSenders(safe_size, null_int, idata), ".*Assertion.*sends != NULL*");
-        ASSERT_DEATH(pm.SetSenders(safe_size, idata, null_int), ".*Assertion.*send_offset != NULL*");
+        ASSERT_DEATH(pm.SetSenders(safe_size, idata, null_int),
+                     ".*Assertion.*send_offset != NULL*");
     }
 
     free_host(&idata);
