@@ -115,7 +115,7 @@ enum _rocalution_backend_id
   *   available devices, you can use this function to select a particular one. This
   *   function has to be called before init_rocalution().
   * - set_omp_threads_rocalution() sets the number of OpenMP threads. This function has
-  *   to be called after init_rocalution().  
+  *   to be called after init_rocalution().
   *
   * @param[in]
   * rank            specifies MPI rank when multi-node environment

@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     Solver<LocalMatrix<double>, LocalVector<double>, double>** p2;
 
     int n = 2;
-    p2 = new Solver<LocalMatrix<double>, LocalVector<double>, double>*[n];
+    p2    = new Solver<LocalMatrix<double>, LocalVector<double>, double>*[n];
 
     for(int i = 0; i < n; ++i)
     {

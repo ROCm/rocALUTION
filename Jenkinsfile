@@ -129,18 +129,7 @@ void checkout_and_version( project_paths paths )
       extensions: scm.extensions + [[$class: 'CleanCheckout']] + [[$class: 'CloneOption', timeout: 180]],
       userRemoteConfigs: scm.userRemoteConfigs
     ])
-
-    if( fileExists( 'CMakeLists.txt' ) )
-    {
-      def cmake_version_file = readFile( 'CMakeLists.txt' ).trim()
-      //echo "cmake_version_file:\n${cmake_version_file}"
-
-      cmake_version_file = cmake_version_file.replaceAll(/(\d+\.)(\d+\.)(\d+\.)\d+/, "\$1\$2\$3${env.BUILD_ID}")
-      //echo "cmake_version_file:\n${cmake_version_file}"
-      writeFile( file: 'CMakeLists.txt', text: cmake_version_file )
-    }
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -194,12 +183,6 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
       fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocSPARSE/develop', flatten: true,
       selector: [$class: 'StatusBuildSelector', stable: false],
       target: "${paths.project_build_prefix}" ])
-
-    // This invokes 'copy artifact plugin' to copy latest archive from rocblas project
-    step([$class: 'CopyArtifact', filter: "Release/${rocm_archive_path}/*.deb",
-      fingerprintArtifacts: true, projectName: 'ROCmSoftwarePlatform/rocBLAS/develop', flatten: true,
-      selector: [$class: 'StatusBuildSelector', stable: false],
-      target: "${paths.project_build_prefix}" ])
   }
 
   build_image.inside( docker_args.docker_run_args )
@@ -214,10 +197,27 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
         """
     }
 
+    if( paths.project_name.equalsIgnoreCase( 'rocalution-ubuntu-hip' ) )
+    {
+      stage('Clang Format')
+      {
+        sh '''
+            find . -iname \'*.h\' \
+                -o -iname \'*.hpp\' \
+                -o -iname \'*.cpp\' \
+                -o -iname \'*.h.in\' \
+                -o -iname \'*.hpp.in\' \
+                -o -iname \'*.cpp.in\' \
+            | grep -v 'build/' \
+            | xargs -n 1 -P 1 -I{} -t sh -c \'clang-format-3.8 -style=file {} | diff - {}\'
+        '''
+      }
+    }
+
     stage( "Test ${compiler_args.build_config}" )
     {
       // Cap the maximum amount of testing to be a few hours; assume failure if the time limit is hit
-      timeout(time: 3, unit: 'HOURS')
+      timeout(time: 4, unit: 'HOURS')
       {
         if(isJobStartedByTimer())
         {
@@ -255,25 +255,10 @@ def docker_build_inside_image( def build_image, compiler_data compiler_args, doc
 
             # Temp rocm lib mv because repo.radeon.com does not have debs for them
             mv ${paths.project_build_prefix}/*.deb ${docker_context}
-            dpkg -c ${docker_context}/*rocblas*.deb
             dpkg -c ${docker_context}/*rocsparse*.deb
             dpkg -c ${docker_context}/*rocalution*.deb
         """
         archiveArtifacts artifacts: "${docker_context}/*.deb", fingerprint: true
-
-//        stage('Clang Format')
-//        {
-//          sh '''
-//              find . -iname \'*.h\' \
-//                  -o -iname \'*.hpp\' \
-//                  -o -iname \'*.cpp\' \
-//                  -o -iname \'*.h.in\' \
-//                  -o -iname \'*.hpp.in\' \
-//                  -o -iname \'*.cpp.in\' \
-//              | grep -v 'build/' \
-//              | xargs -n 1 -P 1 -I{} -t sh -c \'clang-format-3.8 -style=file {} | diff - {}\'
-//          '''
-//        }
       }
       else if( paths.project_name.toLowerCase().startsWith( 'rocalution-fedora' ) )
       {
@@ -450,10 +435,10 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
 
 rocm_ubuntu_hip:
 {
-  node( 'docker && rocm19 && dkms')
+  node( 'docker && rocm20 && dkms')
   {
     def docker_args = new docker_data(
-        from_image:'rocm/dev-ubuntu-16.04:latest',
+        from_image:'rocm/dev-ubuntu-16.04:2.0',
         build_docker_file:'dockerfile-build-ubuntu',
         install_docker_file:'dockerfile-install-ubuntu',
         docker_run_args:'--device=/dev/kfd --device=/dev/dri --group-add=video',
@@ -479,7 +464,7 @@ rocm_ubuntu_hip:
         project_name:'rocalution-ubuntu-hip',
         src_prefix:'src',
         build_prefix:'src',
-        build_command: 'sudo dpkg -i rocsparse-*.deb ; sudo dpkg -i rocblas-*.deb ; ./install.sh -cd' )
+        build_command: 'sudo dpkg -i rocsparse-*.deb ; ./install.sh -cd' )
 
     def print_version_closure = {
       sh  """

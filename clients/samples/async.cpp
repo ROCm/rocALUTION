@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 
     // Async
     tickg = rocalution_time();
-    tick = rocalution_time();
+    tick  = rocalution_time();
 
     // Memory transfer
     mat.MoveToAcceleratorAsync();

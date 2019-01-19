@@ -68,13 +68,13 @@ void testing_backend_init_order(void)
 
 void testing_backend(Arguments argus)
 {
-    int rank = argus.rank;
+    int rank         = argus.rank;
     int dev_per_node = argus.dev_per_node;
-    int dev = argus.dev;
-    int nthreads = argus.omp_nthreads;
-    bool affinity = argus.omp_affinity;
-    int threshold = argus.omp_threshold;
-    bool use_acc = argus.use_acc;
+    int dev          = argus.dev;
+    int nthreads     = argus.omp_nthreads;
+    bool affinity    = argus.omp_affinity;
+    int threshold    = argus.omp_threshold;
+    bool use_acc     = argus.use_acc;
 
     // Select a device
     set_device_rocalution(dev);

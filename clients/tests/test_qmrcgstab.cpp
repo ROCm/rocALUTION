@@ -28,8 +28,9 @@
 
 typedef std::tuple<int, std::string, unsigned int> qmrcgstab_tuple;
 
-int qmrcgstab_size[] = {7, 63};
-std::string qmrcgstab_precond[] = {"None", "Chebyshev", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
+int qmrcgstab_size[]            = {7, 63};
+std::string qmrcgstab_precond[] = {
+    "None", "Chebyshev", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
 unsigned int qmrcgstab_format[] = {1, 2, 4, 5, 6, 7};
 
 class parameterized_qmrcgstab : public testing::TestWithParam<qmrcgstab_tuple>
@@ -44,9 +45,9 @@ class parameterized_qmrcgstab : public testing::TestWithParam<qmrcgstab_tuple>
 Arguments setup_qmrcgstab_arguments(qmrcgstab_tuple tup)
 {
     Arguments arg;
-    arg.size       = std::get<0>(tup);
-    arg.precond    = std::get<1>(tup);
-    arg.format     = std::get<2>(tup);
+    arg.size    = std::get<0>(tup);
+    arg.precond = std::get<1>(tup);
+    arg.format  = std::get<2>(tup);
     return arg;
 }
 

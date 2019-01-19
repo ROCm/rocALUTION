@@ -31,20 +31,14 @@
 
 using namespace rocalution;
 
-static bool check_residual(float res)
-{
-    return (res < 1e-3f);
-}
+static bool check_residual(float res) { return (res < 1e-3f); }
 
-static bool check_residual(double res)
-{
-    return (res < 1e-6);
-}
+static bool check_residual(double res) { return (res < 1e-6); }
 
 template <typename T>
 bool testing_qmrcgstab(Arguments argus)
 {
-    int ndim = argus.size;
+    int ndim            = argus.size;
     std::string precond = argus.precond;
     unsigned int format = argus.format;
 
@@ -64,7 +58,7 @@ bool testing_qmrcgstab(Arguments argus)
     T* csr_val   = NULL;
 
     int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
-    int nnz = csr_ptr[nrow];
+    int nnz  = csr_ptr[nrow];
 
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
@@ -90,9 +84,10 @@ bool testing_qmrcgstab(Arguments argus)
     QMRCGStab<LocalMatrix<T>, LocalVector<T>, T> ls;
 
     // Preconditioner
-    Preconditioner<LocalMatrix<T>, LocalVector<T>, T> *p;
+    Preconditioner<LocalMatrix<T>, LocalVector<T>, T>* p;
 
-    if(precond == "None") p = NULL;
+    if(precond == "None")
+        p = NULL;
     else if(precond == "Chebyshev")
     {
         // Chebyshev preconditioner
@@ -103,24 +98,38 @@ bool testing_qmrcgstab(Arguments argus)
 
         A.Gershgorin(lambda_min, lambda_max);
 
-        AIChebyshev<LocalMatrix<T>, LocalVector<T>, T> *cheb = new AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>;
+        AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>* cheb =
+            new AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>;
         cheb->Set(3, lambda_max / 7.0, lambda_max);
 
         p = cheb;
     }
-    else if(precond == "FSAI") p = new FSAI<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "SPAI") p = new SPAI<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "TNS") p = new TNS<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "Jacobi") p = new Jacobi<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "GS") p = new GS<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "SGS") p = new SGS<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "ILU") p = new ILU<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "ILUT") p = new ILUT<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "IC") p = new IC<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "MCGS") p = new MultiColoredGS<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "MCSGS") p = new MultiColoredSGS<LocalMatrix<T>, LocalVector<T>, T>;
-    else if(precond == "MCILU") p = new MultiColoredILU<LocalMatrix<T>, LocalVector<T>, T>;
-    else return false;
+    else if(precond == "FSAI")
+        p = new FSAI<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "SPAI")
+        p = new SPAI<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "TNS")
+        p = new TNS<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "Jacobi")
+        p = new Jacobi<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "GS")
+        p = new GS<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "SGS")
+        p = new SGS<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "ILU")
+        p = new ILU<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "ILUT")
+        p = new ILUT<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "IC")
+        p = new IC<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "MCGS")
+        p = new MultiColoredGS<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "MCSGS")
+        p = new MultiColoredSGS<LocalMatrix<T>, LocalVector<T>, T>;
+    else if(precond == "MCILU")
+        p = new MultiColoredILU<LocalMatrix<T>, LocalVector<T>, T>;
+    else
+        return false;
 
     ls.Verbose(0);
     ls.SetOperator(A);

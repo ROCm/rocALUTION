@@ -111,13 +111,15 @@ class GlobalMatrix : public Operator<ValueType>
                        std::string name,
                        int local_nnz,
                        int ghost_nnz);
-    void
+
     /** \brief Initialize a CSR matrix on the host with externally allocated local data */
+    void
     SetLocalDataPtrCSR(int** row_offset, int** col, ValueType** val, std::string name, int nnz);
     /** \brief Initialize a COO matrix on the host with externally allocated local data */
     void SetLocalDataPtrCOO(int** row, int** col, ValueType** val, std::string name, int nnz);
-    void
+
     /** \brief Initialize a CSR matrix on the host with externally allocated ghost data */
+    void
     SetGhostDataPtrCSR(int** row_offset, int** col, ValueType** val, std::string name, int nnz);
     /** \brief Initialize a COO matrix on the host with externally allocated ghost data */
     void SetGhostDataPtrCOO(int** row, int** col, ValueType** val, std::string name, int nnz);

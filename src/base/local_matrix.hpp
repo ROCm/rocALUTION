@@ -72,7 +72,7 @@ class LocalMatrix : public Operator<ValueType>
     /** \brief Perform a sanity check of the matrix
       * \details
       * Checks, if the matrix contains valid data, i.e. if the values are not infinity
-      * and not NaN (not a number) and if the structure of the matrix is correct (e.g. 
+      * and not NaN (not a number) and if the structure of the matrix is correct (e.g.
       * indices cannot be negative, CSR and COO matrices have to be sorted, etc.).
       *
       * \retval true if the matrix is ok (empty matrix is also ok).
@@ -744,7 +744,7 @@ class LocalMatrix : public Operator<ValueType>
       * Typically, it is hard to compare if two matrices have the same structure (and
       * values). To do so, rocALUTION provides a keying function, that generates three
       * keys, for the row index, column index and values array.
-      * 
+      *
       * @param[out]
       * row_key row index array key
       * @param[out]

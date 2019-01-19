@@ -15,6 +15,7 @@ ARG user_uid
 # * rocalution-bench: libboost-program-options-dev
 # * libhsakmt.so: libnuma1
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    rock-dkms \
     sudo \
     mpi-default-bin \
     mpi-default-dev \
@@ -30,12 +31,14 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     libboost-program-options-dev \
     libnuma1 \
     wget \
+    rocblas \
     rocrand
 
 # Add rocm repository
 #RUN wget -qO - http://repo.radeon.com/rocm/apt/debian/rocm.gpg.key | apt-key add -
 #RUN sh -c 'echo deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main > /etc/apt/sources.list.d/rocm.list'
 #RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#    rocblas \
 #    rocrand \
 #    && \
 #    apt-get clean && \

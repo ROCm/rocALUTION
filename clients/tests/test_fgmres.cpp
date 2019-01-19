@@ -28,9 +28,10 @@
 
 typedef std::tuple<int, int, std::string, unsigned int> fgmres_tuple;
 
-int fgmres_size[] = {7, 63};
-int fgmres_basis[] = {20, 60};
-std::string fgmres_precond[] = {"None", "Chebyshev", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
+int fgmres_size[]            = {7, 63};
+int fgmres_basis[]           = {20, 60};
+std::string fgmres_precond[] = {
+    "None", "Chebyshev", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
 unsigned int fgmres_format[] = {1, 2, 4, 5, 6, 7};
 
 class parameterized_fgmres : public testing::TestWithParam<fgmres_tuple>
@@ -45,10 +46,10 @@ class parameterized_fgmres : public testing::TestWithParam<fgmres_tuple>
 Arguments setup_fgmres_arguments(fgmres_tuple tup)
 {
     Arguments arg;
-    arg.size       = std::get<0>(tup);
-    arg.index      = std::get<1>(tup);
-    arg.precond    = std::get<2>(tup);
-    arg.format     = std::get<3>(tup);
+    arg.size    = std::get<0>(tup);
+    arg.index   = std::get<1>(tup);
+    arg.precond = std::get<2>(tup);
+    arg.format  = std::get<3>(tup);
     return arg;
 }
 

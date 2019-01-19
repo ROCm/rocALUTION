@@ -104,22 +104,28 @@ void testing_local_vector_bad_args(void)
     // ExtractCoarseMapping
     {
         int* null_int = nullptr;
-        int* vint = nullptr;
+        int* vint     = nullptr;
         allocate_host(safe_size, &vint);
-        ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, null_int, 0, vint, vint), ".*Assertion.*index != NULL*");
-        ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, vint, 0, null_int, vint), ".*Assertion.*size != NULL*");
-        ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, vint, 0, vint, null_int), ".*Assertion.*map != NULL*");
+        ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, null_int, 0, vint, vint),
+                     ".*Assertion.*index != NULL*");
+        ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, vint, 0, null_int, vint),
+                     ".*Assertion.*size != NULL*");
+        ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, vint, 0, vint, null_int),
+                     ".*Assertion.*map != NULL*");
         free_host(&vint);
     }
 
     // ExtractCoarseBoundary
     {
         int* null_int = nullptr;
-        int* vint = nullptr;
+        int* vint     = nullptr;
         allocate_host(safe_size, &vint);
-        ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, null_int, 0, vint, vint), ".*Assertion.*index != NULL*");
-        ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, vint, 0, null_int, vint), ".*Assertion.*size != NULL*");
-        ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, vint, 0, vint, null_int), ".*Assertion.*boundary != NULL*");
+        ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, null_int, 0, vint, vint),
+                     ".*Assertion.*index != NULL*");
+        ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, vint, 0, null_int, vint),
+                     ".*Assertion.*size != NULL*");
+        ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, vint, 0, vint, null_int),
+                     ".*Assertion.*boundary != NULL*");
         free_host(&vint);
     }
 

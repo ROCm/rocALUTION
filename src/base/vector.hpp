@@ -244,7 +244,7 @@ class Vector : public BaseRocalution<ValueType>
 
     /** \brief Clone the vector
       * \details
-      * \p CloneFrom clones the entire vector, including data and backend descriptor from another Vector.
+      * \p CloneFrom clones the entire vector, with data and backend descriptor from another Vector.
       *
       * @param[in]
       * src Vector to clone from.
