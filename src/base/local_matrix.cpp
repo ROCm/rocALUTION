@@ -72,19 +72,19 @@ LocalMatrix<ValueType>::~LocalMatrix()
 template <typename ValueType>
 IndexType2 LocalMatrix<ValueType>::GetM(void) const
 {
-    return (IndexType2)this->matrix_->GetM();
+    return static_cast<IndexType2>(this->matrix_->GetM());
 }
 
 template <typename ValueType>
 IndexType2 LocalMatrix<ValueType>::GetN(void) const
 {
-    return (IndexType2)this->matrix_->GetN();
+    return static_cast<IndexType2>(this->matrix_->GetN());
 }
 
 template <typename ValueType>
 IndexType2 LocalMatrix<ValueType>::GetNnz(void) const
 {
-    return (IndexType2)this->matrix_->GetNnz();
+    return static_cast<IndexType2>(this->matrix_->GetNnz());
 }
 
 template <typename ValueType>
@@ -1848,8 +1848,8 @@ void LocalMatrix<ValueType>::ExtractSubMatrix(
     assert(mat != NULL);
     assert(row_size > 0);
     assert(col_size > 0);
-    assert((IndexType2)row_offset <= this->GetM());
-    assert((IndexType2)col_offset <= this->GetN());
+    assert(static_cast<IndexType2>(row_offset) <= this->GetM());
+    assert(static_cast<IndexType2>(col_offset) <= this->GetN());
 
     assert(((this->matrix_ == this->matrix_host_) && (mat->matrix_ == mat->matrix_host_)) ||
            ((this->matrix_ == this->matrix_accel_) && (mat->matrix_ == mat->matrix_accel_)));
@@ -5520,7 +5520,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map, int n, i
 {
     log_debug(this, "LocalMatrix::CreateFromMap()", (const void*&)map, n, m);
 
-    assert(map.GetSize() == (IndexType2)n);
+    assert(map.GetSize() == static_cast<IndexType2>(n));
     assert(m > 0);
 
     assert(((this->matrix_ == this->matrix_host_) && (map.vector_ == map.vector_host_)) ||
@@ -5593,7 +5593,7 @@ void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map,
 
     assert(pro != NULL);
     assert(this != pro);
-    assert(map.GetSize() == (IndexType2)n);
+    assert(map.GetSize() == static_cast<IndexType2>(n));
     assert(m > 0);
 
     assert(((this->matrix_ == this->matrix_host_) && (map.vector_ == map.vector_host_) &&
