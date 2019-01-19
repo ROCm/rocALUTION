@@ -6204,11 +6204,11 @@ void LocalMatrix<ValueType>::ExtractRowVector(int idx, LocalVector<ValueType>* v
     }
 }
 
-template class LocalMatrix<double>;
 template class LocalMatrix<float>;
+template class LocalMatrix<double>;
 #ifdef SUPPORT_COMPLEX
-template class LocalMatrix<std::complex<double>>;
 template class LocalMatrix<std::complex<float>>;
+template class LocalMatrix<std::complex<double>>;
 #endif
 
 } // namespace rocalution
