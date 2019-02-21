@@ -231,7 +231,7 @@ bool IterationControl::CheckResidual(double res, int index)
     return this->CheckResidual(res);
 }
 
-bool IterationControl::CheckResidualNoCount(double res) const
+bool IterationControl::CheckResidualNoCount(double res)
 {
     assert(this->init_res_ == true);
 
@@ -245,21 +245,25 @@ bool IterationControl::CheckResidualNoCount(double res) const
 
     if(rocalution_abs(res) <= this->absolute_tol_)
     {
+        this->reached_ = 1;
         return true;
     }
 
     if(res / this->initial_residual_ <= this->relative_tol_)
     {
+        this->reached_ = 2;
         return true;
     }
 
     if(res / this->initial_residual_ >= this->divergence_tol_)
     {
+        this->reached_ = 3;
         return true;
     }
 
     if(this->iteration_ >= this->maximum_iter_)
     {
+        this->reached_ = 4;
         return true;
     }
 
