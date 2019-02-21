@@ -75,7 +75,7 @@ class IterationControl
     bool CheckResidual(double res, int index);
 
     // Check the residual (without counting the number of iterations)
-    bool CheckResidualNoCount(double res) const;
+    bool CheckResidualNoCount(double res);
 
     // Record the history of the residual
     void RecordHistory(void);

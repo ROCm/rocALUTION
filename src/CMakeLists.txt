@@ -85,13 +85,13 @@ if(SUPPORT_OMP)
 target_link_libraries(rocalution PRIVATE ${OpenMP_CXX_FLAGS})
 endif()
 if(SUPPORT_MPI)
-target_link_libraries(rocalution PUBLIC ${MPI_CXX_LIBRARIES})
+  target_link_libraries(rocalution PUBLIC ${MPI_CXX_LIBRARIES})
 endif()
 
 # Target include directories
 target_include_directories(rocalution PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 if(SUPPORT_MPI)
-  target_include_directories(rocalution PUBLIC $<BUILD_INTERFACE:${MPI_CXX_INCLUDE_DIRS}>)
+  target_include_directories(rocalution PUBLIC ${MPI_CXX_INCLUDE_DIRS})
 endif()
 
 # Target compile definitions
