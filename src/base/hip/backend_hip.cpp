@@ -188,6 +188,26 @@ void rocalution_stop_hip(void)
 
 void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_descriptor)
 {
+    // Print rocblas version
+    char rocblas_ver[64];
+    rocblas_get_version_string(rocblas_ver, sizeof(rocblas_ver));
+
+    LOG_INFO("rocBLAS ver " <<
+             rocblas_ver);
+
+    // Print rocsparse versions
+    int rocsparse_ver;
+    rocsparse_get_version(ROCSPARSE_HANDLE(_get_backend_descriptor()->ROC_sparse_handle), &rocsparse_ver);
+
+    char rocsparse_rev[64];
+    rocsparse_get_git_rev(ROCSPARSE_HANDLE(_get_backend_descriptor()->ROC_sparse_handle), rocsparse_rev);
+
+    LOG_INFO("rocSPARSE ver " <<
+             rocsparse_ver / 100000 << "." <<
+             rocsparse_ver / 100 % 1000 << "." <<
+             rocsparse_ver % 100 << "-" <<
+             rocsparse_rev);
+
     int num_dev;
 
     hipGetDeviceCount(&num_dev);

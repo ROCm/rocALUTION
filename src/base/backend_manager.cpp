@@ -316,7 +316,7 @@ void info_rocalution(const struct Rocalution_Backend_Descriptor backend_descript
     LOG_INFO("Accelerator backend: " << _rocalution_backend_name[backend_descriptor.backend]);
 
 #ifdef _OPENMP
-    LOG_INFO("OpenMP threads:" << backend_descriptor.OpenMP_threads);
+    LOG_INFO("OpenMP threads: " << backend_descriptor.OpenMP_threads);
 #else
     LOG_INFO("No OpenMP support");
 #endif
