@@ -46,15 +46,15 @@ void testing_global_vector_bad_args(void)
     // SetDataPtr
     {
         T* null_data = nullptr;
-        ASSERT_DEATH(vec.SetDataPtr(nullptr, "", safe_size), ".*Assertion.*ptr != NULL*");
-        ASSERT_DEATH(vec.SetDataPtr(&null_data, "", safe_size), ".*Assertion.*ptr != NULL*");
+        ASSERT_DEATH(vec.SetDataPtr(nullptr, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
+        ASSERT_DEATH(vec.SetDataPtr(&null_data, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
     }
 
     // LeaveDataPtr
     {
         T* data = nullptr;
         allocate_host(safe_size, &data);
-        ASSERT_DEATH(vec.LeaveDataPtr(&data), ".*Assertion.*ptr == NULL*");
+        ASSERT_DEATH(vec.LeaveDataPtr(&data), ".*Assertion.*ptr == (NULL|__null)*");
         free_host(&data);
     }
 
