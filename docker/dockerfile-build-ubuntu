@@ -32,6 +32,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     libnuma1 \
     wget \
     rocblas \
+    rocsparse \
     rocrand
 
 # Add rocm repository
@@ -39,6 +40,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 #RUN sh -c 'echo deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main > /etc/apt/sources.list.d/rocm.list'
 #RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 #    rocblas \
+#    rocsparse \
 #    rocrand \
 #    && \
 #    apt-get clean && \
