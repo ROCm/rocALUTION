@@ -48,7 +48,8 @@ void testing_local_vector_bad_args(void)
     {
         T* null_ptr = nullptr;
         ASSERT_DEATH(vec.SetDataPtr(nullptr, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
-        ASSERT_DEATH(vec.SetDataPtr(&null_ptr, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
+        ASSERT_DEATH(vec.SetDataPtr(&null_ptr, "", safe_size),
+                     ".*Assertion.*ptr != (NULL|__null)*");
     }
 
     // LeaveDataPtr
@@ -74,7 +75,8 @@ void testing_local_vector_bad_args(void)
     // SetIndexArray
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(vec.SetIndexArray(safe_size, null_int), ".*Assertion.*index != (NULL|__null)*");
+        ASSERT_DEATH(vec.SetIndexArray(safe_size, null_int),
+                     ".*Assertion.*index != (NULL|__null)*");
     }
 
     // GetIndexValues
@@ -92,13 +94,15 @@ void testing_local_vector_bad_args(void)
     // GetContinuousValues
     {
         T* null_T = nullptr;
-        ASSERT_DEATH(vec.GetContinuousValues(0, 0, null_T), ".*Assertion.*values != (NULL|__null)*");
+        ASSERT_DEATH(vec.GetContinuousValues(0, 0, null_T),
+                     ".*Assertion.*values != (NULL|__null)*");
     }
 
     // SetContinuousValues
     {
         T* null_T = nullptr;
-        ASSERT_DEATH(vec.SetContinuousValues(0, 0, null_T), ".*Assertion.*values != (NULL|__null)*");
+        ASSERT_DEATH(vec.SetContinuousValues(0, 0, null_T),
+                     ".*Assertion.*values != (NULL|__null)*");
     }
 
     // ExtractCoarseMapping

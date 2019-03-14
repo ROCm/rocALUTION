@@ -47,7 +47,8 @@ void testing_global_vector_bad_args(void)
     {
         T* null_data = nullptr;
         ASSERT_DEATH(vec.SetDataPtr(nullptr, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
-        ASSERT_DEATH(vec.SetDataPtr(&null_data, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
+        ASSERT_DEATH(vec.SetDataPtr(&null_data, "", safe_size),
+                     ".*Assertion.*ptr != (NULL|__null)*");
     }
 
     // LeaveDataPtr
