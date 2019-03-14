@@ -49,29 +49,29 @@ void testing_parallel_manager_bad_args(void)
     // SetMPICommunicator
     {
         void* null_ptr = nullptr;
-        ASSERT_DEATH(pm.SetMPICommunicator(null_ptr), ".*Assertion.*comm != NULL*");
+        ASSERT_DEATH(pm.SetMPICommunicator(null_ptr), ".*Assertion.*comm != (NULL|__null)*");
     }
 
     // SetBoundaryIndex
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(pm.SetBoundaryIndex(safe_size, null_int), ".*Assertion.*index != NULL*");
+        ASSERT_DEATH(pm.SetBoundaryIndex(safe_size, null_int), ".*Assertion.*index != (NULL|__null)*");
     }
 
     // SetReceivers
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(pm.SetReceivers(safe_size, null_int, idata), ".*Assertion.*recvs != NULL*");
+        ASSERT_DEATH(pm.SetReceivers(safe_size, null_int, idata), ".*Assertion.*recvs != (NULL|__null)*");
         ASSERT_DEATH(pm.SetReceivers(safe_size, idata, null_int),
-                     ".*Assertion.*recv_offset != NULL*");
+                     ".*Assertion.*recv_offset != (NULL|__null)*");
     }
 
     // SetSenders
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(pm.SetSenders(safe_size, null_int, idata), ".*Assertion.*sends != NULL*");
+        ASSERT_DEATH(pm.SetSenders(safe_size, null_int, idata), ".*Assertion.*sends != (NULL|__null)*");
         ASSERT_DEATH(pm.SetSenders(safe_size, idata, null_int),
-                     ".*Assertion.*send_offset != NULL*");
+                     ".*Assertion.*send_offset != (NULL|__null)*");
     }
 
     free_host(&idata);

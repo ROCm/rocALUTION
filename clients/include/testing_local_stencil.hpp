@@ -45,13 +45,13 @@ void testing_local_stencil_bad_args(void)
     // Apply
     {
         LocalVector<T>* null_vec = nullptr;
-        ASSERT_DEATH(stn.Apply(vec, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(stn.Apply(vec, null_vec), ".*Assertion.*out != (NULL|__null)*");
     }
 
     // ApplyAdd
     {
         LocalVector<T>* null_vec = nullptr;
-        ASSERT_DEATH(stn.ApplyAdd(vec, 1.0, null_vec), ".*Assertion.*out != NULL*");
+        ASSERT_DEATH(stn.ApplyAdd(vec, 1.0, null_vec), ".*Assertion.*out != (NULL|__null)*");
     }
 
     // Stop rocALUTION

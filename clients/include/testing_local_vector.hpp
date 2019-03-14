@@ -47,58 +47,58 @@ void testing_local_vector_bad_args(void)
     // SetDataPtr
     {
         T* null_ptr = nullptr;
-        ASSERT_DEATH(vec.SetDataPtr(nullptr, "", safe_size), ".*Assertion.*ptr != NULL*");
-        ASSERT_DEATH(vec.SetDataPtr(&null_ptr, "", safe_size), ".*Assertion.*ptr != NULL*");
+        ASSERT_DEATH(vec.SetDataPtr(nullptr, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
+        ASSERT_DEATH(vec.SetDataPtr(&null_ptr, "", safe_size), ".*Assertion.*ptr != (NULL|__null)*");
     }
 
     // LeaveDataPtr
     {
         T* vdata = nullptr;
         allocate_host(safe_size, &vdata);
-        ASSERT_DEATH(vec.LeaveDataPtr(&vdata), ".*Assertion.*ptr == NULL*");
+        ASSERT_DEATH(vec.LeaveDataPtr(&vdata), ".*Assertion.*ptr == (NULL|__null)*");
         free_host(&vdata);
     }
 
     // CopyFromData
     {
         T* null_ptr = nullptr;
-        ASSERT_DEATH(vec.CopyFromData(null_ptr), ".*Assertion.*data != NULL*");
+        ASSERT_DEATH(vec.CopyFromData(null_ptr), ".*Assertion.*data != (NULL|__null)*");
     }
 
     // CopyToData
     {
         T* null_ptr = nullptr;
-        ASSERT_DEATH(vec.CopyToData(null_ptr), ".*Assertion.*data != NULL*");
+        ASSERT_DEATH(vec.CopyToData(null_ptr), ".*Assertion.*data != (NULL|__null)*");
     }
 
     // SetIndexArray
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(vec.SetIndexArray(safe_size, null_int), ".*Assertion.*index != NULL*");
+        ASSERT_DEATH(vec.SetIndexArray(safe_size, null_int), ".*Assertion.*index != (NULL|__null)*");
     }
 
     // GetIndexValues
     {
         T* null_T = nullptr;
-        ASSERT_DEATH(vec.GetIndexValues(null_T), ".*Assertion.*values != NULL*");
+        ASSERT_DEATH(vec.GetIndexValues(null_T), ".*Assertion.*values != (NULL|__null)*");
     }
 
     // SetIndexValues
     {
         T* null_T = nullptr;
-        ASSERT_DEATH(vec.SetIndexValues(null_T), ".*Assertion.*values != NULL*");
+        ASSERT_DEATH(vec.SetIndexValues(null_T), ".*Assertion.*values != (NULL|__null)*");
     }
 
     // GetContinuousValues
     {
         T* null_T = nullptr;
-        ASSERT_DEATH(vec.GetContinuousValues(0, 0, null_T), ".*Assertion.*values != NULL*");
+        ASSERT_DEATH(vec.GetContinuousValues(0, 0, null_T), ".*Assertion.*values != (NULL|__null)*");
     }
 
     // SetContinuousValues
     {
         T* null_T = nullptr;
-        ASSERT_DEATH(vec.SetContinuousValues(0, 0, null_T), ".*Assertion.*values != NULL*");
+        ASSERT_DEATH(vec.SetContinuousValues(0, 0, null_T), ".*Assertion.*values != (NULL|__null)*");
     }
 
     // ExtractCoarseMapping
@@ -107,11 +107,11 @@ void testing_local_vector_bad_args(void)
         int* vint     = nullptr;
         allocate_host(safe_size, &vint);
         ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, null_int, 0, vint, vint),
-                     ".*Assertion.*index != NULL*");
+                     ".*Assertion.*index != (NULL|__null)*");
         ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, vint, 0, null_int, vint),
-                     ".*Assertion.*size != NULL*");
+                     ".*Assertion.*size != (NULL|__null)*");
         ASSERT_DEATH(vec.ExtractCoarseMapping(0, 0, vint, 0, vint, null_int),
-                     ".*Assertion.*map != NULL*");
+                     ".*Assertion.*map != (NULL|__null)*");
         free_host(&vint);
     }
 
@@ -121,11 +121,11 @@ void testing_local_vector_bad_args(void)
         int* vint     = nullptr;
         allocate_host(safe_size, &vint);
         ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, null_int, 0, vint, vint),
-                     ".*Assertion.*index != NULL*");
+                     ".*Assertion.*index != (NULL|__null)*");
         ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, vint, 0, null_int, vint),
-                     ".*Assertion.*size != NULL*");
+                     ".*Assertion.*size != (NULL|__null)*");
         ASSERT_DEATH(vec.ExtractCoarseBoundary(0, 0, vint, 0, vint, null_int),
-                     ".*Assertion.*boundary != NULL*");
+                     ".*Assertion.*boundary != (NULL|__null)*");
         free_host(&vint);
     }
 
