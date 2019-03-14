@@ -126,16 +126,16 @@ install_packages( )
 
   # Host build
   if [[ "${build_host}" == false ]]; then
-    library_dependencies_ubuntu+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" ) # TODO
-    library_dependencies_centos+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" ) # TODO
-    library_dependencies_fedora+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" ) # TODO
+    library_dependencies_ubuntu+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" )
+    library_dependencies_centos+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" )
+    library_dependencies_fedora+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" )
   fi
 
   # MPI
   if [[ "${build_mpi}" == true ]]; then
     library_dependencies_ubuntu+=( "mpi-default-bin" "mpi-default-dev" )
-    library_dependencies_centos+=( "" ) # TODO
-    library_dependencies_fedora+=( "" ) # TODO
+    library_dependencies_centos+=( "openmpi" "openmpi-devel" )
+    library_dependencies_fedora+=( "openmpi" "openmpi-devel" )
   fi
 
   # OpenMP
