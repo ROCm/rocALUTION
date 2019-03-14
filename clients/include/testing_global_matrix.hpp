@@ -321,7 +321,8 @@ void testing_global_matrix_bad_args(void)
     // ExtractInverseDiagonal
     {
         GlobalVector<T>* null_vec = nullptr;
-        ASSERT_DEATH(mat.ExtractInverseDiagonal(null_vec), ".*Assertion.*vec_inv_diag != (NULL|__null)*");
+        ASSERT_DEATH(mat.ExtractInverseDiagonal(null_vec),
+                     ".*Assertion.*vec_inv_diag != (NULL|__null)*");
     }
 
     // InitialPairwiseAggregation

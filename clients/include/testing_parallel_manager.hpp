@@ -55,13 +55,15 @@ void testing_parallel_manager_bad_args(void)
     // SetBoundaryIndex
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(pm.SetBoundaryIndex(safe_size, null_int), ".*Assertion.*index != (NULL|__null)*");
+        ASSERT_DEATH(pm.SetBoundaryIndex(safe_size, null_int),
+                     ".*Assertion.*index != (NULL|__null)*");
     }
 
     // SetReceivers
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(pm.SetReceivers(safe_size, null_int, idata), ".*Assertion.*recvs != (NULL|__null)*");
+        ASSERT_DEATH(pm.SetReceivers(safe_size, null_int, idata),
+                     ".*Assertion.*recvs != (NULL|__null)*");
         ASSERT_DEATH(pm.SetReceivers(safe_size, idata, null_int),
                      ".*Assertion.*recv_offset != (NULL|__null)*");
     }
@@ -69,7 +71,8 @@ void testing_parallel_manager_bad_args(void)
     // SetSenders
     {
         int* null_int = nullptr;
-        ASSERT_DEATH(pm.SetSenders(safe_size, null_int, idata), ".*Assertion.*sends != (NULL|__null)*");
+        ASSERT_DEATH(pm.SetSenders(safe_size, null_int, idata),
+                     ".*Assertion.*sends != (NULL|__null)*");
         ASSERT_DEATH(pm.SetSenders(safe_size, idata, null_int),
                      ".*Assertion.*send_offset != (NULL|__null)*");
     }
