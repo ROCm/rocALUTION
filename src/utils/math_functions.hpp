@@ -28,16 +28,16 @@
 
 namespace rocalution {
 
-/// Return absolute float value
-float rocalution_abs(const float& val);
-/// Return absolute double value
-double rocalution_abs(const double& val);
-/// Return absolute float value
-float rocalution_abs(const std::complex<float>& val);
-/// Return absolute double value
-double rocalution_abs(const std::complex<double>& val);
-/// Return absolute int value
-int rocalution_abs(const int& val);
+/// Return double value
+double rocalution_double(const int& val);
+/// Return double value
+double rocalution_double(const float& val);
+/// Return double value
+double rocalution_double(const double& val);
+/// Return double value
+double rocalution_double(const std::complex<float>& val);
+/// Return double value
+double rocalution_double(const std::complex<double>& val);
 
 /// Return smallest positive floating point number
 template <typename ValueType>

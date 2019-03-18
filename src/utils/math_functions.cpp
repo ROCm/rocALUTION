@@ -30,15 +30,11 @@
 
 namespace rocalution {
 
-float rocalution_abs(const float& val) { return std::fabs(val); }
-
-double rocalution_abs(const double& val) { return std::fabs(val); }
-
-float rocalution_abs(const std::complex<float>& val) { return std::abs(val); }
-
-double rocalution_abs(const std::complex<double>& val) { return std::abs(val); }
-
-int rocalution_abs(const int& val) { return abs(val); }
+double rocalution_double(const int& val) { return static_cast<double>(val); }
+double rocalution_double(const float& val) { return static_cast<double>(val); }
+double rocalution_double(const double& val) { return val; }
+double rocalution_double(const std::complex<float>& val) { return static_cast<double>(val.real()); }
+double rocalution_double(const std::complex<double>& val) { return val.real(); }
 
 template <typename ValueType>
 ValueType rocalution_eps(void)

@@ -397,7 +397,7 @@ void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const Operator
 
     int cycle = 0;
 
-    while(static_cast<ValueType>(op.GetM()) / static_cast<ValueType>(coarse->GetM()) <
+    while(static_cast<double>(op.GetM()) / static_cast<double>(coarse->GetM()) <
           this->coarsening_factor_)
     {
         coarse->FurtherPairwiseAggregation(

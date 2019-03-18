@@ -282,6 +282,21 @@ bool read_matrix_mtx(
 }
 
 template <typename ValueType>
+void write_banner(FILE* file)
+{
+    char sign[3];
+    strcpy(sign, "%%");
+
+    fprintf(file, "%sMatrixMarket matrix coordinate real general\n", sign);
+}
+
+template <typename ValueType>
+void write_value(FILE* file, ValueType val)
+{
+    fprintf(file, "%0.12lg\n", val);
+}
+
+template <typename ValueType>
 bool write_matrix_mtx(int nrow,
                       int ncol,
                       int nnz,
@@ -298,15 +313,16 @@ bool write_matrix_mtx(int nrow,
         return false;
     }
 
-    char sign[3];
-    strcpy(sign, "%%");
+    // Write MTX banner
+    write_banner<ValueType>(file);
 
-    fprintf(file, "%sMatrixMarket matrix coordinate real general\n", sign);
+    // Write matrix sizes
     fprintf(file, "%d %d %d\n", nrow, ncol, nnz);
 
     for(int i = 0; i < nnz; ++i)
     {
-        fprintf(file, "%d %d %0.12lg\n", row[i] + 1, col[i] + 1, val[i]);
+        fprintf(file, "%d %d ", row[i] + 1, col[i] + 1);
+        write_value(file, val[i]);
     }
 
     fclose(file);

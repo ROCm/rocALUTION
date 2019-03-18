@@ -322,7 +322,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     ValueType res = this->Norm_(*r0);
-    this->iter_ctrl_.InitResidual(rocalution_abs(res));
+    this->iter_ctrl_.InitResidual(std::abs(res));
 
     // r_0 = r0
     r[0]->CopyFrom(*r0);
@@ -392,7 +392,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
             // Check convergence
             res = this->Norm_(*r[0]);
 
-            if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res)))
+            if(this->iter_ctrl_.CheckResidualNoCount(std::abs(res)))
             {
                 converged = true;
                 break;
@@ -473,7 +473,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
         res = this->Norm_(*r[0]);
 
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
         {
             break;
         }
@@ -526,7 +526,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     // Using preconditioned residual
     ValueType res = this->Norm_(*r0);
 
-    this->iter_ctrl_.InitResidual(rocalution_abs(res));
+    this->iter_ctrl_.InitResidual(std::abs(res));
 
     // r_0 = r0
     r[0]->CopyFrom(*r0);
@@ -602,7 +602,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
             // Check convergence
             res = this->Norm_(*r[0]);
 
-            if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res)))
+            if(this->iter_ctrl_.CheckResidualNoCount(std::abs(res)))
             {
                 converged = true;
                 break;
@@ -683,7 +683,7 @@ void BiCGStabl<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
         res = this->Norm_(*r[0]);
 
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
         {
             break;
         }

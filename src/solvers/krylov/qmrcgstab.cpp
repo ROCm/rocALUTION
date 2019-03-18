@@ -276,7 +276,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
     // initial residual
     tau2            = this->Norm_(*r0);
-    double res_norm = rocalution_abs(tau2);
+    double res_norm = std::abs(tau2);
 
     this->iter_ctrl_.InitResidual(res_norm);
 
@@ -356,7 +356,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
     // residual <= sqrt(#iter+1) * |tau2|
     res_norm =
-        sqrt(static_cast<double>(this->iter_ctrl_.GetIterationCount() + 1)) * rocalution_abs(tau2);
+        sqrt(static_cast<double>(this->iter_ctrl_.GetIterationCount() + 1)) * std::abs(tau2);
 
     while(!this->iter_ctrl_.CheckResidual(res_norm, this->index_))
     {
@@ -456,14 +456,14 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
         // residual <= sqrt(#iter+1) * |tau2|
         res_norm = sqrt(static_cast<double>(this->iter_ctrl_.GetIterationCount() + 1)) *
-                   rocalution_abs(tau2);
+                   std::abs(tau2);
     }
 
     // Compute final residual
     op->Apply(*x, r0);
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm_(*r0)));
+    this->iter_ctrl_.CheckResidual(std::abs(this->Norm_(*r0)));
 
     log_debug(this, "QMRCGStab::SolveNonPrecond_()", " #*# end");
 }
@@ -504,7 +504,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
     // initial residual
     tau2            = this->Norm_(*r0);
-    double res_norm = rocalution_abs(tau2);
+    double res_norm = std::abs(tau2);
 
     this->iter_ctrl_.InitResidual(res_norm);
 
@@ -590,7 +590,7 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
     // residual <= sqrt(#iter+1) * |tau2|
     res_norm =
-        sqrt(static_cast<double>(this->iter_ctrl_.GetIterationCount() + 1)) * rocalution_abs(tau2);
+        sqrt(static_cast<double>(this->iter_ctrl_.GetIterationCount() + 1)) * std::abs(tau2);
 
     while(!this->iter_ctrl_.CheckResidual(res_norm, this->index_))
     {
@@ -696,14 +696,14 @@ void QMRCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
         // residual <= sqrt(#iter+1) * |tau2|
         res_norm = sqrt(static_cast<double>(this->iter_ctrl_.GetIterationCount() + 1)) *
-                   rocalution_abs(tau2);
+                   std::abs(tau2);
     }
 
     // Compute final residual
     op->Apply(*x, r0);
     r0->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-    this->iter_ctrl_.CheckResidual(rocalution_abs(this->Norm_(*r0)));
+    this->iter_ctrl_.CheckResidual(std::abs(this->Norm_(*r0)));
 
     log_debug(this, "QMRCGStab::SolvePrecond_()", " #*# end");
 }
