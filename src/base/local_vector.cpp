@@ -30,6 +30,7 @@
 #include "backend_manager.hpp"
 #include "../utils/log.hpp"
 #include "../utils/allocate_free.hpp"
+#include "../utils/math_functions.hpp"
 
 #include <stdlib.h>
 #include <sstream>

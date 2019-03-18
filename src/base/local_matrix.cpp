@@ -4438,7 +4438,7 @@ void LocalMatrix<ValueType>::Compress(double drop_off)
 {
     log_debug(this, "LocalMatrix::Compress()", drop_off);
 
-    assert(rocalution_abs(drop_off) >= 0.0);
+    assert(std::abs(drop_off) >= 0.0);
 
 #ifdef DEBUG_MODE
     this->Check();

@@ -1095,7 +1095,7 @@ int HIPAcceleratorVector<ValueType>::Amax(ValueType& value) const
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
-    value = rocalution_abs(value);
+    value = std::abs(value);
     return index;
 }
 

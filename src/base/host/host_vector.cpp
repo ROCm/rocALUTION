@@ -91,8 +91,7 @@ bool HostVector<ValueType>::Check(void) const
     {
         for(int i = 0; i < this->size_; ++i)
         {
-            if((rocalution_abs(this->vec_[i]) ==
-                std::numeric_limits<ValueType>::infinity()) || // inf
+            if((std::abs(this->vec_[i]) == std::numeric_limits<ValueType>::infinity()) || // inf
                (this->vec_[i] != this->vec_[i]))
             { // NaN
                 LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector data");
@@ -100,7 +99,7 @@ bool HostVector<ValueType>::Check(void) const
             }
         }
 
-        if((rocalution_abs(this->size_) == std::numeric_limits<int>::infinity()) || // inf
+        if((std::abs(this->size_) == std::numeric_limits<int>::infinity()) || // inf
            (this->size_ != this->size_))
         { // NaN
             LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector size");
@@ -421,8 +420,8 @@ void HostVector<ValueType>::SetRandomNormal(unsigned long long seed, ValueType m
     for(int i = 0; i < this->size_; ++i)
     {
         // Box-Muller
-        ValueType u1 = static_cast<ValueType>(rand()) / RAND_MAX;
-        ValueType u2 = static_cast<ValueType>(rand()) / RAND_MAX;
+        ValueType u1 = static_cast<ValueType>(rand()) / static_cast<ValueType>(RAND_MAX);
+        ValueType u2 = static_cast<ValueType>(rand()) / static_cast<ValueType>(RAND_MAX);
 
         this->vec_[i] =
             sqrt(static_cast<ValueType>(-2) * log(u1)) * cos(static_cast<ValueType>(2 * M_PI) * u2);
@@ -610,12 +609,12 @@ void HostVector<ValueType>::WriteFileBinary(const std::string filename) const
 
         for(int i = 0; i < this->size_; ++i)
         {
-            tmp[i] = static_cast<double>(this->vec_[i]);
+            tmp[i] = rocalution_double(this->vec_[i]);
         }
 
         out.write((char*)tmp.data(), sizeof(double) * this->size_);
     }
-    else
+    else // TODO complex
     {
         LOG_INFO("WriteFileBinary: filename=" << filename << "; internal error");
         FATAL_ERROR(__FILE__, __LINE__);
@@ -918,7 +917,7 @@ ValueType HostVector<ValueType>::Asum(void) const
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        asum += rocalution_abs(this->vec_[i]);
+        asum += std::abs(this->vec_[i]);
     }
 
     return asum;
@@ -937,8 +936,8 @@ std::complex<float> HostVector<std::complex<float>>::Asum(void) const
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        asum_real += rocalution_abs(this->vec_[i].real());
-        asum_imag += rocalution_abs(this->vec_[i].imag());
+        asum_real += std::abs(this->vec_[i].real());
+        asum_imag += std::abs(this->vec_[i].imag());
     }
 
     return std::complex<float>(asum_real, asum_imag);
@@ -957,8 +956,8 @@ std::complex<double> HostVector<std::complex<double>>::Asum(void) const
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        asum_real += rocalution_abs(this->vec_[i].real());
-        asum_imag += rocalution_abs(this->vec_[i].imag());
+        asum_real += std::abs(this->vec_[i].real());
+        asum_imag += std::abs(this->vec_[i].imag());
     }
 
     return std::complex<double>(asum_real, asum_imag);
@@ -977,7 +976,7 @@ int HostVector<ValueType>::Amax(ValueType& value) const
 #endif
     for(int i = 0; i < this->size_; ++i)
     {
-        ValueType val = rocalution_abs(this->vec_[i]);
+        ValueType val = std::abs(this->vec_[i]);
         if(val > value)
 #ifdef _OPENMP
 #pragma omp critical
