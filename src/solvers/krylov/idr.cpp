@@ -126,7 +126,7 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void)
     assert(this->op_ != NULL);
     assert(this->op_->GetM() == this->op_->GetN());
     assert(this->op_->GetM() > 0);
-    assert((IndexType2) this->s_ <= this->op_->GetM());
+    assert((IndexType2)this->s_ <= this->op_->GetM());
 
     this->r_.CloneBackend(*this->op_);
     this->v_.CloneBackend(*this->op_);

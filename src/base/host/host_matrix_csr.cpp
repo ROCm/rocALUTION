@@ -2059,7 +2059,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& s
     assert(this->ncol_ == cast_mat->nrow_);
 
     std::vector<int> row_offset;
-    std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+    std::vector<int>* new_col = new std::vector<int>[ this->nrow_ ];
 
     row_offset.resize(this->nrow_ + 1);
 
@@ -2314,7 +2314,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& A
     assert(cast_mat_A->ncol_ == cast_mat_B->nrow_);
 
     std::vector<int> row_offset;
-    std::vector<int>* new_col = new std::vector<int>[cast_mat_A->nrow_];
+    std::vector<int>* new_col = new std::vector<int>[ cast_mat_A->nrow_ ];
 
     row_offset.resize(cast_mat_A->nrow_ + 1);
 
@@ -2739,7 +2739,7 @@ bool HostMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType>& mat,
     else
     {
         std::vector<int> row_offset;
-        std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+        std::vector<int>* new_col = new std::vector<int>[ this->nrow_ ];
 
         HostMatrixCSR<ValueType> tmp(this->local_backend_);
 
