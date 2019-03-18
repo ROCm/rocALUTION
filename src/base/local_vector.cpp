@@ -67,7 +67,7 @@ LocalVector<ValueType>::~LocalVector()
 template <typename ValueType>
 IndexType2 LocalVector<ValueType>::GetSize(void) const
 {
-    return (IndexType2) this->vector_->GetSize();
+    return (IndexType2)this->vector_->GetSize();
 }
 
 template <typename ValueType>

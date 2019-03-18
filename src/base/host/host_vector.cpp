@@ -91,8 +91,7 @@ bool HostVector<ValueType>::Check(void) const
     {
         for(int i = 0; i < this->size_; ++i)
         {
-            if((std::abs(this->vec_[i]) ==
-                std::numeric_limits<ValueType>::infinity()) || // inf
+            if((std::abs(this->vec_[i]) == std::numeric_limits<ValueType>::infinity()) || // inf
                (this->vec_[i] != this->vec_[i]))
             { // NaN
                 LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector data");

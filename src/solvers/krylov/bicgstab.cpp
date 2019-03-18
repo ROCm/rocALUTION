@@ -307,8 +307,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
         // omega = <t,r> / <t,t>
         omega = t->Dot(*r) / t->Dot(*t);
 
-        if((std::abs(omega) == std::numeric_limits<ValueType>::infinity()) ||
-           (omega != omega) || (omega == static_cast<ValueType>(0)))
+        if((std::abs(omega) == std::numeric_limits<ValueType>::infinity()) || (omega != omega) ||
+           (omega == static_cast<ValueType>(0)))
         {
             LOG_INFO("BiCGStab omega == 0 || Nan || Inf !!! Updated solution only in p-direction");
 
@@ -432,8 +432,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
         // omega = (t,r) / (t,t)
         omega = t->Dot(*r) / t->Dot(*t);
 
-        if((std::abs(omega) == std::numeric_limits<ValueType>::infinity()) ||
-           (omega != omega) || (omega == static_cast<ValueType>(0)))
+        if((std::abs(omega) == std::numeric_limits<ValueType>::infinity()) || (omega != omega) ||
+           (omega == static_cast<ValueType>(0)))
         {
             LOG_INFO("BiCGStab omega == 0 || Nan || Inf !!! Updated solution only in p-direction");
 

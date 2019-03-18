@@ -2059,7 +2059,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& s
     assert(this->ncol_ == cast_mat->nrow_);
 
     std::vector<int> row_offset;
-    std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+    std::vector<int>* new_col = new std::vector<int>[ this->nrow_ ];
 
     row_offset.resize(this->nrow_ + 1);
 
@@ -2314,7 +2314,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& A
     assert(cast_mat_A->ncol_ == cast_mat_B->nrow_);
 
     std::vector<int> row_offset;
-    std::vector<int>* new_col = new std::vector<int>[cast_mat_A->nrow_];
+    std::vector<int>* new_col = new std::vector<int>[ cast_mat_A->nrow_ ];
 
     row_offset.resize(cast_mat_A->nrow_ + 1);
 
@@ -2739,7 +2739,7 @@ bool HostMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType>& mat,
     else
     {
         std::vector<int> row_offset;
-        std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+        std::vector<int>* new_col = new std::vector<int>[ this->nrow_ ];
 
         HostMatrixCSR<ValueType> tmp(this->local_backend_);
 
@@ -4133,8 +4133,7 @@ bool HostMatrixCSR<ValueType>::FSAI(int power, const BaseMatrix<ValueType>* patt
 #endif
     for(int ai = 0; ai < nrow; ++ai)
     {
-        ValueType fac =
-            sqrt(static_cast<ValueType>(1) / std::abs(val[row_offset[ai + 1] - 1]));
+        ValueType fac = sqrt(static_cast<ValueType>(1) / std::abs(val[row_offset[ai + 1] - 1]));
 
         for(int aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
@@ -4679,10 +4678,10 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
             diag += b_num;
         }
 
-        ValueType alpha = std::abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den)
-                                                        : static_cast<ValueType>(0);
-        ValueType beta = std::abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den)
-                                                       : static_cast<ValueType>(0);
+        ValueType alpha =
+            std::abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : static_cast<ValueType>(0);
+        ValueType beta =
+            std::abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : static_cast<ValueType>(0);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {

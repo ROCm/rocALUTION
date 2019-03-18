@@ -124,19 +124,19 @@ void IterationControl::InitTolerance(double abs, double rel, double div)
     this->divergence_tol_ = div;
 
     if((std::abs(abs) == std::numeric_limits<double>::infinity()) || // infinity
-       (abs != abs))                                                       // not a number (NaN)
+       (abs != abs))                                                 // not a number (NaN)
     {
         LOG_INFO("Abs tol = " << abs << " !!!");
     }
 
     if((std::abs(rel) == std::numeric_limits<double>::infinity()) || // infinity
-       (rel != rel))                                                       // not a number (NaN)
+       (rel != rel))                                                 // not a number (NaN)
     {
         LOG_INFO("Rel tol = " << rel << " !!!");
     }
 
     if((std::abs(div) == std::numeric_limits<double>::infinity()) || // infinity
-       (div != div))                                                       // not a number (NaN)
+       (div != div))                                                 // not a number (NaN)
     {
         LOG_INFO("Div tol = " << div << " !!!");
     }
