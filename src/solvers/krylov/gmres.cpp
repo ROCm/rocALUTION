@@ -307,7 +307,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
     r[0] = this->Norm_(*v[0]);
 
     // Initial residual
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(r[0])) == false)
     {
         log_debug(this, "GMRES::SolveNonPrecond_()", " #*# end");
         return;
@@ -363,7 +363,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
             this->ApplyGivensRotation_(c[i], s[i], r[i], r[i + 1]);
 
             // Check convergence
-            if(this->iter_ctrl_.CheckResidual(rocalution_abs(r[++i])))
+            if(this->iter_ctrl_.CheckResidual(std::abs(r[++i])))
             {
                 break;
             }
@@ -399,7 +399,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorTy
         r[0] = this->Norm_(*v[0]);
 
         // Check convergence
-        if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(r[0])))
+        if(this->iter_ctrl_.CheckResidualNoCount(std::abs(r[0])))
         {
             break;
         }
@@ -453,7 +453,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
     r[0] = this->Norm_(*v[0]);
 
     // Initial residual
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(r[0])) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(r[0])) == false)
     {
         log_debug(this, "GMRES::SolvePrecond_()", " #*# end");
         return;
@@ -512,7 +512,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
             this->ApplyGivensRotation_(c[i], s[i], r[i], r[i + 1]);
 
             // Check convergence
-            if(this->iter_ctrl_.CheckResidual(rocalution_abs(r[++i])))
+            if(this->iter_ctrl_.CheckResidual(std::abs(r[++i])))
             {
                 break;
             }
@@ -551,7 +551,7 @@ void GMRES<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType&
         r[0] = this->Norm_(*v[0]);
 
         // Check convergence
-        if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(r[0])))
+        if(this->iter_ctrl_.CheckResidualNoCount(std::abs(r[0])))
         {
             break;
         }
@@ -579,7 +579,7 @@ void GMRES<OperatorType, VectorType, ValueType>::GenerateGivensRotation_(ValueTy
         c = zero;
         s = one;
     }
-    else if(rocalution_abs(dy) > rocalution_abs(dx))
+    else if(std::abs(dy) > std::abs(dx))
     {
         ValueType tmp = dx / dy;
         s             = one / sqrt(one + tmp * tmp);

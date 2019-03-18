@@ -131,7 +131,7 @@ bool HostMatrixCSR<ValueType>::Check(void) const
     if(this->nnz_ > 0)
     {
         // check nnz
-        if((rocalution_abs(this->nnz_) == std::numeric_limits<int>::infinity()) || // inf
+        if((std::abs(this->nnz_) == std::numeric_limits<int>::infinity()) || // inf
            (this->nnz_ != this->nnz_))
         { // NaN
             LOG_VERBOSE_INFO(2, "*** error: Matrix CSR:Check - problems with matrix nnz");
@@ -139,7 +139,7 @@ bool HostMatrixCSR<ValueType>::Check(void) const
         }
 
         // nrow
-        if((rocalution_abs(this->nrow_) == std::numeric_limits<int>::infinity()) || // inf
+        if((std::abs(this->nrow_) == std::numeric_limits<int>::infinity()) || // inf
            (this->nrow_ != this->nrow_))
         { // NaN
             LOG_VERBOSE_INFO(2, "*** error: Matrix CSR:Check - problems with matrix nrow");
@@ -147,7 +147,7 @@ bool HostMatrixCSR<ValueType>::Check(void) const
         }
 
         // ncol
-        if((rocalution_abs(this->ncol_) == std::numeric_limits<int>::infinity()) || // inf
+        if((std::abs(this->ncol_) == std::numeric_limits<int>::infinity()) || // inf
            (this->ncol_ != this->ncol_))
         { // NaN
             LOG_VERBOSE_INFO(2, "*** error: Matrix CSR:Check - problems with matrix ncol");
@@ -571,12 +571,12 @@ bool HostMatrixCSR<ValueType>::WriteFileCSR(const std::string filename) const
 
         for(int i = 0; i < this->nnz_; ++i)
         {
-            tmp[i] = static_cast<double>(this->mat_.val[i]);
+            tmp[i] = rocalution_double(this->mat_.val[i]);
         }
 
         out.write((char*)tmp.data(), sizeof(double) * this->nnz_);
     }
-    else
+    else // TODO complex
     {
         LOG_INFO("WriteFileCSR: filename=" << filename << "; internal error");
         return false;
@@ -1626,7 +1626,7 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(double t, int maxrow)
             nnz_entries[m] = idx;
             nnz_pos[idx]   = true;
 
-            row_norm += rocalution_abs(this->mat_.val[aj]);
+            row_norm += std::abs(this->mat_.val[aj]);
             ++m;
         }
 
@@ -1689,7 +1689,7 @@ bool HostMatrixCSR<ValueType>::ILUTFactorize(double t, int maxrow)
                     // drop off strategy for fill in
                     if(nnz_pos[idx] == false)
                     {
-                        if(rocalution_abs(fillin) >= threshold)
+                        if(std::abs(fillin) >= threshold)
                         {
                             nnz_entries[m] = idx;
                             nnz_pos[idx]   = true;
@@ -2059,7 +2059,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& s
     assert(this->ncol_ == cast_mat->nrow_);
 
     std::vector<int> row_offset;
-    std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+    std::vector<int>* new_col = new std::vector<int>[ this->nrow_ ];
 
     row_offset.resize(this->nrow_ + 1);
 
@@ -2314,7 +2314,7 @@ bool HostMatrixCSR<ValueType>::SymbolicMatMatMult(const BaseMatrix<ValueType>& A
     assert(cast_mat_A->ncol_ == cast_mat_B->nrow_);
 
     std::vector<int> row_offset;
-    std::vector<int>* new_col = new std::vector<int>[cast_mat_A->nrow_];
+    std::vector<int>* new_col = new std::vector<int>[ cast_mat_A->nrow_ ];
 
     row_offset.resize(cast_mat_A->nrow_ + 1);
 
@@ -2739,7 +2739,7 @@ bool HostMatrixCSR<ValueType>::MatrixAdd(const BaseMatrix<ValueType>& mat,
     else
     {
         std::vector<int> row_offset;
-        std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+        std::vector<int>* new_col = new std::vector<int>[ this->nrow_ ];
 
         HostMatrixCSR<ValueType> tmp(this->local_backend_);
 
@@ -2859,7 +2859,7 @@ bool HostMatrixCSR<ValueType>::Gershgorin(ValueType& lambda_min, ValueType& lamb
         {
             if(ai != this->mat_.col[aj])
             {
-                sum += rocalution_abs(this->mat_.val[aj]);
+                sum += std::abs(this->mat_.val[aj]);
             }
             else
             {
@@ -3077,7 +3077,7 @@ bool HostMatrixCSR<ValueType>::Compress(double drop_off)
 
             for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
-                if((rocalution_abs(this->mat_.val[j]) > drop_off) || (this->mat_.col[j] == i))
+                if((std::abs(this->mat_.val[j]) > drop_off) || (this->mat_.col[j] == i))
                 {
                     row_offset[i + 1] += 1;
                 }
@@ -3108,7 +3108,7 @@ bool HostMatrixCSR<ValueType>::Compress(double drop_off)
 
             for(int j = tmp.mat_.row_offset[i]; j < tmp.mat_.row_offset[i + 1]; ++j)
             {
-                if((rocalution_abs(tmp.mat_.val[j]) > drop_off) || (tmp.mat_.col[j] == i))
+                if((std::abs(tmp.mat_.val[j]) > drop_off) || (tmp.mat_.col[j] == i))
                 {
                     this->mat_.col[jj] = tmp.mat_.col[j];
                     this->mat_.val[jj] = tmp.mat_.val[j];
@@ -4133,8 +4133,7 @@ bool HostMatrixCSR<ValueType>::FSAI(int power, const BaseMatrix<ValueType>* patt
 #endif
     for(int ai = 0; ai < nrow; ++ai)
     {
-        ValueType fac =
-            sqrt(static_cast<ValueType>(1) / rocalution_abs(val[row_offset[ai + 1] - 1]));
+        ValueType fac = sqrt(static_cast<ValueType>(1) / std::abs(val[row_offset[ai + 1] - 1]));
 
         for(int aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
@@ -4664,25 +4663,25 @@ bool HostMatrixCSR<ValueType>::RugeStueben(ValueType eps,
         ValueType cf_neg = static_cast<ValueType>(1);
         ValueType cf_pos = static_cast<ValueType>(1);
 
-        if(rocalution_abs(a_den - d_neg) > 1e-32)
+        if(std::abs(a_den - d_neg) > 1e-32)
         {
             cf_neg = a_den / (a_den - d_neg);
         }
 
-        if(rocalution_abs(b_den - d_pos) > 1e-32)
+        if(std::abs(b_den - d_pos) > 1e-32)
         {
             cf_pos = b_den / (b_den - d_pos);
         }
 
-        if(b_num > static_cast<ValueType>(0) && rocalution_abs(b_den) < 1e-32)
+        if(b_num > static_cast<ValueType>(0) && std::abs(b_den) < 1e-32)
         {
             diag += b_num;
         }
 
-        ValueType alpha = rocalution_abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den)
-                                                        : static_cast<ValueType>(0);
-        ValueType beta = rocalution_abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den)
-                                                       : static_cast<ValueType>(0);
+        ValueType alpha =
+            std::abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : static_cast<ValueType>(0);
+        ValueType beta =
+            std::abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : static_cast<ValueType>(0);
 
         for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
         {
@@ -4777,7 +4776,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType beta,
         {
             if(i != this->mat_.col[j])
             {
-                sum += rocalution_abs(this->mat_.val[j]);
+                sum += std::abs(this->mat_.val[j]);
             }
             else
             {
@@ -4979,7 +4978,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
         {
             if(i != this->mat_.col[j])
             {
-                sum += rocalution_abs(this->mat_.val[j]);
+                sum += std::abs(this->mat_.val[j]);
             }
             else
             {
@@ -4989,7 +4988,7 @@ bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(const BaseMatrix<Value
 
         for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
         {
-            sum += rocalution_abs(cast_mat->mat_.val[j]);
+            sum += std::abs(cast_mat->mat_.val[j]);
         }
 
         sum *= static_cast<ValueType>(5);
@@ -5798,7 +5797,7 @@ bool HostMatrixCSR<ValueType>::Key(long int& row_key, long int& col_key, long in
             col_sign = sgn(row_tmp - (col_mask | this->mat_.col[aj]));
             col_tmp  = col_mask | this->mat_.col[aj];
 
-            double double_val = rocalution_abs(this->mat_.val[aj]);
+            double double_val = std::abs(this->mat_.val[aj]);
             long int val      = 0;
 
             assert(sizeof(long int) == sizeof(double));

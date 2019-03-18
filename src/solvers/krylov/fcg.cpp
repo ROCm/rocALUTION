@@ -260,7 +260,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
     // initial residual norm
     ValueType res = this->Norm_(*r);
-    this->iter_ctrl_.InitResidual(rocalution_abs(res));
+    this->iter_ctrl_.InitResidual(std::abs(res));
 
     // w = Ar
     op->Apply(*r, w);
@@ -288,7 +288,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
     res = this->Norm_(*r);
 
-    while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+    while(!this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
     {
         // w = Ar
         op->Apply(*r, w);
@@ -353,7 +353,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
 
     // initial residual norm
     ValueType res = this->Norm_(*r);
-    this->iter_ctrl_.InitResidual(rocalution_abs(res));
+    this->iter_ctrl_.InitResidual(std::abs(res));
 
     // Mz = r
     this->precond_->SolveZeroSol(*r, z);
@@ -384,7 +384,7 @@ void FCG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
 
     res = this->Norm_(*r);
 
-    while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+    while(!this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
     {
         // Mz = r
         this->precond_->SolveZeroSol(*r, z);

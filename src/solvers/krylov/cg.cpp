@@ -315,7 +315,7 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
     // Initial residual norm |b|
     //    ValueType res_norm = this->Norm_(rhs);
 
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res_norm)) == false)
     {
         log_debug(this, "CG::SolveNonPrecond_()", " #*# end");
         return;
@@ -343,7 +343,7 @@ void CG<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType&
 
         // Check convergence
         res_norm = this->Norm_(*r);
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_))
         {
             break;
         }
@@ -391,7 +391,7 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
     //    ValueType res_norm = this->Norm_(rhs);
 
     // |b - Ax0|
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res_norm)) == false)
     {
         log_debug(this, "CG::SolvePrecond_()", " #*# end");
         return;
@@ -422,7 +422,7 @@ void CG<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rh
 
         // Check convergence
         res_norm = this->Norm_(*r);
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_))
         {
             break;
         }

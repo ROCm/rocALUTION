@@ -30,6 +30,7 @@
 #include "backend_manager.hpp"
 #include "../utils/log.hpp"
 #include "../utils/allocate_free.hpp"
+#include "../utils/math_functions.hpp"
 
 #include <stdlib.h>
 #include <sstream>
@@ -66,7 +67,7 @@ LocalVector<ValueType>::~LocalVector()
 template <typename ValueType>
 IndexType2 LocalVector<ValueType>::GetSize(void) const
 {
-    return (IndexType2) this->vector_->GetSize();
+    return (IndexType2)this->vector_->GetSize();
 }
 
 template <typename ValueType>

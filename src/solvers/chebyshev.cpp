@@ -256,7 +256,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
 
     ValueType res = this->Norm_(*r);
 
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res)) == false)
     {
         log_debug(this, "Chebyshev::SolveNonPrecond_()", " #*# end");
 
@@ -276,7 +276,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vect
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
     res = this->Norm_(*r);
-    while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+    while(!this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
     {
         beta = (c * alpha / two) * (c * alpha / two);
 
@@ -327,7 +327,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
 
     ValueType res = this->Norm_(*r);
 
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res)) == false)
     {
         log_debug(this, "Chebyshev::SolvePrecond_()", " #*# end");
 
@@ -350,7 +350,7 @@ void Chebyshev<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorT
     r->ScaleAdd(static_cast<ValueType>(-1), rhs);
     res = this->Norm_(*r);
 
-    while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+    while(!this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
     {
         // Solve Mz=r
         this->precond_->SolveZeroSol(*r, z);

@@ -559,7 +559,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const Vector
 
         ValueType res = this->Norm_(this->x_res_);
 
-        if(this->iter_ctrl_.InitResidual(rocalution_abs(res)) == false)
+        if(this->iter_ctrl_.InitResidual(std::abs(res)) == false)
         {
             log_debug(this, "FixedPoint::SolvePrecond_()", " #*# end");
             return;
@@ -576,7 +576,7 @@ void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const Vector
         this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
 
         res = this->Norm_(this->x_res_);
-        while(!this->iter_ctrl_.CheckResidual(rocalution_abs(res), this->index_))
+        while(!this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
         {
             // Solve M x_old = x_res
             this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);

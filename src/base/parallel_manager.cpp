@@ -129,7 +129,7 @@ void ParallelManager::SetGlobalSize(IndexType2 size)
 {
     assert(size <= std::numeric_limits<IndexType2>::max());
     assert(size > 0);
-    assert(size >= (IndexType2) this->local_size_);
+    assert(size >= (IndexType2)this->local_size_);
 
     this->global_size_ = size;
 }
@@ -137,7 +137,7 @@ void ParallelManager::SetGlobalSize(IndexType2 size)
 void ParallelManager::SetLocalSize(int size)
 {
     assert(size > 0);
-    assert(size <= (IndexType2) this->global_size_);
+    assert(size <= (IndexType2)this->global_size_);
 
     this->local_size_ = size;
 }

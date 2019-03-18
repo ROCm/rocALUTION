@@ -210,7 +210,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void
         assert(this->op_ != NULL);
         assert(this->coarse_size_ > 0);
 
-        if(this->op_->GetM() <= (IndexType2) this->coarse_size_)
+        if(this->op_->GetM() <= (IndexType2)this->coarse_size_)
         {
             LOG_INFO("Problem size too small for AMG, use Krylov solver instead");
             FATAL_ERROR(__FILE__, __LINE__);
@@ -247,7 +247,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void
 
         ++this->levels_;
 
-        while(op_list_.back()->GetM() > (IndexType2) this->coarse_size_)
+        while(op_list_.back()->GetM() > (IndexType2)this->coarse_size_)
         {
             // Add new list elements
             OperatorType* prev_op_ = op_list_.back();
@@ -367,7 +367,7 @@ void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const Op
         this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
     op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
 
-    while(static_cast<ValueType>(op.GetM()) / static_cast<ValueType>(coarse->GetM()) <
+    while(static_cast<double>(op.GetM()) / static_cast<double>(coarse->GetM()) <
           this->coarsening_factor_)
     {
         coarse->FurtherPairwiseAggregation(

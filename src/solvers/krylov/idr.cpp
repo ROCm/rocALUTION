@@ -126,7 +126,7 @@ void IDR<OperatorType, VectorType, ValueType>::Build(void)
     assert(this->op_ != NULL);
     assert(this->op_->GetM() == this->op_->GetN());
     assert(this->op_->GetM() > 0);
-    assert((IndexType2) this->s_ <= this->op_->GetM());
+    assert((IndexType2)this->s_ <= this->op_->GetM());
 
     this->r_.CloneBackend(*this->op_);
     this->v_.CloneBackend(*this->op_);
@@ -371,7 +371,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
     // use for |b-Ax0|
     ValueType res_norm = this->Norm_(*r);
 
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res_norm)) == false)
     {
         log_debug(this, "::SolvePrecond_()", " #*# end");
         return;
@@ -486,7 +486,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
             res_norm = this->Norm_(*r);
 
             // Check inner loop for convergence
-            if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res_norm)))
+            if(this->iter_ctrl_.CheckResidualNoCount(std::abs(res_norm)))
             {
                 break;
             }
@@ -499,7 +499,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
         }
 
         // Check convergence
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_))
         {
             break;
         }
@@ -515,7 +515,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType
 
         rt /= nt;
 
-        rho   = rocalution_abs(rt / res_norm);
+        rho   = std::abs(rt / res_norm);
         omega = rt / nt;
 
         if(rho < kappa)
@@ -598,7 +598,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
     // use for |b-Ax0|
     ValueType res_norm = this->Norm_(*r);
 
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res_norm)) == false)
     {
         log_debug(this, "::SolvePrecond_()", " #*# end");
         return;
@@ -716,7 +716,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
             res_norm = this->Norm_(*r);
 
             // Check inner loop for convergence
-            if(this->iter_ctrl_.CheckResidualNoCount(rocalution_abs(res_norm)))
+            if(this->iter_ctrl_.CheckResidualNoCount(std::abs(res_norm)))
             {
                 break;
             }
@@ -729,7 +729,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
         }
 
         // Check convergence
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_))
         {
             break;
         }
@@ -748,7 +748,7 @@ void IDR<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& r
 
         rt /= nt;
 
-        rho   = rocalution_abs(rt / res_norm);
+        rho   = std::abs(rt / res_norm);
         omega = rt / nt;
 
         if(rho < kappa)

@@ -100,7 +100,7 @@ bool IterationControl::InitResidual(double res)
         this->residual_history_.push_back(res);
     }
 
-    if((rocalution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
+    if((std::abs(res) == std::numeric_limits<double>::infinity()) || // infinity
        (res != res))
     { // not a number (NaN)
 
@@ -108,7 +108,7 @@ bool IterationControl::InitResidual(double res)
         return false;
     }
 
-    if(rocalution_abs(res) <= this->absolute_tol_)
+    if(std::abs(res) <= this->absolute_tol_)
     {
         this->reached_ = 1;
         return false;
@@ -123,20 +123,20 @@ void IterationControl::InitTolerance(double abs, double rel, double div)
     this->relative_tol_   = rel;
     this->divergence_tol_ = div;
 
-    if((rocalution_abs(abs) == std::numeric_limits<double>::infinity()) || // infinity
-       (abs != abs))                                                       // not a number (NaN)
+    if((std::abs(abs) == std::numeric_limits<double>::infinity()) || // infinity
+       (abs != abs))                                                 // not a number (NaN)
     {
         LOG_INFO("Abs tol = " << abs << " !!!");
     }
 
-    if((rocalution_abs(rel) == std::numeric_limits<double>::infinity()) || // infinity
-       (rel != rel))                                                       // not a number (NaN)
+    if((std::abs(rel) == std::numeric_limits<double>::infinity()) || // infinity
+       (rel != rel))                                                 // not a number (NaN)
     {
         LOG_INFO("Rel tol = " << rel << " !!!");
     }
 
-    if((rocalution_abs(div) == std::numeric_limits<double>::infinity()) || // infinity
-       (div != div))                                                       // not a number (NaN)
+    if((std::abs(div) == std::numeric_limits<double>::infinity()) || // infinity
+       (div != div))                                                 // not a number (NaN)
     {
         LOG_INFO("Div tol = " << div << " !!!");
     }
@@ -187,7 +187,7 @@ bool IterationControl::CheckResidual(double res)
         this->residual_history_.push_back(res);
     }
 
-    if((rocalution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
+    if((std::abs(res) == std::numeric_limits<double>::infinity()) || // infinity
        (res != res))
     { // not a number (NaN)
 
@@ -197,7 +197,7 @@ bool IterationControl::CheckResidual(double res)
 
     if(this->iteration_ >= this->minimum_iter_)
     {
-        if(rocalution_abs(res) <= this->absolute_tol_)
+        if(std::abs(res) <= this->absolute_tol_)
         {
             this->reached_ = 1;
             return true;
@@ -235,7 +235,7 @@ bool IterationControl::CheckResidualNoCount(double res)
 {
     assert(this->init_res_ == true);
 
-    if((rocalution_abs(res) == std::numeric_limits<double>::infinity()) || // infinity
+    if((std::abs(res) == std::numeric_limits<double>::infinity()) || // infinity
        (res != res))
     { // not a number (NaN)
 
@@ -243,7 +243,7 @@ bool IterationControl::CheckResidualNoCount(double res)
         return true;
     }
 
-    if(rocalution_abs(res) <= this->absolute_tol_)
+    if(std::abs(res) <= this->absolute_tol_)
     {
         this->reached_ = 1;
         return true;
@@ -348,7 +348,7 @@ void IterationControl::PrintStatus(void)
     case 1:
         LOG_INFO("IterationControl ABSOLUTE criteria has been reached: "
                  << "res norm="
-                 << rocalution_abs(this->current_res_)
+                 << std::abs(this->current_res_)
                  << "; "
                  << "rel val="
                  << this->current_res_ / this->initial_residual_
@@ -360,7 +360,7 @@ void IterationControl::PrintStatus(void)
     case 2:
         LOG_INFO("IterationControl RELATIVE criteria has been reached: "
                  << "res norm="
-                 << rocalution_abs(this->current_res_)
+                 << std::abs(this->current_res_)
                  << "; "
                  << "rel val="
                  << this->current_res_ / this->initial_residual_
@@ -372,7 +372,7 @@ void IterationControl::PrintStatus(void)
     case 3:
         LOG_INFO("IterationControl DIVERGENCE criteria has been reached: "
                  << "res norm="
-                 << rocalution_abs(this->current_res_)
+                 << std::abs(this->current_res_)
                  << "; "
                  << "rel val="
                  << this->current_res_ / this->initial_residual_
@@ -384,7 +384,7 @@ void IterationControl::PrintStatus(void)
     case 4:
         LOG_INFO("IterationControl MAX ITER criteria has been reached: "
                  << "res norm="
-                 << rocalution_abs(this->current_res_)
+                 << std::abs(this->current_res_)
                  << "; "
                  << "rel val="
                  << this->current_res_ / this->initial_residual_
@@ -396,7 +396,7 @@ void IterationControl::PrintStatus(void)
     default:
         LOG_INFO("IterationControl NO criteria has been reached: "
                  << "res norm="
-                 << rocalution_abs(this->current_res_)
+                 << std::abs(this->current_res_)
                  << "; "
                  << "rel val="
                  << this->current_res_ / this->initial_residual_

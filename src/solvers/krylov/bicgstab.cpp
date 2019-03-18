@@ -275,7 +275,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
     ValueType res_norm = this->Norm_(*r0);
     //    ValueType res_norm = this->Norm_(rhs);
 
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res_norm)) == false)
     {
         log_debug(this, "BiCGStab::SolveNonPrecond_()", " #*# end");
         return;
@@ -307,8 +307,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
         // omega = <t,r> / <t,t>
         omega = t->Dot(*r) / t->Dot(*t);
 
-        if((rocalution_abs(omega) == std::numeric_limits<ValueType>::infinity()) ||
-           (omega != omega) || (omega == static_cast<ValueType>(0)))
+        if((std::abs(omega) == std::numeric_limits<ValueType>::infinity()) || (omega != omega) ||
+           (omega == static_cast<ValueType>(0)))
         {
             LOG_INFO("BiCGStab omega == 0 || Nan || Inf !!! Updated solution only in p-direction");
 
@@ -321,7 +321,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
 
             res_norm = this->Norm_(*p);
 
-            this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
+            this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_);
 
             break;
         }
@@ -334,7 +334,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const Vecto
 
         // Check convergence
         res_norm = this->Norm_(*r);
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_))
         {
             break;
         }
@@ -396,7 +396,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
     ValueType res_norm = this->Norm_(*r0);
     //    ValueType res_norm = this->Norm_(rhs);
 
-    if(this->iter_ctrl_.InitResidual(rocalution_abs(res_norm)) == false)
+    if(this->iter_ctrl_.InitResidual(std::abs(res_norm)) == false)
     {
         log_debug(this, "BiCGStab::SolvePrecond_()", " #*# end");
         return;
@@ -432,8 +432,8 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
         // omega = (t,r) / (t,t)
         omega = t->Dot(*r) / t->Dot(*t);
 
-        if((rocalution_abs(omega) == std::numeric_limits<ValueType>::infinity()) ||
-           (omega != omega) || (omega == static_cast<ValueType>(0)))
+        if((std::abs(omega) == std::numeric_limits<ValueType>::infinity()) || (omega != omega) ||
+           (omega == static_cast<ValueType>(0)))
         {
             LOG_INFO("BiCGStab omega == 0 || Nan || Inf !!! Updated solution only in p-direction");
 
@@ -445,7 +445,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
             p->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
             res_norm = this->Norm_(*p);
-            this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_);
+            this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_);
 
             break;
         }
@@ -458,7 +458,7 @@ void BiCGStab<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorTy
 
         // Check convergence
         res_norm = this->Norm_(*r);
-        if(this->iter_ctrl_.CheckResidual(rocalution_abs(res_norm), this->index_))
+        if(this->iter_ctrl_.CheckResidual(std::abs(res_norm), this->index_))
         {
             break;
         }
