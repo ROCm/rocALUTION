@@ -28,7 +28,6 @@
 #include "../../utils/log.hpp"
 #include "backend_hip.hpp"
 
-#include <complex>
 #include <hip/hip_runtime.h>
 #include <rocblas.h>
 #include <rocsparse.h>
@@ -96,27 +95,6 @@
     }
 
 namespace rocalution {
-
-// Type traits to cast STL types to HIP types
-template <typename ValueType>
-struct HIPType
-{
-    typedef ValueType Type;
-};
-
-#ifdef SUPPORT_COMPLEX
-template <>
-struct HIPType<std::complex<float>>
-{
-    typedef hipFloatComplex Type;
-};
-
-template <>
-struct HIPType<std::complex<double>>
-{
-    typedef hipDoubleComplex Type;
-};
-#endif
 
 __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
 

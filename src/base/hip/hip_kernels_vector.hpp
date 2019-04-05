@@ -222,7 +222,7 @@ __global__ void kernel_power(IndexType n, double power, ValueType* __restrict__ 
         return;
     }
 
-    out[ind] = hip_pow(out[ind], power);
+    out[ind] = pow(out[ind], power);
 }
 
 template <typename ValueType, typename IndexType>

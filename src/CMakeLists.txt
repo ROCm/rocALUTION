@@ -150,6 +150,10 @@ if(SUPPORT_HIP)
   set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
+  if (NOT HIP_PLATFORM STREQUAL "nvcc")
+    target_compile_options(rocalution_hip PRIVATE -fno-gpu-rdc)
+  endif()
+
   target_link_libraries(rocalution_hip PRIVATE rocblas ${ROCSPARSE_LIBRARIES})
 
   target_include_directories(rocalution_hip
