@@ -139,20 +139,17 @@ if(SUPPORT_HIP)
   list(REMOVE_ITEM HIP_SOURCES ${_source_files})
   list(APPEND HIP_SOURCES ${_generated_files})
 
-  if (HIP_PLATFORM STREQUAL "hcc")
-    set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
-  else()
-    set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE CXX)
-  endif()
+  set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
 
   add_library(rocalution_hip SHARED ${HIP_SOURCES})
 
   set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  if (NOT HIP_PLATFORM STREQUAL "nvcc")
-    target_compile_options(rocalution_hip PRIVATE -fno-gpu-rdc)
-  endif()
+  target_compile_options(rocalution_hip PRIVATE -fno-gpu-rdc)
+  foreach(target ${AMDGPU_TARGETS})
+    target_compile_options(rocalution_hip PRIVATE --amdgpu-target=${target})
+  endforeach()
 
   target_link_libraries(rocalution_hip PRIVATE rocblas ${ROCSPARSE_LIBRARIES})
 
@@ -160,14 +157,6 @@ if(SUPPORT_HIP)
                              PRIVATE
                              $<BUILD_INTERFACE:${HIPCUB_INCLUDE_DIRS}>
                              $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>)
-
-  if (HIP_PLATFORM STREQUAL "hcc")
-    foreach(target ${AMDGPU_TARGETS})
-      target_link_libraries(rocalution_hip PRIVATE --amdgpu-target=${target})
-    endforeach()
-  else()
-    target_link_libraries(rocalution_hip PRIVATE ${CUDA_LIBRARIES})
-  endif()
 
   target_link_libraries(rocalution PRIVATE rocalution_hip)
 endif()
@@ -217,14 +206,7 @@ endif()
 
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "\${CPACK_PACKAGING_INSTALL_PREFIX}" "\${CPACK_PACKAGING_INSTALL_PREFIX}/include")
 
-# Package name differs for CUDA backend
-if(HIP_PLATFORM STREQUAL "hcc")
-  set(package_name rocalution)
-endif()
-
-if(HIP_PLATFORM STREQUAL "nvcc")
-  set(package_name rocalution-alt)
-endif()
+set(package_name rocalution)
 
 set(ROCALUTION_CONFIG_DIR "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}" CACHE PATH "Path placed into ldconfig file")
 
