@@ -557,6 +557,10 @@ void HostVector<ValueType>::ReadFileBinary(const std::string filename)
             this->vec_[i] = static_cast<ValueType>(tmp[i]);
         }
     }
+    else if(typeid(ValueType) == typeid(int))
+    {
+        in.read((char*)this->vec_, sizeof(ValueType) * n);
+    }
     else
     {
         LOG_INFO("ReadFileBinary: filename=" << filename << "; internal error");
@@ -613,6 +617,10 @@ void HostVector<ValueType>::WriteFileBinary(const std::string filename) const
         }
 
         out.write((char*)tmp.data(), sizeof(double) * this->size_);
+    }
+    else if(typeid(ValueType) == typeid(int))
+    {
+        out.write((char*)this->vec_, sizeof(ValueType) * this->size_);
     }
     else // TODO complex
     {
