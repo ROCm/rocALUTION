@@ -151,7 +151,7 @@ if(SUPPORT_HIP)
     target_compile_options(rocalution_hip PRIVATE --amdgpu-target=${target})
   endforeach()
 
-  target_link_libraries(rocalution_hip PRIVATE rocblas ${ROCSPARSE_LIBRARIES})
+  target_link_libraries(rocalution_hip PRIVATE ${ROCBLAS_LIBRARIES} ${ROCSPARSE_LIBRARIES})
 
   target_include_directories(rocalution_hip
                              PRIVATE
