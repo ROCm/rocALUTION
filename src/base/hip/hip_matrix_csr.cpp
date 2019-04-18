@@ -48,7 +48,7 @@
 #include "../matrix_formats_ind.hpp"
 
 #include <vector>
-#include <hipcub/hipcub.hpp>
+#include <rocprim/rocprim_hip.hpp>
 #include <hip/hip_runtime.h>
 
 namespace rocalution {
@@ -954,16 +954,16 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
                            d_nnzPerm);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        // hipcub buffer
+        // rocprim buffer
         size_t size  = 0;
         void* buffer = NULL;
 
         // Determine maximum
         int* d_max = NULL;
         allocate_hip(1, &d_max);
-        hipcub::DeviceReduce::Max(buffer, size, d_nnzPerm, d_max, nrow);
+        rocprim::reduce(buffer, size, d_nnzPerm, d_max, 0, nrow, rocprim::maximum<int>());
         hipMalloc(&buffer, size);
-        hipcub::DeviceReduce::Max(buffer, size, d_nnzPerm, d_max, nrow);
+        rocprim::reduce(buffer, size, d_nnzPerm, d_max, 0, nrow, rocprim::maximum<int>());
         hipFree(buffer);
         buffer = NULL;
 
@@ -972,9 +972,9 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutat
         free_hip(&d_max);
 
         // Inclusive sum
-        hipcub::DeviceScan::InclusiveSum(buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow);
+        rocprim::inclusive_scan(buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow, rocprim::plus<int>());
         hipMalloc(&buffer, size);
-        hipcub::DeviceScan::InclusiveSum(buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow);
+        rocprim::inclusive_scan(buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow, rocprim::plus<int>());
         hipFree(buffer);
         buffer = NULL;
 

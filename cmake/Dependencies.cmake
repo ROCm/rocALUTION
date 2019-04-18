@@ -62,13 +62,12 @@ endif()
 # rocPRIM package
 if(SUPPORT_HIP)
   find_package(ROCPRIM QUIET CONFIG PATHS ${CMAKE_PREFIX_PATH})
-  find_package(HIPCUB QUIET CONFIG PATHS ${CMAKE_PREFIX_PATH})
   if(NOT ROCPRIM_FOUND)
     set(ROCPRIM_ROOT ${CMAKE_CURRENT_BINARY_DIR}/rocPRIM CACHE PATH "")
     message(STATUS "Downloading rocPRIM.")
     download_project(PROJ    rocPRIM
          GIT_REPOSITORY      https://github.com/ROCmSoftwarePlatform/rocPRIM.git
-         GIT_TAG             2.3
+         GIT_TAG             master
          INSTALL_DIR         ${ROCPRIM_ROOT}
          CMAKE_ARGS          -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_TEST=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_CXX_COMPILER=${HIP_HCC_EXECUTABLE}
          LOG_DOWNLOAD        TRUE
@@ -79,7 +78,6 @@ if(SUPPORT_HIP)
     )
   endif()
   find_package(ROCPRIM REQUIRED CONFIG PATHS ${ROCPRIM_ROOT})
-  find_package(HIPCUB REQUIRED CONFIG PATHS ${ROCPRIM_ROOT})
 endif()
 
 # Test dependencies
