@@ -417,7 +417,7 @@ def build_pipeline( compiler_data compiler_args, docker_data docker_args, projec
 
 rocm_ubuntu_hip:
 {
-  node( 'docker && rocm22 && dkms')
+  node( 'docker && rocm23 && dkms')
   {
     def docker_args = new docker_data(
         from_image:'rocm/dev-ubuntu-16.04:latest',
