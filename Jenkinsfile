@@ -26,6 +26,82 @@ properties([
 ////////////////////////////////////////////////////////////////////////
 import java.nio.file.Path;
 
+rocALUTIONCIhost:
+{
+
+    def rocalution = new rocProject('rocalution_host')
+    // customize for project
+    rocalution.paths.build_command = './install.sh -c --host'
+    rocalution.compiler.compiler_name = 'c++'
+    rocalution.compiler.compiler_path = 'c++'
+
+    // Define test architectures, optional rocm version argument is available
+    def nodes = new dockerNodes(['dkms'], rocalution)
+
+    boolean formatCheck = false
+
+    def compileCommand =
+    {
+        platform, project->
+
+        project.paths.construct_build_prefix()
+        def command = """#!/usr/bin/env bash
+                  set -x
+                  cd ${project.paths.project_build_prefix}
+                  LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                """
+
+        platform.runCommand(this, command)
+    }
+
+    def testCommand =
+    {
+        platform, project->
+
+        def command
+
+        if(auxiliary.isJobStartedByTimer())
+        {
+          command = """#!/usr/bin/env bash
+                set -x
+                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
+            """
+        }
+        else
+        {
+          command = """#!/usr/bin/env bash
+                set -x
+                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
+            """
+        }
+
+        platform.runCommand(this, command)
+        junit "${project.paths.project_build_prefix}/build/release/clients/tests/*.xml"
+    }
+
+    def packageCommand =
+    {
+        platform, project->
+
+        def command = """
+                      set -x
+                      cd ${project.paths.project_build_prefix}/build/release
+                      make package
+                      rm -rf package && mkdir -p package
+                      mv *.deb package/
+                      dpkg -c package/*.deb
+                      """
+
+        platform.runCommand(this, command)
+        platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.deb""")
+    }
+
+    buildProject(rocalution, formatCheck, nodes.dockerArray, compileCommand, testCommand, packageCommand)
+
+}
+
 rocALUTIONCI:
 {
 
