@@ -35,7 +35,7 @@
 #include "hip_allocate_free.hpp"
 #include "hip_blas.hpp"
 
-#include <hipcub/hipcub.hpp>
+#include <rocprim/rocprim_hip.hpp>
 #include <hip/hip_runtime.h>
 
 namespace rocalution {
@@ -1036,11 +1036,11 @@ ValueType HIPAcceleratorVector<ValueType>::Reduce(void) const
         ValueType* dres = NULL;
         allocate_hip(1, &dres);
 
-        hipcub::DeviceReduce::Sum(buffer, size, this->vec_, dres, this->size_);
+        rocprim::reduce(buffer, size, this->vec_, dres, 0, this->size_, rocprim::plus<ValueType>());
 
         hipMalloc(&buffer, size);
 
-        hipcub::DeviceReduce::Sum(buffer, size, this->vec_, dres, this->size_);
+        rocprim::reduce(buffer, size, this->vec_, dres, 0, this->size_, rocprim::plus<ValueType>());
 
         hipFree(buffer);
 

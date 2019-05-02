@@ -30,7 +30,7 @@
 #include "../matrix_formats.hpp"
 
 #include <hip/hip_runtime_api.h>
-#include <hipcub/hipcub.hpp>
+#include <rocprim/rocprim_hip.hpp>
 
 namespace rocalution {
 
@@ -261,22 +261,20 @@ bool csr_to_dia_hip(int blocksize,
     IndexType* d_num_diag = NULL;
     allocate_hip(1, &d_num_diag);
 
-    void* d_temp_storage      = NULL;
-    size_t temp_storage_bytes = 0;
+    size_t rocprim_size  = 0;
+    void* rocprim_buffer = NULL;
 
     // Get reduction buffer size
-    hipcub::DeviceReduce::Sum(
-        d_temp_storage, temp_storage_bytes, diag_idx, d_num_diag, nrow + ncol);
+    rocprim::reduce(rocprim_buffer, rocprim_size, diag_idx, d_num_diag, 0, nrow + ncol, rocprim::plus<IndexType>());
 
-    // Allocate hipcub buffer
-    hipMalloc(&d_temp_storage, temp_storage_bytes);
+    // Allocate rocprim buffer
+    hipMalloc(&rocprim_buffer, rocprim_size);
 
     // Do reduction
-    hipcub::DeviceReduce::Sum(
-        d_temp_storage, temp_storage_bytes, diag_idx, d_num_diag, nrow + ncol);
+    rocprim::reduce(rocprim_buffer, rocprim_size, diag_idx, d_num_diag, 0, nrow + ncol, rocprim::plus<IndexType>());
 
-    // Clear hipcub buffer
-    hipFree(d_temp_storage);
+    // Clear rocprim buffer
+    hipFree(rocprim_buffer);
 
     // Copy result to host
     hipMemcpy(num_diag, d_num_diag, sizeof(IndexType), hipMemcpyDeviceToHost);
@@ -305,22 +303,20 @@ bool csr_to_dia_hip(int blocksize,
     // Inclusive sum to obtain diagonal offsets
     IndexType* work = NULL;
     allocate_hip(nrow + ncol, &work);
-    d_temp_storage     = NULL;
-    temp_storage_bytes = 0;
+    rocprim_buffer = NULL;
+    rocprim_size   = 0;
 
-    // Obtain hipcub buffer size
-    hipcub::DeviceScan::ExclusiveSum(
-        d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+    // Obtain rocprim buffer size
+    rocprim::exclusive_scan(rocprim_buffer, rocprim_size, diag_idx, work, 0, nrow + ncol, rocprim::plus<IndexType>());
 
-    // Allocate hipcub buffer
-    hipMalloc(&d_temp_storage, temp_storage_bytes);
+    // Allocate rocprim buffer
+    hipMalloc(&rocprim_buffer, rocprim_size);
 
     // Do inclusive sum
-    hipcub::DeviceScan::ExclusiveSum(
-        d_temp_storage, temp_storage_bytes, diag_idx, work, nrow + ncol);
+    rocprim::exclusive_scan(rocprim_buffer, rocprim_size, diag_idx, work, 0, nrow + ncol, rocprim::plus<IndexType>());
 
-    // Clear hipcub buffer
-    hipFree(d_temp_storage);
+    // Clear rocprim buffer
+    hipFree(rocprim_buffer);
 
     // Fill DIA structures
     dim3 fill_blocks((nrow + ncol) / blocksize + 1);
@@ -426,22 +422,20 @@ bool csr_to_hyb_hip(int blocksize,
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Inclusive sum on coo_row_nnz
-        void* d_temp_storage      = NULL;
-        size_t temp_storage_bytes = 0;
+        size_t rocprim_size  = 0;
+        void* rocprim_buffer = NULL;
 
-        // Obtain hipcub buffer size
-        hipcub::DeviceScan::InclusiveSum(
-            d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+        // Obtain rocprim buffer size
+        rocprim::inclusive_scan(rocprim_buffer, rocprim_size, coo_row_nnz, coo_row_nnz + 1, nrow, rocprim::plus<IndexType>());
 
-        // Allocate hipcub buffer
-        hipMalloc(&d_temp_storage, temp_storage_bytes);
+        // Allocate rocprim buffer
+        hipMalloc(&rocprim_buffer, rocprim_size);
 
         // Do inclusive sum
-        hipcub::DeviceScan::InclusiveSum(
-            d_temp_storage, temp_storage_bytes, coo_row_nnz, coo_row_nnz + 1, nrow);
+        rocprim::inclusive_scan(rocprim_buffer, rocprim_size, coo_row_nnz, coo_row_nnz + 1, nrow, rocprim::plus<IndexType>());
 
-        // Clear hipcub buffer
-        hipFree(d_temp_storage);
+        // Clear rocprim buffer
+        hipFree(rocprim_buffer);
 
         set_to_zero_hip(blocksize, 1, coo_row_nnz);
 
