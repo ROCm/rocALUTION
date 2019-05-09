@@ -48,7 +48,7 @@
 #include "../matrix_formats_ind.hpp"
 
 #include <vector>
-#include <rocprim/rocprim_hip.hpp>
+#include <rocprim/rocprim.hpp>
 #include <hip/hip_runtime.h>
 
 namespace rocalution {
