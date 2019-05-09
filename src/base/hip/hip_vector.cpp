@@ -35,7 +35,7 @@
 #include "hip_allocate_free.hpp"
 #include "hip_blas.hpp"
 
-#include <rocprim/rocprim_hip.hpp>
+#include <rocprim/rocprim.hpp>
 #include <hip/hip_runtime.h>
 
 namespace rocalution {

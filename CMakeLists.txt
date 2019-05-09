@@ -72,7 +72,7 @@ option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
 include(cmake/Dependencies.cmake)
 
 # Setup version
-rocm_setup_version(VERSION 1.4.3.0 NO_GIT_TAG_VERSION)
+rocm_setup_version(VERSION 1.4.4.0 NO_GIT_TAG_VERSION)
 set(rocalution_SOVERSION 1)
 
 # AMD targets

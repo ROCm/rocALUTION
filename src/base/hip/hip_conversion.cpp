@@ -30,7 +30,7 @@
 #include "../matrix_formats.hpp"
 
 #include <hip/hip_runtime_api.h>
-#include <rocprim/rocprim_hip.hpp>
+#include <rocprim/rocprim.hpp>
 
 namespace rocalution {
 
