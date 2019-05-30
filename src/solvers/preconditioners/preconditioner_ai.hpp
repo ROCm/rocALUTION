@@ -27,9 +27,10 @@
 #include "../solver.hpp"
 #include "preconditioner.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class AIChebyshev
   * \brief Approximate Inverse - Chebyshev Preconditioner
   * \details
@@ -42,32 +43,32 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class AIChebyshev : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class AIChebyshev : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    AIChebyshev();
-    virtual ~AIChebyshev();
+        AIChebyshev();
+        virtual ~AIChebyshev();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    /** \brief Set order, min and max eigenvalues */
-    void Set(int p, ValueType lambda_min, ValueType lambda_max);
-    virtual void Build(void);
-    virtual void Clear(void);
+        /** \brief Set order, min and max eigenvalues */
+        void         Set(int p, ValueType lambda_min, ValueType lambda_max);
+        virtual void Build(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType AIChebyshev_;
-    int p_;
-    ValueType lambda_min_, lambda_max_;
-};
+        OperatorType AIChebyshev_;
+        int          p_;
+        ValueType    lambda_min_, lambda_max_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class FSAI
   * \brief Factorized Approximate Inverse Preconditioner
   * \details
@@ -86,48 +87,48 @@ class AIChebyshev : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class FSAI : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class FSAI : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    FSAI();
-    virtual ~FSAI();
+        FSAI();
+        virtual ~FSAI();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    /** \brief Set the power of the system matrix sparsity pattern */
-    void Set(int power);
-    /** \brief Set an external sparsity pattern */
-    void Set(const OperatorType& pattern);
+        /** \brief Set the power of the system matrix sparsity pattern */
+        void Set(int power);
+        /** \brief Set an external sparsity pattern */
+        void Set(const OperatorType& pattern);
 
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void Clear(void);
 
-    /** \brief Set the matrix format of the preconditioner */
-    void SetPrecondMatrixFormat(unsigned int mat_format);
+        /** \brief Set the matrix format of the preconditioner */
+        void SetPrecondMatrixFormat(unsigned int mat_format);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType FSAI_L_;
-    OperatorType FSAI_LT_;
-    VectorType t_;
+        OperatorType FSAI_L_;
+        OperatorType FSAI_LT_;
+        VectorType   t_;
 
-    int matrix_power_;
+        int matrix_power_;
 
-    bool external_pattern_;
-    const OperatorType* matrix_pattern_;
+        bool                external_pattern_;
+        const OperatorType* matrix_pattern_;
 
-    // Keep the precond matrix in CSR or not
-    bool op_mat_format_;
-    // Precond matrix format
-    unsigned int precond_mat_format_;
-};
+        // Keep the precond matrix in CSR or not
+        bool op_mat_format_;
+        // Precond matrix format
+        unsigned int precond_mat_format_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class SPAI
   * \brief SParse Approximate Inverse Preconditioner
   * \details
@@ -141,35 +142,35 @@ class FSAI : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class SPAI : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class SPAI : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    SPAI();
-    virtual ~SPAI();
+        SPAI();
+        virtual ~SPAI();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Build(void);
+        virtual void Clear(void);
 
-    /** \brief Set the matrix format of the preconditioner */
-    void SetPrecondMatrixFormat(unsigned int mat_format);
+        /** \brief Set the matrix format of the preconditioner */
+        void SetPrecondMatrixFormat(unsigned int mat_format);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType SPAI_;
+        OperatorType SPAI_;
 
-    // Keep the precond matrix in CSR or not
-    bool op_mat_format_;
-    // Precond matrix format
-    unsigned int precond_mat_format_;
-};
+        // Keep the precond matrix in CSR or not
+        bool op_mat_format_;
+        // Precond matrix format
+        unsigned int precond_mat_format_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class TNS
   * \brief Truncated Neumann Series Preconditioner
   * \details
@@ -186,45 +187,45 @@ class SPAI : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class TNS : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class TNS : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    TNS();
-    virtual ~TNS();
+        TNS();
+        virtual ~TNS();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    /** \brief Set implicit (true) or explicit (false) computation */
-    void Set(bool imp);
+        /** \brief Set implicit (true) or explicit (false) computation */
+        void Set(bool imp);
 
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Build(void);
+        virtual void Clear(void);
 
-    /** \brief Set the matrix format of the preconditioner */
-    void SetPrecondMatrixFormat(unsigned int mat_format);
+        /** \brief Set the matrix format of the preconditioner */
+        void SetPrecondMatrixFormat(unsigned int mat_format);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType L_;
-    OperatorType LT_;
-    OperatorType TNS_;
-    VectorType Dinv_;
+        OperatorType L_;
+        OperatorType LT_;
+        OperatorType TNS_;
+        VectorType   Dinv_;
 
-    VectorType tmp1_;
-    VectorType tmp2_;
+        VectorType tmp1_;
+        VectorType tmp2_;
 
-    // Keep the precond matrix in CSR or not
-    bool op_mat_format_;
-    // Precond matrix format
-    unsigned int precond_mat_format_;
-    // implicit (true) or explicit (false) computation
-    bool impl_;
-};
+        // Keep the precond matrix in CSR or not
+        bool op_mat_format_;
+        // Precond matrix format
+        unsigned int precond_mat_format_;
+        // implicit (true) or explicit (false) computation
+        bool impl_;
+    };
 
 } // namespace rocalution
 

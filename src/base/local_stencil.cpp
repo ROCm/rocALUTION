@@ -21,152 +21,153 @@
  *
  * ************************************************************************ */
 
-#include "../utils/def.hpp"
 #include "local_stencil.hpp"
-#include "local_vector.hpp"
-#include "stencil_types.hpp"
+#include "../utils/def.hpp"
 #include "host/host_stencil_laplace2d.hpp"
 #include "host/host_vector.hpp"
+#include "local_vector.hpp"
+#include "stencil_types.hpp"
 
 #include "../utils/log.hpp"
 
 #include <complex>
 
-namespace rocalution {
-
-template <typename ValueType>
-LocalStencil<ValueType>::LocalStencil()
+namespace rocalution
 {
-    log_debug(this, "LocalStencil::LocalStencil()");
 
-    this->object_name_ = "";
+    template <typename ValueType>
+    LocalStencil<ValueType>::LocalStencil()
+    {
+        log_debug(this, "LocalStencil::LocalStencil()");
 
-    // no default constructors
-    LOG_INFO("no default constructor");
-    FATAL_ERROR(__FILE__, __LINE__);
-}
+        this->object_name_ = "";
 
-template <typename ValueType>
-LocalStencil<ValueType>::~LocalStencil()
-{
-    log_debug(this, "LocalStencil::~LocalStencil()");
+        // no default constructors
+        LOG_INFO("no default constructor");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
 
-    delete this->stencil_;
-}
+    template <typename ValueType>
+    LocalStencil<ValueType>::~LocalStencil()
+    {
+        log_debug(this, "LocalStencil::~LocalStencil()");
 
-template <typename ValueType>
-LocalStencil<ValueType>::LocalStencil(unsigned int type)
-{
-    log_debug(this, "LocalStencil::LocalStencil()", type);
+        delete this->stencil_;
+    }
 
-    assert(type == Laplace2D); // the only one at the moment
+    template <typename ValueType>
+    LocalStencil<ValueType>::LocalStencil(unsigned int type)
+    {
+        log_debug(this, "LocalStencil::LocalStencil()", type);
 
-    this->object_name_ = _stencil_type_names[type];
+        assert(type == Laplace2D); // the only one at the moment
 
-    this->stencil_host_ = new HostStencilLaplace2D<ValueType>(this->local_backend_);
-    this->stencil_      = this->stencil_host_;
-}
+        this->object_name_ = _stencil_type_names[type];
 
-template <typename ValueType>
-int LocalStencil<ValueType>::GetNDim(void) const
-{
-    return this->stencil_->GetNDim();
-}
+        this->stencil_host_ = new HostStencilLaplace2D<ValueType>(this->local_backend_);
+        this->stencil_      = this->stencil_host_;
+    }
 
-template <typename ValueType>
-IndexType2 LocalStencil<ValueType>::GetNnz(void) const
-{
-    return this->stencil_->GetNnz();
-}
+    template <typename ValueType>
+    int LocalStencil<ValueType>::GetNDim(void) const
+    {
+        return this->stencil_->GetNDim();
+    }
 
-template <typename ValueType>
-IndexType2 LocalStencil<ValueType>::GetM(void) const
-{
-    return this->stencil_->GetM();
-}
+    template <typename ValueType>
+    IndexType2 LocalStencil<ValueType>::GetNnz(void) const
+    {
+        return this->stencil_->GetNnz();
+    }
 
-template <typename ValueType>
-IndexType2 LocalStencil<ValueType>::GetN(void) const
-{
-    return this->stencil_->GetN();
-}
+    template <typename ValueType>
+    IndexType2 LocalStencil<ValueType>::GetM(void) const
+    {
+        return this->stencil_->GetM();
+    }
 
-template <typename ValueType>
-void LocalStencil<ValueType>::Info(void) const
-{
-    this->stencil_->Info();
-}
+    template <typename ValueType>
+    IndexType2 LocalStencil<ValueType>::GetN(void) const
+    {
+        return this->stencil_->GetN();
+    }
 
-template <typename ValueType>
-void LocalStencil<ValueType>::Clear(void)
-{
-    log_debug(this, "LocalStencil::Clear()");
+    template <typename ValueType>
+    void LocalStencil<ValueType>::Info(void) const
+    {
+        this->stencil_->Info();
+    }
 
-    this->stencil_->SetGrid(0);
-}
+    template <typename ValueType>
+    void LocalStencil<ValueType>::Clear(void)
+    {
+        log_debug(this, "LocalStencil::Clear()");
 
-template <typename ValueType>
-void LocalStencil<ValueType>::SetGrid(int size)
-{
-    log_debug(this, "LocalStencil::SetGrid()", size);
+        this->stencil_->SetGrid(0);
+    }
 
-    assert(size >= 0);
+    template <typename ValueType>
+    void LocalStencil<ValueType>::SetGrid(int size)
+    {
+        log_debug(this, "LocalStencil::SetGrid()", size);
 
-    this->stencil_->SetGrid(size);
-}
+        assert(size >= 0);
 
-template <typename ValueType>
-void LocalStencil<ValueType>::Apply(const LocalVector<ValueType>& in,
-                                    LocalVector<ValueType>* out) const
-{
-    log_debug(this, "LocalStencil::Apply()", (const void*&)in, out);
+        this->stencil_->SetGrid(size);
+    }
 
-    assert(out != NULL);
+    template <typename ValueType>
+    void LocalStencil<ValueType>::Apply(const LocalVector<ValueType>& in,
+                                        LocalVector<ValueType>*       out) const
+    {
+        log_debug(this, "LocalStencil::Apply()", (const void*&)in, out);
 
-    assert(((this->stencil_ == this->stencil_host_) && (in.vector_ == in.vector_host_) &&
-            (out->vector_ == out->vector_host_)) ||
-           ((this->stencil_ == this->stencil_accel_) && (in.vector_ == in.vector_accel_) &&
-            (out->vector_ == out->vector_accel_)));
+        assert(out != NULL);
 
-    this->stencil_->Apply(*in.vector_, out->vector_);
-}
+        assert(((this->stencil_ == this->stencil_host_) && (in.vector_ == in.vector_host_)
+                && (out->vector_ == out->vector_host_))
+               || ((this->stencil_ == this->stencil_accel_) && (in.vector_ == in.vector_accel_)
+                   && (out->vector_ == out->vector_accel_)));
 
-template <typename ValueType>
-void LocalStencil<ValueType>::ApplyAdd(const LocalVector<ValueType>& in,
-                                       ValueType scalar,
-                                       LocalVector<ValueType>* out) const
-{
-    log_debug(this, "LocalStencil::ApplyAdd()", (const void*&)in, scalar, out);
+        this->stencil_->Apply(*in.vector_, out->vector_);
+    }
 
-    assert(out != NULL);
+    template <typename ValueType>
+    void LocalStencil<ValueType>::ApplyAdd(const LocalVector<ValueType>& in,
+                                           ValueType                     scalar,
+                                           LocalVector<ValueType>*       out) const
+    {
+        log_debug(this, "LocalStencil::ApplyAdd()", (const void*&)in, scalar, out);
 
-    assert(((this->stencil_ == this->stencil_host_) && (in.vector_ == in.vector_host_) &&
-            (out->vector_ == out->vector_host_)) ||
-           ((this->stencil_ == this->stencil_accel_) && (in.vector_ == in.vector_accel_) &&
-            (out->vector_ == out->vector_accel_)));
+        assert(out != NULL);
 
-    this->stencil_->Apply(*in.vector_, out->vector_);
-}
+        assert(((this->stencil_ == this->stencil_host_) && (in.vector_ == in.vector_host_)
+                && (out->vector_ == out->vector_host_))
+               || ((this->stencil_ == this->stencil_accel_) && (in.vector_ == in.vector_accel_)
+                   && (out->vector_ == out->vector_accel_)));
 
-template <typename ValueType>
-void LocalStencil<ValueType>::MoveToAccelerator(void)
-{
-    LOG_INFO("The function is not implemented (yet)!");
-    FATAL_ERROR(__FILE__, __LINE__);
-}
+        this->stencil_->Apply(*in.vector_, out->vector_);
+    }
 
-template <typename ValueType>
-void LocalStencil<ValueType>::MoveToHost(void)
-{
-    LOG_INFO("The function is not implemented (yet)!");
-    FATAL_ERROR(__FILE__, __LINE__);
-}
+    template <typename ValueType>
+    void LocalStencil<ValueType>::MoveToAccelerator(void)
+    {
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
 
-template class LocalStencil<double>;
-template class LocalStencil<float>;
+    template <typename ValueType>
+    void LocalStencil<ValueType>::MoveToHost(void)
+    {
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template class LocalStencil<double>;
+    template class LocalStencil<float>;
 #ifdef SUPPORT_COMPLEX
-template class LocalStencil<std::complex<double>>;
-template class LocalStencil<std::complex<float>>;
+    template class LocalStencil<std::complex<double>>;
+    template class LocalStencil<std::complex<float>>;
 #endif
 
 } // namespace rocalution

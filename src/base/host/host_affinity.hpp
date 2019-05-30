@@ -24,9 +24,10 @@
 #ifndef ROCALUTION_HOST_HOST_AFFINITY_HPP_
 #define ROCALUTION_HOST_HOST_AFFINITY_HPP_
 
-namespace rocalution {
+namespace rocalution
+{
 
-void rocalution_set_omp_affinity(bool aff);
+    void rocalution_set_omp_affinity(bool aff);
 
 } // namespace rocalution
 

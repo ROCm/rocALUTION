@@ -24,12 +24,13 @@
 #ifndef ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
 #define ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup backend_module
+    /** \ingroup backend_module
   * \brief Return current time in microseconds
   */
-double rocalution_time(void);
+    double rocalution_time(void);
 
 } // namespace rocalution
 

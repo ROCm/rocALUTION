@@ -26,9 +26,10 @@
 
 #include "solver.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class MixedPrecisionDC
   * \brief Mixed-Precision Defect Correction Scheme
   * \details
@@ -51,50 +52,50 @@ namespace rocalution {
   * \tparam VectorTypeL - can be LocalVector
   * \tparam ValueTypeL - can be float
   */
-template <class OperatorTypeH,
-          class VectorTypeH,
-          typename ValueTypeH,
-          class OperatorTypeL,
-          class VectorTypeL,
-          typename ValueTypeL>
-class MixedPrecisionDC : public IterativeLinearSolver<OperatorTypeH, VectorTypeH, ValueTypeH>
-{
+    template <class OperatorTypeH,
+              class VectorTypeH,
+              typename ValueTypeH,
+              class OperatorTypeL,
+              class VectorTypeL,
+              typename ValueTypeL>
+    class MixedPrecisionDC : public IterativeLinearSolver<OperatorTypeH, VectorTypeH, ValueTypeH>
+    {
     public:
-    MixedPrecisionDC();
-    virtual ~MixedPrecisionDC();
+        MixedPrecisionDC();
+        virtual ~MixedPrecisionDC();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    /** \brief Set the inner solver for \f$Ad_{k} = r_{k}\f$ */
-    void Set(Solver<OperatorTypeL, VectorTypeL, ValueTypeL>& Solver_L);
+        /** \brief Set the inner solver for \f$Ad_{k} = r_{k}\f$ */
+        void Set(Solver<OperatorTypeL, VectorTypeL, ValueTypeL>& Solver_L);
 
-    virtual void Build(void);
-    virtual void ReBuildNumeric(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void ReBuildNumeric(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void SolveNonPrecond_(const VectorTypeH& rhs, VectorTypeH* x);
-    virtual void SolvePrecond_(const VectorTypeH& rhs, VectorTypeH* x);
+        virtual void SolveNonPrecond_(const VectorTypeH& rhs, VectorTypeH* x);
+        virtual void SolvePrecond_(const VectorTypeH& rhs, VectorTypeH* x);
 
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
 
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    Solver<OperatorTypeL, VectorTypeL, ValueTypeL>* Solver_L_;
+        Solver<OperatorTypeL, VectorTypeL, ValueTypeL>* Solver_L_;
 
-    VectorTypeH r_h_;
-    VectorTypeL r_l_;
+        VectorTypeH r_h_;
+        VectorTypeL r_l_;
 
-    VectorTypeH* x_h_;
-    VectorTypeL d_l_;
-    VectorTypeH d_h_;
+        VectorTypeH* x_h_;
+        VectorTypeL  d_l_;
+        VectorTypeH  d_h_;
 
-    const OperatorTypeH* op_h_;
-    OperatorTypeL* op_l_;
-};
+        const OperatorTypeH* op_h_;
+        OperatorTypeL*       op_l_;
+    };
 
 } // namespace rocalution
 

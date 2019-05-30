@@ -28,77 +28,78 @@
 
 #include <hip/hip_runtime.h>
 
-namespace rocalution {
-
-template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
-__global__ void kernel_mcsr_spmv(IndexType nrow,
-                                 const IndexType* __restrict__ row_offset,
-                                 const IndexType* __restrict__ col,
-                                 const ValueType* __restrict__ val,
-                                 const ValueType* __restrict__ in,
-                                 ValueType* __restrict__ out)
+namespace rocalution
 {
-    IndexType gid    = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    IndexType tid    = hipThreadIdx_x;
-    IndexType laneid = tid & (WF_SIZE - 1);
-    IndexType warpid = gid / WF_SIZE;
-    IndexType nwarps = hipGridDim_x * hipBlockDim_x / WF_SIZE;
 
-    for(IndexType ai = warpid; ai < nrow; ai += nwarps)
-    {
-        IndexType row_start = row_offset[ai];
-        IndexType row_end   = row_offset[ai + 1];
-
-        ValueType sum;
-        make_ValueType(sum, 0);
-
-        for(IndexType aj = row_start + laneid; aj < row_end; aj += WF_SIZE)
-        {
-            sum = fma(val[aj], __ldg(in + col[aj]), sum);
-        }
-
-        sum = wf_reduce_sum<WF_SIZE>(sum);
-
-        if(laneid == 0)
-        {
-            out[ai] = fma(val[ai], in[ai], sum);
-        }
-    }
-}
-
-template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
-__global__ void kernel_mcsr_add_spmv(IndexType nrow,
+    template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
+    __global__ void kernel_mcsr_spmv(IndexType nrow,
                                      const IndexType* __restrict__ row_offset,
                                      const IndexType* __restrict__ col,
                                      const ValueType* __restrict__ val,
-                                     ValueType scalar,
                                      const ValueType* __restrict__ in,
                                      ValueType* __restrict__ out)
-{
-    IndexType gid    = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    IndexType tid    = hipThreadIdx_x;
-    IndexType laneid = tid % WF_SIZE;
-    IndexType warpid = gid / WF_SIZE;
-    IndexType nwarps = hipGridDim_x * hipBlockDim_x / WF_SIZE;
-
-    for(IndexType ai = warpid; ai < nrow; ai += nwarps)
     {
-        ValueType sum;
-        make_ValueType(sum, 0.0);
+        IndexType gid    = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        IndexType tid    = hipThreadIdx_x;
+        IndexType laneid = tid & (WF_SIZE - 1);
+        IndexType warpid = gid / WF_SIZE;
+        IndexType nwarps = hipGridDim_x * hipBlockDim_x / WF_SIZE;
 
-        for(IndexType aj = row_offset[ai] + laneid; aj < row_offset[ai + 1]; aj += WF_SIZE)
+        for(IndexType ai = warpid; ai < nrow; ai += nwarps)
         {
-            sum = fma(scalar * val[aj], __ldg(in + col[aj]), sum);
-        }
+            IndexType row_start = row_offset[ai];
+            IndexType row_end   = row_offset[ai + 1];
 
-        sum = wf_reduce_sum<WF_SIZE>(sum);
+            ValueType sum;
+            make_ValueType(sum, 0);
 
-        if(laneid == 0)
-        {
-            out[ai] = fma(scalar * val[ai], in[ai], out[ai] + sum);
+            for(IndexType aj = row_start + laneid; aj < row_end; aj += WF_SIZE)
+            {
+                sum = fma(val[aj], __ldg(in + col[aj]), sum);
+            }
+
+            sum = wf_reduce_sum<WF_SIZE>(sum);
+
+            if(laneid == 0)
+            {
+                out[ai] = fma(val[ai], in[ai], sum);
+            }
         }
     }
-}
+
+    template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
+    __global__ void kernel_mcsr_add_spmv(IndexType nrow,
+                                         const IndexType* __restrict__ row_offset,
+                                         const IndexType* __restrict__ col,
+                                         const ValueType* __restrict__ val,
+                                         ValueType scalar,
+                                         const ValueType* __restrict__ in,
+                                         ValueType* __restrict__ out)
+    {
+        IndexType gid    = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        IndexType tid    = hipThreadIdx_x;
+        IndexType laneid = tid % WF_SIZE;
+        IndexType warpid = gid / WF_SIZE;
+        IndexType nwarps = hipGridDim_x * hipBlockDim_x / WF_SIZE;
+
+        for(IndexType ai = warpid; ai < nrow; ai += nwarps)
+        {
+            ValueType sum;
+            make_ValueType(sum, 0.0);
+
+            for(IndexType aj = row_offset[ai] + laneid; aj < row_offset[ai + 1]; aj += WF_SIZE)
+            {
+                sum = fma(scalar * val[aj], __ldg(in + col[aj]), sum);
+            }
+
+            sum = wf_reduce_sum<WF_SIZE>(sum);
+
+            if(laneid == 0)
+            {
+                out[ai] = fma(scalar * val[ai], in[ai], out[ai] + sum);
+            }
+        }
+    }
 
 } // namespace rocalution
 

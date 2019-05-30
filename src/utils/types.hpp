@@ -32,14 +32,15 @@
 #define IndexType2 long
 //#define IndexType2 long long
 
-namespace rocalution {
-
-inline static int IndexTypeToInt(IndexType2 idx)
+namespace rocalution
 {
-    assert(idx <= std::numeric_limits<int>::max());
 
-    return static_cast<int>(idx);
-}
+    inline static int IndexTypeToInt(IndexType2 idx)
+    {
+        assert(idx <= std::numeric_limits<int>::max());
+
+        return static_cast<int>(idx);
+    }
 
 } // namespace rocalution
 

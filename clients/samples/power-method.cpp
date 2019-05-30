@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
     // Print rocALUTION info
     info_rocalution();
 
-    LocalVector<double> b;
-    LocalVector<double> b_old;
+    LocalVector<double>  b;
+    LocalVector<double>  b_old;
     LocalVector<double>* b_k;
     LocalVector<double>* b_k1;
     LocalVector<double>* b_tmp;
-    LocalMatrix<double> mat;
+    LocalMatrix<double>  mat;
 
     // Read matrix from MTX file
     mat.ReadFileMTX(std::string(argv[1]));
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
     std::cout << "Chebyshev iteration ||e - x||_2 = " << error << std::endl;
 
     // PCG + Chebyshev polynomial
-    CG<LocalMatrix<double>, LocalVector<double>, double> cg;
+    CG<LocalMatrix<double>, LocalVector<double>, double>          cg;
     AIChebyshev<LocalMatrix<double>, LocalVector<double>, double> p;
 
     // damping factor

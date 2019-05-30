@@ -27,8 +27,8 @@
 
 #include "utility.hpp"
 
-#include <rocalution.hpp>
 #include <gtest/gtest.h>
+#include <rocalution.hpp>
 
 using namespace rocalution;
 
@@ -41,30 +41,30 @@ void testing_local_matrix_bad_args(void)
     set_device_rocalution(device);
     init_rocalution();
 
-    LocalMatrix<T> mat1;
-    LocalMatrix<T> mat2;
-    LocalVector<T> vec1;
+    LocalMatrix<T>   mat1;
+    LocalMatrix<T>   mat2;
+    LocalVector<T>   vec1;
     LocalVector<int> int1;
 
     // null pointers
-    int* null_int = nullptr;
-    T* null_data  = nullptr;
+    int* null_int  = nullptr;
+    T*   null_data = nullptr;
 
     // Valid pointers
-    int* vint = nullptr;
-    T* vdata  = nullptr;
+    int* vint  = nullptr;
+    T*   vdata = nullptr;
 
     allocate_host(safe_size, &vint);
     allocate_host(safe_size, &vdata);
 
     // ExtractSubMatrix, ExtractSubMatrices, Extract(Inverse)Diagonal, ExtractL/U
     {
-        LocalMatrix<T>* mat_null   = nullptr;
-        LocalMatrix<T>** mat_null2 = nullptr;
-        LocalMatrix<T>*** pmat     = new LocalMatrix<T>**[1];
-        pmat[0]                    = new LocalMatrix<T>*[1];
-        pmat[0][0]                 = new LocalMatrix<T>;
-        LocalVector<T>* null_vec   = nullptr;
+        LocalMatrix<T>*   mat_null  = nullptr;
+        LocalMatrix<T>**  mat_null2 = nullptr;
+        LocalMatrix<T>*** pmat      = new LocalMatrix<T>**[1];
+        pmat[0]                     = new LocalMatrix<T>*[1];
+        pmat[0][0]                  = new LocalMatrix<T>;
+        LocalVector<T>* null_vec    = nullptr;
         ASSERT_DEATH(mat1.ExtractSubMatrix(0, 0, safe_size, safe_size, mat_null),
                      ".*Assertion.*mat != (NULL|__null)*");
         ASSERT_DEATH(mat1.ExtractSubMatrices(safe_size, safe_size, null_int, vint, pmat),
@@ -87,7 +87,7 @@ void testing_local_matrix_bad_args(void)
 
     // CMK, RCMK, ConnectivityOrder, MultiColoring, MaximalIndependentSet, ZeroBlockPermutation
     {
-        int val;
+        int               val;
         LocalVector<int>* null_vec = nullptr;
         ASSERT_DEATH(mat1.CMK(null_vec), ".*Assertion.*permutation != (NULL|__null)*");
         ASSERT_DEATH(mat1.RCMK(null_vec), ".*Assertion.*permutation != (NULL|__null)*");
@@ -116,7 +116,7 @@ void testing_local_matrix_bad_args(void)
 
     // ICFactorize, Householder
     {
-        T val;
+        T               val;
         LocalVector<T>* null_vec = nullptr;
         ASSERT_DEATH(mat1.ICFactorize(null_vec), ".*Assertion.*inv_diag != (NULL|__null)*");
         ASSERT_DEATH(mat1.Householder(0, val, null_vec), ".*Assertion.*vec != (NULL|__null)*");
@@ -173,9 +173,9 @@ void testing_local_matrix_bad_args(void)
 
     // AMG
     {
-        int val;
+        int               val;
         LocalVector<int>* null_vec = nullptr;
-        LocalMatrix<T>* null_mat   = nullptr;
+        LocalMatrix<T>*   null_mat = nullptr;
         ASSERT_DEATH(mat1.AMGConnect(0.1, null_vec), ".*Assertion.*connections != (NULL|__null)*");
         ASSERT_DEATH(mat1.AMGAggregate(int1, null_vec),
                      ".*Assertion.*aggregates != (NULL|__null)*");

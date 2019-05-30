@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     // Preconditioners
     MultiColoredSGS<LocalMatrix<double>, LocalVector<double>, double> p1;
     MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double> p2;
-    ILU<LocalMatrix<double>, LocalVector<double>, double> p3;
+    ILU<LocalMatrix<double>, LocalVector<double>, double>             p3;
 
     vp[0] = &p1;
     vp[1] = &p2;

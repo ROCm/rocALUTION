@@ -26,9 +26,10 @@
 
 #include "base_multigrid.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class MultiGrid
   * \brief MultiGrid Method
   * \details
@@ -54,17 +55,17 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType>
+    {
     public:
-    MultiGrid();
-    virtual ~MultiGrid();
+        MultiGrid();
+        virtual ~MultiGrid();
 
-    virtual void SetRestrictOperator(OperatorType** op);
-    virtual void SetProlongOperator(OperatorType** op);
-    virtual void SetOperatorHierarchy(OperatorType** op);
-};
+        virtual void SetRestrictOperator(OperatorType** op);
+        virtual void SetProlongOperator(OperatorType** op);
+        virtual void SetOperatorHierarchy(OperatorType** op);
+    };
 
 } // namespace rocalution
 

@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -73,10 +73,10 @@ int main(int argc, char* argv[])
 
     // Preconditioner
     BlockPreconditioner<LocalMatrix<double>, LocalVector<double>, double> p;
-    Solver<LocalMatrix<double>, LocalVector<double>, double>** p2;
+    Solver<LocalMatrix<double>, LocalVector<double>, double>**            p2;
 
     // Setup blocks
-    int n = 2;
+    int  n = 2;
     int* size;
     size = new int[n];
 

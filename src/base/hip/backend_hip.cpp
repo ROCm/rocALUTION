@@ -21,216 +21,220 @@
  *
  * ************************************************************************ */
 
-#include "../../utils/def.hpp"
-#include "../backend_manager.hpp"
 #include "backend_hip.hpp"
+#include "../../utils/def.hpp"
 #include "../../utils/log.hpp"
-#include "hip_utils.hpp"
-#include "../base_vector.hpp"
+#include "../backend_manager.hpp"
 #include "../base_matrix.hpp"
+#include "../base_vector.hpp"
+#include "hip_utils.hpp"
 
-#include "hip_vector.hpp"
-#include "hip_matrix_csr.hpp"
-#include "hip_matrix_coo.hpp"
-#include "hip_matrix_mcsr.hpp"
 #include "hip_matrix_bcsr.hpp"
-#include "hip_matrix_hyb.hpp"
+#include "hip_matrix_coo.hpp"
+#include "hip_matrix_csr.hpp"
+#include "hip_matrix_dense.hpp"
 #include "hip_matrix_dia.hpp"
 #include "hip_matrix_ell.hpp"
-#include "hip_matrix_dense.hpp"
+#include "hip_matrix_hyb.hpp"
+#include "hip_matrix_mcsr.hpp"
+#include "hip_vector.hpp"
 
+#include <complex>
 #include <hip/hip_runtime_api.h>
 #include <rocblas.h>
 #include <rocsparse.h>
-#include <complex>
 
-namespace rocalution {
-
-bool rocalution_init_hip(void)
+namespace rocalution
 {
-    log_debug(0, "rocalution_init_hip()", "* begin");
 
-    assert(_get_backend_descriptor()->ROC_blas_handle == NULL);
-    assert(_get_backend_descriptor()->ROC_sparse_handle == NULL);
-    //  assert(_get_backend_descriptor()->HIP_dev == -1);
-
-    // create a handle
-    _get_backend_descriptor()->ROC_blas_handle   = new rocblas_handle;
-    _get_backend_descriptor()->ROC_sparse_handle = new rocsparse_handle;
-
-    // get last error (if any)
-    hipGetLastError();
-
-    hipError_t hip_status_t;
-    int num_dev;
-    hipGetDeviceCount(&num_dev);
-    hip_status_t = hipGetLastError();
-
-    // if querying for device count fails, fall back to host backend
-    if(hip_status_t != hipSuccess)
+    bool rocalution_init_hip(void)
     {
-        LOG_INFO("Querying for HIP devices failed - falling back to host backend");
-        return false;
-    }
+        log_debug(0, "rocalution_init_hip()", "* begin");
 
-    LOG_INFO("Number of HIP devices in the system: " << num_dev);
+        assert(_get_backend_descriptor()->ROC_blas_handle == NULL);
+        assert(_get_backend_descriptor()->ROC_sparse_handle == NULL);
+        //  assert(_get_backend_descriptor()->HIP_dev == -1);
 
-    if(num_dev < 1)
-    {
-        LOG_INFO("No HIP device found");
-    }
-    else
-    {
-        if(_get_backend_descriptor()->HIP_dev != -1)
+        // create a handle
+        _get_backend_descriptor()->ROC_blas_handle   = new rocblas_handle;
+        _get_backend_descriptor()->ROC_sparse_handle = new rocsparse_handle;
+
+        // get last error (if any)
+        hipGetLastError();
+
+        hipError_t hip_status_t;
+        int        num_dev;
+        hipGetDeviceCount(&num_dev);
+        hip_status_t = hipGetLastError();
+
+        // if querying for device count fails, fall back to host backend
+        if(hip_status_t != hipSuccess)
         {
-            num_dev = 1;
+            LOG_INFO("Querying for HIP devices failed - falling back to host backend");
+            return false;
         }
 
-        for(int idev = 0; idev < num_dev; idev++)
-        {
-            int dev = idev;
+        LOG_INFO("Number of HIP devices in the system: " << num_dev);
 
+        if(num_dev < 1)
+        {
+            LOG_INFO("No HIP device found");
+        }
+        else
+        {
             if(_get_backend_descriptor()->HIP_dev != -1)
             {
-                dev = _get_backend_descriptor()->HIP_dev;
+                num_dev = 1;
             }
 
-            hipSetDevice(dev);
-            hip_status_t = hipGetLastError();
-
-            if(hip_status_t == hipErrorContextAlreadyInUse)
+            for(int idev = 0; idev < num_dev; idev++)
             {
-                LOG_INFO("HIP context of device " << dev << " is already in use");
-                return false;
-            }
+                int dev = idev;
 
-            if(hip_status_t == hipErrorInvalidDevice)
-            {
-                LOG_INFO("HIP device " << dev << " is invalid");
-                return false;
-            }
-
-            if(hip_status_t == hipSuccess)
-            {
-                if((rocblas_create_handle(static_cast<rocblas_handle*>(
-                        _get_backend_descriptor()->ROC_blas_handle)) == rocblas_status_success) &&
-                   (rocsparse_create_handle(static_cast<rocsparse_handle*>(
-                        _get_backend_descriptor()->ROC_sparse_handle)) == rocsparse_status_success))
+                if(_get_backend_descriptor()->HIP_dev != -1)
                 {
-                    _get_backend_descriptor()->HIP_dev = dev;
-                    break;
+                    dev = _get_backend_descriptor()->HIP_dev;
                 }
-                else
+
+                hipSetDevice(dev);
+                hip_status_t = hipGetLastError();
+
+                if(hip_status_t == hipErrorContextAlreadyInUse)
                 {
-                    LOG_INFO("HIP device " << dev << " cannot create rocBLAS/rocSPARSE context");
+                    LOG_INFO("HIP context of device " << dev << " is already in use");
+                    return false;
+                }
+
+                if(hip_status_t == hipErrorInvalidDevice)
+                {
+                    LOG_INFO("HIP device " << dev << " is invalid");
+                    return false;
+                }
+
+                if(hip_status_t == hipSuccess)
+                {
+                    if((rocblas_create_handle(static_cast<rocblas_handle*>(
+                            _get_backend_descriptor()->ROC_blas_handle))
+                        == rocblas_status_success)
+                       && (rocsparse_create_handle(static_cast<rocsparse_handle*>(
+                               _get_backend_descriptor()->ROC_sparse_handle))
+                           == rocsparse_status_success))
+                    {
+                        _get_backend_descriptor()->HIP_dev = dev;
+                        break;
+                    }
+                    else
+                    {
+                        LOG_INFO("HIP device " << dev
+                                               << " cannot create rocBLAS/rocSPARSE context");
+                    }
                 }
             }
         }
-    }
 
-    if(_get_backend_descriptor()->HIP_dev == -1)
-    {
-        LOG_INFO("HIP and rocBLAS/rocSPARSE have NOT been initialized!");
-        return false;
-    }
-
-    struct hipDeviceProp_t dev_prop;
-    hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
-
-    if(dev_prop.major < 3)
-    {
-        LOG_INFO("HIP device " << _get_backend_descriptor()->HIP_dev
-                               << " has low compute capability (min 3.0 is needed)");
-        return false;
-    }
-
-    // Get some properties from the device
-    _get_backend_descriptor()->HIP_warp             = dev_prop.warpSize;
-    _get_backend_descriptor()->HIP_num_procs        = dev_prop.multiProcessorCount;
-    _get_backend_descriptor()->HIP_threads_per_proc = dev_prop.maxThreadsPerMultiProcessor;
-    _get_backend_descriptor()->HIP_max_threads =
-        dev_prop.regsPerBlock > 0 ? dev_prop.regsPerBlock : 65536;
-
-    log_debug(0, "rocalution_init_hip()", "* end");
-
-    return true;
-}
-
-void rocalution_stop_hip(void)
-{
-    log_debug(0, "rocalution_stop_hip()", "* begin");
-
-    if(_get_backend_descriptor()->accelerator)
-    {
-        if(rocblas_destroy_handle(*(static_cast<rocblas_handle*>(
-               _get_backend_descriptor()->ROC_blas_handle))) != rocblas_status_success)
+        if(_get_backend_descriptor()->HIP_dev == -1)
         {
-            LOG_INFO("Error in rocblas_destroy_handle");
+            LOG_INFO("HIP and rocBLAS/rocSPARSE have NOT been initialized!");
+            return false;
         }
 
-        if(rocsparse_destroy_handle(*(static_cast<rocsparse_handle*>(
-               _get_backend_descriptor()->ROC_sparse_handle))) != rocsparse_status_success)
-        {
-            LOG_INFO("Error in rocsparse_destroy_handle");
-        }
-    }
-
-    delete(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle));
-    delete(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle));
-
-    _get_backend_descriptor()->ROC_blas_handle   = NULL;
-    _get_backend_descriptor()->ROC_sparse_handle = NULL;
-
-    _get_backend_descriptor()->HIP_dev = -1;
-
-    log_debug(0, "rocalution_stop_hip()", "* end");
-}
-
-void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_descriptor)
-{
-    // Print rocblas version
-    char rocblas_ver[64];
-    rocblas_get_version_string(rocblas_ver, sizeof(rocblas_ver));
-
-    LOG_INFO("rocBLAS ver " << rocblas_ver);
-
-    // Print rocsparse versions
-    int rocsparse_ver;
-    rocsparse_get_version(ROCSPARSE_HANDLE(_get_backend_descriptor()->ROC_sparse_handle),
-                          &rocsparse_ver);
-
-    char rocsparse_rev[64];
-    rocsparse_get_git_rev(ROCSPARSE_HANDLE(_get_backend_descriptor()->ROC_sparse_handle),
-                          rocsparse_rev);
-
-    LOG_INFO("rocSPARSE ver " << rocsparse_ver / 100000 << "." << rocsparse_ver / 100 % 1000 << "."
-                              << rocsparse_ver % 100
-                              << "-"
-                              << rocsparse_rev);
-
-    int num_dev;
-
-    hipGetDeviceCount(&num_dev);
-    hipGetLastError();
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-    //    LOG_INFO("Number of HIP devices in the sytem: " << num_dev);
-
-    if(_get_backend_descriptor()->HIP_dev >= 0)
-    {
-        LOG_INFO("Selected HIP device: " << backend_descriptor.HIP_dev);
-    }
-    else
-    {
-        LOG_INFO("No HIP device is selected!");
-    }
-
-    for(int dev = 0; dev < num_dev; dev++)
-    {
         struct hipDeviceProp_t dev_prop;
-        hipGetDeviceProperties(&dev_prop, dev);
+        hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
 
-        // clang-format off
+        if(dev_prop.major < 3)
+        {
+            LOG_INFO("HIP device " << _get_backend_descriptor()->HIP_dev
+                                   << " has low compute capability (min 3.0 is needed)");
+            return false;
+        }
+
+        // Get some properties from the device
+        _get_backend_descriptor()->HIP_warp             = dev_prop.warpSize;
+        _get_backend_descriptor()->HIP_num_procs        = dev_prop.multiProcessorCount;
+        _get_backend_descriptor()->HIP_threads_per_proc = dev_prop.maxThreadsPerMultiProcessor;
+        _get_backend_descriptor()->HIP_max_threads
+            = dev_prop.regsPerBlock > 0 ? dev_prop.regsPerBlock : 65536;
+
+        log_debug(0, "rocalution_init_hip()", "* end");
+
+        return true;
+    }
+
+    void rocalution_stop_hip(void)
+    {
+        log_debug(0, "rocalution_stop_hip()", "* begin");
+
+        if(_get_backend_descriptor()->accelerator)
+        {
+            if(rocblas_destroy_handle(
+                   *(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle)))
+               != rocblas_status_success)
+            {
+                LOG_INFO("Error in rocblas_destroy_handle");
+            }
+
+            if(rocsparse_destroy_handle(
+                   *(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle)))
+               != rocsparse_status_success)
+            {
+                LOG_INFO("Error in rocsparse_destroy_handle");
+            }
+        }
+
+        delete(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle));
+        delete(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle));
+
+        _get_backend_descriptor()->ROC_blas_handle   = NULL;
+        _get_backend_descriptor()->ROC_sparse_handle = NULL;
+
+        _get_backend_descriptor()->HIP_dev = -1;
+
+        log_debug(0, "rocalution_stop_hip()", "* end");
+    }
+
+    void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_descriptor)
+    {
+        // Print rocblas version
+        char rocblas_ver[64];
+        rocblas_get_version_string(rocblas_ver, sizeof(rocblas_ver));
+
+        LOG_INFO("rocBLAS ver " << rocblas_ver);
+
+        // Print rocsparse versions
+        int rocsparse_ver;
+        rocsparse_get_version(ROCSPARSE_HANDLE(_get_backend_descriptor()->ROC_sparse_handle),
+                              &rocsparse_ver);
+
+        char rocsparse_rev[64];
+        rocsparse_get_git_rev(ROCSPARSE_HANDLE(_get_backend_descriptor()->ROC_sparse_handle),
+                              rocsparse_rev);
+
+        LOG_INFO("rocSPARSE ver " << rocsparse_ver / 100000 << "." << rocsparse_ver / 100 % 1000
+                                  << "." << rocsparse_ver % 100 << "-" << rocsparse_rev);
+
+        int num_dev;
+
+        hipGetDeviceCount(&num_dev);
+        hipGetLastError();
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        //    LOG_INFO("Number of HIP devices in the sytem: " << num_dev);
+
+        if(_get_backend_descriptor()->HIP_dev >= 0)
+        {
+            LOG_INFO("Selected HIP device: " << backend_descriptor.HIP_dev);
+        }
+        else
+        {
+            LOG_INFO("No HIP device is selected!");
+        }
+
+        for(int dev = 0; dev < num_dev; dev++)
+        {
+            struct hipDeviceProp_t dev_prop;
+            hipGetDeviceProperties(&dev_prop, dev);
+
+            // clang-format off
         LOG_INFO("------------------------------------------------");
         LOG_INFO("Device number: " << dev);
         LOG_INFO("Device name: " << dev_prop.name);                                        // char name[256];
@@ -289,74 +293,77 @@ void rocalution_info_hip(const struct Rocalution_Backend_Descriptor backend_desc
         LOG_INFO("maxThreadsPerMultiProcessor: " << dev_prop.maxThreadsPerMultiProcessor); // int maxThreadsPerMultiProcessor;
         */
         LOG_INFO("------------------------------------------------");
-        // clang-format on
+            // clang-format on
+        }
     }
-}
 
-template <typename ValueType>
-AcceleratorMatrix<ValueType>*
-_rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 unsigned int matrix_format)
-{
-    assert(backend_descriptor.backend == HIP);
-
-    switch(matrix_format)
+    template <typename ValueType>
+    AcceleratorMatrix<ValueType>* _rocalution_init_base_hip_matrix(
+        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format)
     {
-    case CSR: return new HIPAcceleratorMatrixCSR<ValueType>(backend_descriptor);
-    case COO: return new HIPAcceleratorMatrixCOO<ValueType>(backend_descriptor);
-    case MCSR: return new HIPAcceleratorMatrixMCSR<ValueType>(backend_descriptor);
-    case DIA: return new HIPAcceleratorMatrixDIA<ValueType>(backend_descriptor);
-    case ELL: return new HIPAcceleratorMatrixELL<ValueType>(backend_descriptor);
-    case DENSE: return new HIPAcceleratorMatrixDENSE<ValueType>(backend_descriptor);
-    case HYB: return new HIPAcceleratorMatrixHYB<ValueType>(backend_descriptor);
-    case BCSR: return new HIPAcceleratorMatrixBCSR<ValueType>(backend_descriptor);
-    default:
-        LOG_INFO("This backed is not supported for Matrix types");
-        FATAL_ERROR(__FILE__, __LINE__);
-        return NULL;
+        assert(backend_descriptor.backend == HIP);
+
+        switch(matrix_format)
+        {
+        case CSR:
+            return new HIPAcceleratorMatrixCSR<ValueType>(backend_descriptor);
+        case COO:
+            return new HIPAcceleratorMatrixCOO<ValueType>(backend_descriptor);
+        case MCSR:
+            return new HIPAcceleratorMatrixMCSR<ValueType>(backend_descriptor);
+        case DIA:
+            return new HIPAcceleratorMatrixDIA<ValueType>(backend_descriptor);
+        case ELL:
+            return new HIPAcceleratorMatrixELL<ValueType>(backend_descriptor);
+        case DENSE:
+            return new HIPAcceleratorMatrixDENSE<ValueType>(backend_descriptor);
+        case HYB:
+            return new HIPAcceleratorMatrixHYB<ValueType>(backend_descriptor);
+        case BCSR:
+            return new HIPAcceleratorMatrixBCSR<ValueType>(backend_descriptor);
+        default:
+            LOG_INFO("This backed is not supported for Matrix types");
+            FATAL_ERROR(__FILE__, __LINE__);
+            return NULL;
+        }
     }
-}
 
-template <typename ValueType>
-AcceleratorVector<ValueType>*
-_rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor)
-{
-    assert(backend_descriptor.backend == HIP);
-    return new HIPAcceleratorVector<ValueType>(backend_descriptor);
-}
+    template <typename ValueType>
+    AcceleratorVector<ValueType>* _rocalution_init_base_hip_vector(
+        const struct Rocalution_Backend_Descriptor backend_descriptor)
+    {
+        assert(backend_descriptor.backend == HIP);
+        return new HIPAcceleratorVector<ValueType>(backend_descriptor);
+    }
 
-void rocalution_hip_sync(void)
-{
-    hipDeviceSynchronize();
-    CHECK_HIP_ERROR(__FILE__, __LINE__);
-}
+    void rocalution_hip_sync(void)
+    {
+        hipDeviceSynchronize();
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+    }
 
-template AcceleratorVector<float>*
-_rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
-template AcceleratorVector<double>*
-_rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+    template AcceleratorVector<float>* _rocalution_init_base_hip_vector(
+        const struct Rocalution_Backend_Descriptor backend_descriptor);
+    template AcceleratorVector<double>* _rocalution_init_base_hip_vector(
+        const struct Rocalution_Backend_Descriptor backend_descriptor);
 #ifdef SUPPORT_COMPLEX
-template AcceleratorVector<std::complex<float>>*
-_rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
-template AcceleratorVector<std::complex<double>>*
-_rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+    template AcceleratorVector<std::complex<float>>* _rocalution_init_base_hip_vector(
+        const struct Rocalution_Backend_Descriptor backend_descriptor);
+    template AcceleratorVector<std::complex<double>>* _rocalution_init_base_hip_vector(
+        const struct Rocalution_Backend_Descriptor backend_descriptor);
 #endif
-template AcceleratorVector<int>*
-_rocalution_init_base_hip_vector(const struct Rocalution_Backend_Descriptor backend_descriptor);
+    template AcceleratorVector<int>* _rocalution_init_base_hip_vector(
+        const struct Rocalution_Backend_Descriptor backend_descriptor);
 
-template AcceleratorMatrix<float>*
-_rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 unsigned int matrix_format);
-template AcceleratorMatrix<double>*
-_rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 unsigned int matrix_format);
+    template AcceleratorMatrix<float>* _rocalution_init_base_hip_matrix(
+        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format);
+    template AcceleratorMatrix<double>* _rocalution_init_base_hip_matrix(
+        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format);
 #ifdef SUPPORT_COMPLEX
-template AcceleratorMatrix<std::complex<float>>*
-_rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 unsigned int matrix_format);
-template AcceleratorMatrix<std::complex<double>>*
-_rocalution_init_base_hip_matrix(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                 unsigned int matrix_format);
+    template AcceleratorMatrix<std::complex<float>>* _rocalution_init_base_hip_matrix(
+        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format);
+    template AcceleratorMatrix<std::complex<double>>* _rocalution_init_base_hip_matrix(
+        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format);
 #endif
 
 } // namespace rocalution
