@@ -2147,32 +2147,15 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractSubMatrix(
 
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-    // compute the new nnz by reduction
-    std::vector<int> tmp(row_size + 1);
-    hipMemcpy(&tmp[1], row_nnz, sizeof(int) * row_size, hipMemcpyDeviceToHost);
+    size_t rocprim_size;
+    void* rocprim_buffer;
 
-    tmp[0] = 0;
-    for(int i = 0; i < row_size; ++i)
-    {
-        tmp[i + 1] += tmp[i];
-    }
+    rocprim::exclusive_scan(NULL, rocprim_size, row_nnz, row_nnz, 0, row_size + 1, rocprim::plus<int>());
+    hipMalloc(&rocprim_buffer, rocprim_size);
+    rocprim::exclusive_scan(rocprim_buffer, rocprim_size, row_nnz, row_nnz, 0, row_size + 1, rocprim::plus<int>());
+    hipFree(rocprim_buffer);
 
-    mat_nnz = tmp[row_size];
-
-    hipMemcpy(row_nnz, tmp.data(), sizeof(int) * (row_size + 1), hipMemcpyHostToDevice);
-
-    /*
-      // TODO replace when PR575 is fixed in HIP
-      size_t size = 0;
-      void* buffer = NULL;
-
-      hipcub::DeviceScan::ExclusiveSum(buffer, size, row_nnz, row_nnz, row_size + 1);
-      hipMalloc(&buffer, size);
-      hipcub::DeviceScan::ExclusiveSum(buffer, size, row_nnz, row_nnz, row_size + 1);
-      hipFree(buffer);
-
-      hipMemcpy(&mat_nnz, &row_nnz[row_size], sizeof(int), hipMemcpyDeviceToHost);
-    */
+    hipMemcpy(&mat_nnz, &row_nnz[row_size], sizeof(int), hipMemcpyDeviceToHost);
 
     // not empty submatrix
     if(mat_nnz > 0)
@@ -2239,25 +2222,19 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractL(BaseMatrix<ValueType>* L) cons
                        nrow,
                        this->mat_.row_offset,
                        this->mat_.col,
-                       cast_L->mat_.row_offset + 1);
+                       cast_L->mat_.row_offset);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-    // partial sum row_nnz to obtain row_offset vector
-    // TODO currently performing partial sum on host
-    int* h_buffer = NULL;
-    allocate_host(nrow + 1, &h_buffer);
-    hipMemcpy(h_buffer + 1, cast_L->mat_.row_offset + 1, nrow * sizeof(int), hipMemcpyDeviceToHost);
+    size_t rocprim_size;
+    void* rocprim_buffer;
 
-    h_buffer[0] = 0;
-    for(int i = 1; i < nrow + 1; ++i)
-        h_buffer[i] += h_buffer[i - 1];
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_L->mat_.row_offset, cast_L->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipMalloc(&rocprim_buffer, rocprim_size);
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_L->mat_.row_offset, cast_L->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipFree(rocprim_buffer);
 
-    int nnz_L = h_buffer[nrow];
-
-    hipMemcpy(cast_L->mat_.row_offset, h_buffer, (nrow + 1) * sizeof(int), hipMemcpyHostToDevice);
-
-    free_host(&h_buffer);
-    // end TODO
+    int nnz_L;
+    hipMemcpy(&nnz_L, &cast_L->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
     // allocate lower triangular part structure
     allocate_hip<int>(nnz_L, &cast_L->mat_.col);
@@ -2318,25 +2295,20 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractLDiagonal(BaseMatrix<ValueType>*
                        nrow,
                        this->mat_.row_offset,
                        this->mat_.col,
-                       cast_L->mat_.row_offset + 1);
+                       cast_L->mat_.row_offset);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     // partial sum row_nnz to obtain row_offset vector
-    // TODO currently performing partial sum on host
-    int* h_buffer = NULL;
-    allocate_host(nrow + 1, &h_buffer);
-    hipMemcpy(h_buffer + 1, cast_L->mat_.row_offset + 1, nrow * sizeof(int), hipMemcpyDeviceToHost);
+    size_t rocprim_size;
+    void* rocprim_buffer;
 
-    h_buffer[0] = 0;
-    for(int i = 1; i < nrow + 1; ++i)
-        h_buffer[i] += h_buffer[i - 1];
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_L->mat_.row_offset, cast_L->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipMalloc(&rocprim_buffer, rocprim_size);
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_L->mat_.row_offset, cast_L->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipFree(rocprim_buffer);
 
-    int nnz_L = h_buffer[nrow];
-
-    hipMemcpy(cast_L->mat_.row_offset, h_buffer, (nrow + 1) * sizeof(int), hipMemcpyHostToDevice);
-
-    free_host(&h_buffer);
-    // end TODO
+    int nnz_L;
+    hipMemcpy(&nnz_L, &cast_L->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
     // allocate lower triangular part structure
     allocate_hip<int>(nnz_L, &cast_L->mat_.col);
@@ -2397,29 +2369,24 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractU(BaseMatrix<ValueType>* U) cons
                        nrow,
                        this->mat_.row_offset,
                        this->mat_.col,
-                       cast_U->mat_.row_offset + 1);
+                       cast_U->mat_.row_offset);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     // partial sum row_nnz to obtain row_offset vector
-    // TODO currently performing partial sum on host
-    int* h_buffer = NULL;
-    allocate_host(nrow + 1, &h_buffer);
-    hipMemcpy(h_buffer + 1, cast_U->mat_.row_offset + 1, nrow * sizeof(int), hipMemcpyDeviceToHost);
+    size_t rocprim_size;
+    void* rocprim_buffer;
 
-    h_buffer[0] = 0;
-    for(int i = 1; i < nrow + 1; ++i)
-        h_buffer[i] += h_buffer[i - 1];
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_U->mat_.row_offset, cast_U->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipMalloc(&rocprim_buffer, rocprim_size);
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_U->mat_.row_offset, cast_U->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipFree(rocprim_buffer);
 
-    int nnz_L = h_buffer[nrow];
-
-    hipMemcpy(cast_U->mat_.row_offset, h_buffer, (nrow + 1) * sizeof(int), hipMemcpyHostToDevice);
-
-    free_host(&h_buffer);
-    // end TODO
+    int nnz_U;
+    hipMemcpy(&nnz_U, &cast_U->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
     // allocate lower triangular part structure
-    allocate_hip<int>(nnz_L, &cast_U->mat_.col);
-    allocate_hip<ValueType>(nnz_L, &cast_U->mat_.val);
+    allocate_hip<int>(nnz_U, &cast_U->mat_.col);
+    allocate_hip<ValueType>(nnz_U, &cast_U->mat_.val);
 
     // fill upper triangular part
     hipLaunchKernelGGL((kernel_csr_extract_u_triangular<ValueType, int>),
@@ -2438,7 +2405,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractU(BaseMatrix<ValueType>* U) cons
 
     cast_U->nrow_ = this->nrow_;
     cast_U->ncol_ = this->ncol_;
-    cast_U->nnz_  = nnz_L;
+    cast_U->nnz_  = nnz_U;
 
     cast_U->ApplyAnalysis();
 
@@ -2476,29 +2443,24 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractUDiagonal(BaseMatrix<ValueType>*
                        nrow,
                        this->mat_.row_offset,
                        this->mat_.col,
-                       cast_U->mat_.row_offset + 1);
+                       cast_U->mat_.row_offset);
     CHECK_HIP_ERROR(__FILE__, __LINE__);
 
     // partial sum row_nnz to obtain row_offset vector
-    // TODO currently performing partial sum on host
-    int* h_buffer = NULL;
-    allocate_host(nrow + 1, &h_buffer);
-    hipMemcpy(h_buffer + 1, cast_U->mat_.row_offset + 1, nrow * sizeof(int), hipMemcpyDeviceToHost);
+    size_t rocprim_size;
+    void* rocprim_buffer;
 
-    h_buffer[0] = 0;
-    for(int i = 1; i < nrow + 1; ++i)
-        h_buffer[i] += h_buffer[i - 1];
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_U->mat_.row_offset, cast_U->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipMalloc(&rocprim_buffer, rocprim_size);
+    rocprim::exclusive_scan(NULL, rocprim_size, cast_U->mat_.row_offset, cast_U->mat_.row_offset, 0, nrow + 1, rocprim::plus<int>());
+    hipFree(rocprim_buffer);
 
-    int nnz_L = h_buffer[nrow];
-
-    hipMemcpy(cast_U->mat_.row_offset, h_buffer, (nrow + 1) * sizeof(int), hipMemcpyHostToDevice);
-
-    free_host(&h_buffer);
-    // end TODO
+    int nnz_U;
+    hipMemcpy(&nnz_U, &cast_U->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
     // allocate lower triangular part structure
-    allocate_hip<int>(nnz_L, &cast_U->mat_.col);
-    allocate_hip<ValueType>(nnz_L, &cast_U->mat_.val);
+    allocate_hip<int>(nnz_U, &cast_U->mat_.col);
+    allocate_hip<ValueType>(nnz_U, &cast_U->mat_.val);
 
     // fill lower triangular part
     hipLaunchKernelGGL((kernel_csr_extract_u_triangular<ValueType, int>),
@@ -2517,7 +2479,7 @@ bool HIPAcceleratorMatrixCSR<ValueType>::ExtractUDiagonal(BaseMatrix<ValueType>*
 
     cast_U->nrow_ = this->nrow_;
     cast_U->ncol_ = this->ncol_;
-    cast_U->nnz_  = nnz_L;
+    cast_U->nnz_  = nnz_U;
 
     cast_U->ApplyAnalysis();
 
@@ -3162,36 +3124,19 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(double drop_off)
                            row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        // TODO replace
-        std::vector<int> htmp(nrow + 1);
-        hipMemcpy(&htmp[1], row_offset, sizeof(int) * nrow, hipMemcpyDeviceToHost);
+        size_t rocprim_size;
+        void* rocprim_buffer;
 
-        htmp[0] = 0;
-        for(int i = 0; i < nrow; ++i)
-        {
-            htmp[i + 1] += htmp[i];
-        }
-
-        hipMemcpy(mat_row_offset, htmp.data(), sizeof(int) * (nrow + 1), hipMemcpyHostToDevice);
-
-        /*
-            // TODO replace when PR575 is fixed in HIP
-            size_t size = 0;
-            void* buffer = NULL;
-
-            hipcub::DeviceScan::ExclusiveSum(buffer, size, row_nnz, row_nnz, row_size + 1);
-            hipMalloc(&buffer, size);
-            hipcub::DeviceScan::ExclusiveSum(buffer, size, row_nnz, row_nnz, row_size + 1);
-            hipFree(buffer);
-            buffer = NULL;
-        */
+        rocprim::exclusive_scan(NULL, rocprim_size, row_offset, mat_row_offset, 0, nrow + 1, rocprim::plus<int>());
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        rocprim::exclusive_scan(rocprim_buffer, rocprim_size, row_offset, mat_row_offset, 0, nrow + 1, rocprim::plus<int>());
+        hipFree(rocprim_buffer);
 
         // get the new mat nnz
         hipMemcpy(&mat_nnz, &mat_row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
         this->AllocateCSR(mat_nnz, nrow, this->ncol_);
 
-        // TODO - just exchange memory pointers
         // copy row_offset
         hipMemcpy(this->mat_.row_offset,
                   mat_row_offset,
@@ -3199,7 +3144,6 @@ bool HIPAcceleratorMatrixCSR<ValueType>::Compress(double drop_off)
                   hipMemcpyDeviceToDevice);
 
         // copy col and val
-
         hipLaunchKernelGGL((kernel_csr_compress_copy<ValueType, int>),
                            GridSize,
                            BlockSize,
