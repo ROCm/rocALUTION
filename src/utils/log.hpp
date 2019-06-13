@@ -41,7 +41,7 @@ namespace rocalution
     template <typename F, typename... Ts>
     void each_args(F f, Ts&... xs)
     {
-        (void)std::initializer_list<int> {((void)f(xs), 0)...};
+        (void)std::initializer_list<int>{((void)f(xs), 0)...};
     }
 
     struct log_arg
@@ -70,7 +70,7 @@ namespace rocalution
         os << "\n[rank:" << rank << "]# ";
         os << "Obj addr: " << ptr << "; ";
         os << "fct: " << fct;
-        each_args(log_arg {os, separator}, xs...);
+        each_args(log_arg{os, separator}, xs...);
     }
 
     template <typename P, typename F, typename... Ts>

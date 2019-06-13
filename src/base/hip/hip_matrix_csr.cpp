@@ -22,34 +22,49 @@
  * ************************************************************************ */
 
 #include "hip_matrix_csr.hpp"
-#include "../../utils/allocate_free.hpp"
 #include "../../utils/def.hpp"
-#include "../../utils/log.hpp"
-#include "../backend_manager.hpp"
-#include "../base_matrix.hpp"
-#include "../base_vector.hpp"
-#include "../host/host_matrix_csr.hpp"
-#include "../matrix_formats_ind.hpp"
-#include "hip_allocate_free.hpp"
-#include "hip_blas.hpp"
-#include "hip_conversion.hpp"
-#include "hip_kernels_csr.hpp"
-#include "hip_kernels_general.hpp"
-#include "hip_kernels_vector.hpp"
-#include "hip_matrix_bcsr.hpp"
+
 #include "hip_matrix_coo.hpp"
-#include "hip_matrix_dense.hpp"
 #include "hip_matrix_dia.hpp"
 #include "hip_matrix_ell.hpp"
 #include "hip_matrix_hyb.hpp"
 #include "hip_matrix_mcsr.hpp"
-#include "hip_sparse.hpp"
-#include "hip_utils.hpp"
+
+#include "hip_matrix_bcsr.hpp"
+#include "hip_matrix_dense.hpp"
 #include "hip_vector.hpp"
 
-#include <hip/hip_runtime.h>
-#include <rocprim/rocprim.hpp>
+#include "hip_conversion.hpp"
+
+#include "../host/host_matrix_csr.hpp"
+
+#include "../base_matrix.hpp"
+#include "../base_vector.hpp"
+
+#include "../backend_manager.hpp"
+
+#include "../../utils/log.hpp"
+
+#include "../../utils/allocate_free.hpp"
+#include "hip_utils.hpp"
+
+#include "hip_kernels_general.hpp"
+
+#include "hip_kernels_csr.hpp"
+#include "hip_kernels_vector.hpp"
+
+#include "hip_allocate_free.hpp"
+#include "hip_blas.hpp"
+
+#include "../matrix_formats_ind.hpp"
+
+#include "hip_sparse.hpp"
+
 #include <vector>
+
+#include <rocprim/rocprim.hpp>
+
+#include <hip/hip_runtime.h>
 
 namespace rocalution
 {

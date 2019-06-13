@@ -101,7 +101,7 @@ namespace rocalution
       */
         /**@{*/
         void AllocateCSR(const std::string name, int nnz, int nrow, int ncol);
-        void AllocateBCSR(void) {};
+        void AllocateBCSR(void){};
         void AllocateMCSR(const std::string name, int nnz, int nrow, int ncol);
         void AllocateCOO(const std::string name, int nnz, int nrow, int ncol);
         void AllocateDIA(const std::string name, int nnz, int nrow, int ncol, int ndiag);

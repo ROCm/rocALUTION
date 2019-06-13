@@ -21,20 +21,29 @@
  *
  * ************************************************************************ */
 
-#include "hip_matrix_mcsr.hpp"
 #include "../../utils/def.hpp"
-#include "../../utils/log.hpp"
-#include "../backend_manager.hpp"
+
+#include "hip_matrix_csr.hpp"
+#include "hip_matrix_mcsr.hpp"
+#include "hip_vector.hpp"
+
+#include "../host/host_matrix_mcsr.hpp"
+
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
-#include "../host/host_matrix_mcsr.hpp"
-#include "../matrix_formats_ind.hpp"
-#include "hip_allocate_free.hpp"
+
+#include "../backend_manager.hpp"
+
+#include "../../utils/log.hpp"
+
+#include "hip_utils.hpp"
+
 #include "hip_kernels_general.hpp"
 #include "hip_kernels_mcsr.hpp"
-#include "hip_matrix_csr.hpp"
-#include "hip_utils.hpp"
-#include "hip_vector.hpp"
+
+#include "hip_allocate_free.hpp"
+
+#include "../matrix_formats_ind.hpp"
 
 #include <hip/hip_runtime.h>
 
