@@ -24,15 +24,16 @@
 #ifndef ROCALUTION_PRECONDITIONER_BLOCKPRECOND_HPP_
 #define ROCALUTION_PRECONDITIONER_BLOCKPRECOND_HPP_
 
+#include "../../base/local_vector.hpp"
 #include "../solver.hpp"
 #include "preconditioner.hpp"
-#include "../../base/local_vector.hpp"
 
 #include <vector>
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class BlockPreconditioner
   * \brief Block-Preconditioner
   * \details
@@ -58,66 +59,66 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class BlockPreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class BlockPreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    BlockPreconditioner();
-    virtual ~BlockPreconditioner();
+        BlockPreconditioner();
+        virtual ~BlockPreconditioner();
 
-    virtual void Print(void) const;
-    virtual void Clear(void);
+        virtual void Print(void) const;
+        virtual void Clear(void);
 
-    /** \brief Set number, size and diagonal solver */
-    void Set(int n, const int* size, Solver<OperatorType, VectorType, ValueType>** D_solver);
+        /** \brief Set number, size and diagonal solver */
+        void Set(int n, const int* size, Solver<OperatorType, VectorType, ValueType>** D_solver);
 
-    /** \brief Set diagonal solver mode */
-    void SetDiagonalSolver(void);
-    /** \brief Set lower triangular sweep mode */
-    void SetLSolver(void);
+        /** \brief Set diagonal solver mode */
+        void SetDiagonalSolver(void);
+        /** \brief Set lower triangular sweep mode */
+        void SetLSolver(void);
 
-    /** \brief Set external last block matrix */
-    void SetExternalLastMatrix(const OperatorType& mat);
+        /** \brief Set external last block matrix */
+        void SetExternalLastMatrix(const OperatorType& mat);
 
-    /** \brief Set permutation vector */
-    virtual void SetPermutation(const LocalVector<int>& perm);
+        /** \brief Set permutation vector */
+        virtual void SetPermutation(const LocalVector<int>& perm);
 
-    virtual void Build(void);
+        virtual void Build(void);
 
-    virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Solve(const VectorType& rhs, VectorType* x);
 
     protected:
-    /** \brief The operator decomposition */
-    OperatorType*** A_block_;
-    /** \brief The operator of the last block */
-    OperatorType* A_last_;
+        /** \brief The operator decomposition */
+        OperatorType*** A_block_;
+        /** \brief The operator of the last block */
+        OperatorType* A_last_;
 
-    /** \brief The precond matrix in CSR or not */
-    bool op_mat_format_;
-    /** \brief The precond matrix format */
-    unsigned int precond_mat_format_;
+        /** \brief The precond matrix in CSR or not */
+        bool op_mat_format_;
+        /** \brief The precond matrix format */
+        unsigned int precond_mat_format_;
 
-    /** \brief Solution vector of each block */
-    VectorType** x_block_;
-    /** \brief Temporary vector objects */
-    VectorType** tmp_block_;
-    /** \brief Solution vector */
-    VectorType x_;
+        /** \brief Solution vector of each block */
+        VectorType** x_block_;
+        /** \brief Temporary vector objects */
+        VectorType** tmp_block_;
+        /** \brief Solution vector */
+        VectorType x_;
 
-    /** \brief Number of blocks */
-    int num_blocks_;
-    /** \brief Block sizes */
-    int* block_sizes_;
+        /** \brief Number of blocks */
+        int num_blocks_;
+        /** \brief Block sizes */
+        int* block_sizes_;
 
-    /** \brief Diagonal solvers */
-    Solver<OperatorType, VectorType, ValueType>** D_solver_;
+        /** \brief Diagonal solvers */
+        Solver<OperatorType, VectorType, ValueType>** D_solver_;
 
-    /** \brief Flag if diagonal solves enabled */
-    bool diag_solve_;
+        /** \brief Flag if diagonal solves enabled */
+        bool diag_solve_;
 
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
-};
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
+    };
 
 } // namespace rocalution
 

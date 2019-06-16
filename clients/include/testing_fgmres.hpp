@@ -34,10 +34,10 @@ using namespace rocalution;
 template <typename T>
 bool testing_fgmres(Arguments argus)
 {
-    int ndim            = argus.size;
-    int basis           = argus.index;
-    std::string precond = argus.precond;
-    unsigned int format = argus.format;
+    int          ndim    = argus.size;
+    int          basis   = argus.index;
+    std::string  precond = argus.precond;
+    unsigned int format  = argus.format;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);
@@ -52,7 +52,7 @@ bool testing_fgmres(Arguments argus)
     // Generate A
     int* csr_ptr = NULL;
     int* csr_col = NULL;
-    T* csr_val   = NULL;
+    T*   csr_val = NULL;
 
     int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
     int nnz  = csr_ptr[nrow];
@@ -95,8 +95,8 @@ bool testing_fgmres(Arguments argus)
 
         A.Gershgorin(lambda_min, lambda_max);
 
-        AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>* cheb =
-            new AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>;
+        AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>* cheb
+            = new AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>;
         cheb->Set(3, lambda_max / 7.0, lambda_max);
 
         p = cheb;

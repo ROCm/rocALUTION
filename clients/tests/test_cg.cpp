@@ -28,8 +28,8 @@
 
 typedef std::tuple<int, std::string, unsigned int> cg_tuple;
 
-int cg_size[]            = {7, 63};
-std::string cg_precond[] = {"None",
+int          cg_size[]    = {7, 63};
+std::string  cg_precond[] = {"None",
                             "Chebyshev",
                             "FSAI",
                             "SPAI",
@@ -41,11 +41,11 @@ std::string cg_precond[] = {"None",
                             "IC",
                             "MCSGS",
                             "MCILU"};
-unsigned int cg_format[] = {1, 2, 4, 5, 6, 7};
+unsigned int cg_format[]  = {1, 2, 4, 5, 6, 7};
 
 class parameterized_cg : public testing::TestWithParam<cg_tuple>
 {
-    protected:
+protected:
     parameterized_cg() {}
     virtual ~parameterized_cg() {}
     virtual void SetUp() {}

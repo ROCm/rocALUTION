@@ -58,7 +58,10 @@ Arguments setup_backend_arguments(backend_tuple tup)
     return arg;
 }
 */
-TEST(parallel_manager_bad_args, parallel_manager) { testing_parallel_manager_bad_args<float>(); }
+TEST(parallel_manager_bad_args, parallel_manager)
+{
+    testing_parallel_manager_bad_args<float>();
+}
 /*
 TEST_P(parameterized_backend, backend)
 {

@@ -58,7 +58,10 @@ Arguments setup_backend_arguments(backend_tuple tup)
     return arg;
 }
 */
-TEST(global_matrix_bad_args, global_matrix) { testing_global_matrix_bad_args<float>(); }
+TEST(global_matrix_bad_args, global_matrix)
+{
+    testing_global_matrix_bad_args<float>();
+}
 /*
 TEST_P(parameterized_backend, backend)
 {

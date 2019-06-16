@@ -26,17 +26,30 @@
 
 #include <hip/hip_runtime.h>
 
-namespace rocalution {
-
-__device__ static __inline__ double hip_abs(double val) { return abs(val); }
-__device__ static __inline__ float hip_abs(float val) { return abs(val); }
-
-__device__ static __inline__ void make_ValueType(float& val, const float& scalar) { val = scalar; }
-__device__ static __inline__ void make_ValueType(double& val, const double& scalar)
+namespace rocalution
 {
-    val = scalar;
-}
-__device__ static __inline__ void make_ValueType(int& val, const int& scalar) { val = scalar; }
+
+    __device__ static __inline__ double hip_abs(double val)
+    {
+        return abs(val);
+    }
+    __device__ static __inline__ float hip_abs(float val)
+    {
+        return abs(val);
+    }
+
+    __device__ static __inline__ void make_ValueType(float& val, const float& scalar)
+    {
+        val = scalar;
+    }
+    __device__ static __inline__ void make_ValueType(double& val, const double& scalar)
+    {
+        val = scalar;
+    }
+    __device__ static __inline__ void make_ValueType(int& val, const int& scalar)
+    {
+        val = scalar;
+    }
 
 } // namespace rocalution
 

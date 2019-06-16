@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -37,9 +37,9 @@ int main(int argc, char* argv[])
     info_rocalution();
 
     // rocALUTION objects
-    LocalVector<double> x;
-    LocalVector<double> rhs;
-    LocalVector<double> e;
+    LocalVector<double>  x;
+    LocalVector<double>  rhs;
+    LocalVector<double>  e;
     LocalStencil<double> stencil(Laplace2D);
 
     // Set up stencil grid
