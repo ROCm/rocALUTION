@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     lmat.ReadFileMTX(argv[1]);
 
     // Global structures
-    ParallelManager manager;
+    ParallelManager         manager;
     GlobalMatrix<ValueType> mat;
 
     // Distribute matrix - lmat will be destroyed

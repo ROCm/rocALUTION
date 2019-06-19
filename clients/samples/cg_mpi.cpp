@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     lmat.ReadFileMTX(argv[1]);
 
     // Global structures
-    ParallelManager manager;
+    ParallelManager         manager;
     GlobalMatrix<ValueType> mat;
 
     // Distribute matrix - lmat will be destroyed
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     mat.Apply(e, &rhs);
     x.Zeros();
 
-    CG<GlobalMatrix<double>, GlobalVector<double>, double> ls;
+    CG<GlobalMatrix<double>, GlobalVector<double>, double>     ls;
     Jacobi<GlobalMatrix<double>, GlobalVector<double>, double> p;
 
     ls.SetPreconditioner(p);

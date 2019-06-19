@@ -28,9 +28,10 @@
 
 #include <vector>
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class CR
   * \brief Conjugate Residual Method
   * \details
@@ -45,33 +46,33 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class CR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class CR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
+    {
     public:
-    CR();
-    virtual ~CR();
+        CR();
+        virtual ~CR();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    virtual void Build(void);
-    virtual void ReBuildNumeric(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void ReBuildNumeric(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
-    virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
+        virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
+        virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
 
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    VectorType r_, z_, t_;
-    VectorType p_, q_, v_;
-};
+        VectorType r_, z_, t_;
+        VectorType p_, q_, v_;
+    };
 
 } // namespace rocalution
 

@@ -26,9 +26,10 @@
 
 #include "../solver.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class Preconditioner
   * \brief Base class for all preconditioners
   *
@@ -36,21 +37,21 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
+    {
     public:
-    Preconditioner();
-    virtual ~Preconditioner();
+        Preconditioner();
+        virtual ~Preconditioner();
 
-    virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
+        virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
     protected:
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
-};
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class Jacobi
   * \brief Jacobi Method
   * \details
@@ -69,29 +70,29 @@ class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    Jacobi();
-    virtual ~Jacobi();
+        Jacobi();
+        virtual ~Jacobi();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Build(void);
+        virtual void Clear(void);
 
-    virtual void ResetOperator(const OperatorType& op);
+        virtual void ResetOperator(const OperatorType& op);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    VectorType inv_diag_entries_;
-};
+        VectorType inv_diag_entries_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class GS
   * \brief Gauss-Seidel / Successive Over-Relaxation Method
   * \details
@@ -110,29 +111,29 @@ class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class GS : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class GS : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    GS();
-    virtual ~GS();
+        GS();
+        virtual ~GS();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Build(void);
+        virtual void Clear(void);
 
-    virtual void ResetOperator(const OperatorType& op);
+        virtual void ResetOperator(const OperatorType& op);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType GS_;
-};
+        OperatorType GS_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class SGS
   * \brief Symmetric Gauss-Seidel / Symmetric Successive Over-Relaxation Method
   * \details
@@ -143,32 +144,32 @@ class GS : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    SGS();
-    virtual ~SGS();
+        SGS();
+        virtual ~SGS();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Build(void);
+        virtual void Clear(void);
 
-    virtual void ResetOperator(const OperatorType& op);
+        virtual void ResetOperator(const OperatorType& op);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType SGS_;
+        OperatorType SGS_;
 
-    VectorType diag_entries_;
-    VectorType v_;
-};
+        VectorType diag_entries_;
+        VectorType v_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class ILU
   * \brief Incomplete LU Factorization based on levels
   * \details
@@ -179,38 +180,38 @@ class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    ILU();
-    virtual ~ILU();
+        ILU();
+        virtual ~ILU();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    /** \brief Initialize ILU(p) factorization
+        /** \brief Initialize ILU(p) factorization
       * \details
       * Initialize ILU(p) factorization based on power.
       * \cite SAAD
       * - level = true build the structure based on levels
       * - level = false build the structure only based on the power(p+1)
       */
-    virtual void Set(int p, bool level = true);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Set(int p, bool level = true);
+        virtual void Build(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType ILU_;
-    int p_;
-    bool level_;
-};
+        OperatorType ILU_;
+        int          p_;
+        bool         level_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class ILUT
   * \brief Incomplete LU Factorization based on threshold
   * \details
@@ -223,36 +224,36 @@ class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    ILUT();
-    virtual ~ILUT();
+        ILUT();
+        virtual ~ILUT();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    /** \brief Set drop-off threshold */
-    virtual void Set(double t);
+        /** \brief Set drop-off threshold */
+        virtual void Set(double t);
 
-    /** \brief Set drop-off threshold and maximum fill-ins per row */
-    virtual void Set(double t, int maxrow);
+        /** \brief Set drop-off threshold and maximum fill-ins per row */
+        virtual void Set(double t, int maxrow);
 
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType ILUT_;
-    double t_;
-    int max_row_;
-};
+        OperatorType ILUT_;
+        double       t_;
+        int          max_row_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class IC
   * \brief Incomplete Cholesky Factorization without fill-ins
   * \details
@@ -264,28 +265,28 @@ class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class IC : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class IC : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    IC();
-    virtual ~IC();
+        IC();
+        virtual ~IC();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Build(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType IC_;
-    VectorType inv_diag_entries_;
-};
+        OperatorType IC_;
+        VectorType   inv_diag_entries_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class VariablePreconditioner
   * \brief Variable Preconditioner
   * \details
@@ -299,30 +300,31 @@ class IC : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class VariablePreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class VariablePreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    VariablePreconditioner();
-    virtual ~VariablePreconditioner();
+        VariablePreconditioner();
+        virtual ~VariablePreconditioner();
 
-    virtual void Print(void) const;
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Print(void) const;
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Build(void);
+        virtual void Clear(void);
 
-    /** \brief Set the preconditioner sequence */
-    virtual void SetPreconditioner(int n, Solver<OperatorType, VectorType, ValueType>** precond);
+        /** \brief Set the preconditioner sequence */
+        virtual void SetPreconditioner(int                                           n,
+                                       Solver<OperatorType, VectorType, ValueType>** precond);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    int num_precond_;
-    int counter_;
-    Solver<OperatorType, VectorType, ValueType>** precond_;
-};
+        int                                           num_precond_;
+        int                                           counter_;
+        Solver<OperatorType, VectorType, ValueType>** precond_;
+    };
 
 } // namespace rocalution
 

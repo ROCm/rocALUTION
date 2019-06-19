@@ -24,9 +24,10 @@
 #ifndef ROCALUTION_UTILS_ALLOCATE_FREE_HPP_
 #define ROCALUTION_UTILS_ALLOCATE_FREE_HPP_
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup backend_module
+    /** \ingroup backend_module
   * \brief Allocate buffer on the host
   * \details
   * \p allocate_host allocates a buffer on the host.
@@ -40,10 +41,10 @@ namespace rocalution {
   * \tparam DataType can be char, int, unsigned int, float, double, std::complex<float>
   *         or std::complex<double>.
   */
-template <typename DataType>
-void allocate_host(int size, DataType** ptr);
+    template <typename DataType>
+    void allocate_host(int size, DataType** ptr);
 
-/** \ingroup backend_module
+    /** \ingroup backend_module
   * \brief Free buffer on the host
   * \details
   * \p free_host deallocates a buffer on the host. \p *ptr will be set to NULL after
@@ -56,10 +57,10 @@ void allocate_host(int size, DataType** ptr);
   * \tparam DataType can be char, int, unsigned int, float, double, std::complex<float>
   *         or std::complex<double>.
   */
-template <typename DataType>
-void free_host(DataType** ptr);
+    template <typename DataType>
+    void free_host(DataType** ptr);
 
-/** \ingroup backend_module
+    /** \ingroup backend_module
   * \brief Set a host buffer to zero
   * \details
   * \p set_to_zero_host sets a host buffer to zero.
@@ -72,8 +73,8 @@ void free_host(DataType** ptr);
   * \tparam DataType can be char, int, unsigned int, float, double, std::complex<float>
   *         or std::complex<double>.
   */
-template <typename DataType>
-void set_to_zero_host(int size, DataType* ptr);
+    template <typename DataType>
+    void set_to_zero_host(int size, DataType* ptr);
 
 } // namespace rocalution
 

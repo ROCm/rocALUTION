@@ -28,47 +28,50 @@
 
 #include <hip/hip_runtime.h>
 
-namespace rocalution {
-
-template <typename ValueType, typename IndexType>
-__global__ void kernel_set_to_ones(IndexType n, ValueType* __restrict__ data)
+namespace rocalution
 {
-    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-    if(ind >= n)
+    template <typename ValueType, typename IndexType>
+    __global__ void kernel_set_to_ones(IndexType n, ValueType* __restrict__ data)
     {
-        return;
+        IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+        if(ind >= n)
+        {
+            return;
+        }
+
+        make_ValueType(data[ind], 1);
     }
 
-    make_ValueType(data[ind], 1);
-}
-
-template <typename IndexType>
-__global__ void
-kernel_reverse_index(IndexType n, const IndexType* __restrict__ perm, IndexType* __restrict__ out)
-{
-    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-
-    if(ind >= n)
+    template <typename IndexType>
+    __global__ void kernel_reverse_index(IndexType n,
+                                         const IndexType* __restrict__ perm,
+                                         IndexType* __restrict__ out)
     {
-        return;
+        IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+        if(ind >= n)
+        {
+            return;
+        }
+
+        out[perm[ind]] = ind;
     }
 
-    out[perm[ind]] = ind;
-}
-
-template <typename ValueType, typename IndexType>
-__global__ void kernel_buffer_addscalar(IndexType n, ValueType scalar, ValueType* __restrict__ buff)
-{
-    IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-
-    if(ind >= n)
+    template <typename ValueType, typename IndexType>
+    __global__ void
+        kernel_buffer_addscalar(IndexType n, ValueType scalar, ValueType* __restrict__ buff)
     {
-        return;
-    }
+        IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-    buff[ind] = buff[ind] + scalar;
-}
+        if(ind >= n)
+        {
+            return;
+        }
+
+        buff[ind] = buff[ind] + scalar;
+    }
 
 } // namespace rocalution
 

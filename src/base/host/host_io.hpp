@@ -26,20 +26,26 @@
 
 #include <string>
 
-namespace rocalution {
+namespace rocalution
+{
 
-template <typename ValueType>
-bool read_matrix_mtx(
-    int& nrow, int& ncol, int& nnz, int** row, int** col, ValueType** val, const char* filename);
+    template <typename ValueType>
+    bool read_matrix_mtx(int&        nrow,
+                         int&        ncol,
+                         int&        nnz,
+                         int**       row,
+                         int**       col,
+                         ValueType** val,
+                         const char* filename);
 
-template <typename ValueType>
-bool write_matrix_mtx(int nrow,
-                      int ncol,
-                      int nnz,
-                      const int* row,
-                      const int* col,
-                      const ValueType* val,
-                      const char* filename);
+    template <typename ValueType>
+    bool write_matrix_mtx(int              nrow,
+                          int              ncol,
+                          int              nnz,
+                          const int*       row,
+                          const int*       col,
+                          const ValueType* val,
+                          const char*      filename);
 
 } // namespace rocalution
 

@@ -27,8 +27,8 @@
 
 #include "utility.hpp"
 
-#include <rocalution.hpp>
 #include <gtest/gtest.h>
+#include <rocalution.hpp>
 
 using namespace rocalution;
 
