@@ -2270,7 +2270,7 @@ namespace rocalution
                                 nrow + 1,
                                 rocprim::plus<int>());
         hipMalloc(&rocprim_buffer, rocprim_size);
-        rocprim::exclusive_scan(NULL,
+        rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
                                 cast_L->mat_.row_offset,
                                 cast_L->mat_.row_offset,
@@ -2356,7 +2356,7 @@ namespace rocalution
                                 nrow + 1,
                                 rocprim::plus<int>());
         hipMalloc(&rocprim_buffer, rocprim_size);
-        rocprim::exclusive_scan(NULL,
+        rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
                                 cast_L->mat_.row_offset,
                                 cast_L->mat_.row_offset,
@@ -2442,7 +2442,7 @@ namespace rocalution
                                 nrow + 1,
                                 rocprim::plus<int>());
         hipMalloc(&rocprim_buffer, rocprim_size);
-        rocprim::exclusive_scan(NULL,
+        rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
                                 cast_U->mat_.row_offset,
                                 cast_U->mat_.row_offset,
@@ -2528,7 +2528,7 @@ namespace rocalution
                                 nrow + 1,
                                 rocprim::plus<int>());
         hipMalloc(&rocprim_buffer, rocprim_size);
-        rocprim::exclusive_scan(NULL,
+        rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
                                 cast_U->mat_.row_offset,
                                 cast_U->mat_.row_offset,
