@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     lmat.ReadFileMTX(argv[1]);
 
     // Global structures
-    ParallelManager manager;
+    ParallelManager         manager;
     GlobalMatrix<ValueType> mat;
 
     // Distribute matrix - lmat will be destroyed
@@ -99,9 +99,9 @@ int main(int argc, char* argv[])
     mat.Apply(e, &rhs);
     x.Zeros();
 
-    IDR<GlobalMatrix<double>, GlobalVector<double>, double> ls;
+    IDR<GlobalMatrix<double>, GlobalVector<double>, double>         ls;
     BlockJacobi<GlobalMatrix<double>, GlobalVector<double>, double> bj;
-    FSAI<LocalMatrix<double>, LocalVector<double>, double> p;
+    FSAI<LocalMatrix<double>, LocalVector<double>, double>          p;
 
     bj.Set(p);
 

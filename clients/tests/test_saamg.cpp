@@ -28,18 +28,18 @@
 
 typedef std::tuple<int, std::string, int, int, unsigned int, int, int> saamg_tuple;
 
-int saamg_size[]             = {63, 134};
-std::string saamg_smoother[] = {"FSAI", "SPAI"};
-int saamg_pre_iter[]         = {1, 2};
-int saamg_post_iter[]        = {1, 2};
-int saamg_cycle[]            = {0, 2};
-int saamg_scaling[]          = {0, 1};
+int         saamg_size[]      = {63, 134};
+std::string saamg_smoother[]  = {"FSAI", "SPAI"};
+int         saamg_pre_iter[]  = {1, 2};
+int         saamg_post_iter[] = {1, 2};
+int         saamg_cycle[]     = {0, 2};
+int         saamg_scaling[]   = {0, 1};
 
 unsigned int saamg_format[] = {1, 6};
 
 class parameterized_saamg : public testing::TestWithParam<saamg_tuple>
 {
-    protected:
+protected:
     parameterized_saamg() {}
     virtual ~parameterized_saamg() {}
     virtual void SetUp() {}

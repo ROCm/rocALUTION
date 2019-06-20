@@ -26,7 +26,8 @@
 
 #include "../matrix_formats_ind.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
 } // namespace rocalution
 

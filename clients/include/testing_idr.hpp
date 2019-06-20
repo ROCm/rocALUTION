@@ -31,17 +31,23 @@
 
 using namespace rocalution;
 
-static bool check_residual(float res) { return (res < 1e-1f); }
+static bool check_residual(float res)
+{
+    return (res < 1e-1f);
+}
 
-static bool check_residual(double res) { return (res < 1e-5); }
+static bool check_residual(double res)
+{
+    return (res < 1e-5);
+}
 
 template <typename T>
 bool testing_idr(Arguments argus)
 {
-    int ndim            = argus.size;
-    std::string precond = argus.precond;
-    unsigned int format = argus.format;
-    int l               = argus.index;
+    int          ndim    = argus.size;
+    std::string  precond = argus.precond;
+    unsigned int format  = argus.format;
+    int          l       = argus.index;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);
@@ -56,7 +62,7 @@ bool testing_idr(Arguments argus)
     // Generate A
     int* csr_ptr = NULL;
     int* csr_col = NULL;
-    T* csr_val   = NULL;
+    T*   csr_val = NULL;
 
     int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
     int nnz  = csr_ptr[nrow];
@@ -99,8 +105,8 @@ bool testing_idr(Arguments argus)
 
         A.Gershgorin(lambda_min, lambda_max);
 
-        AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>* cheb =
-            new AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>;
+        AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>* cheb
+            = new AIChebyshev<LocalMatrix<T>, LocalVector<T>, T>;
         cheb->Set(3, lambda_max / 7.0, lambda_max);
 
         p = cheb;

@@ -27,8 +27,8 @@
 
 #include "utility.hpp"
 
-#include <rocalution.hpp>
 #include <gtest/gtest.h>
+#include <rocalution.hpp>
 
 using namespace rocalution;
 
@@ -40,7 +40,7 @@ void testing_local_stencil_bad_args(void)
     init_rocalution();
 
     LocalStencil<T> stn(Laplace2D);
-    LocalVector<T> vec;
+    LocalVector<T>  vec;
 
     // Apply
     {

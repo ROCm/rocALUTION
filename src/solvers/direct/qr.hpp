@@ -26,9 +26,10 @@
 
 #include "../solver.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class QR
   * \brief QR Decomposition
   * \details
@@ -39,30 +40,30 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class QR : public DirectLinearSolver<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class QR : public DirectLinearSolver<OperatorType, VectorType, ValueType>
+    {
     public:
-    QR();
-    virtual ~QR();
+        QR();
+        virtual ~QR();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void Solve_(const VectorType& rhs, VectorType* x);
+        virtual void Solve_(const VectorType& rhs, VectorType* x);
 
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
 
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    OperatorType qr_;
-};
+        OperatorType qr_;
+    };
 
 } // namespace rocalution
 

@@ -27,10 +27,10 @@
 using namespace rocalution;
 
 template <typename ValueType>
-void distribute_matrix(const MPI_Comm* comm,
-                       LocalMatrix<ValueType>* lmat,
+void distribute_matrix(const MPI_Comm*          comm,
+                       LocalMatrix<ValueType>*  lmat,
                        GlobalMatrix<ValueType>* gmat,
-                       ParallelManager* pm)
+                       ParallelManager*         pm)
 {
     int rank;
     int num_procs;
@@ -40,9 +40,9 @@ void distribute_matrix(const MPI_Comm* comm,
 
     size_t global_nrow = lmat->GetM();
 
-    int* global_row_offset = NULL;
-    int* global_col        = NULL;
-    ValueType* global_val  = NULL;
+    int*       global_row_offset = NULL;
+    int*       global_col        = NULL;
+    ValueType* global_val        = NULL;
 
     lmat->LeaveDataPtrCSR(&global_row_offset, &global_col, &global_val);
 
@@ -71,7 +71,7 @@ void distribute_matrix(const MPI_Comm* comm,
     }
 
     // Read sub matrix - row_offset
-    int local_nrow = local_size[rank];
+    int              local_nrow = local_size[rank];
     std::vector<int> local_row_offset(local_nrow + 1);
 
     for(int i = index_offset[rank], k = 0; k < local_nrow + 1; ++i, ++k)
@@ -82,8 +82,8 @@ void distribute_matrix(const MPI_Comm* comm,
     free_host(&global_row_offset);
 
     // Read sub matrix - col and val
-    int local_nnz = local_row_offset[local_nrow] - local_row_offset[0];
-    std::vector<int> local_col(local_nnz);
+    int                    local_nnz = local_row_offset[local_nrow] - local_row_offset[0];
+    std::vector<int>       local_col(local_nnz);
     std::vector<ValueType> local_val(local_nnz);
 
     for(int i = local_row_offset[0], k = 0; k < local_nnz; ++i, ++k)
@@ -107,8 +107,8 @@ void distribute_matrix(const MPI_Comm* comm,
     int boundary_nnz = 0;
     int neighbors    = 0;
 
-    std::vector<std::vector<int>> boundary(num_procs, std::vector<int>());
-    std::vector<bool> neighbor(num_procs, false);
+    std::vector<std::vector<int>>    boundary(num_procs, std::vector<int>());
+    std::vector<bool>                neighbor(num_procs, false);
     std::vector<std::map<int, bool>> checked(num_procs, std::map<int, bool>());
 
     for(int i = 0; i < local_nrow; ++i)
@@ -185,7 +185,7 @@ void distribute_matrix(const MPI_Comm* comm,
     }
 
     std::vector<MPI_Request> mpi_req(neighbors * 2);
-    int n = 0;
+    int                      n = 0;
     // Array to hold boundary size for each interface
     std::vector<int> boundary_size(neighbors);
 
@@ -218,7 +218,7 @@ void distribute_matrix(const MPI_Comm* comm,
 
     n = 0;
     // Array to hold boundary offset for each interface
-    int k = 0;
+    int              k = 0;
     std::vector<int> recv_offset(neighbors + 1);
     std::vector<int> send_offset(neighbors + 1);
     recv_offset[0] = 0;
@@ -314,17 +314,17 @@ void distribute_matrix(const MPI_Comm* comm,
     }
 
     // Build up ghost and interior matrix
-    int* ghost_row       = new int[ghost_nnz];
-    int* ghost_col       = new int[ghost_nnz];
+    int*       ghost_row = new int[ghost_nnz];
+    int*       ghost_col = new int[ghost_nnz];
     ValueType* ghost_val = new ValueType[ghost_nnz];
 
     memset(ghost_row, 0, sizeof(int) * ghost_nnz);
     memset(ghost_col, 0, sizeof(int) * ghost_nnz);
     memset(ghost_val, 0, sizeof(ValueType) * ghost_nnz);
 
-    int* row_offset = new int[local_nrow + 1];
-    int* col        = new int[interior_nnz];
-    ValueType* val  = new ValueType[interior_nnz];
+    int*       row_offset = new int[local_nrow + 1];
+    int*       col        = new int[interior_nnz];
+    ValueType* val        = new ValueType[interior_nnz];
 
     memset(row_offset, 0, sizeof(int) * (local_nrow + 1));
     memset(col, 0, sizeof(int) * interior_nnz);

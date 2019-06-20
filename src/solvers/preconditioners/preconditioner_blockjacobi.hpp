@@ -26,9 +26,10 @@
 
 #include "preconditioner.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class BlockJacobi
   * \brief Block-Jacobi Preconditioner
   * \details
@@ -39,33 +40,33 @@ namespace rocalution {
   * \tparam VectorType - can be GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    BlockJacobi();
-    virtual ~BlockJacobi();
+        BlockJacobi();
+        virtual ~BlockJacobi();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    /** \brief Set local preconditioner */
-    void Set(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>& precond);
+        /** \brief Set local preconditioner */
+        void Set(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>& precond);
 
-    virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
+        virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
-    virtual void Build(void);
-    virtual void ReBuildNumeric(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void ReBuildNumeric(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>* local_precond_;
-};
+        Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>* local_precond_;
+    };
 
 } // namespace rocalution
 

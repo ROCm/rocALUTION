@@ -58,7 +58,10 @@ Arguments setup_backend_arguments(backend_tuple tup)
     return arg;
 }
 */
-TEST(global_vector_bad_args, global_vector) { testing_global_vector_bad_args<float>(); }
+TEST(global_vector_bad_args, global_vector)
+{
+    testing_global_vector_bad_args<float>();
+}
 /*
 TEST_P(parameterized_backend, backend)
 {

@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
                      float>
         mp;
 
-    CG<LocalMatrix<float>, LocalVector<float>, float> cg;
+    CG<LocalMatrix<float>, LocalVector<float>, float>              cg;
     MultiColoredILU<LocalMatrix<float>, LocalVector<float>, float> p;
 
     // Initialize rhs such that A 1 = rhs
