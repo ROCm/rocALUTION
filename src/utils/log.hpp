@@ -24,60 +24,65 @@
 #ifndef ROCALUTION_UTILS_LOG_HPP_
 #define ROCALUTION_UTILS_LOG_HPP_
 
-#include "def.hpp"
 #include "../base/backend_manager.hpp"
+#include "def.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <stdlib.h>
 #include <string>
-#include <sstream>
 
-namespace rocalution {
-
-void _rocalution_open_log_file(void);
-void _rocalution_close_log_file(void);
-
-template <typename F, typename... Ts>
-void each_args(F f, Ts&... xs)
+namespace rocalution
 {
-    (void)std::initializer_list<int>{((void)f(xs), 0)...};
-}
 
-struct log_arg
-{
-    log_arg(std::ostream& os, std::string& separator) : os_(os), separator_(separator) {}
+    void _rocalution_open_log_file(void);
+    void _rocalution_close_log_file(void);
 
-    /// Generic overload for () operator.
-    template <typename T>
-    void operator()(T& x) const
+    template <typename F, typename... Ts>
+    void each_args(F f, Ts&... xs)
     {
-        os_ << separator_ << x;
+        (void)std::initializer_list<int>{((void)f(xs), 0)...};
     }
+
+    struct log_arg
+    {
+        log_arg(std::ostream& os, std::string& separator)
+            : os_(os)
+            , separator_(separator)
+        {
+        }
+
+        /// Generic overload for () operator.
+        template <typename T>
+        void operator()(T& x) const
+        {
+            os_ << separator_ << x;
+        }
 
     private:
-    std::ostream& os_;
-    std::string& separator_;
-};
+        std::ostream& os_;
+        std::string&  separator_;
+    };
 
-template <typename P, typename F, typename... Ts>
-void log_arguments(std::ostream& os, std::string& separator, int rank, P ptr, F fct, Ts&... xs)
-{
-    os << "\n[rank:" << rank << "]# ";
-    os << "Obj addr: " << ptr << "; ";
-    os << "fct: " << fct;
-    each_args(log_arg{os, separator}, xs...);
-}
-
-template <typename P, typename F, typename... Ts>
-void log_debug(P ptr, F fct, Ts&... xs)
-{
-    if(_get_backend_descriptor()->log_file != NULL)
+    template <typename P, typename F, typename... Ts>
+    void log_arguments(std::ostream& os, std::string& separator, int rank, P ptr, F fct, Ts&... xs)
     {
-        std::string comma_separator = ", ";
-        std::ostream* os            = _get_backend_descriptor()->log_file;
-        log_arguments(*os, comma_separator, _get_backend_descriptor()->rank, ptr, fct, xs...);
+        os << "\n[rank:" << rank << "]# ";
+        os << "Obj addr: " << ptr << "; ";
+        os << "fct: " << fct;
+        each_args(log_arg{os, separator}, xs...);
     }
-}
+
+    template <typename P, typename F, typename... Ts>
+    void log_debug(P ptr, F fct, Ts&... xs)
+    {
+        if(_get_backend_descriptor()->log_file != NULL)
+        {
+            std::string   comma_separator = ", ";
+            std::ostream* os              = _get_backend_descriptor()->log_file;
+            log_arguments(*os, comma_separator, _get_backend_descriptor()->rank, ptr, fct, xs...);
+        }
+    }
 
 } // namespace rocalution
 

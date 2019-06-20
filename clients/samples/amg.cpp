@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 
     // Smoother for each level
     IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double>** sm = NULL;
-    MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>** gs        = NULL;
+    MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>**        gs = NULL;
 
     // Coarse Grid Solver
     CG<LocalMatrix<double>, LocalVector<double>, double> cgs;

@@ -29,9 +29,10 @@
 
 #include <vector>
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class SAAMG
   * \brief Smoothed Aggregation Algebraic MultiGrid Method
   * \details
@@ -43,39 +44,39 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class SAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class SAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
+    {
     public:
-    SAAMG();
-    virtual ~SAAMG();
+        SAAMG();
+        virtual ~SAAMG();
 
-    virtual void Print(void) const;
-    virtual void BuildSmoothers(void);
+        virtual void Print(void) const;
+        virtual void BuildSmoothers(void);
 
-    /** \brief Set coupling strength */
-    void SetCouplingStrength(ValueType eps);
-    /** \brief Set the relaxation parameter */
-    void SetInterpRelax(ValueType relax);
+        /** \brief Set coupling strength */
+        void SetCouplingStrength(ValueType eps);
+        /** \brief Set the relaxation parameter */
+        void SetInterpRelax(ValueType relax);
 
-    virtual void ReBuildNumeric(void);
+        virtual void ReBuildNumeric(void);
 
     protected:
-    virtual void Aggregate_(const OperatorType& op,
-                            Operator<ValueType>* pro,
-                            Operator<ValueType>* res,
-                            OperatorType* coarse);
+        virtual void Aggregate_(const OperatorType&  op,
+                                Operator<ValueType>* pro,
+                                Operator<ValueType>* res,
+                                OperatorType*        coarse);
 
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
 
     private:
-    /** \brief Coupling strength */
-    ValueType eps_;
+        /** \brief Coupling strength */
+        ValueType eps_;
 
-    /** \brief Relaxation parameter */
-    ValueType relax_;
-};
+        /** \brief Relaxation parameter */
+        ValueType relax_;
+    };
 
 } // namespace rocalution
 

@@ -24,8 +24,8 @@
 #ifndef ROCALUTION_HIP_HIP_UTILS_HPP_
 #define ROCALUTION_HIP_HIP_UTILS_HPP_
 
-#include "../backend_manager.hpp"
 #include "../../utils/log.hpp"
+#include "../backend_manager.hpp"
 #include "backend_hip.hpp"
 
 #include <hip/hip_runtime.h>
@@ -94,121 +94,122 @@
         }                                                     \
     }
 
-namespace rocalution {
-
-__device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
-
-template <unsigned int WF_SIZE>
-static __device__ __forceinline__ float wf_reduce_sum(float sum)
+namespace rocalution
 {
-    typedef union flt_b32
-    {
-        float val;
-        uint32_t b32;
-    } flt_b32_t;
 
-    flt_b32_t upper_sum;
-    flt_b32_t temp_sum;
-    temp_sum.val = sum;
+    __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
 
-    if(WF_SIZE > 1)
+    template <unsigned int WF_SIZE>
+    static __device__ __forceinline__ float wf_reduce_sum(float sum)
     {
-        upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x80b1);
-        temp_sum.val += upper_sum.val;
+        typedef union flt_b32
+        {
+            float    val;
+            uint32_t b32;
+        } flt_b32_t;
+
+        flt_b32_t upper_sum;
+        flt_b32_t temp_sum;
+        temp_sum.val = sum;
+
+        if(WF_SIZE > 1)
+        {
+            upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x80b1);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 2)
+        {
+            upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x804e);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 4)
+        {
+            upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x101f);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 8)
+        {
+            upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x201f);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 16)
+        {
+            upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x401f);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 32)
+        {
+            upper_sum.b32 = __llvm_amdgcn_readlane(temp_sum.b32, 32);
+            temp_sum.val += upper_sum.val;
+        }
+
+        sum = temp_sum.val;
+        return sum;
     }
 
-    if(WF_SIZE > 2)
+    template <unsigned int WF_SIZE>
+    static __device__ __forceinline__ double wf_reduce_sum(double sum)
     {
-        upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x804e);
-        temp_sum.val += upper_sum.val;
+        typedef union dbl_b32
+        {
+            double   val;
+            uint32_t b32[2];
+        } dbl_b32_t;
+
+        dbl_b32_t upper_sum;
+        dbl_b32_t temp_sum;
+        temp_sum.val = sum;
+
+        if(WF_SIZE > 1)
+        {
+            upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x80b1);
+            upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x80b1);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 2)
+        {
+            upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x804e);
+            upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x804e);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 4)
+        {
+            upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x101f);
+            upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x101f);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 8)
+        {
+            upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x201f);
+            upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x201f);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 16)
+        {
+            upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x401f);
+            upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x401f);
+            temp_sum.val += upper_sum.val;
+        }
+
+        if(WF_SIZE > 32)
+        {
+            upper_sum.b32[0] = __llvm_amdgcn_readlane(temp_sum.b32[0], 32);
+            upper_sum.b32[1] = __llvm_amdgcn_readlane(temp_sum.b32[1], 32);
+            temp_sum.val += upper_sum.val;
+        }
+
+        sum = temp_sum.val;
+        return sum;
     }
-
-    if(WF_SIZE > 4)
-    {
-        upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x101f);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 8)
-    {
-        upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x201f);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 16)
-    {
-        upper_sum.b32 = __hip_ds_swizzle(temp_sum.b32, 0x401f);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 32)
-    {
-        upper_sum.b32 = __llvm_amdgcn_readlane(temp_sum.b32, 32);
-        temp_sum.val += upper_sum.val;
-    }
-
-    sum = temp_sum.val;
-    return sum;
-}
-
-template <unsigned int WF_SIZE>
-static __device__ __forceinline__ double wf_reduce_sum(double sum)
-{
-    typedef union dbl_b32
-    {
-        double val;
-        uint32_t b32[2];
-    } dbl_b32_t;
-
-    dbl_b32_t upper_sum;
-    dbl_b32_t temp_sum;
-    temp_sum.val = sum;
-
-    if(WF_SIZE > 1)
-    {
-        upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x80b1);
-        upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x80b1);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 2)
-    {
-        upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x804e);
-        upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x804e);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 4)
-    {
-        upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x101f);
-        upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x101f);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 8)
-    {
-        upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x201f);
-        upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x201f);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 16)
-    {
-        upper_sum.b32[0] = __hip_ds_swizzle(temp_sum.b32[0], 0x401f);
-        upper_sum.b32[1] = __hip_ds_swizzle(temp_sum.b32[1], 0x401f);
-        temp_sum.val += upper_sum.val;
-    }
-
-    if(WF_SIZE > 32)
-    {
-        upper_sum.b32[0] = __llvm_amdgcn_readlane(temp_sum.b32[0], 32);
-        upper_sum.b32[1] = __llvm_amdgcn_readlane(temp_sum.b32[1], 32);
-        temp_sum.val += upper_sum.val;
-    }
-
-    sum = temp_sum.val;
-    return sum;
-}
 
 } // namespace rocalution
 

@@ -28,9 +28,10 @@
 #include "base_amg.hpp"
 #include "pairwise_amg.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class GlobalPairwiseAMG
   * \brief Pairwise Aggregation Algebraic MultiGrid Method (multi-node)
   * \details
@@ -45,65 +46,65 @@ namespace rocalution {
   * \tparam VectorType - can be GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
+    {
     public:
-    GlobalPairwiseAMG();
-    virtual ~GlobalPairwiseAMG();
+        GlobalPairwiseAMG();
+        virtual ~GlobalPairwiseAMG();
 
-    virtual void Print(void) const;
-    virtual void BuildHierarchy(void);
-    virtual void ClearLocal(void);
+        virtual void Print(void) const;
+        virtual void BuildHierarchy(void);
+        virtual void ClearLocal(void);
 
-    /** \brief Set beta for pairwise aggregation */
-    virtual void SetBeta(ValueType beta);
-    /** \brief Set re-ordering for aggregation */
-    virtual void SetOrdering(const _aggregation_ordering ordering);
-    /** \brief Set target coarsening factor */
-    virtual void SetCoarseningFactor(double factor);
+        /** \brief Set beta for pairwise aggregation */
+        virtual void SetBeta(ValueType beta);
+        /** \brief Set re-ordering for aggregation */
+        virtual void SetOrdering(const _aggregation_ordering ordering);
+        /** \brief Set target coarsening factor */
+        virtual void SetCoarseningFactor(double factor);
 
-    virtual void ReBuildNumeric(void);
+        virtual void ReBuildNumeric(void);
 
     protected:
-    /** \brief Constructs the prolongation, restriction and coarse operator */
-    void Aggregate_(const OperatorType& op,
-                    Operator<ValueType>* pro,
-                    Operator<ValueType>* res,
-                    OperatorType* coarse,
-                    ParallelManager* pm,
-                    LocalVector<int>* trans);
+        /** \brief Constructs the prolongation, restriction and coarse operator */
+        void Aggregate_(const OperatorType&  op,
+                        Operator<ValueType>* pro,
+                        Operator<ValueType>* res,
+                        OperatorType*        coarse,
+                        ParallelManager*     pm,
+                        LocalVector<int>*    trans);
 
-    /** \private */
-    virtual void Aggregate_(const OperatorType& op,
-                            Operator<ValueType>* pro,
-                            Operator<ValueType>* res,
-                            OperatorType* coarse);
+        /** \private */
+        virtual void Aggregate_(const OperatorType&  op,
+                                Operator<ValueType>* pro,
+                                Operator<ValueType>* res,
+                                OperatorType*        coarse);
 
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
 
     private:
-    // Beta factor
-    ValueType beta_;
+        // Beta factor
+        ValueType beta_;
 
-    // Target factor for coarsening ratio
-    double coarsening_factor_;
-    // Ordering for the aggregation scheme
-    int aggregation_ordering_;
+        // Target factor for coarsening ratio
+        double coarsening_factor_;
+        // Ordering for the aggregation scheme
+        int aggregation_ordering_;
 
-    // Parallel Manager for coarser levels
-    ParallelManager** pm_level_;
+        // Parallel Manager for coarser levels
+        ParallelManager** pm_level_;
 
-    // Transfer mapping
-    LocalVector<int>** trans_level_;
+        // Transfer mapping
+        LocalVector<int>** trans_level_;
 
-    // Dimension of the coarse operators
-    std::vector<int> dim_level_;
-    std::vector<int> Gsize_level_;
-    std::vector<int> rGsize_level_;
-    std::vector<int*> rG_level_;
-};
+        // Dimension of the coarse operators
+        std::vector<int>  dim_level_;
+        std::vector<int>  Gsize_level_;
+        std::vector<int>  rGsize_level_;
+        std::vector<int*> rG_level_;
+    };
 
 } // namespace rocalution
 

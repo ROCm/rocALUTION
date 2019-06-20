@@ -26,9 +26,10 @@
 
 #include "preconditioner.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class AS
   * \brief Additive Schwarz Preconditioner
   * \details
@@ -43,50 +44,50 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class AS : public Preconditioner<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class AS : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
     public:
-    AS();
-    virtual ~AS();
+        AS();
+        virtual ~AS();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    /** \brief Set number of blocks, overlap and array of preconditioners */
-    void Set(int nb, int overlap, Solver<OperatorType, VectorType, ValueType>** preconds);
+        /** \brief Set number of blocks, overlap and array of preconditioners */
+        void Set(int nb, int overlap, Solver<OperatorType, VectorType, ValueType>** preconds);
 
-    virtual void Solve(const VectorType& rhs, VectorType* x);
+        virtual void Solve(const VectorType& rhs, VectorType* x);
 
-    virtual void Build(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
-    /** \brief Number of blocks */
-    int num_blocks_; /**< Number of blocks */
-    /** \brief Overlap */
-    int overlap_;
-    /** \brief Position */
-    int* pos_;
-    /** \brief Sizes including overlap */
-    int* sizes_;
+        /** \brief Number of blocks */
+        int num_blocks_; /**< Number of blocks */
+        /** \brief Overlap */
+        int overlap_;
+        /** \brief Position */
+        int* pos_;
+        /** \brief Sizes including overlap */
+        int* sizes_;
 
-    /** \brief Preconditioner for each block */
-    Solver<OperatorType, VectorType, ValueType>** local_precond_;
+        /** \brief Preconditioner for each block */
+        Solver<OperatorType, VectorType, ValueType>** local_precond_;
 
-    /** \brief Local operator */
-    OperatorType** local_mat_;
-    /** \brief r */
-    VectorType** r_;
-    /** \brief z */
-    VectorType** z_;
-    /** \brief weights */
-    VectorType weight_;
-};
+        /** \brief Local operator */
+        OperatorType** local_mat_;
+        /** \brief r */
+        VectorType** r_;
+        /** \brief z */
+        VectorType** z_;
+        /** \brief weights */
+        VectorType weight_;
+    };
 
-/** \ingroup precond_module
+    /** \ingroup precond_module
   * \class RAS
   * \brief Restricted Additive Schwarz Preconditioner
   * \details
@@ -101,17 +102,17 @@ class AS : public Preconditioner<OperatorType, VectorType, ValueType>
   * \tparam VectorType - can be LocalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class RAS : public AS<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class RAS : public AS<OperatorType, VectorType, ValueType>
+    {
     public:
-    RAS();
-    virtual ~RAS();
+        RAS();
+        virtual ~RAS();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    virtual void Solve(const VectorType& rhs, VectorType* x);
-};
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+    };
 
 } // namespace rocalution
 

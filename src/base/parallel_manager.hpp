@@ -24,20 +24,21 @@
 #ifndef ROCALUTION_PARALLEL_MANAGER_HPP_
 #define ROCALUTION_PARALLEL_MANAGER_HPP_
 
-#include "base_rocalution.hpp"
 #include "../utils/types.hpp"
+#include "base_rocalution.hpp"
 
-#include <string>
 #include <complex>
+#include <string>
 
-namespace rocalution {
+namespace rocalution
+{
 
-template <typename ValueType>
-class GlobalMatrix;
-template <typename ValueType>
-class GlobalVector;
+    template <typename ValueType>
+    class GlobalMatrix;
+    template <typename ValueType>
+    class GlobalVector;
 
-/** \ingroup backend_module
+    /** \ingroup backend_module
   * \brief Parallel Manager class
   * \details
   * The parallel manager class handles the communication and the mapping of the global
@@ -46,103 +47,103 @@ class GlobalVector;
   * the underlying operator is already distributed. This information need to be passed to
   * the parallel manager.
   */
-class ParallelManager : public RocalutionObj
-{
+    class ParallelManager : public RocalutionObj
+    {
     public:
-    ParallelManager();
-    ~ParallelManager();
+        ParallelManager();
+        ~ParallelManager();
 
-    /** \brief Set the MPI communicator */
-    void SetMPICommunicator(const void* comm);
-    /** \brief Clear all allocated resources */
-    void Clear(void);
+        /** \brief Set the MPI communicator */
+        void SetMPICommunicator(const void* comm);
+        /** \brief Clear all allocated resources */
+        void Clear(void);
 
-    /** \brief Return the global size */
-    IndexType2 GetGlobalSize(void) const;
-    /** \brief Return the local size */
-    int GetLocalSize(void) const;
+        /** \brief Return the global size */
+        IndexType2 GetGlobalSize(void) const;
+        /** \brief Return the local size */
+        int GetLocalSize(void) const;
 
-    /** \brief Return the number of receivers */
-    int GetNumReceivers(void) const;
-    /** \brief Return the number of senders */
-    int GetNumSenders(void) const;
-    /** \brief Return the number of involved processes */
-    int GetNumProcs(void) const;
+        /** \brief Return the number of receivers */
+        int GetNumReceivers(void) const;
+        /** \brief Return the number of senders */
+        int GetNumSenders(void) const;
+        /** \brief Return the number of involved processes */
+        int GetNumProcs(void) const;
 
-    /** \brief Initialize the global size */
-    void SetGlobalSize(IndexType2 size);
-    /** \brief Initialize the local size */
-    void SetLocalSize(int size);
+        /** \brief Initialize the global size */
+        void SetGlobalSize(IndexType2 size);
+        /** \brief Initialize the local size */
+        void SetLocalSize(int size);
 
-    /** \brief Set all boundary indices of this ranks process */
-    void SetBoundaryIndex(int size, const int* index);
+        /** \brief Set all boundary indices of this ranks process */
+        void SetBoundaryIndex(int size, const int* index);
 
-    /** \brief Number of processes, the current process is receiving data from, array of
+        /** \brief Number of processes, the current process is receiving data from, array of
       * the processes, the current process is receiving data from and offsets, where the
       * boundary for process 'receiver' starts
       */
-    void SetReceivers(int nrecv, const int* recvs, const int* recv_offset);
+        void SetReceivers(int nrecv, const int* recvs, const int* recv_offset);
 
-    /** \brief Number of processes, the current process is sending data to, array of the
+        /** \brief Number of processes, the current process is sending data to, array of the
       * processes, the current process is sending data to and offsets where the ghost
       * part for process 'sender' starts
       */
-    void SetSenders(int nsend, const int* sends, const int* send_offset);
+        void SetSenders(int nsend, const int* sends, const int* send_offset);
 
-    /** \brief Mapping local to global */
-    void LocalToGlobal(int proc, int local, int& global);
-    /** \brief Mapping global to local */
-    void GlobalToLocal(int global, int& proc, int& local);
+        /** \brief Mapping local to global */
+        void LocalToGlobal(int proc, int local, int& global);
+        /** \brief Mapping global to local */
+        void GlobalToLocal(int global, int& proc, int& local);
 
-    /** \brief Check sanity status of parallel manager */
-    bool Status(void) const;
+        /** \brief Check sanity status of parallel manager */
+        bool Status(void) const;
 
-    /** \brief Read file that contains all relevant parallel manager data */
-    void ReadFileASCII(const std::string filename);
-    /** \brief Write file that contains all relevant parallel manager data */
-    void WriteFileASCII(const std::string filename) const;
+        /** \brief Read file that contains all relevant parallel manager data */
+        void ReadFileASCII(const std::string filename);
+        /** \brief Write file that contains all relevant parallel manager data */
+        void WriteFileASCII(const std::string filename) const;
 
     private:
-    const void* comm_;
-    int rank_;
-    int num_procs_;
+        const void* comm_;
+        int         rank_;
+        int         num_procs_;
 
-    IndexType2 global_size_;
-    int local_size_;
+        IndexType2 global_size_;
+        int        local_size_;
 
-    // Number of total ids, the current process is receiving
-    int recv_index_size_;
-    // Number of total ids, the current process is sending
-    int send_index_size_;
+        // Number of total ids, the current process is receiving
+        int recv_index_size_;
+        // Number of total ids, the current process is sending
+        int send_index_size_;
 
-    // Number of processes, the current process receives data from
-    int nrecv_;
-    // Number of processes, the current process sends data to
-    int nsend_;
+        // Number of processes, the current process receives data from
+        int nrecv_;
+        // Number of processes, the current process sends data to
+        int nsend_;
 
-    // Array of process ids, the current process receives data from
-    int* recvs_;
-    // Array of process ids, the current process sends data to
-    int* sends_;
+        // Array of process ids, the current process receives data from
+        int* recvs_;
+        // Array of process ids, the current process sends data to
+        int* sends_;
 
-    // Array of offsets, the current process receives data from
-    int* recv_offset_index_;
-    // Array of offsets, the current process sends data to
-    int* send_offset_index_;
+        // Array of offsets, the current process receives data from
+        int* recv_offset_index_;
+        // Array of offsets, the current process sends data to
+        int* send_offset_index_;
 
-    // Boundary index ids
-    int* boundary_index_;
+        // Boundary index ids
+        int* boundary_index_;
 
-    friend class GlobalMatrix<double>;
-    friend class GlobalMatrix<float>;
-    friend class GlobalMatrix<std::complex<double>>;
-    friend class GlobalMatrix<std::complex<float>>;
-    friend class GlobalVector<double>;
-    friend class GlobalVector<float>;
-    friend class GlobalVector<std::complex<double>>;
-    friend class GlobalVector<std::complex<float>>;
-    friend class GlobalVector<int>;
-};
+        friend class GlobalMatrix<double>;
+        friend class GlobalMatrix<float>;
+        friend class GlobalMatrix<std::complex<double>>;
+        friend class GlobalMatrix<std::complex<float>>;
+        friend class GlobalVector<double>;
+        friend class GlobalVector<float>;
+        friend class GlobalVector<std::complex<double>>;
+        friend class GlobalVector<std::complex<float>>;
+        friend class GlobalVector<int>;
+    };
 
 } // namespace rocalution
 

@@ -26,115 +26,116 @@
 
 #include <string>
 
-namespace rocalution {
-
-// Matrix Names
-const std::string _matrix_format_names[8] = {
-    "DENSE", "CSR", "MCSR", "BCSR", "COO", "DIA", "ELL", "HYB"};
-
-// Matrix Enumeration
-enum _matrix_format
+namespace rocalution
 {
-    DENSE = 0,
-    CSR   = 1,
-    MCSR  = 2,
-    BCSR  = 3,
-    COO   = 4,
-    DIA   = 5,
-    ELL   = 6,
-    HYB   = 7
-};
 
-// Sparse Matrix - Sparse Compressed Row Format CSR
-template <typename ValueType, typename IndexType>
-struct MatrixCSR
-{
-    // Row offsets (row ptr)
-    IndexType* row_offset;
+    // Matrix Names
+    const std::string _matrix_format_names[8]
+        = {"DENSE", "CSR", "MCSR", "BCSR", "COO", "DIA", "ELL", "HYB"};
 
-    // Column index
-    IndexType* col;
+    // Matrix Enumeration
+    enum _matrix_format
+    {
+        DENSE = 0,
+        CSR   = 1,
+        MCSR  = 2,
+        BCSR  = 3,
+        COO   = 4,
+        DIA   = 5,
+        ELL   = 6,
+        HYB   = 7
+    };
 
-    // Values
-    ValueType* val;
-};
+    // Sparse Matrix - Sparse Compressed Row Format CSR
+    template <typename ValueType, typename IndexType>
+    struct MatrixCSR
+    {
+        // Row offsets (row ptr)
+        IndexType* row_offset;
 
-// Sparse Matrix - Modified Sparse Compressed Row Format MCSR
-template <typename ValueType, typename IndexType>
-struct MatrixMCSR
-{
-    // Row offsets (row ptr)
-    IndexType* row_offset;
+        // Column index
+        IndexType* col;
 
-    // Column index
-    IndexType* col;
+        // Values
+        ValueType* val;
+    };
 
-    // Values
-    ValueType* val;
-};
+    // Sparse Matrix - Modified Sparse Compressed Row Format MCSR
+    template <typename ValueType, typename IndexType>
+    struct MatrixMCSR
+    {
+        // Row offsets (row ptr)
+        IndexType* row_offset;
 
-template <typename ValueType, typename IndexType>
-struct MatrixBCSR
-{
-};
+        // Column index
+        IndexType* col;
 
-// Sparse Matrix - Coordinate Format COO
-template <typename ValueType, typename IndexType>
-struct MatrixCOO
-{
-    // Row index
-    IndexType* row;
+        // Values
+        ValueType* val;
+    };
 
-    // Column index
-    IndexType* col;
+    template <typename ValueType, typename IndexType>
+    struct MatrixBCSR
+    {
+    };
 
-    // Values
-    ValueType* val;
-};
+    // Sparse Matrix - Coordinate Format COO
+    template <typename ValueType, typename IndexType>
+    struct MatrixCOO
+    {
+        // Row index
+        IndexType* row;
 
-// Sparse Matrix - Diagonal Format DIA (see DIA_IND for indexing)
-template <typename ValueType, typename IndexType, typename Index = IndexType>
-struct MatrixDIA
-{
-    // Number of diagonal
-    Index num_diag;
+        // Column index
+        IndexType* col;
 
-    // Offset with respect to the main diagonal
-    IndexType* offset;
+        // Values
+        ValueType* val;
+    };
 
-    // Values
-    ValueType* val;
-};
+    // Sparse Matrix - Diagonal Format DIA (see DIA_IND for indexing)
+    template <typename ValueType, typename IndexType, typename Index = IndexType>
+    struct MatrixDIA
+    {
+        // Number of diagonal
+        Index num_diag;
 
-// Sparse Matrix - ELL Format (see ELL_IND for indexing)
-template <typename ValueType, typename IndexType, typename Index = IndexType>
-struct MatrixELL
-{
-    // Maximal elements per row
-    Index max_row;
+        // Offset with respect to the main diagonal
+        IndexType* offset;
 
-    // Column index
-    IndexType* col;
+        // Values
+        ValueType* val;
+    };
 
-    // Values
-    ValueType* val;
-};
+    // Sparse Matrix - ELL Format (see ELL_IND for indexing)
+    template <typename ValueType, typename IndexType, typename Index = IndexType>
+    struct MatrixELL
+    {
+        // Maximal elements per row
+        Index max_row;
 
-// Sparse Matrix - Hybrid Format HYB (Contains ELL and COO Matrices)
-template <typename ValueType, typename IndexType, typename Index = IndexType>
-struct MatrixHYB
-{
-    MatrixELL<ValueType, IndexType, Index> ELL;
-    MatrixCOO<ValueType, IndexType> COO;
-};
+        // Column index
+        IndexType* col;
 
-// Dense Matrix (see DENSE_IND for indexing)
-template <typename ValueType>
-struct MatrixDENSE
-{
-    // Values
-    ValueType* val;
-};
+        // Values
+        ValueType* val;
+    };
+
+    // Sparse Matrix - Hybrid Format HYB (Contains ELL and COO Matrices)
+    template <typename ValueType, typename IndexType, typename Index = IndexType>
+    struct MatrixHYB
+    {
+        MatrixELL<ValueType, IndexType, Index> ELL;
+        MatrixCOO<ValueType, IndexType>        COO;
+    };
+
+    // Dense Matrix (see DENSE_IND for indexing)
+    template <typename ValueType>
+    struct MatrixDENSE
+    {
+        // Values
+        ValueType* val;
+    };
 
 } // namespace rocalution
 

@@ -27,18 +27,18 @@
 
 #include "utility.hpp"
 
-#include <rocalution.hpp>
 #include <gtest/gtest.h>
+#include <rocalution.hpp>
 
 using namespace rocalution;
 
 void testing_backend_init_order(void)
 {
-    bool use_acc  = false;
-    bool omp_aff  = false;
-    int dev       = 0;
-    int nthreads  = 4;
-    int threshold = 20000;
+    bool use_acc   = false;
+    bool omp_aff   = false;
+    int  dev       = 0;
+    int  nthreads  = 4;
+    int  threshold = 20000;
 
     // Try to stop rocalution without initialization
     stop_rocalution();
@@ -68,13 +68,13 @@ void testing_backend_init_order(void)
 
 void testing_backend(Arguments argus)
 {
-    int rank         = argus.rank;
-    int dev_per_node = argus.dev_per_node;
-    int dev          = argus.dev;
-    int nthreads     = argus.omp_nthreads;
-    bool affinity    = argus.omp_affinity;
-    int threshold    = argus.omp_threshold;
-    bool use_acc     = argus.use_acc;
+    int  rank         = argus.rank;
+    int  dev_per_node = argus.dev_per_node;
+    int  dev          = argus.dev;
+    int  nthreads     = argus.omp_nthreads;
+    bool affinity     = argus.omp_affinity;
+    int  threshold    = argus.omp_threshold;
+    bool use_acc      = argus.use_acc;
 
     // Select a device
     set_device_rocalution(dev);

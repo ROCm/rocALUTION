@@ -27,8 +27,8 @@
 
 #include "utility.hpp"
 
-#include <rocalution.hpp>
 #include <gtest/gtest.h>
+#include <rocalution.hpp>
 
 using namespace rocalution;
 
@@ -45,15 +45,15 @@ void testing_global_matrix_bad_args(void)
     GlobalVector<T> vec;
 
     int* idata = nullptr;
-    T* data    = nullptr;
+    T*   data  = nullptr;
 
     allocate_host(safe_size, &idata);
     allocate_host(safe_size, &data);
 
     // SetDataPtrCSR
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.SetDataPtrCSR(
                          nullptr, &idata, &data, &idata, &idata, &data, "", safe_size, safe_size),
                      ".*Assertion.*local_row_offset != (NULL|__null)*");
@@ -96,8 +96,8 @@ void testing_global_matrix_bad_args(void)
 
     // SetDataPtrCOO
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.SetDataPtrCOO(
                          nullptr, &idata, &data, &idata, &idata, &data, "", safe_size, safe_size),
                      ".*Assertion.*local_row != (NULL|__null)*");
@@ -140,8 +140,8 @@ void testing_global_matrix_bad_args(void)
 
     // SetLocalDataPtrCSR
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.SetLocalDataPtrCSR(nullptr, &idata, &data, "", safe_size),
                      ".*Assertion.*row_offset != (NULL|__null)*");
         ASSERT_DEATH(mat.SetLocalDataPtrCSR(&idata, nullptr, &data, "", safe_size),
@@ -158,8 +158,8 @@ void testing_global_matrix_bad_args(void)
 
     // SetGhostDataPtrCSR
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.SetGhostDataPtrCSR(nullptr, &idata, &data, "", safe_size),
                      ".*Assertion.*row_offset != (NULL|__null)*");
         ASSERT_DEATH(mat.SetGhostDataPtrCSR(&idata, nullptr, &data, "", safe_size),
@@ -176,8 +176,8 @@ void testing_global_matrix_bad_args(void)
 
     // SetLocalDataPtrCOO
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.SetLocalDataPtrCOO(nullptr, &idata, &data, "", safe_size),
                      ".*Assertion.*row != (NULL|__null)*");
         ASSERT_DEATH(mat.SetLocalDataPtrCOO(&idata, nullptr, &data, "", safe_size),
@@ -194,8 +194,8 @@ void testing_global_matrix_bad_args(void)
 
     // SetGhostDataPtrCOO
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.SetGhostDataPtrCOO(nullptr, &idata, &data, "", safe_size),
                      ".*Assertion.*row != (NULL|__null)*");
         ASSERT_DEATH(mat.SetGhostDataPtrCOO(&idata, nullptr, &data, "", safe_size),
@@ -212,8 +212,8 @@ void testing_global_matrix_bad_args(void)
 
     // LeaveDataPtrCSR
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(
             mat.LeaveDataPtrCSR(&idata, &null_int, &null_data, &null_int, &null_int, &null_data),
             ".*Assertion.*local_row_offset == (NULL|__null)*");
@@ -236,8 +236,8 @@ void testing_global_matrix_bad_args(void)
 
     // LeaveDataPtrCOO
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(
             mat.LeaveDataPtrCOO(&idata, &null_int, &null_data, &null_int, &null_int, &null_data),
             ".*Assertion.*local_row == (NULL|__null)*");
@@ -260,8 +260,8 @@ void testing_global_matrix_bad_args(void)
 
     // LeaveLocalDataPtrCSR
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.LeaveLocalDataPtrCSR(&idata, &null_int, &null_data),
                      ".*Assertion.*row_offset == (NULL|__null)*");
         ASSERT_DEATH(mat.LeaveLocalDataPtrCSR(&null_int, &idata, &null_data),
@@ -272,8 +272,8 @@ void testing_global_matrix_bad_args(void)
 
     // LeaveGhostDataPtrCSR
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.LeaveGhostDataPtrCSR(&idata, &null_int, &null_data),
                      ".*Assertion.*row_offset == (NULL|__null)*");
         ASSERT_DEATH(mat.LeaveGhostDataPtrCSR(&null_int, &idata, &null_data),
@@ -284,8 +284,8 @@ void testing_global_matrix_bad_args(void)
 
     // LeaveLocalDataPtrCOO
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.LeaveLocalDataPtrCOO(&idata, &null_int, &null_data),
                      ".*Assertion.*row == (NULL|__null)*");
         ASSERT_DEATH(mat.LeaveLocalDataPtrCOO(&null_int, &idata, &null_data),
@@ -296,8 +296,8 @@ void testing_global_matrix_bad_args(void)
 
     // LeaveGhostDataPtrCOO
     {
-        int* null_int = nullptr;
-        T* null_data  = nullptr;
+        int* null_int  = nullptr;
+        T*   null_data = nullptr;
         ASSERT_DEATH(mat.LeaveGhostDataPtrCOO(&idata, &null_int, &null_data),
                      ".*Assertion.*row == (NULL|__null)*");
         ASSERT_DEATH(mat.LeaveGhostDataPtrCOO(&null_int, &idata, &null_data),
@@ -327,9 +327,9 @@ void testing_global_matrix_bad_args(void)
 
     // InitialPairwiseAggregation
     {
-        int val;
-        int* null_int = nullptr;
-        LocalVector<int> lvint;
+        int               val;
+        int*              null_int = nullptr;
+        LocalVector<int>  lvint;
         LocalVector<int>* null_vec = nullptr;
         ASSERT_DEATH(mat.InitialPairwiseAggregation(0.1, val, null_vec, val, &null_int, val, 0),
                      ".*Assertion.*G != (NULL|__null)*");
@@ -339,9 +339,9 @@ void testing_global_matrix_bad_args(void)
 
     // FurtherPairwiseAggregation
     {
-        int val;
-        int* null_int = nullptr;
-        LocalVector<int> lvint;
+        int               val;
+        int*              null_int = nullptr;
+        LocalVector<int>  lvint;
         LocalVector<int>* null_vec = nullptr;
         ASSERT_DEATH(mat.FurtherPairwiseAggregation(0.1, val, null_vec, val, &idata, val, 0),
                      ".*Assertion.*G != (NULL|__null)*");
@@ -351,12 +351,12 @@ void testing_global_matrix_bad_args(void)
 
     // CoarsenOperator
     {
-        GlobalMatrix<T> Ac;
-        ParallelManager pm;
+        GlobalMatrix<T>  Ac;
+        ParallelManager  pm;
         LocalVector<int> lvint;
         GlobalMatrix<T>* null_mat = nullptr;
         ParallelManager* null_pm  = nullptr;
-        int* null_int             = nullptr;
+        int*             null_int = nullptr;
         ASSERT_DEATH(mat.CoarsenOperator(
                          null_mat, &pm, safe_size, safe_size, lvint, safe_size, idata, safe_size),
                      ".*Assertion.*Ac != (NULL|__null)*");

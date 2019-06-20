@@ -28,9 +28,10 @@
 
 #include <vector>
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class BiCGStabl
   * \brief Bi-Conjugate Gradient Stabilized (l) Method
   * \details
@@ -43,41 +44,41 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class BiCGStabl : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class BiCGStabl : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
+    {
     public:
-    BiCGStabl();
-    virtual ~BiCGStabl();
+        BiCGStabl();
+        virtual ~BiCGStabl();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    virtual void Build(void);
-    virtual void ReBuildNumeric(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void ReBuildNumeric(void);
+        virtual void Clear(void);
 
-    /** \brief Set the order */
-    virtual void SetOrder(int l);
+        /** \brief Set the order */
+        virtual void SetOrder(int l);
 
     protected:
-    virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
-    virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
+        virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
+        virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
 
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    int l_;
+        int l_;
 
-    ValueType *gamma0_, *gamma1_, *gamma2_, *sigma_;
-    ValueType** tau_;
+        ValueType * gamma0_, *gamma1_, *gamma2_, *sigma_;
+        ValueType** tau_;
 
-    VectorType r0_, z_;
-    VectorType **r_, **u_;
-};
+        VectorType   r0_, z_;
+        VectorType **r_, **u_;
+    };
 
 } // namespace rocalution
 

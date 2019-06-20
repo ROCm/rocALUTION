@@ -26,27 +26,28 @@
 
 #include <mpi.h>
 
-namespace rocalution {
-
-struct MRequest
+namespace rocalution
 {
-    MPI_Request req;
-};
 
-// TODO make const what ever possible
+    struct MRequest
+    {
+        MPI_Request req;
+    };
 
-template <typename ValueType>
-void communication_allreduce_single_sum(ValueType local, ValueType* global, const void* comm);
+    // TODO make const what ever possible
 
-template <typename ValueType>
-void communication_async_recv(
-    ValueType* buf, int count, int source, int tag, MRequest* request, const void* comm);
+    template <typename ValueType>
+    void communication_allreduce_single_sum(ValueType local, ValueType* global, const void* comm);
 
-template <typename ValueType>
-void communication_async_send(
-    ValueType* buf, int count, int dest, int tag, MRequest* request, const void* comm);
+    template <typename ValueType>
+    void communication_async_recv(
+        ValueType* buf, int count, int source, int tag, MRequest* request, const void* comm);
 
-void communication_syncall(int count, MRequest* requests);
+    template <typename ValueType>
+    void communication_async_send(
+        ValueType* buf, int count, int dest, int tag, MRequest* request, const void* comm);
+
+    void communication_syncall(int count, MRequest* requests);
 
 } // namespace rocalution
 

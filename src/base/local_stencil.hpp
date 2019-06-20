@@ -25,25 +25,26 @@
 #define ROCALUTION_LOCAL_STENCIL_HPP_
 
 #include "../utils/types.hpp"
-#include "operator.hpp"
 #include "local_vector.hpp"
+#include "operator.hpp"
 #include "stencil_types.hpp"
 
-namespace rocalution {
+namespace rocalution
+{
 
-template <typename ValueType>
-class BaseStencil;
-template <typename ValueType>
-class HostStencil;
-template <typename ValueType>
-class AcceleratorStencil;
+    template <typename ValueType>
+    class BaseStencil;
+    template <typename ValueType>
+    class HostStencil;
+    template <typename ValueType>
+    class AcceleratorStencil;
 
-template <typename ValueType>
-class LocalVector;
-template <typename ValueType>
-class GlobalVector;
+    template <typename ValueType>
+    class LocalVector;
+    template <typename ValueType>
+    class GlobalVector;
 
-/** \ingroup op_vec_module
+    /** \ingroup op_vec_module
   * \class LocalStencil
   * \brief LocalStencil class
   * \details
@@ -54,50 +55,57 @@ class GlobalVector;
   * \tparam ValueType - can be int, float, double, std::complex<float> and
   *                     std::complex<double>
   */
-template <typename ValueType>
-class LocalStencil : public Operator<ValueType>
-{
+    template <typename ValueType>
+    class LocalStencil : public Operator<ValueType>
+    {
     public:
-    LocalStencil();
-    /** \brief Initialize a local stencil with a type */
-    LocalStencil(unsigned int type);
-    virtual ~LocalStencil();
+        LocalStencil();
+        /** \brief Initialize a local stencil with a type */
+        LocalStencil(unsigned int type);
+        virtual ~LocalStencil();
 
-    virtual void Info() const;
+        virtual void Info() const;
 
-    /** \brief Return the dimension of the stencil */
-    int GetNDim(void) const;
-    virtual IndexType2 GetM(void) const;
-    virtual IndexType2 GetN(void) const;
-    virtual IndexType2 GetNnz(void) const;
+        /** \brief Return the dimension of the stencil */
+        int                GetNDim(void) const;
+        virtual IndexType2 GetM(void) const;
+        virtual IndexType2 GetN(void) const;
+        virtual IndexType2 GetNnz(void) const;
 
-    /** \brief Set the stencil grid size */
-    void SetGrid(int size);
+        /** \brief Set the stencil grid size */
+        void SetGrid(int size);
 
-    virtual void Clear();
+        virtual void Clear();
 
-    virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
-    virtual void
-    ApplyAdd(const LocalVector<ValueType>& in, ValueType scalar, LocalVector<ValueType>* out) const;
+        virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+        virtual void ApplyAdd(const LocalVector<ValueType>& in,
+                              ValueType                     scalar,
+                              LocalVector<ValueType>*       out) const;
 
-    virtual void MoveToAccelerator(void);
-    virtual void MoveToHost(void);
+        virtual void MoveToAccelerator(void);
+        virtual void MoveToHost(void);
 
     protected:
-    virtual bool is_host_(void) const { return true; };
-    virtual bool is_accel_(void) const { return false; };
+        virtual bool is_host_(void) const
+        {
+            return true;
+        };
+        virtual bool is_accel_(void) const
+        {
+            return false;
+        };
 
     private:
-    std::string object_name_;
+        std::string object_name_;
 
-    BaseStencil<ValueType>* stencil_;
+        BaseStencil<ValueType>* stencil_;
 
-    HostStencil<ValueType>* stencil_host_;
-    AcceleratorStencil<ValueType>* stencil_accel_;
+        HostStencil<ValueType>*        stencil_host_;
+        AcceleratorStencil<ValueType>* stencil_accel_;
 
-    friend class LocalVector<ValueType>;
-    friend class GlobalVector<ValueType>;
-};
+        friend class LocalVector<ValueType>;
+        friend class GlobalVector<ValueType>;
+    };
 
 } // namespace rocalution
 

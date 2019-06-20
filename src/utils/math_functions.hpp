@@ -26,35 +26,36 @@
 
 #include <complex>
 
-namespace rocalution {
+namespace rocalution
+{
 
-/// Return double value
-double rocalution_double(const int& val);
-/// Return double value
-double rocalution_double(const float& val);
-/// Return double value
-double rocalution_double(const double& val);
-/// Return double value
-double rocalution_double(const std::complex<float>& val);
-/// Return double value
-double rocalution_double(const std::complex<double>& val);
+    /// Return double value
+    double rocalution_double(const int& val);
+    /// Return double value
+    double rocalution_double(const float& val);
+    /// Return double value
+    double rocalution_double(const double& val);
+    /// Return double value
+    double rocalution_double(const std::complex<float>& val);
+    /// Return double value
+    double rocalution_double(const std::complex<double>& val);
 
-/// Return smallest positive floating point number
-template <typename ValueType>
-ValueType rocalution_eps(void);
+    /// Return smallest positive floating point number
+    template <typename ValueType>
+    ValueType rocalution_eps(void);
 
-/// Overloaded < operator for complex numbers
-template <typename ValueType>
-bool operator<(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
-/// Overloaded > operator for complex numbers
-template <typename ValueType>
-bool operator>(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
-/// Overloaded <= operator for complex numbers
-template <typename ValueType>
-bool operator<=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
-/// Overloaded >= operator for complex numbers
-template <typename ValueType>
-bool operator>=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
+    /// Overloaded < operator for complex numbers
+    template <typename ValueType>
+    bool operator<(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
+    /// Overloaded > operator for complex numbers
+    template <typename ValueType>
+    bool operator>(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
+    /// Overloaded <= operator for complex numbers
+    template <typename ValueType>
+    bool operator<=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
+    /// Overloaded >= operator for complex numbers
+    template <typename ValueType>
+    bool operator>=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
 
 } // namespace rocalution
 

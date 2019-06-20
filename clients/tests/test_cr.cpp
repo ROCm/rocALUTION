@@ -28,8 +28,8 @@
 
 typedef std::tuple<int, std::string, unsigned int> cr_tuple;
 
-int cr_size[]            = {7, 63};
-std::string cr_precond[] = {"None",
+int          cr_size[]    = {7, 63};
+std::string  cr_precond[] = {"None",
                             "Chebyshev",
                             "FSAI",
                             "SPAI",
@@ -41,11 +41,11 @@ std::string cr_precond[] = {"None",
                             "IC",
                             "MCSGS",
                             "MCILU"};
-unsigned int cr_format[] = {1, 2, 4, 5, 6, 7};
+unsigned int cr_format[]  = {1, 2, 4, 5, 6, 7};
 
 class parameterized_cr : public testing::TestWithParam<cr_tuple>
 {
-    protected:
+protected:
     parameterized_cr() {}
     virtual ~parameterized_cr() {}
     virtual void SetUp() {}

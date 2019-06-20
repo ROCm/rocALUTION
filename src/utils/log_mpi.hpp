@@ -27,8 +27,8 @@
 #include "log.hpp"
 
 #include <iostream>
-#include <stdlib.h>
 #include <mpi.h>
+#include <stdlib.h>
 
 #define CHECK_MPI_ERROR(err_t, file, line)                    \
     {                                                         \

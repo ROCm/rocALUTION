@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -227,9 +227,9 @@ int main(int argc, char* argv[])
     tack = rocalution_time();
     std::cout << "CSR SpMV execution: " << (tack - tick) / max_tests / 1e3 << " msec"
               << "; "
-              << max_tests *
-                     double((sizeof(double) * (size + size + nnz) + sizeof(int) * (size + nnz))) /
-                     (tack - tick) / 1e3
+              << max_tests
+                     * double((sizeof(double) * (size + size + nnz) + sizeof(int) * (size + nnz)))
+                     / (tack - tick) / 1e3
               << " Gbyte/sec; " << max_tests * double((2 * nnz)) / (tack - tick) / 1e3
               << " GFlop/sec" << std::endl;
 
@@ -255,9 +255,10 @@ int main(int argc, char* argv[])
     tack = rocalution_time();
     std::cout << "MCSR SpMV execution: " << (tack - tick) / max_tests / 1e3 << " msec"
               << "; "
-              << max_tests * double((sizeof(double) * (size + size + nnz - size) +
-                                     sizeof(int) * (size + nnz))) /
-                     (tack - tick) / 1e3
+              << max_tests
+                     * double(
+                         (sizeof(double) * (size + size + nnz - size) + sizeof(int) * (size + nnz)))
+                     / (tack - tick) / 1e3
               << " Gbyte/sec; " << max_tests * double((2 * nnz)) / (tack - tick) / 1e3
               << " GFlop/sec" << std::endl;
 
@@ -283,8 +284,8 @@ int main(int argc, char* argv[])
     tack = rocalution_time();
     std::cout << "ELL SpMV execution: " << (tack - tick) / max_tests / 1e3 << " msec"
               << "; "
-              << max_tests * double((sizeof(double) * (size + size + nnz) + sizeof(int) * (nnz))) /
-                     (tack - tick) / 1e3
+              << max_tests * double((sizeof(double) * (size + size + nnz) + sizeof(int) * (nnz)))
+                     / (tack - tick) / 1e3
               << " Gbyte/sec; " << max_tests * double((2 * nnz)) / (tack - tick) / 1e3
               << " GFlop/sec" << std::endl;
 
@@ -310,9 +311,9 @@ int main(int argc, char* argv[])
     tack = rocalution_time();
     std::cout << "COO SpMV execution: " << (tack - tick) / max_tests / 1e3 << " msec"
               << "; "
-              << max_tests *
-                     double((sizeof(double) * (size + size + nnz) + sizeof(int) * (2 * nnz))) /
-                     (tack - tick) / 1e3
+              << max_tests
+                     * double((sizeof(double) * (size + size + nnz) + sizeof(int) * (2 * nnz)))
+                     / (tack - tick) / 1e3
               << " Gbyte/sec; " << max_tests * double((2 * nnz)) / (tack - tick) / 1e3
               << " GFlop/sec" << std::endl;
 
@@ -339,8 +340,8 @@ int main(int argc, char* argv[])
     std::cout << "HYB SpMV execution: " << (tack - tick) / max_tests / 1e3 << " msec"
               << "; "
               // like O(ELL)
-              << max_tests * double((sizeof(double) * (size + size + nnz) + sizeof(int) * (nnz))) /
-                     (tack - tick) / 1e3
+              << max_tests * double((sizeof(double) * (size + size + nnz) + sizeof(int) * (nnz)))
+                     / (tack - tick) / 1e3
               << " Gbyte/sec; " << max_tests * double((2 * nnz)) / (tack - tick) / 1e3
               << " GFlop/sec" << std::endl;
 
@@ -489,8 +490,8 @@ int main(int argc, char* argv[])
     std::cout << "Vector update (scaleadd) execution: "
               << (updatev1_tack - updatev1_tick) / max_tests / 1e3 << " msec"
               << "; "
-              << max_tests * double(sizeof(double) * (size + size + size)) /
-                     (updatev1_tack - updatev1_tick) / 1e3
+              << max_tests * double(sizeof(double) * (size + size + size))
+                     / (updatev1_tack - updatev1_tick) / 1e3
               << " Gbyte/sec; "
               << max_tests * double((2 * size)) / (updatev1_tack - updatev1_tick) / 1e3
               << " GFlop/sec" << std::endl;
@@ -498,17 +499,17 @@ int main(int argc, char* argv[])
     std::cout << "Vector update (addscale) execution: "
               << (updatev2_tack - updatev2_tick) / max_tests / 1e3 << " msec"
               << "; "
-              << max_tests * double(sizeof(double) * (size + size + size)) /
-                     (updatev2_tack - updatev2_tick) / 1e3
+              << max_tests * double(sizeof(double) * (size + size + size))
+                     / (updatev2_tack - updatev2_tick) / 1e3
               << " Gbyte/sec; "
               << max_tests * double((2 * size)) / (updatev2_tack - updatev2_tick) / 1e3
               << " GFlop/sec" << std::endl;
 
     std::cout << "SpMV execution: " << (spmv_tack - spmv_tick) / max_tests / 1e3 << " msec"
               << "; "
-              << max_tests *
-                     double((sizeof(double) * (size + size + nnz) + sizeof(int) * (size + nnz))) /
-                     (spmv_tack - spmv_tick) / 1e3
+              << max_tests
+                     * double((sizeof(double) * (size + size + nnz) + sizeof(int) * (size + nnz)))
+                     / (spmv_tack - spmv_tick) / 1e3
               << " Gbyte/sec; " << max_tests * double((2 * nnz) / (spmv_tack - spmv_tick)) / 1e3
               << " GFlop/sec" << std::endl;
 
