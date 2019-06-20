@@ -9,7 +9,7 @@ ARG user_uid
 # Install dependent packages
 # Dependencies:
 # * hcc-config.cmake: pkg-config
-# * rocalution: rocblas rocrand rocsparse openmp
+# * rocalution: rocblas rocprim rocrand rocsparse openmp
 # * rocalution_mpi: mpi-default-bin mpi-default-dev
 # * rocalution-test: googletest
 # * rocalution-bench: libboost-program-options-dev
@@ -31,6 +31,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     libboost-program-options-dev \
     libnuma1 \
     rocblas \
+    rocprim \
     rocsparse \
     rocrand \
     && \

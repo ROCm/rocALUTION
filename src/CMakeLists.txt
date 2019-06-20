@@ -155,7 +155,6 @@ if(SUPPORT_HIP)
 
   target_include_directories(rocalution_hip
                              PRIVATE
-                             $<BUILD_INTERFACE:${HIPCUB_INCLUDE_DIRS}>
                              $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>)
 
   target_link_libraries(rocalution PRIVATE rocalution_hip)
@@ -194,8 +193,8 @@ rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5.19055), rocsparse (>= 1.0.5), rocblas (>= 2.2.2)")
-  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5.19055, rocsparse >= 1.0.5, rocblas >= 2.2.2")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5.19211), rocsparse (>= 1.1.5), rocblas (>= 2.2.6), rocprim (>= 2.5.0)")
+  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5.19211, rocsparse >= 1.1.5, rocblas >= 2.2.6, rocprim >= 2.5.0")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
