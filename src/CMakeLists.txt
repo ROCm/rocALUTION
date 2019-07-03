@@ -152,6 +152,10 @@ if(SUPPORT_HIP)
   endforeach()
 
   target_link_libraries(rocalution_hip PRIVATE ${ROCBLAS_LIBRARIES} ${ROCSPARSE_LIBRARIES})
+  foreach(target ${AMDGPU_TARGETS})
+    target_link_libraries(rocalution_hip PRIVATE --amdgpu-target=${target})
+  endforeach()
+
 
   target_include_directories(rocalution_hip
                              PRIVATE
