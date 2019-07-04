@@ -98,7 +98,7 @@ namespace rocalution
         // Pad remaining ELL structure
         for(int aj = row_end - row_begin; aj < ell_width; ++aj)
         {
-            int idx          = ELL_IND(ai, p++, m, ell_width);
+            int idx          = ELL_IND(ai, aj, m, ell_width);
             ell_col_ind[idx] = -1;
             ell_val[idx]     = static_cast<ValueType>(0);
         }
