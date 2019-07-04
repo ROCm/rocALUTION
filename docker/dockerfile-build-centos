@@ -1,0 +1,60 @@
+# Parameters related to building rocALUTION
+ARG base_image
+
+FROM ${base_image}
+MAINTAINER Nico Trost
+
+ARG user_uid
+
+# Install dependent packages
+RUN yum install -y \
+    sudo \
+    rock-dkms \
+    openmpi \
+    openmpi-devel \
+    llvm-toolset-7-libomp \
+    llvm-toolset-7-libomp-devel \
+    libgomp \
+    ca-certificates \
+    git \
+    make \
+    cmake3 \
+    pkgconfig \
+    boost-devel \
+    numactl-libs \
+    rocblas \
+    rocprim \
+    rocsparse \
+    rocrand
+
+RUN echo '#!/bin/bash' | tee /etc/profile.d/devtoolset7.sh && echo \
+    'source scl_source enable devtoolset-7' >>/etc/profile.d/devtoolset7.sh
+
+# docker pipeline runs containers with particular uid
+# create a jenkins user with this specific uid so it can use sudo priviledges
+# Grant any member of sudo group password-less sudo privileges
+RUN useradd --create-home -u ${user_uid} -o -G video --shell /bin/bash jenkins && \
+    echo '%video ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd && \
+    chmod 400 /etc/sudoers.d/sudo-nopasswd
+
+ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
+ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
+
+# Clone rocsparse repo
+# Build rocsparse and install into /usr/local
+RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
+    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
+    mkdir -p build && cd build && \
+    HIP_PLATFORM=hcc cmake3 -DBUILD_CLIENTS_SAMPLES=OFF .. && \
+    HIP_PLATFORM=hcc make -j $(nproc) install && \
+    rm -rf ${ROCSPARSE_SRC_ROOT}
+
+# Clone rocalution repo
+# Build client dependencies and install into /usr/local
+RUN mkdir -p ${ROCALUTION_SRC_ROOT} && cd ${ROCALUTION_SRC_ROOT} && \
+    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocALUTION . && \
+    mkdir -p build/deps && cd build/deps && \
+    HIP_PLATFORM=hcc cmake3 -DBUILD_BOOST=OFF ${ROCALUTION_SRC_ROOT}/deps && \
+    HIP_PLATFORM=hcc make -j $(nproc) install && \
+    rm -rf ${ROCALUTION_SRC_ROOT}
+

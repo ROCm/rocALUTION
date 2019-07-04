@@ -44,17 +44,7 @@ RUN useradd --create-home -u ${user_uid} -o -G sudo --shell /bin/bash jenkins &&
     mkdir -p /etc/sudoers.d/ && \
     echo '%sudo   ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd
 
-ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
 ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
-
-# Clone rocsparse repo
-# Build rocsparse and install into /usr/local
-RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
-    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
-    mkdir -p build && cd build && \
-    HIP_PLATFORM=hcc cmake -DBUILD_CLIENTS_SAMPLES=OFF .. && \
-    HIP_PLATFORM=hcc make -j $(nproc) install && \
-    rm -rf ${ROCSPARSE_SRC_ROOT}
 
 # Clone rocalution repo
 # Build client dependencies and install into /usr/local

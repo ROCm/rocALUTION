@@ -8,19 +8,19 @@
 # #################################################
 function display_help()
 {
-  echo "rocALUTION build & installation helper script"
-  echo "./install [-h|--help] "
-  echo "    [-h|--help] prints this help message"
-#  echo "    [--prefix] Specify an alternate CMAKE_INSTALL_PREFIX for cmake"
-  echo "    [-i|--install] install after build"
-  echo "    [-d|--dependencies] install build dependencies"
-  echo "    [-c|--clients] build library clients too (combines with -i & -d)"
-  echo "    [-g|--debug] -DCMAKE_BUILD_TYPE=Debug (default is =Release)"
-  echo "    [--build-dir] build directory (default is ./build)"
-  echo "    [--host] build library for host backend only"
-  echo "    [--no-openmp] build library without OpenMP"
-  echo "    [--mpi] build library with MPI"
-  echo "    [--hip-clang] build using hip-clang compiler"
+    echo "rocALUTION build & installation helper script"
+    echo "./install [-h|--help] "
+    echo "    [-h|--help] prints this help message"
+    #  echo "    [--prefix] Specify an alternate CMAKE_INSTALL_PREFIX for cmake"
+    echo "    [-i|--install] install after build"
+    echo "    [-d|--dependencies] install build dependencies"
+    echo "    [-c|--clients] build library clients too (combines with -i & -d)"
+    echo "    [-g|--debug] -DCMAKE_BUILD_TYPE=Debug (default is =Release)"
+    echo "    [--build-dir] build directory (default is ./build)"
+    echo "    [--host] build library for host backend only"
+    echo "    [--no-openmp] build library without OpenMP"
+    echo "    [--mpi] build library with MPI"
+    echo "    [--hip-clang] build library with hip-clang"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -28,77 +28,77 @@ function display_help()
 # prereq: ${ID} must be defined before calling
 supported_distro( )
 {
-  if [ -z ${ID+foo} ]; then
-    printf "supported_distro(): \$ID must be set\n"
-    exit 2
-  fi
-
-  case "${ID}" in
-    ubuntu|centos|rhel|fedora)
-        true
-        ;;
-    *)  printf "This script is currently supported on Ubuntu, CentOS, RHEL and Fedora\n"
+    if [ -z ${ID+foo} ]; then
+        printf "supported_distro(): \$ID must be set\n"
         exit 2
-        ;;
-  esac
+    fi
+
+    case "${ID}" in
+        ubuntu|centos|rhel|fedora)
+            true
+            ;;
+        *)  printf "This script is currently supported on Ubuntu, CentOS, RHEL and Fedora\n"
+            exit 2
+            ;;
+    esac
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
 check_exit_code( )
 {
-  if (( $? != 0 )); then
-    exit $?
-  fi
+    if (( $? != 0 )); then
+        exit $?
+    fi
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
 elevate_if_not_root( )
 {
-  local uid=$(id -u)
+    local uid=$(id -u)
 
-  if (( ${uid} )); then
-    sudo $@
-    check_exit_code
-  else
-    $@
-    check_exit_code
-  fi
+    if (( ${uid} )); then
+        sudo $@
+        check_exit_code
+    else
+        $@
+        check_exit_code
+    fi
 }
 
 # Take an array of packages as input, and install those packages with 'apt' if they are not already installed
 install_apt_packages( )
 {
-  package_dependencies=("$@")
-  for package in "${package_dependencies[@]}"; do
-    if [[ $(dpkg-query --show --showformat='${db:Status-Abbrev}\n' ${package} 2> /dev/null | grep -q "ii"; echo $?) -ne 0 ]]; then
-      printf "\033[32mInstalling \033[33m${package}\033[32m from distro package manager\033[0m\n"
-      elevate_if_not_root apt install -y --no-install-recommends ${package}
-    fi
-  done
+    package_dependencies=("$@")
+    for package in "${package_dependencies[@]}"; do
+        if [[ $(dpkg-query --show --showformat='${db:Status-Abbrev}\n' ${package} 2> /dev/null | grep -q "ii"; echo $?) -ne 0 ]]; then
+            printf "\033[32mInstalling \033[33m${package}\033[32m from distro package manager\033[0m\n"
+            elevate_if_not_root apt install -y --no-install-recommends ${package}
+        fi
+    done
 }
 
 # Take an array of packages as input, and install those packages with 'yum' if they are not already installed
 install_yum_packages( )
 {
-  package_dependencies=("$@")
-  for package in "${package_dependencies[@]}"; do
-    if [[ $(yum list installed ${package} &> /dev/null; echo $? ) -ne 0 ]]; then
-      printf "\033[32mInstalling \033[33m${package}\033[32m from distro package manager\033[0m\n"
-      elevate_if_not_root yum -y --nogpgcheck install ${package}
-    fi
-  done
+    package_dependencies=("$@")
+    for package in "${package_dependencies[@]}"; do
+        if [[ $(yum list installed ${package} &> /dev/null; echo $? ) -ne 0 ]]; then
+            printf "\033[32mInstalling \033[33m${package}\033[32m from distro package manager\033[0m\n"
+            elevate_if_not_root yum -y --nogpgcheck install ${package}
+        fi
+    done
 }
 
 # Take an array of packages as input, and install those packages with 'dnf' if they are not already installed
 install_dnf_packages( )
 {
-  package_dependencies=("$@")
-  for package in "${package_dependencies[@]}"; do
-    if [[ $(dnf list installed ${package} &> /dev/null; echo $? ) -ne 0 ]]; then
-      printf "\033[32mInstalling \033[33m${package}\033[32m from distro package manager\033[0m\n"
-      elevate_if_not_root dnf install -y ${package}
-    fi
-  done
+    package_dependencies=("$@")
+    for package in "${package_dependencies[@]}"; do
+        if [[ $(dnf list installed ${package} &> /dev/null; echo $? ) -ne 0 ]]; then
+            printf "\033[32mInstalling \033[33m${package}\033[32m from distro package manager\033[0m\n"
+            elevate_if_not_root dnf install -y ${package}
+        fi
+    done
 }
 
 # Take an array of packages as input, and delegate the work to the appropriate distro installer
@@ -106,80 +106,80 @@ install_dnf_packages( )
 # prereq: ${build_clients} must be defined before calling
 install_packages( )
 {
-  if [ -z ${ID+foo} ]; then
-    printf "install_packages(): \$ID must be set\n"
-    exit 2
-  fi
+    if [ -z ${ID+foo} ]; then
+        printf "install_packages(): \$ID must be set\n"
+        exit 2
+    fi
 
-  if [ -z ${build_clients+foo} ]; then
-    printf "install_packages(): \$build_clients must be set\n"
-    exit 2
-  fi
+    if [ -z ${build_clients+foo} ]; then
+        printf "install_packages(): \$build_clients must be set\n"
+        exit 2
+    fi
 
-  # dependencies needed for library and clients to build
-  local library_dependencies_ubuntu=( "make" "cmake-curses-gui" "pkg-config" )
-  local library_dependencies_centos=( "epel-release" "make" "cmake3" "gcc-c++" "rpm-build" )
-  local library_dependencies_fedora=( "make" "cmake" "gcc-c++" "libcxx-devel" "rpm-build" )
+    # dependencies needed for library and clients to build
+    local library_dependencies_ubuntu=( "make" "cmake-curses-gui" "pkg-config" )
+    local library_dependencies_centos=( "epel-release" "make" "cmake3" "gcc-c++" "rpm-build" )
+    local library_dependencies_fedora=( "make" "cmake" "gcc-c++" "libcxx-devel" "rpm-build" )
 
-  local client_dependencies_ubuntu=( "libboost-program-options-dev" )
-  local client_dependencies_centos=( "boost-devel" )
-  local client_dependencies_fedora=( "boost-devel" )
+    local client_dependencies_ubuntu=( "libboost-program-options-dev" )
+    local client_dependencies_centos=( "boost-devel" )
+    local client_dependencies_fedora=( "boost-devel" )
 
-  # Host build
-  if [[ "${build_host}" == false ]]; then
-    library_dependencies_ubuntu+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_centos+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_fedora+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
-  fi
+    # Host build
+    if [[ "${build_host}" == false ]]; then
+        library_dependencies_ubuntu+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" "rocprim" )
+        library_dependencies_centos+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
+        library_dependencies_fedora+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
+    fi
 
-  # MPI
-  if [[ "${build_mpi}" == true ]]; then
-    library_dependencies_ubuntu+=( "mpi-default-bin" "mpi-default-dev" )
-    library_dependencies_centos+=( "openmpi" "openmpi-devel" )
-    library_dependencies_fedora+=( "openmpi" "openmpi-devel" )
-  fi
+    # MPI
+    if [[ "${build_mpi}" == true ]]; then
+        library_dependencies_ubuntu+=( "mpi-default-bin" "mpi-default-dev" )
+        library_dependencies_centos+=( "openmpi" "openmpi-devel" )
+        li1brary_dependencies_fedora+=( "openmpi" "openmpi-devel" )
+    fi
 
-  # OpenMP
-  if [[ "${build_omp}" == true ]]; then
-    library_dependencies_ubuntu+=( "libomp5" "libomp-dev" )
-    library_dependencies_centos+=( "libomp5-devel" ) # TODO
-    library_dependencies_fedora+=( "libomp5-devel" ) # TODO
-  fi
+    # OpenMP
+    if [[ "${build_omp}" == true ]]; then
+        library_dependencies_ubuntu+=( "libomp5" "libomp-dev" )
+        library_dependencies_centos+=( "llvm-toolset-7-libomp" "llvm-toolset-7-libomp-devel" "libgomp")
+        library_dependencies_fedora+=( "llvm-toolset-7-libomp" "llvm-toolset-7-libomp-devel" "libgomp")
+    fi
 
-  case "${ID}" in
-    ubuntu)
-      elevate_if_not_root apt update
-      install_apt_packages "${library_dependencies_ubuntu[@]}"
+    case "${ID}" in
+        ubuntu)
+            elevate_if_not_root apt update
+            install_apt_packages "${library_dependencies_ubuntu[@]}"
 
-      if [[ "${build_clients}" == true ]]; then
-        install_apt_packages "${client_dependencies_ubuntu[@]}"
-      fi
-      ;;
+            if [[ "${build_clients}" == true ]]; then
+                install_apt_packages "${client_dependencies_ubuntu[@]}"
+            fi
+            ;;
 
-    centos|rhel)
-#     yum -y update brings *all* installed packages up to date
-#     without seeking user approval
-#     elevate_if_not_root yum -y update
-      install_yum_packages "${library_dependencies_centos[@]}"
+        centos|rhel)
+            #   yum -y update brings *all* installed packages up to date
+            #   without seeking user approval
+            #   elevate_if_not_root yum -y update
+            install_yum_packages "${library_dependencies_centos[@]}"
 
-      if [[ "${build_clients}" == true ]]; then
-        install_yum_packages "${client_dependencies_centos[@]}"
-      fi
-      ;;
+            if [[ "${build_clients}" == true ]]; then
+                install_yum_packages "${client_dependencies_centos[@]}"
+            fi
+            ;;
 
-    fedora)
-#     elevate_if_not_root dnf -y update
-      install_dnf_packages "${library_dependencies_fedora[@]}"
+        fedora)
+            #   elevate_if_not_root dnf -y update
+            install_dnf_packages "${library_dependencies_fedora[@]}"
 
-      if [[ "${build_clients}" == true ]]; then
-        install_dnf_packages "${client_dependencies_fedora[@]}"
-      fi
-      ;;
-    *)
-      echo "This script is currently supported on Ubuntu, CentOS, RHEL and Fedora"
-      exit 2
-      ;;
-  esac
+            if [[ "${build_clients}" == true ]]; then
+                install_dnf_packages "${client_dependencies_fedora[@]}"
+            fi
+            ;;
+        *)
+            echo "This script is currently supported on Ubuntu, CentOS, RHEL and Fedora"
+            exit 2
+            ;;
+    esac
 }
 
 # #################################################
@@ -192,16 +192,16 @@ install_packages( )
 # check if getopt command is installed
 type getopt > /dev/null
 if [[ $? -ne 0 ]]; then
-  echo "This script uses getopt to parse arguments; try installing the util-linux package";
-  exit 1
+    echo "This script uses getopt to parse arguments; try installing the util-linux package";
+    exit 1
 fi
 
 # os-release file describes the system
 if [[ -e "/etc/os-release" ]]; then
-  source /etc/os-release
+    source /etc/os-release
 else
-  echo "This script depends on the /etc/os-release file"
-  exit 2
+    echo "This script depends on the /etc/os-release file"
+    exit 2
 fi
 
 # The following function exits script if an unsupported distro is detected
@@ -228,60 +228,60 @@ build_hip_clang=false
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi,hip-clang --options hicgd -- "$@")
+    GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi,hip-clang --options hicgd -- "$@")
 else
-  echo "Need a new version of getopt"
-  exit 1
+    echo "Need a new version of getopt"
+    exit 1
 fi
 
 if [[ $? -ne 0 ]]; then
-  echo "getopt invocation failed; could not parse the command line";
-  exit 1
+    echo "getopt invocation failed; could not parse the command line";
+    exit 1
 fi
 
 eval set -- "${GETOPT_PARSE}"
 
 while true; do
-  case "${1}" in
-    -h|--help)
-        display_help
-        exit 0
-        ;;
-    -i|--install)
-        install_package=true
-        shift ;;
-    -d|--dependencies)
-        install_dependencies=true
-        shift ;;
-    -c|--clients)
-        build_clients=true
-        shift ;;
-    -g|--debug)
-        build_release=false
-        shift ;;
-    --build-dir)
-        build_dir=${2}
-        shift 2 ;;
-    --host)
-        build_host=true
-        shift ;;
-    --no-openmp)
-        build_omp=false
-        shift ;;
-    --mpi)
-        build_mpi=true
-        shift ;;
-    --hip-clang)
-        build_hip_clang=true
-        shift ;;
-    --prefix)
-        install_prefix=${2}
-        shift 2 ;;
-    --) shift ; break ;;
-    *)  echo "Unexpected command line parameter received; aborting";
-        exit 1
-        ;;
-  esac
+    case "${1}" in
+        -h|--help)
+            display_help
+            exit 0
+            ;;
+        -i|--install)
+            install_package=true
+            shift ;;
+        -d|--dependencies)
+            install_dependencies=true
+            shift ;;
+        -c|--clients)
+            build_clients=true
+            shift ;;
+        -g|--debug)
+            build_release=false
+            shift ;;
+        --build-dir)
+            build_dir=${2}
+            shift 2 ;;
+        --host)
+            build_host=true
+            shift ;;
+        --no-openmp)
+            build_omp=false
+            shift ;;
+        --mpi)
+            build_mpi=true
+            shift ;;
+        --hip-clang)
+            build_hip_clang=true
+            shift ;;
+        --prefix)
+            install_prefix=${2}
+            shift 2 ;;
+        --) shift ; break ;;
+        *)  echo "Unexpected command line parameter received; aborting";
+            exit 1
+            ;;
+    esac
 done
 
 printf "\033[32mCreating project build directory in: \033[33m${build_dir}\033[0m\n"
@@ -291,18 +291,18 @@ printf "\033[32mCreating project build directory in: \033[33m${build_dir}\033[0m
 # #################################################
 # ensure a clean build environment
 if [[ "${build_release}" == true ]]; then
-  rm -rf ${build_dir}/release
+    rm -rf ${build_dir}/release
 else
-  rm -rf ${build_dir}/debug
+    rm -rf ${build_dir}/debug
 fi
 
 # Default cmake executable is called cmake
 cmake_executable=cmake
 
 case "${ID}" in
-  centos|rhel)
-  cmake_executable=cmake3
-  ;;
+    centos|rhel)
+    cmake_executable=cmake3
+    ;;
 esac
 
 # #################################################
@@ -310,16 +310,16 @@ esac
 # #################################################
 if [[ "${install_dependencies}" == true ]]; then
 
-  install_packages
+    install_packages
 
-  # The following builds googletest from source, installs into cmake default /usr/local
-  pushd .
+    # The following builds googletest from source, installs into cmake default /usr/local
+    pushd .
     printf "\033[32mBuilding \033[33mgoogletest\033[32m from source; installing into \033[33m/usr/local\033[0m\n"
     mkdir -p ${build_dir}/deps && cd ${build_dir}/deps
     ${cmake_executable} -DBUILD_BOOST=OFF ../../deps
     make -j$(nproc)
     elevate_if_not_root make install
-  popd
+    popd
 fi
 
 # We append customary rocm path; if user provides custom rocm path in ${path}, our
@@ -327,78 +327,79 @@ fi
 export PATH=${PATH}:/opt/rocm/bin
 
 pushd .
-  # #################################################
-  # configure & build
-  # #################################################
-  cmake_common_options=""
-  cmake_client_options=""
 
-  # build type
-  if [[ "${build_release}" == true ]]; then
+# #################################################
+# configure & build
+# #################################################
+cmake_common_options=""
+cmake_client_options=""
+
+# build type
+if [[ "${build_release}" == true ]]; then
     mkdir -p ${build_dir}/release/clients && cd ${build_dir}/release
     cmake_common_options="${cmake_common_options} -DCMAKE_BUILD_TYPE=Release"
-  else
+else
     mkdir -p ${build_dir}/debug/clients && cd ${build_dir}/debug
     cmake_common_options="${cmake_common_options} -DCMAKE_BUILD_TYPE=Debug"
-  fi
+fi
 
-  # clients
-  if [[ "${build_clients}" == true ]]; then
+# clients
+if [[ "${build_clients}" == true ]]; then
     cmake_client_options="${cmake_client_options} -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON"
-  fi
+fi
 
-  # hip-clang
-  if [[ "${build_hip_clang}" == true ]]; then
-    export HIP_PLATFORM=hipcc
-    cmake_client_options="${cmake_client_options} -DSUPPORT_HIP=ON -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON"
-  
-  # OpenMP
-  if [[ "${build_omp}" == false ]]; then
+# OpenMP
+if [[ "${build_omp}" == false ]]; then
     cmake_common_options="${cmake_common_options} -DSUPPORT_OMP=OFF"
-  fi
+fi
 
-  # MPI
-  if [[ "${build_mpi}" == true ]]; then
+# MPI
+if [[ "${build_mpi}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DSUPPORT_MPI=ON"
-  fi
+fi
 
-  # HIP / Host only
-  if [[ "${build_host}" == true ]]; then
+# HIP / Host only
+if [[ "${build_host}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=OFF"
-  else
+else
     export HIP_PLATFORM=hcc
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=ON"
-  fi
+fi
 
-  # cpack
-  cmake_common_options="${cmake_common_options} -DCPACK_SET_DESTDIR=OFF -DCPACK_PACKAGING_INSTALL_PREFIX=/opt/rocm"
+# hip-clang
+if [[ "${build_hip_clang}" == true ]]; then
+    export HIP_PLATFORM=hipcc
+fi
 
-  # Build library with AMD toolchain because of existense of device kernels
-  ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=rocalution-install ../..
-  check_exit_code
+# cpack
+cmake_common_options="${cmake_common_options} -DCPACK_SET_DESTDIR=OFF -DCPACK_PACKAGING_INSTALL_PREFIX=/opt/rocm"
 
-  make -j$(nproc) install
-  check_exit_code
+# Build library with AMD toolchain because of existense of device kernels
+${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=rocalution-install ../..
+check_exit_code
 
-  # #################################################
-  # install
-  # #################################################
-  # installing through package manager, which makes uninstalling easy
-  if [[ "${install_package}" == true ]]; then
+make -j$(nproc) install
+check_exit_code
+
+# #################################################
+# install
+# #################################################
+# installing through package manager, which makes uninstalling easy
+if [[ "${install_package}" == true ]]; then
     make package
     check_exit_code
 
     case "${ID}" in
-      ubuntu)
-        elevate_if_not_root dpkg -i rocalution-*.deb
-      ;;
-      centos|rhel)
-        elevate_if_not_root yum -y localinstall rocalution-*.rpm
-      ;;
-      fedora)
-        elevate_if_not_root dnf install rocalution-*.rpm
-      ;;
+        ubuntu)
+            elevate_if_not_root dpkg -i rocalution-*.deb
+            ;;
+        centos|rhel)
+            elevate_if_not_root yum -y localinstall rocalution-*.rpm
+            ;;
+        fedora)
+            elevate_if_not_root dnf install rocalution-*.rpm
+            ;;
     esac
 
-  fi
+fi
 popd
