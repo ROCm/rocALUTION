@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 // This shared library is available at https://github.com/ROCmSoftwarePlatform/rocJENKINS/
-@Library('rocJenkins@clang9') _
+@Library('rocJenkins') _
 
 // This is file for internal AMD use.
 // If you are interested in running your own Jenkins, please raise a github issue for assistance.
@@ -181,14 +181,15 @@ rocALUTIONCImpi:
 rocALUTIONCI:
 {
 
-    def rocalution = new rocProject('rocalution')
+    def rocalution = new rocProject('rocALUTION')
     // customize for project
     rocalution.paths.build_command = './install.sh -c'
     rocalution.compiler.compiler_name = 'c++'
     rocalution.compiler.compiler_path = 'c++'
 
     // Define test architectures, optional rocm version argument is available
-    def nodes = new dockerNodes(['gfx900', 'gfx906'], rocalution)
+    def nodes = new dockerNodes(['gfx900 && ubuntu', 'gfx906 && ubuntu', 'gfx900 && centos7', 'gfx906 && centos7', 
+                                'gfx900 && ubuntu && hip-clang', 'gfx906 && ubuntu && hip-clang'], rocalution)
 
     boolean formatCheck = false
 
@@ -197,11 +198,26 @@ rocALUTIONCI:
         platform, project->
 
         project.paths.construct_build_prefix()
-        def command = """#!/usr/bin/env bash
-                  set -x
-                  cd ${project.paths.project_build_prefix}
-                  LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
-                """
+
+        def command 
+
+        if(platform.jenkinsLabel.contains('hip-clang'))
+        {
+            command = """#!/usr/bin/env bash
+                    set -x
+                    cd ${project.paths.project_build_prefix}
+                    LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=/opt/rocm/bin/hipcc ${project.paths.build_command} --hip-clang
+                    """
+        }
+        else
+        {
+            command = """#!/usr/bin/env bash
+                    set -x
+                    cd ${project.paths.project_build_prefix}
+                    LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                    """
+
+        }
 
         platform.runCommand(this, command)
     }
@@ -212,21 +228,43 @@ rocALUTIONCI:
 
         def command
 
-        if(auxiliary.isJobStartedByTimer())
+        if(platform.jenkinsLabel.contains('centos'))
         {
-          command = """#!/usr/bin/env bash
-                set -x
-                cd ${project.paths.project_build_prefix}/build/release/clients/tests
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
-            """
+            if(auxiliary.isJobStartedByTimer())
+            {
+                command = """#!/usr/bin/env bash
+                        set -x
+                        cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                        LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG sudo ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
+                        """
+            }
+            else
+            {
+                command = """#!/usr/bin/env bash
+                        set -x
+                        cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                        LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG sudo ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
+                        """
+            }
         }
         else
         {
-          command = """#!/usr/bin/env bash
-                set -x
-                cd ${project.paths.project_build_prefix}/build/release/clients/tests
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
-            """
+            if(auxiliary.isJobStartedByTimer())
+            {
+                command = """#!/usr/bin/env bash
+                        set -x
+                        cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                        LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
+                        """
+            }
+            else
+            {
+                command = """#!/usr/bin/env bash
+                        set -x
+                        cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                        LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
+                        """
+            }
         }
 
         platform.runCommand(this, command)
@@ -237,17 +275,40 @@ rocALUTIONCI:
     {
         platform, project->
 
-        def command = """
-                      set -x
-                      cd ${project.paths.project_build_prefix}/build/release
-                      make package
-                      rm -rf package && mkdir -p package
-                      mv *.deb package/
-                      dpkg -c package/*.deb
-                      """
+        def command 
 
-        platform.runCommand(this, command)
-        platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.deb""")
+        if(platform.jenkinsLabel.contains('centos'))
+        {
+            command = """
+                    set -x
+                    cd ${project.paths.project_build_prefix}/build/release
+                    make package
+                    rm -rf package && mkdir -p package
+                    mv *.rpm package/
+                    rpm -qlp package/*.rpm
+                """
+
+            platform.runCommand(this, command)
+            platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.rpm""")        
+        }
+        else if(platform.jenkinsLabel.contains('hip-clang'))
+        {
+            packageCommand = null
+        }
+        else
+        {
+            command = """
+                    set -x
+                    cd ${project.paths.project_build_prefix}/build/release
+                    make package
+                    rm -rf package && mkdir -p package
+                    mv *.deb package/
+                    dpkg -c package/*.deb
+                    """
+
+            platform.runCommand(this, command)
+            platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.deb""")
+        }
     }
 
     buildProject(rocalution, formatCheck, nodes.dockerArray, compileCommand, testCommand, packageCommand)
