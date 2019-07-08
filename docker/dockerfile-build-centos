@@ -24,7 +24,6 @@ RUN yum install -y \
     numactl-libs \
     rocblas \
     rocprim \
-    rocsparse \
     rocrand
 
 RUN echo '#!/bin/bash' | tee /etc/profile.d/devtoolset7.sh && echo \
