@@ -188,7 +188,7 @@ rocALUTIONCI:
     rocalution.compiler.compiler_path = 'c++'
 
     // Define test architectures, optional rocm version argument is available
-    def nodes = new dockerNodes([ 
+    def nodes = new dockerNodes([ 'gfx900 && ubuntu', 'gfx906 && ubuntu', 'gfx900 && centos7', 'gfx906 && centos7',
                                 'gfx900 && ubuntu && hip-clang && dkms', 'gfx906 && ubuntu && hip-clang && dkms'], rocalution)
 
     boolean formatCheck = false
