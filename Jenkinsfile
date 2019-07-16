@@ -188,7 +188,7 @@ rocALUTIONCI:
     rocalution.compiler.compiler_path = 'c++'
 
     // Define test architectures, optional rocm version argument is available
-    def nodes = new dockerNodes(['gfx900'], rocalution)
+    def nodes = new dockerNodes(['gfx900 && ubuntu && hip-clang'], rocalution)
 
     boolean formatCheck = false
 
@@ -197,11 +197,25 @@ rocALUTIONCI:
         platform, project->
 
         project.paths.construct_build_prefix()
-        def command = """#!/usr/bin/env bash
-                  set -x
-                  cd ${project.paths.project_build_prefix}
-                  LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+
+        def command
+
+        if(platform.jenkinsLabel.contains('hip-clang'))
+        {
+            command = """#!/usr/bin/env bash
+                    set -x
+                    cd ${project.paths.project_build_prefix}
+                    LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command} --hip-clang
                 """
+        }
+        else
+        {
+            command = """#!/usr/bin/env bash
+                    set -x
+                    cd ${project.paths.project_build_prefix}
+                    LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                """
+        }
 
         platform.runCommand(this, command)
     }
@@ -237,17 +251,26 @@ rocALUTIONCI:
     {
         platform, project->
 
-        def command = """
-                      set -x
-                      cd ${project.paths.project_build_prefix}/build/release
-                      make package
-                      rm -rf package && mkdir -p package
-                      mv *.deb package/
-                      dpkg -c package/*.deb
-                      """
+        def command
 
-        platform.runCommand(this, command)
-        platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.deb""")
+        if(platform.JenkinsLabel.contains('hip-clang'))
+        {
+            packageCommand = null
+        }
+        else
+        {
+            command = """
+                    set -x
+                    cd ${project.paths.project_build_prefix}/build/release
+                    make package
+                    rm -rf package && mkdir -p package
+                    mv *.deb package/
+                    dpkg -c package/*.deb
+                """
+
+            platform.runCommand(this, command)
+            platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.deb""")
+        }
     }
 
     buildProject(rocalution, formatCheck, nodes.dockerArray, compileCommand, testCommand, packageCommand)

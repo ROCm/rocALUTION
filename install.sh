@@ -20,6 +20,7 @@ function display_help()
   echo "    [--host] build library for host backend only"
   echo "    [--no-openmp] build library without OpenMP"
   echo "    [--mpi] build library with MPI"
+  echo "    [--hip-clang] build library with hip-clang"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -218,6 +219,7 @@ build_mpi=false
 build_omp=true
 build_release=true
 build_dir=./build
+build_hip_clang=false
 
 # #################################################
 # Parameter parsing
@@ -226,7 +228,7 @@ build_dir=./build
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi --options hicgd -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi,hip-clang --options hicgd -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -268,6 +270,9 @@ while true; do
         shift ;;
     --mpi)
         build_mpi=true
+        shift ;;
+    --hip-clang)
+        build_hip_clang=true
         shift ;;
     --prefix)
         install_prefix=${2}
@@ -356,7 +361,11 @@ pushd .
   if [[ "${build_host}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=OFF"
   else
-    export HIP_PLATFORM=hcc
+    if [[ "${build_hip_clang}" == true ]]; then
+      export HIP_PLATFORM=clang
+    else
+      export HIP_PLATFORM=hcc
+    fi
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=ON"
   fi
 
