@@ -181,7 +181,7 @@ rocALUTIONCImpi:
 rocALUTIONCI:
 {
 
-    def rocalution = new rocProject('rocalution')
+    def rocalution = new rocProject('rocALUTION')
     // customize for project
     rocalution.paths.build_command = './install.sh -c'
     rocalution.compiler.compiler_name = 'c++'
