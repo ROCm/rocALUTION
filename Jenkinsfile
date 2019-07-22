@@ -238,15 +238,7 @@ rocALUTIONCI:
     {
         platform, project->
 
-        def command
-
-        if(platform.JenkinsLabel.contains('hip-clang'))
-        {
-            packageCommand = null
-        }
-        else
-        {
-            command = """
+        def command = """
                     set -x
                     cd ${project.paths.project_build_prefix}/build/release
                     make package
@@ -255,9 +247,8 @@ rocALUTIONCI:
                     dpkg -c package/*.deb
                 """
 
-            platform.runCommand(this, command)
-            platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.deb""")
-        }
+        platform.runCommand(this, command)
+        platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.deb""")
     }
 
     buildProject(rocalution, formatCheck, nodes.dockerArray, compileCommand, testCommand, packageCommand)
