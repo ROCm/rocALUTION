@@ -72,7 +72,11 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(rocalution-test PRIVATE roc::rocalution ${GTEST_BOTH_LIBRARIES} Threads::Threads)
 
-set_target_properties(rocalution-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
+  if(NOT TARGET rocalution)
+    set_target_properties(rocalution-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
+  else()
+    set_target_properties(rocalution-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/clients/staging")
+  endif()
 
 # Add tests
 add_test(rocalution-test rocalution-test)
