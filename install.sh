@@ -330,7 +330,7 @@ pushd .
   # #################################################
   # configure & build
   # #################################################
-  cmake_common_options=""
+  cmake_common_options="-DCMAKE_VERBOSE_MAKEFILE=ON"
   cmake_client_options=""
 
   # build type
