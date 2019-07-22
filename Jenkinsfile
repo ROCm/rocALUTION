@@ -199,24 +199,11 @@ rocALUTIONCI:
 
         project.paths.construct_build_prefix()
 
-        def command
-
-        if(platform.jenkinsLabel.contains('hip-clang'))
-        {
-            command = """#!/usr/bin/env bash
-                    set -x
-                    cd ${project.paths.project_build_prefix}
-                    LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command} --hip-clang
-                """
-        }
-        else
-        {
-            command = """#!/usr/bin/env bash
+        def command = """#!/usr/bin/env bash
                     set -x
                     cd ${project.paths.project_build_prefix}
                     LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
                 """
-        }
 
         platform.runCommand(this, command)
     }
