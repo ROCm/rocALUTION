@@ -62,12 +62,11 @@ namespace rocalution
         }
 
         // clang-format off
-    // Convert to lower case
-    for(char *p=mtx; *p != '\0'; *p = tolower(*p), ++p);
-    for(char *p=b.array_type; *p != '\0'; *p = tolower(*p), ++p);
-    for(char *p=b.matrix_type; *p != '\0'; *p = tolower(*p), ++p);
-    for(char *p=b.storage_type; *p != '\0'; *p = tolower(*p), ++p);
-
+        // Convert to lower case
+        for(char *p = mtx;            *p != '\0'; *p = tolower(*p), ++p);
+        for(char *p = b.array_type;   *p != '\0'; *p = tolower(*p), ++p);
+        for(char *p = b.matrix_type;  *p != '\0'; *p = tolower(*p), ++p);
+        for(char *p = b.storage_type; *p != '\0'; *p = tolower(*p), ++p);
         // clang-format on
 
         // Check banner

@@ -32,7 +32,6 @@ execute_process(COMMAND ${GIT_COMMAND}
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
                "${PROJECT_BINARY_DIR}/include/version.hpp"
-               @ONLY
 )
 
 # Include sub-directories
@@ -128,38 +127,25 @@ if(SUPPORT_HIP)
     set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
   endforeach()
 
-  # For some reason, hip does not recognize build type
-  if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(HIP_BUILD_OPTIONS "-O3")
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(HIP_BUILD_OPTIONS "-g")
-  endif()
+  # HIP flags workaround while target_compile_options do not work
+  list(APPEND HIP_HCC_FLAGS "-fno-gpu-rdc -Wno-unused-command-line-argument")
+  foreach(target ${AMDGPU_TARGETS})
+    list(APPEND HIP_HCC_FLAGS "-amdgpu-target=${target}")
+  endforeach()
 
-  HIP_PREPARE_TARGET_COMMANDS(rocalution_hip OBJ _generated_files _source_files ${HIP_SOURCES} SHARED HIPCC_OPTIONS ${HIP_BUILD_OPTIONS})
-  list(REMOVE_ITEM HIP_SOURCES ${_source_files})
-  list(APPEND HIP_SOURCES ${_generated_files})
-
-  set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
-
-  add_library(rocalution_hip SHARED ${HIP_SOURCES})
+  # Create rocALUTION HIP library
+  hip_add_library(rocalution_hip SHARED ${HIP_SOURCES})
 
   set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  target_compile_options(rocalution_hip PRIVATE -fno-gpu-rdc)
-  foreach(target ${AMDGPU_TARGETS})
-    target_compile_options(rocalution_hip PRIVATE --amdgpu-target=${target})
-  endforeach()
-
   target_link_libraries(rocalution_hip PRIVATE ${ROCBLAS_LIBRARIES} ${ROCSPARSE_LIBRARIES})
-  foreach(target ${AMDGPU_TARGETS})
-    target_link_libraries(rocalution_hip PRIVATE --amdgpu-target=${target})
-  endforeach()
-
 
   target_include_directories(rocalution_hip
                              PRIVATE
-                             $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>)
+                               $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>
+                               $<BUILD_INTERFACE:${ROCBLAS_INCLUDE_DIRS}>
+                               $<BUILD_INTERFACE:${ROCSPARSE_INCLUDE_DIRS}>)
 
   target_link_libraries(rocalution PRIVATE rocalution_hip)
 endif()
