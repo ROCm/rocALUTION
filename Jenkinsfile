@@ -64,7 +64,7 @@ import java.nio.file.Path;
 //        {
 //          command = """#!/usr/bin/env bash
 //                set -x
-//                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+//                cd ${project.paths.project_build_prefix}/build/release/clients/staging
 //                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
 //            """
 //        }
@@ -72,13 +72,13 @@ import java.nio.file.Path;
 //        {
 //          command = """#!/usr/bin/env bash
 //                set -x
-//                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+//                cd ${project.paths.project_build_prefix}/build/release/clients/staging
 //                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
 //            """
 //        }
 //
 //        platform.runCommand(this, command)
-//        junit "${project.paths.project_build_prefix}/build/release/clients/tests/*.xml"
+//        junit "${project.paths.project_build_prefix}/build/release/clients/staging/*.xml"
 //    }
 //
 //    def packageCommand =
@@ -140,7 +140,7 @@ import java.nio.file.Path;
 //        {
 //          command = """#!/usr/bin/env bash
 //                set -x
-//                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+//                cd ${project.paths.project_build_prefix}/build/release/clients/staging
 //                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
 //            """
 //        }
@@ -148,13 +148,13 @@ import java.nio.file.Path;
 //        {
 //          command = """#!/usr/bin/env bash
 //                set -x
-//                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+//                cd ${project.paths.project_build_prefix}/build/release/clients/staging
 //                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
 //            """
 //        }
 //
 //        platform.runCommand(this, command)
-//        junit "${project.paths.project_build_prefix}/build/release/clients/tests/*.xml"
+//        junit "${project.paths.project_build_prefix}/build/release/clients/staging/*.xml"
 //    }
 //
 //    def packageCommand =
@@ -231,7 +231,7 @@ rocALUTIONCI:
         {
           command = """#!/usr/bin/env bash
                 set -x
-                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                cd ${project.paths.project_build_prefix}/build/release/clients/staging
                 LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_filter=*fcg*double* --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
             """
         }
@@ -239,13 +239,13 @@ rocALUTIONCI:
         {
           command = """#!/usr/bin/env bash
                 set -x
-                cd ${project.paths.project_build_prefix}/build/release/clients/tests
+                cd ${project.paths.project_build_prefix}/build/release/clients/staging
                 LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_filter=*fcg*double* --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
             """
         }
 
         platform.runCommand(this, command)
-        junit "${project.paths.project_build_prefix}/build/release/clients/tests/*.xml"
+        junit "${project.paths.project_build_prefix}/build/release/clients/staging/*.xml"
     }
 
     def packageCommand =

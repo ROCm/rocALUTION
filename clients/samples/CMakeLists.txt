@@ -42,7 +42,7 @@ function(add_rocalution_example EXAMPLE_SOURCE)
   endif()
 
   # Examples output directory
-  set_target_properties(${EXAMPLE_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/example")
+  set_target_properties(${EXAMPLE_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
 endfunction()
 
 # Examples

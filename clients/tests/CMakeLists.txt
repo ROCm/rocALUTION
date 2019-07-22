@@ -68,7 +68,11 @@ target_compile_definitions(rocalution-test PRIVATE GOOGLE_TEST)
 target_include_directories(rocalution-test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
 target_include_directories(rocalution-test SYSTEM PRIVATE $<BUILD_INTERFACE:${GTEST_INCLUDE_DIRS}>)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 target_link_libraries(rocalution-test PRIVATE roc::rocalution ${GTEST_BOTH_LIBRARIES} Threads::Threads)
+
+set_target_properties(rocalution-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
 
 # Add tests
 add_test(rocalution-test rocalution-test)
