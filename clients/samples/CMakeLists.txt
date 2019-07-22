@@ -30,11 +30,14 @@ function(add_rocalution_example EXAMPLE_SOURCE)
   target_include_directories(${EXAMPLE_TARGET}
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-      $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
   )
 
   # Link rocALUTION library
-  target_link_libraries(${EXAMPLE_TARGET} PRIVATE roc::rocalution)
+  if(NOT TARGET rocalution)
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${ROCALUTION_LIBRARIES})
+  else()
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE roc::rocalution)
+  endif()
 
   # MPI
   if(SUPPORT_MPI)

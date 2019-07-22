@@ -81,7 +81,7 @@ endif()
 # TODO plug-ins
 
 # Create rocALUTION host library
-add_library(rocalution ${SOURCE} ${PUBLIC_HEADERS} ${PROJECT_BINARY_DIR}/include)
+add_library(rocalution ${SOURCE} ${PUBLIC_HEADERS})
 add_library(roc::rocalution ALIAS rocalution)
 
 # Target link libraries
@@ -93,7 +93,6 @@ if(SUPPORT_MPI)
 endif()
 
 # Target include directories
-target_include_directories(rocalution PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 if(SUPPORT_MPI)
   target_include_directories(rocalution PUBLIC ${MPI_CXX_INCLUDE_DIRS})
 endif()
@@ -126,22 +125,15 @@ set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
-
-  if(HIP_PLATFORM STREQUAL "hcc")
-    message(STATUS "HCC compiler set; ROCm backend selected [ CXX=${HIP_HCC_COMPILER} cmake .. ]")
-  elseif(HIP_PLATFORM STREQUAL "clang")
-    message(STATUS "Using hip-clang to build for amdgpu backend")
-  endif()
-
   # Flag source file as a hip source file
   foreach(i ${HIP_SOURCES})
     set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
-  list(APPEND HIP_HCC_FLAGS "-fno-gpu-rdc -Wno-unused-command-line-argument")
+  list(APPEND HIP_HIPCC_FLAGS "-fno-gpu-rdc -Wall -Wno-unused-command-line-argument")
   foreach(target ${AMDGPU_TARGETS})
-    list(APPEND HIP_HCC_FLAGS "-amdgpu-target=${target}")
+    list(APPEND HIP_HIPCC_FLAGS "-amdgpu-target=${target}")
   endforeach()
 
   # Create rocALUTION HIP library
