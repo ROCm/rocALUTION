@@ -64,8 +64,8 @@ endif()
 
 # HIP related library dependencies
 if(SUPPORT_HIP)
-  find_package(rocblas 2.2.6 REQUIRED) # ROCm 2.5
-  find_package(rocsparse 1.1.5 REQUIRED) # ROCm 2.5
+  find_package(rocblas 2.2.11 REQUIRED) # ROCm 2.5
+  find_package(rocsparse 1.1.10 REQUIRED) # ROCm 2.5
   find_package(rocprim 2.5.0 REQUIRED) # ROCm 2.5
 endif()
 
