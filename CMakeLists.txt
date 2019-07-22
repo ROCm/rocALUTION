@@ -52,9 +52,6 @@ endif()
 # rocALUTION project
 project(rocalution LANGUAGES CXX)
 
-# Set toolchain
-include(cmake/SetToolchain.cmake)
-
 # Force library install path to lib (CentOS 7 defaults to lib64)
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE INTERNAL "Installation directory for libraries" FORCE)
 
