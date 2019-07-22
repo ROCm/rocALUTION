@@ -94,7 +94,7 @@ endif()
 
 # Target include directories
 if(SUPPORT_MPI)
-  target_include_directories(rocalution PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+  target_include_directories(rocalution PUBLIC ${MPI_CXX_INCLUDE_PATH})
 endif()
 
 # Target compile definitions

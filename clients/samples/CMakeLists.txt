@@ -41,7 +41,7 @@ function(add_rocalution_example EXAMPLE_SOURCE)
 
   # MPI
   if(SUPPORT_MPI)
-    target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${MPI_CXX_INCLUDE_DIRS}>)
+    target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${MPI_CXX_INCLUDE_PATH}>)
     target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${MPI_LIBRARIES})
   endif()
 
