@@ -21,8 +21,7 @@
 #
 # ########################################################################
 
-# The ROCm platform requires Ubuntu 16.04 or Fedora 24, which has cmake 3.5
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
 # Consider removing this in the future
 # This should appear before the project command, because it does not use FORCE
@@ -45,14 +44,16 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "" "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# Honor per-config flags in try_compile() source-file signature. cmake v3.7 and up
+if(POLICY CMP0066)
+  cmake_policy(SET CMP0066 NEW)
+endif()
+
 # rocALUTION project
 project(rocalution LANGUAGES CXX)
 
 # Set toolchain
 include(cmake/SetToolchain.cmake)
-
-# RPATH
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE CACHE BOOLEAN "Add paths to linker search and installed rpath")
 
 # Force library install path to lib (CentOS 7 defaults to lib64)
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE INTERNAL "Installation directory for libraries" FORCE)
@@ -67,13 +68,25 @@ option(BUILD_SHARED_LIBS "Build rocALUTION as a shared library" ON)
 option(BUILD_CLIENTS_TESTS "Build tests (requires googletest)" OFF)
 option(BUILD_CLIENTS_BENCHMARKS "Build benchmarks (requires boost)" OFF)
 option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
+option(BUILD_VERBOSE "Output additional build information" OFF)
 
 # Dependencies
 include(cmake/Dependencies.cmake)
 
 # Setup version
-rocm_setup_version(VERSION 1.4.6.0 NO_GIT_TAG_VERSION)
+set(VERSION_STRING "1.4.6.")
+# Check if BUILD_NUMBER if defined in a Jenkins environment
+if($ENV{BUILD_NUMBER})
+  string(CONCAT BUILD_VERSION ${VERSION_STRING} $ENV{BUILD_NUMBER})
+else()
+  string(CONCAT BUILD_VERSION ${VERSION_STRING} "0")
+endif()
+rocm_setup_version(VERSION ${BUILD_VERSION} NO_GIT_TAG_VERSION)
 set(rocalution_SOVERSION 1)
+
+# Get the git tag version
+include(cmake/version.cmake)
+rocm_get_git_commit_id(rocalution_VERSION_COMMIT_ID)
 
 # AMD targets
 set(AMDGPU_TARGETS gfx803;gfx900;gfx906 CACHE STRING "List of specific machine types for library to target")
@@ -81,8 +94,6 @@ set(AMDGPU_TARGETS gfx803;gfx900;gfx906 CACHE STRING "List of specific machine t
 # rocALUTION library
 add_subdirectory(src)
 
-# Clients
 if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
-  enable_testing()
   add_subdirectory(clients)
 endif()
