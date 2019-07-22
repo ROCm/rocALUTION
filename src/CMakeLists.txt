@@ -125,7 +125,7 @@ if(SUPPORT_HIP)
   if(HIP_PLATFORM STREQUAL "hcc")
     message(STATUS "HCC compiler set; ROCm backend selected [ CXX=${HIP_HCC_COMPILER} cmake .. ]")
   elseif(HIP_PLATFORM STREQUAL "clang")
-    message(STATUS "hip-clang compiler set; [ CXX=${HIP_HIPCC_COMPILER} cmake .. }")
+    message(STATUS "Using hip-clang to build for amdgpu backend")
   endif()
 
   # Flag source file as a hip source file
