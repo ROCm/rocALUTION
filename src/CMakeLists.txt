@@ -122,7 +122,11 @@ set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
 
-  message("Platform: ${HIP_PLATFORM}")
+  if(${HIP_PLATFORM} STREQUAL "hcc")
+    message(STATUS "HCC compiler set; ROCm backend selected [ CXX=${HIP_HCC_COMPILER} cmake .. ]")
+  elseif()
+    message(STATUS "hip-clang compiler set; [ CXX=${HIP_HIPCC_COMPILER} cmake .. }")
+  endif()
 
   # Flag source file as a hip source file
   foreach(i ${HIP_SOURCES})
