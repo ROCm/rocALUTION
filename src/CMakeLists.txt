@@ -122,6 +122,8 @@ set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
 
+  message("Platform: ${HIP_PLATFORM}")
+
   # Flag source file as a hip source file
   foreach(i ${HIP_SOURCES})
     set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
