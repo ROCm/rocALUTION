@@ -2,7 +2,7 @@
 ARG base_image
 
 FROM ${base_image}
-MAINTAINER Nico Trost
+LABEL maintainer="nico.trost@amd.com"
 
 ARG user_uid
 
@@ -21,18 +21,14 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     mpi-default-dev \
     libomp-dev \
     libomp5 \
-    build-essential \
     ca-certificates \
     git \
     make \
     cmake \
-    clang-format-3.8 \
     pkg-config \
-    libboost-program-options-dev \
     libnuma1 \
     rocblas \
     rocprim \
-    rocsparse \
     rocrand \
     && \
     apt-get clean && \
@@ -46,22 +42,27 @@ RUN useradd --create-home -u ${user_uid} -o -G sudo --shell /bin/bash jenkins &&
     echo '%sudo   ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd
 
 ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
+#ARG ROCBLAS_SRC_ROOT=/usr/local/src/rocBLAS
 ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
 
 # Clone rocsparse repo
 # Build rocsparse and install into /usr/local
 RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
     git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
-    mkdir -p build && cd build && \
-    HIP_PLATFORM=hcc cmake -DBUILD_CLIENTS_SAMPLES=OFF .. && \
-    HIP_PLATFORM=hcc make -j $(nproc) install && \
+    HCC_AMDGPU_TARGET=gfx803 ./install.sh -i --hip-clang && \
     rm -rf ${ROCSPARSE_SRC_ROOT}
+
+# Clone rocblas repo
+#RUN mkdir -p ${ROCBLAS_SRC_ROOT} && cd ${ROCBLAS_SRC_ROOT} && \
+#    git clone -b master --depth=1 https://github.com/ROCmSoftwarePlatform/rocBLAS . && \
+#    HCC_AMDGPU_TARGET=gfx803 ./install.sh -i --hip-clang && \
+#    rm -rf ${ROCBLAS_SRC_ROOT}
 
 # Clone rocalution repo
 # Build client dependencies and install into /usr/local
 RUN mkdir -p ${ROCALUTION_SRC_ROOT} && cd ${ROCALUTION_SRC_ROOT} && \
-    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocALUTION . && \
+    git clone -b hip-clang --depth=1 https://github.com/ntrost57/rocALUTION . && \
     mkdir -p build/deps && cd build/deps && \
-    HIP_PLATFORM=hcc cmake -DBUILD_BOOST=OFF ${ROCALUTION_SRC_ROOT}/deps && \
-    HIP_PLATFORM=hcc make -j $(nproc) install && \
+    cmake ${ROCALUTION_SRC_ROOT}/deps && \
+    make -j $(nproc) install && \
     rm -rf ${ROCALUTION_SRC_ROOT}

@@ -21,18 +21,18 @@
 #
 # ########################################################################
 
-# Get full git commit SHA-1
-set(GIT_COMMAND ${GIT_EXECUTABLE} rev-parse -q HEAD)
-execute_process(COMMAND ${GIT_COMMAND}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                OUTPUT_VARIABLE rocalution_GIT_REV
-                OUTPUT_STRIP_TRAILING_WHITESPACE
-                ERROR_QUIET)
+# This option only works for make/nmake and the ninja generators, but no reason it shouldn't be on all the time
+# This tells cmake to create a compile_commands.json file that can be used with clang tooling or vim
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Print verbose compiler flags
+if(BUILD_VERBOSE)
+  include(../cmake/Verbose.cmake)
+endif()
 
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
                "${PROJECT_BINARY_DIR}/include/version.hpp"
-               @ONLY
 )
 
 # Include sub-directories
@@ -58,14 +58,20 @@ foreach(i ${PUBLIC_HEADERS})
   configure_file("${i}" "${PROJECT_BINARY_DIR}/include/${i}" COPYONLY)
 endforeach()
 
+source_group("Header Files\\Public" FILES ${PUBLIC_HEADERS})
+
+include(GNUInstallDirs)
+
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR})
+
 # rocALUTION source
 set(SOURCE
     ${BASE_SOURCES}
     ${HOST_SOURCES}
     ${SOLVERS_SOURCES}
     ${UTILS_SOURCES}
-    ${PUBLIC_HEADERS}
-    ${PROJECT_BINARY_DIR}/include
 )
 
 if(SUPPORT_MPI)
@@ -74,10 +80,8 @@ endif()
 
 # TODO plug-ins
 
-
-
 # Create rocALUTION host library
-add_library(rocalution ${SOURCE})
+add_library(rocalution ${SOURCE} ${PUBLIC_HEADERS})
 add_library(roc::rocalution ALIAS rocalution)
 
 # Target link libraries
@@ -89,9 +93,8 @@ if(SUPPORT_MPI)
 endif()
 
 # Target include directories
-target_include_directories(rocalution PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 if(SUPPORT_MPI)
-  target_include_directories(rocalution PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+  target_include_directories(rocalution PUBLIC ${MPI_CXX_INCLUDE_PATH})
 endif()
 
 # Target compile definitions
@@ -122,44 +125,30 @@ set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
-
   # Flag source file as a hip source file
   foreach(i ${HIP_SOURCES})
     set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
   endforeach()
 
-  # For some reason, hip does not recognize build type
-  if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(HIP_BUILD_OPTIONS "-O3")
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(HIP_BUILD_OPTIONS "-g")
-  endif()
+  # HIP flags workaround while target_compile_options do not work
+  list(APPEND HIP_HIPCC_FLAGS "-fno-gpu-rdc -Wall -Wno-unused-command-line-argument")
+  foreach(target ${AMDGPU_TARGETS})
+    list(APPEND HIP_HIPCC_FLAGS "-amdgpu-target=${target}")
+  endforeach()
 
-  HIP_PREPARE_TARGET_COMMANDS(rocalution_hip OBJ _generated_files _source_files ${HIP_SOURCES} SHARED HIPCC_OPTIONS ${HIP_BUILD_OPTIONS})
-  list(REMOVE_ITEM HIP_SOURCES ${_source_files})
-  list(APPEND HIP_SOURCES ${_generated_files})
-
-  set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
-
-  add_library(rocalution_hip SHARED ${HIP_SOURCES})
+  # Create rocALUTION HIP library
+  hip_add_library(rocalution_hip SHARED ${HIP_SOURCES})
 
   set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  target_compile_options(rocalution_hip PRIVATE -fno-gpu-rdc)
-  foreach(target ${AMDGPU_TARGETS})
-    target_compile_options(rocalution_hip PRIVATE --amdgpu-target=${target})
-  endforeach()
-
   target_link_libraries(rocalution_hip PRIVATE ${ROCBLAS_LIBRARIES} ${ROCSPARSE_LIBRARIES})
-  foreach(target ${AMDGPU_TARGETS})
-    target_link_libraries(rocalution_hip PRIVATE --amdgpu-target=${target})
-  endforeach()
-
 
   target_include_directories(rocalution_hip
                              PRIVATE
-                             $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>)
+                               $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>
+                               $<BUILD_INTERFACE:${ROCBLAS_INCLUDE_DIRS}>
+                               $<BUILD_INTERFACE:${ROCSPARSE_INCLUDE_DIRS}>)
 
   target_link_libraries(rocalution PRIVATE rocalution_hip)
 endif()
@@ -174,13 +163,13 @@ endif()
 if(SUPPORT_HIP)
   rocm_install_targets(TARGETS rocalution rocalution_hip
                        INCLUDE
-                       ${CMAKE_BINARY_DIR}/include
+                         ${CMAKE_BINARY_DIR}/include
                        PREFIX rocalution
   )
 else()
   rocm_install_targets(TARGETS rocalution
                        INCLUDE
-                       ${CMAKE_BINARY_DIR}/include
+                         ${CMAKE_BINARY_DIR}/include
                        PREFIX rocalution
   )
 endif()
@@ -197,8 +186,8 @@ rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5.19211), rocsparse (>= 1.1.5), rocblas (>= 2.2.6), rocprim (>= 2.5.0)")
-  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5.19211, rocsparse >= 1.1.5, rocblas >= 2.2.6, rocprim >= 2.5.0")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5.19211), rocsparse (>= 1.1.10), rocblas (>= 2.2.6), rocprim (>= 2.5.0)")
+  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5.19211, rocsparse >= 1.1.10, rocblas >= 2.2.6, rocprim >= 2.5.0")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
@@ -209,6 +198,7 @@ endif()
 
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "\${CPACK_PACKAGING_INSTALL_PREFIX}" "\${CPACK_PACKAGING_INSTALL_PREFIX}/include")
 
+# Package name
 set(package_name rocalution)
 
 set(ROCALUTION_CONFIG_DIR "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}" CACHE PATH "Path placed into ldconfig file")

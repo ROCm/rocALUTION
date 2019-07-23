@@ -1,0 +1,68 @@
+# Parameters related to building rocALUTION
+ARG base_image
+
+FROM ${base_image}
+LABEL maintainer="nico.trost@amd.com"
+
+ARG user_uid
+
+# Install dependent packages
+# Dependencies:
+# * hcc-config.cmake: pkg-config
+# * rocalution: rocblas rocprim rocrand rocsparse openmp
+# * rocalution_mpi: mpi-default-bin mpi-default-dev
+# * rocalution-test: googletest
+# * rocalution-bench: libboost-program-options-dev
+# * libhsakmt.so: libnuma1
+RUN yum install -y \
+    sudo \
+    rock-dkms \
+    centos-release-scl \
+    devtoolset-7 \
+    openmpi \
+    openmpi-devel \
+    ca-certificates \
+    git \
+    cmake3 \
+    make \
+    clang \
+    clang-devel \
+    gcc-c++ \
+    gtest-devel \
+    gtest \
+    pkgconfig \
+    rocblas
+    rocprim \
+    libcxx-devel \
+    numactl-libs \
+    rpm-build \
+    deltarpm
+
+RUN echo '#!/bin/bash' | tee /etc/profile.d/devtoolset7.sh && echo \
+    'source scl_source enable devtoolset-7' >>/etc/profile.d/devtoolset7.sh
+
+# docker pipeline runs containers with particular uid
+# create a jenkins user with this specific uid so it can use sudo priviledges
+# Grant any member of sudo group password-less sudo privileges
+RUN useradd --create-home -u ${user_uid} -o -G video --shell /bin/bash jenkins && \
+    echo '%video ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd && \
+    chmod 400 /etc/sudoers.d/sudo-nopasswd
+
+ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
+ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
+
+# Clone rocsparse repo
+# Build rocsparse and install into /usr/local
+RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
+    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
+    HCC_AMDGPU_TARGET=gfx803 ./install.sh -i --hip-clang && \
+    rm -rf ${ROCSPARSE_SRC_ROOT}
+
+# Clone rocalution repo
+# Build client dependencies and install into /usr/local
+RUN mkdir -p ${ROCALUTION_SRC_ROOT} && cd ${ROCALUTION_SRC_ROOT} && \
+    git clone -b hip-clang --depth=1 https://github.com/ntrost57/rocALUTION . && \
+    mkdir -p build/deps && cd build/deps && \
+    cmake3 ${ROCALUTION_SRC_ROOT}/deps && \
+    make -j $(nproc) install && \
+    rm -rf ${ROCALUTION_SRC_ROOT}

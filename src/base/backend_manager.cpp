@@ -55,6 +55,9 @@
 #include <mpi.h>
 #endif
 
+#define TO_STR2(x) #x
+#define TO_STR(x) TO_STR2(x)
+
 namespace rocalution
 {
 
@@ -268,7 +271,7 @@ namespace rocalution
     {
         LOG_INFO("rocALUTION ver " << __ROCALUTION_VER_MAJOR << "." << __ROCALUTION_VER_MINOR << "."
                                    << __ROCALUTION_VER_PATCH << __ROCALUTION_VER_PRE << "-"
-                                   << __ROCALUTION_GIT_REV);
+                                   << TO_STR(__ROCALUTION_VER_COMMIT_ID));
 
 #if defined(__gnu_linux__) || defined(linux) || defined(__linux) || defined(__linux__)
 

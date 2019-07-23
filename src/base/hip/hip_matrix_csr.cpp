@@ -2984,7 +2984,7 @@ namespace rocalution
 
         int m    = cast_mat_A->nrow_;
         int n    = cast_mat_B->ncol_;
-        int k    = cast_mat_B->nrow_;
+        // int k    = cast_mat_B->nrow_;
         int nnzC = 0;
 
         allocate_hip(m + 1, &this->mat_.row_offset);
