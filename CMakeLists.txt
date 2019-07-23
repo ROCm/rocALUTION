@@ -71,15 +71,8 @@ option(BUILD_VERBOSE "Output additional build information" OFF)
 include(cmake/Dependencies.cmake)
 
 # Setup version
-set(VERSION_STRING "1.4.6.")
-# Check if BUILD_NUMBER if defined in a Jenkins environment
-if($ENV{BUILD_NUMBER})
-  string(CONCAT BUILD_VERSION ${VERSION_STRING} $ENV{BUILD_NUMBER})
-else()
-  string(CONCAT BUILD_VERSION ${VERSION_STRING} "0")
-endif()
-rocm_setup_version(VERSION ${BUILD_VERSION} NO_GIT_TAG_VERSION)
-set(rocalution_SOVERSION 1)
+rocm_setup_version(VERSION 1.4.6)
+set(rocalution_SOVERSION 0.1)
 
 # Get the git tag version
 include(cmake/version.cmake)
