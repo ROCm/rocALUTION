@@ -270,8 +270,7 @@ namespace rocalution
     void info_rocalution(void)
     {
         LOG_INFO("rocALUTION ver " << __ROCALUTION_VER_MAJOR << "." << __ROCALUTION_VER_MINOR << "."
-                                   << __ROCALUTION_VER_PATCH << __ROCALUTION_VER_PRE << "-"
-                                   << TO_STR(__ROCALUTION_VER_COMMIT_ID));
+                                   << __ROCALUTION_VER_PATCH << __ROCALUTION_VER_PRE);
 
 #if defined(__gnu_linux__) || defined(linux) || defined(__linux) || defined(__linux__)
 

@@ -74,10 +74,6 @@ include(cmake/Dependencies.cmake)
 rocm_setup_version(VERSION 1.4.6)
 set(rocalution_SOVERSION 0.1)
 
-# Get the git tag version
-include(cmake/version.cmake)
-rocm_get_git_commit_id(rocalution_VERSION_COMMIT_ID)
-
 # AMD targets
 set(AMDGPU_TARGETS gfx803;gfx900;gfx906 CACHE STRING "List of specific machine types for library to target")
 
