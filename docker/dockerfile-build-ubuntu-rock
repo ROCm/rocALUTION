@@ -51,7 +51,7 @@ ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
 # Clone rocsparse repo
 # Build rocsparse and install into /usr/local
 RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
-    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
+    git clone -b master-rocm-2.7 --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
     mkdir -p build && cd build && \
     HIP_PLATFORM=hcc cmake -DBUILD_CLIENTS_SAMPLES=OFF .. && \
     HIP_PLATFORM=hcc make -j $(nproc) install && \
@@ -60,7 +60,7 @@ RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
 # Clone rocalution repo
 # Build client dependencies and install into /usr/local
 RUN mkdir -p ${ROCALUTION_SRC_ROOT} && cd ${ROCALUTION_SRC_ROOT} && \
-    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocALUTION . && \
+    git clone -b master-rocm-2.7 --depth=1 https://github.com/ROCmSoftwarePlatform/rocALUTION . && \
     mkdir -p build/deps && cd build/deps && \
     HIP_PLATFORM=hcc cmake -DBUILD_BOOST=OFF ${ROCALUTION_SRC_ROOT}/deps && \
     HIP_PLATFORM=hcc make -j $(nproc) install && \
