@@ -31,7 +31,6 @@ RUN yum install -y \
     gtest-devel \
     gtest \
     pkgconfig \
-    rocblas
     rocprim \
     libcxx-devel \
     numactl-libs \
@@ -49,6 +48,7 @@ RUN useradd --create-home -u ${user_uid} -o -G video --shell /bin/bash jenkins &
     chmod 400 /etc/sudoers.d/sudo-nopasswd
 
 ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
+ARG ROCBLAS_SRC_ROOT=/usr/local/src/rocBLAS
 ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
 
 # Clone rocsparse repo
@@ -57,6 +57,13 @@ RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
     git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
     HCC_AMDGPU_TARGET=gfx803 ./install.sh -i --hip-clang && \
     rm -rf ${ROCSPARSE_SRC_ROOT}
+
+# Clone rocblas repo
+# Build rocblas and install into /usr/local
+RUN mkdir -p ${ROCBLAS_SRC_ROOT} && cd ${ROCBLAS_SRC_ROOT} && \
+    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocBLAS . && \
+    HCC_AMDGPU_TARGET=gfx803 ./install.sh -i --hip-clang && \
+    rm -rf ${ROCBLAS_SRC_ROOT}
 
 # Clone rocalution repo
 # Build client dependencies and install into /usr/local
