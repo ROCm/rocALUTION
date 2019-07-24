@@ -28,18 +28,11 @@ RUN yum install -y \
     clang \
     clang-devel \
     gcc-c++ \
-    gcc-gfortran \
     gtest-devel \
     gtest \
     pkgconfig \
     rocprim \
-    python27 \
-    python36 \
-    python36-devel \
-    python36-pip \
-    python36-pytest \
-    python36-setuptools \
-    PyYAML \
+    rocblas \
     libcxx-devel \
     numactl-libs \
     rpm-build \
@@ -56,27 +49,19 @@ RUN useradd --create-home -u ${user_uid} -o -G video --shell /bin/bash jenkins &
     chmod 400 /etc/sudoers.d/sudo-nopasswd
 
 ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
-ARG ROCBLAS_SRC_ROOT=/usr/local/src/rocBLAS
 ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
 
 # Clone rocsparse repo
 # Build rocsparse and install into /usr/local
 RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
     git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
-    HCC_AMDGPU_TARGET=gfx803 ./install.sh -i --hip-clang && \
+    HCC_AMDGPU_TARGET=gfx803 ./install.sh -i && \
     rm -rf ${ROCSPARSE_SRC_ROOT}
-
-# Clone rocblas repo
-# Build rocblas and install into /usr/local
-RUN mkdir -p ${ROCBLAS_SRC_ROOT} && cd ${ROCBLAS_SRC_ROOT} && \
-    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocBLAS . && \
-    HCC_AMDGPU_TARGET=gfx803 ./install.sh -i --hip-clang && \
-    rm -rf ${ROCBLAS_SRC_ROOT}
 
 # Clone rocalution repo
 # Build client dependencies and install into /usr/local
 RUN mkdir -p ${ROCALUTION_SRC_ROOT} && cd ${ROCALUTION_SRC_ROOT} && \
-    git clone -b hip-clang --depth=1 https://github.com/ntrost57/rocALUTION . && \
+    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocALUTION . && \
     mkdir -p build/deps && cd build/deps && \
     cmake3 ${ROCALUTION_SRC_ROOT}/deps && \
     make -j $(nproc) install && \
