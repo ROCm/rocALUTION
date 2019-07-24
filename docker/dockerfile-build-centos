@@ -28,10 +28,18 @@ RUN yum install -y \
     clang \
     clang-devel \
     gcc-c++ \
+    gcc-gfortran \
     gtest-devel \
     gtest \
     pkgconfig \
     rocprim \
+    python27 \
+    python36 \
+    python36-devel \
+    python36-pip \
+    python36-pytest \
+    python36-setuptools \
+    PyYAML \
     libcxx-devel \
     numactl-libs \
     rpm-build \
