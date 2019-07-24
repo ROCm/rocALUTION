@@ -41,7 +41,7 @@ RUN useradd --create-home -u ${user_uid} -o -G sudo --shell /bin/bash jenkins &&
     echo '%sudo   ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd
 
 ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
-#ARG ROCBLAS_SRC_ROOT=/usr/local/src/rocBLAS
+ARG ROCBLAS_SRC_ROOT=/usr/local/src/rocBLAS
 ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
 
 # Clone rocsparse repo
