@@ -42,15 +42,15 @@ else()
 endif()
 
 # Find HIP package
-find_package(HIP 1.5.19211) # ROCm 2.5
+find_package(HIP)
 if (NOT HIP_FOUND)
   message("-- HIP not found. Compiling WITHOUT HIP support.")
 else()
   option(SUPPORT_HIP "Compile WITH HIP support." ON)
   if (SUPPORT_HIP)
-    find_package(rocblas 2.2.6 REQUIRED) # ROCm 2.5
-    find_package(rocsparse 1.1.5 REQUIRED) # ROCm 2.5
-    find_package(rocprim 2.5.0 REQUIRED) # ROCm 2.5
+    find_package(rocblas REQUIRED)
+    find_package(rocsparse REQUIRED)
+    find_package(rocprim REQUIRED)
 
     # Find HCC executable
     find_program(
