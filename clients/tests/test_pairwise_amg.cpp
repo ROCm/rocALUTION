@@ -29,7 +29,7 @@
 typedef std::tuple<int, std::string, int, int, unsigned int, int> pwamg_tuple;
 
 int         pwamg_size[]      = {63, 134};
-std::string pwamg_smoother[]  = {"Jacobi", "MCILU"};
+std::string pwamg_smoother[]  = {"Jacobi"}; //, "MCILU"};
 int         pwamg_pre_iter[]  = {1, 2};
 int         pwamg_post_iter[] = {1, 2};
 int         pwamg_ordering[]  = {0, 1, 2, 3, 4, 5};

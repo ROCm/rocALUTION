@@ -29,7 +29,7 @@
 typedef std::tuple<int, std::string, int, int, unsigned int, int, int> uaamg_tuple;
 
 int         uaamg_size[]      = {63, 134};
-std::string uaamg_smoother[]  = {"FSAI", "ILU"};
+std::string uaamg_smoother[]  = {"FSAI" /*, "ILU"*/};
 int         uaamg_pre_iter[]  = {1, 2};
 int         uaamg_post_iter[] = {1, 2};
 int         uaamg_cycle[]     = {0, 2};

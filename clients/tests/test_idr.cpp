@@ -29,7 +29,7 @@
 typedef std::tuple<int, std::string, unsigned int, int> idr_tuple;
 
 int          idr_size[]    = {7, 63};
-std::string  idr_precond[] = {"None", "SPAI", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
+std::string  idr_precond[] = {"None", "SPAI", /*"GS", "ILU",*/ "ILUT", "MCGS" /*, "MCILU"*/};
 unsigned int idr_format[]  = {1, 2, 4, 5, 6, 7};
 int          idr_level[]   = {1, 2, 4};
 
