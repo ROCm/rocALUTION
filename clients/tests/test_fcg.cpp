@@ -28,20 +28,20 @@
 
 typedef std::tuple<int, std::string, unsigned int> fcg_tuple;
 
-int          fcg_size[]    = {7, 63};
-std::string  fcg_precond[] = {"None",
+int         fcg_size[]    = {7, 63};
+std::string fcg_precond[] = {"None",
                              "Chebyshev",
                              "FSAI",
                              "SPAI",
                              "TNS",
                              "Jacobi",
-                             "SGS",
-                             "ILU",
+                             //                             "SGS",
+                             //                             "ILU",
                              "ILUT",
-                             "IC",
-                             "MCSGS",
-                             "MCILU"};
-unsigned int fcg_format[]  = {1, 2, 4, 5, 6, 7};
+                             //                             "IC",
+                             "MCSGS"}; //,
+//                             "MCILU"};
+unsigned int fcg_format[] = {1, 2, 4, 5, 6, 7};
 
 class parameterized_fcg : public testing::TestWithParam<fcg_tuple>
 {
