@@ -112,7 +112,7 @@ if(SUPPORT_MPI)
 endif()
 
 # Target properties
-set_target_properties(rocalution PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
+rocm_set_soversion(rocalution ${rocalution_SOVERSION})
 set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 #set_target_properties(rocalution PROPERTIES CXX_VISIBILITY_PRESET "hidden" VISIBILITY_INLINES_HIDDEN ON)
 
@@ -143,7 +143,7 @@ if(SUPPORT_HIP)
 
   add_library(rocalution_hip SHARED ${HIP_SOURCES})
 
-  set_target_properties(rocalution_hip PROPERTIES VERSION ${rocalution_VERSION} SOVERSION ${rocalution_SOVERSION})
+  rocm_set_soversion(rocalution_hip ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
   target_compile_options(rocalution_hip PRIVATE -fno-gpu-rdc)
