@@ -31,7 +31,7 @@ rocALUTIONCIhost:
 
     def rocalution = new rocProject('rocalution_host')
     // customize for project
-    rocalution.paths.build_command = './install.sh -c --host'
+    rocalution.paths.build_command = './install.sh -c --host --hip-clang'
     rocalution.compiler.compiler_name = 'c++'
     rocalution.compiler.compiler_path = 'c++'
 
@@ -48,7 +48,7 @@ rocALUTIONCIhost:
         def command = """#!/usr/bin/env bash
                   set -x
                   cd ${project.paths.project_build_prefix}
-                  LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                  LD_LIBRARY_PATH=/opt/rocm/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
                 """
 
         platform.runCommand(this, command)
@@ -65,7 +65,7 @@ rocALUTIONCIhost:
           command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build/release/clients/staging
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
+                LD_LIBRARY_PATH=/opt/rocm/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
             """
         }
         else
@@ -73,7 +73,7 @@ rocALUTIONCIhost:
           command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build/release/clients/staging
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
+                LD_LIBRARY_PATH=/opt/rocm/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
             """
         }
 
@@ -107,7 +107,7 @@ rocALUTIONCImpi:
 
     def rocalution = new rocProject('rocalution_mpi')
     // customize for project
-    rocalution.paths.build_command = './install.sh -c --host --mpi --no-openmp'
+    rocalution.paths.build_command = './install.sh -c --host --mpi --no-openmp --hip-clang'
     rocalution.compiler.compiler_name = 'c++'
     rocalution.compiler.compiler_path = 'c++'
 
@@ -124,7 +124,7 @@ rocALUTIONCImpi:
         def command = """#!/usr/bin/env bash
                   set -x
                   cd ${project.paths.project_build_prefix}
-                  LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                  LD_LIBRARY_PATH=/opt/rocm/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
                 """
 
         platform.runCommand(this, command)
@@ -141,7 +141,7 @@ rocALUTIONCImpi:
           command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build/release/clients/staging
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
+                LD_LIBRARY_PATH=/opt/rocm/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
             """
         }
         else
@@ -149,7 +149,7 @@ rocALUTIONCImpi:
           command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build/release/clients/staging
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
+                LD_LIBRARY_PATH=/opt/rocm/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
             """
         }
 
@@ -183,12 +183,12 @@ rocALUTIONCI:
 
     def rocalution = new rocProject('rocALUTION')
     // customize for project
-    rocalution.paths.build_command = './install.sh -c'
+    rocalution.paths.build_command = './install.sh -c --hip-clang'
     rocalution.compiler.compiler_name = 'c++'
     rocalution.compiler.compiler_path = 'c++'
 
     // Define test architectures, optional rocm version argument is available
-    def nodes = new dockerNodes(['gfx900 && ubuntu', 'gfx906 && centos7'], rocalution)
+    def nodes = new dockerNodes(['gfx900 && ubuntu && hip-clang', 'gfx906 && ubuntu && hip-clang'], rocalution)
 
     boolean formatCheck = false
 
@@ -201,7 +201,7 @@ rocALUTIONCI:
         def command = """#!/usr/bin/env bash
                     set -x
                     cd ${project.paths.project_build_prefix}
-                    LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                    LD_LIBRARY_PATH=/opt/rocm/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
                 """
 
         platform.runCommand(this, command)
@@ -218,7 +218,7 @@ rocALUTIONCI:
           command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build/release/clients/staging
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
+                LD_LIBRARY_PATH=/opt/rocm/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*nightly*-*known_bug* #--gtest_filter=*nightly*
             """
         }
         else
@@ -226,7 +226,7 @@ rocALUTIONCI:
           command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build/release/clients/staging
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
+                LD_LIBRARY_PATH=/opt/rocm/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=*quick*:*pre_checkin*-*known_bug* #--gtest_filter=*checkin*
             """
         }
 
