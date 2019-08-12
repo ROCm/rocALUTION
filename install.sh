@@ -356,7 +356,6 @@ pushd .
   if [[ "${build_host}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=OFF"
   else
-    export HIP_PLATFORM=hcc
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=ON"
   fi
 

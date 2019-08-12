@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     lmat.ReadFileMTX(argv[1]);
 
     // Global structures
-    ParallelManager manager;
+    ParallelManager         manager;
     GlobalMatrix<ValueType> mat;
 
     // Distribute matrix - lmat will be destroyed
@@ -283,9 +283,10 @@ int main(int argc, char* argv[])
     {
         std::cout << "CSR SpMV execution: " << time / 1e3 / tests << " msec"
                   << "; "
-                  << tests * double((sizeof(ValueType) * (2 * size + nnz) +
-                                     sizeof(int) * (size + 1 + nnz))) /
-                         time / 1e3
+                  << tests
+                         * double((sizeof(ValueType) * (2 * size + nnz)
+                                   + sizeof(int) * (size + 1 + nnz)))
+                         / time / 1e3
                   << " GByte/sec; " << tests * double(2 * nnz) / time / 1e3 << " GFlop/sec"
                   << std::endl;
     }
@@ -324,9 +325,10 @@ int main(int argc, char* argv[])
     {
         std::cout << "MCSR SpMV execution: " << time / 1e3 / tests << " msec"
                   << "; "
-                  << tests * double((sizeof(ValueType) * (2 * size + nnz - size) +
-                                     sizeof(int) * (size + 1 + nnz))) /
-                         time / 1e3
+                  << tests
+                         * double((sizeof(ValueType) * (2 * size + nnz - size)
+                                   + sizeof(int) * (size + 1 + nnz)))
+                         / time / 1e3
                   << " GByte/sec; " << tests * double(2 * nnz) / time / 1e3 << " GFlop/sec"
                   << std::endl;
     }
@@ -365,8 +367,8 @@ int main(int argc, char* argv[])
     {
         std::cout << "ELL SpMV execution: " << time / 1e3 / tests << " msec"
                   << "; "
-                  << tests * double((sizeof(ValueType) * (2 * size + nnz) + sizeof(int) * (nnz))) /
-                         time / 1e3
+                  << tests * double((sizeof(ValueType) * (2 * size + nnz) + sizeof(int) * (nnz)))
+                         / time / 1e3
                   << " GByte/sec; " << tests * double(2 * nnz) / time / 1e3 << " GFlop/sec"
                   << std::endl;
     }
@@ -405,9 +407,9 @@ int main(int argc, char* argv[])
     {
         std::cout << "COO SpMV execution: " << time / 1e3 / tests << " msec"
                   << "; "
-                  << tests *
-                         double((sizeof(ValueType) * (2 * size + nnz) + sizeof(int) * (2 * nnz))) /
-                         time / 1e3
+                  << tests
+                         * double((sizeof(ValueType) * (2 * size + nnz) + sizeof(int) * (2 * nnz)))
+                         / time / 1e3
                   << " GByte/sec; " << tests * double(2 * nnz) / time / 1e3 << " GFlop/sec"
                   << std::endl;
     }
@@ -446,8 +448,8 @@ int main(int argc, char* argv[])
     {
         std::cout << "HYB SpMV execution: " << time / 1e3 / tests << " msec"
                   << "; "
-                  << tests * double((sizeof(ValueType) * (2 * size + nnz) + sizeof(int) * (nnz))) /
-                         time / 1e3
+                  << tests * double((sizeof(ValueType) * (2 * size + nnz) + sizeof(int) * (nnz)))
+                         / time / 1e3
                   << " GByte/sec; " << tests * double(2 * nnz) / time / 1e3 << " GFlop/sec"
                   << std::endl;
     }
@@ -626,8 +628,8 @@ int main(int argc, char* argv[])
         std::cout << "Vector update (scaleadd) execution: "
                   << (updatev1_tack - updatev1_tick) / tests / 1e3 << " msec"
                   << "; "
-                  << tests * double(sizeof(double) * (size + size + size)) /
-                         (updatev1_tack - updatev1_tick) / 1e3
+                  << tests * double(sizeof(double) * (size + size + size))
+                         / (updatev1_tack - updatev1_tick) / 1e3
                   << " Gbyte/sec; "
                   << tests * double(2 * size) / (updatev1_tack - updatev1_tick) / 1e3
                   << " GFlop/sec" << std::endl;
@@ -635,17 +637,18 @@ int main(int argc, char* argv[])
         std::cout << "Vector update (addscale) execution: "
                   << (updatev2_tack - updatev2_tick) / tests / 1e3 << " msec"
                   << "; "
-                  << tests * double(sizeof(double) * (size + size + size)) /
-                         (updatev2_tack - updatev2_tick) / 1e3
+                  << tests * double(sizeof(double) * (size + size + size))
+                         / (updatev2_tack - updatev2_tick) / 1e3
                   << " Gbyte/sec; "
                   << tests * double(2 * size) / (updatev2_tack - updatev2_tick) / 1e3
                   << " GFlop/sec" << std::endl;
 
         std::cout << "SpMV execution: " << (spmv_tack - spmv_tick) / tests / 1e3 << " msec"
                   << "; "
-                  << tests * double((sizeof(double) * (size + size + nnz) +
-                                     sizeof(int) * (size + nnz))) /
-                         (spmv_tack - spmv_tick) / 1e3
+                  << tests
+                         * double(
+                             (sizeof(double) * (size + size + nnz) + sizeof(int) * (size + nnz)))
+                         / (spmv_tack - spmv_tick) / 1e3
                   << " Gbyte/sec; " << tests * double((2 * nnz) / (spmv_tack - spmv_tick)) / 1e3
                   << " GFlop/sec" << std::endl;
     }

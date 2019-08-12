@@ -28,9 +28,10 @@
 
 #include <vector>
 
-namespace rocalution {
+namespace rocalution
+{
 
-/** \ingroup solver_module
+    /** \ingroup solver_module
   * \class QMRCGStab
   * \brief Quasi-Minimal Residual Conjugate Gradient Stabilized Method
   * \details
@@ -43,35 +44,35 @@ namespace rocalution {
   * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
-template <class OperatorType, class VectorType, typename ValueType>
-class QMRCGStab : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
-{
+    template <class OperatorType, class VectorType, typename ValueType>
+    class QMRCGStab : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
+    {
     public:
-    QMRCGStab();
-    virtual ~QMRCGStab();
+        QMRCGStab();
+        virtual ~QMRCGStab();
 
-    virtual void Print(void) const;
+        virtual void Print(void) const;
 
-    virtual void Build(void);
-    virtual void ReBuildNumeric(void);
-    virtual void Clear(void);
+        virtual void Build(void);
+        virtual void ReBuildNumeric(void);
+        virtual void Clear(void);
 
     protected:
-    virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
-    virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
+        virtual void SolveNonPrecond_(const VectorType& rhs, VectorType* x);
+        virtual void SolvePrecond_(const VectorType& rhs, VectorType* x);
 
-    virtual void PrintStart_(void) const;
-    virtual void PrintEnd_(void) const;
+        virtual void PrintStart_(void) const;
+        virtual void PrintEnd_(void) const;
 
-    virtual void MoveToHostLocalData_(void);
-    virtual void MoveToAcceleratorLocalData_(void);
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
 
     private:
-    VectorType r0_, r_;
-    VectorType t_, p_;
-    VectorType v_, d_;
-    VectorType z_;
-};
+        VectorType r0_, r_;
+        VectorType t_, p_;
+        VectorType v_, d_;
+        VectorType z_;
+    };
 
 } // namespace rocalution
 

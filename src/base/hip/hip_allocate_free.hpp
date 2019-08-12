@@ -26,19 +26,20 @@
 
 #include <iostream>
 
-namespace rocalution {
+namespace rocalution
+{
 
-template <typename DataType>
-void allocate_hip(int size, DataType** ptr);
+    template <typename DataType>
+    void allocate_hip(int size, DataType** ptr);
 
-template <typename DataType>
-void free_hip(DataType** ptr);
+    template <typename DataType>
+    void free_hip(DataType** ptr);
 
-template <typename DataType>
-void set_to_zero_hip(int blocksize, int size, DataType* ptr);
+    template <typename DataType>
+    void set_to_zero_hip(int blocksize, int size, DataType* ptr);
 
-template <typename DataType>
-void set_to_one_hip(int blocksize, int size, DataType* ptr);
+    template <typename DataType>
+    void set_to_one_hip(int blocksize, int size, DataType* ptr);
 
 } // namespace rocalution
 

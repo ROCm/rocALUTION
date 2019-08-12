@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;

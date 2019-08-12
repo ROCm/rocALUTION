@@ -58,7 +58,10 @@ Arguments setup_backend_arguments(backend_tuple tup)
     return arg;
 }
 */
-TEST(local_stencil_bad_args, local_stencil) { testing_local_stencil_bad_args<float>(); }
+TEST(local_stencil_bad_args, local_stencil)
+{
+    testing_local_stencil_bad_args<float>();
+}
 /*
 TEST_P(parameterized_backend, backend)
 {

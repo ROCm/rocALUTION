@@ -65,10 +65,32 @@ add_executable(rocalution-test ${ROCALUTION_TEST_SOURCES} ${ROCALUTION_CLIENTS_C
 
 target_compile_definitions(rocalution-test PRIVATE GOOGLE_TEST)
 
-target_include_directories(rocalution-test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
-target_include_directories(rocalution-test SYSTEM PRIVATE $<BUILD_INTERFACE:${GTEST_INCLUDE_DIRS}>)
+target_include_directories(rocalution-test
+  PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+)
 
-target_link_libraries(rocalution-test PRIVATE roc::rocalution ${GTEST_BOTH_LIBRARIES} Threads::Threads)
+target_include_directories(rocalution-test
+  SYSTEM
+    PRIVATE
+      $<BUILD_INTERFACE:${GTEST_INCLUDE_DIRS}>
+)
+
+if(NOT TARGET rocalution)
+  target_link_libraries(rocalution-test PRIVATE ${ROCALUTION_LIBRARIES})
+else()
+  target_link_libraries(rocalution-test PRIVATE roc::rocalution)
+endif()
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(rocalution-test PRIVATE ${GTEST_BOTH_LIBRARIES} Threads::Threads)
+
+if(NOT TARGET rocalution)
+  set_target_properties(rocalution-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
+else()
+  set_target_properties(rocalution-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/clients/staging")
+endif()
 
 # Add tests
 add_test(rocalution-test rocalution-test)

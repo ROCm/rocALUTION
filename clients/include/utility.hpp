@@ -25,8 +25,8 @@
 #ifndef TESTING_UTILITY_HPP
 #define TESTING_UTILITY_HPP
 
-#include <string>
 #include <algorithm>
+#include <string>
 
 extern int device;
 
@@ -104,7 +104,7 @@ int gen_2d_laplacian(int ndim, int** rowptr, int** col, T** val)
 
 class Arguments
 {
-    public:
+public:
     // MPI variables
     int rank         = 0;
     int dev_per_node = 1;

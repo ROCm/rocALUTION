@@ -28,17 +28,17 @@
 
 typedef std::tuple<int, std::string, int, int, unsigned int, int> pwamg_tuple;
 
-int pwamg_size[]             = {63, 134};
-std::string pwamg_smoother[] = {"Jacobi", "MCILU"};
-int pwamg_pre_iter[]         = {1, 2};
-int pwamg_post_iter[]        = {1, 2};
-int pwamg_ordering[]         = {0, 1, 2, 3, 4, 5};
+int         pwamg_size[]      = {63, 134};
+std::string pwamg_smoother[]  = {"Jacobi"}; //, "MCILU"};
+int         pwamg_pre_iter[]  = {1, 2};
+int         pwamg_post_iter[] = {1, 2};
+int         pwamg_ordering[]  = {0, 1, 2, 3, 4, 5};
 
 unsigned int pwamg_format[] = {1, 7};
 
 class parameterized_pairwise_amg : public testing::TestWithParam<pwamg_tuple>
 {
-    protected:
+protected:
     parameterized_pairwise_amg() {}
     virtual ~parameterized_pairwise_amg() {}
     virtual void SetUp() {}

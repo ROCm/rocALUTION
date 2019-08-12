@@ -28,18 +28,18 @@
 
 typedef std::tuple<int, std::string, int, int, unsigned int, int, int> uaamg_tuple;
 
-int uaamg_size[]             = {63, 134};
-std::string uaamg_smoother[] = {"FSAI", "ILU"};
-int uaamg_pre_iter[]         = {1, 2};
-int uaamg_post_iter[]        = {1, 2};
-int uaamg_cycle[]            = {0, 2};
-int uaamg_scaling[]          = {0, 1};
+int         uaamg_size[]      = {63, 134};
+std::string uaamg_smoother[]  = {"FSAI" /*, "ILU"*/};
+int         uaamg_pre_iter[]  = {1, 2};
+int         uaamg_post_iter[] = {1, 2};
+int         uaamg_cycle[]     = {0, 2};
+int         uaamg_scaling[]   = {0, 1};
 
 unsigned int uaamg_format[] = {1, 6};
 
 class parameterized_uaamg : public testing::TestWithParam<uaamg_tuple>
 {
-    protected:
+protected:
     parameterized_uaamg() {}
     virtual ~parameterized_uaamg() {}
     virtual void SetUp() {}

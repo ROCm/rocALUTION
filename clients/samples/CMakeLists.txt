@@ -28,21 +28,29 @@ function(add_rocalution_example EXAMPLE_SOURCE)
 
   # Include rocALUTION headers
   target_include_directories(${EXAMPLE_TARGET}
-                               PRIVATE
-                                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-                                 $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+    PRIVATE
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
   )
 
   # Link rocALUTION library
-  target_link_libraries(${EXAMPLE_TARGET} PRIVATE rocalution)
+  if(NOT TARGET rocalution)
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${ROCALUTION_LIBRARIES})
+  else()
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE roc::rocalution)
+  endif()
 
   # MPI
   if(SUPPORT_MPI)
+    target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${MPI_CXX_INCLUDE_PATH}>)
     target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${MPI_LIBRARIES})
   endif()
 
   # Examples output directory
-  set_target_properties(${EXAMPLE_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/example")
+  if(NOT TARGET rocalution)
+    set_target_properties(${EXAMPLE_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
+  else()
+    set_target_properties(${EXAMPLE_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/clients/staging")
+  endif()
 endfunction()
 
 # Examples

@@ -21,8 +21,8 @@
  *
  * ************************************************************************ */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include <rocalution.hpp>
 
 using namespace rocalution;
@@ -73,8 +73,8 @@ int main(int argc, char* argv[])
 
     // Preconditioner
     DiagJacobiSaddlePointPrecond<LocalMatrix<double>, LocalVector<double>, double> p;
-    MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double> p1;
-    MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double> p2;
+    MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double>              p1;
+    MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double>              p2;
 
     // Initialize rhs such that A 1 = rhs
     e.Ones();

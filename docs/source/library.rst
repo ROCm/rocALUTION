@@ -293,7 +293,7 @@ You can test the installation by running a CG solver on a Laplace matrix. After 
 
 ::
 
-  cd rocALUTION/build/release/examples
+  cd rocALUTION/build/release/clients/staging
 
   wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
   gzip -d gr_30_30.mtx.gz
