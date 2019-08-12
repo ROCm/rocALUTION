@@ -31,7 +31,7 @@ rocALUTIONCIhost:
 
     def rocalution = new rocProject('rocalution_host')
     // customize for project
-    rocalution.paths.build_command = './install.sh -c --host --hip-clang'
+    rocalution.paths.build_command = './install.sh -c --host'
     rocalution.compiler.compiler_name = 'c++'
     rocalution.compiler.compiler_path = 'c++'
 
@@ -107,7 +107,7 @@ rocALUTIONCImpi:
 
     def rocalution = new rocProject('rocalution_mpi')
     // customize for project
-    rocalution.paths.build_command = './install.sh -c --host --mpi --no-openmp --hip-clang'
+    rocalution.paths.build_command = './install.sh -c --host --mpi --no-openmp'
     rocalution.compiler.compiler_name = 'c++'
     rocalution.compiler.compiler_path = 'c++'
 
