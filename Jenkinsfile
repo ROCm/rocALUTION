@@ -38,7 +38,7 @@ rocALUTIONCIhost:
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(['dkms'], rocalution)
 
-    boolean formatCheck = false
+    boolean formatCheck = true
 
     def compileCommand =
     {
@@ -114,7 +114,7 @@ rocALUTIONCImpi:
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(['dkms'], rocalution)
 
-    boolean formatCheck = false
+    boolean formatCheck = true
 
     def compileCommand =
     {
@@ -190,7 +190,7 @@ rocALUTIONCI:
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(['gfx900 && ubuntu', 'gfx906 && centos7'], rocalution)
 
-    boolean formatCheck = false
+    boolean formatCheck = true
 
     def compileCommand =
     {
