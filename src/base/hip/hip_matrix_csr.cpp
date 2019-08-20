@@ -2979,9 +2979,10 @@ namespace rocalution
 
         this->Clear();
 
-        int m    = cast_mat_A->nrow_;
-        int n    = cast_mat_B->ncol_;
-        int k    = cast_mat_B->nrow_;
+        int m = cast_mat_A->nrow_;
+        int n = cast_mat_B->ncol_;
+        int k = cast_mat_B->nrow_;
+
         int nnzC = 0;
 
         ValueType alpha = static_cast<ValueType>(1);
