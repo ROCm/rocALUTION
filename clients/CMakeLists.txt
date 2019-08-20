@@ -75,3 +75,14 @@ if(BUILD_CLIENTS_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
+
+# Client packaging
+include(../cmake/Packaging.cmake)
+
+if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
+  rocm_create_package_clients(LIB_NAME rocalution
+                              DESCRIPTION "Radeon Open Compute library for sparse linear systems"
+                              MAINTAINER "Nico Trost"
+                              SECTION "dev"
+                              VERSION ${rocalution_VERSION})
+endif()
