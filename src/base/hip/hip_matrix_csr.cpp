@@ -2964,9 +2964,6 @@ namespace rocalution
     bool HIPAcceleratorMatrixCSR<ValueType>::MatMatMult(const BaseMatrix<ValueType>& A,
                                                         const BaseMatrix<ValueType>& B)
     {
-        return false;
-
-        // TODO
         assert(A.GetN() == B.GetM());
         assert(A.GetM() > 0);
         assert(B.GetN() > 0);
@@ -2984,30 +2981,67 @@ namespace rocalution
 
         int m = cast_mat_A->nrow_;
         int n = cast_mat_B->ncol_;
-        // int k    = cast_mat_B->nrow_;
+        int k = cast_mat_B->nrow_;
+
         int nnzC = 0;
+
+        ValueType alpha = static_cast<ValueType>(1);
+
+        rocsparse_status status;
+
+        size_t buffer_size = 0;
+
+        status = rocsparseTcsrgemm_buffer_size(
+            ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+            rocsparse_operation_none,
+            rocsparse_operation_none,
+            m,
+            n,
+            k,
+            &alpha,
+            cast_mat_A->mat_descr_,
+            cast_mat_A->nnz_,
+            cast_mat_A->mat_.row_offset,
+            cast_mat_A->mat_.col,
+            cast_mat_B->mat_descr_,
+            cast_mat_B->nnz_,
+            cast_mat_B->mat_.row_offset,
+            cast_mat_B->mat_.col,
+            this->mat_info_,
+            &buffer_size);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+        void* buffer = NULL;
+        hipMalloc(&buffer, buffer_size);
 
         allocate_hip(m + 1, &this->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
-        /*
-      cusparseStatus_t status;
 
-      status = cusparseSetPointerMode(CUSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                      CUSPARSE_POINTER_MODE_HOST);
-      CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
+        status = rocsparse_csrgemm_nnz(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                       rocsparse_operation_none,
+                                       rocsparse_operation_none,
+                                       m,
+                                       n,
+                                       k,
+                                       cast_mat_A->mat_descr_,
+                                       cast_mat_A->nnz_,
+                                       cast_mat_A->mat_.row_offset,
+                                       cast_mat_A->mat_.col,
+                                       cast_mat_B->mat_descr_,
+                                       cast_mat_B->nnz_,
+                                       cast_mat_B->mat_.row_offset,
+                                       cast_mat_B->mat_.col,
+                                       NULL,
+                                       0,
+                                       NULL,
+                                       NULL,
+                                       this->mat_descr_,
+                                       this->mat_.row_offset,
+                                       &nnzC,
+                                       this->mat_info_,
+                                       buffer);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-      status = cusparseXcsrgemmNnz(CUSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                   CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                   m, n, k,
-                                   cast_mat_A->mat_descr_, cast_mat_A->nnz_,
-                                   cast_mat_A->mat_.row_offset, cast_mat_A->mat_.col,
-                                   cast_mat_B->mat_descr_, cast_mat_B->nnz_,
-                                   cast_mat_B->mat_.row_offset, cast_mat_B->mat_.col,
-                                   this->mat_descr_, this->mat_.row_offset,
-                                   &nnzC);
-      CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
-    */
         allocate_hip(nnzC, &this->mat_.col);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3017,25 +3051,31 @@ namespace rocalution
         this->nrow_ = m;
         this->ncol_ = n;
         this->nnz_  = nnzC;
-        /*
-      status = __cusparseXcsrgemm__(CUSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                    CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                    CUSPARSE_OPERATION_NON_TRANSPOSE,
-                                    m, n, k,
-                                    // A
-                                    cast_mat_A->mat_descr_, cast_mat_A->nnz_,
-                                    cast_mat_A->mat_.val,
-                                    cast_mat_A->mat_.row_offset, cast_mat_A->mat_.col,
-                                    // B
-                                    cast_mat_B->mat_descr_, cast_mat_B->nnz_,
-                                    cast_mat_B->mat_.val,
-                                    cast_mat_B->mat_.row_offset, cast_mat_B->mat_.col,
-                                    // C
-                                    this->mat_descr_,
-                                    this->mat_.val,
-                                    this->mat_.row_offset, this->mat_.col);
-      CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
-    */
+
+        status = rocsparseTcsrgemm(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                   rocsparse_operation_none,
+                                   rocsparse_operation_none,
+                                   m,
+                                   n,
+                                   k,
+                                   &alpha,
+                                   cast_mat_A->mat_descr_,
+                                   cast_mat_A->nnz_,
+                                   cast_mat_A->mat_.val,
+                                   cast_mat_A->mat_.row_offset,
+                                   cast_mat_A->mat_.col,
+                                   cast_mat_B->mat_descr_,
+                                   cast_mat_B->nnz_,
+                                   cast_mat_B->mat_.val,
+                                   cast_mat_B->mat_.row_offset,
+                                   cast_mat_B->mat_.col,
+                                   this->mat_descr_,
+                                   this->mat_.val,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   this->mat_info_,
+                                   buffer);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         this->ApplyAnalysis();
 

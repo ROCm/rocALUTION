@@ -135,6 +135,51 @@ namespace rocalution
                                      const ValueType*          beta,
                                      ValueType*                y);
 
+    // rocsparse csrgemm
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsrgemm_buffer_size(rocsparse_handle          handle,
+                                                   rocsparse_operation       trans_A,
+                                                   rocsparse_operation       trans_B,
+                                                   int                       m,
+                                                   int                       n,
+                                                   int                       k,
+                                                   const ValueType*          alpha,
+                                                   const rocsparse_mat_descr descr_A,
+                                                   int                       nnz_A,
+                                                   const int*                csr_row_ptr_A,
+                                                   const int*                csr_col_ind_A,
+                                                   const rocsparse_mat_descr descr_B,
+                                                   int                       nnz_B,
+                                                   const int*                csr_row_ptr_B,
+                                                   const int*                csr_col_ind_B,
+                                                   rocsparse_mat_info        info,
+                                                   size_t*                   buffer_size);
+
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsrgemm(rocsparse_handle          handle,
+                                       rocsparse_operation       trans_A,
+                                       rocsparse_operation       trans_B,
+                                       int                       m,
+                                       int                       n,
+                                       int                       k,
+                                       const ValueType*          alpha,
+                                       const rocsparse_mat_descr descr_A,
+                                       int                       nnz_A,
+                                       const ValueType*          csr_val_A,
+                                       const int*                csr_row_ptr_A,
+                                       const int*                csr_col_ind_A,
+                                       const rocsparse_mat_descr descr_B,
+                                       int                       nnz_B,
+                                       const ValueType*          csr_val_B,
+                                       const int*                csr_row_ptr_B,
+                                       const int*                csr_col_ind_B,
+                                       const rocsparse_mat_descr descr_C,
+                                       ValueType*                csr_val_C,
+                                       const int*                csr_row_ptr_C,
+                                       int*                      csr_col_ind_C,
+                                       rocsparse_mat_info        info,
+                                       void*                     temp_buffer);
+
     // rocsparse csrilu0 buffer size
     template <typename ValueType>
     rocsparse_status rocsparseTcsrilu0_buffer_size(rocsparse_handle          handle,
