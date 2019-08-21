@@ -2,7 +2,7 @@
 ARG base_image
 
 FROM ${base_image}
-LABEL maintainer="nico.trost@amd.com"
+LABEL maintainer="rocalution-maintainer@amd.com"
 
 # Copy the rpm package of rocalution into the container from host
 COPY *.rpm /tmp/
