@@ -1827,47 +1827,118 @@ namespace rocalution
 
         cast_diag->Allocate(this->nrow_);
 
+        int* diag_offset = NULL;
+        int* nnz_entries = NULL;
+
+        allocate_host(this->nrow_, &diag_offset);
+        allocate_host(this->nrow_, &nnz_entries);
+
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            nnz_entries[i] = 0;
+        }
+
         // i=0,..n
         for(int i = 0; i < this->nrow_; ++i)
         {
-            // j=0,..i
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            int row_begin = this->mat_.row_offset[i];
+            int row_end   = this->mat_.row_offset[i + 1];
+
+            for(int j = row_begin; j < row_end; ++j)
             {
-                // k=0,..j-1
-                for(int k = this->mat_.row_offset[i]; k < j; ++k)
+                nnz_entries[this->mat_.col[j]] = j;
+            }
+
+            ValueType sum = static_cast<ValueType>(0);
+
+            bool has_diag = false;
+
+            // j=0,..i
+            int j;
+            for(j = row_begin; j < row_end; ++j)
+            {
+                int       col_j = this->mat_.col[j];
+                ValueType val_j = this->mat_.val[j];
+
+                // Mark diagonal and skip row
+                if(col_j == i)
                 {
-                    // loop through j-th row to find matching k
-                    for(int l = this->mat_.row_offset[this->mat_.col[j]];
-                        l < this->mat_.row_offset[this->mat_.col[j] + 1];
-                        ++l)
+                    has_diag = true;
+                    break;
+                }
+
+                // Skip upper triangular
+                if(col_j > i)
+                {
+                    break;
+                }
+
+                int row_begin_j = this->mat_.row_offset[col_j];
+                int row_diag_j  = diag_offset[col_j];
+
+                ValueType local_sum = static_cast<ValueType>(0);
+                ValueType inv_diag  = this->mat_.val[row_diag_j];
+
+                // Check for numeric zero
+                if(inv_diag == static_cast<ValueType>(0))
+                {
+                    LOG_INFO("IC breakdown: division by zero");
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                inv_diag = static_cast<ValueType>(1) / inv_diag;
+
+                for(int k = row_begin_j; k < row_diag_j; ++k)
+                {
+                    int col_k = this->mat_.col[k];
+
+                    if(nnz_entries[col_k] != 0)
                     {
-                        if(this->mat_.col[l] == this->mat_.col[k])
-                        {
-                            this->mat_.val[j] -= this->mat_.val[k] * this->mat_.val[l];
-                            break;
-                        }
+                        int idx   = nnz_entries[col_k];
+                        local_sum = std::fma(this->mat_.val[k], this->mat_.val[idx], local_sum);
                     }
                 }
 
-                if(i > this->mat_.col[j])
-                {
-                    // Fill lower part
-                    this->mat_.val[j]
-                        /= this->mat_.val[this->mat_.row_offset[this->mat_.col[j] + 1] - 1];
-                }
-                else if(this->mat_.val[j] > static_cast<ValueType>(0))
-                {
-                    // Fill diagonal part
-                    this->mat_.val[j]  = sqrt(this->mat_.val[j]);
-                    cast_diag->vec_[i] = static_cast<ValueType>(1) / this->mat_.val[j];
-                }
-                else
-                {
-                    LOG_INFO("IC breakdown");
-                    FATAL_ERROR(__FILE__, __LINE__);
-                }
+                val_j = (val_j - local_sum) * inv_diag;
+                sum   = std::fma(val_j, val_j, sum);
+
+                this->mat_.val[j] = val_j;
+            }
+
+            if(!has_diag)
+            {
+                // Structural zero
+                LOG_INFO("IC breakdown: structural zero diagonal");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            // Process diagonal entry
+            ValueType diag_entry = std::sqrt(std::abs(this->mat_.val[j] - sum));
+            this->mat_.val[j]    = diag_entry;
+
+            // Check for numerical zero
+            if(diag_entry == static_cast<ValueType>(0))
+            {
+                LOG_INFO("IC breakdown: division by zero");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            // Store inverse diagonal entry
+            cast_diag->vec_[i] = static_cast<ValueType>(1) / diag_entry;
+
+            // Store diagonal offset
+            diag_offset[i] = j;
+
+            // Clear nnz entries
+            for(j = row_begin; j < row_end; ++j)
+            {
+                nnz_entries[this->mat_.col[j]] = 0;
             }
         }
+
+        // Free temporary storage
+        free_host(&diag_offset);
+        free_host(&nnz_entries);
 
         return true;
     }
