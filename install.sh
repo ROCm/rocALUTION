@@ -33,10 +33,10 @@ supported_distro( )
   fi
 
   case "${ID}" in
-    ubuntu|centos|rhel|fedora)
+    ubuntu|centos|rhel|fedora|sles)
         true
         ;;
-    *)  printf "This script is currently supported on Ubuntu, CentOS, RHEL and Fedora\n"
+    *)  printf "This script is currently supported on Ubuntu, CentOS, RHEL, Fedora and SLES\n"
         exit 2
         ;;
   esac
@@ -100,6 +100,18 @@ install_dnf_packages( )
   done
 }
 
+# Take an array of packages as input, and install those packages with 'zypper' if they are not already installed
+install_zypper_packages( )
+{
+  package_dependencies=("$@")
+  for package in "${package_dependencies[@]}"; do
+    if [[ $(rpm -q ${package} &> /dev/null; echo $? ) -ne 0 ]]; then
+      printf "\033[32mInstalling \033[33m${package}\033[32m from distro package manager\033[0m\n"
+      elevate_if_not_root zypper -n --nogpgcheck install ${package}
+    fi
+  done
+}
+
 # Take an array of packages as input, and delegate the work to the appropriate distro installer
 # prereq: ${ID} must be defined before calling
 # prereq: ${build_clients} must be defined before calling
@@ -119,16 +131,19 @@ install_packages( )
   local library_dependencies_ubuntu=( "make" "cmake-curses-gui" "pkg-config" )
   local library_dependencies_centos=( "epel-release" "make" "cmake3" "gcc-c++" "rpm-build" )
   local library_dependencies_fedora=( "make" "cmake" "gcc-c++" "libcxx-devel" "rpm-build" )
+  local library_dependencies_sles=( "make" "cmake" "gcc-c++" "libcxxtools9" "rpm-build" )
 
   local client_dependencies_ubuntu=( "libboost-program-options-dev" )
   local client_dependencies_centos=( "boost-devel" )
   local client_dependencies_fedora=( "boost-devel" )
+  local client_dependencies_sles=( "libboost_program_options1_66_0-devel" "pkg-config" "dpkg" )
 
   # Host build
   if [[ "${build_host}" == false ]]; then
     library_dependencies_ubuntu+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" "rocprim" )
     library_dependencies_centos+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
     library_dependencies_fedora+=( "hip_hcc" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
+    library_dependencies_sles+=( "hip_hcc" "libnuma1" "rocblas" "rocsparse" "rocprim" )
   fi
 
   # MPI
@@ -136,6 +151,7 @@ install_packages( )
     library_dependencies_ubuntu+=( "mpi-default-bin" "mpi-default-dev" )
     library_dependencies_centos+=( "openmpi" "openmpi-devel" )
     library_dependencies_fedora+=( "openmpi" "openmpi-devel" )
+    library_dependencies_sles+=( "mpich" "mpich-devel" )
   fi
 
   # OpenMP
@@ -143,6 +159,7 @@ install_packages( )
     library_dependencies_ubuntu+=( "libomp5" "libomp-dev" )
     library_dependencies_centos+=( "" ) # TODO
     library_dependencies_fedora+=( "" ) # TODO
+    library_dependencies_sles+=( "libgomp1" )
   fi
 
   case "${ID}" in
@@ -173,6 +190,19 @@ install_packages( )
       if [[ "${build_clients}" == true ]]; then
         install_dnf_packages "${client_dependencies_fedora[@]}"
       fi
+      ;;
+
+    sles)
+#     elevate_if_not_root zypper -y update
+      install_zypper_packages "${library_dependencies_sles[@]}"
+
+      if [[ "${build_clients}" == true ]]; then
+        install_zypper_packages "${client_dependencies_sles[@]}"
+      fi
+      ;;
+    *)
+      echo "This script is currently supported on Ubuntu, CentOS, RHEL and Fedora"
+      exit 2
       ;;
     *)
       echo "This script is currently supported on Ubuntu, CentOS, RHEL and Fedora"
@@ -386,6 +416,9 @@ pushd .
       ;;
       fedora)
         elevate_if_not_root dnf install rocalution-*.rpm
+      ;;
+      sles)
+        elevate_if_not_root zypper -n --no-gpg-checks install rocalution-*.rpm
       ;;
     esac
 
