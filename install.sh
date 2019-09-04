@@ -418,7 +418,7 @@ pushd .
         elevate_if_not_root dnf install rocalution-*.rpm
       ;;
       sles)
-        elevate_if_not_root zypper -n --no-gpg-checks install rocalution-*.rpm
+        elevate_if_not_root zypper -n --nogpgcheck install rocalution-*.rpm
       ;;
     esac
 
