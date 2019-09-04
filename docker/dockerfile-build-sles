@@ -14,7 +14,7 @@ ARG user_uid
 # * rocalution-test: googletest
 # * rocalution-bench: libboost-program-options-dev
 # * libhsakmt.so: libnuma1
-RUN zypper -n update && zypper -n install \
+RUN zypper -n update && zypper -n --no-gpg-checks install \
     sudo \
     rock-dkms \
     mpich \
