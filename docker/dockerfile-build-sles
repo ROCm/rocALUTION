@@ -16,7 +16,8 @@ ARG user_uid
 # * libhsakmt.so: libnuma1
 RUN zypper -n update && zypper -n --no-gpg-checks install \
     sudo \
-    rock-dkms \
+#    rock-dkms \
+    comgr \
     mpich \
     mpich-devel \
     ca-certificates \
