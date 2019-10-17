@@ -157,7 +157,7 @@ namespace rocalution
   * - SetPreconditioner() sets the preconditioning.
   *
   * All iterative solvers are controlled based on
-  * - Absolute stopping criteria, when \f$|r_{k}|_{L_{p}} \lt \epsilon_{abs}\f$
+  * - Absolute stopping criteria, when \f$|r_{k}|_{L_{p}} < \epsilon_{abs}\f$
   * - Relative stopping criteria, when \f$|r_{k}|_{L_{p}} / |r_{1}|_{L_{p}} \leq
   *   \epsilon_{rel}\f$
   * - Divergence stopping criteria, when \f$|r_{k}|_{L_{p}} / |r_{1}|_{L_{p}} \geq
