@@ -10,7 +10,7 @@ Currently, rocALUTION is supported under the following operating systems
 
 To compile and run rocALUTION with HIP support, `AMD ROCm Platform <https://github.com/RadeonOpenCompute/ROCm>`_ 2.9 or newer is required.
 
-The following HIP devices are supported
+The following HIP devices are currently supported
 
 - gfx803 (e.g. Fiji)
 - gfx900 (e.g. Vega10, MI25)

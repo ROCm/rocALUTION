@@ -264,6 +264,25 @@ In this example, a new :cpp:class:`IterativeLinearSolver <rocalution::IterativeL
 To achieve this, the :cpp:class:`CG <rocalution::CG>` is a good template.
 Thus, we first copy `src/solvers/krylov/cg.hpp` to `src/solvers/krylov/mysolver.hpp` and `src/solvers/krylov.cg.cpp` to `src/solvers/krylov/mysolver.cpp` (assuming we add a krylov subspace solvers).
 
+Next, modify the `cg.hpp` and `cg.cpp` to your needs (e.g. change the solver name from `CG` to `MySolver`).
+Each of the virtual functions in the class need an implementation.
+
+- **MySolver()**: The constructor of the new solver class.
+- **~MySolver()**: The destructor of the new solver class. It should call the `Clear()` function.
+- **void Print(void) const**: This function should print some informations about the solver.
+- **void Build(void)**: This function creates all required structures of the solver, e.g. allocates memory and sets the backend of temporary objects.
+- **void BuildMoveToAcceleratorAsync(void)**: This function should moves all solver related objects asynchronously to the accelerator device.
+- **void Sync(void)**: This function should synchronize all solver related objects.
+- **void ReBuildNumeric(void)**: This function should re-build the solver only numerically.
+- **void Clear(void)**: This function should clean up all solver relevant structures that have been created using `Build()`.
+- **void SolveNonPrecond_(const VectorType& rhs, VectorType* x)**: This function should perform the solving phase `Ax=y` without the use of a preconditioner.
+- **void SolvePrecond_(const VectorType& rhs, VectorType* x)**: This function should perform the solving phase `Ax=y` with the use of a preconditioner.
+- **void PrintStart_(void) const**: This protected function is called upton solver start.
+- **void PrintEnd_(void) const**: This protected function is called when the solver ends.
+- **void MoveToHostLocalData_(void)**: This protected function should move all local solver objects to the host.
+- **void MoveToAcceleratorLocalData_(void)**: This protected function should move all local solver objects to the accelerator.
+
+Of course, additional member functions that are solver specific, can be introduced.
 
 Then, to make the new solver visible, we have to add it to the `src/rocalution.hpp` header:
 
@@ -285,5 +304,3 @@ Finally, the new solver must be added to the CMake compilation list, found in `s
     solvers/krylov/mysolver.cpp
     solvers/krylov/fcg.cpp
   ...
-
-
