@@ -19,7 +19,7 @@ In the current version, cross ValueType object operations are not supported.
 
   Operator and vector classes.
 
-Each of the objects contain a local copy of the hardware descriptor created by the :cpp:func:`rocalution::init_rocalution` function.
+Each of the objects contain a local copy of the hardware descriptor created by the :cpp:func:`init_rocalution <rocalution::init_rocalution>` function.
 This allows the user to modify it according to his needs and to obtain two or more objects with different hardware specifications (e.g. different amount of OpenMP threads, HIP block sizes, etc.).
 
 Local Operators and Vectors

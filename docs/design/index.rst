@@ -11,6 +11,7 @@ rocALUTION Design Document
    design
    opvec
    solprec
+   guides
    functable
    targets
    api

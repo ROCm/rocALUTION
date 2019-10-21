@@ -29,7 +29,7 @@ Library Source Code Organization
 ================================
 The rocALUTION library is split into three major parts:
 
-- The `src/base/` directory contains all source code that is built on top of the :cpp:class:`rocalution::BaseRocalution` object as well as the backend structure.
+- The `src/base/` directory contains all source code that is built on top of the :cpp:class:`BaseRocalution <rocalution::BaseRocalution>` object as well as the backend structure.
 - `src/solvers/` contains all solvers, preconditioners and its control classes.
 - In `src/utils/` memory (de)allocation, logging, communication, timing and math helper functions are placed.
 
@@ -49,14 +49,14 @@ Currently available backends are for CPU (naive, OpenMP, MPI) and GPU (HIP).
 
 The Operator and Vector classes
 ```````````````````````````````
-The :cpp:class:`rocalution::Operator` and :cpp:class:`rocalution::Vector` classes and its derived local and global classes, see :ref:`rocalution_opvec`, are the classes available by the rocALUTION API.
+The :cpp:class:`Operator <rocalution::Operator>` and :cpp:class:`Vector <rocalution::Vector>` classes and its derived local and global classes, see :ref:`rocalution_opvec`, are the classes available by the rocALUTION API.
 While granting the user access to all relevant functionality, all hardware relevant implementation details are hidden.
 
-Each local object, derived from an operator or vector, contains a pointer to a `Base`-class, a `Host`-class and a `Accelerator`-class of same type (e.g. a :cpp:class:`rocalution::LocalMatrix` contains pointers to a :cpp:class:`rocalution::BaseMatrix`, :cpp:class:`rocalution::HostMatrix` and :cpp:class:`rocalution::AcceleratorMatrix`).
+Each local object, derived from an operator or vector, contains a pointer to a `Base`-class, a `Host`-class and an `Accelerator`-class of same type (e.g. a :cpp:class:`LocalMatrix <rocalution::LocalMatrix>` contains pointers to a :cpp:class:`BaseMatrix <rocalution::BaseMatrix>`, :cpp:class:`HostMatrix <rocalution::HostMatrix>` and :cpp:class:`AcceleratorMatrix <rocalution::AcceleratorMatrix>`).
 The `Base`-class pointer will always point towards either the `Host`-class or the `Accelerator`-class pointer, dependend on the runtime decision of the local object.
 `Base`-classes and their derivatives are further explained in :ref:`rocalution_base_classes`.
 
-Furthermore, each global object, derived from an operator or vector, embeds two `Local`-classes of same type to store the interior and ghost part of the global object (e.g. a :cpp:class:`rocalution::GlobalVector` contains two :cpp:class:`rocalution::LocalVector`).
+Furthermore, each global object, derived from an operator or vector, embeds two `Local`-classes of same type to store the interior and ghost part of the global object (e.g. a :cpp:class:`GlobalVector <rocalution::GlobalVector>` contains two :cpp:class:`LocalVector <rocalution::LocalVector>`).
 For more details on distributed data structures, see :ref:`rocalution_multinode`.
 
 .. _rocalution_base_classes:
@@ -66,7 +66,7 @@ The BaseMatrix and BaseVector classes
 Each local object contains a pointer to a `Base`-class object.
 While the `Base`-class is mainly pure virtual, their derivatives implement all platform specific functionality.
 Each of them is coupled to a rocALUTION backend descriptor.
-While the :cpp:class:`rocalution::HostMatrix`, :cpp:class:`rocalution::HostStencil` and :cpp:class:`rocalution::HostVector` classes implements all host functionality, :cpp:class:`rocalution::AcceleratorMatrix`, :cpp:class:`rocalution::AcceleratorStencil` and :cpp:class:`rocalution::AcceleratorVector` contain accelerator related device code.
+While the :cpp:class:`HostMatrix <rocalution::HostMatrix>`, :cpp:class:`HostStencil <rocalution::HostStencil>` and :cpp:class:`HostVector <rocalution::HostVector>` classes implements all host functionality, :cpp:class:`<AcceleratorMatrix <rocalution::AcceleratorMatrix>`, :cpp:class:`AcceleratorStencil <rocalution::AcceleratorStencil>` and :cpp:class:`AcceleratorVector <rocalution::AcceleratorVector>` contain accelerator related device code.
 Each of the backend specializations are located in a different directory, e.g. `src/base/host` for host related classes and `src/base/hip` for accelerator / HIP related classes.
 
 ParallelManager
@@ -80,8 +80,10 @@ For more details on distributed data structures, see :ref:`rocalution_multinode`
 
 The `src/solvers/` directory
 ----------------------------
-The :cpp:class:`rocalution::Solver` and its derived classes, see :ref:`rocalution_solprec`, can be found in `src/solvers`.
-The directory structure is further split into the sub-classes :cpp:class:`rocalution::DirectLinearSolver` in `src/solvers/direct`, :cpp:class:`rocalution::IterativeLinearSolver` in `src/solvers/krylov`, :cpp:class:`rocalution::BaseMultiGrid` in `src/solvers/multigrid` and :cpp:class:`rocalution::Preconditioner` in `src/solvers/preconditioners`.
+The :cpp:class:`Solver <rocalution::Solver>` and its derived classes, see :ref:`rocalution_solprec`, can be found in `src/solvers`.
+The directory structure is further split into the sub-classes :cpp:class:`DirectLinearSolver <rocalution::DirectLinearSolver>` in `src/solvers/direct`, :cpp:class:`IterativeLinearSolver <rocalution::IterativeLinearSolver>` in `src/solvers/krylov`, :cpp:class:`BaseMultiGrid <rocalution::BaseMultiGrid>` in `src/solvers/multigrid` and :cpp:class:`Preconditioner <rocalution::Preconditioner>` in `src/solvers/preconditioners`.
+Each of the solver is using an :cpp:class:`Operator <rocalution::Operator>`, :cpp:class:`Vector <rocalution::Vector>` and data type as template parameters to solve a linear system of equations.
+The actual solver algorithm is implemented by the :cpp:class:`Operator <rocalution::Operator>` and :cpp:class:`Vector <rocalution::Vector>` functionality.
 
 The `src/utils/` directory
 --------------------------
@@ -102,11 +104,11 @@ In `src/utils/def.hpp`
 Backend Descriptor and User Control
 ===================================
 The body of a rocALUTION code is very simple, it should contain the header file and the namespace of the library.
-The program must contain an initialization call to :cpp:func:`rocalution::init_rocalution` which will check and allocate the hardware and a finalizing call to :cpp:func:`rocalution::stop_rocalution` which will release the allocated hardware.
+The program must contain an initialization call to :cpp:func:`init_rocalution <rocalution::init_rocalution>` which will check and allocate the hardware and a finalizing call to :cpp:func:`stop_rocalution <rocalution::stop_rocalution>` which will release the allocated hardware.
 
 Thread-core Mapping
 -------------------
-The number of threads which rocALUTION will use can be modified by the function :cpp:func:`rocalution::set_omp_threads_rocalution` or by the global OpenMP environment variable (for Unix-like OS this is `OMP_NUM_THREADS`).
+The number of threads which rocALUTION will use can be modified by the function :cpp:func:`set_omp_threads_rocalution <rocalution::set_omp_threads_rocalution>` or by the global OpenMP environment variable (for Unix-like OS this is `OMP_NUM_THREADS`).
 During the initialization phase, the library provides affinity thread-core mapping:
 
 - If the number of cores (including SMT cores) is greater or equal than two times the number of threads, then all the threads can occupy every second core ID (e.g. 0,2,4,...).
@@ -115,7 +117,7 @@ During the initialization phase, the library provides affinity thread-core mappi
 - If non of the above criteria is matched, then the default thread-core mapping is used (typically set by the operating system).
 
 .. note:: The thread-core mapping is available for Unix-like operating systems only.
-.. note:: The user can disable the thread affinity by :cpp:func:`rocalution::set_omp_affinity_rocalution`, before initializing the library.
+.. note:: The user can disable the thread affinity by :cpp:func:`set_omp_affinity_rocalution <rocalution::set_omp_affinity_rocalution>`, before initializing the library.
 
 OpenMP Threshold Size
 ---------------------
@@ -123,19 +125,19 @@ Whenever working on a small problem, OpenMP host backend might be slightly slowe
 This is mainly attributed to the small amount of work, which every thread should perform and the large overhead of forking/joining threads.
 This can be avoid by the OpenMP threshold size parameter in rocALUTION.
 The default threshold is set to 10.000, which means that all matrices under (and equal to) this size will use only one thread (disregarding the number of OpenMP threads set in the system).
-The threshold can be modified with :cpp:func:`rocalution::set_omp_threshold_rocalution`.
+The threshold can be modified with :cpp:func:`set_omp_threshold_rocalution <rocalution::set_omp_threshold_rocalution>`.
 
 Accelerator Selection
 ---------------------
-The accelerator device id that is supposed to be used for the computation can be selected by the user by :cpp:func:`rocalution::set_device_rocalution`.
+The accelerator device id that is supposed to be used for the computation can be selected by the user by :cpp:func:`set_device_rocalution <rocalution::set_device_rocalution>`.
 
 Disable the Accelerator
 -----------------------
-Furthermore, the accelerator can be disabled without having to re-compile the library by calling :cpp:func:`rocalution::disable_accelerator_rocalution`.
+Furthermore, the accelerator can be disabled without having to re-compile the library by calling :cpp:func:`disable_accelerator_rocalution <rocalution::disable_accelerator_rocalution>`.
 
 Backend Information
 -------------------
-Detailed information about the current backend / accelerator in use as well as the available accelerators can be printed by :cpp:func:`rocalution::info_rocalution`.
+Detailed information about the current backend / accelerator in use as well as the available accelerators can be printed by :cpp:func:`info_rocalution <rocalution::info_rocalution>`.
 
 MPI and Multi-Accelerators
 --------------------------
@@ -178,7 +180,7 @@ Automatic Object Tracking
 =========================
 rocALUTION supports automatic object tracking.
 After the initialization of the library, all objects created by the user application can be tracked.
-Once :cpp:func:`rocalution::stop_rocalution` is called, all memory from tracked objects gets deallocated.
+Once :cpp:func:`stop_rocalution <rocalution::stop_rocalution>` is called, all memory from tracked objects gets deallocated.
 This will avoid memory leaks when the objects are allocated but not freed.
 The user can enable or disable the tracking by editing `src/utils/def.hpp`.
 By default, automatic object tracking is disabled.
