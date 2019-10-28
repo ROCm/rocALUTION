@@ -9,8 +9,6 @@ rocALUTION Design Document
    intro
    install
    design
-   opvec
-   solprec
    guides
    functable
    targets
