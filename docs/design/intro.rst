@@ -96,8 +96,6 @@ Below we list our primary concerns when reviewing pull-requests.
 
 - All public APIs are C89 compatible; all other library code should use C++14.
 - Our minimum supported compiler is clang 3.6.
-- Avoid CamelCase.
-- This rule applies specifically to publicly visible APIs, but is also encouraged (not mandated) for internal code.
 
 **Philosophy**
 

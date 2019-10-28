@@ -154,7 +154,21 @@ Building and Installing
 
 Installing from AMD ROCm repositories
 **************************************
-TODO, not yet available
+rocALUTION can be installed from `AMD ROCm repository <https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories>`_.
+The repository hosts the single-node, accelerator enabled version of the library.
+If a different setup is required, e.g. multi-node support, rocALUTION need to be built from source, see :ref:`rocalution_building`.
+
+For detailed instructions on how to set up ROCm on different platforms, see the `AMD ROCm Platform Installation Guide for Linux <https://rocm.github.io/ROCmInstall.html>`_.
+
+rocALUTION has the following run-time dependencies
+
+- `AMD ROCm <https://github.com/RadeonOpenCompute/ROCm>`_ 2.9 or later (optional, for HIP support)
+- `rocSPARSE <https://github.com/ROCmSoftwarePlatform/rocSPARSE>`_ (optional, for HIP support)
+- `rocBLAS <https://github.com/ROCmSoftwarePlatform/rocBLAS>`_ (optional, for HIP support)
+- `OpenMP <https://www.openmp.org/>`_ (optional, for OpenMP support)
+- `MPI <https://www.mcs.anl.gov/research/projects/mpi/>`_ (optional, for multi-node / multi-GPU support)
+
+.. _rocalution_building:
 
 Building rocALUTION from Open-Source repository
 ***********************************************
@@ -410,23 +424,48 @@ process and accelerators - the allocated accelerator will be `rank % num_dev_per
 
 Automatic Object Tracking
 *************************
-By default, after the initialization of the library, rocALUTION tracks all objects and releasing the allocated memory in them when the library is stopped. This ensure large memory leaks when the objects are allocated but not freed. The user can disable the tracking by editing `src/utils/def.hpp`, however, this is not recommended.
+rocALUTION supports automatic object tracking.
+After the initialization of the library, all objects created by the user application can be tracked.
+Once :cpp:func:`stop_rocalution <rocalution::stop_rocalution>` is called, all memory from tracked objects gets deallocated.
+This will avoid memory leaks when the objects are allocated but not freed.
+The user can enable or disable the tracking by editing `src/utils/def.hpp`.
+By default, automatic object tracking is disabled.
+
+.. _rocalution_verbose:
 
 Verbose Output
 **************
-rocALUTION provides different levels of output messages. They can be modified in `src/utils/def.hpp` before the compilation of the library. By setting a higher level, the user will obtain more detailed information about the internal calls and data transfers to and from the accelerators.
+rocALUTION provides different levels of output messages.
+The `VERBOSE_LEVEL` can be modified in `src/utils/def.hpp` before the compilation of the library.
+By setting a higher level, the user will obtain more detailed information about the internal calls and data transfers to and from the accelerators.
+By default, `VERBOSE_LEVEL` is set to 2.
+
+.. _rocalution_logging:
 
 Verbose Output and MPI
 **********************
-To prevent all MPI processes from printing information to screen, the default configuration is that only RANK 0 outputs information. The user can change the RANK or allow all RANKs to print by modifying `src/utils/def.hpp`. If file logging is enabled, all ranks write into the corresponding log files.
+To prevent all MPI processes from printing information to `stdout`, the default configuration is that only `RANK 0` outputs information.
+The user can change the `RANK` or allow all processes to print setting `LOG_MPI_RANK` to 1 in `src/utils/def.hpp`.
+If file logging is enabled, all ranks write into the corresponding log files.
+
+.. _rocalution_debug:
 
 Debug Output
 ************
-Debug output will print almost every detail in the program, including object constructor / destructor, address of the object, memory allocation, data transfers, all function calls for matrices, vectors, solvers and preconditioners. The debug flag can be set in `src/utils/def.hpp`. When enabled, additional *assert()s* are being checked during the computation. This might decrease the performance of some operations significantly.
+Debug output will print almost every detail in the program, including object constructor / destructor, address of the object, memory allocation, data transfers, all function calls for matrices, vectors, solvers and preconditioners.
+The flag `DEBUG_MODE` can be set in `src/utils/def.hpp`.
+When enabled, additional `assert()s` are being checked during the computation.
+This might decrease performance of some operations significantly.
 
-Logging
-*******
-TODO
+File Logging
+************
+rocALUTION trace file logging can be enabled by setting the environment variable `ROCALUTION_LAYER` to 1.
+rocALUTION will then log each rocALUTION function call including object constructor / destructor, address of the object, memory allocation, data transfers, all function calls for matrices, vectors, solvers and preconditioners.
+The log file will be placed in the working directory.
+The log file naming convention is `rocalution-rank-<rank>-<time_since_epoch_in_msec>.log`.
+By default, the environment variable `ROCALUTION_LAYER` is unset, and logging is disabled.
+
+.. note:: Performance might degrade when logging is enabled.
 
 .. _rocalution_version:
 
@@ -439,6 +478,7 @@ For checking the rocALUTION version in your code, you can use the pre-defined ma
   #define __ROCALUTION_VER_MAJOR  // version major
   #define __ROCALUTION_VER_MINOR  // version minor
   #define __ROCALUTION_VER_PATCH  // version patch
+  #define __ROCALUTION_VER_TWEAK  // commit id (sha-1)
 
   #define __ROCALUTION_VER_PRE    // version pre-release (alpha or beta)
 
@@ -564,9 +604,9 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{coo_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
-    \text{coo_row_ind}[8] & = \{0, 0, 0, 1, 1, 2, 2, 2\} \\
-    \text{coo_col_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
+    \text{coo\_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
+    \text{coo\_row\_ind}[8] & = \{0, 0, 0, 1, 1, 2, 2, 2\} \\
+    \text{coo\_col\_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
   \end{array}
 
 CSR storage format
@@ -600,9 +640,9 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{csr_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
-    \text{csr_row_ptr}[4] & = \{0, 3, 5, 8\} \\
-    \text{csr_col_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
+    \text{csr\_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
+    \text{csr\_row\_ptr}[4] & = \{0, 3, 5, 8\} \\
+    \text{csr\_col\_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
   \end{array}
 
 ELL storage format
@@ -620,7 +660,7 @@ ell_col_ind array of ``m times ell_width`` elements containing the column indice
 
 .. note:: The ELL matrix is assumed to be stored in column-major format. Rows with less than ``ell_width`` non-zero elements are padded with zeros (``ell_val``) and :math:`-1` (``ell_col_ind``).
 
-Consider the following :math:`3 \times 5` matrix and the corresponding ELL structures, with :math:`m = 3, n = 5` and :math:`\text{ell_width} = 3`:
+Consider the following :math:`3 \times 5` matrix and the corresponding ELL structures, with :math:`m = 3, n = 5` and :math:`\text{ell\_width} = 3`:
 
 .. math::
 
@@ -635,8 +675,8 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{ell_val}[9] & = \{1.0, 4.0, 6.0, 2.0, 5.0, 7.0, 3.0, 0.0, 8.0\} \\
-    \text{ell_col_ind}[9] & = \{0, 1, 0, 1, 2, 3, 3, -1, 4\}
+    \text{ell\_val}[9] & = \{1.0, 4.0, 6.0, 2.0, 5.0, 7.0, 3.0, 0.0, 8.0\} \\
+    \text{ell\_col\_ind}[9] & = \{0, 1, 0, 1, 2, 3, 3, -1, 4\}
   \end{array}
 
 .. _DIA storage format:
@@ -671,8 +711,8 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{dia_val}[20] & = \{\ast, 0, 5, 0, 9, 1, 3, 6, 8, 10, 2, 4, 7, 0, \ast, 11, 0, \ast, \ast, \ast\} \\
-    \text{dia_offset}[4] & = \{-1, 0, 1, 3\}
+    \text{dia\_val}[20] & = \{\ast, 0, 5, 0, 9, 1, 3, 6, 8, 10, 2, 4, 7, 0, \ast, 11, 0, \ast, \ast, \ast\} \\
+    \text{dia\_offset}[4] & = \{-1, 0, 1, 3\}
   \end{array}
 
 .. _HYB storage format:

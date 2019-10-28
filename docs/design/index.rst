@@ -14,5 +14,6 @@ rocALUTION Design Document
    guides
    functable
    targets
+   clients
    api
    indtab

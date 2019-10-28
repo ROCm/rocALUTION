@@ -1,6 +1,8 @@
 *********************
 Design and Philosophy
 *********************
+rocALUTION is written in C++ and HIP.
+
 The main idea of the rocALUTION objects is that they are separated from the actual hardware specification.
 Once you declare a matrix, a vector or a solver they are initially allocated on the host (CPU).
 Then, every object can be moved to a selected accelerator by a simple function call.
@@ -57,7 +59,7 @@ The `Base`-class pointer will always point towards either the `Host`-class or th
 `Base`-classes and their derivatives are further explained in :ref:`rocalution_base_classes`.
 
 Furthermore, each global object, derived from an operator or vector, embeds two `Local`-classes of same type to store the interior and ghost part of the global object (e.g. a :cpp:class:`GlobalVector <rocalution::GlobalVector>` contains two :cpp:class:`LocalVector <rocalution::LocalVector>`).
-For more details on distributed data structures, see :ref:`rocalution_multinode`.
+For more details on distributed data structures, see the user manual.
 
 .. _rocalution_base_classes:
 
@@ -76,7 +78,7 @@ Each global operator and vector need to be initialized with a valid parallel man
 For many distributed simulations, the underlying operator is already distributed.
 This information need to be passed to the parallel manager.
 All communication functionality for the implementation of global algorithms is available in the rocALUTION communicator in `src/utils/communicator.hpp`.
-For more details on distributed data structures, see :ref:`rocalution_multinode`.
+For more details on distributed data structures, see the user manual.
 
 The `src/solvers/` directory
 ----------------------------
