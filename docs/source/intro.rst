@@ -1,9 +1,8 @@
-************
 Introduction
-************
+============
 
 Overview
-========
+--------
 rocALUTION is a sparse linear algebra library with focus on exploring fine-grained parallelism, targeting modern processors and accelerators including multi/many-core CPU and GPU platforms. The main goal of this package is to provide a portable library for iterative sparse methods on state of the art hardware. rocALUTION can be seen as middle-ware between different parallel backends and application specific packages.
 
 The major features and characteristics of the library are
@@ -43,7 +42,7 @@ The code is open-source under MIT license, see :ref:`rocalution_license` and hos
 .. _rocalution_license:
 
 License
-=======
+-------
 
 rocALUTION is distributed as open-source under the following license:
 
@@ -60,23 +59,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 .. _rocalution_contributing:
 
 Contributing
-============
+------------
 
 .. _rocalution_contrib_license:
 
 Contribution License Agreement
-------------------------------
+``````````````````````````````
 
 #. The code I am contributing is mine, and I have the right to license it.
 #. By submitting a pull request for this project I am granting you a license to distribute said code under the MIT License for the project.
 
 How to contribute
------------------
+`````````````````
 Code contriubtion guidelines closely follow the model of GitHub pull-requests.
 This repository follows the git flow workflow, which dictates a `master` branch where releases are cut, and a `develop` branch which serves as an integration branch for new code.
 
 Pull-request guidelines
------------------------
+```````````````````````
 - Target the `**develop**` branch for integration.
 - Ensure code builds successfully.
 - Do not break existing test cases.
@@ -87,7 +86,7 @@ Pull-request guidelines
   - Performance must approach the compute bound limit or memory bound limit.
 
 StyleGuide
-----------
+``````````
 This project follows the `CPP Core guidelines <https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md>`_, with few modifications or additions noted below.
 All pull-requests should in good faith attempt to follow the guidelines stated therein, but we recognize that the content is lengthy.
 Below we list our primary concerns when reviewing pull-requests.

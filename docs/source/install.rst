@@ -1,9 +1,8 @@
-***********************
 Building and Installing
-***********************
+=======================
 
 Installing from AMD ROCm repository
-===================================
+-----------------------------------
 rocALUTION can be installed from `AMD ROCm repository <https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories>`_.
 The repository hosts the single-node, accelerator enabled version of the library.
 If a different setup is required, e.g. multi-node support, rocALUTION need to be built from source, see :ref:`rocalution_building`.
@@ -21,7 +20,7 @@ rocALUTION has the following run-time dependencies
 .. _rocalution_building:
 
 Building from GitHub repository
-===============================
+-------------------------------
 
 To build rocALUTION from source, the following compile-time and run-time dependencies must be met
 
@@ -36,7 +35,7 @@ To build rocALUTION from source, the following compile-time and run-time depende
 - `googletest <https://github.com/google/googletest>`_ (optional, for clients)
 
 Download rocALUTION
--------------------
+```````````````````
 The rocALUTION source code is available at the `rocALUTION GitHub page <https://github.com/ROCmSoftwarePlatform/rocALUTION>`_.
 Download the master branch using:
 
@@ -51,7 +50,7 @@ Below are steps to build different packages of the library, including dependenci
 It is recommended to install rocALUTION using the `install.sh` script.
 
 Using `install.sh` script to build rocALUTION with dependencies
----------------------------------------------------------------
+```````````````````````````````````````````````````````````````
 The following table lists common uses of `install.sh` to build dependencies + library. Accelerator support via HIP and OpenMP will be enabled by default, whereas MPI is disabled.
 
 .. tabularcolumns::
@@ -69,7 +68,7 @@ Command               Description
 ===================== ====
 
 Using `install.sh` script to build rocALUTION with dependencies and clients
----------------------------------------------------------------------------
+```````````````````````````````````````````````````````````````````````````
 The client contains example code, unit tests and benchmarks. Common uses of `install.sh` to build them are listed in the table below.
 
 .. tabularcolumns::
@@ -86,7 +85,7 @@ Command             Description
 =================== ====
 
 Using individual commands to build rocALUTION
----------------------------------------------
+`````````````````````````````````````````````
 CMake 3.5 or later is required in order to build rocALUTION without the use of `install.sh`.
 
 rocALUTION can be built with cmake using the following commands:
@@ -145,7 +144,7 @@ If you do not copy the library to a specific location you can add the path under
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_rocalution>
 
 Common build problems
----------------------
+`````````````````````
 #. **Issue:** HIP (/opt/rocm/hip) was built using hcc 1.0.xxx-xxx-xxx-xxx, but you are using /opt/rocm/bin/hcc with version 1.0.yyy-yyy-yyy-yyy from hipcc (version mismatch). Please rebuild HIP including cmake or update HCC_HOME variable.
 
    **Solution:** Download HIP from GitHub and use hcc to `build from source <https://github.com/ROCm-Developer-Tools/HIP/blob/master/INSTALL.md>`_ and then use the built HIP instead of /opt/rocm/hip.
@@ -173,7 +172,7 @@ Common build problems
    **Solution:** Install `rocBLAS <https://github.com/ROCmSoftwarePlatform/rocBLAS>`_ either from source or from `AMD ROCm repository <https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories>`_.
 
 Simple Test
------------
+```````````
 You can test the installation by running a CG solver on a sparse matrix.
 After successfully compiling the library, the CG solver example can be executed.
 
