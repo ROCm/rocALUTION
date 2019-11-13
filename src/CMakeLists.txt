@@ -186,8 +186,8 @@ rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_hcc (>= 1.5.19211), rocsparse (>= 1.1.10), rocblas (>= 2.2.6), rocprim (>= 2.5.0)")
-  set(CPACK_RPM_PACKAGE_REQUIRES "hip_hcc >= 1.5.19211, rocsparse >= 1.1.10, rocblas >= 2.2.6, rocprim >= 2.5.0")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-dev (>= 2.5.27), rocsparse (>= 1.1.10), rocblas (>= 2.2.6), rocprim (>= 2.5.0)")
+  set(CPACK_RPM_PACKAGE_REQUIRES "rocm-dev >= 2.5.27, rocsparse >= 1.1.10, rocblas >= 2.2.6, rocprim >= 2.5.0")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
