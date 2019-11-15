@@ -46,7 +46,7 @@ if(NOT TARGET rocalution)
   # This project may compile dependencies for clients
   project(rocalution-clients LANGUAGES CXX)
 
-  find_package(rocalution REQUIRED CONFIG PATHS /opt/rocm/rocalution)
+  find_package(rocalution REQUIRED CONFIG PATHS ${ROCM_PATH}/rocalution /opt/rocm/rocalution)
 
   option(BUILD_CLIENTS_SAMPLES "Build examples." ON)
   option(SUPPORT_MPI "Build MPI examples." OFF)
