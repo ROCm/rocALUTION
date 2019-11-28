@@ -9,4 +9,5 @@ doxygen Doxyfile
 cd source
 make clean
 make html
+#make latexpdf
 cd ..
