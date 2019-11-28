@@ -111,9 +111,9 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{coo\_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
-    \text{coo\_row\_ind}[8] & = \{0, 0, 0, 1, 1, 2, 2, 2\} \\
-    \text{coo\_col\_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
+    \text{coo_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
+    \text{coo_row_ind}[8] & = \{0, 0, 0, 1, 1, 2, 2, 2\} \\
+    \text{coo_col_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
   \end{array}
 
 CSR storage format
@@ -147,9 +147,9 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{csr\_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
-    \text{csr\_row\_ptr}[4] & = \{0, 3, 5, 8\} \\
-    \text{csr\_col\_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
+    \text{csr_val}[8] & = \{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0\} \\
+    \text{csr_row_ptr}[4] & = \{0, 3, 5, 8\} \\
+    \text{csr_col_ind}[8] & = \{0, 1, 3, 1, 2, 0, 3, 4\}
   \end{array}
 
 ELL storage format
@@ -167,7 +167,7 @@ ell_col_ind array of ``m times ell_width`` elements containing the column indice
 
 .. note:: The ELL matrix is assumed to be stored in column-major format. Rows with less than ``ell_width`` non-zero elements are padded with zeros (``ell_val``) and :math:`-1` (``ell_col_ind``).
 
-Consider the following :math:`3 \times 5` matrix and the corresponding ELL structures, with :math:`m = 3, n = 5` and :math:`\text{ell\_width} = 3`:
+Consider the following :math:`3 \times 5` matrix and the corresponding ELL structures, with :math:`m = 3, n = 5` and :math:`\text{ell_width} = 3`:
 
 .. math::
 
@@ -182,8 +182,8 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{ell\_val}[9] & = \{1.0, 4.0, 6.0, 2.0, 5.0, 7.0, 3.0, 0.0, 8.0\} \\
-    \text{ell\_col\_ind}[9] & = \{0, 1, 0, 1, 2, 3, 3, -1, 4\}
+    \text{ell_val}[9] & = \{1.0, 4.0, 6.0, 2.0, 5.0, 7.0, 3.0, 0.0, 8.0\} \\
+    \text{ell_col_ind}[9] & = \{0, 1, 0, 1, 2, 3, 3, -1, 4\}
   \end{array}
 
 .. _DIA storage format:
@@ -218,8 +218,8 @@ where
 .. math::
 
   \begin{array}{ll}
-    \text{dia\_val}[20] & = \{\ast, 0, 5, 0, 9, 1, 3, 6, 8, 10, 2, 4, 7, 0, \ast, 11, 0, \ast, \ast, \ast\} \\
-    \text{dia\_offset}[4] & = \{-1, 0, 1, 3\}
+    \text{dia_val}[20] & = \{\ast, 0, 5, 0, 9, 1, 3, 6, 8, 10, 2, 4, 7, 0, \ast, 11, 0, \ast, \ast, \ast\} \\
+    \text{dia_offset}[4] & = \{-1, 0, 1, 3\}
   \end{array}
 
 .. _HYB storage format:

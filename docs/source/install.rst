@@ -44,8 +44,6 @@ Download the master branch using:
   $ git clone -b master https://github.com/ROCmSoftwarePlatform/rocALUTION.git
   $ cd rocALUTION
 
-.. note:: If you want to contribute to rocALUTION, you will need to checkout the develop branch instead of the master branch. See :ref:`rocalution_contributing` for further details.
-
 Below are steps to build different packages of the library, including dependencies and clients.
 It is recommended to install rocALUTION using the `install.sh` script.
 

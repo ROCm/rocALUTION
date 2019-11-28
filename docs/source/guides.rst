@@ -9,7 +9,6 @@ Also, users that are not interested in using accelerators will not be confronted
 In the following sections, different levels of functionality enhancements are illustrated.
 These examples can be used as guidelines to extend rocALUTION step by step with your own routines.
 Please note, that user added routines can also be added to the main GitHub repository using pull requests.
-In this case, please acknowledge the :ref:`contribution guidelines <rocalution_contributing>` and the :ref:`contribution license agreement <rocalution_contrib_license>`.
 
 LocalMatrix Functionlity Extension
 ==================================
