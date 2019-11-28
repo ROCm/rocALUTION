@@ -34,7 +34,7 @@ rocALUTIONCIhost:
     rocalution.compiler.compiler_path = 'c++'
 
     // Define test architectures, optional rocm version argument is available
-    def nodes = new dockerNodes(['dkms'], rocalution)
+    def nodes = new dockerNodes(['ubuntu'], rocalution)
 
     boolean formatCheck = true
 
