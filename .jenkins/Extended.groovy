@@ -10,25 +10,23 @@ import com.amd.docker.*
 import java.nio.file.Path
 
 
-rocALUTIONCImpi:
+rocALUTIONCI:
 {
 
-    def rocalution = new rocProject('rocALUTION')
+    def rocalution = new rocProject('rocALUTION', 'Extended')
     // customize for project
-    rocalution.paths.build_command = './install.sh -c --host --mpi --no-openmp'
+    rocalution.paths.build_command = './install.sh -c'
     rocalution.compiler.compiler_name = 'c++'
     rocalution.compiler.compiler_path = 'c++'
 
     // Define test architectures, optional rocm version argument is available
-    def nodes = new dockerNodes(['ubuntu'], rocalution)
+    def nodes = new dockerNodes(['gfx900 && ubuntu', 'gfx906 && centos7', 'gfx906 && sles'], rocalution)
 
     boolean formatCheck = true
 
     def compileCommand =
     {
         platform, project->
-
-        project.paths.construct_build_prefix()
 
         commonGroovy = load "${project.paths.project_src_prefix}/.jenkins/Common.groovy"
         commonGroovy.runCompileCommand(platform, project)

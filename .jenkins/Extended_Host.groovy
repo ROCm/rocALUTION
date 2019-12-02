@@ -13,7 +13,7 @@ import java.nio.file.Path
 rocALUTIONCIhost:
 {
 
-    def rocalution = new rocProject('rocALUTION')
+    def rocalution = new rocProject('rocALUTION', 'Extended_Host')
     // customize for project
     rocalution.paths.build_command = './install.sh -c --host'
     rocalution.compiler.compiler_name = 'c++'

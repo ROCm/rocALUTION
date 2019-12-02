@@ -13,7 +13,7 @@ import java.nio.file.Path
 rocALUTIONCI:
 {
 
-    def rocalution = new rocProject('rocALUTION')
+    def rocalution = new rocProject('rocALUTION', 'PreCheckin')
     // customize for project
     rocalution.paths.build_command = './install.sh -c'
     rocalution.compiler.compiler_name = 'c++'
