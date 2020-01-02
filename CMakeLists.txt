@@ -34,7 +34,6 @@ endif()
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-     ${ROCM_PATH}/hip/cmake
      /opt/rocm/hip/cmake
 )
 
