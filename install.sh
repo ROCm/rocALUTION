@@ -14,6 +14,7 @@ function display_help()
 #  echo "    [--prefix] Specify an alternate CMAKE_INSTALL_PREFIX for cmake"
   echo "    [-i|--install] install after build"
   echo "    [-d|--dependencies] install build dependencies"
+  echo "    [-r]--relocatable] create a package to support relocatable ROCm"
   echo "    [-c|--clients] build library clients too (combines with -i & -d)"
   echo "    [-g|--debug] -DCMAKE_BUILD_TYPE=Debug (default is =Release)"
   echo "    [--build-dir] build directory (default is ./build)"
@@ -241,13 +242,15 @@ supported_distro
 # #################################################
 install_package=false
 install_dependencies=false
-install_prefix=rocalution-install
 build_clients=false
 build_host=false
 build_mpi=false
 build_omp=true
 build_release=true
 build_dir=./build
+install_prefix=rocalution-install
+rocm_path=/opt/rocm
+build_relocatable=false
 
 # #################################################
 # Parameter parsing
@@ -256,7 +259,7 @@ build_dir=./build
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi --options hicgd -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi,relocatable --options hicgdr -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -283,6 +286,9 @@ while true; do
         shift ;;
     -c|--clients)
         build_clients=true
+        shift ;;
+    -r|--relocatable)
+        build_relocatable=true
         shift ;;
     -g|--debug)
         build_release=false
@@ -321,6 +327,17 @@ else
   rm -rf ${build_dir}/debug
 fi
 
+if [[ "${build_relocatable}" == true ]]; then
+    if ! [ -z ${ROCM_PATH+x} ]; then
+        rocm_path=${ROCM_PATH}
+    fi
+
+    rocm_rpath=" -Wl,--enable-new-dtags -Wl,--rpath,/opt/rocm/lib:/opt/rocm/lib64"
+    if ! [ -z ${ROCM_RPATH+x} ]; then
+        rocm_rpath=" -Wl,--enable-new-dtags -Wl,--rpath,${ROCM_RPATH}"
+    fi
+fi
+
 # Default cmake executable is called cmake
 cmake_executable=cmake
 
@@ -349,7 +366,11 @@ fi
 
 # We append customary rocm path; if user provides custom rocm path in ${path}, our
 # hard-coded path has lesser priority
-export PATH=${PATH}:/opt/rocm/bin
+if [[ "${build_relocatable}" == true ]]; then
+    export PATH=${rocm_path}/bin:${PATH}
+else
+    export PATH=${PATH}:/opt/rocm/bin
+fi
 
 pushd .
   # #################################################
@@ -390,10 +411,25 @@ pushd .
   fi
 
   # cpack
-  cmake_common_options="${cmake_common_options} -DCPACK_SET_DESTDIR=OFF -DCPACK_PACKAGING_INSTALL_PREFIX=/opt/rocm"
+  if [[ "${build_relocatable}" == true ]]; then
+    cmake_common_options="${cmake_common_options} -DCPACK_SET_DESTDIR=OFF -DCPACK_PACKAGING_INSTALL_PREFIX=${rocm_path}"
+  else
+    cmake_common_options="${cmake_common_options} -DCPACK_SET_DESTDIR=OFF -DCPACK_PACKAGING_INSTALL_PREFIX=/opt/rocm"
+  fi
 
   # Build library with AMD toolchain because of existense of device kernels
-  ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=rocalution-install ../..
+  if [[ "${build_relocatable}" == true ]]; then
+    ${cmake_executable} ${cmake_common_options} ${cmake_client_options} \
+      -DCMAKE_INSTALL_PREFIX=${rocm_path} \
+      -DCMAKE_SHARED_LINKER_FLAGS=${rocm_rpath} \
+      -DCMAKE_PREFIX_PATH="${rocm_path} ${rocm_path}/hcc ${rocm_path}/hip" \
+      -DCMAKE_MODULE_PATH="${rocm_path}/hip/cmake" \
+      -DROCM_DISABLE_LDCONFIG=ON \
+      -DROCM_PATH=${rocm_path} ../..
+  else
+    ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=${install_prefix} -DROCM_PATH=${rocm_path} ../..
+  fi
+
   check_exit_code
 
   make -j$(nproc) install
