@@ -22,6 +22,8 @@ rocALUTIONCI:
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(['gfx900 && ubuntu', 'gfx906 && centos7', 'gfx906 && sles'], rocalution)
 
+    def commonGroovy
+
     boolean formatCheck = true
 
     def compileCommand =
