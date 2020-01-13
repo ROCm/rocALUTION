@@ -22,7 +22,7 @@ rocALUTIONCImpi:
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(['ubuntu'], rocalution)
 
-    commonGroovy
+    def commonGroovy
 
     boolean formatCheck = true
 
