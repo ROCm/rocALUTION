@@ -38,7 +38,7 @@ std::string cg_precond[] = {"None",
                             //                            "SGS",
                             //                            "ILU",
                             "ILUT",
-                            //                            "IC",
+                            "IC",
                             "MCSGS"}; //,
 //                            "MCILU"};
 unsigned int cg_format[] = {1, 2, 4, 5, 6, 7};

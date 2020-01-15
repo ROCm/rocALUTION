@@ -180,6 +180,45 @@ namespace rocalution
                                        rocsparse_mat_info        info,
                                        void*                     temp_buffer);
 
+    // rocsparse csric0 buffer size
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsric0_buffer_size(rocsparse_handle          handle,
+                                                  int                       m,
+                                                  int                       nnz,
+                                                  const rocsparse_mat_descr descr,
+                                                  ValueType*                csr_val,
+                                                  const int*                csr_row_ptr,
+                                                  const int*                csr_col_ind,
+                                                  rocsparse_mat_info        info,
+                                                  size_t*                   buffer_size);
+
+    // rocsparse csric0 analysis
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsric0_analysis(rocsparse_handle          handle,
+                                               int                       m,
+                                               int                       nnz,
+                                               const rocsparse_mat_descr descr,
+                                               ValueType*                csr_val,
+                                               const int*                csr_row_ptr,
+                                               const int*                csr_col_ind,
+                                               rocsparse_mat_info        info,
+                                               rocsparse_analysis_policy analysis,
+                                               rocsparse_solve_policy    solve,
+                                               void*                     temp_buffer);
+
+    // rocsparse csric0
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsric0(rocsparse_handle          handle,
+                                      int                       m,
+                                      int                       nnz,
+                                      const rocsparse_mat_descr descr,
+                                      ValueType*                csr_val,
+                                      const int*                csr_row_ptr,
+                                      const int*                csr_col_ind,
+                                      rocsparse_mat_info        info,
+                                      rocsparse_solve_policy    policy,
+                                      void*                     temp_buffer);
+
     // rocsparse csrilu0 buffer size
     template <typename ValueType>
     rocsparse_status rocsparseTcsrilu0_buffer_size(rocsparse_handle          handle,

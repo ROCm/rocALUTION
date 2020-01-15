@@ -28,10 +28,16 @@
 
 typedef std::tuple<int, std::string, unsigned int> bicgstab_tuple;
 
-int         bicgstab_size[] = {7, 63};
-std::string bicgstab_precond[]
-    = {"None", "Chebyshev", "SPAI", "TNS", "Jacobi", /*"GS", "ILU",*/ "ILUT", "MCGS" /*, "MCILU"*/};
-unsigned int bicgstab_format[] = {1, 2, 4, 5, 6, 7};
+int          bicgstab_size[]    = {7, 63};
+std::string  bicgstab_precond[] = {"None",
+                                  "Chebyshev",
+                                  "SPAI",
+                                  "TNS",
+                                  "Jacobi",
+                                  /*"GS", "ILU",*/ "ILUT",
+                                  "IC",
+                                  "MCGS" /*, "MCILU"*/};
+unsigned int bicgstab_format[]  = {1, 2, 4, 5, 6, 7};
 
 class parameterized_bicgstab : public testing::TestWithParam<bicgstab_tuple>
 {

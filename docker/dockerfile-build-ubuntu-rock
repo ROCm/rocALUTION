@@ -19,8 +19,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     sudo \
     mpi-default-bin \
     mpi-default-dev \
-    libomp-dev \
     libomp5 \
+    libomp-dev \
     ca-certificates \
     git \
     make \

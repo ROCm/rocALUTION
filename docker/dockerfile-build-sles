@@ -16,13 +16,12 @@ ARG user_uid
 # * libhsakmt.so: libnuma1
 RUN zypper refresh && zypper -n --no-gpg-checks install \
     sudo \
-#    rock-dkms \
     mpich \
     mpich-devel \
     ca-certificates \
     git \
-    cmake \
     make \
+    cmake \
     gcc-c++ \
     pkg-config \
     dpkg \
