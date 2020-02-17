@@ -35,12 +35,15 @@
 #include "hip_kernels_vector.hpp"
 #include "hip_utils.hpp"
 
+#ifdef SUPPORT_COMPLEX
+#include <complex>
+#include <hip/hip_complex.h>
+#endif
+
 #include <hip/hip_runtime.h>
-#include <rocprim/rocprim.hpp>
 
 namespace rocalution
 {
-
     template <typename ValueType>
     HIPAcceleratorVector<ValueType>::HIPAcceleratorVector()
     {
@@ -796,7 +799,7 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_scaleadd<ValueType, int>),
+            hipLaunchKernelGGL((kernel_scaleadd),
                                GridSize,
                                BlockSize,
                                0,
@@ -955,13 +958,13 @@ namespace rocalution
         if(this->size_ > 0)
         {
             rocblas_status status;
-            status = rocblasTdot(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
-                                 this->size_,
-                                 this->vec_,
-                                 1,
-                                 cast_x->vec_,
-                                 1,
-                                 &res);
+            status = rocblasTdotc(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                                  this->size_,
+                                  this->vec_,
+                                  1,
+                                  cast_x->vec_,
+                                  1,
+                                  &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
         }
 
@@ -989,7 +992,7 @@ namespace rocalution
         if(this->size_ > 0)
         {
             rocblas_status status;
-            status = rocblasTdotc(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+            status = rocblasTdotu(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                                   this->size_,
                                   this->vec_,
                                   1,
@@ -1048,13 +1051,13 @@ namespace rocalution
             ValueType* dres = NULL;
             allocate_hip(1, &dres);
 
-            rocprim::reduce(
-                buffer, size, this->vec_, dres, 0, this->size_, rocprim::plus<ValueType>());
+            rocprimTreduce(buffer, size, this->vec_, dres, this->size_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMalloc(&buffer, size);
 
-            rocprim::reduce(
-                buffer, size, this->vec_, dres, 0, this->size_, rocprim::plus<ValueType>());
+            rocprimTreduce(buffer, size, this->vec_, dres, this->size_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipFree(buffer);
 
@@ -1443,6 +1446,26 @@ namespace rocalution
             hipLaunchKernelGGL(
                 (kernel_power<ValueType, int>), GridSize, BlockSize, 0, 0, size, power, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <>
+    void HIPAcceleratorVector<std::complex<float>>::Power(double power)
+    {
+        if(this->size_ > 0)
+        {
+            LOG_INFO("HIPAcceleratorVector::Power(), no pow() for complex float in HIP");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <>
+    void HIPAcceleratorVector<std::complex<double>>::Power(double power)
+    {
+        if(this->size_ > 0)
+        {
+            LOG_INFO("HIPAcceleratorVector::Power(), no pow() for complex double in HIP");
+            FATAL_ERROR(__FILE__, __LINE__);
         }
     }
 

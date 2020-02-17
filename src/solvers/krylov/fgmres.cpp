@@ -610,7 +610,7 @@ namespace rocalution
                                                                            ValueType& dy) const
     {
         ValueType temp = dx;
-        dx             = c * dx + s * dy;
+        dx             = rocalution_conj(c) * dx + rocalution_conj(s) * dy;
         dy             = -s * temp + c * dy;
     }
 

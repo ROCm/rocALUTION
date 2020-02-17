@@ -1069,6 +1069,8 @@ namespace rocalution
     {
         log_debug(this, "LocalMatrix::WriteFileMTX()", filename);
 
+        LOG_INFO("WriteFileMTX: filename=" << filename << "; writing...");
+
 #ifdef DEBUG_MODE
         this->Check();
 #endif
@@ -1099,12 +1101,16 @@ namespace rocalution
                 FATAL_ERROR(__FILE__, __LINE__);
             }
         }
+
+        LOG_INFO("WriteFileMTX: filename=" << filename << "; done");
     }
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename)
     {
         log_debug(this, "LocalMatrix::ReadFileCSR()", filename);
+
+        LOG_INFO("ReadFileCSR: filename=" << filename << "; reading...");
 
         this->Clear();
 
@@ -1147,12 +1153,16 @@ namespace rocalution
 #ifdef DEBUG_MODE
         this->Check();
 #endif
+
+        LOG_INFO("ReadFileCSR: filename=" << filename << "; done");
     }
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const
     {
         log_debug(this, "LocalMatrix::WriteFileCSR()", filename);
+
+        LOG_INFO("WriteFileCSR: filename=" << filename << "; writing...");
 
 #ifdef DEBUG_MODE
         this->Check();
@@ -1184,6 +1194,8 @@ namespace rocalution
                 FATAL_ERROR(__FILE__, __LINE__);
             }
         }
+
+        LOG_INFO("WriteFileCSR: filename=" << filename << "; done");
     }
 
     template <typename ValueType>

@@ -24,8 +24,6 @@
 #ifndef ROCALUTION_HIP_HIP_KERNELS_GENERAL_HPP_
 #define ROCALUTION_HIP_HIP_KERNELS_GENERAL_HPP_
 
-#include "hip_complex.hpp"
-
 #include <hip/hip_runtime.h>
 
 namespace rocalution
@@ -41,7 +39,7 @@ namespace rocalution
             return;
         }
 
-        make_ValueType(data[ind], 1);
+        data[ind] = static_cast<ValueType>(1);
     }
 
     template <typename IndexType>

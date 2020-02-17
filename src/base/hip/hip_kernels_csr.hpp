@@ -25,6 +25,7 @@
 #define ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_
 
 #include "../matrix_formats_ind.hpp"
+#include "hip_utils.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -164,8 +165,7 @@ namespace rocalution
         {
             if(ai == col[aj])
             {
-                make_ValueType(vec[ai], 1);
-                vec[ai] = vec[ai] / val[aj];
+                vec[ai] = static_cast<ValueType>(1) / val[aj];
             }
         }
     }
@@ -760,7 +760,7 @@ namespace rocalution
             return;
         }
 
-        make_ValueType(vec[ai], 0);
+        vec[ai] = static_cast<ValueType>(0);
 
         for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {

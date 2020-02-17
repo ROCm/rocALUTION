@@ -29,6 +29,7 @@
 #include "hip_sparse.hpp"
 #include "hip_utils.hpp"
 
+#include <complex>
 #include <hip/hip_runtime_api.h>
 #include <rocprim/rocprim.hpp>
 
@@ -541,6 +542,22 @@ namespace rocalution
                                  const MatrixCSR<double, int>& src,
                                  MatrixCOO<double, int>*       dst);
 
+#ifdef SUPPORT_COMPLEX
+    template bool csr_to_coo_hip(const rocsparse_handle                     handle,
+                                 int                                        nnz,
+                                 int                                        nrow,
+                                 int                                        ncol,
+                                 const MatrixCSR<std::complex<float>, int>& src,
+                                 MatrixCOO<std::complex<float>, int>*       dst);
+
+    template bool csr_to_coo_hip(const rocsparse_handle                      handle,
+                                 int                                         nnz,
+                                 int                                         nrow,
+                                 int                                         ncol,
+                                 const MatrixCSR<std::complex<double>, int>& src,
+                                 MatrixCOO<std::complex<double>, int>*       dst);
+#endif
+
     // coo_to_csr
     template bool coo_to_csr_hip(const rocsparse_handle       handle,
                                  int                          nnz,
@@ -555,6 +572,22 @@ namespace rocalution
                                  int                           ncol,
                                  const MatrixCOO<double, int>& src,
                                  MatrixCSR<double, int>*       dst);
+
+#ifdef SUPPORT_COMPLEX
+    template bool coo_to_csr_hip(const rocsparse_handle                     handle,
+                                 int                                        nnz,
+                                 int                                        nrow,
+                                 int                                        ncol,
+                                 const MatrixCOO<std::complex<float>, int>& src,
+                                 MatrixCSR<std::complex<float>, int>*       dst);
+
+    template bool coo_to_csr_hip(const rocsparse_handle                      handle,
+                                 int                                         nnz,
+                                 int                                         nrow,
+                                 int                                         ncol,
+                                 const MatrixCOO<std::complex<double>, int>& src,
+                                 MatrixCSR<std::complex<double>, int>*       dst);
+#endif
 
     // csr_to_ell
     template bool csr_to_ell_hip(const rocsparse_handle       handle,
@@ -577,6 +610,28 @@ namespace rocalution
                                  const rocsparse_mat_descr     dst_descr,
                                  int*                          nnz_ell);
 
+#ifdef SUPPORT_COMPLEX
+    template bool csr_to_ell_hip(const rocsparse_handle                     handle,
+                                 int                                        nnz,
+                                 int                                        nrow,
+                                 int                                        ncol,
+                                 const MatrixCSR<std::complex<float>, int>& src,
+                                 const rocsparse_mat_descr                  src_descr,
+                                 MatrixELL<std::complex<float>, int>*       dst,
+                                 const rocsparse_mat_descr                  dst_descr,
+                                 int*                                       nnz_ell);
+
+    template bool csr_to_ell_hip(const rocsparse_handle                      handle,
+                                 int                                         nnz,
+                                 int                                         nrow,
+                                 int                                         ncol,
+                                 const MatrixCSR<std::complex<double>, int>& src,
+                                 const rocsparse_mat_descr                   src_descr,
+                                 MatrixELL<std::complex<double>, int>*       dst,
+                                 const rocsparse_mat_descr                   dst_descr,
+                                 int*                                        nnz_ell);
+#endif
+
     // ell_to_csr
     template bool ell_to_csr_hip(const rocsparse_handle       handle,
                                  int                          nnz,
@@ -598,6 +653,28 @@ namespace rocalution
                                  const rocsparse_mat_descr     dst_descr,
                                  int*                          nnz_csr);
 
+#ifdef SUPPORT_COMPLEX
+    template bool ell_to_csr_hip(const rocsparse_handle                     handle,
+                                 int                                        nnz,
+                                 int                                        nrow,
+                                 int                                        ncol,
+                                 const MatrixELL<std::complex<float>, int>& src,
+                                 const rocsparse_mat_descr                  src_descr,
+                                 MatrixCSR<std::complex<float>, int>*       dst,
+                                 const rocsparse_mat_descr                  dst_descr,
+                                 int*                                       nnz_csr);
+
+    template bool ell_to_csr_hip(const rocsparse_handle                      handle,
+                                 int                                         nnz,
+                                 int                                         nrow,
+                                 int                                         ncol,
+                                 const MatrixELL<std::complex<double>, int>& src,
+                                 const rocsparse_mat_descr                   src_descr,
+                                 MatrixCSR<std::complex<double>, int>*       dst,
+                                 const rocsparse_mat_descr                   dst_descr,
+                                 int*                                        nnz_csr);
+#endif
+
     // csr_to_dia
     template bool csr_to_dia_hip(int                          blocksize,
                                  int                          nnz,
@@ -616,6 +693,26 @@ namespace rocalution
                                  MatrixDIA<double, int>*       dst,
                                  int*                          nnz_dia,
                                  int*                          num_diag);
+
+#ifdef SUPPORT_COMPLEX
+    template bool csr_to_dia_hip(int                                        blocksize,
+                                 int                                        nnz,
+                                 int                                        nrow,
+                                 int                                        ncol,
+                                 const MatrixCSR<std::complex<float>, int>& src,
+                                 MatrixDIA<std::complex<float>, int>*       dst,
+                                 int*                                       nnz_dia,
+                                 int*                                       num_diag);
+
+    template bool csr_to_dia_hip(int                                         blocksize,
+                                 int                                         nnz,
+                                 int                                         nrow,
+                                 int                                         ncol,
+                                 const MatrixCSR<std::complex<double>, int>& src,
+                                 MatrixDIA<std::complex<double>, int>*       dst,
+                                 int*                                        nnz_dia,
+                                 int*                                        num_diag);
+#endif
 
     // csr_to_hyb
     template bool csr_to_hyb_hip(int                          blocksize,
@@ -637,5 +734,27 @@ namespace rocalution
                                  int*                          nnz_hyb,
                                  int*                          nnz_ell,
                                  int*                          nnz_coo);
+
+#ifdef SUPPORT_COMPLEX
+    template bool csr_to_hyb_hip(int                                        blocksize,
+                                 int                                        nnz,
+                                 int                                        nrow,
+                                 int                                        ncol,
+                                 const MatrixCSR<std::complex<float>, int>& src,
+                                 MatrixHYB<std::complex<float>, int>*       dst,
+                                 int*                                       nnz_hyb,
+                                 int*                                       nnz_ell,
+                                 int*                                       nnz_coo);
+
+    template bool csr_to_hyb_hip(int                                         blocksize,
+                                 int                                         nnz,
+                                 int                                         nrow,
+                                 int                                         ncol,
+                                 const MatrixCSR<std::complex<double>, int>& src,
+                                 MatrixHYB<std::complex<double>, int>*       dst,
+                                 int*                                        nnz_hyb,
+                                 int*                                        nnz_ell,
+                                 int*                                        nnz_coo);
+#endif
 
 } // namespace rocalution

@@ -40,6 +40,27 @@ namespace rocalution
     /// Return double value
     double rocalution_double(const std::complex<double>& val);
 
+    /// Return conjugate complex
+    inline float rocalution_conj(const float& val)
+    {
+        return val;
+    }
+    /// Return conjugate complex
+    inline double rocalution_conj(const double& val)
+    {
+        return val;
+    }
+    /// Return conjugate complex
+    inline std::complex<float> rocalution_conj(const std::complex<float>& val)
+    {
+        return std::conj(val);
+    }
+    /// Return conjugate complex
+    inline std::complex<double> rocalution_conj(const std::complex<double>& val)
+    {
+        return std::conj(val);
+    }
+
     /// Return smallest positive floating point number
     template <typename ValueType>
     ValueType rocalution_eps(void);

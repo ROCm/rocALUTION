@@ -1191,8 +1191,8 @@ namespace rocalution
             assert(cast_in != NULL);
             assert(cast_out != NULL);
 
-            ValueType alpha = 1.0;
-            ValueType beta  = 0.0;
+            ValueType alpha = static_cast<ValueType>(1);
+            ValueType beta  = static_cast<ValueType>(0);
 
             rocsparse_status status;
             status = rocsparseTcsrmv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -1233,7 +1233,7 @@ namespace rocalution
             assert(cast_in != NULL);
             assert(cast_out != NULL);
 
-            ValueType beta = 1.0;
+            ValueType beta = static_cast<ValueType>(1);
 
             rocsparse_status status;
             status = rocsparseTcsrmv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -3305,7 +3305,7 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_compress_count_nrow<ValueType, int>),
+            hipLaunchKernelGGL((kernel_csr_compress_count_nrow),
                                GridSize,
                                BlockSize,
                                0,
@@ -3345,7 +3345,7 @@ namespace rocalution
                       hipMemcpyDeviceToDevice);
 
             // copy col and val
-            hipLaunchKernelGGL((kernel_csr_compress_copy<ValueType, int>),
+            hipLaunchKernelGGL((kernel_csr_compress_copy),
                                GridSize,
                                BlockSize,
                                0,
@@ -3444,7 +3444,7 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_replace_column_vector_offset<ValueType, int>),
+            hipLaunchKernelGGL((kernel_csr_replace_column_vector_offset),
                                GridSize,
                                BlockSize,
                                0,
@@ -3476,7 +3476,7 @@ namespace rocalution
             allocate_hip(nnz, &col);
             allocate_hip(nnz, &val);
 
-            hipLaunchKernelGGL((kernel_csr_replace_column_vector<ValueType, int>),
+            hipLaunchKernelGGL((kernel_csr_replace_column_vector),
                                GridSize,
                                BlockSize,
                                0,

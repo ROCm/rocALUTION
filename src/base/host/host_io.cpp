@@ -25,11 +25,15 @@
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/def.hpp"
 #include "../../utils/log.hpp"
+#include "version.hpp"
 
 #include <complex>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <vector>
 
 namespace rocalution
 {
@@ -104,6 +108,26 @@ namespace rocalution
         return true;
     }
 
+    template <typename ValueType,
+              typename std::enable_if<std::is_same<ValueType, float>::value
+                                          || std::is_same<ValueType, double>::value,
+                                      int>::type
+              = 0>
+    static ValueType read_complex(double real, double imag)
+    {
+        return static_cast<ValueType>(real);
+    }
+
+    template <typename ValueType,
+              typename std::enable_if<std::is_same<ValueType, std::complex<float>>::value
+                                          || std::is_same<ValueType, std::complex<double>>::value,
+                                      int>::type
+              = 0>
+    static ValueType read_complex(double real, double imag)
+    {
+        return ValueType(real, imag);
+    }
+
     template <typename ValueType>
     bool mm_read_coordinate(FILE*       fin,
                             mm_banner&  b,
@@ -144,16 +168,16 @@ namespace rocalution
         // Read data
         if(!strncmp(b.matrix_type, "complex", 7))
         {
-            double tmp1, tmp2;
+            double real, imag;
             for(int i = 0; i < nnz; ++i)
             {
-                if(fscanf(fin, "%d %d %lg %lg", (*row) + i, (*col) + i, &tmp1, &tmp2) != 4)
+                if(fscanf(fin, "%d %d %lg %lg", (*row) + i, (*col) + i, &real, &imag) != 4)
                 {
                     return false;
                 }
                 --(*row)[i];
                 --(*col)[i];
-                // (*val)[i] = TODO
+                (*val)[i] = read_complex<ValueType>(real, imag);
             }
         }
         else if(!strncmp(b.matrix_type, "real", 4) || !strncmp(b.matrix_type, "integer", 7))
@@ -167,7 +191,7 @@ namespace rocalution
                 }
                 --(*row)[i];
                 --(*col)[i];
-                (*val)[i] = static_cast<ValueType>(tmp);
+                (*val)[i] = read_complex<ValueType>(tmp, tmp);
             }
         }
         else if(!strncmp(b.matrix_type, "pattern", 7))
@@ -287,7 +311,11 @@ namespace rocalution
         return true;
     }
 
-    template <typename ValueType>
+    template <typename ValueType,
+              typename std::enable_if<std::is_same<ValueType, float>::value
+                                          || std::is_same<ValueType, double>::value,
+                                      int>::type
+              = 0>
     void write_banner(FILE* file)
     {
         char sign[3];
@@ -296,10 +324,48 @@ namespace rocalution
         fprintf(file, "%sMatrixMarket matrix coordinate real general\n", sign);
     }
 
-    template <typename ValueType>
+    template <typename ValueType,
+              typename std::enable_if<std::is_same<ValueType, std::complex<float>>::value
+                                          || std::is_same<ValueType, std::complex<double>>::value,
+                                      int>::type
+              = 0>
+    void write_banner(FILE* file)
+    {
+        char sign[3];
+        strcpy(sign, "%%");
+
+        fprintf(file, "%sMatrixMarket matrix coordinate complex general\n", sign);
+    }
+
+    template <typename ValueType,
+              typename std::enable_if<std::is_same<ValueType, float>::value, int>::type = 0>
+    void write_value(FILE* file, ValueType val)
+    {
+        fprintf(file, "%0.12g\n", val);
+    }
+
+    template <typename ValueType,
+              typename std::enable_if<std::is_same<ValueType, double>::value, int>::type = 0>
     void write_value(FILE* file, ValueType val)
     {
         fprintf(file, "%0.12lg\n", val);
+    }
+
+    template <
+        typename ValueType,
+        typename std::enable_if<std::is_same<ValueType, std::complex<float>>::value, int>::type = 0>
+    void write_value(FILE* file, ValueType val)
+    {
+        fprintf(file, "%0.12g %0.12g\n", val.real(), val.imag());
+    }
+
+    template <
+        typename ValueType,
+        typename std::enable_if<std::is_same<ValueType, std::complex<double>>::value, int>::type
+        = 0>
+    void write_value(FILE* file, ValueType val)
+    {
+        fprintf(file, "%0.12lg %0.12lg\n", val.real(), val.imag());
     }
 
     template <typename ValueType>
@@ -332,6 +398,210 @@ namespace rocalution
         }
 
         fclose(file);
+
+        return true;
+    }
+
+    static inline void read_csr_values(std::ifstream& in, int nnz, float* val)
+    {
+        // Temporary array to convert from double to float
+        std::vector<double> tmp(nnz);
+
+        // Read double values
+        in.read((char*)tmp.data(), sizeof(double) * nnz);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < nnz; ++i)
+        {
+            val[i] = static_cast<float>(tmp[i]);
+        }
+    }
+
+    static inline void read_csr_values(std::ifstream& in, int nnz, double* val)
+    {
+        // Read double values
+        in.read((char*)val, sizeof(double) * nnz);
+    }
+
+    static inline void read_csr_values(std::ifstream& in, int nnz, std::complex<float>* val)
+    {
+        // Temporary array to convert from complex double to complex float
+        std::vector<std::complex<double>> tmp(nnz);
+
+        // Read in double complex values
+        in.read((char*)tmp.data(), sizeof(std::complex<double>) * nnz);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < nnz; ++i)
+        {
+            val[i] = std::complex<float>(static_cast<float>(tmp[i].real()),
+                                         static_cast<float>(tmp[i].imag()));
+        }
+    }
+
+    static inline void read_csr_values(std::ifstream& in, int nnz, std::complex<double>* val)
+    {
+        // Read in double complex values
+        in.read((char*)val, sizeof(std::complex<double>) * nnz);
+    }
+
+    template <typename ValueType>
+    bool read_matrix_csr(
+        int& nrow, int& ncol, int& nnz, int** ptr, int** col, ValueType** val, const char* filename)
+    {
+        std::ifstream in(filename, std::ios::in | std::ios::binary);
+
+        if(!in.is_open())
+        {
+            LOG_INFO("ReadFileCSR: cannot open file " << filename);
+            return false;
+        }
+
+        // Header
+        std::string header;
+        std::getline(in, header);
+
+        if(header != "#rocALUTION binary csr file")
+        {
+            LOG_INFO("ReadFileCSR: invalid rocALUTION matrix header");
+            return false;
+        }
+
+        // rocALUTION version
+        int version;
+        in.read((char*)&version, sizeof(int));
+
+        //        if(version != __ROCALUTION_VER)
+        //        {
+        //            LOG_INFO("ReadFileCSR: file version mismatch");
+        //            return false;
+        //        }
+
+        // Read sizes
+        in.read((char*)&nrow, sizeof(int));
+        in.read((char*)&ncol, sizeof(int));
+        in.read((char*)&nnz, sizeof(int));
+
+        // Allocate arrays
+        allocate_host(nrow + 1, ptr);
+        allocate_host(nnz, col);
+        allocate_host(nnz, val);
+
+        // Read data
+        in.read((char*)*ptr, (nrow + 1) * sizeof(int));
+        in.read((char*)*col, nnz * sizeof(int));
+
+        read_csr_values(in, nnz, *val);
+
+        // Check ifstream status
+        if(!in)
+        {
+            LOG_INFO("ReadFileCSR: invalid matrix data");
+            return false;
+        }
+
+        in.close();
+
+        return true;
+    }
+
+    static inline void write_csr_values(std::ofstream& out, int nnz, const float* val)
+    {
+        // Temporary array to convert from float to double
+        std::vector<double> tmp(nnz);
+
+        // Convert values
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < nnz; ++i)
+        {
+            tmp[i] = static_cast<double>(val[i]);
+        }
+
+        // Write double values
+        out.write((char*)tmp.data(), sizeof(double) * nnz);
+    }
+
+    static inline void write_csr_values(std::ofstream& out, int nnz, const double* val)
+    {
+        // Write double values
+        out.write((char*)val, sizeof(double) * nnz);
+    }
+
+    static inline void write_csr_values(std::ofstream& out, int nnz, const std::complex<float>* val)
+    {
+        // Temporary array to convert from complex float to complex double
+        std::vector<std::complex<double>> tmp(nnz);
+
+        // Convert values
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < nnz; ++i)
+        {
+            tmp[i] = std::complex<double>(static_cast<double>(val[i].real()),
+                                          static_cast<double>(val[i].imag()));
+        }
+
+        // Write double complex values
+        out.write((char*)tmp.data(), sizeof(std::complex<double>) * nnz);
+    }
+
+    static inline void
+        write_csr_values(std::ofstream& out, int nnz, const std::complex<double>* val)
+    {
+        // Write double complex values
+        out.write((char*)val, sizeof(std::complex<double>) * nnz);
+    }
+
+    template <typename ValueType>
+    bool write_matrix_csr(int              nrow,
+                          int              ncol,
+                          int              nnz,
+                          const int*       ptr,
+                          const int*       col,
+                          const ValueType* val,
+                          const char*      filename)
+    {
+        std::ofstream out(filename, std::ios::out | std::ios::binary);
+
+        if(!out.is_open())
+        {
+            LOG_INFO("WriteFileCSR: cannot open file " << filename);
+            return false;
+        }
+
+        // Write header
+        out << "#rocALUTION binary csr file" << std::endl;
+
+        // rocALUTION version
+        int version = __ROCALUTION_VER;
+        out.write((char*)&version, sizeof(int));
+
+        // Write matrix sizes
+        out.write((char*)&nrow, sizeof(int));
+        out.write((char*)&ncol, sizeof(int));
+        out.write((char*)&nnz, sizeof(int));
+
+        // Write matrix data
+        out.write((char*)ptr, (nrow + 1) * sizeof(int));
+        out.write((char*)col, nnz * sizeof(int));
+
+        write_csr_values(out, nnz, val);
+
+        // Check ofstream status
+        if(!out)
+        {
+            LOG_INFO("WriteFileCSR: filename=" << filename << "; could not write to file");
+            return false;
+        }
+
+        out.close();
 
         return true;
     }
@@ -383,6 +653,58 @@ namespace rocalution
                                    int                         ncol,
                                    int                         nnz,
                                    const int*                  row,
+                                   const int*                  col,
+                                   const std::complex<double>* val,
+                                   const char*                 filename);
+#endif
+
+    template bool read_matrix_csr(
+        int& nrow, int& ncol, int& nnz, int** ptr, int** col, float** val, const char* filename);
+    template bool read_matrix_csr(
+        int& nrow, int& ncol, int& nnz, int** ptr, int** col, double** val, const char* filename);
+#ifdef SUPPORT_COMPLEX
+    template bool read_matrix_csr(int&                  nrow,
+                                  int&                  ncol,
+                                  int&                  nnz,
+                                  int**                 ptr,
+                                  int**                 col,
+                                  std::complex<float>** val,
+                                  const char*           filename);
+    template bool read_matrix_csr(int&                   nrow,
+                                  int&                   ncol,
+                                  int&                   nnz,
+                                  int**                  ptr,
+                                  int**                  col,
+                                  std::complex<double>** val,
+                                  const char*            filename);
+#endif
+
+    template bool write_matrix_csr(int          nrow,
+                                   int          ncol,
+                                   int          nnz,
+                                   const int*   ptr,
+                                   const int*   col,
+                                   const float* val,
+                                   const char*  filename);
+    template bool write_matrix_csr(int           nrow,
+                                   int           ncol,
+                                   int           nnz,
+                                   const int*    ptr,
+                                   const int*    col,
+                                   const double* val,
+                                   const char*   filename);
+#ifdef SUPPORT_COMPLEX
+    template bool write_matrix_csr(int                        nrow,
+                                   int                        ncol,
+                                   int                        nnz,
+                                   const int*                 ptr,
+                                   const int*                 col,
+                                   const std::complex<float>* val,
+                                   const char*                filename);
+    template bool write_matrix_csr(int                         nrow,
+                                   int                         ncol,
+                                   int                         nnz,
+                                   const int*                  ptr,
                                    const int*                  col,
                                    const std::complex<double>* val,
                                    const char*                 filename);

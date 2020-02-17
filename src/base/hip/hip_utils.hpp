@@ -32,6 +32,11 @@
 #include <rocblas.h>
 #include <rocsparse.h>
 
+#ifdef SUPPORT_COMPLEX
+#include <complex>
+#include <hip/hip_complex.h>
+#endif
+
 #define ROCBLAS_HANDLE(handle) *static_cast<rocblas_handle*>(handle)
 #define ROCSPARSE_HANDLE(handle) *static_cast<rocsparse_handle*>(handle)
 
@@ -96,11 +101,33 @@
 
 namespace rocalution
 {
+    // abs()
+    static __device__ __forceinline__ float hip_abs(float val)
+    {
+        return fabsf(val);
+    }
+
+    static __device__ __forceinline__ double hip_abs(double val)
+    {
+        return fabs(val);
+    }
+
+#ifdef SUPPORT_COMPLEX
+    static __device__ __forceinline__ float hip_abs(std::complex<float> val)
+    {
+        return sqrtf(val.real() * val.real() + val.imag() * val.imag());
+    }
+
+    static __device__ __forceinline__ double hip_abs(std::complex<double> val)
+    {
+        return sqrt(val.real() * val.real() + val.imag() * val.imag());
+    }
+#endif
 
     __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
 
     template <unsigned int WF_SIZE>
-    static __device__ __forceinline__ float wf_reduce_sum(float sum)
+    static __device__ __forceinline__ void wf_reduce_sum(float* sum)
     {
         typedef union flt_b32
         {
@@ -110,7 +137,7 @@ namespace rocalution
 
         flt_b32_t upper_sum;
         flt_b32_t temp_sum;
-        temp_sum.val = sum;
+        temp_sum.val = *sum;
 
         if(WF_SIZE > 1)
         {
@@ -148,12 +175,11 @@ namespace rocalution
             temp_sum.val += upper_sum.val;
         }
 
-        sum = temp_sum.val;
-        return sum;
+        *sum = temp_sum.val;
     }
 
     template <unsigned int WF_SIZE>
-    static __device__ __forceinline__ double wf_reduce_sum(double sum)
+    static __device__ __forceinline__ void wf_reduce_sum(double* sum)
     {
         typedef union dbl_b32
         {
@@ -163,7 +189,7 @@ namespace rocalution
 
         dbl_b32_t upper_sum;
         dbl_b32_t temp_sum;
-        temp_sum.val = sum;
+        temp_sum.val = *sum;
 
         if(WF_SIZE > 1)
         {
@@ -207,9 +233,46 @@ namespace rocalution
             temp_sum.val += upper_sum.val;
         }
 
-        sum = temp_sum.val;
-        return sum;
+        *sum = temp_sum.val;
     }
+
+#ifdef SUPPORT_COMPLEX
+    template <unsigned int WF_SIZE>
+    static __device__ __forceinline__ void wf_reduce_sum(hipFloatComplex* sum)
+    {
+        float real = hipCrealf(*sum);
+        float imag = hipCimagf(*sum);
+
+        wf_reduce_sum<WF_SIZE>(&real);
+        wf_reduce_sum<WF_SIZE>(&imag);
+
+        *sum = make_hipFloatComplex(real, imag);
+    }
+
+    template <unsigned int WF_SIZE>
+    static __device__ __forceinline__ void wf_reduce_sum(hipDoubleComplex* sum)
+    {
+        double real = hipCreal(*sum);
+        double imag = hipCimag(*sum);
+
+        wf_reduce_sum<WF_SIZE>(&real);
+        wf_reduce_sum<WF_SIZE>(&imag);
+
+        *sum = make_hipDoubleComplex(real, imag);
+    }
+
+    template <unsigned int WF_SIZE>
+    static __device__ __forceinline__ void wf_reduce_sum(std::complex<float>* sum)
+    {
+        wf_reduce_sum<WF_SIZE>((hipComplex*)sum);
+    }
+
+    template <unsigned int WF_SIZE>
+    static __device__ __forceinline__ void wf_reduce_sum(std::complex<double>* sum)
+    {
+        wf_reduce_sum<WF_SIZE>((hipDoubleComplex*)sum);
+    }
+#endif
 
 } // namespace rocalution
 

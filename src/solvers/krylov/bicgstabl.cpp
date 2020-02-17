@@ -339,7 +339,7 @@ namespace rocalution
             for(int j = 0; j < l; ++j)
             {
                 // rho = (r_j, r0)
-                rho = r[j]->Dot(*r0);
+                rho = r0->Dot(*r[j]);
 
                 // Check for breakdown
                 if(rho == static_cast<ValueType>(0))
@@ -362,7 +362,7 @@ namespace rocalution
                 op->Apply(*u[j], u[j + 1]);
 
                 // sigma = (u_j+1, r0)
-                rho_old = u[j + 1]->Dot(*r0);
+                rho_old = r0->Dot(*u[j + 1]);
 
                 // Check for breakdown
                 if(rho_old == static_cast<ValueType>(0))
@@ -543,7 +543,7 @@ namespace rocalution
             for(int j = 0; j < l; ++j)
             {
                 // rho = (r_j, r0)
-                rho = r[j]->Dot(*r0);
+                rho = r0->Dot(*r[j]);
 
                 // Check for breakdown
                 if(rho == static_cast<ValueType>(0))
@@ -569,7 +569,7 @@ namespace rocalution
                 this->precond_->SolveZeroSol(*z, u[j + 1]);
 
                 // sigma = (u_j+1, r0)
-                rho_old = u[j + 1]->Dot(*r0);
+                rho_old = r0->Dot(*u[j + 1]);
 
                 // Check for breakdown
                 if(rho_old == static_cast<ValueType>(0))

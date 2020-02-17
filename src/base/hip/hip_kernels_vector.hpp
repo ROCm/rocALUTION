@@ -24,13 +24,10 @@
 #ifndef ROCALUTION_HIP_HIP_KERNELS_VECTOR_HPP_
 #define ROCALUTION_HIP_HIP_KERNELS_VECTOR_HPP_
 
-#include "hip_complex.hpp"
-
 #include <hip/hip_runtime.h>
 
 namespace rocalution
 {
-
     template <typename ValueType, typename IndexType>
     __global__ void kernel_scaleadd(IndexType n,
                                     ValueType alpha,

@@ -24,8 +24,6 @@
 #ifndef ROCALUTION_HIP_HIP_KERNELS_MCSR_HPP_
 #define ROCALUTION_HIP_HIP_KERNELS_MCSR_HPP_
 
-#include "hip_complex.hpp"
-
 #include <hip/hip_runtime.h>
 
 namespace rocalution
@@ -50,19 +48,18 @@ namespace rocalution
             IndexType row_start = row_offset[ai];
             IndexType row_end   = row_offset[ai + 1];
 
-            ValueType sum;
-            make_ValueType(sum, 0);
+            ValueType sum = static_cast<ValueType>(0);
 
             for(IndexType aj = row_start + laneid; aj < row_end; aj += WF_SIZE)
             {
-                sum = fma(val[aj], __ldg(in + col[aj]), sum);
+                sum = sum + val[aj] * in[col[aj]];
             }
 
-            sum = wf_reduce_sum<WF_SIZE>(sum);
+            wf_reduce_sum<WF_SIZE>(&sum);
 
             if(laneid == 0)
             {
-                out[ai] = fma(val[ai], in[ai], sum);
+                out[ai] = val[ai] * in[ai] + sum;
             }
         }
     }
@@ -84,19 +81,18 @@ namespace rocalution
 
         for(IndexType ai = warpid; ai < nrow; ai += nwarps)
         {
-            ValueType sum;
-            make_ValueType(sum, 0.0);
+            ValueType sum = static_cast<ValueType>(0);
 
             for(IndexType aj = row_offset[ai] + laneid; aj < row_offset[ai + 1]; aj += WF_SIZE)
             {
-                sum = fma(scalar * val[aj], __ldg(in + col[aj]), sum);
+                sum = sum + scalar * val[aj] * in[col[aj]];
             }
 
-            sum = wf_reduce_sum<WF_SIZE>(sum);
+            wf_reduce_sum<WF_SIZE>(&sum);
 
             if(laneid == 0)
             {
-                out[ai] = fma(scalar * val[ai], in[ai], out[ai] + sum);
+                out[ai] = out[ai] + scalar * val[ai] * in[ai] + sum;
             }
         }
     }

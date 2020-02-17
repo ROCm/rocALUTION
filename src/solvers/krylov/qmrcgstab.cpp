@@ -563,7 +563,7 @@ namespace rocalution
         op->Apply(*z, t);
 
         // omega = (r,t) / (t,t)
-        omega = r->Dot(*t) / t->Dot(*t);
+        omega = t->Dot(*r) / t->Dot(*t);
 
         // d = theta1 * theta1 * eta1 / omega * d + r
         d->ScaleAdd(theta1sq * eta1 / omega, *z);
@@ -669,7 +669,7 @@ namespace rocalution
             }
 
             // omega = (r,t) / (t,t)
-            omega = r->Dot(*t) / omega;
+            omega = t->Dot(*r) / omega;
 
             // d = r + theta1 * theta1 * eta1 / omega * d
             d->ScaleAdd(theta1sq * eta1 / omega, *z);

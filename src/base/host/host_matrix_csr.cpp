@@ -28,6 +28,7 @@
 #include "../../utils/math_functions.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
+#include "host_io.hpp"
 #include "host_matrix_bcsr.hpp"
 #include "host_matrix_coo.hpp"
 #include "host_matrix_dense.hpp"
@@ -36,17 +37,13 @@
 #include "host_matrix_hyb.hpp"
 #include "host_matrix_mcsr.hpp"
 #include "host_vector.hpp"
-#include "version.hpp"
 
 #include <algorithm>
 #include <complex>
-#include <fstream>
 #include <limits>
 #include <map>
 #include <math.h>
 #include <string.h>
-#include <typeindex>
-#include <typeinfo>
 #include <vector>
 
 #ifdef _OPENMP
@@ -407,84 +404,21 @@ namespace rocalution
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string filename)
     {
-        LOG_INFO("ReadFileCSR: filename=" << filename << "; reading...");
-
-        std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
-
-        if(!in.is_open())
-        {
-            LOG_INFO("ReadFileCSR: filename=" << filename << "; cannot open file");
-            return false;
-        }
-
-        // Header
-        std::string header;
-        std::getline(in, header);
-
-        if(header != "#rocALUTION binary csr file")
-        {
-            LOG_INFO("ReadFileCSR: filename=" << filename << " is not a rocALUTION matrix");
-            return false;
-        }
-
-        // rocALUTION version
-        int version;
-        in.read((char*)&version, sizeof(int));
-
-        /* TODO might need this in the future
-      if(version != __ROCALUTION_VER)
-      {
-          LOG_INFO("ReadFileCSR: filename=" << filename << "; file version mismatch");
-          return false;
-      }
-    */
-
-        // Read data
         int nrow;
         int ncol;
         int nnz;
 
-        in.read((char*)&nrow, sizeof(int));
-        in.read((char*)&ncol, sizeof(int));
-        in.read((char*)&nnz, sizeof(int));
+        int*       ptr = NULL;
+        int*       col = NULL;
+        ValueType* val = NULL;
 
-        this->AllocateCSR(nnz, nrow, ncol);
-
-        in.read((char*)this->mat_.row_offset, (nrow + 1) * sizeof(int));
-        in.read((char*)this->mat_.col, nnz * sizeof(int));
-
-        // We read always in double precision
-        if(typeid(ValueType) == typeid(double))
+        if(read_matrix_csr(nrow, ncol, nnz, &ptr, &col, &val, filename.c_str()) != true)
         {
-            in.read((char*)this->mat_.val, sizeof(ValueType) * nnz);
-        }
-        else if(typeid(ValueType) == typeid(float))
-        {
-            std::vector<double> tmp(nnz);
-
-            in.read((char*)tmp.data(), sizeof(double) * nnz);
-
-            for(int i = 0; i < nnz; ++i)
-            {
-                this->mat_.val[i] = static_cast<ValueType>(tmp[i]);
-            }
-        }
-        else
-        {
-            LOG_INFO("ReadFileCSR: filename=" << filename << "; internal error");
             return false;
         }
 
-        // Check ifstream status
-        if(!in)
-        {
-            LOG_INFO("ReadFileCSR: filename=" << filename << "; could not read from file");
-            return false;
-        }
-
-        in.close();
-
-        LOG_INFO("ReadFileCSR: filename=" << filename << "; done");
+        this->Clear();
+        this->SetDataPtrCSR(&ptr, &col, &val, nnz, nrow, ncol);
 
         return true;
     }
@@ -540,62 +474,17 @@ namespace rocalution
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::WriteFileCSR(const std::string filename) const
     {
-        LOG_INFO("WriteFileCSR: filename=" << filename << "; writing...");
-
-        std::ofstream out(filename.c_str(), std::ios::out | std::ios::binary);
-
-        if(!out.is_open())
+        if(write_matrix_csr(this->nrow_,
+                            this->ncol_,
+                            this->nnz_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            filename.c_str())
+           != true)
         {
-            LOG_INFO("WriteFileCSR: filename=" << filename << "; cannot open file");
             return false;
         }
-
-        // Header
-        out << "#rocALUTION binary csr file" << std::endl;
-
-        // rocALUTION version
-        int version = __ROCALUTION_VER;
-        out.write((char*)&version, sizeof(int));
-
-        // Data
-        out.write((char*)&this->nrow_, sizeof(int));
-        out.write((char*)&this->ncol_, sizeof(int));
-        out.write((char*)&this->nnz_, sizeof(int));
-        out.write((char*)this->mat_.row_offset, (this->nrow_ + 1) * sizeof(int));
-        out.write((char*)this->mat_.col, this->nnz_ * sizeof(int));
-
-        // We write always in double precision
-        if(typeid(ValueType) == typeid(double))
-        {
-            out.write((char*)this->mat_.val, this->nnz_ * sizeof(ValueType));
-        }
-        else if(typeid(ValueType) == typeid(float))
-        {
-            std::vector<double> tmp(this->nnz_);
-
-            for(int i = 0; i < this->nnz_; ++i)
-            {
-                tmp[i] = rocalution_double(this->mat_.val[i]);
-            }
-
-            out.write((char*)tmp.data(), sizeof(double) * this->nnz_);
-        }
-        else // TODO complex
-        {
-            LOG_INFO("WriteFileCSR: filename=" << filename << "; internal error");
-            return false;
-        }
-
-        // Check ofstream status
-        if(!out)
-        {
-            LOG_INFO("ReadFileCSR: filename=" << filename << "; could not write to file");
-            return false;
-        }
-
-        out.close();
-
-        LOG_INFO("WriteFileCSR: filename=" << filename << "; done");
 
         return true;
     }
@@ -1894,13 +1783,13 @@ namespace rocalution
 
                     if(nnz_entries[col_k] != 0)
                     {
-                        int idx   = nnz_entries[col_k];
-                        local_sum = std::fma(this->mat_.val[k], this->mat_.val[idx], local_sum);
+                        int idx = nnz_entries[col_k];
+                        local_sum += this->mat_.val[k] * this->mat_.val[idx];
                     }
                 }
 
                 val_j = (val_j - local_sum) * inv_diag;
-                sum   = std::fma(val_j, val_j, sum);
+                sum += val_j * val_j;
 
                 this->mat_.val[j] = val_j;
             }

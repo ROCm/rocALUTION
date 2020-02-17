@@ -366,8 +366,6 @@ namespace rocalution
     template <typename ValueType>
     bool HostMatrixCOO<ValueType>::WriteFileMTX(const std::string filename) const
     {
-        LOG_INFO("WriteFileMTX: filename=" << filename << "; writing...");
-
         if(write_matrix_mtx(this->nrow_,
                             this->ncol_,
                             this->nnz_,
@@ -377,11 +375,8 @@ namespace rocalution
                             filename.c_str())
            != true)
         {
-            LOG_INFO("WriteFileMTX: failed to write matrix " << filename);
-            FATAL_ERROR(__FILE__, __LINE__);
+            return false;
         }
-
-        LOG_INFO("WriteFileMTX: filename=" << filename << "; done");
 
         return true;
     }

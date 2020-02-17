@@ -47,6 +47,24 @@ namespace rocalution
                           const ValueType* val,
                           const char*      filename);
 
+    template <typename ValueType>
+    bool read_matrix_csr(int&        nrow,
+                         int&        ncol,
+                         int&        nnz,
+                         int**       ptr,
+                         int**       col,
+                         ValueType** val,
+                         const char* filename);
+
+    template <typename ValueType>
+    bool write_matrix_csr(int              nrow,
+                          int              ncol,
+                          int              nnz,
+                          const int*       ptr,
+                          const int*       col,
+                          const ValueType* val,
+                          const char*      filename);
+
 } // namespace rocalution
 
 #endif // ROCALUTION_HOST_IO_HPP_

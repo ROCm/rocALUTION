@@ -24,11 +24,11 @@
 #ifndef ROCALUTION_HIP_HIP_BLAS_HPP_
 #define ROCALUTION_HIP_HIP_BLAS_HPP_
 
+#include <hip/hip_runtime_api.h>
 #include <rocblas.h>
 
 namespace rocalution
 {
-
     // rocblas axpy
     template <typename ValueType>
     rocblas_status rocblasTaxpy(rocblas_handle   handle,
@@ -39,15 +39,15 @@ namespace rocalution
                                 ValueType*       y,
                                 int              incy);
 
-    // rocblas dot
+    // rocblas dotu
     template <typename ValueType>
-    rocblas_status rocblasTdot(rocblas_handle   handle,
-                               int              n,
-                               const ValueType* x,
-                               int              incx,
-                               const ValueType* y,
-                               int              incy,
-                               ValueType*       result);
+    rocblas_status rocblasTdotu(rocblas_handle   handle,
+                                int              n,
+                                const ValueType* x,
+                                int              incx,
+                                const ValueType* y,
+                                int              incy,
+                                ValueType*       result);
 
     // rocblas dotconj
     template <typename ValueType>
@@ -58,6 +58,11 @@ namespace rocalution
                                 const ValueType* y,
                                 int              incy,
                                 ValueType*       result);
+
+    // rocprim reduction
+    template <typename ValueType>
+    hipError_t rocprimTreduce(
+        void* buffer, size_t& buffer_size, ValueType* in, ValueType* out, size_t size);
 
     // rocblas nrm2
     template <typename ValueType>

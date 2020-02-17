@@ -114,7 +114,7 @@ namespace rocalution
     template <typename DataType>
     void set_to_one_hip(int blocksize, int size, DataType* ptr)
     {
-        log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
+        log_debug(0, "set_to_one_hip()", blocksize, size, ptr);
 
         if(size > 0)
         {
@@ -124,59 +124,10 @@ namespace rocalution
             dim3 BlockSize(blocksize);
             dim3 GridSize(size / blocksize + 1);
 
-            hipLaunchKernelGGL(
-                (kernel_set_to_ones<DataType, int>), GridSize, BlockSize, 0, 0, size, ptr);
+            hipLaunchKernelGGL((kernel_set_to_ones), GridSize, BlockSize, 0, 0, size, ptr);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
-
-#ifdef SUPPORT_COMPLEX
-    template <>
-    void set_to_one_hip(int blocksize, int size, std::complex<double>* ptr)
-    {
-        log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
-
-        if(size > 0)
-        {
-            assert(ptr != NULL);
-
-            // 1D accessing, no stride
-            dim3 BlockSize(blocksize);
-            dim3 GridSize(size / blocksize + 1);
-
-            hipLaunchKernelGGL((kernel_set_to_ones<hipDoubleComplex, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               (hipDoubleComplex*)ptr);
-        }
-    }
-
-    template <>
-    void set_to_one_hip(int blocksize, int size, std::complex<float>* ptr)
-    {
-        log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
-
-        if(size > 0)
-        {
-            assert(ptr != NULL);
-
-            // 1D accessing, no stride
-            dim3 BlockSize(blocksize);
-            dim3 GridSize(size / blocksize + 1);
-
-            hipLaunchKernelGGL((kernel_set_to_ones<hipFloatComplex, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               (hipFloatComplex*)ptr);
-        }
-    }
-#endif
 
 #ifdef ROCALUTION_HIP_PINNED_MEMORY
     template void allocate_host<float>(int size, float** ptr);

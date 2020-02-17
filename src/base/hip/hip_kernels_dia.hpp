@@ -25,7 +25,6 @@
 #define ROCALUTION_HIP_HIP_KERNELS_DIA_HPP_
 
 #include "../matrix_formats_ind.hpp"
-#include "hip_complex.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -51,8 +50,7 @@ namespace rocalution
             return;
         }
 
-        ValueType sum;
-        make_ValueType(sum, 0);
+        ValueType sum = static_cast<ValueType>(0);
 
         for(IndexType n = 0; n < num_diags; ++n)
         {
@@ -88,8 +86,7 @@ namespace rocalution
             return;
         }
 
-        ValueType sum;
-        make_ValueType(sum, 0.0);
+        ValueType sum = static_cast<ValueType>(0);
 
         for(IndexType n = 0; n < num_diags; ++n)
         {

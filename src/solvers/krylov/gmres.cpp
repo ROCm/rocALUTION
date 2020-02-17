@@ -474,7 +474,7 @@ namespace rocalution
                 // z = Av_i
                 op->Apply(*v[i], z);
 
-                // Solve Mz = v_i+1
+                // Solve M v_i+1 = z
                 this->precond_->SolveZeroSol(*z, v[i + 1]);
 
                 // Build Hessenberg matrix H
@@ -603,7 +603,7 @@ namespace rocalution
                                                                           ValueType& dy) const
     {
         ValueType temp = dx;
-        dx             = c * dx + s * dy;
+        dx             = rocalution_conj(c) * dx + rocalution_conj(s) * dy;
         dy             = -s * temp + c * dy;
     }
 

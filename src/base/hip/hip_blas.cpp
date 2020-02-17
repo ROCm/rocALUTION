@@ -26,7 +26,10 @@
 #include "../../utils/log.hpp"
 
 #include <complex>
+#include <hip/hip_complex.h>
+#include <hip/hip_runtime_api.h>
 #include <rocblas.h>
+#include <rocprim/rocprim.hpp>
 
 namespace rocalution
 {
@@ -65,8 +68,13 @@ namespace rocalution
                                 std::complex<float>*       y,
                                 int                        incy)
     {
-        //    return rocblas_caxpy(handle, n, alpha, x, incx, y, incy);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_caxpy(handle,
+                             n,
+                             (const rocblas_float_complex*)alpha,
+                             (const rocblas_float_complex*)x,
+                             incx,
+                             (rocblas_float_complex*)y,
+                             incy);
     }
 
     template <>
@@ -78,59 +86,74 @@ namespace rocalution
                                 std::complex<double>*       y,
                                 int                         incy)
     {
-        //    return rocblas_zaxpy(handle, n, alpha, x, incx, y, incy);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_zaxpy(handle,
+                             n,
+                             (const rocblas_double_complex*)alpha,
+                             (const rocblas_double_complex*)x,
+                             incx,
+                             (rocblas_double_complex*)y,
+                             incy);
     }
 
-    // rocblas dot
+    // rocblas dotu
     template <>
-    rocblas_status rocblasTdot(rocblas_handle handle,
-                               int            n,
-                               const float*   x,
-                               int            incx,
-                               const float*   y,
-                               int            incy,
-                               float*         result)
+    rocblas_status rocblasTdotu(rocblas_handle handle,
+                                int            n,
+                                const float*   x,
+                                int            incx,
+                                const float*   y,
+                                int            incy,
+                                float*         result)
     {
         return rocblas_sdot(handle, n, x, incx, y, incy, result);
     }
 
     template <>
-    rocblas_status rocblasTdot(rocblas_handle handle,
-                               int            n,
-                               const double*  x,
-                               int            incx,
-                               const double*  y,
-                               int            incy,
-                               double*        result)
+    rocblas_status rocblasTdotu(rocblas_handle handle,
+                                int            n,
+                                const double*  x,
+                                int            incx,
+                                const double*  y,
+                                int            incy,
+                                double*        result)
     {
         return rocblas_ddot(handle, n, x, incx, y, incy, result);
     }
 
     template <>
-    rocblas_status rocblasTdot(rocblas_handle             handle,
-                               int                        n,
-                               const std::complex<float>* x,
-                               int                        incx,
-                               const std::complex<float>* y,
-                               int                        incy,
-                               std::complex<float>*       result)
+    rocblas_status rocblasTdotu(rocblas_handle             handle,
+                                int                        n,
+                                const std::complex<float>* x,
+                                int                        incx,
+                                const std::complex<float>* y,
+                                int                        incy,
+                                std::complex<float>*       result)
     {
-        //    return rocblas_cdotu(handle, n, x, incx, y, incy, result);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_cdotu(handle,
+                             n,
+                             (const rocblas_float_complex*)x,
+                             incx,
+                             (const rocblas_float_complex*)y,
+                             incy,
+                             (rocblas_float_complex*)result);
     }
 
     template <>
-    rocblas_status rocblasTdot(rocblas_handle              handle,
-                               int                         n,
-                               const std::complex<double>* x,
-                               int                         incx,
-                               const std::complex<double>* y,
-                               int                         incy,
-                               std::complex<double>*       result)
+    rocblas_status rocblasTdotu(rocblas_handle              handle,
+                                int                         n,
+                                const std::complex<double>* x,
+                                int                         incx,
+                                const std::complex<double>* y,
+                                int                         incy,
+                                std::complex<double>*       result)
     {
-        //    return rocblas_zdotu(handle, n, x, incx, y, incy, result);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_zdotu(handle,
+                             n,
+                             (const rocblas_double_complex*)x,
+                             incx,
+                             (const rocblas_double_complex*)y,
+                             incy,
+                             (rocblas_double_complex*)result);
     }
 
     // rocblas dotconj
@@ -167,8 +190,13 @@ namespace rocalution
                                 int                        incy,
                                 std::complex<float>*       result)
     {
-        //    return rocblas_cdot(handle, n, x, incx, y, incy, result);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_cdotc(handle,
+                             n,
+                             (const rocblas_float_complex*)x,
+                             incx,
+                             (const rocblas_float_complex*)y,
+                             incy,
+                             (rocblas_float_complex*)result);
     }
 
     template <>
@@ -180,8 +208,65 @@ namespace rocalution
                                 int                         incy,
                                 std::complex<double>*       result)
     {
-        //    return rocblas_zdot(handle, n, x, incx, y, incy, result);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_zdotc(handle,
+                             n,
+                             (const rocblas_double_complex*)x,
+                             incx,
+                             (const rocblas_double_complex*)y,
+                             incy,
+                             (rocblas_double_complex*)result);
+    }
+
+    // rocprim reduce
+    template <>
+    hipError_t rocprimTreduce(void* buffer, size_t& buffer_size, float* in, float* out, size_t size)
+    {
+        return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<float>());
+    }
+
+    template <>
+    hipError_t
+        rocprimTreduce(void* buffer, size_t& buffer_size, double* in, double* out, size_t size)
+    {
+        return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<double>());
+    }
+
+    template <>
+    hipError_t rocprimTreduce(void*                buffer,
+                              size_t&              buffer_size,
+                              std::complex<float>* in,
+                              std::complex<float>* out,
+                              size_t               size)
+    {
+        return rocprim::reduce(buffer,
+                               buffer_size,
+                               (hipComplex*)in,
+                               (hipComplex*)out,
+                               0,
+                               size,
+                               rocprim::plus<hipComplex>());
+    }
+
+    template <>
+    hipError_t rocprimTreduce(void*                 buffer,
+                              size_t&               buffer_size,
+                              std::complex<double>* in,
+                              std::complex<double>* out,
+                              size_t                size)
+    {
+        return rocprim::reduce(buffer,
+                               buffer_size,
+                               (hipDoubleComplex*)in,
+                               (hipDoubleComplex*)out,
+                               0,
+                               size,
+                               rocprim::plus<hipDoubleComplex>());
+    }
+
+    template <>
+    hipError_t rocprimTreduce(void* buffer, size_t& buffer_size, int* in, int* out, size_t size)
+    {
+        return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<int>());
     }
 
     // rocblas nrm2
@@ -206,8 +291,12 @@ namespace rocalution
                                 int                        incx,
                                 std::complex<float>*       result)
     {
-        //    return rocblas_scnrm2(handle, n, x, incx, result);
-        FATAL_ERROR(__FILE__, __LINE__);
+        float          res;
+        rocblas_status status
+            = rocblas_scnrm2(handle, n, (const rocblas_float_complex*)x, incx, &res);
+
+        *result = std::complex<float>(res);
+        return status;
     }
 
     template <>
@@ -217,8 +306,12 @@ namespace rocalution
                                 int                         incx,
                                 std::complex<double>*       result)
     {
-        //    return rocblas_dznrm2(handle, n, x, incx, result);
-        FATAL_ERROR(__FILE__, __LINE__);
+        double         res;
+        rocblas_status status
+            = rocblas_dznrm2(handle, n, (const rocblas_double_complex*)x, incx, &res);
+
+        *result = std::complex<double>(res);
+        return status;
     }
 
     // rocblas scal
@@ -243,8 +336,8 @@ namespace rocalution
                                 std::complex<float>*       x,
                                 int                        incx)
     {
-        //    return rocblas_cscal(handle, n, alpha, x, incx);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_cscal(
+            handle, n, (const rocblas_float_complex*)alpha, (rocblas_float_complex*)x, incx);
     }
 
     template <>
@@ -254,8 +347,8 @@ namespace rocalution
                                 std::complex<double>*       x,
                                 int                         incx)
     {
-        //    return rocblas_zscal(handle, n, alpha, x, incx);
-        FATAL_ERROR(__FILE__, __LINE__);
+        return rocblas_zscal(
+            handle, n, (const rocblas_double_complex*)alpha, (rocblas_double_complex*)x, incx);
     }
 
     // rocblas_amax

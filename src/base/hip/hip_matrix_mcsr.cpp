@@ -666,7 +666,7 @@ namespace rocalution
             {
                 if(nnz_per_row < 4)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<2, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<2>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -680,7 +680,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 8)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<4, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<4>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -694,7 +694,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 16)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<8, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<8>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -708,7 +708,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 32)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<16, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<16>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -722,7 +722,7 @@ namespace rocalution
                 }
                 else
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<32, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<32>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -739,7 +739,7 @@ namespace rocalution
             {
                 if(nnz_per_row < 4)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<2, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<2>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -753,7 +753,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 8)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<4, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<4>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -767,7 +767,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 16)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<8, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<8>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -781,7 +781,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 32)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<16, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<16>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -795,7 +795,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 64)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<32, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<32>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -809,7 +809,7 @@ namespace rocalution
                 }
                 else
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_spmv<64, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_spmv<64>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -861,7 +861,7 @@ namespace rocalution
             {
                 if(nnz_per_row < 4)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<2, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<2>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -876,7 +876,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 8)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<4, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<4>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -891,7 +891,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 16)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<8, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<8>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -906,7 +906,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 32)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<16, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<16>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -921,7 +921,7 @@ namespace rocalution
                 }
                 else
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<32, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<32>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -939,7 +939,7 @@ namespace rocalution
             {
                 if(nnz_per_row < 4)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<2, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<2>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -954,7 +954,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 8)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<4, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<4>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -969,7 +969,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 16)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<8, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<8>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -984,7 +984,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 32)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<16, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<16>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -999,7 +999,7 @@ namespace rocalution
                 }
                 else if(nnz_per_row < 64)
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<32, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<32>),
                                        GridSize,
                                        BlockSize,
                                        0,
@@ -1014,7 +1014,7 @@ namespace rocalution
                 }
                 else
                 {
-                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<64, ValueType, int>),
+                    hipLaunchKernelGGL((kernel_mcsr_add_spmv<64>),
                                        GridSize,
                                        BlockSize,
                                        0,
