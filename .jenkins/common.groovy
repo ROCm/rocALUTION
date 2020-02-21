@@ -1,5 +1,6 @@
 // This file is for internal AMD use.
 // If you are interested in running your own Jenkins, please raise a github issue for assistance.
+import static groovy.io.FileType.FILES
 
 def runCompileCommand(platform, project)
 {
@@ -26,9 +27,11 @@ def runTestCommand (platform, project, gfilter)
     junit "${project.paths.project_build_prefix}/build/release/clients/staging/*.xml"
 }
 
-def runPackageCommand(platform, project)
+def runPackageCommand(platform, project, jobName, label='')
 {
     def command
+
+    label = label != '' ? '-' + label.toLowerCase() : ''
 
     if(platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('sles'))
     {
@@ -37,16 +40,21 @@ def runPackageCommand(platform, project)
                 cd ${project.paths.project_build_prefix}/build/release
                 make package
                 mkdir -p package
+                if [ ! -z "$label" ]
+                then
+                    for f in rocalution*.rpm
+                    do
+                        echo f
+                        mv "\$f" "rocalution${label}-\${f#*-}"
+                        ls
+                    done
+                fi
                 mv *.rpm package/
                 rpm -qlp package/*.rpm
             """
 
         platform.runCommand(this, command)
         platform.archiveArtifacts(this, """${project.paths.project_build_prefix}/build/release/package/*.rpm""")
-    }
-    else if(platform.jenkinsLabel.contains('hip-clang'))
-    {
-        packageCommand = null
     }
     else
     {
@@ -55,6 +63,15 @@ def runPackageCommand(platform, project)
                 cd ${project.paths.project_build_prefix}/build/release
                 make package
                 mkdir -p package
+                if [ ! -z "$label" ]
+                then
+                    for f in rocalution*.deb
+                    do
+                        echo f
+                        mv "\$f" "rocalution${label}-\${f#*-}"
+                        ls
+                    done
+                fi
                 mv *.deb package/
                 dpkg -c package/*.deb
             """
@@ -64,7 +81,5 @@ def runPackageCommand(platform, project)
     }
 }
 
-echo "Common Groovy Loaded"
 
 return this
-
