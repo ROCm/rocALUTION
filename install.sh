@@ -420,12 +420,13 @@ pushd .
   # Build library with AMD toolchain because of existense of device kernels
   if [[ "${build_relocatable}" == true ]]; then
     ${cmake_executable} ${cmake_common_options} ${cmake_client_options} \
-      -DCMAKE_INSTALL_PREFIX=${rocm_path} \
-      -DCMAKE_SHARED_LINKER_FLAGS=${rocm_rpath} \
+      -DCMAKE_INSTALL_PREFIX="${rocm_path}" \
+      -DCMAKE_SHARED_LINKER_FLAGS="${rocm_rpath}" \
       -DCMAKE_PREFIX_PATH="${rocm_path} ${rocm_path}/hcc ${rocm_path}/hip" \
       -DCMAKE_MODULE_PATH="${rocm_path}/hip/cmake" \
+      -DCMAKE_EXE_LINKER_FLAGS=" -Wl,--enable-new-dtags -Wl,--rpath,${rocm_path}/lib:${rocm_path}/lib64" \
       -DROCM_DISABLE_LDCONFIG=ON \
-      -DROCM_PATH=${rocm_path} ../..
+      -DROCM_PATH="${rocm_path}" ../..
   else
     ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=${install_prefix} -DROCM_PATH=${rocm_path} ../..
   fi
