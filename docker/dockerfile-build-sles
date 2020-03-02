@@ -25,6 +25,7 @@ RUN zypper refresh && zypper -n --no-gpg-checks install \
     gcc-c++ \
     pkg-config \
     dpkg \
+    rocm-dev \
     rocprim \
     rocblas \
     libcxxtools9 \
