@@ -31,7 +31,6 @@ RUN yum install -y \
     gtest-devel \
     gtest \
     pkgconfig \
-    rocm-dev \
     rocprim \
     rocblas \
     libcxx-devel \

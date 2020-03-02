@@ -27,8 +27,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     cmake \
     pkg-config \
     libnuma1 \
-    rocm-dev \
     rocprim \
+    rocrand \
     rocblas \
     && \
     apt-get clean && \
