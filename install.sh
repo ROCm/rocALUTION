@@ -141,10 +141,10 @@ install_packages( )
 
   # Host build
   if [[ "${build_host}" == false ]]; then
-    library_dependencies_ubuntu+=( "rocm-dev" "libnuma1" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_centos+=( "rocm-dev" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_fedora+=( "rocm-dev" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_sles+=( "rocm-dev" "libnuma1" "rocblas" "rocsparse" "rocprim" )
+    library_dependencies_ubuntu+=( "libnuma1" )
+    library_dependencies_centos+=( "numactl-libs" )
+    library_dependencies_fedora+=( "numactl-libs" )
+    library_dependencies_sles+=( "libnuma1" )
   fi
 
   # MPI
@@ -420,12 +420,13 @@ pushd .
   # Build library with AMD toolchain because of existense of device kernels
   if [[ "${build_relocatable}" == true ]]; then
     ${cmake_executable} ${cmake_common_options} ${cmake_client_options} \
-      -DCMAKE_INSTALL_PREFIX=${rocm_path} \
-      -DCMAKE_SHARED_LINKER_FLAGS=${rocm_rpath} \
+      -DCMAKE_INSTALL_PREFIX="${rocm_path}" \
+      -DCMAKE_SHARED_LINKER_FLAGS="${rocm_rpath}" \
       -DCMAKE_PREFIX_PATH="${rocm_path} ${rocm_path}/hcc ${rocm_path}/hip" \
       -DCMAKE_MODULE_PATH="${rocm_path}/hip/cmake" \
+      -DCMAKE_EXE_LINKER_FLAGS=" -Wl,--enable-new-dtags -Wl,--rpath,${rocm_path}/lib:${rocm_path}/lib64" \
       -DROCM_DISABLE_LDCONFIG=ON \
-      -DROCM_PATH=${rocm_path} ../..
+      -DROCM_PATH="${rocm_path}" ../..
   else
     ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=${install_prefix} -DROCM_PATH=${rocm_path} ../..
   fi
