@@ -141,10 +141,10 @@ install_packages( )
 
   # Host build
   if [[ "${build_host}" == false ]]; then
-    library_dependencies_ubuntu+=( "rocm-dev" "libnuma1" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_centos+=( "rocm-dev" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_fedora+=( "rocm-dev" "numactl-libs" "rocblas" "rocsparse" "rocprim" )
-    library_dependencies_sles+=( "rocm-dev" "libnuma1" "rocblas" "rocsparse" "rocprim" )
+    library_dependencies_ubuntu+=( "libnuma1" )
+    library_dependencies_centos+=( "numactl-libs" )
+    library_dependencies_fedora+=( "numactl-libs" )
+    library_dependencies_sles+=( "libnuma1" )
   fi
 
   # MPI
