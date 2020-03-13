@@ -35,12 +35,12 @@
 #include "hip_kernels_vector.hpp"
 #include "hip_utils.hpp"
 
+#include <hip/hip_runtime.h>
+
 #ifdef SUPPORT_COMPLEX
 #include <complex>
 #include <hip/hip_complex.h>
 #endif
-
-#include <hip/hip_runtime.h>
 
 namespace rocalution
 {

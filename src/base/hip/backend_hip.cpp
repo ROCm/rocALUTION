@@ -39,14 +39,14 @@
 #include "hip_matrix_mcsr.hpp"
 #include "hip_vector.hpp"
 
-#include <complex>
 #include <hip/hip_runtime_api.h>
 #include <rocblas.h>
 #include <rocsparse.h>
 
+#include <complex>
+
 namespace rocalution
 {
-
     bool rocalution_init_hip(void)
     {
         log_debug(0, "rocalution_init_hip()", "* begin");

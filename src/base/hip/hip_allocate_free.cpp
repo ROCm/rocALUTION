@@ -27,9 +27,10 @@
 #include "hip_kernels_general.hpp"
 #include "hip_utils.hpp"
 
+#include <hip/hip_runtime.h>
+
 #include <cmath>
 #include <complex>
-#include <hip/hip_runtime.h>
 
 namespace rocalution
 {
