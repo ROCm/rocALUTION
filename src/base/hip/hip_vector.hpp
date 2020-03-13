@@ -29,6 +29,8 @@
 #include "../base_matrix.hpp"
 #include "../base_vector.hpp"
 
+#include <hip/hip_runtime.h>
+
 #include <complex>
 
 namespace rocalution

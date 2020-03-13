@@ -25,15 +25,15 @@
 #include "../../utils/def.hpp"
 #include "../../utils/log.hpp"
 
-#include <complex>
 #include <hip/hip_complex.h>
 #include <hip/hip_runtime_api.h>
 #include <rocblas.h>
 #include <rocprim/rocprim.hpp>
 
+#include <complex>
+
 namespace rocalution
 {
-
     // rocblas axpy
     template <>
     rocblas_status rocblasTaxpy(rocblas_handle handle,

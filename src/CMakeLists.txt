@@ -145,10 +145,12 @@ if(SUPPORT_HIP)
   target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim hip::host)
   target_link_libraries(rocalution PRIVATE rocalution_hip)
 
-  # remove -hc flag as it is not know by host compilers and shouldn't be part of hip::host target
-  get_target_property(HCC_PROP hcc::hccrt INTERFACE_LINK_LIBRARIES)
-  string(REPLACE "-hc" "" HCC_FIX "${HCC_PROP}")
-  set_target_properties(hcc::hccrt PROPERTIES INTERFACE_LINK_LIBRARIES "${HCC_FIX}")
+  if(HIP_COMPILER MATCHES "hcc")
+    # remove -hc flag as it is not know by host compilers and shouldn't be part of hip::host target
+    get_target_property(HCC_PROP hcc::hccrt INTERFACE_LINK_LIBRARIES)
+    string(REPLACE "-hc" "" HCC_FIX "${HCC_PROP}")
+    set_target_properties(hcc::hccrt PROPERTIES INTERFACE_LINK_LIBRARIES "${HCC_FIX}")
+  endif()
 endif()
 
 

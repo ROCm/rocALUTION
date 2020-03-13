@@ -29,13 +29,13 @@
 #include "hip_sparse.hpp"
 #include "hip_utils.hpp"
 
-#include <complex>
 #include <hip/hip_runtime_api.h>
 #include <rocprim/rocprim.hpp>
 
+#include <complex>
+
 namespace rocalution
 {
-
     template <typename ValueType, typename IndexType>
     bool csr_to_coo_hip(const rocsparse_handle                 handle,
                         IndexType                              nnz,
