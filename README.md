@@ -17,11 +17,11 @@ cd rocALUTION; mkdir build; cd build
 
 # Configure rocALUTION
 # Build options:
-#   SUPPORT_HIP    - build rocALUTION with HIP support (ON)
-#   SUPPORT_OMP    - build rocALUTION with OpenMP support (ON)
-#   SUPPORT_MPI    - build rocALUTION with MPI (multi-node) support (OFF)
-#   BUILD_SHARED   - build rocALUTION as shared library (ON, recommended)
-#   BUILD_EXAMPLES - build rocALUTION examples (ON)
+#   SUPPORT_HIP         - build rocALUTION with HIP support (ON)
+#   SUPPORT_OMP         - build rocALUTION with OpenMP support (ON)
+#   SUPPORT_MPI         - build rocALUTION with MPI (multi-node) support (OFF)
+#   BUILD_SHARED_LIBS   - build rocALUTION as shared library (ON, recommended)
+#   BUILD_EXAMPLES      - build rocALUTION examples (ON)
 cmake .. -DSUPPORT_HIP=ON
 
 # Build
