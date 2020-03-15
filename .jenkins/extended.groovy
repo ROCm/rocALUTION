@@ -79,10 +79,6 @@ def setupCI(urlJobName, jobNameList, buildCommand, runCI, label)
 
 ci: {
     String urlJobName = auxiliary.getTopJobName(env.BUILD_URL)
-    // Don't process hipclang jobs right now
-    if( urlJobName.contains('hipclang') ) {
-        return
-    }
 
     def propertyList = ["compute-rocm-dkms-no-npi":[pipelineTriggers([cron('0 1 * * 0')])],
                         "rocm-docker":[]]
