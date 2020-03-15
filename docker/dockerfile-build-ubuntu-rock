@@ -15,7 +15,6 @@ ARG user_uid
 # * rocalution-bench: libboost-program-options-dev
 # * libhsakmt.so: libnuma1
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    rock-dkms \
     sudo \
     mpi-default-bin \
     mpi-default-dev \
@@ -28,7 +27,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     pkg-config \
     libnuma1 \
     rocprim \
-    rocrand \
     rocblas \
     && \
     apt-get clean && \

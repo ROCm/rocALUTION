@@ -16,7 +16,6 @@ ARG user_uid
 # * libhsakmt.so: libnuma1
 RUN yum install -y \
     sudo \
-    rock-dkms \
     centos-release-scl \
     devtoolset-7 \
     openmpi \
