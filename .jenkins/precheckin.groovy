@@ -18,6 +18,7 @@ def runCI =
     prj.paths.build_command = buildCommand
     prj.compiler.compiler_name = 'c++'
     prj.compiler.compiler_path = 'c++'
+    prj.libraryDependencies = ['rocPRIM', 'rocBLAS', 'rocSPARSE-internal']
 
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(nodeDetails, jobName, prj)
@@ -51,7 +52,7 @@ def runCI =
         commonGroovy.runPackageCommand(platform, project, jobName, label)
     }
 
-    buildProject(prj, formatCheck, nodes.dockerArray, compileCommand, null, packageCommand)
+    buildProject(prj, formatCheck, nodes.dockerArray, compileCommand, testCommand, packageCommand)
 }
 
 def setupCI(urlJobName, jobNameList, buildCommand, runCI, label)

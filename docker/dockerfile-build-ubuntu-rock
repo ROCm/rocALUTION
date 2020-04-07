@@ -5,6 +5,7 @@ FROM ${base_image}
 LABEL maintainer="rocalution-maintainer@amd.com"
 
 ARG user_uid
+ARG library_dependencies="rocblas rocprim rocsparse"
 
 # Install dependent packages
 # Dependencies:
@@ -26,28 +27,23 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     cmake \
     pkg-config \
     libnuma1 \
-    rocprim \
-    rocblas \
+    libboost-program-options-dev \
+    gfortran \
+    wget \
+    unzip \
+    ${library_dependencies} \
     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # docker pipeline runs containers with particular uid
 # create a jenkins user with this specific uid so it can use sudo priviledges
-# Grant any member of sudo group password-less sudo privileges
-RUN useradd --create-home -u ${user_uid} -o -G sudo --shell /bin/bash jenkins && \
+# Grant any member of video group password-less sudo privileges
+RUN useradd --create-home -u ${user_uid} -o -G video --shell /bin/bash jenkins && \
     mkdir -p /etc/sudoers.d/ && \
-    echo '%sudo   ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd
+    echo '%video   ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd
 
-ARG ROCSPARSE_SRC_ROOT=/usr/local/src/rocSPARSE
 ARG ROCALUTION_SRC_ROOT=/usr/local/src/rocALUTION
-
-# Clone rocsparse repo
-# Build rocsparse and install into /usr/local
-RUN mkdir -p ${ROCSPARSE_SRC_ROOT} && cd ${ROCSPARSE_SRC_ROOT} && \
-    git clone -b develop --depth=1 https://github.com/ROCmSoftwarePlatform/rocSPARSE . && \
-    ./install.sh -i && \
-    rm -rf ${ROCSPARSE_SRC_ROOT}
 
 # Clone rocalution repo
 # Build client dependencies and install into /usr/local
