@@ -15,7 +15,7 @@ ARG library_dependencies="rocblas rocprim rocsparse"
 # * rocalution-test: googletest
 # * rocalution-bench: libboost-program-options-dev
 # * libhsakmt.so: libnuma1
-RUN yum install -y \
+RUN yum install -y --nogpgcheck\
     sudo \
     centos-release-scl \
     devtoolset-7 \
