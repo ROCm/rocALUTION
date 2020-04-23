@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,15 @@ namespace rocalution
         }
 
         virtual void Clear(void);
-        virtual void AllocateBCSR(int nnz, int nrow, int ncol);
+        virtual void AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim);
+        virtual void SetDataPtrBCSR(int**       row_offset,
+                                    int**       col,
+                                    ValueType** val,
+                                    int         nnzb,
+                                    int         nrowb,
+                                    int         ncolb,
+                                    int         blockdim);
+        virtual void LeaveDataPtrBCSR(int** row_offset, int** col, ValueType** val, int& blockdim);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 

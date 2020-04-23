@@ -106,7 +106,7 @@ namespace rocalution
         virtual void Clear(void);
 
         /** \brief Set the matrix format of the preconditioner */
-        void SetPrecondMatrixFormat(unsigned int mat_format);
+        void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
     protected:
         virtual void MoveToHostLocalData_(void);
@@ -126,6 +126,8 @@ namespace rocalution
         bool op_mat_format_;
         // Precond matrix format
         unsigned int precond_mat_format_;
+        // Matrix format block dimension
+        int format_block_dim_;
     };
 
     /** \ingroup precond_module
@@ -155,7 +157,7 @@ namespace rocalution
         virtual void Clear(void);
 
         /** \brief Set the matrix format of the preconditioner */
-        void SetPrecondMatrixFormat(unsigned int mat_format);
+        void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
     protected:
         virtual void MoveToHostLocalData_(void);
@@ -168,6 +170,8 @@ namespace rocalution
         bool op_mat_format_;
         // Precond matrix format
         unsigned int precond_mat_format_;
+        // Matrix format block dimension
+        int format_block_dim_;
     };
 
     /** \ingroup precond_module
@@ -204,7 +208,7 @@ namespace rocalution
         virtual void Clear(void);
 
         /** \brief Set the matrix format of the preconditioner */
-        void SetPrecondMatrixFormat(unsigned int mat_format);
+        void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
     protected:
         virtual void MoveToHostLocalData_(void);
@@ -223,6 +227,8 @@ namespace rocalution
         bool op_mat_format_;
         // Precond matrix format
         unsigned int precond_mat_format_;
+        // Matrix format block dimension
+        int format_block_dim_;
         // implicit (true) or explicit (false) computation
         bool impl_;
     };

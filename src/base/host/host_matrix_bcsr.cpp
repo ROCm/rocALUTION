@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/def.hpp"
 #include "../../utils/log.hpp"
+#include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
 #include "host_matrix_csr.hpp"
 #include "host_vector.hpp"
@@ -53,10 +54,11 @@ namespace rocalution
     {
         log_debug(this, "HostMatrixBCSR::HostMatrixBCSR()", "constructor with local_backend");
 
-        this->set_backend(local_backend);
+        this->mat_.row_offset = NULL;
+        this->mat_.col        = NULL;
+        this->mat_.val        = NULL;
 
-        // not implemented yet
-        FATAL_ERROR(__FILE__, __LINE__);
+        this->set_backend(local_backend);
     }
 
     template <typename ValueType>
@@ -70,7 +72,6 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixBCSR<ValueType>::Info(void) const
     {
-        // TODO
         LOG_INFO("HostMatrixBCSR<ValueType>");
     }
 
@@ -79,6 +80,10 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
+            free_host(&this->mat_.row_offset);
+            free_host(&this->mat_.col);
+            free_host(&this->mat_.val);
+
             this->nrow_ = 0;
             this->ncol_ = 0;
             this->nnz_  = 0;
@@ -86,23 +91,95 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixBCSR<ValueType>::AllocateBCSR(int nnz, int nrow, int ncol)
+    void HostMatrixBCSR<ValueType>::AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim)
     {
-        assert(nnz >= 0);
-        assert(ncol >= 0);
-        assert(nrow >= 0);
+        assert(nnzb >= 0);
+        assert(ncolb >= 0);
+        assert(nrowb >= 0);
+        assert(blockdim > 1);
 
         if(this->nnz_ > 0)
         {
             this->Clear();
         }
 
-        if(nnz > 0)
+        if(nnzb > 0)
         {
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nnz;
+            allocate_host(nrowb + 1, &this->mat_.row_offset);
+            allocate_host(nnzb, &this->mat_.col);
+            allocate_host(nnzb * blockdim * blockdim, &this->mat_.val);
+
+            set_to_zero_host(nrowb + 1, this->mat_.row_offset);
+            set_to_zero_host(nnzb, this->mat_.col);
+            set_to_zero_host(nnzb * blockdim * blockdim, this->mat_.val);
+
+            this->nrow_ = nrowb * blockdim;
+            this->ncol_ = ncolb * blockdim;
+            this->nnz_  = nnzb * blockdim * blockdim;
+
+            this->mat_.nrowb = nrowb;
+            this->mat_.ncolb = ncolb;
+            this->mat_.nnzb  = nnzb;
+
+            this->mat_.blockdim = blockdim;
         }
+    }
+
+    template <typename ValueType>
+    void HostMatrixBCSR<ValueType>::SetDataPtrBCSR(
+        int** row_offset, int** col, ValueType** val, int nnzb, int nrowb, int ncolb, int blockdim)
+    {
+        assert(*row_offset != NULL);
+        assert(*col != NULL);
+        assert(*val != NULL);
+        assert(nnzb > 0);
+        assert(nrowb > 0);
+        assert(ncolb > 0);
+        assert(blockdim > 1);
+
+        this->Clear();
+
+        this->blockdim_ = blockdim;
+        this->nrow_     = nrowb * blockdim;
+        this->ncol_     = ncolb * blockdim;
+        this->nnz_      = nnzb * blockdim * blockdim;
+
+        this->mat_.nrowb    = nrowb;
+        this->mat_.ncolb    = ncolb;
+        this->mat_.nnzb     = nnzb;
+        this->mat_.blockdim = blockdim;
+
+        this->mat_.row_offset = *row_offset;
+        this->mat_.col        = *col;
+        this->mat_.val        = *val;
+    }
+
+    template <typename ValueType>
+    void HostMatrixBCSR<ValueType>::LeaveDataPtrBCSR(int**       row_offset,
+                                                     int**       col,
+                                                     ValueType** val,
+                                                     int&        blockdim)
+    {
+        assert(this->nrow_ > 0);
+        assert(this->ncol_ > 0);
+        assert(this->nnz_ > 0);
+        assert(this->mat_.blockdim > 1);
+
+        *row_offset = this->mat_.row_offset;
+        *col        = this->mat_.col;
+        *val        = this->mat_.val;
+
+        this->mat_.row_offset = NULL;
+        this->mat_.col        = NULL;
+        this->mat_.val        = NULL;
+
+        blockdim = this->mat_.blockdim;
+
+        this->mat_.blockdim = 0;
+
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -114,7 +191,10 @@ namespace rocalution
         if(const HostMatrixBCSR<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&mat))
         {
-            this->AllocateBCSR(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_);
+            this->AllocateBCSR(cast_mat->mat_.nnzb,
+                               cast_mat->mat_.nrowb,
+                               cast_mat->mat_.ncolb,
+                               cast_mat->mat_.blockdim);
 
             assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_)
                    && (this->ncol_ == cast_mat->ncol_));
@@ -123,8 +203,29 @@ namespace rocalution
             {
                 _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
-                // TODO
-                FATAL_ERROR(__FILE__, __LINE__);
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+                for(int i = 0; i < this->mat_.nrowb + 1; ++i)
+                {
+                    this->mat_.row_offset[i] = cast_mat->mat_.row_offset[i];
+                }
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+                for(int j = 0; j < this->mat_.nnzb; ++j)
+                {
+                    this->mat_.col[j] = cast_mat->mat_.col[j];
+                }
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+                for(int j = 0; j < this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim; ++j)
+                {
+                    this->mat_.val[j] = cast_mat->mat_.val[j];
+                }
             }
         }
         else
@@ -163,18 +264,23 @@ namespace rocalution
            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
         {
             this->Clear();
-            int nnz = 0;
 
-            // TODO
-            //      csr_to_bcsr(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_,
-            //                 cast_mat->mat_, &this->mat_, &nnz);
-            FATAL_ERROR(__FILE__, __LINE__);
+            this->mat_.blockdim = this->blockdim_;
 
-            this->nrow_ = cast_mat->nrow_;
-            this->ncol_ = cast_mat->ncol_;
-            this->nnz_  = nnz;
+            if(csr_to_bcsr(this->local_backend_.OpenMP_threads,
+                           cast_mat->nnz_,
+                           cast_mat->nrow_,
+                           cast_mat->ncol_,
+                           cast_mat->mat_,
+                           &this->mat_)
+               == true)
+            {
+                this->nrow_ = this->mat_.nrowb * this->mat_.blockdim;
+                this->ncol_ = this->mat_.ncolb * this->mat_.blockdim;
+                this->nnz_  = this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim;
 
-            return true;
+                return true;
+            }
         }
 
         return false;
@@ -191,18 +297,42 @@ namespace rocalution
             assert(in.GetSize() == this->ncol_);
             assert(out->GetSize() == this->nrow_);
 
-            //    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*>
-            //    (&in);
-            //    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*>
-            //    (out);
+            const HostVector<ValueType>* cast_in  = dynamic_cast<const HostVector<ValueType>*>(&in);
+            HostVector<ValueType>*       cast_out = dynamic_cast<HostVector<ValueType>*>(out);
 
-            //    assert(cast_in != NULL);
-            //    assert(cast_out!= NULL);
+            assert(cast_in != NULL);
+            assert(cast_out != NULL);
 
-            _set_omp_backend_threads(this->local_backend_, this->nrow_);
+            _set_omp_backend_threads(this->local_backend_, this->mat_.nrowb);
 
-            // TODO
-            FATAL_ERROR(__FILE__, __LINE__);
+            int bsrdim = this->mat_.blockdim;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+            for(int ai = 0; ai < this->mat_.nrowb; ++ai)
+            {
+                for(int bi = 0; bi < bsrdim; ++bi)
+                {
+                    int row_begin = this->mat_.row_offset[ai];
+                    int row_end   = this->mat_.row_offset[ai + 1];
+
+                    ValueType sum = static_cast<ValueType>(0);
+
+                    for(int aj = row_begin; aj < row_end; ++aj)
+                    {
+                        int col = this->mat_.col[aj];
+
+                        for(int bj = 0; bj < bsrdim; ++bj)
+                        {
+                            sum += this->mat_.val[BCSR_IND(bsrdim * bsrdim * aj, bi, bj, bsrdim)]
+                                   * cast_in->vec_[bsrdim * col + bj];
+                        }
+                    }
+
+                    cast_out->vec_[ai * bsrdim + bi] = sum;
+                }
+            }
         }
     }
 
@@ -218,18 +348,43 @@ namespace rocalution
             assert(in.GetSize() == this->ncol_);
             assert(out->GetSize() == this->nrow_);
 
-            //    const HostVector<ValueType> *cast_in = dynamic_cast<const HostVector<ValueType>*>
-            //    (&in) ;
-            //    HostVector<ValueType> *cast_out      = dynamic_cast<      HostVector<ValueType>*>
-            //    (out) ;
+            const HostVector<ValueType>* cast_in  = dynamic_cast<const HostVector<ValueType>*>(&in);
+            HostVector<ValueType>*       cast_out = dynamic_cast<HostVector<ValueType>*>(out);
 
-            //    assert(cast_in != NULL);
-            //    assert(cast_out!= NULL);
+            assert(cast_in != NULL);
+            assert(cast_out != NULL);
 
             _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
-            // TODO
-            FATAL_ERROR(__FILE__, __LINE__);
+            assert(this->nrow_ == this->ncol_);
+
+            int bsrdim = this->mat_.blockdim;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+            for(int ai = 0; ai < this->mat_.nrowb; ++ai)
+            {
+                for(int bi = 0; bi < bsrdim; ++bi)
+                {
+                    int row_begin = this->mat_.row_offset[ai];
+                    int row_end   = this->mat_.row_offset[ai + 1];
+
+                    ValueType sum = static_cast<ValueType>(0);
+
+                    for(int aj = row_begin; aj < row_end; ++aj)
+                    {
+                        int col = this->mat_.col[aj];
+
+                        for(int bj = 0; bj < bsrdim; ++bj)
+                        {
+                            sum += this->mat_.val[BCSR_IND(bsrdim * bsrdim * aj, bi, bj, bsrdim)]
+                                   * cast_in->vec_[bsrdim * col + bj];
+                        }
+                    }
+
+                    cast_out->vec_[ai * bsrdim + bi] += scalar * sum;
+                }
+            }
         }
     }
 

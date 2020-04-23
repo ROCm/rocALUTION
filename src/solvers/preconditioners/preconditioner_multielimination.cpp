@@ -56,6 +56,7 @@ namespace rocalution
 
         this->op_mat_format_      = false;
         this->precond_mat_format_ = CSR;
+        this->format_block_dim_   = 0;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -120,6 +121,7 @@ namespace rocalution
 
             this->op_mat_format_      = false;
             this->precond_mat_format_ = CSR;
+            this->format_block_dim_   = 0;
 
             this->build_ = false;
         }
@@ -159,12 +161,13 @@ namespace rocalution
 
     template <class OperatorType, class VectorType, typename ValueType>
     void MultiElimination<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(
-        unsigned int mat_format)
+        unsigned int mat_format, int blockdim)
     {
-        log_debug(this, "MultiElimination::SetPrecondMatrixFormat()", mat_format);
+        log_debug(this, "MultiElimination::SetPrecondMatrixFormat()", mat_format, blockdim);
 
         this->op_mat_format_      = true;
         this->precond_mat_format_ = mat_format;
+        this->format_block_dim_   = blockdim;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -294,12 +297,12 @@ namespace rocalution
         // e.g. the block matrices will have the same format as this->op_
         if(this->op_mat_format_ == true)
         {
-            A_.ConvertTo(this->precond_mat_format_);
-            D_.ConvertTo(this->precond_mat_format_);
-            E_.ConvertTo(this->precond_mat_format_);
-            F_.ConvertTo(this->precond_mat_format_);
-            //    C_.ConvertTo(this->precond_mat_format_);
-            //    AA_.ConvertTo(this->precond_mat_format_);
+            A_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            D_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            E_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            F_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            //    C_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            //    AA_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
         }
 
         log_debug(this, "MultiElimination::Build()", this->build_, " #*# end");

@@ -205,6 +205,54 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::AllocateBCSR(
+        const std::string name, int nnzb, int nrowb, int ncolb, int blockdim)
+    {
+        log_debug(this, "LocalMatrix::AllocateBCSR()", name, nnzb, nrowb, ncolb, blockdim);
+
+        assert(nnzb >= 0);
+        assert(nrowb >= 0);
+        assert(ncolb >= 0);
+        assert(blockdim > 1);
+
+        this->Clear();
+        this->object_name_ = name;
+        this->ConvertToBCSR(blockdim);
+
+        if(nnzb > 0)
+        {
+            assert(nrowb > 0);
+            assert(ncolb > 0);
+
+            Rocalution_Backend_Descriptor backend = this->local_backend_;
+            unsigned int                  mat     = this->GetFormat();
+
+            // init host matrix
+            if(this->matrix_ == this->matrix_host_)
+            {
+                delete this->matrix_host_;
+                this->matrix_host_ = _rocalution_init_base_host_matrix<ValueType>(backend, mat);
+                this->matrix_      = this->matrix_host_;
+            }
+            else
+            {
+                // init accel matrix
+                assert(this->matrix_ == this->matrix_accel_);
+
+                delete this->matrix_accel_;
+                this->matrix_accel_ = _rocalution_init_base_backend_matrix<ValueType>(backend, mat);
+                this->matrix_       = this->matrix_accel_;
+            }
+
+            this->matrix_->AllocateBCSR(nnzb, nrowb, ncolb, blockdim);
+        }
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateCOO(const std::string name, int nnz, int nrow, int ncol)
     {
         log_debug(this, "LocalMatrix::AllocateCOO()", name, nnz, nrow, ncol);
@@ -641,6 +689,86 @@ namespace rocalution
         this->ConvertToCSR();
 
         this->matrix_->LeaveDataPtrCSR(row_offset, col, val);
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::SetDataPtrBCSR(int**       row_offset,
+                                                int**       col,
+                                                ValueType** val,
+                                                std::string name,
+                                                int         nnzb,
+                                                int         nrowb,
+                                                int         ncolb,
+                                                int         blockdim)
+    {
+        log_debug(this,
+                  "LocalMatrix::SetDataPtrBCSR()",
+                  row_offset,
+                  col,
+                  val,
+                  name,
+                  nnzb,
+                  nrowb,
+                  ncolb,
+                  blockdim);
+
+        assert(row_offset != NULL);
+        assert(col != NULL);
+        assert(val != NULL);
+        assert(*row_offset != NULL);
+        assert(*col != NULL);
+        assert(*val != NULL);
+        assert(nnzb > 0);
+        assert(nrowb > 0);
+        assert(ncolb > 0);
+        assert(blockdim > 1);
+
+        this->Clear();
+
+        this->object_name_ = name;
+
+        //  this->MoveToHost();
+        this->ConvertToBCSR(blockdim);
+
+        this->matrix_->SetDataPtrBCSR(row_offset, col, val, nnzb, nrowb, ncolb, blockdim);
+
+        *row_offset = NULL;
+        *col        = NULL;
+        *val        = NULL;
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::LeaveDataPtrBCSR(int**       row_offset,
+                                                  int**       col,
+                                                  ValueType** val,
+                                                  int&        blockdim)
+    {
+        log_debug(this, "LocalMatrix::LeaveDataPtrCSR()", row_offset, col, val, blockdim);
+
+        assert(*row_offset == NULL);
+        assert(*col == NULL);
+        assert(*val == NULL);
+        assert(this->GetM() > 0);
+        assert(this->GetN() > 0);
+        assert(this->GetNnz() > 0);
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+        // If matrix is not yet a BCSR matrix, blockdim need to be valid
+        if(this->GetFormat() != BCSR)
+        {
+            assert(blockdim > 1);
+        }
+
+        //  this->MoveToHost();
+        this->ConvertToBCSR(blockdim);
+
+        this->matrix_->LeaveDataPtrBCSR(row_offset, col, val, blockdim);
     }
 
     template <typename ValueType>
@@ -1540,9 +1668,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::ConvertToBCSR(void)
+    void LocalMatrix<ValueType>::ConvertToBCSR(int blockdim)
     {
-        this->ConvertTo(BCSR);
+        this->ConvertTo(BCSR, blockdim);
     }
 
     template <typename ValueType>
@@ -1576,9 +1704,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::ConvertTo(unsigned int matrix_format)
+    void LocalMatrix<ValueType>::ConvertTo(unsigned int matrix_format, int blockdim)
     {
-        log_debug(this, "LocalMatrix::ConvertTo()", matrix_format);
+        log_debug(this, "LocalMatrix::ConvertTo()", matrix_format, blockdim);
 
         assert((matrix_format == DENSE) || (matrix_format == CSR) || (matrix_format == MCSR)
                || (matrix_format == BCSR) || (matrix_format == COO) || (matrix_format == DIA)
@@ -1604,6 +1732,8 @@ namespace rocalution
                 new_mat = _rocalution_init_base_host_matrix<ValueType>(this->local_backend_,
                                                                        matrix_format);
                 assert(new_mat != NULL);
+
+                new_mat->set_block_dimension(blockdim);
 
                 // If conversion fails, try CSR before we give up
                 if(new_mat->ConvertFrom(*this->matrix_host_) == false)
@@ -1641,12 +1771,14 @@ namespace rocalution
                                                                           matrix_format);
                 assert(new_mat != NULL);
 
+                new_mat->set_block_dimension(blockdim);
+
                 if(new_mat->ConvertFrom(*this->matrix_accel_) == false)
                 {
                     delete new_mat;
 
                     this->MoveToHost();
-                    this->ConvertTo(matrix_format);
+                    this->ConvertTo(matrix_format, blockdim);
                     this->MoveToAccelerator();
 
                     LOG_VERBOSE_INFO(

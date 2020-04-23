@@ -827,9 +827,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::ConvertToBCSR(void)
+    void GlobalMatrix<ValueType>::ConvertToBCSR(int blockdim)
     {
-        this->ConvertTo(BCSR);
+        this->ConvertTo(BCSR, blockdim);
     }
 
     template <typename ValueType>
@@ -863,11 +863,11 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::ConvertTo(unsigned int matrix_format)
+    void GlobalMatrix<ValueType>::ConvertTo(unsigned int matrix_format, int blockdim)
     {
-        log_debug(this, "GlobalMatrix::ConverTo()", matrix_format);
+        log_debug(this, "GlobalMatrix::ConverTo()", matrix_format, blockdim);
 
-        this->matrix_interior_.ConvertTo(matrix_format);
+        this->matrix_interior_.ConvertTo(matrix_format, blockdim);
 
         // Ghost part remains COO
         this->matrix_ghost_.ConvertTo(COO);

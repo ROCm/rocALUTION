@@ -153,7 +153,7 @@ bool testing_idr(Arguments argus)
     ls.Build();
 
     // Matrix format
-    A.ConvertTo(format);
+    A.ConvertTo(format, 3);
 
     ls.Solve(b, &x);
 

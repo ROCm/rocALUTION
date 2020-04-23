@@ -160,7 +160,7 @@ namespace rocalution
         /** \brief Convert the matrix to MCSR structure */
         void ConvertToMCSR(void);
         /** \brief Convert the matrix to BCSR structure */
-        void ConvertToBCSR(void);
+        void ConvertToBCSR(int blockdim);
         /** \brief Convert the matrix to COO structure */
         void ConvertToCOO(void);
         /** \brief Convert the matrix to ELL structure */
@@ -172,7 +172,7 @@ namespace rocalution
         /** \brief Convert the matrix to DENSE structure */
         void ConvertToDENSE(void);
         /** \brief Convert the matrix to specified matrix ID format */
-        void ConvertTo(unsigned int matrix_format);
+        void ConvertTo(unsigned int matrix_format, int blockdim = 1);
 
         virtual void Apply(const GlobalVector<ValueType>& in, GlobalVector<ValueType>* out) const;
         virtual void ApplyAdd(const GlobalVector<ValueType>& in,

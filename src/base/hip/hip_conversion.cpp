@@ -107,6 +107,116 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
+    bool csr_to_bcsr_hip(const rocsparse_handle                 handle,
+                         IndexType                              nnz,
+                         IndexType                              nrow,
+                         IndexType                              ncol,
+                         const MatrixCSR<ValueType, IndexType>& src,
+                         const rocsparse_mat_descr              src_descr,
+                         MatrixBCSR<ValueType, IndexType>*      dst,
+                         const rocsparse_mat_descr              dst_descr)
+    {
+        assert(nnz > 0);
+        assert(nrow > 0);
+        assert(ncol > 0);
+
+        assert(dst != NULL);
+        assert(handle != NULL);
+
+        IndexType blockdim = dst->blockdim;
+
+        assert(blockdim > 1);
+
+        // Matrix dimensions must be a multiple of blockdim
+        if((nrow % blockdim) != 0 || (ncol % blockdim) != 0)
+        {
+            return false;
+        }
+
+        // BCSR row blocks
+        IndexType mb = (nrow + blockdim - 1) / blockdim;
+        IndexType nb = (ncol + blockdim - 1) / blockdim;
+        IndexType nnzb;
+
+        rocsparse_direction dir
+            = BCSR_IND_BASE ? rocsparse_direction_row : rocsparse_direction_column;
+
+        allocate_hip(mb + 1, &dst->row_offset);
+
+        rocsparse_status status = rocsparse_csr2bsr_nnz(handle,
+                                                        dir,
+                                                        nrow,
+                                                        ncol,
+                                                        src_descr,
+                                                        src.row_offset,
+                                                        src.col,
+                                                        blockdim,
+                                                        dst_descr,
+                                                        dst->row_offset,
+                                                        &nnzb);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+        allocate_hip(nnzb, &dst->col);
+        allocate_hip(nnzb * blockdim * blockdim, &dst->val);
+
+        status = rocsparseTcsr2bsr(handle,
+                                   dir,
+                                   nrow,
+                                   ncol,
+                                   src_descr,
+                                   src.val,
+                                   src.row_offset,
+                                   src.col,
+                                   blockdim,
+                                   dst_descr,
+                                   dst->val,
+                                   dst->row_offset,
+                                   dst->col);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+        dst->nrowb = mb;
+        dst->ncolb = nb;
+        dst->nnzb  = nnzb;
+
+        return true;
+    }
+
+    template <typename ValueType, typename IndexType>
+    bool bcsr_to_csr_hip(const rocsparse_handle                  handle,
+                         IndexType                               nnz,
+                         IndexType                               nrow,
+                         IndexType                               ncol,
+                         const MatrixBCSR<ValueType, IndexType>& src,
+                         MatrixCSR<ValueType, IndexType>*        dst)
+    {
+        assert(nnz > 0);
+        assert(nrow > 0);
+        assert(ncol > 0);
+
+        assert(dst != NULL);
+        assert(handle != NULL);
+
+        allocate_hip(nrow + 1, &dst->row_offset);
+        allocate_hip(nnz, &dst->col);
+        allocate_hip(nnz, &dst->val);
+
+        hipMemcpyAsync(dst->col, src.col, sizeof(IndexType) * nnz, hipMemcpyDeviceToDevice);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipMemcpyAsync(dst->val, src.val, sizeof(ValueType) * nnz, hipMemcpyDeviceToDevice);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocsparse_status status = rocsparse_coo2csr(
+            handle, src.row, nnz, nrow, dst->row_offset, rocsparse_index_base_zero);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+        // Sync memcopy
+        hipDeviceSynchronize();
+
+        return true;
+    }
+
+    template <typename ValueType, typename IndexType>
     bool csr_to_ell_hip(const rocsparse_handle                 handle,
                         IndexType                              nnz,
                         IndexType                              nrow,
@@ -587,6 +697,45 @@ namespace rocalution
                                  int                                         ncol,
                                  const MatrixCOO<std::complex<double>, int>& src,
                                  MatrixCSR<std::complex<double>, int>*       dst);
+#endif
+
+    // csr_to_bcsr
+    template bool csr_to_bcsr_hip(const rocsparse_handle       handle,
+                                  int                          nnz,
+                                  int                          nrow,
+                                  int                          ncol,
+                                  const MatrixCSR<float, int>& src,
+                                  const rocsparse_mat_descr    src_descr,
+                                  MatrixBCSR<float, int>*      dst,
+                                  const rocsparse_mat_descr    dst_descr);
+
+    template bool csr_to_bcsr_hip(const rocsparse_handle        handle,
+                                  int                           nnz,
+                                  int                           nrow,
+                                  int                           ncol,
+                                  const MatrixCSR<double, int>& src,
+                                  const rocsparse_mat_descr     src_descr,
+                                  MatrixBCSR<double, int>*      dst,
+                                  const rocsparse_mat_descr     dst_descr);
+
+#ifdef SUPPORT_COMPLEX
+    template bool csr_to_bcsr_hip(const rocsparse_handle                     handle,
+                                  int                                        nnz,
+                                  int                                        nrow,
+                                  int                                        ncol,
+                                  const MatrixCSR<std::complex<float>, int>& src,
+                                  const rocsparse_mat_descr                  src_descr,
+                                  MatrixBCSR<std::complex<float>, int>*      dst,
+                                  const rocsparse_mat_descr                  dst_descr);
+
+    template bool csr_to_bcsr_hip(const rocsparse_handle                      handle,
+                                  int                                         nnz,
+                                  int                                         nrow,
+                                  int                                         ncol,
+                                  const MatrixCSR<std::complex<double>, int>& src,
+                                  const rocsparse_mat_descr                   src_descr,
+                                  MatrixBCSR<std::complex<double>, int>*      dst,
+                                  const rocsparse_mat_descr                   dst_descr);
 #endif
 
     // csr_to_ell

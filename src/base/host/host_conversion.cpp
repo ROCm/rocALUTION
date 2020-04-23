@@ -317,6 +317,232 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
+    bool csr_to_bcsr(int                                    omp_threads,
+                     IndexType                              nnz,
+                     IndexType                              nrow,
+                     IndexType                              ncol,
+                     const MatrixCSR<ValueType, IndexType>& src,
+                     MatrixBCSR<ValueType, IndexType>*      dst)
+    {
+        assert(nnz > 0);
+        assert(nrow > 0);
+        assert(ncol > 0);
+
+        IndexType blockdim = dst->blockdim;
+
+        assert(blockdim > 1);
+
+        // Matrix dimensions must be a multiple of blockdim
+        if((nrow % blockdim) != 0 || (ncol % blockdim) != 0)
+        {
+            return false;
+        }
+
+        // BCSR row blocks
+        IndexType mb = (nrow + blockdim - 1) / blockdim;
+        IndexType nb = (ncol + blockdim - 1) / blockdim;
+
+        // Allocate memory for row pointers
+        allocate_host(mb + 1, &dst->row_offset);
+
+        // Determine BCSR nnz
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        {
+            std::vector<bool>      blockcol(nb, false);
+            std::vector<IndexType> erase(nb);
+
+#ifdef _OPENMP
+#pragma omp for
+#endif
+            // Loop over blocked rows
+            for(IndexType bcsr_i = 0; bcsr_i < mb; ++bcsr_i)
+            {
+                // CSR row index
+                IndexType csr_i = bcsr_i * blockdim;
+
+                // Number of blocks required in the blocked row
+                IndexType nblocks = 0;
+
+                // Loop over rows inside the current block
+                for(IndexType i = 0; i < blockdim; ++i)
+                {
+                    // Do not exceed CSR rows
+                    if(i >= nrow - csr_i)
+                    {
+                        break;
+                    }
+
+                    IndexType csr_row_begin = src.row_offset[csr_i + i];
+                    IndexType csr_row_end   = src.row_offset[csr_i + i + 1];
+
+                    // Loop over CSR columns for each of the rows in the block
+                    for(IndexType csr_j = csr_row_begin; csr_j < csr_row_end; ++csr_j)
+                    {
+                        // Block column index
+                        IndexType bcsr_j = src.col[csr_j] / blockdim;
+
+                        // Increment block counter for current blocked row if this column
+                        // creates a new block
+                        if(blockcol[bcsr_j] == false)
+                        {
+                            blockcol[bcsr_j] = true;
+                            erase[nblocks++] = bcsr_j;
+                        }
+                    }
+                }
+
+                // Store number of blocks of the current blocked row
+                dst->row_offset[bcsr_i + 1] = nblocks;
+
+                // Clear block buffer
+                for(IndexType i = 0; i < nblocks; ++i)
+                {
+                    blockcol[erase[i]] = false;
+                }
+            }
+        }
+
+        // Exclusive sum to obtain BCSR row pointers
+        dst->row_offset[0] = 0;
+        for(IndexType i = 0; i < mb; ++i)
+        {
+            dst->row_offset[i + 1] += dst->row_offset[i];
+        }
+
+        // Extract BCSR nnz
+        IndexType nnzb = dst->row_offset[mb];
+
+        // Allocate BCSR structure
+        allocate_host(nnzb, &dst->col);
+        allocate_host(nnzb * blockdim * blockdim, &dst->val);
+
+        // Initialize values with zero
+        set_to_zero_host(nnzb * blockdim * blockdim, dst->val);
+
+        // Fill BCSR structure
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        {
+            std::vector<IndexType> blockcol(nb, -1);
+
+#ifdef _OPENMP
+#pragma omp for
+#endif
+            // Loop over blocked rows
+            for(IndexType bcsr_i = 0; bcsr_i < mb; ++bcsr_i)
+            {
+                // CSR row index
+                IndexType csr_i = bcsr_i * blockdim;
+
+                // Offset into BCSR row
+                IndexType bcsr_row_begin = dst->row_offset[bcsr_i];
+                IndexType bcsr_row_end   = dst->row_offset[bcsr_i + 1];
+                IndexType bcsr_idx       = bcsr_row_begin;
+
+                // Loop over rows inside the current block
+                for(IndexType i = 0; i < blockdim; ++i)
+                {
+                    // Do not exceed CSR rows
+                    if(i >= nrow - csr_i)
+                    {
+                        break;
+                    }
+
+                    IndexType csr_row_begin = src.row_offset[csr_i + i];
+                    IndexType csr_row_end   = src.row_offset[csr_i + i + 1];
+
+                    // Loop over CSR columns for each of the rows in the block
+                    for(IndexType csr_j = csr_row_begin; csr_j < csr_row_end; ++csr_j)
+                    {
+                        // CSR column index
+                        IndexType csr_col = src.col[csr_j];
+
+                        // Block column index
+                        IndexType bcsr_col = csr_col / blockdim;
+
+                        // Intra block column
+                        IndexType j = csr_col % blockdim;
+
+                        // Fill the block's column index
+                        if(blockcol[bcsr_col] == -1)
+                        {
+                            // Keep block value offset for filling
+                            blockcol[bcsr_col] = bcsr_idx * blockdim * blockdim;
+
+                            // Write BCSR column index
+                            dst->col[bcsr_idx++] = bcsr_col;
+                        }
+
+                        // Write BCSR value
+                        dst->val[BCSR_IND(blockcol[bcsr_col], i, j, blockdim)] = src.val[csr_j];
+                    }
+                }
+
+                // Clear block buffer
+                for(IndexType i = bcsr_row_begin; i < bcsr_row_end; ++i)
+                {
+                    blockcol[dst->col[i]] = -1;
+                }
+            }
+
+            // Sort
+#ifdef _OPENMP
+#pragma omp for
+#endif
+            for(IndexType i = 0; i < mb; ++i)
+            {
+                IndexType row_begin = dst->row_offset[i];
+                IndexType row_end   = dst->row_offset[i + 1];
+
+                for(IndexType j = row_begin; j < row_end; ++j)
+                {
+                    for(IndexType k = row_begin; k < row_end - 1; ++k)
+                    {
+                        if(dst->col[k] > dst->col[k + 1])
+                        {
+                            // Swap values
+                            for(IndexType b = 0; b < blockdim * blockdim; ++b)
+                            {
+                                std::swap(dst->val[blockdim * blockdim * k + b],
+                                          dst->val[blockdim * blockdim * (k + 1) + b]);
+                            }
+
+                            // Swap column index
+                            std::swap(dst->col[k], dst->col[k + 1]);
+                        }
+                    }
+                }
+            }
+        }
+
+        dst->nrowb = mb;
+        dst->ncolb = nb;
+        dst->nnzb  = nnzb;
+
+        return true;
+    }
+
+    template <typename ValueType, typename IndexType>
+    bool bcsr_to_csr(int                                     omp_threads,
+                     IndexType                               nnz,
+                     IndexType                               nrow,
+                     IndexType                               ncol,
+                     const MatrixBCSR<ValueType, IndexType>& src,
+                     MatrixCSR<ValueType, IndexType>*        dst)
+    {
+        assert(nnz > 0);
+        assert(nrow > 0);
+        assert(ncol > 0);
+
+        // TODO
+
+        return false;
+    }
+
+    template <typename ValueType, typename IndexType>
     bool csr_to_coo(int                                    omp_threads,
                     IndexType                              nnz,
                     IndexType                              nrow,
@@ -1097,6 +1323,80 @@ namespace rocalution
                               int                         nrow,
                               int                         ncol,
                               const MatrixMCSR<int, int>& src,
+                              MatrixCSR<int, int>*        dst);
+
+    template bool csr_to_bcsr(int                           omp_threads,
+                              int                           nnz,
+                              int                           nrow,
+                              int                           ncol,
+                              const MatrixCSR<double, int>& src,
+                              MatrixBCSR<double, int>*      dst);
+
+    template bool csr_to_bcsr(int                          omp_threads,
+                              int                          nnz,
+                              int                          nrow,
+                              int                          ncol,
+                              const MatrixCSR<float, int>& src,
+                              MatrixBCSR<float, int>*      dst);
+
+#ifdef SUPPORT_COMPLEX
+    template bool csr_to_bcsr(int                                         omp_threads,
+                              int                                         nnz,
+                              int                                         nrow,
+                              int                                         ncol,
+                              const MatrixCSR<std::complex<double>, int>& src,
+                              MatrixBCSR<std::complex<double>, int>*      dst);
+
+    template bool csr_to_bcsr(int                                        omp_threads,
+                              int                                        nnz,
+                              int                                        nrow,
+                              int                                        ncol,
+                              const MatrixCSR<std::complex<float>, int>& src,
+                              MatrixBCSR<std::complex<float>, int>*      dst);
+#endif
+
+    template bool csr_to_bcsr(int                        omp_threads,
+                              int                        nnz,
+                              int                        nrow,
+                              int                        ncol,
+                              const MatrixCSR<int, int>& src,
+                              MatrixBCSR<int, int>*      dst);
+
+    template bool bcsr_to_csr(int                            omp_threads,
+                              int                            nnz,
+                              int                            nrow,
+                              int                            ncol,
+                              const MatrixBCSR<double, int>& src,
+                              MatrixCSR<double, int>*        dst);
+
+    template bool bcsr_to_csr(int                           omp_threads,
+                              int                           nnz,
+                              int                           nrow,
+                              int                           ncol,
+                              const MatrixBCSR<float, int>& src,
+                              MatrixCSR<float, int>*        dst);
+
+#ifdef SUPPORT_COMPLEX
+    template bool bcsr_to_csr(int                                          omp_threads,
+                              int                                          nnz,
+                              int                                          nrow,
+                              int                                          ncol,
+                              const MatrixBCSR<std::complex<double>, int>& src,
+                              MatrixCSR<std::complex<double>, int>*        dst);
+
+    template bool bcsr_to_csr(int                                         omp_threads,
+                              int                                         nnz,
+                              int                                         nrow,
+                              int                                         ncol,
+                              const MatrixBCSR<std::complex<float>, int>& src,
+                              MatrixCSR<std::complex<float>, int>*        dst);
+#endif
+
+    template bool bcsr_to_csr(int                         omp_threads,
+                              int                         nnz,
+                              int                         nrow,
+                              int                         ncol,
+                              const MatrixBCSR<int, int>& src,
                               MatrixCSR<int, int>*        dst);
 
     template bool csr_to_dia(int                           omp_threads,

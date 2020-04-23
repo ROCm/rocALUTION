@@ -135,6 +135,24 @@ namespace rocalution
                                      const ValueType*          beta,
                                      ValueType*                y);
 
+    // rocsparse bsrmv
+    template <typename ValueType>
+    rocsparse_status rocsparseTbsrmv(rocsparse_handle          handle,
+                                     rocsparse_direction       dir,
+                                     rocsparse_operation       trans,
+                                     int                       mb,
+                                     int                       nb,
+                                     int                       nnzb,
+                                     const ValueType*          alpha,
+                                     const rocsparse_mat_descr descr,
+                                     const ValueType*          bsr_val,
+                                     const int*                bsr_row_ptr,
+                                     const int*                bsr_col_ind,
+                                     int                       bsr_dim,
+                                     const ValueType*          x,
+                                     const ValueType*          beta,
+                                     ValueType*                y);
+
     // rocsparse csrgemm
     template <typename ValueType>
     rocsparse_status rocsparseTcsrgemm_buffer_size(rocsparse_handle          handle,
@@ -257,6 +275,22 @@ namespace rocalution
                                        rocsparse_mat_info        info,
                                        rocsparse_solve_policy    policy,
                                        void*                     temp_buffer);
+
+    // rocsparse_csr2bsr
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsr2bsr(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       m,
+                                       int                       n,
+                                       const rocsparse_mat_descr csr_descr,
+                                       const ValueType*          csr_val,
+                                       const int*                csr_row_ptr,
+                                       const int*                csr_col_ind,
+                                       int                       block_dim,
+                                       const rocsparse_mat_descr bsr_descr,
+                                       ValueType*                bsr_val,
+                                       int*                      bsr_row_ptr,
+                                       int*                      bsr_col_ind);
 
     // rocsparse csr2csc
     template <typename ValueType>

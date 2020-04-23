@@ -168,6 +168,7 @@ namespace rocalution
 
         HIPAcceleratorVector<ValueType>* tmp_vec_;
 
+        friend class HIPAcceleratorMatrixBCSR<ValueType>;
         friend class HIPAcceleratorMatrixCOO<ValueType>;
         friend class HIPAcceleratorMatrixDIA<ValueType>;
         friend class HIPAcceleratorMatrixELL<ValueType>;

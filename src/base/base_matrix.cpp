@@ -37,9 +37,10 @@ namespace rocalution
     {
         log_debug(this, "BaseMatrix::BaseMatrix()");
 
-        this->nrow_ = 0;
-        this->ncol_ = 0;
-        this->nnz_  = 0;
+        this->nrow_     = 0;
+        this->ncol_     = 0;
+        this->nnz_      = 0;
+        this->blockdim_ = 1;
     }
 
     template <typename ValueType>
@@ -70,6 +71,12 @@ namespace rocalution
     void BaseMatrix<ValueType>::set_backend(const Rocalution_Backend_Descriptor local_backend)
     {
         this->local_backend_ = local_backend;
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::set_block_dimension(int blockdim)
+    {
+        this->blockdim_ = blockdim;
     }
 
     template <typename ValueType>
@@ -144,6 +151,16 @@ namespace rocalution
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a CSR matrix");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim)
+    {
+        LOG_INFO("AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("This is NOT a BCSR matrix");
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -784,6 +801,30 @@ namespace rocalution
     void BaseMatrix<ValueType>::LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val)
     {
         LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrCSR(...)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)! Check the backend?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::SetDataPtrBCSR(
+        int** row_offset, int** col, ValueType** val, int nnzb, int nrowb, int ncolb, int blockdim)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::SetDataPtrBCSR(...)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)! Check the backend?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::LeaveDataPtrBCSR(int**       row_offset,
+                                                 int**       col,
+                                                 ValueType** val,
+                                                 int&        blockdim)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrBCSR(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("The function is not implemented (yet)! Check the backend?");

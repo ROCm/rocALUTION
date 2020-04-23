@@ -53,7 +53,7 @@ namespace rocalution
         virtual void Build(void);
 
         /** \brief Set a specific matrix type of the decomposed block matrices */
-        void SetPrecondMatrixFormat(unsigned int mat_format);
+        void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
         /** \brief Set if the preconditioner should be decomposed or not */
         void SetDecomposition(bool decomp);
@@ -90,6 +90,8 @@ namespace rocalution
         bool op_mat_format_;
         /** \brief Precond matrix format */
         unsigned int precond_mat_format_;
+        /** \brief Matrix format block dimension */
+        int format_block_dim_;
 
         /** \brief Decompose the preconditioner into blocks or not */
         bool decomp_;

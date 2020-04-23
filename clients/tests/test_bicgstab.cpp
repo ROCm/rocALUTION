@@ -37,7 +37,7 @@ std::string  bicgstab_precond[] = {"None",
                                   /*"GS", "ILU",*/ "ILUT",
                                   "IC",
                                   "MCGS" /*, "MCILU"*/};
-unsigned int bicgstab_format[]  = {1, 2, 4, 5, 6, 7};
+unsigned int bicgstab_format[]  = {1, 2, 3, 4, 5, 6, 7};
 
 class parameterized_bicgstab : public testing::TestWithParam<bicgstab_tuple>
 {

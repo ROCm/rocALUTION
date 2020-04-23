@@ -154,7 +154,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
     ls.Build();
 
     // Matrix format
-    A.ConvertTo(format);
+    A.ConvertTo(format, 3);
 
     ls.Solve(b, &x);
 

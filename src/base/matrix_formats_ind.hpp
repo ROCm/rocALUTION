@@ -44,4 +44,12 @@
 #define DIA_IND_EL(row, el, nrow, ndiag) (el) + (ndiag) * (row)
 #define DIA_IND(row, el, nrow, ndiag) DIA_IND_ROW(row, el, nrow, ndiag)
 
+// BCSR indexing
+#define BCSR_IND(j, bi, bj, dim) ((j) + (bi) + (bj) * (dim))
+//#define BCSR_IND(j, bi, bj, dim) ((j) + (bj) + (bi) * (dim))
+
+// BCSR_IND_BASE == 0 - column-major
+// BCSR_IND_BASE == 1 - row-major
+#define BCSR_IND_BASE (BCSR_IND(0, 1, 2, 10) == 21 ? 0 : 1)
+
 #endif // ROCALUTION_MATRIX_FORMATS_IND_HPP_

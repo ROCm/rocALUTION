@@ -28,6 +28,8 @@
 #include "../base_vector.hpp"
 #include "../matrix_formats.hpp"
 
+#include <rocsparse.h>
+
 namespace rocalution
 {
 
@@ -46,15 +48,27 @@ namespace rocalution
         }
 
         virtual void Clear(void);
-        virtual void AllocateBCSR(int nnz, int nrow, int ncol);
+        virtual void AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim);
+        virtual void SetDataPtrBCSR(int**       row_offset,
+                                    int**       col,
+                                    ValueType** val,
+                                    int         nnzb,
+                                    int         nrowb,
+                                    int         ncolb,
+                                    int         blockdim);
+        virtual void LeaveDataPtrBCSR(int** row_offset, int** col, ValueType** val, int& blockdim);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
         virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
+        virtual void CopyFromAsync(const BaseMatrix<ValueType>& mat);
         virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
+        virtual void CopyToAsync(BaseMatrix<ValueType>* mat) const;
 
         virtual void CopyFromHost(const HostMatrix<ValueType>& src);
+        virtual void CopyFromHostAsync(const HostMatrix<ValueType>& src);
         virtual void CopyToHost(HostMatrix<ValueType>* dst) const;
+        virtual void CopyToHostAsync(HostMatrix<ValueType>* dst) const;
 
         virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
         virtual void ApplyAdd(const BaseVector<ValueType>& in,
@@ -63,6 +77,8 @@ namespace rocalution
 
     private:
         MatrixBCSR<ValueType, int> mat_;
+
+        rocsparse_mat_descr mat_descr_;
 
         friend class BaseVector<ValueType>;
         friend class AcceleratorVector<ValueType>;

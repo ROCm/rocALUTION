@@ -31,7 +31,6 @@
 
 namespace rocalution
 {
-
     template <typename ValueType, typename IndexType>
     bool csr_to_coo_hip(const rocsparse_handle                 handle,
                         IndexType                              nnz,
@@ -47,6 +46,24 @@ namespace rocalution
                         IndexType                              ncol,
                         const MatrixCOO<ValueType, IndexType>& src,
                         MatrixCSR<ValueType, IndexType>*       dst);
+
+    template <typename ValueType, typename IndexType>
+    bool csr_to_bcsr_hip(const rocsparse_handle                 handle,
+                         IndexType                              nnz,
+                         IndexType                              nrow,
+                         IndexType                              ncol,
+                         const MatrixCSR<ValueType, IndexType>& src,
+                         const rocsparse_mat_descr              src_descr,
+                         MatrixBCSR<ValueType, IndexType>*      dst,
+                         const rocsparse_mat_descr              dst_descr);
+
+    template <typename ValueType, typename IndexType>
+    bool bcsr_to_csr_hip(const rocsparse_handle                  handle,
+                         IndexType                               nnz,
+                         IndexType                               nrow,
+                         IndexType                               ncol,
+                         const MatrixBCSR<ValueType, IndexType>& src,
+                         MatrixCSR<ValueType, IndexType>*        dst);
 
     template <typename ValueType, typename IndexType>
     bool csr_to_ell_hip(const rocsparse_handle                 handle,

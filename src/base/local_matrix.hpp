@@ -101,7 +101,7 @@ namespace rocalution
       */
         /**@{*/
         void AllocateCSR(const std::string name, int nnz, int nrow, int ncol);
-        void AllocateBCSR(void){};
+        void AllocateBCSR(const std::string name, int nnzb, int nrowb, int ncolb, int blockdim);
         void AllocateMCSR(const std::string name, int nnz, int nrow, int ncol);
         void AllocateCOO(const std::string name, int nnz, int nrow, int ncol);
         void AllocateDIA(const std::string name, int nnz, int nrow, int ncol, int ndiag);
@@ -147,6 +147,14 @@ namespace rocalution
                            int         nnz,
                            int         nrow,
                            int         ncol);
+        void SetDataPtrBCSR(int**       row_offset,
+                            int**       col,
+                            ValueType** val,
+                            std::string name,
+                            int         nnzb,
+                            int         nrowb,
+                            int         ncolb,
+                            int         blockdim);
         void SetDataPtrMCSR(int**       row_offset,
                             int**       col,
                             ValueType** val,
@@ -195,6 +203,7 @@ namespace rocalution
         /**@{*/
         void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
         void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
+        void LeaveDataPtrBCSR(int** row_offset, int** col, ValueType** val, int& blockdim);
         void LeaveDataPtrMCSR(int** row_offset, int** col, ValueType** val);
         void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
         void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
@@ -678,7 +687,7 @@ namespace rocalution
         /** \brief Convert the matrix to MCSR structure */
         void ConvertToMCSR(void);
         /** \brief Convert the matrix to BCSR structure */
-        void ConvertToBCSR(void);
+        void ConvertToBCSR(int blockdim);
         /** \brief Convert the matrix to COO structure */
         void ConvertToCOO(void);
         /** \brief Convert the matrix to ELL structure */
@@ -690,7 +699,7 @@ namespace rocalution
         /** \brief Convert the matrix to DENSE structure */
         void ConvertToDENSE(void);
         /** \brief Convert the matrix to specified matrix ID format */
-        void ConvertTo(unsigned int matrix_format);
+        void ConvertTo(unsigned int matrix_format, int blockdim = 1);
 
         virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
         virtual void ApplyAdd(const LocalVector<ValueType>& in,

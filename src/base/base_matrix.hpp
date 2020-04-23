@@ -91,11 +91,15 @@ namespace rocalution
         virtual unsigned int GetMatFormat(void) const = 0;
         /// Copy the backend descriptor information
         virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
+        /// Set matrix value block dimension
+        void set_block_dimension(int blockdim);
 
         virtual bool Check(void) const;
 
         /// Allocate CSR Matrix
         virtual void AllocateCSR(int nnz, int nrow, int ncol);
+        /// Allocate BCSR Matrix
+        virtual void AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim);
         /// Allocate MCSR Matrix
         virtual void AllocateMCSR(int nnz, int nrow, int ncol);
         /// Allocate COO Matrix
@@ -120,6 +124,17 @@ namespace rocalution
             int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol);
         /// Leave a CSR matrix to Host pointers
         virtual void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
+
+        /// Initialize a BCSR matrix on the Host with externally allocated data
+        virtual void SetDataPtrBCSR(int**       row_offset,
+                                    int**       col,
+                                    ValueType** val,
+                                    int         nnzb,
+                                    int         nrowb,
+                                    int         ncolb,
+                                    int         blockdim);
+        /// Leave a BCSR matrix to Host pointers
+        virtual void LeaveDataPtrBCSR(int** row_offset, int** col, ValueType** val, int& blockdim);
 
         /// Initialize a MCSR matrix on the Host with externally allocated data
         virtual void SetDataPtrMCSR(
@@ -466,6 +481,8 @@ namespace rocalution
         int ncol_;
         /// Number of non-zero elements
         int nnz_;
+        /// Block dimension
+        int blockdim_;
 
         /// Backend descriptor (local copy)
         Rocalution_Backend_Descriptor local_backend_;

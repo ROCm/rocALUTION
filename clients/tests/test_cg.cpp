@@ -41,7 +41,7 @@ std::string cg_precond[] = {"None",
                             "IC",
                             "MCSGS"}; //,
 //                            "MCILU"};
-unsigned int cg_format[] = {1, 2, 4, 5, 6, 7};
+unsigned int cg_format[] = {1, 2, 3, 4, 5, 6, 7};
 
 class parameterized_cg : public testing::TestWithParam<cg_tuple>
 {

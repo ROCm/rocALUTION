@@ -210,6 +210,7 @@ namespace rocalution
 
         this->op_mat_format_      = false;
         this->precond_mat_format_ = CSR;
+        this->format_block_dim_   = 0;
 
         this->matrix_power_     = 1;
         this->external_pattern_ = false;
@@ -284,8 +285,8 @@ namespace rocalution
 
         if(this->op_mat_format_ == true)
         {
-            this->FSAI_L_.ConvertTo(this->precond_mat_format_);
-            this->FSAI_LT_.ConvertTo(this->precond_mat_format_);
+            this->FSAI_L_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            this->FSAI_LT_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
         }
     }
 
@@ -303,6 +304,7 @@ namespace rocalution
 
             this->op_mat_format_      = false;
             this->precond_mat_format_ = CSR;
+            this->format_block_dim_   = 0;
 
             this->build_ = false;
         }
@@ -311,12 +313,14 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void FSAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format)
+    void FSAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format,
+                                                                           int          blockdim)
     {
         log_debug(this, "FSAI::SetPrecondMatrixFormat()", mat_format);
 
         this->op_mat_format_      = true;
         this->precond_mat_format_ = mat_format;
+        this->format_block_dim_   = blockdim;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -363,6 +367,7 @@ namespace rocalution
 
         this->op_mat_format_      = false;
         this->precond_mat_format_ = CSR;
+        this->format_block_dim_   = 0;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -404,7 +409,7 @@ namespace rocalution
 
         if(this->op_mat_format_ == true)
         {
-            this->SPAI_.ConvertTo(this->precond_mat_format_);
+            this->SPAI_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
         }
 
         log_debug(this, "SPAI::Build()", this->build_, " #*# end");
@@ -421,18 +426,21 @@ namespace rocalution
 
             this->op_mat_format_      = false;
             this->precond_mat_format_ = CSR;
+            this->format_block_dim_   = 0;
 
             this->build_ = false;
         }
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void SPAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format)
+    void SPAI<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format,
+                                                                           int          blockdim)
     {
         log_debug(this, "SPAI::SetPrecondMatrixFormat()", mat_format);
 
         this->op_mat_format_      = true;
         this->precond_mat_format_ = mat_format;
+        this->format_block_dim_   = blockdim;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -472,6 +480,7 @@ namespace rocalution
 
         this->op_mat_format_      = false;
         this->precond_mat_format_ = CSR;
+        this->format_block_dim_   = 0;
 
         this->impl_ = true;
     }
@@ -594,9 +603,9 @@ namespace rocalution
 
         if(this->op_mat_format_ == true)
         {
-            this->TNS_.ConvertTo(this->precond_mat_format_);
-            this->L_.ConvertTo(this->precond_mat_format_);
-            this->LT_.ConvertTo(this->precond_mat_format_);
+            this->TNS_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            this->L_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
+            this->LT_.ConvertTo(this->precond_mat_format_, this->format_block_dim_);
         }
 
         log_debug(this, "TNS::Build()", this->build_, " #*# end");
@@ -620,18 +629,21 @@ namespace rocalution
 
             this->op_mat_format_      = false;
             this->precond_mat_format_ = CSR;
+            this->format_block_dim_   = 0;
 
             this->build_ = false;
         }
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void TNS<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format)
+    void TNS<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(unsigned int mat_format,
+                                                                          int          blockdim)
     {
         log_debug(this, "TNS::SetPrecondMatrixFormat()", mat_format);
 
         this->op_mat_format_      = true;
         this->precond_mat_format_ = mat_format;
+        this->format_block_dim_   = blockdim;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>

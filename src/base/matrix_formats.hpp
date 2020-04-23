@@ -74,9 +74,27 @@ namespace rocalution
         ValueType* val;
     };
 
-    template <typename ValueType, typename IndexType>
+    template <typename ValueType, typename IndexType, typename Index = IndexType>
     struct MatrixBCSR
     {
+        // Number of block rows
+        Index nrowb;
+        // Number of block columns
+        Index ncolb;
+        // Number of block nnz
+        Index nnzb;
+
+        // Block dimension
+        Index blockdim;
+
+        // Row offsets (row ptr)
+        IndexType* row_offset;
+
+        // Column index
+        IndexType* col;
+
+        // Values
+        ValueType* val;
     };
 
     // Sparse Matrix - Coordinate Format COO

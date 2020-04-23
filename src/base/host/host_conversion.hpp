@@ -46,6 +46,14 @@ namespace rocalution
                      MatrixMCSR<ValueType, IndexType>*      dst);
 
     template <typename ValueType, typename IndexType>
+    bool csr_to_bcsr(int                                    omp_threads,
+                     IndexType                              nnz,
+                     IndexType                              nrow,
+                     IndexType                              ncol,
+                     const MatrixCSR<ValueType, IndexType>& src,
+                     MatrixBCSR<ValueType, IndexType>*      dst);
+
+    template <typename ValueType, typename IndexType>
     bool csr_to_dia(int                                    omp_threads,
                     IndexType                              nnz,
                     IndexType                              nrow,

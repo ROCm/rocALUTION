@@ -51,6 +51,7 @@ namespace rocalution
 
         this->op_mat_format_      = false;
         this->precond_mat_format_ = CSR;
+        this->format_block_dim_   = 0;
 
         this->decomp_ = true;
     }
@@ -116,6 +117,7 @@ namespace rocalution
 
             this->op_mat_format_      = false;
             this->precond_mat_format_ = CSR;
+            this->format_block_dim_   = 0;
 
             this->decomp_ = true;
 
@@ -125,12 +127,13 @@ namespace rocalution
 
     template <class OperatorType, class VectorType, typename ValueType>
     void MultiColored<OperatorType, VectorType, ValueType>::SetPrecondMatrixFormat(
-        unsigned int mat_format)
+        unsigned int mat_format, int blockdim)
     {
-        log_debug(this, "MultiColored::SetPrecondMatrixFormat()", mat_format);
+        log_debug(this, "MultiColored::SetPrecondMatrixFormat()", mat_format, blockdim);
 
         this->op_mat_format_      = true;
         this->precond_mat_format_ = mat_format;
+        this->format_block_dim_   = blockdim;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -278,7 +281,8 @@ namespace rocalution
                 {
                     for(int j = 0; j < this->num_blocks_; ++j)
                     {
-                        this->preconditioner_block_[i][j]->ConvertTo(this->precond_mat_format_);
+                        this->preconditioner_block_[i][j]->ConvertTo(this->precond_mat_format_,
+                                                                     this->format_block_dim_);
                     }
                 }
             }
