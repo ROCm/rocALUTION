@@ -571,28 +571,28 @@ namespace rocalution
             void*  rocprim_buffer = NULL;
 
             // Obtain rocprim buffer size
-            rocprim::inclusive_scan(rocprim_buffer,
+            rocprim::exclusive_scan(rocprim_buffer,
                                     rocprim_size,
                                     coo_row_nnz,
-                                    coo_row_nnz + 1,
-                                    nrow,
+                                    coo_row_nnz,
+                                    0,
+                                    nrow + 1,
                                     rocprim::plus<IndexType>());
 
             // Allocate rocprim buffer
             hipMalloc(&rocprim_buffer, rocprim_size);
 
-            // Do inclusive sum
-            rocprim::inclusive_scan(rocprim_buffer,
+            // Do exclusive sum
+            rocprim::exclusive_scan(rocprim_buffer,
                                     rocprim_size,
                                     coo_row_nnz,
-                                    coo_row_nnz + 1,
-                                    nrow,
+                                    coo_row_nnz,
+                                    0,
+                                    nrow + 1,
                                     rocprim::plus<IndexType>());
 
             // Clear rocprim buffer
             hipFree(rocprim_buffer);
-
-            set_to_zero_hip(blocksize, 1, coo_row_nnz);
 
             // Copy result to host
             hipMemcpy(nnz_coo, coo_row_nnz + nrow, sizeof(IndexType), hipMemcpyDeviceToHost);
