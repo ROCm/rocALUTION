@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,10 @@
 #
 # ########################################################################
 
+# Find google test and its dependencies
 find_package(GTest REQUIRED)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 # Non MPI tests
 set(ROCALUTION_TEST_SOURCES
@@ -58,33 +61,18 @@ if(SUPPORT_MPI)
   )
 endif()
 
-set(ROCALUTION_CLIENTS_COMMON
-)
-
 add_executable(rocalution-test ${ROCALUTION_TEST_SOURCES} ${ROCALUTION_CLIENTS_COMMON})
 
+# Google test
 target_compile_definitions(rocalution-test PRIVATE GOOGLE_TEST)
-
-target_include_directories(rocalution-test
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-)
-
-target_include_directories(rocalution-test
-  SYSTEM
-    PRIVATE
-      $<BUILD_INTERFACE:${GTEST_INCLUDE_DIRS}>
-)
-
-if(NOT TARGET rocalution)
-  target_link_libraries(rocalution-test PRIVATE ${ROCALUTION_LIBRARIES})
-else()
-  target_link_libraries(rocalution-test PRIVATE roc::rocalution)
-endif()
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
+target_include_directories(rocalution-test SYSTEM PRIVATE $<BUILD_INTERFACE:${GTEST_INCLUDE_DIRS}>)
 target_link_libraries(rocalution-test PRIVATE ${GTEST_BOTH_LIBRARIES} Threads::Threads)
+
+# Include common client headers
+target_include_directories(rocalution-test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
+
+# Link rocALUTION library
+target_link_libraries(rocalution-test PRIVATE roc::rocalution)
 
 if(NOT TARGET rocalution)
   set_target_properties(rocalution-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")

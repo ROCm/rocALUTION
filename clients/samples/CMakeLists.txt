@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,24 +26,11 @@ function(add_rocalution_example EXAMPLE_SOURCE)
   get_filename_component(EXAMPLE_TARGET ${EXAMPLE_SOURCE} NAME_WE)
   add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE} ${ROCALUTION_CLIENTS_COMMON})
 
-  # Include rocALUTION headers
-  target_include_directories(${EXAMPLE_TARGET}
-    PRIVATE
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-  )
+  # Include common client headers
+  target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
 
   # Link rocALUTION library
-  if(NOT TARGET rocalution)
-    target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${ROCALUTION_LIBRARIES})
-  else()
-    target_link_libraries(${EXAMPLE_TARGET} PRIVATE roc::rocalution)
-  endif()
-
-  # MPI
-  if(SUPPORT_MPI)
-    target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${MPI_CXX_INCLUDE_PATH}>)
-    target_link_libraries(${EXAMPLE_TARGET} PRIVATE ${MPI_LIBRARIES})
-  endif()
+  target_link_libraries(${EXAMPLE_TARGET} PRIVATE roc::rocalution)
 
   # Examples output directory
   if(NOT TARGET rocalution)

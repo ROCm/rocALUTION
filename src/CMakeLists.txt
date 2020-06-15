@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -78,40 +78,26 @@ if(SUPPORT_MPI)
   list(APPEND SOURCE ${UTILS_MPI_SOURCES})
 endif()
 
-# TODO plug-ins
-
 # Create rocALUTION host library
 add_library(rocalution ${SOURCE} ${PUBLIC_HEADERS})
 add_library(roc::rocalution ALIAS rocalution)
 
 # Target link libraries
 if(SUPPORT_OMP)
-target_link_libraries(rocalution PRIVATE ${OpenMP_CXX_FLAGS})
-endif()
-if(SUPPORT_MPI)
-  target_link_libraries(rocalution PUBLIC ${MPI_CXX_LIBRARIES})
+  target_link_libraries(rocalution PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
-# Target include directories
 if(SUPPORT_MPI)
-  target_include_directories(rocalution PUBLIC ${MPI_CXX_INCLUDE_PATH})
+  target_link_libraries(rocalution PUBLIC MPI::MPI_CXX)
 endif()
 
 # Target compile definitions
 if(SUPPORT_MPI)
   target_compile_definitions(rocalution PRIVATE SUPPORT_MULTINODE)
-  target_compile_definitions(rocalution PUBLIC ${MPI_COMPILE_DEFINITIONS})
-endif()
-if(SUPPORT_HIP)
-  target_compile_definitions(rocalution PRIVATE SUPPORT_HIP)
 endif()
 
-# Target compile options
-if(SUPPORT_OMP)
-  target_compile_options(rocalution PUBLIC ${OpenMP_CXX_FLAGS})
-endif()
-if(SUPPORT_MPI)
-  target_compile_options(rocalution PUBLIC ${MPI_COMPILE_OPTIONS})
+if(SUPPORT_HIP)
+  target_compile_definitions(rocalution PRIVATE SUPPORT_HIP)
 endif()
 
 # Target properties
@@ -131,9 +117,9 @@ if(SUPPORT_HIP)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
-  list(APPEND HIP_HIPCC_FLAGS "-fno-gpu-rdc -Wall -Wno-unused-command-line-argument -fPIC")
+  list(APPEND HIP_HIPCC_FLAGS "-Wno-unused-command-line-argument -fPIC")
   foreach(target ${AMDGPU_TARGETS})
-    list(APPEND HIP_HIPCC_FLAGS "-amdgpu-target=${target}")
+    list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}")
   endforeach()
 
   # Create rocALUTION HIP library
@@ -142,52 +128,34 @@ if(SUPPORT_HIP)
   rocm_set_soversion(rocalution_hip ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim hip::host)
-  target_link_libraries(rocalution PRIVATE rocalution_hip)
-
-  if(HIP_COMPILER MATCHES "hcc")
-    # remove -hc flag as it is not know by host compilers and shouldn't be part of hip::host target
-    get_target_property(HCC_PROP hcc::hccrt INTERFACE_LINK_LIBRARIES)
-    string(REPLACE "-hc" "" HCC_FIX "${HCC_PROP}")
-    set_target_properties(hcc::hccrt PROPERTIES INTERFACE_LINK_LIBRARIES "${HCC_FIX}")
-  endif()
+  target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim)
+  target_link_libraries(rocalution PRIVATE rocalution_hip hip::host)
 endif()
-
-
-
-
-
-
 
 # Install targets
 if(SUPPORT_HIP)
   rocm_install_targets(TARGETS rocalution rocalution_hip
-                       INCLUDE
-                         ${CMAKE_BINARY_DIR}/include
-                       PREFIX rocalution
-  )
+                       INCLUDE ${CMAKE_BINARY_DIR}/include
+                       PREFIX rocalution)
 else()
   rocm_install_targets(TARGETS rocalution
-                       INCLUDE
-                         ${CMAKE_BINARY_DIR}/include
-                       PREFIX rocalution
-  )
+                       INCLUDE ${CMAKE_BINARY_DIR}/include
+                       PREFIX rocalution)
 endif()
 
 # Export targets
 rocm_export_targets(TARGETS roc::rocalution
                     PREFIX rocalution
                     DEPENDS PACKAGE HIP
-                    NAMESPACE roc::
-)
+                    NAMESPACE roc::)
 
 # Symbolic links
 rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-dev (>= 2.5.27), rocsparse (>= 1.1.10), rocblas (>= 2.2.6), rocprim (>= 2.5.0)")
-  set(CPACK_RPM_PACKAGE_REQUIRES "rocm-dev >= 2.5.27, rocsparse >= 1.1.10, rocblas >= 2.2.6, rocprim >= 2.5.0")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-dev (>= 3.5.0), rocsparse (>= 1.12.10), rocblas (>= 2.22.0), rocprim (>= 2.10.1)")
+  set(CPACK_RPM_PACKAGE_REQUIRES "rocm-dev >= 3.5.0, rocsparse >= 1.12.10, rocblas >= 2.22.0, rocprim >= 2.10.1")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")

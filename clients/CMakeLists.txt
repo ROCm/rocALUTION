@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,15 +47,19 @@ if(NOT TARGET rocalution)
   project(rocalution-clients LANGUAGES CXX)
 
   find_package(rocalution REQUIRED CONFIG PATHS /opt/rocm/rocalution)
+  get_target_property(depends roc::rocalution INTERFACE_LINK_LIBRARIES)
+
+  # Check for MPI build
+  foreach(i ${depends})
+    if("MPI::MPI_CXX" STREQUAL ${i})
+      set(SUPPORT_MPI ON)
+      find_package(MPI REQUIRED)
+    endif()
+  endforeach()
 
   option(BUILD_CLIENTS_SAMPLES "Build examples." ON)
-  option(SUPPORT_MPI "Build MPI examples." OFF)
   option(BUILD_CLIENTS_BENCHMARKS "Build benchmarks." OFF)
   option(BUILD_CLIENTS_TESTS "Build tests." OFF)
-
-  if(SUPPORT_MPI)
-    find_package(MPI REQUIRED)
-  endif()
 endif()
 
 # Build flags
