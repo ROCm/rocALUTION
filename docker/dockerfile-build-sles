@@ -26,8 +26,6 @@ RUN zypper refresh && zypper -n --no-gpg-checks install \
     gcc-c++ \
     pkg-config \
     dpkg \
-    rocprim \
-    rocblas \
     libcxxtools9 \
     libboost_program_options1_66_0-devel \
     libnuma1 \
