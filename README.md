@@ -1,5 +1,5 @@
 # rocALUTION
-rocALUTION is a sparse linear algebra library with focus on exploring fine-grained parallelism on top of AMD's Radeon Open Compute [ROCm][] runtime and toolchains, targeting modern CPU and GPU platforms. Based on C++ and [HIP][], it provides a portable, generic and flexible design that allows seamless integration with other scientific software packages.
+rocALUTION is a sparse linear algebra library with focus on exploring fine-grained parallelism on top of AMD's Radeon Open eCosystem Platform [ROCm][] runtime and toolchains, targeting modern CPU and GPU platforms. Based on C++ and [HIP][], it provides a portable, generic and flexible design that allows seamless integration with other scientific software packages.
 
 ## Documentation
 The latest rocALUTION documentation and API description can be found [here][].
