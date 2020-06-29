@@ -143,14 +143,6 @@ If you do not copy the library to a specific location you can add the path under
 
 Common build problems
 `````````````````````
-#. **Issue:** HIP (/opt/rocm/hip) was built using hcc 1.0.xxx-xxx-xxx-xxx, but you are using /opt/rocm/bin/hcc with version 1.0.yyy-yyy-yyy-yyy from hipcc (version mismatch). Please rebuild HIP including cmake or update HCC_HOME variable.
-
-   **Solution:** Download HIP from GitHub and use hcc to `build from source <https://github.com/ROCm-Developer-Tools/HIP/blob/master/INSTALL.md>`_ and then use the built HIP instead of /opt/rocm/hip.
-
-#. **Issue:** HCC RUNTIME ERROR: Failed to find compatible kernel
-
-   **Solution:** `export HCC_AMDGPU_TARGET=gfx803,gfx900,gfx906,gfx908`
-
 #. **Issue:** Could not find a package file provided by "ROCM" with any of the following names:
               ROCMConfig.cmake
               rocm-config.cmake
