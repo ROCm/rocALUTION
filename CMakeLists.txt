@@ -71,7 +71,7 @@ option(BUILD_VERBOSE "Output additional build information" OFF)
 include(cmake/Dependencies.cmake)
 
 # Setup version
-set(VERSION_STRING "1.9.2")
+set(VERSION_STRING "1.9.3")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 

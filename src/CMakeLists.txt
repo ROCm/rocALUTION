@@ -117,7 +117,7 @@ if(SUPPORT_HIP)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
-  list(APPEND HIP_HIPCC_FLAGS "-Wno-unused-command-line-argument -fPIC")
+  list(APPEND HIP_HIPCC_FLAGS "-Wno-unused-command-line-argument -fPIC -mno-xnack")
   foreach(target ${AMDGPU_TARGETS})
     list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}")
   endforeach()
