@@ -675,6 +675,7 @@ namespace rocalution
             ValueType alpha = static_cast<ValueType>(1);
             ValueType beta = static_cast<ValueType>(0);
 
+            // Not actually used in following geam call as beta is zero
             ValueType* B; 
 
             // transpose matrix so that dst values are row major
@@ -750,6 +751,7 @@ namespace rocalution
             ValueType alpha = static_cast<ValueType>(1);
             ValueType beta = static_cast<ValueType>(0);
 
+            // Not actually used in following geam call as beta is zero
             ValueType* B; 
 
             // transpose matrix so that src values are column major
