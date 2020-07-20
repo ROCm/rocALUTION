@@ -173,6 +173,7 @@ namespace rocalution
         friend class HIPAcceleratorMatrixDIA<ValueType>;
         friend class HIPAcceleratorMatrixELL<ValueType>;
         friend class HIPAcceleratorMatrixHYB<ValueType>;
+        friend class HIPAcceleratorMatrixDENSE<ValueType>;
 
         friend class BaseVector<ValueType>;
         friend class AcceleratorVector<ValueType>;

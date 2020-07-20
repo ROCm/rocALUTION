@@ -2256,4 +2256,276 @@ namespace rocalution
                                   csr_col_ind);
     }
 
+    template <>
+    rocsparse_status rocsparseTcsr2dense(rocsparse_handle        handle,
+                                         int                       m,
+                                         int                       n,
+                                         const rocsparse_mat_descr csr_descr,
+                                         const float*              csr_val,
+                                         const int*                csr_row_ptr,
+                                         const int*                csr_col_ind,
+                                         float*                    A,
+                                         int                       ld)
+    {
+        return rocsparse_scsr2dense(handle,
+                                    m,
+                                    n,
+                                    csr_descr,
+                                    csr_val,
+                                    csr_row_ptr,
+                                    csr_col_ind,
+                                    A,
+                                    ld);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsr2dense(rocsparse_handle        handle,
+                                         int                       m,
+                                         int                       n,
+                                         const rocsparse_mat_descr csr_descr,
+                                         const double*              csr_val,
+                                         const int*                csr_row_ptr,
+                                         const int*                csr_col_ind,
+                                         double*                    A,
+                                         int                       ld)
+    {
+        return rocsparse_dcsr2dense(handle,
+                                    m,
+                                    n,
+                                    csr_descr,
+                                    csr_val,
+                                    csr_row_ptr,
+                                    csr_col_ind,
+                                    A,
+                                    ld);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsr2dense(rocsparse_handle           handle,
+                                         int                        m,
+                                         int                        n,
+                                         const rocsparse_mat_descr  csr_descr,
+                                         const std::complex<float>* csr_val,
+                                         const int*                 csr_row_ptr,
+                                         const int*                 csr_col_ind,
+                                         std::complex<float>*       A,
+                                         int                        ld)
+    {
+        return rocsparse_ccsr2dense(handle,
+                                    m,
+                                    n,
+                                    csr_descr,
+                                    (const rocsparse_float_complex*)csr_val,
+                                    csr_row_ptr,
+                                    csr_col_ind,
+                                    (rocsparse_float_complex*)A,
+                                    ld);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsr2dense(rocsparse_handle            handle,
+                                         int                         m,
+                                         int                         n,
+                                         const rocsparse_mat_descr   csr_descr,
+                                         const std::complex<double>* csr_val,
+                                         const int*                  csr_row_ptr,
+                                         const int*                  csr_col_ind,
+                                         std::complex<double>*       A,
+                                         int                         ld)
+    {
+        return rocsparse_zcsr2dense(handle,
+                                    m,
+                                    n,
+                                    csr_descr,
+                                    (const rocsparse_double_complex*)csr_val,
+                                    csr_row_ptr,
+                                    csr_col_ind,
+                                    (rocsparse_double_complex*)A,
+                                    ld);
+    }
+
+    template <>
+    rocsparse_status rocsparseTdense2csr(rocsparse_handle          handle,
+                                         int                       m,
+                                         int                       n,
+                                         const rocsparse_mat_descr descr_A,
+                                         const float*              A,
+                                         int                       lda,
+                                         const int*                nnz_per_row,
+                                         float*                    csr_val,          
+                                         int*                      csr_row_ptr,
+                                         int*                      csr_col_ind)
+    {
+        return rocsparse_sdense2csr(handle,
+                                    m,
+                                    n,
+                                    descr_A,
+                                    A,
+                                    lda,
+                                    nnz_per_row,
+                                    csr_val,          
+                                    csr_row_ptr,
+                                    csr_col_ind);
+    }
+
+    template <>
+    rocsparse_status rocsparseTdense2csr(rocsparse_handle          handle,
+                                         int                       m,
+                                         int                       n,
+                                         const rocsparse_mat_descr descr_A,
+                                         const double*             A,
+                                         int                       lda,
+                                         const int*                nnz_per_row,
+                                         double*                   csr_val,          
+                                         int*                      csr_row_ptr,
+                                         int*                      csr_col_ind)
+    {
+        return rocsparse_ddense2csr(handle,
+                                    m,
+                                    n,
+                                    descr_A,
+                                    A,
+                                    lda,
+                                    nnz_per_row,
+                                    csr_val,          
+                                    csr_row_ptr,
+                                    csr_col_ind);
+    }
+
+    template <>
+    rocsparse_status rocsparseTdense2csr(rocsparse_handle           handle,
+                                         int                        m,
+                                         int                        n,
+                                         const rocsparse_mat_descr  descr_A,
+                                         const std::complex<float>* A,
+                                         int                        lda,
+                                         const int*                 nnz_per_row,
+                                         std::complex<float>*       csr_val,          
+                                         int*                       csr_row_ptr,
+                                         int*                       csr_col_ind)
+    {
+        return rocsparse_cdense2csr(handle,
+                                    m,
+                                    n,
+                                    descr_A,
+                                    (const rocsparse_float_complex*)A,
+                                    lda,
+                                    nnz_per_row,
+                                    (rocsparse_float_complex*)csr_val,          
+                                    csr_row_ptr,
+                                    csr_col_ind);
+    }
+
+    template <>
+    rocsparse_status rocsparseTdense2csr(rocsparse_handle            handle,
+                                         int                         m,
+                                         int                         n,
+                                         const rocsparse_mat_descr   descr_A,
+                                         const std::complex<double>* A,
+                                         int                         lda,
+                                         const int*                  nnz_per_row,
+                                         std::complex<double>*       csr_val,          
+                                         int*                        csr_row_ptr,
+                                         int*                        csr_col_ind)
+    {
+        return rocsparse_zdense2csr(handle,
+                                    m,
+                                    n,
+                                    descr_A,
+                                    (const rocsparse_double_complex*)A,
+                                    lda,
+                                    nnz_per_row,
+                                    (rocsparse_double_complex*)csr_val,          
+                                    csr_row_ptr,
+                                    csr_col_ind);
+    }
+
+    template <>
+    rocsparse_status rocsparseTnnz(rocsparse_handle          handle,
+                                   rocsparse_direction       dir_A,
+                                   int                       m,
+                                   int                       n,
+                                   const rocsparse_mat_descr descr_A,
+                                   const float*              A,
+                                   int                       lda,
+                                   int*                      nnz_per_row_column,
+                                   int*                      nnz_total)
+    {
+        return rocsparse_snnz(handle,
+                              dir_A,
+                              m,
+                              n,
+                              descr_A,
+                              A,
+                              lda,
+                              nnz_per_row_column,
+                              nnz_total);
+    }
+
+    template <>
+    rocsparse_status rocsparseTnnz(rocsparse_handle          handle,
+                                   rocsparse_direction       dir_A,
+                                   int                       m,
+                                   int                       n,
+                                   const rocsparse_mat_descr descr_A,
+                                   const double*             A,
+                                   int                       lda,
+                                   int*                      nnz_per_row_column,
+                                   int*                      nnz_total)
+    {
+        return rocsparse_dnnz(handle,
+                              dir_A,
+                              m,
+                              n,
+                              descr_A,
+                              A,
+                              lda,
+                              nnz_per_row_column,
+                              nnz_total);
+    }
+
+    template <>
+    rocsparse_status rocsparseTnnz(rocsparse_handle           handle,
+                                   rocsparse_direction        dir_A,
+                                   int                        m,
+                                   int                        n,
+                                   const rocsparse_mat_descr  descr_A,
+                                   const std::complex<float>* A,
+                                   int                        lda,
+                                   int*                       nnz_per_row_column,
+                                   int*                       nnz_total)
+    {
+        return rocsparse_cnnz(handle,
+                              dir_A,
+                              m,
+                              n,
+                              descr_A,
+                              (const rocsparse_float_complex*)A,
+                              lda,
+                              nnz_per_row_column,
+                              nnz_total);
+    }
+
+    template <>
+    rocsparse_status rocsparseTnnz(rocsparse_handle            handle,
+                                   rocsparse_direction         dir_A,
+                                   int                         m,
+                                   int                         n,
+                                   const rocsparse_mat_descr   descr_A,
+                                   const std::complex<double>* A,
+                                   int                         lda,
+                                   int*                        nnz_per_row_column,
+                                   int*                        nnz_total)
+    {
+        return rocsparse_znnz(handle,
+                              dir_A,
+                              m,
+                              n,
+                              descr_A,
+                              (const rocsparse_double_complex*)A,
+                              lda,
+                              nnz_per_row_column,
+                              nnz_total);
+    }
+
 } // namespace rocalution

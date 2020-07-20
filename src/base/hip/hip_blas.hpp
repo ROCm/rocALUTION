@@ -116,6 +116,24 @@ namespace rocalution
                                 ValueType*        C,
                                 int               ldc);
 
+
+
+    // rocblas_geam
+    template <typename ValueType>
+    rocblas_status rocblasTgeam(rocblas_handle    handle,
+                                rocblas_operation transA,
+                                rocblas_operation transB,
+                                int               m,
+                                int               n,
+                                const ValueType*  alpha,
+                                const ValueType*  A,
+                                int               lda,
+                                const ValueType*  beta,
+                                const ValueType*  B,
+                                int               ldb,
+                                ValueType*        C,
+                                int               ldc);
+
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_BLAS_HPP_
