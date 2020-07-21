@@ -770,9 +770,9 @@ namespace rocalution
                                                       nrow);
             CHECK_ROCBLAS_ERROR(blas_status, __FILE__, __LINE__);
 
-            rocsparse_status sparse_status;
-
             allocate_hip(nrow, &nnz_per_row);
+
+            rocsparse_status sparse_status;
 
             sparse_status = rocsparseTnnz(
                 sparse_handle, rocsparse_direction_row, nrow, ncol, dst_descr, temp, nrow, nnz_per_row, &nnz_total);
