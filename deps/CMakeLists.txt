@@ -44,7 +44,7 @@ endif()
 # The superbuild does not build anything itself; all compiling is done in external projects
 project( rocsparse-dependencies NONE )
 
-option( BUILD_GTEST "Download and build googletest library" ON )
+option( BUILD_GTEST "Download and build googletest library" OFF )
 # option( BUILD_VERBOSE "Print helpful build debug information" OFF )
 
 # This module scrapes the CMakeCache.txt file and attempts to get all the cli options the user specified to cmake invocation
