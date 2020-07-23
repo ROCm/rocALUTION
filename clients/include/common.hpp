@@ -23,6 +23,7 @@
 
 #include <mpi.h>
 #include <rocalution.hpp>
+#include <cstring.h>
 
 using namespace rocalution;
 
