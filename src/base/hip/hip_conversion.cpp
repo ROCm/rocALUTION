@@ -676,7 +676,7 @@ namespace rocalution
             ValueType beta = static_cast<ValueType>(0);
 
             // Not actually used in following geam call as beta is zero
-            ValueType* B; 
+            ValueType* B;
 
             // transpose matrix so that dst values are row major
             rocblas_status blas_status = rocblasTgeam(blas_handle,
