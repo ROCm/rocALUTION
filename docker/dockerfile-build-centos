@@ -41,10 +41,6 @@ RUN yum install -y --nogpgcheck \
     mpich-devel \
     ${library_dependencies}
 
-RUN which mpicc
-RUN export MPI_C=`which mpicc`
-RUN export MPI_CXX=`which mpicxx`
-
 RUN echo '#!/bin/bash' | tee /etc/profile.d/devtoolset7.sh && echo \
     'source scl_source enable devtoolset-7' >>/etc/profile.d/devtoolset7.sh
 
