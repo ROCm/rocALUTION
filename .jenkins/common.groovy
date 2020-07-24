@@ -19,7 +19,7 @@ def runCompileCommand(platform, project)
                 set -x
                 cd ${project.paths.project_build_prefix}
                 ${getDependenciesCommand}
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                ${project.paths.build_command}
             """
 
     platform.runCommand(this, command)
