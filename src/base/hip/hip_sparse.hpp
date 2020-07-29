@@ -335,6 +335,43 @@ namespace rocalution
                                        const int*                csr_row_ptr,
                                        int*                      csr_col_ind);
 
+    // rocsparse csr2dense
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsr2dense(rocsparse_handle          handle,
+                                         int                       m,
+                                         int                       n,
+                                         const rocsparse_mat_descr csr_descr,
+                                         const ValueType*          csr_val,
+                                         const int*                csr_row_ptr,
+                                         const int*                csr_col_ind,
+                                         ValueType*                A,
+                                         int                       ld);
+
+    // rocsparse dense2csr
+    template <typename ValueType>
+    rocsparse_status rocsparseTdense2csr(rocsparse_handle          handle,
+                                         int                       m,
+                                         int                       n,
+                                         const rocsparse_mat_descr descr_A,
+                                         const ValueType*          A,
+                                         int                       lda,
+                                         const int*                nnz_per_row,
+                                         ValueType*                csr_val,          
+                                         int*                      csr_row_ptr,
+                                         int*                      csr_col_ind);
+
+    // rocsparse nnz
+    template <typename ValueType>
+    rocsparse_status rocsparseTnnz(rocsparse_handle          handle,
+                                   rocsparse_direction       dir_A,
+                                   int                       m,
+                                   int                       n,
+                                   const rocsparse_mat_descr descr_A,
+                                   const ValueType*          A,
+                                   int                       lda,
+                                   int*                      nnz_per_row_column,
+                                   int*                      nnz_total);
+
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_SPARSE_HPP_

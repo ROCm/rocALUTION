@@ -27,6 +27,7 @@
 #include "hip_allocate_free.hpp"
 #include "hip_kernels_conversion.hpp"
 #include "hip_sparse.hpp"
+#include "hip_blas.hpp"
 #include "hip_utils.hpp"
 
 #include <hip/hip_runtime_api.h>
@@ -637,6 +638,164 @@ namespace rocalution
         return true;
     }
 
+    template <typename ValueType, typename IndexType>
+    bool csr_to_dense_hip(const rocsparse_handle                 sparse_handle,
+                          const rocblas_handle                   blas_handle,
+                          IndexType                              nrow,
+                          IndexType                              ncol,
+                          const MatrixCSR<ValueType, IndexType>& src,
+                          const rocsparse_mat_descr              src_descr,
+                          MatrixDENSE<ValueType>*                dst)
+    {
+        assert(nrow > 0);
+        assert(ncol > 0);
+
+        assert(dst != NULL);
+        assert(sparse_handle != NULL);
+        assert(blas_handle != NULL);
+        assert(src_descr != NULL);
+
+        allocate_hip(nrow * ncol, &dst->val);
+
+        if(DENSE_IND_BASE == 0)
+        {
+            rocsparse_status status = rocsparseTcsr2dense(
+            sparse_handle, nrow, ncol, src_descr, src.val, src.row_offset, src.col, dst->val, nrow);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+        }
+        else
+        {
+            ValueType* temp = NULL;
+            allocate_hip(nrow * ncol, &temp);
+
+            rocsparse_status sparse_status = rocsparseTcsr2dense(
+            sparse_handle, nrow, ncol, src_descr, src.val, src.row_offset, src.col, temp, nrow);
+            CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);
+
+            ValueType alpha = static_cast<ValueType>(1);
+            ValueType beta = static_cast<ValueType>(0);
+
+            // Not actually used in following geam call as beta is zero
+            ValueType* B;
+
+            // transpose matrix so that dst values are row major
+            rocblas_status blas_status = rocblasTgeam(blas_handle,
+                                                      rocblas_operation_transpose,
+                                                      rocblas_operation_none,
+                                                      nrow,
+                                                      ncol,
+                                                      &alpha,
+                                                      temp,
+                                                      nrow,
+                                                      &beta,
+                                                      B,
+                                                      nrow,
+                                                      dst->val,
+                                                      nrow);
+            CHECK_ROCBLAS_ERROR(blas_status, __FILE__, __LINE__);
+
+            free_hip(&temp);
+        }
+
+        // Sync memcopy
+        hipDeviceSynchronize();
+
+        return true;
+    }
+
+    template <typename ValueType, typename IndexType>
+    bool dense_to_csr_hip(const rocsparse_handle           sparse_handle,
+                          const rocblas_handle             blas_handle,
+                          IndexType                        nrow,
+                          IndexType                        ncol,
+                          const MatrixDENSE<ValueType>&    src,
+                          MatrixCSR<ValueType, IndexType>* dst,
+                          const rocsparse_mat_descr        dst_descr)
+    {
+        assert(nrow > 0);
+        assert(ncol > 0);
+
+        assert(dst != NULL);
+        assert(sparse_handle != NULL);
+        assert(blas_handle != NULL);
+        assert(dst_descr != NULL);
+
+        IndexType nnz_total;
+        IndexType* nnz_per_row = NULL;
+
+        if(DENSE_IND_BASE == 0)
+        {
+            rocsparse_status status;
+
+            allocate_hip(nrow, &nnz_per_row);
+
+            status = rocsparseTnnz(
+                sparse_handle, rocsparse_direction_row, nrow, ncol, dst_descr, src.val, nrow, nnz_per_row, &nnz_total);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);  
+
+            allocate_hip(nrow + 1, &dst->row_offset);
+            allocate_hip(nnz_total, &dst->col);
+            allocate_hip(nnz_total, &dst->val);
+
+            status = rocsparseTdense2csr(
+                sparse_handle, nrow, ncol, dst_descr, src.val, nrow, nnz_per_row, dst->val, dst->row_offset, dst->col);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            free_hip(&nnz_per_row);
+        }
+        else
+        {
+            ValueType* temp = NULL;
+            allocate_hip(nrow * ncol, &temp);
+
+            ValueType alpha = static_cast<ValueType>(1);
+            ValueType beta = static_cast<ValueType>(0);
+
+            // Not actually used in following geam call as beta is zero
+            ValueType* B; 
+
+            // transpose matrix so that src values are column major
+            rocblas_status blas_status = rocblasTgeam(blas_handle,
+                                                      rocblas_operation_transpose,
+                                                      rocblas_operation_none,
+                                                      nrow,
+                                                      ncol,
+                                                      &alpha,
+                                                      src.val,
+                                                      nrow,
+                                                      &beta,
+                                                      B,
+                                                      nrow,
+                                                      temp,
+                                                      nrow);
+            CHECK_ROCBLAS_ERROR(blas_status, __FILE__, __LINE__);
+
+            allocate_hip(nrow, &nnz_per_row);
+
+            rocsparse_status sparse_status;
+
+            sparse_status = rocsparseTnnz(
+                sparse_handle, rocsparse_direction_row, nrow, ncol, dst_descr, temp, nrow, nnz_per_row, &nnz_total);
+            CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);  
+
+            allocate_hip(nrow + 1, &dst->row_offset);
+            allocate_hip(nnz_total, &dst->col);
+            allocate_hip(nnz_total, &dst->val);
+
+            sparse_status = rocsparseTdense2csr(
+                sparse_handle, nrow, ncol, dst_descr, temp, nrow, nnz_per_row, dst->val, dst->row_offset, dst->col);
+            CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);
+
+            free_hip(&temp);
+            free_hip(&nnz_per_row);
+        }
+
+        // Sync memcopy
+        hipDeviceSynchronize();
+
+        return true;
+    }
+
     // csr_to_coo
     template bool csr_to_coo_hip(const rocsparse_handle       handle,
                                  int                          nnz,
@@ -904,6 +1063,77 @@ namespace rocalution
                                  int*                                        nnz_hyb,
                                  int*                                        nnz_ell,
                                  int*                                        nnz_coo);
+#endif
+
+    // csr_to_dense
+    template bool csr_to_dense_hip(const rocsparse_handle       sparse_handle,
+                                   const rocblas_handle         blas_handle,
+                                   int                          nrow,
+                                   int                          ncol,
+                                   const MatrixCSR<float, int>& src,
+                                   const rocsparse_mat_descr    src_descr,
+                                   MatrixDENSE<float>*          dst);
+
+    template bool csr_to_dense_hip(const rocsparse_handle        sparse_handle,
+                                   const rocblas_handle          blas_handle,
+                                   int                           nrow,
+                                   int                           ncol,
+                                   const MatrixCSR<double, int>& src,
+                                   const rocsparse_mat_descr     src_descr,
+                                   MatrixDENSE<double>*          dst);
+
+#ifdef SUPPORT_COMPLEX
+    template bool csr_to_dense_hip(const rocsparse_handle                     sparse_handle,
+                                   const rocblas_handle                       blas_handle,
+                                   int                                        nrow,
+                                   int                                        ncol,
+                                   const MatrixCSR<std::complex<float>, int>& src,
+                                   const rocsparse_mat_descr                  src_descr,
+                                   MatrixDENSE<std::complex<float>>*          dst);
+
+
+    template bool csr_to_dense_hip(const rocsparse_handle                      sparse_handle,
+                                   const rocblas_handle                        blas_handle,
+                                   int                                         nrow,
+                                   int                                         ncol,
+                                   const MatrixCSR<std::complex<double>, int>& src,
+                                   const rocsparse_mat_descr                   src_descr,
+                                   MatrixDENSE<std::complex<double>>*          dst);
+#endif
+
+    // dense_to_csr
+    template bool dense_to_csr_hip(const rocsparse_handle    sparse_handle,
+                                   const rocblas_handle      blas_handle,
+                                   int                       nrow,
+                                   int                       ncol,
+                                   const MatrixDENSE<float>& src,
+                                   MatrixCSR<float, int>*    dst,
+                                   const rocsparse_mat_descr dst_descr);
+
+    template bool dense_to_csr_hip(const rocsparse_handle     sparse_handle,
+                                   const rocblas_handle       blas_handle,
+                                   int                        nrow,
+                                   int                        ncol,
+                                   const MatrixDENSE<double>& src,
+                                   MatrixCSR<double, int>*    dst,
+                                   const rocsparse_mat_descr  dst_descr);
+
+#ifdef SUPPORT_COMPLEX
+    template bool dense_to_csr_hip(const rocsparse_handle                  sparse_handle,
+                                   const rocblas_handle                    blas_handle,
+                                   int                                     nrow,
+                                   int                                     ncol,
+                                   const MatrixDENSE<std::complex<float>>& src,
+                                   MatrixCSR<std::complex<float>, int>*    dst,
+                                   const rocsparse_mat_descr               dst_descr);
+
+    template bool dense_to_csr_hip(const rocsparse_handle                   sparse_handle,
+                                   const rocblas_handle                     blas_handle,
+                                   int                                      nrow,
+                                   int                                      ncol,
+                                   const MatrixDENSE<std::complex<double>>& src,
+                                   MatrixCSR<std::complex<double>, int>*    dst,
+                                   const rocsparse_mat_descr                dst_descr);
 #endif
 
 } // namespace rocalution

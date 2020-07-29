@@ -77,6 +77,8 @@ namespace rocalution
     private:
         MatrixDENSE<ValueType> mat_;
 
+        friend class HIPAcceleratorMatrixCSR<ValueType>;
+
         friend class BaseVector<ValueType>;
         friend class AcceleratorVector<ValueType>;
         friend class HIPAcceleratorVector<ValueType>;

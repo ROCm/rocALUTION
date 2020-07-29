@@ -43,6 +43,8 @@
 #include "hip_utils.hpp"
 #include "hip_vector.hpp"
 
+#include "hip_conversion.hpp"
+
 #include <hip/hip_runtime.h>
 
 namespace rocalution
@@ -524,21 +526,26 @@ namespace rocalution
             return true;
         }
 
-        /*
-    const HIPAcceleratorMatrixCSR<ValueType>   *cast_mat_csr;
-    if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL) {
-      this->Clear();
+        const HIPAcceleratorMatrixCSR<ValueType>   *cast_mat_csr;
+        if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL) {
+            this->Clear();
 
-      FATAL_ERROR(__FILE__, __LINE__);
+            if(csr_to_dense_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                                cast_mat_csr->nrow_,
+                                cast_mat_csr->ncol_,
+                                cast_mat_csr->mat_,
+                                cast_mat_csr->mat_descr_,
+                                &this->mat_) 
+                        == true)
+            {
+                this->nrow_ = cast_mat_csr->nrow_;
+                this->ncol_ = cast_mat_csr->ncol_;
+                this->nnz_  = this->nrow_ * this->ncol_;
 
-      this->nrow_ = cast_mat_csr->nrow_;
-      this->ncol_ = cast_mat_csr->ncol_;
-      this->nnz_  = cast_mat_csr->nnz_;
-
-      return true;
-
-    }
-    */
+                return true;
+            }
+        }
 
         return false;
     }

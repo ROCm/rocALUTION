@@ -44,6 +44,10 @@ RUN yum install -y --nogpgcheck \
 RUN echo '#!/bin/bash' | tee /etc/profile.d/devtoolset7.sh && echo \
     'source scl_source enable devtoolset-7' >>/etc/profile.d/devtoolset7.sh
 
+# Centos7 users need to select MPI
+RUN echo '#!/bin/bash' | tee /etc/profile.d/openmpi.sh && echo \
+    'module load mpi/openmpi-x86_64' >>/etc/profile.d/openmpi.sh
+
 # docker pipeline runs containers with particular uid
 # create a jenkins user with this specific uid so it can use sudo priviledges
 # Grant any member of sudo group password-less sudo privileges

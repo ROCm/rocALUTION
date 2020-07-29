@@ -825,23 +825,28 @@ namespace rocalution
             }
         }
 
-        /*
-    const HIPAcceleratorMatrixDENSE<ValueType> *cast_mat_dense;
-    if ((cast_mat_dense = dynamic_cast<const HIPAcceleratorMatrixDENSE<ValueType>*> (&mat)) != NULL)
-    {
-      this->Clear();
-      int nnz = 0;
+        const HIPAcceleratorMatrixDENSE<ValueType> *cast_mat_dense;
+        if ((cast_mat_dense = dynamic_cast<const HIPAcceleratorMatrixDENSE<ValueType>*> (&mat)) != NULL)
+        {
+            this->Clear();
+            int nnz = 0;
 
-      FATAL_ERROR(__FILE__, __LINE__);
+            if(dense_to_csr_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+                                cast_mat_dense->nrow_,
+                                cast_mat_dense->ncol_,
+                                cast_mat_dense->mat_,
+                                &this->mat_,
+                                this->mat_descr_)
+                == true)
+            {
+                this->nrow_ = cast_mat_dense->nrow_;
+                this->ncol_ = cast_mat_dense->ncol_;
+                this->nnz_  = cast_mat_dense->nnz_;
 
-      this->nrow_ = cast_mat_dense->nrow_;
-      this->ncol_ = cast_mat_dense->ncol_;
-      this->nnz_  = nnz;
-
-      return true;
-
-    }
-    */
+                return true;
+            }
+        }
 
         /*
     const HIPAcceleratorMatrixDIA<ValueType>   *cast_mat_dia;

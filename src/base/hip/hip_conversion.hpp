@@ -28,6 +28,7 @@
 #include "../matrix_formats.hpp"
 
 #include <rocsparse.h>
+#include <rocblas.h>
 
 namespace rocalution
 {
@@ -107,6 +108,25 @@ namespace rocalution
                         IndexType*                             nnz_hyb,
                         IndexType*                             nnz_ell,
                         IndexType*                             nnz_coo);
+
+    template <typename ValueType, typename IndexType>
+    bool csr_to_dense_hip(const rocsparse_handle                 sparse_handle,
+                          const rocblas_handle                   blas_handle,
+                          IndexType                              nrow,
+                          IndexType                              ncol,
+                          const MatrixCSR<ValueType, IndexType>& src,
+                          const rocsparse_mat_descr              src_descr,
+                          MatrixDENSE<ValueType>*                dst);
+
+    template <typename ValueType, typename IndexType>
+    bool dense_to_csr_hip(const rocsparse_handle           sparse_handle,
+                          const rocblas_handle             blas_handle,
+                          IndexType                        nrow,
+                          IndexType                        ncol,
+                          const MatrixDENSE<ValueType>&    src,
+                          MatrixCSR<ValueType, IndexType>* dst,
+                          const rocsparse_mat_descr        dst_descr);
+
 
 } // namespace rocalution
 

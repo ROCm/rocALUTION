@@ -5,7 +5,8 @@ import static groovy.io.FileType.FILES
 def runCompileCommand(platform, project)
 {
     project.paths.construct_build_prefix()
-
+    String centos7devtoolset = platform.jenkinsLabel.contains('centos7') ? 'source /etc/profile.d/modules.sh && source scl_source enable devtoolset-7 && module load mpi/openmpi-x86_64' : ''
+    
     def getDependenciesCommand = ""
     if (project.installLibraryDependenciesFromCI)
     {
@@ -19,7 +20,8 @@ def runCompileCommand(platform, project)
                 set -x
                 cd ${project.paths.project_build_prefix}
                 ${getDependenciesCommand}
-                LD_LIBRARY_PATH=/opt/rocm/hcc/lib CXX=${project.compiler.compiler_path} ${project.paths.build_command}
+                ${centos7devtoolset}
+                ${project.paths.build_command}
             """
 
     platform.runCommand(this, command)
