@@ -2,7 +2,7 @@
 // If you are interested in running your own Jenkins, please raise a github issue for assistance.
 import static groovy.io.FileType.FILES
 
-def runCompileCommand(platform, project)
+def runCompileCommand(platform, project, boolean sameOrg=false)
 {
     project.paths.construct_build_prefix()
     String centos7devtoolset = platform.jenkinsLabel.contains('centos7') ? 'source /etc/profile.d/modules.sh && source scl_source enable devtoolset-7 && module load mpi/openmpi-x86_64' : ''
@@ -12,7 +12,7 @@ def runCompileCommand(platform, project)
     {
         project.libraryDependencies.each
         { libraryName ->
-            getDependenciesCommand += auxiliary.getLibrary(libraryName, platform.jenkinsLabel, 'develop')
+            getDependenciesCommand += auxiliary.getLibrary(libraryName, platform.jenkinsLabel, 'develop', sameOrg)
         }
     }
 

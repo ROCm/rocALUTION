@@ -18,7 +18,7 @@ def runCI =
     prj.paths.build_command = buildCommand
     prj.compiler.compiler_name = 'c++'
     prj.compiler.compiler_path = 'c++'
-    prj.libraryDependencies = ['rocPRIM', 'rocBLAS', 'rocSPARSE-internal']
+    prj.libraryDependencies = ['rocPRIM', 'rocBLAS-internal', 'rocSPARSE-internal']
 
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(nodeDetails, jobName, prj)
@@ -58,7 +58,7 @@ def setupCI(urlJobName, jobNameList, buildCommand, runCI, label)
     {
         properties(auxiliary.addCommonProperties([pipelineTriggers([cron('0 1 * * *')])]))
         stage(label + ' ' + urlJobName) {
-            runCI([ubuntu16:['any']], urlJobName, buildCommand)
+            runCI([ubuntu18:['any']], urlJobName, buildCommand)
         }
     }
 }
@@ -78,14 +78,14 @@ ci: {
             properties(auxiliary.addCommonProperties(property))
     }
 
-    def defaultJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu16:['any']]),
-                              "rocm-docker":([ubuntu16:['any']])]
+    def defaultJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['any']]),
+                              "rocm-docker":([ubuntu18:['any']])]
 
-    def hostJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu16:['any']]),
-                           "rocm-docker":([ubuntu16:['any']])]
+    def hostJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['any']]),
+                           "rocm-docker":([ubuntu18:['any']])]
 
-    def mpiJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu16:['any']]),
-                          "rocm-docker":([ubuntu16:['any']])]
+    def mpiJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['any']]),
+                          "rocm-docker":([ubuntu18:['any']])]
 
     String defaultBuildCommand = './install.sh -c'
     String hostBuildCommand = './install.sh -c --host'

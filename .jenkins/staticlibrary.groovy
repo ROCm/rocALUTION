@@ -11,13 +11,13 @@ import java.nio.file.Path
 
 def runCI =
 {
-    nodeDetails, jobName, buildCommand ->
+    nodeDetails, jobName, buildCommand, label ->
 
-    def prj = new rocProject('rocALUTION', 'Extended')
+    def prj = new rocProject('rocALUTION', 'Static Library PreCheckin')
     // customize for project
     prj.paths.build_command = buildCommand
-    prj.compiler.compiler_name = 'c++'
-    prj.compiler.compiler_path = 'c++'
+    prj.compiler.compiler_name = 'hipcc'
+    prj.compiler.compiler_path = '/opt/rocm/bin/hipcc'
     prj.libraryDependencies = ['rocPRIM', 'rocBLAS-internal', 'rocSPARSE-internal']
 
     // Define test architectures, optional rocm version argument is available
@@ -34,14 +34,14 @@ def runCI =
         project.paths.construct_build_prefix()
 
         commonGroovy = load "${project.paths.project_src_prefix}/.jenkins/common.groovy"
-        commonGroovy.runCompileCommand(platform, project)
+        commonGroovy.runCompileCommand(platform, project,true)
     }
 
     def testCommand =
     {
         platform, project->
 
-        def gfilter = "*nightly*"
+        def gfilter = "*checkin*"
         commonGroovy.runTestCommand(platform, project, gfilter)
     }
 
@@ -49,7 +49,7 @@ def runCI =
     {
         platform, project->
 
-        commonGroovy.runPackageCommand(platform, project, jobName)
+        commonGroovy.runPackageCommand(platform, project, jobName, label)
     }
 
     buildProject(prj, formatCheck, nodes.dockerArray, compileCommand, testCommand, packageCommand)
@@ -64,7 +64,7 @@ def setupCI(urlJobName, jobNameList, buildCommand, runCI, label)
         jobName, nodeDetails->
         if (urlJobName == jobName)
             stage(label + ' ' + jobName) {
-                runCI(nodeDetails, jobName, buildCommand)
+                runCI(nodeDetails, jobName, buildCommand, label)
             }
     }
 
@@ -73,7 +73,7 @@ def setupCI(urlJobName, jobNameList, buildCommand, runCI, label)
     {
         properties(auxiliary.addCommonProperties([pipelineTriggers([cron('0 1 * * *')])]))
         stage(label + ' ' + urlJobName) {
-            runCI([ubuntu18:['gfx906']], urlJobName, buildCommand)
+            runCI([ubuntu18:['gfx906']], urlJobName, buildCommand, label)
         }
     }
 }
@@ -102,9 +102,9 @@ ci: {
     def mpiJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['gfx900']]),
                           "rocm-docker":([ubuntu18:['gfx900']])]
 
-    String defaultBuildCommand = './install.sh -c'
-    String hostBuildCommand = './install.sh -c --host'
-    String mpiBuildCommand = './install.sh -c --host --mpi --no-openmp'
+    String defaultBuildCommand = './install.sh -c --static'
+    String hostBuildCommand = './install.sh -c --host --static'
+    String mpiBuildCommand = './install.sh -c --host --mpi --no-openmp --static'
 
     setupCI(urlJobName, defaultJobNameList, defaultBuildCommand, runCI, '')
     setupCI(urlJobName, hostJobNameList, hostBuildCommand, runCI, 'Host')

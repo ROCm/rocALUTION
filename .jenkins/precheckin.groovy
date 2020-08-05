@@ -18,7 +18,7 @@ def runCI =
     prj.paths.build_command = buildCommand
     prj.compiler.compiler_name = 'c++'
     prj.compiler.compiler_path = 'c++'
-    prj.libraryDependencies = ['rocPRIM', 'rocBLAS', 'rocSPARSE-internal']
+    prj.libraryDependencies = ['rocPRIM', 'rocBLAS-internal', 'rocSPARSE-internal']
 
     // Define test architectures, optional rocm version argument is available
     def nodes = new dockerNodes(nodeDetails, jobName, prj)
@@ -73,7 +73,7 @@ def setupCI(urlJobName, jobNameList, buildCommand, runCI, label)
     {
         properties(auxiliary.addCommonProperties([pipelineTriggers([cron('0 1 * * *')])]))
         stage(label + ' ' + urlJobName) {
-            runCI([ubuntu16:['gfx906']], urlJobName, buildCommand, label)
+            runCI([ubuntu18:['gfx906']], urlJobName, buildCommand, label)
         }
     }
 }
@@ -93,14 +93,14 @@ ci: {
             properties(auxiliary.addCommonProperties(property))
     }
 
-    def defaultJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu16:['gfx900'],centos7:['gfx906'],sles15sp1:['gfx906']]),
-                              "rocm-docker":([ubuntu16:['gfx900'],centos7:['gfx906'],sles15sp1:['gfx906']])]
+    def defaultJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['gfx900'],centos7:['gfx906'],sles15sp1:['gfx908']]),
+                              "rocm-docker":([ubuntu18:['gfx900'],centos7:['gfx906'],sles15sp1:['gfx908']])]
 
-    def hostJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu16:['gfx900']]),
-                           "rocm-docker":([ubuntu16:['gfx900']])]
+    def hostJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['gfx900']]),
+                           "rocm-docker":([ubuntu18:['gfx900']])]
 
-    def mpiJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu16:['gfx900']]),
-                          "rocm-docker":([ubuntu16:['gfx900']])]
+    def mpiJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['gfx900']]),
+                          "rocm-docker":([ubuntu18:['gfx900']])]
 
     String defaultBuildCommand = './install.sh -c'
     String hostBuildCommand = './install.sh -c --host'

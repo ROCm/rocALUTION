@@ -22,6 +22,7 @@ function display_help()
   echo "    [--no-openmp] build library without OpenMP"
   echo "    [--mpi] build library with MPI"
   echo "    [--static] build static library"
+  echo "    [--compiler] compiler to build with"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -253,6 +254,7 @@ install_prefix=rocalution-install
 rocm_path=/opt/rocm
 build_relocatable=false
 build_static=false
+compiler=c++
 
 # #################################################
 # Parameter parsing
@@ -261,7 +263,7 @@ build_static=false
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi,relocatable,static --options hicgdr -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi,relocatable,static,compiler: --options hicgdr -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -308,8 +310,13 @@ while true; do
         build_mpi=true
         shift ;;
     --static)
+        #Forcing hipcc for static builds temporarily
+        compiler=${rocm_path}/bin/hipcc
         build_static=true
         shift ;;
+    --compiler)
+        compiler=${2}
+        shift 2 ;;
     --prefix)
         install_prefix=${2}
         shift 2 ;;
@@ -429,7 +436,7 @@ pushd .
 
   # Build library with AMD toolchain because of existense of device kernels
   if [[ "${build_relocatable}" == true ]]; then
-    ${cmake_executable} ${cmake_common_options} ${cmake_client_options} \
+    CXX=${compiler} ${cmake_executable} ${cmake_common_options} ${cmake_client_options} \
       -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
       -DCMAKE_SHARED_LINKER_FLAGS="${rocm_rpath}" \
       -DCMAKE_PREFIX_PATH="${rocm_path} ${rocm_path}/hcc ${rocm_path}/hip" \
@@ -438,7 +445,7 @@ pushd .
       -DROCM_DISABLE_LDCONFIG=ON \
       -DROCM_PATH="${rocm_path}" ../..
   else
-    ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=${install_prefix} -DROCM_PATH=${rocm_path} ../..
+    CXX=${compiler} ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=${install_prefix} -DROCM_PATH=${rocm_path} ../..
   fi
 
   check_exit_code
