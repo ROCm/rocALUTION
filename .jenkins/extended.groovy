@@ -93,13 +93,13 @@ ci: {
             properties(auxiliary.addCommonProperties(property))
     }
 
-    def defaultJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['gfx900'],centos7:['gfx906'],sles15sp1:['gfx908']]),
+    def defaultJobNameList = ["compute-rocm-dkms-no-npi-hipclang":([ubuntu18:['gfx900'],centos7:['gfx906'],centos8:['any'],sles15sp1:['gfx908']]),
                               "rocm-docker":([ubuntu18:['gfx900'],centos7:['gfx906'],sles15sp1:['gfx908']])]
 
-    def hostJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['gfx900']]),
+    def hostJobNameList = ["compute-rocm-dkms-no-npi-hipclang":([ubuntu18:['gfx900']]),
                            "rocm-docker":([ubuntu18:['gfx900']])]
 
-    def mpiJobNameList = ["compute-rocm-dkms-no-npi":([ubuntu18:['gfx900']]),
+    def mpiJobNameList = ["compute-rocm-dkms-no-npi-hipclang":([ubuntu18:['gfx900']]),
                           "rocm-docker":([ubuntu18:['gfx900']])]
 
     String defaultBuildCommand = './install.sh -c'
