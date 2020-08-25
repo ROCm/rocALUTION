@@ -212,7 +212,7 @@ Unsmoothed Aggregation AMG
 .. doxygenfunction:: rocalution::UAAMG::SetCouplingStrength
 .. doxygenfunction:: rocalution::UAAMG::SetOverInterp
 
-For further details, see :cite:`stuben`.
+For further details, see :cite:`stueben`.
 
 Smoothed Aggregation AMG
 ========================
@@ -227,7 +227,7 @@ Ruge-Stueben AMG
 .. doxygenclass:: rocalution::RugeStuebenAMG
 .. doxygenfunction:: rocalution::RugeStuebenAMG::SetCouplingStrength
 
-For further details, see :cite:`stuben`.
+For further details, see :cite:`stueben`.
 
 Pairwise AMG
 ============

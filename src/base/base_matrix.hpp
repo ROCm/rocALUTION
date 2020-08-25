@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -419,7 +419,7 @@ namespace rocalution
                                     BaseMatrix<ValueType>* prolong,
                                     BaseMatrix<ValueType>* restrict) const;
 
-        /// Ruge Stüben coarsening
+        /// Ruge Stueben coarsening
         virtual bool RugeStueben(ValueType              eps,
                                  BaseMatrix<ValueType>* prolong,
                                  BaseMatrix<ValueType>* restrict) const;

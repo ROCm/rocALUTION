@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -292,7 +292,7 @@ namespace rocalution
   * \details
   * The Variable Preconditioner can hold a selection of preconditioners. Thus, any type
   * of preconditioners can be combined. As example, the variable preconditioner can
-  * combine Jacobi, GS and ILU – then, the first iteration of the iterative solver will
+  * combine Jacobi, GS and ILU - then, the first iteration of the iterative solver will
   * apply Jacobi, the second iteration will apply GS and the third iteration will apply
   * ILU. After that, the solver will start again with Jacobi, GS, ILU.
   *

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,8 +27,8 @@
 #include "../backend_manager.hpp"
 #include "../matrix_formats.hpp"
 
-#include <rocsparse.h>
 #include <rocblas.h>
+#include <rocsparse.h>
 
 namespace rocalution
 {
@@ -126,7 +126,6 @@ namespace rocalution
                           const MatrixDENSE<ValueType>&    src,
                           MatrixCSR<ValueType, IndexType>* dst,
                           const rocsparse_mat_descr        dst_descr);
-
 
 } // namespace rocalution
 
