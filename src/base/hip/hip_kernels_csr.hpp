@@ -372,13 +372,14 @@ namespace rocalution
     // Outputs:  col:              fully permuted column indices of elements
     //           data:             fully permuted data
     template <unsigned int size, typename ValueType, typename IndexType>
-    __global__ void kernel_permute_cols(IndexType nrow,
-                                        const IndexType* __restrict__ row_offset,
-                                        const IndexType* __restrict__ perm_vec,
-                                        const IndexType* __restrict__ perm_col,
-                                        const ValueType* __restrict__ perm_data,
-                                        IndexType* __restrict__ col,
-                                        ValueType* __restrict__ data)
+    __launch_bounds__(256) __global__
+        void kernel_permute_cols(IndexType nrow,
+                                 const IndexType* __restrict__ row_offset,
+                                 const IndexType* __restrict__ perm_vec,
+                                 const IndexType* __restrict__ perm_col,
+                                 const ValueType* __restrict__ perm_data,
+                                 IndexType* __restrict__ col,
+                                 ValueType* __restrict__ data)
     {
         IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
