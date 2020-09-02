@@ -1457,16 +1457,34 @@ namespace rocalution
                                                            ValueType          a,
                                                            ValueType          b)
     {
-        //
-        // Create the random calculator.
-        //
-        HIPRandUniform_rocRAND<ValueType> rand_engine_uniform(seed, std::real(a), std::real(b));
+        if(this->size_ > 0)
+        {
+            //
+            // Create the random calculator.
+            //
+            HIPRandUniform_rocRAND<ValueType> rand_engine_uniform(seed, std::real(a), std::real(b));
 
-        //
-        // Apply the random calculator.
-        //
-        this->SetRandom(rand_engine_uniform);
-    };
+            //
+            // Apply the random calculator.
+            //
+            this->SetRandom(rand_engine_uniform);
+
+            //
+            // Apply the affine transformation.
+            //
+            if((a != static_cast<ValueType>(0)) || (b != static_cast<ValueType>(1)))
+            {
+                int  size = this->size_;
+                dim3 BlockSize(this->local_backend_.HIP_block_size);
+                dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+
+                hipLaunchKernelGGL(
+                    (kernel_affine_transform), GridSize, BlockSize, 0, 0, size, a, b, this->vec_);
+
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+            }
+        }
+    }
 
     //
     // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.

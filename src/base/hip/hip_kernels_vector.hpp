@@ -29,6 +29,22 @@
 namespace rocalution
 {
     template <typename ValueType, typename IndexType>
+    __global__ void kernel_affine_transform(IndexType n,
+                                            ValueType a,
+                                            ValueType b,
+                                            ValueType* __restrict__ inout)
+    {
+        IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+        if(ind >= n)
+        {
+            return;
+        }
+
+        inout[ind] = (b - a) * inout[ind] + a;
+    }
+
+    template <typename ValueType, typename IndexType>
     __global__ void kernel_scaleadd(IndexType n,
                                     ValueType alpha,
                                     const ValueType* __restrict__ x,

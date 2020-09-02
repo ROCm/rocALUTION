@@ -309,7 +309,7 @@ namespace rocalution
     {
         log_debug(this, "GlobalVector::SetRandomNormal()", seed, mean, var);
 
-        this->vector_interior_.SetRandomUniform(seed, mean, var);
+        this->vector_interior_.SetRandomNormal(seed, mean, var);
     }
 
     template <typename ValueType>

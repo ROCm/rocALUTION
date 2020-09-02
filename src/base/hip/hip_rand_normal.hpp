@@ -46,8 +46,8 @@ namespace rocalution
     {
     protected:
         using value_type = typename numeric_traits<T>::value_type;
-        rocrand_cpp::xorwow_engine<ROCRAND_XORWOW_DEFAULT_SEED> m_engine;
-        rocrand_cpp::normal_distribution<value_type>            m_distribution;
+        rocrand_cpp::mtgp32_engine<0UL>              m_engine;
+        rocrand_cpp::normal_distribution<value_type> m_distribution;
 
     public:
         inline HIPRandNormal_rocRAND(unsigned long long seed, value_type mean, value_type var)
@@ -56,11 +56,14 @@ namespace rocalution
 
         inline void Generate(T* data, size_t size)
         {
-            assert(0 == sizeof(T) % sizeof(value_type));
-            const int n = sizeof(T) / sizeof(value_type);
-            for(int i = 0; i < n; ++i)
+            if(size > 0)
             {
-                this->m_distribution(this->m_engine, ((value_type*)data) + size * i, size);
+                assert(0 == sizeof(T) % sizeof(value_type));
+                const int n = sizeof(T) / sizeof(value_type);
+                for(int i = 0; i < n; ++i)
+                {
+                    this->m_distribution(this->m_engine, ((value_type*)data) + size * i, size);
+                }
             }
         };
     };

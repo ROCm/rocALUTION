@@ -61,6 +61,9 @@ namespace rocalution
     template <typename IMPL>
     struct CRTP_HIPRand_Traits;
 
+    //
+    // Base class of the random number functionality.
+    //
     template <typename IMPL>
     class CRTP_HIPRand
     {
