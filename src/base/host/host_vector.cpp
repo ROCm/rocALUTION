@@ -411,14 +411,13 @@ namespace rocalution
             this->vec_[i]
                 = a + static_cast<ValueType>(rand()) / static_cast<ValueType>(RAND_MAX) * (b - a);
         }
-    }
+     }
 
     template <typename ValueType>
     void HostVector<ValueType>::SetRandomNormal(unsigned long long seed,
                                                 ValueType          mean,
                                                 ValueType          var)
     {
-        // Fill this with random data from interval [a,b]
         srand(seed);
         for(int i = 0; i < this->size_; ++i)
         {

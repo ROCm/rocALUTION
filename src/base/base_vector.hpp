@@ -179,6 +179,9 @@ namespace rocalution
         virtual void ExtractCoarseBoundary(
             int start, int end, const int* index, int nc, int* size, int* boundary) const = 0;
 
+      virtual void SetRandomUniform(unsigned long long seed, ValueType a, ValueType b) = 0;
+      virtual void SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var) = 0;
+
     protected:
         /// The size of the vector
         int size_;

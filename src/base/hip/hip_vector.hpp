@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,9 +33,10 @@
 
 #include <complex>
 
+#include "hip_rand.hpp"
+
 namespace rocalution
 {
-
     template <typename ValueType>
     class HIPAcceleratorVector : public AcceleratorVector<ValueType>
     {
@@ -135,6 +136,22 @@ namespace rocalution
         // get coarse boundary index
         virtual void ExtractCoarseBoundary(
             int start, int end, const int* index, int nc, int* size, int* boundary) const;
+
+      // set random values from a uniform distribution.      
+      virtual void SetRandomUniform(unsigned long long seed, ValueType a, ValueType b);
+      // set random values from a normal distribution.
+      virtual void SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var);
+
+      // set random values with an implementation of CRTP_HIPRand.
+      template<typename RANDIMPL>
+      inline void SetRandom(CRTP_HIPRand<RANDIMPL>& rand_engine)
+      {	
+        if(this->size_ > 0)
+	  {
+	    rand_engine.Generate(this->vec_,
+				 this->size_);	
+	  };
+      };
 
     private:
         ValueType* vec_;
