@@ -26,60 +26,58 @@
 
 namespace rocalution
 {
-  //
-  // Convenience traits.
-  //
-  template <typename T>
-  struct numeric_traits
-  {
-    using value_type = T;
-  };
-
-  template <>
-  struct numeric_traits< std::complex<float> >
-  {
-    using value_type = float;
-  };
-
-  template <>
-  struct numeric_traits< std::complex<double> >
-  {
-    using value_type = double;
-  };
-
-  template <>
-  struct numeric_traits< float >
-  {
-    using value_type = float;
-  };
-  template <>
-  struct numeric_traits< double >
-  {
-    using value_type = double;
-  };
-
-  
-  template <typename IMPL>
-  struct CRTP_HIPRand_Traits;
-  
-  template <typename IMPL>
-  class CRTP_HIPRand
-  {
-    
-  protected:
-    inline CRTP_HIPRand() {};
-    using traits_t = CRTP_HIPRand_Traits<IMPL>;      
-    
-  public:
-    inline CRTP_HIPRand(const CRTP_HIPRand&that) = delete;
-    using data_t = typename traits_t::data_t;      
-    
-    inline void Generate(data_t * data, size_t size)
+    //
+    // Convenience traits.
+    //
+    template <typename T>
+    struct numeric_traits
     {
-      static_cast<IMPL&>(*this).Generate(data, size);
+        using value_type = T;
     };
-    
-  };
+
+    template <>
+    struct numeric_traits<std::complex<float>>
+    {
+        using value_type = float;
+    };
+
+    template <>
+    struct numeric_traits<std::complex<double>>
+    {
+        using value_type = double;
+    };
+
+    template <>
+    struct numeric_traits<float>
+    {
+        using value_type = float;
+    };
+    template <>
+    struct numeric_traits<double>
+    {
+        using value_type = double;
+    };
+
+    template <typename IMPL>
+    struct CRTP_HIPRand_Traits;
+
+    template <typename IMPL>
+    class CRTP_HIPRand
+    {
+
+    protected:
+        inline CRTP_HIPRand(){};
+        using traits_t = CRTP_HIPRand_Traits<IMPL>;
+
+    public:
+        inline CRTP_HIPRand(const CRTP_HIPRand& that) = delete;
+        using data_t                                  = typename traits_t::data_t;
+
+        inline void Generate(data_t* data, size_t size)
+        {
+            static_cast<IMPL&>(*this).Generate(data, size);
+        };
+    };
 
 } // namespace rocalution
 

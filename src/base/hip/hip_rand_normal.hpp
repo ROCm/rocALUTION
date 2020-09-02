@@ -28,43 +28,42 @@
 #include <rocrand/rocrand.hpp>
 
 namespace rocalution
-{  
-  //
-  // Implementation of a normal distribution using rocRAND.
-  //
-  template <typename T>
-  class HIPRandNormal_rocRAND;
+{
+    //
+    // Implementation of a normal distribution using rocRAND.
+    //
+    template <typename T>
+    class HIPRandNormal_rocRAND;
 
-  template <typename T>
-  struct CRTP_HIPRand_Traits< HIPRandNormal_rocRAND<T> >
-  {
-    using data_t = T;
-  };
-
-  template <typename T>
-  class HIPRandNormal_rocRAND : public CRTP_HIPRand< HIPRandNormal_rocRAND<T> >
-  {
-  protected:    
-    using value_type = typename numeric_traits<T>::value_type;
-    rocrand_cpp::xorwow_engine<ROCRAND_XORWOW_DEFAULT_SEED> m_engine;    
-    rocrand_cpp::normal_distribution<value_type> m_distribution;
-  public:
-    inline HIPRandNormal_rocRAND(unsigned long long seed, value_type mean, value_type var)
-    : m_engine(seed),
-      m_distribution(mean, var)
+    template <typename T>
+    struct CRTP_HIPRand_Traits<HIPRandNormal_rocRAND<T>>
     {
+        using data_t = T;
     };
 
-    inline void Generate(T * data, size_t size)
+    template <typename T>
+    class HIPRandNormal_rocRAND : public CRTP_HIPRand<HIPRandNormal_rocRAND<T>>
     {
-      assert(0 == sizeof(T) % sizeof(value_type));
-      const int n = sizeof(T) / sizeof(value_type);
-      for (int i=0;i < n;++i)
-	{
-	  this->m_distribution(this->m_engine, ((value_type*)data) + size * i, size);
-	}
+    protected:
+        using value_type = typename numeric_traits<T>::value_type;
+        rocrand_cpp::xorwow_engine<ROCRAND_XORWOW_DEFAULT_SEED> m_engine;
+        rocrand_cpp::normal_distribution<value_type>            m_distribution;
+
+    public:
+        inline HIPRandNormal_rocRAND(unsigned long long seed, value_type mean, value_type var)
+            : m_engine(seed)
+            , m_distribution(mean, var){};
+
+        inline void Generate(T* data, size_t size)
+        {
+            assert(0 == sizeof(T) % sizeof(value_type));
+            const int n = sizeof(T) / sizeof(value_type);
+            for(int i = 0; i < n; ++i)
+            {
+                this->m_distribution(this->m_engine, ((value_type*)data) + size * i, size);
+            }
+        };
     };
-  };
 
 } // namespace rocalution
 

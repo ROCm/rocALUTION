@@ -32,10 +32,10 @@
 #include "local_matrix.hpp"
 #include <rocrand/rocrand.h>
 
+#include "../utils/time_functions.hpp"
 #include <complex>
 #include <sstream>
 #include <stdlib.h>
-#include "../utils/time_functions.hpp"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -217,26 +217,24 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::SetRandomUniform(unsigned long long 	seed,
-						  ValueType 		a,
-						  ValueType 		b)
+    void LocalVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType a, ValueType b)
     {
-      log_debug(this, "LocalVector::SetRandomUniform()", seed, a, b);
-      if(this->GetSize() > 0)
+        log_debug(this, "LocalVector::SetRandomUniform()", seed, a, b);
+        if(this->GetSize() > 0)
         {
-	  this->vector_->SetRandomUniform(seed, a, b);
-	}
+            this->vector_->SetRandomUniform(seed, a, b);
+        }
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::SetRandomNormal(unsigned long long 	seed,
-                                                 ValueType          	mean,
-                                                 ValueType          	var)
+    void LocalVector<ValueType>::SetRandomNormal(unsigned long long seed,
+                                                 ValueType          mean,
+                                                 ValueType          var)
     {
-      log_debug(this, "LocalVector::SetRandomNormal()", seed, mean, var);
-      if (this->GetSize() > 0)
+        log_debug(this, "LocalVector::SetRandomNormal()", seed, mean, var);
+        if(this->GetSize() > 0)
         {
-	  this->vector_->SetRandomNormal(seed, mean, var);
+            this->vector_->SetRandomNormal(seed, mean, var);
         }
     }
 

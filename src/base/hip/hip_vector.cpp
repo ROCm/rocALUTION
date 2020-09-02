@@ -42,8 +42,8 @@
 #include <hip/hip_complex.h>
 #endif
 
-#include "hip_rand_uniform.hpp"
 #include "hip_rand_normal.hpp"
+#include "hip_rand_uniform.hpp"
 
 namespace rocalution
 {
@@ -1452,56 +1452,60 @@ namespace rocalution
         }
     }
 
+    template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::SetRandomUniform(unsigned long long seed,
+                                                           ValueType          a,
+                                                           ValueType          b)
+    {
+        //
+        // Create the random calculator.
+        //
+        HIPRandUniform_rocRAND<ValueType> rand_engine_uniform(seed, std::real(a), std::real(b));
 
-  template <typename ValueType>
-  void HIPAcceleratorVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType a, ValueType b)
-  {
-    //
-    // Create the random calculator.
-    //
-    HIPRandUniform_rocRAND<ValueType> rand_engine_uniform(seed, std::real(a), std::real(b));
-
-    //
-    // Apply the random calculator.
-    //
-    this->SetRandom(rand_engine_uniform);
-  };
-
-  //
-  // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
-  //
-  template <>
-  void HIPAcceleratorVector<int>::SetRandomUniform(unsigned long long seed, int a, int b)
-  {
-    LOG_INFO("HIPAcceleratorVector::SetRandomUniform(), available implementation are for float, double, complex float and complex double only.");
-    FATAL_ERROR(__FILE__, __LINE__);   
-  }
-
-
-  template <typename ValueType>
-  void HIPAcceleratorVector<ValueType>::SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var)
-  {
-    //
-    // Create the random calculator.
-    //
-    HIPRandNormal_rocRAND<ValueType> rand_engine_normal(seed, std::real(mean), std::real(var));
+        //
+        // Apply the random calculator.
+        //
+        this->SetRandom(rand_engine_uniform);
+    };
 
     //
-    // Apply the random calculator.
+    // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
     //
-    this->SetRandom(rand_engine_normal);
-  }
+    template <>
+    void HIPAcceleratorVector<int>::SetRandomUniform(unsigned long long seed, int a, int b)
+    {
+        LOG_INFO("HIPAcceleratorVector::SetRandomUniform(), available implementation are for "
+                 "float, double, complex float and complex double only.");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
 
-  //
-  // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
-  //
-  template <>
-  void HIPAcceleratorVector<int>::SetRandomNormal(unsigned long long seed, int mean, int var)
-  {
-    LOG_INFO("HIPAcceleratorVector::SetRandomNormal(), available implementation are for float, double, complex float and complex double only.");
-    FATAL_ERROR(__FILE__, __LINE__);   
-  }
-    
+    template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::SetRandomNormal(unsigned long long seed,
+                                                          ValueType          mean,
+                                                          ValueType          var)
+    {
+        //
+        // Create the random calculator.
+        //
+        HIPRandNormal_rocRAND<ValueType> rand_engine_normal(seed, std::real(mean), std::real(var));
+
+        //
+        // Apply the random calculator.
+        //
+        this->SetRandom(rand_engine_normal);
+    }
+
+    //
+    // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
+    //
+    template <>
+    void HIPAcceleratorVector<int>::SetRandomNormal(unsigned long long seed, int mean, int var)
+    {
+        LOG_INFO("HIPAcceleratorVector::SetRandomNormal(), available implementation are for float, "
+                 "double, complex float and complex double only.");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <>
     void HIPAcceleratorVector<std::complex<float>>::Power(double power)
     {
