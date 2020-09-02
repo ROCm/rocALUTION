@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -4308,7 +4308,7 @@ namespace rocalution
         set_to_zero_host(this->nrow_ + 1, S_row_offset);
         set_to_zero_host(this->nnz_, S_val);
 
-// Determine strong influences in matrix (Ruge Stüben approach)
+// Determine strong influences in matrix (Ruge Stuben approach)
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif

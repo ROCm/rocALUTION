@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -825,8 +825,9 @@ namespace rocalution
             }
         }
 
-        const HIPAcceleratorMatrixDENSE<ValueType> *cast_mat_dense;
-        if ((cast_mat_dense = dynamic_cast<const HIPAcceleratorMatrixDENSE<ValueType>*> (&mat)) != NULL)
+        const HIPAcceleratorMatrixDENSE<ValueType>* cast_mat_dense;
+        if((cast_mat_dense = dynamic_cast<const HIPAcceleratorMatrixDENSE<ValueType>*>(&mat))
+           != NULL)
         {
             this->Clear();
             int nnz = 0;
@@ -838,7 +839,7 @@ namespace rocalution
                                 cast_mat_dense->mat_,
                                 &this->mat_,
                                 this->mat_descr_)
-                == true)
+               == true)
             {
                 this->nrow_ = cast_mat_dense->nrow_;
                 this->ncol_ = cast_mat_dense->ncol_;

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ namespace rocalution
   * coarsening with direct interpolation. The solver provides high-efficiency in terms of
   * complexity of the solver (i.e. number of iterations). However, most of the time it
   * has a higher building step and requires higher memory usage.
-  * \cite stuben
+  * \cite stueben
   *
   * \tparam OperatorType - can be LocalMatrix
   * \tparam VectorType - can be LocalVector

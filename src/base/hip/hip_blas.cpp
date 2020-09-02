@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -586,19 +586,7 @@ namespace rocalution
                                 float*            C,
                                 int               ldc)
     {
-        return rocblas_sgeam(handle,
-                             transA,
-                             transB,
-                             m,
-                             n,
-                             alpha,
-                             A,
-                             lda,
-                             beta,
-                             B,
-                             ldb,
-                             C,
-                             ldc);
+        return rocblas_sgeam(handle, transA, transB, m, n, alpha, A, lda, beta, B, ldb, C, ldc);
     }
 
     template <>
@@ -607,28 +595,16 @@ namespace rocalution
                                 rocblas_operation transB,
                                 int               m,
                                 int               n,
-                                const double*      alpha,
-                                const double*      A,
+                                const double*     alpha,
+                                const double*     A,
                                 int               lda,
-                                const double*      beta,
-                                const double*      B,
+                                const double*     beta,
+                                const double*     B,
                                 int               ldb,
-                                double*            C,
+                                double*           C,
                                 int               ldc)
     {
-        return rocblas_dgeam(handle,
-                             transA,
-                             transB,
-                             m,
-                             n,
-                             alpha,
-                             A,
-                             lda,
-                             beta,
-                             B,
-                             ldb,
-                             C,
-                             ldc);
+        return rocblas_dgeam(handle, transA, transB, m, n, alpha, A, lda, beta, B, ldb, C, ldc);
     }
 
     template <>

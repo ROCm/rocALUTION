@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,9 @@
 #include "../../utils/def.hpp"
 #include "../matrix_formats.hpp"
 #include "hip_allocate_free.hpp"
+#include "hip_blas.hpp"
 #include "hip_kernels_conversion.hpp"
 #include "hip_sparse.hpp"
-#include "hip_blas.hpp"
 #include "hip_utils.hpp"
 
 #include <hip/hip_runtime_api.h>
@@ -659,8 +659,15 @@ namespace rocalution
 
         if(DENSE_IND_BASE == 0)
         {
-            rocsparse_status status = rocsparseTcsr2dense(
-            sparse_handle, nrow, ncol, src_descr, src.val, src.row_offset, src.col, dst->val, nrow);
+            rocsparse_status status = rocsparseTcsr2dense(sparse_handle,
+                                                          nrow,
+                                                          ncol,
+                                                          src_descr,
+                                                          src.val,
+                                                          src.row_offset,
+                                                          src.col,
+                                                          dst->val,
+                                                          nrow);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
         }
         else
@@ -669,11 +676,11 @@ namespace rocalution
             allocate_hip(nrow * ncol, &temp);
 
             rocsparse_status sparse_status = rocsparseTcsr2dense(
-            sparse_handle, nrow, ncol, src_descr, src.val, src.row_offset, src.col, temp, nrow);
+                sparse_handle, nrow, ncol, src_descr, src.val, src.row_offset, src.col, temp, nrow);
             CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);
 
             ValueType alpha = static_cast<ValueType>(1);
-            ValueType beta = static_cast<ValueType>(0);
+            ValueType beta  = static_cast<ValueType>(0);
 
             // Not actually used in following geam call as beta is zero
             ValueType* B;
@@ -720,7 +727,7 @@ namespace rocalution
         assert(blas_handle != NULL);
         assert(dst_descr != NULL);
 
-        IndexType nnz_total;
+        IndexType  nnz_total;
         IndexType* nnz_per_row = NULL;
 
         if(DENSE_IND_BASE == 0)
@@ -729,16 +736,31 @@ namespace rocalution
 
             allocate_hip(nrow, &nnz_per_row);
 
-            status = rocsparseTnnz(
-                sparse_handle, rocsparse_direction_row, nrow, ncol, dst_descr, src.val, nrow, nnz_per_row, &nnz_total);
-            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);  
+            status = rocsparseTnnz(sparse_handle,
+                                   rocsparse_direction_row,
+                                   nrow,
+                                   ncol,
+                                   dst_descr,
+                                   src.val,
+                                   nrow,
+                                   nnz_per_row,
+                                   &nnz_total);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
             allocate_hip(nrow + 1, &dst->row_offset);
             allocate_hip(nnz_total, &dst->col);
             allocate_hip(nnz_total, &dst->val);
 
-            status = rocsparseTdense2csr(
-                sparse_handle, nrow, ncol, dst_descr, src.val, nrow, nnz_per_row, dst->val, dst->row_offset, dst->col);
+            status = rocsparseTdense2csr(sparse_handle,
+                                         nrow,
+                                         ncol,
+                                         dst_descr,
+                                         src.val,
+                                         nrow,
+                                         nnz_per_row,
+                                         dst->val,
+                                         dst->row_offset,
+                                         dst->col);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
             free_hip(&nnz_per_row);
@@ -749,10 +771,10 @@ namespace rocalution
             allocate_hip(nrow * ncol, &temp);
 
             ValueType alpha = static_cast<ValueType>(1);
-            ValueType beta = static_cast<ValueType>(0);
+            ValueType beta  = static_cast<ValueType>(0);
 
             // Not actually used in following geam call as beta is zero
-            ValueType* B; 
+            ValueType* B;
 
             // transpose matrix so that src values are column major
             rocblas_status blas_status = rocblasTgeam(blas_handle,
@@ -774,16 +796,31 @@ namespace rocalution
 
             rocsparse_status sparse_status;
 
-            sparse_status = rocsparseTnnz(
-                sparse_handle, rocsparse_direction_row, nrow, ncol, dst_descr, temp, nrow, nnz_per_row, &nnz_total);
-            CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);  
+            sparse_status = rocsparseTnnz(sparse_handle,
+                                          rocsparse_direction_row,
+                                          nrow,
+                                          ncol,
+                                          dst_descr,
+                                          temp,
+                                          nrow,
+                                          nnz_per_row,
+                                          &nnz_total);
+            CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);
 
             allocate_hip(nrow + 1, &dst->row_offset);
             allocate_hip(nnz_total, &dst->col);
             allocate_hip(nnz_total, &dst->val);
 
-            sparse_status = rocsparseTdense2csr(
-                sparse_handle, nrow, ncol, dst_descr, temp, nrow, nnz_per_row, dst->val, dst->row_offset, dst->col);
+            sparse_status = rocsparseTdense2csr(sparse_handle,
+                                                nrow,
+                                                ncol,
+                                                dst_descr,
+                                                temp,
+                                                nrow,
+                                                nnz_per_row,
+                                                dst->val,
+                                                dst->row_offset,
+                                                dst->col);
             CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);
 
             free_hip(&temp);
@@ -1090,7 +1127,6 @@ namespace rocalution
                                    const MatrixCSR<std::complex<float>, int>& src,
                                    const rocsparse_mat_descr                  src_descr,
                                    MatrixDENSE<std::complex<float>>*          dst);
-
 
     template bool csr_to_dense_hip(const rocsparse_handle                      sparse_handle,
                                    const rocblas_handle                        blas_handle,

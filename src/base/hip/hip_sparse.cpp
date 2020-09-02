@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -2257,7 +2257,7 @@ namespace rocalution
     }
 
     template <>
-    rocsparse_status rocsparseTcsr2dense(rocsparse_handle        handle,
+    rocsparse_status rocsparseTcsr2dense(rocsparse_handle          handle,
                                          int                       m,
                                          int                       n,
                                          const rocsparse_mat_descr csr_descr,
@@ -2267,37 +2267,23 @@ namespace rocalution
                                          float*                    A,
                                          int                       ld)
     {
-        return rocsparse_scsr2dense(handle,
-                                    m,
-                                    n,
-                                    csr_descr,
-                                    csr_val,
-                                    csr_row_ptr,
-                                    csr_col_ind,
-                                    A,
-                                    ld);
+        return rocsparse_scsr2dense(
+            handle, m, n, csr_descr, csr_val, csr_row_ptr, csr_col_ind, A, ld);
     }
 
     template <>
-    rocsparse_status rocsparseTcsr2dense(rocsparse_handle        handle,
+    rocsparse_status rocsparseTcsr2dense(rocsparse_handle          handle,
                                          int                       m,
                                          int                       n,
                                          const rocsparse_mat_descr csr_descr,
-                                         const double*              csr_val,
+                                         const double*             csr_val,
                                          const int*                csr_row_ptr,
                                          const int*                csr_col_ind,
-                                         double*                    A,
+                                         double*                   A,
                                          int                       ld)
     {
-        return rocsparse_dcsr2dense(handle,
-                                    m,
-                                    n,
-                                    csr_descr,
-                                    csr_val,
-                                    csr_row_ptr,
-                                    csr_col_ind,
-                                    A,
-                                    ld);
+        return rocsparse_dcsr2dense(
+            handle, m, n, csr_descr, csr_val, csr_row_ptr, csr_col_ind, A, ld);
     }
 
     template <>
@@ -2352,20 +2338,12 @@ namespace rocalution
                                          const float*              A,
                                          int                       lda,
                                          const int*                nnz_per_row,
-                                         float*                    csr_val,          
+                                         float*                    csr_val,
                                          int*                      csr_row_ptr,
                                          int*                      csr_col_ind)
     {
-        return rocsparse_sdense2csr(handle,
-                                    m,
-                                    n,
-                                    descr_A,
-                                    A,
-                                    lda,
-                                    nnz_per_row,
-                                    csr_val,          
-                                    csr_row_ptr,
-                                    csr_col_ind);
+        return rocsparse_sdense2csr(
+            handle, m, n, descr_A, A, lda, nnz_per_row, csr_val, csr_row_ptr, csr_col_ind);
     }
 
     template <>
@@ -2376,20 +2354,12 @@ namespace rocalution
                                          const double*             A,
                                          int                       lda,
                                          const int*                nnz_per_row,
-                                         double*                   csr_val,          
+                                         double*                   csr_val,
                                          int*                      csr_row_ptr,
                                          int*                      csr_col_ind)
     {
-        return rocsparse_ddense2csr(handle,
-                                    m,
-                                    n,
-                                    descr_A,
-                                    A,
-                                    lda,
-                                    nnz_per_row,
-                                    csr_val,          
-                                    csr_row_ptr,
-                                    csr_col_ind);
+        return rocsparse_ddense2csr(
+            handle, m, n, descr_A, A, lda, nnz_per_row, csr_val, csr_row_ptr, csr_col_ind);
     }
 
     template <>
@@ -2400,7 +2370,7 @@ namespace rocalution
                                          const std::complex<float>* A,
                                          int                        lda,
                                          const int*                 nnz_per_row,
-                                         std::complex<float>*       csr_val,          
+                                         std::complex<float>*       csr_val,
                                          int*                       csr_row_ptr,
                                          int*                       csr_col_ind)
     {
@@ -2411,7 +2381,7 @@ namespace rocalution
                                     (const rocsparse_float_complex*)A,
                                     lda,
                                     nnz_per_row,
-                                    (rocsparse_float_complex*)csr_val,          
+                                    (rocsparse_float_complex*)csr_val,
                                     csr_row_ptr,
                                     csr_col_ind);
     }
@@ -2424,7 +2394,7 @@ namespace rocalution
                                          const std::complex<double>* A,
                                          int                         lda,
                                          const int*                  nnz_per_row,
-                                         std::complex<double>*       csr_val,          
+                                         std::complex<double>*       csr_val,
                                          int*                        csr_row_ptr,
                                          int*                        csr_col_ind)
     {
@@ -2435,7 +2405,7 @@ namespace rocalution
                                     (const rocsparse_double_complex*)A,
                                     lda,
                                     nnz_per_row,
-                                    (rocsparse_double_complex*)csr_val,          
+                                    (rocsparse_double_complex*)csr_val,
                                     csr_row_ptr,
                                     csr_col_ind);
     }
@@ -2451,15 +2421,7 @@ namespace rocalution
                                    int*                      nnz_per_row_column,
                                    int*                      nnz_total)
     {
-        return rocsparse_snnz(handle,
-                              dir_A,
-                              m,
-                              n,
-                              descr_A,
-                              A,
-                              lda,
-                              nnz_per_row_column,
-                              nnz_total);
+        return rocsparse_snnz(handle, dir_A, m, n, descr_A, A, lda, nnz_per_row_column, nnz_total);
     }
 
     template <>
@@ -2473,15 +2435,7 @@ namespace rocalution
                                    int*                      nnz_per_row_column,
                                    int*                      nnz_total)
     {
-        return rocsparse_dnnz(handle,
-                              dir_A,
-                              m,
-                              n,
-                              descr_A,
-                              A,
-                              lda,
-                              nnz_per_row_column,
-                              nnz_total);
+        return rocsparse_dnnz(handle, dir_A, m, n, descr_A, A, lda, nnz_per_row_column, nnz_total);
     }
 
     template <>

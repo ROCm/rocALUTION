@@ -6,7 +6,7 @@ def runCompileCommand(platform, project, boolean sameOrg=false)
 {
     project.paths.construct_build_prefix()
     String centos7devtoolset = platform.jenkinsLabel.contains('centos7') ? 'source /etc/profile.d/modules.sh && source scl_source enable devtoolset-7 && module load mpi/openmpi-x86_64' : ''
-    
+
     def getDependenciesCommand = ""
     if (project.installLibraryDependenciesFromCI)
     {
