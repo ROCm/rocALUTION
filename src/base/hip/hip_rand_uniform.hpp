@@ -25,6 +25,7 @@
 #define ROCALUTION_HIP_RAND_UNIFORM_HPP_
 
 #include "hip_rand.hpp"
+#include <hip/hip_runtime.h>
 #include <rocrand/rocrand.hpp>
 
 namespace rocalution
@@ -49,12 +50,17 @@ namespace rocalution
         value_type                                         m_a, m_b;
         rocrand_cpp::mtgp32_engine<0UL>                    m_engine;
         rocrand_cpp::uniform_real_distribution<value_type> m_distribution;
+        int                                                m_hip_block_size;
 
     public:
-        inline HIPRandUniform_rocRAND(unsigned long long seed, value_type a, value_type b)
+        inline HIPRandUniform_rocRAND(unsigned long long seed,
+                                      value_type         a,
+                                      value_type         b,
+                                      int                hip_block_size)
             : m_a(a)
             , m_b(b)
-            , m_engine(seed){};
+            , m_engine(seed)
+            , m_hip_block_size(hip_block_size){};
 
         inline void Generate(T* data, size_t size)
         {
@@ -62,9 +68,32 @@ namespace rocalution
             {
                 assert(0 == sizeof(T) % sizeof(value_type));
                 const int n = sizeof(T) / sizeof(value_type);
-                for(int i = 0; i < n; ++i)
+
+                //
+                // Get the uniform distribution between 0 and 1.
+                //
+                this->m_distribution(this->m_engine, ((value_type*)data), size * n);
+
+                //
+                // Apply the affine transformation.
+                //
+                if((this->m_a != static_cast<value_type>(0))
+                   || (this->m_b != static_cast<value_type>(1)))
                 {
-                    this->m_distribution(this->m_engine, ((value_type*)data) + size * i, size);
+                    dim3 BlockSize(m_hip_block_size);
+                    dim3 GridSize((size * n) / m_hip_block_size + 1);
+
+                    hipLaunchKernelGGL((kernel_affine_transform),
+                                       GridSize,
+                                       BlockSize,
+                                       0,
+                                       0,
+                                       size * n,
+                                       this->m_a,
+                                       this->m_b,
+                                       (value_type*)data);
+
+                    CHECK_HIP_ERROR(__FILE__, __LINE__);
                 }
             }
         };

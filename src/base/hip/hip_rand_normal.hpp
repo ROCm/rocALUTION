@@ -59,11 +59,8 @@ namespace rocalution
             if(size > 0)
             {
                 assert(0 == sizeof(T) % sizeof(value_type));
-                const int n = sizeof(T) / sizeof(value_type);
-                for(int i = 0; i < n; ++i)
-                {
-                    this->m_distribution(this->m_engine, ((value_type*)data) + size * i, size);
-                }
+                this->m_distribution(
+                    this->m_engine, ((value_type*)data), size * (sizeof(T) / sizeof(value_type)));
             }
         };
     };

@@ -1462,27 +1462,13 @@ namespace rocalution
             //
             // Create the random calculator.
             //
-            HIPRandUniform_rocRAND<ValueType> rand_engine_uniform(seed, std::real(a), std::real(b));
+            HIPRandUniform_rocRAND<ValueType> rand_engine_uniform(
+                seed, std::real(a), std::real(b), this->local_backend_.HIP_block_size);
 
             //
             // Apply the random calculator.
             //
             this->SetRandom(rand_engine_uniform);
-
-            //
-            // Apply the affine transformation.
-            //
-            if((a != static_cast<ValueType>(0)) || (b != static_cast<ValueType>(1)))
-            {
-                int  size = this->size_;
-                dim3 BlockSize(this->local_backend_.HIP_block_size);
-                dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
-
-                hipLaunchKernelGGL(
-                    (kernel_affine_transform), GridSize, BlockSize, 0, 0, size, a, b, this->vec_);
-
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
         }
     }
 
