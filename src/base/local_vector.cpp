@@ -30,9 +30,7 @@
 #include "base_vector.hpp"
 #include "host/host_vector.hpp"
 #include "local_matrix.hpp"
-#include <rocrand/rocrand.h>
 
-#include "../utils/time_functions.hpp"
 #include <complex>
 #include <sstream>
 #include <stdlib.h>
