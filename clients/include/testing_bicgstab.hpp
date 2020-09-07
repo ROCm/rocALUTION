@@ -84,7 +84,7 @@ bool testing_bicgstab(Arguments argus)
     A.Apply(e, &b);
 
     // Random initial guess
-    x.SetRandomUniform(12345ULL, -4.0, 6.0);
+    x.SetRandomUniform(12345ULL, -3.0, 4.0);
 
     // Solver
     BiCGStab<LocalMatrix<T>, LocalVector<T>, T> ls;
