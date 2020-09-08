@@ -128,7 +128,7 @@ if(SUPPORT_HIP)
   rocm_set_soversion(rocalution_hip ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim)
+  target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim roc::rocrand)
   target_link_libraries(rocalution PRIVATE rocalution_hip hip::host)
 endif()
 
@@ -154,8 +154,8 @@ rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-dev (>= 3.5.0), rocsparse (>= 1.12.10), rocblas (>= 2.22.0), rocprim (>= 2.10.1)")
-  set(CPACK_RPM_PACKAGE_REQUIRES "rocm-dev >= 3.5.0, rocsparse >= 1.12.10, rocblas >= 2.22.0, rocprim >= 2.10.1")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-dev (>= 3.5.0), rocsparse (>= 1.12.10), rocblas (>= 2.22.0), rocprim (>= 2.10.1), rocrand (>= 0.0.1)")
+  set(CPACK_RPM_PACKAGE_REQUIRES "rocm-dev >= 3.5.0, rocsparse >= 1.12.10, rocblas >= 2.22.0, rocprim >= 2.10.1, rocrand >= 0.0.1")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
@@ -174,7 +174,7 @@ set(ROCALUTION_CONFIG_DIR "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LI
 rocm_create_package(
   NAME ${package_name}
   DESCRIPTION "Radeon Open Compute library for sparse linear systems"
-  MAINTAINER "Nico Trost"
+  MAINTAINER "Nico Trost, Yvan Mokwinski, James Sandham"
   LDCONFIG
   LDCONFIG_DIR ${ROCALUTION_CONFIG_DIR}
 )

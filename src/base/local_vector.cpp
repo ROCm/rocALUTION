@@ -34,7 +34,6 @@
 #include <complex>
 #include <sstream>
 #include <stdlib.h>
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -219,28 +218,9 @@ namespace rocalution
     void LocalVector<ValueType>::SetRandomUniform(unsigned long long seed, ValueType a, ValueType b)
     {
         log_debug(this, "LocalVector::SetRandomUniform()", seed, a, b);
-
-        assert(a <= b);
-
         if(this->GetSize() > 0)
         {
-            // host only
-            bool on_host = this->is_host_();
-            if(on_host == false)
-            {
-                this->MoveToHost();
-            }
-
-            assert(this->vector_ == this->vector_host_);
-            this->vector_host_->SetRandomUniform(seed, a, b);
-
-            if(on_host == false)
-            {
-                LOG_VERBOSE_INFO(
-                    2, "*** warning: LocalVector::SetRandomUniform() is performed on the host");
-
-                this->MoveToAccelerator();
-            }
+            this->vector_->SetRandomUniform(seed, a, b);
         }
     }
 
@@ -250,26 +230,9 @@ namespace rocalution
                                                  ValueType          var)
     {
         log_debug(this, "LocalVector::SetRandomNormal()", seed, mean, var);
-
         if(this->GetSize() > 0)
         {
-            // host only
-            bool on_host = this->is_host_();
-            if(on_host == false)
-            {
-                this->MoveToHost();
-            }
-
-            assert(this->vector_ == this->vector_host_);
-            this->vector_host_->SetRandomNormal(seed, mean, var);
-
-            if(on_host == false)
-            {
-                LOG_VERBOSE_INFO(
-                    2, "*** warning: LocalVector::SetRandomNormal() is performed on the host");
-
-                this->MoveToAccelerator();
-            }
+            this->vector_->SetRandomNormal(seed, mean, var);
         }
     }
 

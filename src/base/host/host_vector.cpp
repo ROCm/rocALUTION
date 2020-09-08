@@ -418,7 +418,6 @@ namespace rocalution
                                                 ValueType          mean,
                                                 ValueType          var)
     {
-        // Fill this with random data from interval [a,b]
         srand(seed);
         for(int i = 0; i < this->size_; ++i)
         {

@@ -84,6 +84,7 @@ if(SUPPORT_HIP)
   find_package(rocblas REQUIRED)
   find_package(rocsparse REQUIRED)
   find_package(rocprim REQUIRED)
+  find_package(rocrand REQUIRED)
 endif()
 
 # ROCm cmake package
