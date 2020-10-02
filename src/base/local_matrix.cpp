@@ -4751,10 +4751,6 @@ namespace rocalution
     {
         log_debug(this, "LocalMatrix::Sort()");
 
-#ifdef DEBUG_MODE
-        this->Check();
-#endif
-
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Sort();

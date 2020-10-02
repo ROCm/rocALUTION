@@ -96,6 +96,48 @@ int gen_2d_laplacian(int ndim, int** rowptr, int** col, T** val)
 }
 
 /* ============================================================================================ */
+/*! \brief  Generate full rank identity matrix where the row order has been permuted */
+template <typename T>
+int gen_permuted_identity(int ndim, int** rowptr, int** col, T** val)
+{
+    if(ndim == 0)
+    {
+        return 0;
+    }
+
+    int n       = ndim * ndim;
+    int nnz_mat = n;
+
+    *rowptr = new int[n + 1];
+    *col    = new int[nnz_mat];
+    *val    = new T[nnz_mat];
+
+    int nnz = 0;
+
+    for(int i = 0; i < n + 1; i++)
+    {
+        (*rowptr)[i] = i;
+    }
+
+    srand(12345ULL);
+    int r = (int)(static_cast<T>(rand()) / RAND_MAX * (n - 0));
+
+    for(int i = 0; i < n; i++)
+    {
+        int index = r + i;
+        if(r + i >= n)
+        {
+            index = r + i - n;
+        }
+
+        (*col)[i] = index;
+        (*val)[i] = static_cast<T>(1);
+    }
+
+    return n;
+}
+
+/* ============================================================================================ */
 
 /*! \brief Class used to parse command arguments in both client & gtest   */
 
@@ -132,6 +174,7 @@ public:
     std::string solver   = "";
     std::string precond  = "";
     std::string smoother = "";
+    std::string matrix   = "";
 
     int pre_smooth  = 2;
     int post_smooth = 2;
@@ -163,6 +206,7 @@ public:
         this->solver   = rhs.solver;
         this->precond  = rhs.precond;
         this->smoother = rhs.smoother;
+        this->matrix   = rhs.matrix;
 
         this->pre_smooth  = rhs.pre_smooth;
         this->post_smooth = rhs.post_smooth;
