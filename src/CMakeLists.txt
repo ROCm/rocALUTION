@@ -144,10 +144,18 @@ else()
 endif()
 
 # Export targets
-rocm_export_targets(TARGETS roc::rocalution
-                    PREFIX rocalution
-                    DEPENDS PACKAGE HIP
-                    NAMESPACE roc::)
+if(SUPPORT_OMP)
+  rocm_export_targets(TARGETS roc::rocalution
+                      PREFIX rocalution
+                      DEPENDS PACKAGE HIP
+                      DEPENDS PACKAGE OpenMP
+                      NAMESPACE roc::)
+else()
+  rocm_export_targets(TARGETS roc::rocalution
+                      PREFIX rocalution
+                      DEPENDS PACKAGE HIP
+                      NAMESPACE roc::)
+endif()
 
 # Symbolic links
 rocm_install_symlink_subdir(rocalution)

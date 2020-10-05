@@ -32,10 +32,11 @@
 using namespace rocalution;
 
 template <typename T>
-bool testing_gmres(Arguments argus)
+bool testing_gmres(Arguments argus, bool expectConvergence = true)
 {
     int          ndim    = argus.size;
     int          basis   = argus.index;
+    std::string  matrix  = argus.matrix;
     std::string  precond = argus.precond;
     unsigned int format  = argus.format;
 
@@ -54,8 +55,15 @@ bool testing_gmres(Arguments argus)
     int* csr_col = NULL;
     T*   csr_val = NULL;
 
-    int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
-    int nnz  = csr_ptr[nrow];
+    int nrow = 0;
+    if(matrix == "laplacian")
+        nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
+    else if(matrix == "permuted_identity")
+        nrow = gen_permuted_identity(ndim, &csr_ptr, &csr_col, &csr_val);
+    else
+        return false;
+
+    int nnz = csr_ptr[nrow];
 
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
@@ -151,7 +159,7 @@ bool testing_gmres(Arguments argus)
     x.ScaleAdd(-1.0, e);
     T nrm2 = x.Norm();
 
-    bool success = (nrm2 < 1e3);
+    bool success = expectConvergence ? (nrm2 < 1e3) : true;
 
     // Clean up
     ls.Clear();

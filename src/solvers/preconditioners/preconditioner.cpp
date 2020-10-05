@@ -141,6 +141,18 @@ namespace rocalution
         assert(this->build_ == true);
         assert(x != NULL);
 
+        // If inverse diagonal entries vector is empty then simply return which is equivalent to
+        // performing pointwise multiplication assuming the inverse diagonal vector was all ones.
+        if(this->inv_diag_entries_.GetSize() == 0)
+        {
+            if(x != &rhs)
+            {
+                x->CopyFrom(rhs);
+            }
+
+            return;
+        }
+
         if(x != &rhs)
         {
             x->PointWiseMult(this->inv_diag_entries_, rhs);
