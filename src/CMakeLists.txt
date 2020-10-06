@@ -119,7 +119,7 @@ if(SUPPORT_HIP)
   # HIP flags workaround while target_compile_options do not work
   list(APPEND HIP_HIPCC_FLAGS "-Wno-unused-command-line-argument -fPIC")
   foreach(target ${AMDGPU_TARGETS})
-    list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}")
+    list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}:xnack-")
   endforeach()
 
   # Create rocALUTION HIP library
@@ -144,10 +144,18 @@ else()
 endif()
 
 # Export targets
-rocm_export_targets(TARGETS roc::rocalution
-                    PREFIX rocalution
-                    DEPENDS PACKAGE HIP
-                    NAMESPACE roc::)
+if(SUPPORT_OMP)
+  rocm_export_targets(TARGETS roc::rocalution
+                      PREFIX rocalution
+                      DEPENDS PACKAGE HIP
+                      DEPENDS PACKAGE OpenMP
+                      NAMESPACE roc::)
+else()
+  rocm_export_targets(TARGETS roc::rocalution
+                      PREFIX rocalution
+                      DEPENDS PACKAGE HIP
+                      NAMESPACE roc::)
+endif()
 
 # Symbolic links
 rocm_install_symlink_subdir(rocalution)
