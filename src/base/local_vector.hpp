@@ -251,7 +251,7 @@ namespace rocalution
         virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);
         virtual void ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x);
         virtual void
-                          ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
+            ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
         virtual void      ScaleAddScale(ValueType                     alpha,
                                         const LocalVector<ValueType>& x,
                                         ValueType                     beta,

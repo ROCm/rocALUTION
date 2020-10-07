@@ -55,7 +55,7 @@ namespace rocalution
         virtual void Clear(void);
         virtual void AllocateELL(int nnz, int nrow, int ncol, int max_row);
         virtual void
-                     SetDataPtrELL(int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row);
+            SetDataPtrELL(int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row);
         virtual void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);

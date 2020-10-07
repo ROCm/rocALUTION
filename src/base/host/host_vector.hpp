@@ -62,7 +62,7 @@ namespace rocalution
         virtual void CopyFromDouble(const BaseVector<double>& vec);
         virtual void CopyTo(BaseVector<ValueType>* vec) const;
         virtual void
-                     CopyFrom(const BaseVector<ValueType>& src, int src_offset, int dst_offset, int size);
+            CopyFrom(const BaseVector<ValueType>& src, int src_offset, int dst_offset, int size);
         virtual void CopyFromPermute(const BaseVector<ValueType>& src,
                                      const BaseVector<int>&       permutation);
         virtual void CopyFromPermuteBackward(const BaseVector<ValueType>& src,

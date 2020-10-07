@@ -121,7 +121,7 @@ namespace rocalution
                                const GlobalVector<ValueType>& y,
                                ValueType                      gamma);
         virtual void
-                          ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
+            ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
         virtual void      Scale(ValueType alpha);
         virtual ValueType Dot(const GlobalVector<ValueType>& x) const;
         virtual ValueType DotNonConj(const GlobalVector<ValueType>& x) const;

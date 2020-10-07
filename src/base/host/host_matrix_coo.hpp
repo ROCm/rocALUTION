@@ -49,7 +49,7 @@ namespace rocalution
         virtual void AllocateCOO(int nnz, int nrow, int ncol);
 
         virtual void
-                     SetDataPtrCOO(int** row, int** col, ValueType** val, int nnz, int nrow, int ncol);
+            SetDataPtrCOO(int** row, int** col, ValueType** val, int nnz, int nrow, int ncol);
         virtual void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
 
         virtual bool Scale(ValueType alpha);

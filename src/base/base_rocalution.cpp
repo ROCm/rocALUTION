@@ -183,7 +183,7 @@ namespace rocalution
 
 #ifdef SUPPORT_COMPLEX
     template void
-                  BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
+        BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
     template void BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
 
     template void BaseRocalution<std::complex<float>>::CloneBackend(

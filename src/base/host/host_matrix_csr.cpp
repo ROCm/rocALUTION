@@ -4681,8 +4681,8 @@ namespace rocalution
 
             ValueType alpha = std::abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den)
                                                       : static_cast<ValueType>(0);
-            ValueType beta = std::abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den)
-                                                     : static_cast<ValueType>(0);
+            ValueType beta  = std::abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den)
+                                                      : static_cast<ValueType>(0);
 
             for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {

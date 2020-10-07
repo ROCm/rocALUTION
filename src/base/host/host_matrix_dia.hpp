@@ -53,7 +53,7 @@ namespace rocalution
         virtual void Clear(void);
         virtual void AllocateDIA(int nnz, int nrow, int ncol, int ndiag);
         virtual void
-                     SetDataPtrDIA(int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag);
+            SetDataPtrDIA(int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag);
         virtual void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
