@@ -564,6 +564,393 @@ namespace rocalution
                                       temp_buffer);
     }
 
+    // rocsparse bsrsv buffer size
+    template <>
+    rocsparse_status rocsparseTbsrsv_buffer_size(rocsparse_handle          handle,
+                                                 rocsparse_direction       dir,
+                                                 rocsparse_operation       trans,
+                                                 int                       mb,
+                                                 int                       nnzb,
+                                                 const rocsparse_mat_descr descr,
+                                                 const float*              bsr_val,
+                                                 const int*                bsr_row_ptr,
+                                                 const int*                bsr_col_ind,
+                                                 int                       bsr_dim,
+                                                 rocsparse_mat_info        info,
+                                                 size_t*                   buffer_size)
+    {
+        return rocsparse_sbsrsv_buffer_size(handle,
+                                            dir,
+                                            trans,
+                                            mb,
+                                            nnzb,
+                                            descr,
+                                            bsr_val,
+                                            bsr_row_ptr,
+                                            bsr_col_ind,
+                                            bsr_dim,
+                                            info,
+                                            buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv_buffer_size(rocsparse_handle          handle,
+                                                 rocsparse_direction       dir,
+                                                 rocsparse_operation       trans,
+                                                 int                       mb,
+                                                 int                       nnzb,
+                                                 const rocsparse_mat_descr descr,
+                                                 const double*             bsr_val,
+                                                 const int*                bsr_row_ptr,
+                                                 const int*                bsr_col_ind,
+                                                 int                       bsr_dim,
+                                                 rocsparse_mat_info        info,
+                                                 size_t*                   buffer_size)
+    {
+        return rocsparse_dbsrsv_buffer_size(handle,
+                                            dir,
+                                            trans,
+                                            mb,
+                                            nnzb,
+                                            descr,
+                                            bsr_val,
+                                            bsr_row_ptr,
+                                            bsr_col_ind,
+                                            bsr_dim,
+                                            info,
+                                            buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv_buffer_size(rocsparse_handle           handle,
+                                                 rocsparse_direction        dir,
+                                                 rocsparse_operation        trans,
+                                                 int                        mb,
+                                                 int                        nnzb,
+                                                 const rocsparse_mat_descr  descr,
+                                                 const std::complex<float>* bsr_val,
+                                                 const int*                 bsr_row_ptr,
+                                                 const int*                 bsr_col_ind,
+                                                 int                        bsr_dim,
+                                                 rocsparse_mat_info         info,
+                                                 size_t*                    buffer_size)
+    {
+        return rocsparse_cbsrsv_buffer_size(handle,
+                                            dir,
+                                            trans,
+                                            mb,
+                                            nnzb,
+                                            descr,
+                                            (const rocsparse_float_complex*)bsr_val,
+                                            bsr_row_ptr,
+                                            bsr_col_ind,
+                                            bsr_dim,
+                                            info,
+                                            buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv_buffer_size(rocsparse_handle            handle,
+                                                 rocsparse_direction         dir,
+                                                 rocsparse_operation         trans,
+                                                 int                         mb,
+                                                 int                         nnzb,
+                                                 const rocsparse_mat_descr   descr,
+                                                 const std::complex<double>* bsr_val,
+                                                 const int*                  bsr_row_ptr,
+                                                 const int*                  bsr_col_ind,
+                                                 int                         bsr_dim,
+                                                 rocsparse_mat_info          info,
+                                                 size_t*                     buffer_size)
+    {
+        return rocsparse_zbsrsv_buffer_size(handle,
+                                            dir,
+                                            trans,
+                                            mb,
+                                            nnzb,
+                                            descr,
+                                            (const rocsparse_double_complex*)bsr_val,
+                                            bsr_row_ptr,
+                                            bsr_col_ind,
+                                            bsr_dim,
+                                            info,
+                                            buffer_size);
+    }
+
+    // rocsparse bsrsv analysis
+    template <>
+    rocsparse_status rocsparseTbsrsv_analysis(rocsparse_handle          handle,
+                                              rocsparse_direction       dir,
+                                              rocsparse_operation       trans,
+                                              int                       mb,
+                                              int                       nnzb,
+                                              const rocsparse_mat_descr descr,
+                                              const float*              bsr_val,
+                                              const int*                bsr_row_ptr,
+                                              const int*                bsr_col_ind,
+                                              int                       bsr_dim,
+                                              rocsparse_mat_info        info,
+                                              rocsparse_analysis_policy analysis,
+                                              rocsparse_solve_policy    solve,
+                                              void*                     temp_buffer)
+    {
+        return rocsparse_sbsrsv_analysis(handle,
+                                         dir,
+                                         trans,
+                                         mb,
+                                         nnzb,
+                                         descr,
+                                         bsr_val,
+                                         bsr_row_ptr,
+                                         bsr_col_ind,
+                                         bsr_dim,
+                                         info,
+                                         analysis,
+                                         solve,
+                                         temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv_analysis(rocsparse_handle          handle,
+                                              rocsparse_direction       dir,
+                                              rocsparse_operation       trans,
+                                              int                       mb,
+                                              int                       nnzb,
+                                              const rocsparse_mat_descr descr,
+                                              const double*             bsr_val,
+                                              const int*                bsr_row_ptr,
+                                              const int*                bsr_col_ind,
+                                              int                       bsr_dim,
+                                              rocsparse_mat_info        info,
+                                              rocsparse_analysis_policy analysis,
+                                              rocsparse_solve_policy    solve,
+                                              void*                     temp_buffer)
+    {
+        return rocsparse_dbsrsv_analysis(handle,
+                                         dir,
+                                         trans,
+                                         mb,
+                                         nnzb,
+                                         descr,
+                                         bsr_val,
+                                         bsr_row_ptr,
+                                         bsr_col_ind,
+                                         bsr_dim,
+                                         info,
+                                         analysis,
+                                         solve,
+                                         temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv_analysis(rocsparse_handle           handle,
+                                              rocsparse_direction        dir,
+                                              rocsparse_operation        trans,
+                                              int                        mb,
+                                              int                        nnzb,
+                                              const rocsparse_mat_descr  descr,
+                                              const std::complex<float>* bsr_val,
+                                              const int*                 bsr_row_ptr,
+                                              const int*                 bsr_col_ind,
+                                              int                        bsr_dim,
+                                              rocsparse_mat_info         info,
+                                              rocsparse_analysis_policy  analysis,
+                                              rocsparse_solve_policy     solve,
+                                              void*                      temp_buffer)
+    {
+        return rocsparse_cbsrsv_analysis(handle,
+                                         dir,
+                                         trans,
+                                         mb,
+                                         nnzb,
+                                         descr,
+                                         (const rocsparse_float_complex*)bsr_val,
+                                         bsr_row_ptr,
+                                         bsr_col_ind,
+                                         bsr_dim,
+                                         info,
+                                         analysis,
+                                         solve,
+                                         temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv_analysis(rocsparse_handle            handle,
+                                              rocsparse_direction         dir,
+                                              rocsparse_operation         trans,
+                                              int                         mb,
+                                              int                         nnzb,
+                                              const rocsparse_mat_descr   descr,
+                                              const std::complex<double>* bsr_val,
+                                              const int*                  bsr_row_ptr,
+                                              const int*                  bsr_col_ind,
+                                              int                         bsr_dim,
+                                              rocsparse_mat_info          info,
+                                              rocsparse_analysis_policy   analysis,
+                                              rocsparse_solve_policy      solve,
+                                              void*                       temp_buffer)
+    {
+        return rocsparse_zbsrsv_analysis(handle,
+                                         dir,
+                                         trans,
+                                         mb,
+                                         nnzb,
+                                         descr,
+                                         (const rocsparse_double_complex*)bsr_val,
+                                         bsr_row_ptr,
+                                         bsr_col_ind,
+                                         bsr_dim,
+                                         info,
+                                         analysis,
+                                         solve,
+                                         temp_buffer);
+    }
+
+    // rocsparse bsrsv
+    template <>
+    rocsparse_status rocsparseTbsrsv(rocsparse_handle          handle,
+                                     rocsparse_direction       dir,
+                                     rocsparse_operation       trans,
+                                     int                       mb,
+                                     int                       nnzb,
+                                     const float*              alpha,
+                                     const rocsparse_mat_descr descr,
+                                     const float*              bsr_val,
+                                     const int*                bsr_row_ptr,
+                                     const int*                bsr_col_ind,
+                                     int                       bsr_dim,
+                                     rocsparse_mat_info        info,
+                                     const float*              x,
+                                     float*                    y,
+                                     rocsparse_solve_policy    policy,
+                                     void*                     temp_buffer)
+    {
+        return rocsparse_sbsrsv_solve(handle,
+                                      dir,
+                                      trans,
+                                      mb,
+                                      nnzb,
+                                      alpha,
+                                      descr,
+                                      bsr_val,
+                                      bsr_row_ptr,
+                                      bsr_col_ind,
+                                      bsr_dim,
+                                      info,
+                                      x,
+                                      y,
+                                      policy,
+                                      temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv(rocsparse_handle          handle,
+                                     rocsparse_direction       dir,
+                                     rocsparse_operation       trans,
+                                     int                       mb,
+                                     int                       nnzb,
+                                     const double*             alpha,
+                                     const rocsparse_mat_descr descr,
+                                     const double*             bsr_val,
+                                     const int*                bsr_row_ptr,
+                                     const int*                bsr_col_ind,
+                                     int                       bsr_dim,
+                                     rocsparse_mat_info        info,
+                                     const double*             x,
+                                     double*                   y,
+                                     rocsparse_solve_policy    policy,
+                                     void*                     temp_buffer)
+    {
+        return rocsparse_dbsrsv_solve(handle,
+                                      dir,
+                                      trans,
+                                      mb,
+                                      nnzb,
+                                      alpha,
+                                      descr,
+                                      bsr_val,
+                                      bsr_row_ptr,
+                                      bsr_col_ind,
+                                      bsr_dim,
+                                      info,
+                                      x,
+                                      y,
+                                      policy,
+                                      temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv(rocsparse_handle           handle,
+                                     rocsparse_direction        dir,
+                                     rocsparse_operation        trans,
+                                     int                        mb,
+                                     int                        nnzb,
+                                     const std::complex<float>* alpha,
+                                     const rocsparse_mat_descr  descr,
+                                     const std::complex<float>* bsr_val,
+                                     const int*                 bsr_row_ptr,
+                                     const int*                 bsr_col_ind,
+                                     int                        bsr_dim,
+                                     rocsparse_mat_info         info,
+                                     const std::complex<float>* x,
+                                     std::complex<float>*       y,
+                                     rocsparse_solve_policy     policy,
+                                     void*                      temp_buffer)
+    {
+        return rocsparse_cbsrsv_solve(handle,
+                                      dir,
+                                      trans,
+                                      mb,
+                                      nnzb,
+                                      (const rocsparse_float_complex*)alpha,
+                                      descr,
+                                      (const rocsparse_float_complex*)bsr_val,
+                                      bsr_row_ptr,
+                                      bsr_col_ind,
+                                      bsr_dim,
+                                      info,
+                                      (const rocsparse_float_complex*)x,
+                                      (rocsparse_float_complex*)y,
+                                      policy,
+                                      temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrsv(rocsparse_handle            handle,
+                                     rocsparse_direction         dir,
+                                     rocsparse_operation         trans,
+                                     int                         mb,
+                                     int                         nnzb,
+                                     const std::complex<double>* alpha,
+                                     const rocsparse_mat_descr   descr,
+                                     const std::complex<double>* bsr_val,
+                                     const int*                  bsr_row_ptr,
+                                     const int*                  bsr_col_ind,
+                                     int                         bsr_dim,
+                                     rocsparse_mat_info          info,
+                                     const std::complex<double>* x,
+                                     std::complex<double>*       y,
+                                     rocsparse_solve_policy      policy,
+                                     void*                       temp_buffer)
+    {
+        return rocsparse_zbsrsv_solve(handle,
+                                      dir,
+                                      trans,
+                                      mb,
+                                      nnzb,
+                                      (const rocsparse_double_complex*)alpha,
+                                      descr,
+                                      (const rocsparse_double_complex*)bsr_val,
+                                      bsr_row_ptr,
+                                      bsr_col_ind,
+                                      bsr_dim,
+                                      info,
+                                      (const rocsparse_double_complex*)x,
+                                      (rocsparse_double_complex*)y,
+                                      policy,
+                                      temp_buffer);
+    }
+
     // rocsparse coomv
     template <>
     rocsparse_status rocsparseTcoomv(rocsparse_handle          handle,
@@ -1551,6 +1938,345 @@ namespace rocalution
                                  temp_buffer);
     }
 
+    // rocsparse bsric0 buffer size
+    template <>
+    rocsparse_status rocsparseTbsric0_buffer_size(rocsparse_handle          handle,
+                                                  rocsparse_direction       dir,
+                                                  int                       mb,
+                                                  int                       nnzb,
+                                                  const rocsparse_mat_descr descr,
+                                                  float*                    bsr_val,
+                                                  const int*                bsr_row_ptr,
+                                                  const int*                bsr_col_ind,
+                                                  int                       bsr_dim,
+                                                  rocsparse_mat_info        info,
+                                                  size_t*                   buffer_size)
+    {
+        return rocsparse_sbsric0_buffer_size(handle,
+                                             dir,
+                                             mb,
+                                             nnzb,
+                                             descr,
+                                             bsr_val,
+                                             bsr_row_ptr,
+                                             bsr_col_ind,
+                                             bsr_dim,
+                                             info,
+                                             buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0_buffer_size(rocsparse_handle          handle,
+                                                  rocsparse_direction       dir,
+                                                  int                       mb,
+                                                  int                       nnzb,
+                                                  const rocsparse_mat_descr descr,
+                                                  double*                   bsr_val,
+                                                  const int*                bsr_row_ptr,
+                                                  const int*                bsr_col_ind,
+                                                  int                       bsr_dim,
+                                                  rocsparse_mat_info        info,
+                                                  size_t*                   buffer_size)
+    {
+        return rocsparse_dbsric0_buffer_size(handle,
+                                             dir,
+                                             mb,
+                                             nnzb,
+                                             descr,
+                                             bsr_val,
+                                             bsr_row_ptr,
+                                             bsr_col_ind,
+                                             bsr_dim,
+                                             info,
+                                             buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0_buffer_size(rocsparse_handle          handle,
+                                                  rocsparse_direction       dir,
+                                                  int                       mb,
+                                                  int                       nnzb,
+                                                  const rocsparse_mat_descr descr,
+                                                  std::complex<float>*      bsr_val,
+                                                  const int*                bsr_row_ptr,
+                                                  const int*                bsr_col_ind,
+                                                  int                       bsr_dim,
+                                                  rocsparse_mat_info        info,
+                                                  size_t*                   buffer_size)
+    {
+        return rocsparse_cbsric0_buffer_size(handle,
+                                             dir,
+                                             mb,
+                                             nnzb,
+                                             descr,
+                                             (rocsparse_float_complex*)bsr_val,
+                                             bsr_row_ptr,
+                                             bsr_col_ind,
+                                             bsr_dim,
+                                             info,
+                                             buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0_buffer_size(rocsparse_handle          handle,
+                                                  rocsparse_direction       dir,
+                                                  int                       mb,
+                                                  int                       nnzb,
+                                                  const rocsparse_mat_descr descr,
+                                                  std::complex<double>*     bsr_val,
+                                                  const int*                bsr_row_ptr,
+                                                  const int*                bsr_col_ind,
+                                                  int                       bsr_dim,
+                                                  rocsparse_mat_info        info,
+                                                  size_t*                   buffer_size)
+    {
+        return rocsparse_zbsric0_buffer_size(handle,
+                                             dir,
+                                             mb,
+                                             nnzb,
+                                             descr,
+                                             (rocsparse_double_complex*)bsr_val,
+                                             bsr_row_ptr,
+                                             bsr_col_ind,
+                                             bsr_dim,
+                                             info,
+                                             buffer_size);
+    }
+
+    // rocsparse bsric0 analysis
+    template <>
+    rocsparse_status rocsparseTbsric0_analysis(rocsparse_handle          handle,
+                                               rocsparse_direction       dir,
+                                               int                       mb,
+                                               int                       nnzb,
+                                               const rocsparse_mat_descr descr,
+                                               float*                    bsr_val,
+                                               const int*                bsr_row_ptr,
+                                               const int*                bsr_col_ind,
+                                               int                       bsr_dim,
+                                               rocsparse_mat_info        info,
+                                               rocsparse_analysis_policy analysis,
+                                               rocsparse_solve_policy    solve,
+                                               void*                     temp_buffer)
+    {
+        return rocsparse_sbsric0_analysis(handle,
+                                          dir,
+                                          mb,
+                                          nnzb,
+                                          descr,
+                                          bsr_val,
+                                          bsr_row_ptr,
+                                          bsr_col_ind,
+                                          bsr_dim,
+                                          info,
+                                          analysis,
+                                          solve,
+                                          temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0_analysis(rocsparse_handle          handle,
+                                               rocsparse_direction       dir,
+                                               int                       mb,
+                                               int                       nnzb,
+                                               const rocsparse_mat_descr descr,
+                                               double*                   bsr_val,
+                                               const int*                bsr_row_ptr,
+                                               const int*                bsr_col_ind,
+                                               int                       bsr_dim,
+                                               rocsparse_mat_info        info,
+                                               rocsparse_analysis_policy analysis,
+                                               rocsparse_solve_policy    solve,
+                                               void*                     temp_buffer)
+    {
+        return rocsparse_dbsric0_analysis(handle,
+                                          dir,
+                                          mb,
+                                          nnzb,
+                                          descr,
+                                          bsr_val,
+                                          bsr_row_ptr,
+                                          bsr_col_ind,
+                                          bsr_dim,
+                                          info,
+                                          analysis,
+                                          solve,
+                                          temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0_analysis(rocsparse_handle          handle,
+                                               rocsparse_direction       dir,
+                                               int                       mb,
+                                               int                       nnzb,
+                                               const rocsparse_mat_descr descr,
+                                               std::complex<float>*      bsr_val,
+                                               const int*                bsr_row_ptr,
+                                               const int*                bsr_col_ind,
+                                               int                       bsr_dim,
+                                               rocsparse_mat_info        info,
+                                               rocsparse_analysis_policy analysis,
+                                               rocsparse_solve_policy    solve,
+                                               void*                     temp_buffer)
+    {
+        return rocsparse_cbsric0_analysis(handle,
+                                          dir,
+                                          mb,
+                                          nnzb,
+                                          descr,
+                                          (rocsparse_float_complex*)bsr_val,
+                                          bsr_row_ptr,
+                                          bsr_col_ind,
+                                          bsr_dim,
+                                          info,
+                                          analysis,
+                                          solve,
+                                          temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0_analysis(rocsparse_handle          handle,
+                                               rocsparse_direction       dir,
+                                               int                       mb,
+                                               int                       nnzb,
+                                               const rocsparse_mat_descr descr,
+                                               std::complex<double>*     bsr_val,
+                                               const int*                bsr_row_ptr,
+                                               const int*                bsr_col_ind,
+                                               int                       bsr_dim,
+                                               rocsparse_mat_info        info,
+                                               rocsparse_analysis_policy analysis,
+                                               rocsparse_solve_policy    solve,
+                                               void*                     temp_buffer)
+    {
+        return rocsparse_zbsric0_analysis(handle,
+                                          dir,
+                                          mb,
+                                          nnzb,
+                                          descr,
+                                          (rocsparse_double_complex*)bsr_val,
+                                          bsr_row_ptr,
+                                          bsr_col_ind,
+                                          bsr_dim,
+                                          info,
+                                          analysis,
+                                          solve,
+                                          temp_buffer);
+    }
+
+    // rocsparse bsric0
+    template <>
+    rocsparse_status rocsparseTbsric0(rocsparse_handle          handle,
+                                      rocsparse_direction       dir,
+                                      int                       mb,
+                                      int                       nnzb,
+                                      const rocsparse_mat_descr descr,
+                                      float*                    bsr_val,
+                                      const int*                bsr_row_ptr,
+                                      const int*                bsr_col_ind,
+                                      int                       bsr_dim,
+                                      rocsparse_mat_info        info,
+                                      rocsparse_solve_policy    policy,
+                                      void*                     temp_buffer)
+    {
+        return rocsparse_sbsric0(handle,
+                                 dir,
+                                 mb,
+                                 nnzb,
+                                 descr,
+                                 bsr_val,
+                                 bsr_row_ptr,
+                                 bsr_col_ind,
+                                 bsr_dim,
+                                 info,
+                                 policy,
+                                 temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0(rocsparse_handle          handle,
+                                      rocsparse_direction       dir,
+                                      int                       mb,
+                                      int                       nnzb,
+                                      const rocsparse_mat_descr descr,
+                                      double*                   bsr_val,
+                                      const int*                bsr_row_ptr,
+                                      const int*                bsr_col_ind,
+                                      int                       bsr_dim,
+                                      rocsparse_mat_info        info,
+                                      rocsparse_solve_policy    policy,
+                                      void*                     temp_buffer)
+    {
+        return rocsparse_dbsric0(handle,
+                                 dir,
+                                 mb,
+                                 nnzb,
+                                 descr,
+                                 bsr_val,
+                                 bsr_row_ptr,
+                                 bsr_col_ind,
+                                 bsr_dim,
+                                 info,
+                                 policy,
+                                 temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0(rocsparse_handle          handle,
+                                      rocsparse_direction       dir,
+                                      int                       mb,
+                                      int                       nnzb,
+                                      const rocsparse_mat_descr descr,
+                                      std::complex<float>*      bsr_val,
+                                      const int*                bsr_row_ptr,
+                                      const int*                bsr_col_ind,
+                                      int                       bsr_dim,
+                                      rocsparse_mat_info        info,
+                                      rocsparse_solve_policy    policy,
+                                      void*                     temp_buffer)
+    {
+        return rocsparse_cbsric0(handle,
+                                 dir,
+                                 mb,
+                                 nnzb,
+                                 descr,
+                                 (rocsparse_float_complex*)bsr_val,
+                                 bsr_row_ptr,
+                                 bsr_col_ind,
+                                 bsr_dim,
+                                 info,
+                                 policy,
+                                 temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsric0(rocsparse_handle          handle,
+                                      rocsparse_direction       dir,
+                                      int                       mb,
+                                      int                       nnzb,
+                                      const rocsparse_mat_descr descr,
+                                      std::complex<double>*     bsr_val,
+                                      const int*                bsr_row_ptr,
+                                      const int*                bsr_col_ind,
+                                      int                       bsr_dim,
+                                      rocsparse_mat_info        info,
+                                      rocsparse_solve_policy    policy,
+                                      void*                     temp_buffer)
+    {
+        return rocsparse_zbsric0(handle,
+                                 dir,
+                                 mb,
+                                 nnzb,
+                                 descr,
+                                 (rocsparse_double_complex*)bsr_val,
+                                 bsr_row_ptr,
+                                 bsr_col_ind,
+                                 bsr_dim,
+                                 info,
+                                 policy,
+                                 temp_buffer);
+    }
+
     // rocsparse csrilu0 buffer size
     template <>
     rocsparse_status rocsparseTcsrilu0_buffer_size(rocsparse_handle          handle,
@@ -1807,6 +2533,345 @@ namespace rocalution
                                   (rocsparse_double_complex*)csr_val,
                                   csr_row_ptr,
                                   csr_col_ind,
+                                  info,
+                                  policy,
+                                  temp_buffer);
+    }
+
+    // rocsparse bsrilu0 buffer size
+    template <>
+    rocsparse_status rocsparseTbsrilu0_buffer_size(rocsparse_handle          handle,
+                                                   rocsparse_direction       dir,
+                                                   int                       mb,
+                                                   int                       nnzb,
+                                                   const rocsparse_mat_descr descr,
+                                                   float*                    bsr_val,
+                                                   const int*                bsr_row_ptr,
+                                                   const int*                bsr_col_ind,
+                                                   int                       bsr_dim,
+                                                   rocsparse_mat_info        info,
+                                                   size_t*                   buffer_size)
+    {
+        return rocsparse_sbsrilu0_buffer_size(handle,
+                                              dir,
+                                              mb,
+                                              nnzb,
+                                              descr,
+                                              bsr_val,
+                                              bsr_row_ptr,
+                                              bsr_col_ind,
+                                              bsr_dim,
+                                              info,
+                                              buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0_buffer_size(rocsparse_handle          handle,
+                                                   rocsparse_direction       dir,
+                                                   int                       mb,
+                                                   int                       nnzb,
+                                                   const rocsparse_mat_descr descr,
+                                                   double*                   bsr_val,
+                                                   const int*                bsr_row_ptr,
+                                                   const int*                bsr_col_ind,
+                                                   int                       bsr_dim,
+                                                   rocsparse_mat_info        info,
+                                                   size_t*                   buffer_size)
+    {
+        return rocsparse_dbsrilu0_buffer_size(handle,
+                                              dir,
+                                              mb,
+                                              nnzb,
+                                              descr,
+                                              bsr_val,
+                                              bsr_row_ptr,
+                                              bsr_col_ind,
+                                              bsr_dim,
+                                              info,
+                                              buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0_buffer_size(rocsparse_handle          handle,
+                                                   rocsparse_direction       dir,
+                                                   int                       mb,
+                                                   int                       nnzb,
+                                                   const rocsparse_mat_descr descr,
+                                                   std::complex<float>*      bsr_val,
+                                                   const int*                bsr_row_ptr,
+                                                   const int*                bsr_col_ind,
+                                                   int                       bsr_dim,
+                                                   rocsparse_mat_info        info,
+                                                   size_t*                   buffer_size)
+    {
+        return rocsparse_cbsrilu0_buffer_size(handle,
+                                              dir,
+                                              mb,
+                                              nnzb,
+                                              descr,
+                                              (rocsparse_float_complex*)bsr_val,
+                                              bsr_row_ptr,
+                                              bsr_col_ind,
+                                              bsr_dim,
+                                              info,
+                                              buffer_size);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0_buffer_size(rocsparse_handle          handle,
+                                                   rocsparse_direction       dir,
+                                                   int                       mb,
+                                                   int                       nnzb,
+                                                   const rocsparse_mat_descr descr,
+                                                   std::complex<double>*     bsr_val,
+                                                   const int*                bsr_row_ptr,
+                                                   const int*                bsr_col_ind,
+                                                   int                       bsr_dim,
+                                                   rocsparse_mat_info        info,
+                                                   size_t*                   buffer_size)
+    {
+        return rocsparse_zbsrilu0_buffer_size(handle,
+                                              dir,
+                                              mb,
+                                              nnzb,
+                                              descr,
+                                              (rocsparse_double_complex*)bsr_val,
+                                              bsr_row_ptr,
+                                              bsr_col_ind,
+                                              bsr_dim,
+                                              info,
+                                              buffer_size);
+    }
+
+    // rocsparse bsrilu0 analysis
+    template <>
+    rocsparse_status rocsparseTbsrilu0_analysis(rocsparse_handle          handle,
+                                                rocsparse_direction       dir,
+                                                int                       mb,
+                                                int                       nnzb,
+                                                const rocsparse_mat_descr descr,
+                                                float*                    bsr_val,
+                                                const int*                bsr_row_ptr,
+                                                const int*                bsr_col_ind,
+                                                int                       bsr_dim,
+                                                rocsparse_mat_info        info,
+                                                rocsparse_analysis_policy analysis,
+                                                rocsparse_solve_policy    solve,
+                                                void*                     temp_buffer)
+    {
+        return rocsparse_sbsrilu0_analysis(handle,
+                                           dir,
+                                           mb,
+                                           nnzb,
+                                           descr,
+                                           bsr_val,
+                                           bsr_row_ptr,
+                                           bsr_col_ind,
+                                           bsr_dim,
+                                           info,
+                                           analysis,
+                                           solve,
+                                           temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0_analysis(rocsparse_handle          handle,
+                                                rocsparse_direction       dir,
+                                                int                       mb,
+                                                int                       nnzb,
+                                                const rocsparse_mat_descr descr,
+                                                double*                   bsr_val,
+                                                const int*                bsr_row_ptr,
+                                                const int*                bsr_col_ind,
+                                                int                       bsr_dim,
+                                                rocsparse_mat_info        info,
+                                                rocsparse_analysis_policy analysis,
+                                                rocsparse_solve_policy    solve,
+                                                void*                     temp_buffer)
+    {
+        return rocsparse_dbsrilu0_analysis(handle,
+                                           dir,
+                                           mb,
+                                           nnzb,
+                                           descr,
+                                           bsr_val,
+                                           bsr_row_ptr,
+                                           bsr_col_ind,
+                                           bsr_dim,
+                                           info,
+                                           analysis,
+                                           solve,
+                                           temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0_analysis(rocsparse_handle          handle,
+                                                rocsparse_direction       dir,
+                                                int                       mb,
+                                                int                       nnzb,
+                                                const rocsparse_mat_descr descr,
+                                                std::complex<float>*      bsr_val,
+                                                const int*                bsr_row_ptr,
+                                                const int*                bsr_col_ind,
+                                                int                       bsr_dim,
+                                                rocsparse_mat_info        info,
+                                                rocsparse_analysis_policy analysis,
+                                                rocsparse_solve_policy    solve,
+                                                void*                     temp_buffer)
+    {
+        return rocsparse_cbsrilu0_analysis(handle,
+                                           dir,
+                                           mb,
+                                           nnzb,
+                                           descr,
+                                           (rocsparse_float_complex*)bsr_val,
+                                           bsr_row_ptr,
+                                           bsr_col_ind,
+                                           bsr_dim,
+                                           info,
+                                           analysis,
+                                           solve,
+                                           temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0_analysis(rocsparse_handle          handle,
+                                                rocsparse_direction       dir,
+                                                int                       mb,
+                                                int                       nnzb,
+                                                const rocsparse_mat_descr descr,
+                                                std::complex<double>*     bsr_val,
+                                                const int*                bsr_row_ptr,
+                                                const int*                bsr_col_ind,
+                                                int                       bsr_dim,
+                                                rocsparse_mat_info        info,
+                                                rocsparse_analysis_policy analysis,
+                                                rocsparse_solve_policy    solve,
+                                                void*                     temp_buffer)
+    {
+        return rocsparse_zbsrilu0_analysis(handle,
+                                           dir,
+                                           mb,
+                                           nnzb,
+                                           descr,
+                                           (rocsparse_double_complex*)bsr_val,
+                                           bsr_row_ptr,
+                                           bsr_col_ind,
+                                           bsr_dim,
+                                           info,
+                                           analysis,
+                                           solve,
+                                           temp_buffer);
+    }
+
+    // rocsparse bsrilu0
+    template <>
+    rocsparse_status rocsparseTbsrilu0(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       mb,
+                                       int                       nnzb,
+                                       const rocsparse_mat_descr descr,
+                                       float*                    bsr_val,
+                                       const int*                bsr_row_ptr,
+                                       const int*                bsr_col_ind,
+                                       int                       bsr_dim,
+                                       rocsparse_mat_info        info,
+                                       rocsparse_solve_policy    policy,
+                                       void*                     temp_buffer)
+    {
+        return rocsparse_sbsrilu0(handle,
+                                  dir,
+                                  mb,
+                                  nnzb,
+                                  descr,
+                                  bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  bsr_dim,
+                                  info,
+                                  policy,
+                                  temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       mb,
+                                       int                       nnzb,
+                                       const rocsparse_mat_descr descr,
+                                       double*                   bsr_val,
+                                       const int*                bsr_row_ptr,
+                                       const int*                bsr_col_ind,
+                                       int                       bsr_dim,
+                                       rocsparse_mat_info        info,
+                                       rocsparse_solve_policy    policy,
+                                       void*                     temp_buffer)
+    {
+        return rocsparse_dbsrilu0(handle,
+                                  dir,
+                                  mb,
+                                  nnzb,
+                                  descr,
+                                  bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  bsr_dim,
+                                  info,
+                                  policy,
+                                  temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       mb,
+                                       int                       nnzb,
+                                       const rocsparse_mat_descr descr,
+                                       std::complex<float>*      bsr_val,
+                                       const int*                bsr_row_ptr,
+                                       const int*                bsr_col_ind,
+                                       int                       bsr_dim,
+                                       rocsparse_mat_info        info,
+                                       rocsparse_solve_policy    policy,
+                                       void*                     temp_buffer)
+    {
+        return rocsparse_cbsrilu0(handle,
+                                  dir,
+                                  mb,
+                                  nnzb,
+                                  descr,
+                                  (rocsparse_float_complex*)bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  bsr_dim,
+                                  info,
+                                  policy,
+                                  temp_buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsrilu0(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       mb,
+                                       int                       nnzb,
+                                       const rocsparse_mat_descr descr,
+                                       std::complex<double>*     bsr_val,
+                                       const int*                bsr_row_ptr,
+                                       const int*                bsr_col_ind,
+                                       int                       bsr_dim,
+                                       rocsparse_mat_info        info,
+                                       rocsparse_solve_policy    policy,
+                                       void*                     temp_buffer)
+    {
+        return rocsparse_zbsrilu0(handle,
+                                  dir,
+                                  mb,
+                                  nnzb,
+                                  descr,
+                                  (rocsparse_double_complex*)bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  bsr_dim,
                                   info,
                                   policy,
                                   temp_buffer);

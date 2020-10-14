@@ -537,9 +537,39 @@ namespace rocalution
         assert(nrow > 0);
         assert(ncol > 0);
 
-        // TODO
+        omp_set_num_threads(omp_threads);
 
-        return false;
+        allocate_host(nrow + 1, &dst->row_offset);
+        allocate_host(nnz, &dst->col);
+        allocate_host(nnz, &dst->val);
+
+        dst->row_offset[0] = 0;
+
+        IndexType idx = 0;
+        for(IndexType i = 0; i < src.nrowb; ++i)
+        {
+            for(IndexType r = 0; r < src.blockdim; ++r)
+            {
+                IndexType row = i * src.blockdim + r;
+
+                for(IndexType k = src.row_offset[i]; k < src.row_offset[i + 1]; ++k)
+                {
+                    for(IndexType c = 0; c < src.blockdim; ++c)
+                    {
+                        dst->col[idx] = src.blockdim * src.col[k] + c;
+                        dst->val[idx] = src.val[BCSR_IND(k, c, r, src.blockdim)];
+
+                        ++idx;
+                    }
+                }
+
+                dst->row_offset[row + 1]
+                    = dst->row_offset[row]
+                      + (src.row_offset[i + 1] - src.row_offset[i]) * src.blockdim;
+            }
+        }
+
+        return true;
     }
 
     template <typename ValueType, typename IndexType>

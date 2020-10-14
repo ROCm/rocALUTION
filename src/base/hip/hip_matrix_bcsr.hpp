@@ -70,6 +70,27 @@ namespace rocalution
         virtual void CopyToHost(HostMatrix<ValueType>* dst) const;
         virtual void CopyToHostAsync(HostMatrix<ValueType>* dst) const;
 
+        virtual bool ILU0Factorize(void);
+
+        virtual void LUAnalyse(void);
+        virtual void LUAnalyseClear(void);
+        virtual bool LUSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+
+        virtual void LLAnalyse(void);
+        virtual void LLAnalyseClear(void);
+        virtual bool LLSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+        virtual bool LLSolve(const BaseVector<ValueType>& in,
+                             const BaseVector<ValueType>& inv_diag,
+                             BaseVector<ValueType>*       out) const;
+
+        virtual void LAnalyse(bool diag_unit = false);
+        virtual void LAnalyseClear(void);
+        virtual bool LSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+
+        virtual void UAnalyse(bool diag_unit = false);
+        virtual void UAnalyseClear(void);
+        virtual bool USolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+
         virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
         virtual void ApplyAdd(const BaseVector<ValueType>& in,
                               ValueType                    scalar,
@@ -78,7 +99,17 @@ namespace rocalution
     private:
         MatrixBCSR<ValueType, int> mat_;
 
+        rocsparse_mat_descr L_mat_descr_;
+        rocsparse_mat_descr U_mat_descr_;
         rocsparse_mat_descr mat_descr_;
+
+        rocsparse_mat_info mat_info_;
+
+        // Matrix buffer (bsrilu0, bsric0, bsrsv)
+        size_t mat_buffer_size_;
+        void*  mat_buffer_;
+
+        HIPAcceleratorVector<ValueType>* tmp_vec_;
 
         friend class BaseVector<ValueType>;
         friend class AcceleratorVector<ValueType>;
