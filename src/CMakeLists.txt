@@ -117,9 +117,9 @@ if(SUPPORT_HIP)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
-  list(APPEND HIP_HIPCC_FLAGS "-Wno-unused-command-line-argument -fPIC -mno-xnack -Xarch_gfx906 -mno-sram-ecc -Xarch_gfx908 -msram-ecc")
+  list(APPEND HIP_HIPCC_FLAGS "-Wno-unused-command-line-argument -fPIC")
   foreach(target ${AMDGPU_TARGETS})
-    list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}")
+    list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}:xnack-")
   endforeach()
 
   # Create rocALUTION HIP library
