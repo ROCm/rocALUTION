@@ -463,7 +463,7 @@ pushd .
 
     case "${ID}" in
       ubuntu)
-        elevate_if_not_root dpkg -i rocalution-*.deb
+        elevate_if_not_root dpkg -i rocalution[-\_]*.deb
       ;;
       centos|rhel)
         elevate_if_not_root yum -y localinstall rocalution-*.rpm
