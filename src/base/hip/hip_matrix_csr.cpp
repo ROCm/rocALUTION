@@ -2190,6 +2190,10 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
+            int* d_detect_zero_diag = NULL;
+            allocate_hip(1, &d_detect_zero_diag);
+            set_to_zero_hip(1, 1, d_detect_zero_diag);
+
             hipLaunchKernelGGL((kernel_csr_extract_inv_diag<ValueType, int>),
                                GridSize,
                                BlockSize,
@@ -2199,7 +2203,20 @@ namespace rocalution
                                this->mat_.row_offset,
                                this->mat_.col,
                                this->mat_.val,
-                               cast_vec_inv_diag->vec_);
+                               cast_vec_inv_diag->vec_,
+                               d_detect_zero_diag);
+
+            int detect_zero_diag = 0;
+            hipMemcpy(&detect_zero_diag, d_detect_zero_diag, sizeof(int), hipMemcpyDeviceToHost);
+
+            if(detect_zero_diag == 1)
+            {
+                LOG_VERBOSE_INFO(
+                    2,
+                    "*** warning: in HIPAcceleratorMatrixCSR::ExtractInverseDiagonal() a zero has "
+                    "been detected on the diagonal. It has been replaced with one to avoid inf");
+            }
+            free_hip(&d_detect_zero_diag);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
