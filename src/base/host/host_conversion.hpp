@@ -91,6 +91,14 @@ namespace rocalution
                     IndexType*                             nnz_coo);
 
     template <typename ValueType, typename IndexType>
+    bool bcsr_to_csr(int                                     omp_threads,
+                     IndexType                               nnz,
+                     IndexType                               nrow,
+                     IndexType                               ncol,
+                     const MatrixBCSR<ValueType, IndexType>& src,
+                     MatrixCSR<ValueType, IndexType>*        dst);
+
+    template <typename ValueType, typename IndexType>
     bool dense_to_csr(int                              omp_threads,
                       IndexType                        nrow,
                       IndexType                        ncol,

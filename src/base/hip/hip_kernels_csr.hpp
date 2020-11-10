@@ -152,7 +152,8 @@ namespace rocalution
                                                 const IndexType* __restrict__ row_offset,
                                                 const IndexType* __restrict__ col,
                                                 const ValueType* __restrict__ val,
-                                                ValueType* __restrict__ vec)
+                                                ValueType* __restrict__ vec,
+                                                int* __restrict__ detect_zero)
     {
         IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
@@ -165,7 +166,16 @@ namespace rocalution
         {
             if(ai == col[aj])
             {
-                vec[ai] = static_cast<ValueType>(1) / val[aj];
+                if(val[aj] != static_cast<ValueType>(0))
+                {
+                    vec[ai] = static_cast<ValueType>(1) / val[aj];
+                }
+                else
+                {
+                    vec[ai] = static_cast<ValueType>(1);
+
+                    *detect_zero = 1;
+                }
             }
         }
     }

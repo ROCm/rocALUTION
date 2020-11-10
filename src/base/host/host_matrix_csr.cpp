@@ -507,6 +507,31 @@ namespace rocalution
             return true;
         }
 
+        if(const HostMatrixBCSR<ValueType>* cast_mat
+           = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&mat))
+        {
+            this->Clear();
+
+            int nrow = cast_mat->mat_.nrowb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
+            int ncol = cast_mat->mat_.ncolb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
+            int nnz  = cast_mat->mat_.nnzb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
+
+            if(bcsr_to_csr(this->local_backend_.OpenMP_threads,
+                           nnz,
+                           nrow,
+                           ncol,
+                           cast_mat->mat_,
+                           &this->mat_)
+               == true)
+            {
+                this->nrow_ = nrow;
+                this->ncol_ = ncol;
+                this->nnz_  = nnz;
+
+                return true;
+            }
+        }
+
         if(const HostMatrixCOO<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixCOO<ValueType>*>(&mat))
         {
@@ -751,6 +776,8 @@ namespace rocalution
         HostVector<ValueType>* cast_vec_inv_diag
             = dynamic_cast<HostVector<ValueType>*>(vec_inv_diag);
 
+        int detect_zero_diag = 0;
+
         _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
 #ifdef _OPENMP
@@ -762,12 +789,29 @@ namespace rocalution
             {
                 if(ai == this->mat_.col[aj])
                 {
-                    cast_vec_inv_diag->vec_[ai] = static_cast<ValueType>(1) / this->mat_.val[aj];
+                    if(this->mat_.val[aj] != static_cast<ValueType>(0))
+                    {
+                        cast_vec_inv_diag->vec_[ai]
+                            = static_cast<ValueType>(1) / this->mat_.val[aj];
+                    }
+                    else
+                    {
+                        cast_vec_inv_diag->vec_[ai] = static_cast<ValueType>(1);
+                        detect_zero_diag            = 1;
+                    }
+
                     break;
                 }
             }
         }
 
+        if(detect_zero_diag == 1)
+        {
+            LOG_VERBOSE_INFO(
+                2,
+                "*** warning: in HostMatrixCSR::ExtractInverseDiagonal() a zero has been detected "
+                "on the diagonal. It has been replaced with one to avoid inf");
+        }
         return true;
     }
 
