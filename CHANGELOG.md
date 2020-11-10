@@ -10,31 +10,31 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 - bcsr format support.
 - cmake files adjustments.
 
-## [(Unreleased) rocALUTION 1.10 for ROCm 3.9]
+## [rocALUTION 1.10 for ROCm 3.9]
 ### Added
 - rocRAND to support GPU sampling of random data.
 ### Known Issues
 - none
 
-## [(Unreleased) rocALUTION 1.9.3 for ROCm 3.8]
+## [rocALUTION 1.9.3 for ROCm 3.8]
 ### Added
 - csr2dense and dense2csr to HIP backend.
 ### Known Issues
 - none
 
-## [(Unreleased) rocALUTION 1.9.1 for ROCm 3.7]
+## [rocALUTION 1.9.1 for ROCm 3.7]
 ### Added
 - none
 ### Known Issues
 - none
 
-## [(Unreleased) rocALUTION 1.9.1 for ROCm 3.6]
+## [rocALUTION 1.9.1 for ROCm 3.6]
 ### Added
 - none
 ### Known Issues
 - none
 
-## [(Unreleased) rocALUTION 1.9.1 for ROCm 3.5]
+## [rocALUTION 1.9.1 for ROCm 3.5]
 ### Added
 - static build
 - BCSR matrix format for SpMV
