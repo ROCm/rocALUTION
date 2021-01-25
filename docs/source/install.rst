@@ -3,11 +3,11 @@ Building and Installing
 
 Installing from AMD ROCm repository
 -----------------------------------
-rocALUTION can be installed from `AMD ROCm repository <https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories>`_.
+rocALUTION can be installed from `AMD ROCm repository <https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html>`_.
 The repository hosts the single-node, accelerator enabled version of the library.
 If a different setup is required, e.g. multi-node support, rocALUTION need to be built from source, see :ref:`rocalution_building`.
 
-For detailed instructions on how to set up ROCm on different platforms, see the `AMD ROCm Platform Installation Guide for Linux <https://rocm.github.io/ROCmInstall.html>`_.
+For detailed instructions on how to set up ROCm on different platforms, see the `AMD ROCm Platform Installation Guide for Linux <https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html>`_.
 
 rocALUTION has the following run-time dependencies
 
@@ -147,19 +147,19 @@ Common build problems
               ROCMConfig.cmake
               rocm-config.cmake
 
-   **Solution:** Install `ROCm cmake modules <https://github.com/RadeonOpenCompute/rocm-cmake>`_ either from source or from `AMD ROCm repository <https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories>`_.
+   **Solution:** Install `ROCm cmake modules <https://github.com/RadeonOpenCompute/rocm-cmake>`_ either from source or from `AMD ROCm repository <https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html>`_.
 
 #. **Issue:** Could not find a package file provided by "ROCSPARSE" with any of the following names:
               ROCSPARSE.cmake
               rocsparse-config.cmake
 
-   **Solution:** Install `rocSPARSE <https://github.com/ROCmSoftwarePlatform/rocSPARSE>`_ either from source or from `AMD ROCm repository <https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories>`_.
+   **Solution:** Install `rocSPARSE <https://github.com/ROCmSoftwarePlatform/rocSPARSE>`_ either from source or from `AMD ROCm repository <https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html>`_.
 
 #. **Issue:** Could not find a package file provided by "ROCBLAS" with any of the following names:
               ROCBLAS.cmake
               rocblas-config.cmake
 
-   **Solution:** Install `rocBLAS <https://github.com/ROCmSoftwarePlatform/rocBLAS>`_ either from source or from `AMD ROCm repository <https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories>`_.
+   **Solution:** Install `rocBLAS <https://github.com/ROCmSoftwarePlatform/rocBLAS>`_ either from source or from `AMD ROCm repository <https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html>`_.
 
 Simple Test
 ```````````
