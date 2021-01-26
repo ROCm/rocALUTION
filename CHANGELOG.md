@@ -2,7 +2,13 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## [(Unreleased) rocALUTION 1.11.5 for ROCm 4.0.0]
+## [rocALUTION 1.11.5 for ROCm 4.1.0]
+### Added
+- none
+### Known Issues
+- none
+
+## [rocALUTION 1.11.5 for ROCm 4.0.0]
 ### Added
 - Add changelog
 - Fixing NaN issues
