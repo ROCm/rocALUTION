@@ -90,7 +90,7 @@ endif()
 include(cmake/Dependencies.cmake)
 
 # Setup version
-set(VERSION_STRING "1.11.5")
+set(VERSION_STRING "1.12.0")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 
