@@ -70,23 +70,6 @@ else()
   endif()
 endif()
 
-# Find HIP package
-find_package(HIP)
-
-if (NOT HIP_FOUND)
-  message("-- HIP not found. Compiling WITHOUT HIP support.")
-else()
-  option(SUPPORT_HIP "Compile WITH HIP support." ON)
-endif()
-
-# HIP related library dependencies
-if(SUPPORT_HIP)
-  find_package(rocblas REQUIRED)
-  find_package(rocsparse REQUIRED)
-  find_package(rocprim REQUIRED)
-  find_package(rocrand REQUIRED)
-endif()
-
 # ROCm cmake package
 set(PROJECT_EXTERN_DIR ${CMAKE_CURRENT_BINARY_DIR}/extern)
 find_package(ROCM QUIET CONFIG PATHS ${CMAKE_PREFIX_PATH})
@@ -118,3 +101,4 @@ include(ROCMCreatePackage)
 include(ROCMInstallTargets)
 include(ROCMPackageConfigHelpers)
 include(ROCMInstallSymlinks)
+include(ROCMCheckTargetIds OPTIONAL)
