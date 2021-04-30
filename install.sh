@@ -20,9 +20,10 @@ function display_help()
   echo "    [--build-dir] build directory (default is ./build)"
   echo "    [--host] build library for host backend only"
   echo "    [--no-openmp] build library without OpenMP"
-  echo "    [--mpi] build library with MPI"
+  echo "    [--mpi=<dir>] Path to external MPI install (Default: disabled)"
   echo "    [--static] build static library"
   echo "    [--compiler] compiler to build with"
+  echo "    [--verbose] print additional cmake build information"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -149,14 +150,6 @@ install_packages( )
     library_dependencies_sles+=( "libnuma1" )
   fi
 
-  # MPI
-  if [[ "${build_mpi}" == true ]]; then
-    library_dependencies_ubuntu+=( "mpi-default-bin" "mpi-default-dev" )
-    library_dependencies_centos+=( "openmpi" "openmpi-devel" )
-    library_dependencies_fedora+=( "openmpi" "openmpi-devel" )
-    library_dependencies_sles+=( "mpich" "mpich-devel" )
-  fi
-
   # OpenMP
   if [[ "${build_omp}" == true ]]; then
     library_dependencies_ubuntu+=( "libomp5" "libomp-dev" )
@@ -214,6 +207,27 @@ install_packages( )
   esac
 }
 
+# Clone and build OpenMPI+UCX in rochpcg/openmpi
+install_openmpi( )
+{
+  if [ ! -d "./deps/ucx" ]; then
+    cd deps
+    git clone --branch v1.10.0 https://github.com/openucx/ucx.git ucx
+    cd ucx; ./autogen.sh; ./autogen.sh #why do we have to run this twice?
+    mkdir build; cd build
+    ../contrib/configure-opt --prefix=${PWD}/../ --with-rocm=${with_rocm} --without-knem --without-cuda --without-java
+    make -j$(nproc); make install; cd ../../..
+  fi
+
+  if [ ! -d "./deps/openmpi" ]; then
+    cd deps
+    git clone --branch v4.1.0 https://github.com/open-mpi/ompi.git openmpi
+    cd openmpi; ./autogen.pl; mkdir build; cd build
+    ../configure --prefix=${PWD}/../ --with-ucx=${PWD}/../../ucx --without-verbs
+    make -j$(nproc); make install; cd ../../..
+  fi
+}
+
 # #################################################
 # Pre-requisites check
 # #################################################
@@ -247,6 +261,7 @@ install_dependencies=false
 build_clients=false
 build_host=false
 build_mpi=false
+mpi_dir=deps/openmpi
 build_omp=true
 build_release=true
 build_dir=./build
@@ -255,6 +270,7 @@ rocm_path=/opt/rocm
 build_relocatable=false
 build_static=false
 compiler=c++
+verb=false
 
 # #################################################
 # Parameter parsing
@@ -263,7 +279,7 @@ compiler=c++
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi,relocatable,static,compiler: --options hicgdr -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,static,compiler:,verbose --options hicgdr -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -307,8 +323,13 @@ while true; do
         build_omp=false
         shift ;;
     --mpi)
-        build_mpi=true
-        shift ;;
+        mpi_dir=${2}
+        if [[ "${mpi_dir}" == off || "${mpi_dir}" == false || "${mpi_dir}" == 0 || "${mpi_dir}" == disabled ]]; then
+          build_mpi=false
+        else
+          build_mpi=true
+        fi
+        shift 2 ;;
     --static)
         #Forcing hipcc for static builds temporarily
         compiler=${rocm_path}/bin/hipcc
@@ -317,6 +338,9 @@ while true; do
     --compiler)
         compiler=${2}
         shift 2 ;;
+    --verbose)
+        verb=true
+        shift ;;
     --prefix)
         install_prefix=${2}
         shift 2 ;;
@@ -370,7 +394,7 @@ if [[ "${install_dependencies}" == true ]]; then
   pushd .
     printf "\033[32mBuilding \033[33mgoogletest\033[32m from source; installing into \033[33m/usr/local\033[0m\n"
     mkdir -p ${build_dir}/deps && cd ${build_dir}/deps
-    ${cmake_executable} -DBUILD_BOOST=OFF ../../deps
+    ${cmake_executable} ../../deps
     make -j$(nproc)
     elevate_if_not_root make install
   popd
@@ -385,6 +409,26 @@ else
 fi
 
 pushd .
+
+  # #################################################
+  # MPI
+  # #################################################
+  if [[ "${build_mpi}" == true ]]; then
+
+    shopt -s nocasematch
+
+    echo "${mpi_dir}"
+
+    # If asking for MPI build, but no valid installation dir is given, install it
+    if [[ "${mpi_dir}" == on || "${mpi_dir}" == true || "${mpi_dir}" == 1 || "${mpi_dir}" == enabled ]]; then
+      install_openmpi
+      mpi_dir=deps/openmpi
+    fi
+
+    shopt -u nocasematch
+
+  fi
+
   # #################################################
   # configure & build
   # #################################################
@@ -417,7 +461,7 @@ pushd .
 
   # MPI
   if [[ "${build_mpi}" == true ]]; then
-    cmake_common_options="${cmake_common_options} -DSUPPORT_MPI=ON"
+    cmake_common_options="${cmake_common_options} -DSUPPORT_MPI=ON -DROCALUTION_MPI_DIR=${mpi_dir}"
   fi
 
   # HIP / Host only
@@ -425,6 +469,11 @@ pushd .
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=OFF"
   else
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=ON"
+  fi
+
+  # Verbose cmake
+  if [[ "${verb}" == true ]]; then
+    cmake_common_options="${cmake_common_options} -DBUILD_VERBOSE=ON"
   fi
 
   # cpack

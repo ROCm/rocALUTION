@@ -56,14 +56,14 @@ The following table lists common uses of `install.sh` to build dependencies + li
 
 ===================== ====
 Command               Description
-===================== ====
-`./install.sh -h`     Print help information.
-`./install.sh -d`     Build dependencies and library in your local directory. The `-d` flag only needs to be used once. For subsequent invocations of `install.sh` it is not necessary to rebuild the dependencies.
-`./install.sh`        Build library in your local directory. It is assumed dependencies are available.
-`./install.sh -i`     Build library, then build and install rocALUTION package in `/opt/rocm/rocalution`. You will be prompted for sudo access. This will install for all users.
-`./install.sh --host` Build library in your local directory without HIP support. It is assumed dependencies are available.
-`./install.sh --mpi`  Build library in your local directory with HIP and MPI support. It is assumed dependencies are available.
-===================== ====
+========================== ====
+`./install.sh -h`          Print help information.
+`./install.sh -d`          Build dependencies and library in your local directory. The `-d` flag only needs to be used once. For subsequent invocations of `install.sh` it is not necessary to rebuild the dependencies.
+`./install.sh`             Build library in your local directory. It is assumed dependencies are available.
+`./install.sh -i`          Build library, then build and install rocALUTION package in `/opt/rocm/rocalution`. You will be prompted for sudo access. This will install for all users.
+`./install.sh --host`      Build library in your local directory without HIP support. It is assumed dependencies are available.
+`./install.sh --mpi=<dir>` Build library in your local directory with HIP and MPI support. It is assumed dependencies are available.
+========================== ====
 
 Using `install.sh` script to build rocALUTION with dependencies and clients
 ```````````````````````````````````````````````````````````````````````````

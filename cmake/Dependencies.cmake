@@ -42,6 +42,7 @@ else()
 endif()
 
 # MPI
+set(MPI_HOME ${ROCALUTION_MPI_DIR})
 find_package(MPI)
 if (NOT MPI_FOUND)
   message("-- MPI not found. Compiling WITHOUT MPI support.")
@@ -63,10 +64,6 @@ else()
       set_property(TARGET MPI::MPI_CXX APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${MPI_CXX_LIBRARIES}")
     endif()
     set_property(TARGET MPI::MPI_CXX PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_CXX_INCLUDE_DIRS}")
-  endif()
-  if (SUPPORT_MPI)
-    set(CMAKE_C_COMPILER ${MPI_COMPILER})
-    set(CMAKE_CXX_COMPILER ${MPI_COMPILER})
   endif()
 endif()
 

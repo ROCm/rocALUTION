@@ -28,17 +28,16 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 if(WIN32)
   set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/package" CACHE PATH "Install path prefix, prepended onto install directories")
 else()
-  set(CMAKE_INSTALL_PREFIX "/opt/rocm" CACHE PATH "Install path prefix, prepended onto install directories")
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "Install path prefix, prepended onto install directories")
 endif()
 
 # Needed to pickup static library files
-list( APPEND CMAKE_PREFIX_PATH /opt/rocm/llvm )
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm)
 
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-     /opt/rocm/hip/cmake
-)
+     ${ROCM_PATH}/hip/cmake)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -69,15 +68,6 @@ option(BUILD_CLIENTS_TESTS "Build tests (requires googletest)" OFF)
 option(BUILD_CLIENTS_BENCHMARKS "Build benchmarks (requires boost)" OFF)
 option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
 option(BUILD_VERBOSE "Output additional build information" OFF)
-
-# Detect compiler support for target ID
-if(HIP_HIPCC_EXECUTABLE MATCHES ".*/hipcc$" )
-  execute_process(COMMAND ${HIP_HIPCC_EXECUTABLE} "--help"
-    OUTPUT_VARIABLE CXX_OUTPUT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_STRIP_TRAILING_WHITESPACE)
-  string(REGEX MATCH ".mcode\-object\-version" TARGET_ID_SUPPORT ${CXX_OUTPUT})
-endif()
 
 # Dependencies
 include(cmake/Dependencies.cmake)
@@ -124,7 +114,7 @@ if(SUPPORT_HIP)
 endif()
 
 # Setup version
-set(VERSION_STRING "1.12.0")
+set(VERSION_STRING "1.12.1")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 

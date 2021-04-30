@@ -109,6 +109,9 @@ set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 #include(GenerateExportHeader)
 #generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/export.hpp)
 
+list(APPEND CMAKE_HOST_FLAGS "-O3;-march=native")
+target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
+
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
   # Flag source file as a hip source file
@@ -117,7 +120,7 @@ if(SUPPORT_HIP)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
-  list(APPEND HIP_HIPCC_FLAGS "-Wno-unused-command-line-argument -fPIC")
+  list(APPEND HIP_HIPCC_FLAGS "-O3 -march=native -Wno-unused-command-line-argument -fPIC")
   foreach(target ${AMDGPU_TARGETS})
     list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}")
   endforeach()

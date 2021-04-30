@@ -29,7 +29,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 if(WIN32)
   set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/package" CACHE PATH "Install path prefix, prepended onto install directories")
 else()
-  set(CMAKE_INSTALL_PREFIX "/opt/rocm" CACHE PATH "Install path prefix, prepended onto install directories")
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "Install path prefix, prepended onto install directories")
 endif()
 
 # This has to be initialized before the project() command appears
@@ -46,7 +46,7 @@ if(NOT TARGET rocalution)
   # This project may compile dependencies for clients
   project(rocalution-clients LANGUAGES CXX)
 
-  find_package(rocalution REQUIRED CONFIG PATHS /opt/rocm/rocalution)
+  find_package(rocalution REQUIRED CONFIG PATHS ${ROCM_PATH}/rocalution)
   get_target_property(depends roc::rocalution INTERFACE_LINK_LIBRARIES)
 
   # Check for MPI build
