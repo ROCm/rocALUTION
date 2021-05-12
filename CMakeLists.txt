@@ -72,27 +72,12 @@ option(BUILD_VERBOSE "Output additional build information" OFF)
 # Dependencies
 include(cmake/Dependencies.cmake)
 
-# Set the AMDGPU_TARGETS with backward compatiblity
-# Use target ID syntax if supported for AMDGPU_TARGETS
+# Availability of rocm_check_target_ids command assures that we can also build
+# for gfx90a target
 if(COMMAND rocm_check_target_ids)
-  rocm_check_target_ids(DEFAULT_AMDGPU_TARGETS
-    TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx90a:xnack-;gfx90a:xnack+;gfx1030"
-  )
+  set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030;gfx90a:xnack-;gfx90a:xnack+")
 else()
-  # Detect compiler support for target ID
-  # This section is deprecated. Please use rocm_check_target_ids for future use.
-  if( CMAKE_CXX_COMPILER MATCHES ".*/hipcc$" )
-    execute_process(COMMAND ${CMAKE_CXX_COMPILER} "--help"
-      OUTPUT_VARIABLE CXX_OUTPUT
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_STRIP_TRAILING_WHITESPACE)
-    string(REGEX MATCH ".mcode\-object\-version" TARGET_ID_SUPPORT ${CXX_OUTPUT})
-  endif()
-  if(TARGET_ID_SUPPORT)
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030")
-  else()
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908")
-  endif()
+  set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030")
 endif()
 set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
 
@@ -114,7 +99,7 @@ if(SUPPORT_HIP)
 endif()
 
 # Setup version
-set(VERSION_STRING "1.12.1")
+set(VERSION_STRING "1.12.2")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 
