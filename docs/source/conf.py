@@ -148,7 +148,7 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    'preamble': '\usepackage[strings]{underscore}',
+    'preamble': '\\usepackage[strings]{underscore}',
 
     # Latex figure (float) alignment
     #
