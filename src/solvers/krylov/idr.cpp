@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -173,11 +173,12 @@ namespace rocalution
         // Build ONB out of P using modified Gram-Schmidt algorithm
         for(int k = 0; k < this->s_; ++k)
         {
-            for(int j = 0; j < k; ++j)
-            {
-                this->P_[k]->AddScale(*this->P_[j], -this->P_[j]->Dot(*this->P_[k]));
-            }
             this->P_[k]->Scale(static_cast<ValueType>(1) / this->P_[k]->Norm());
+            ValueType invdotk = static_cast<ValueType>(1) / this->P_[k]->Dot(*this->P_[k]);
+            for(int j = k + 1; j < this->s_; ++j)
+            {
+                this->P_[j]->AddScale(*this->P_[k], -this->P_[j]->Dot(*this->P_[k]) * invdotk);
+            }
         }
 
         this->build_ = true;
