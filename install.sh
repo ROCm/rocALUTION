@@ -132,7 +132,7 @@ install_packages( )
   fi
 
   # dependencies needed for library and clients to build
-  local library_dependencies_ubuntu=( "make" "cmake-curses-gui" "pkg-config" )
+  local library_dependencies_ubuntu=( "make" "cmake" "pkg-config" )
   local library_dependencies_centos=( "epel-release" "make" "cmake3" "gcc-c++" "rpm-build" )
   local library_dependencies_fedora=( "make" "cmake" "gcc-c++" "libcxx-devel" "rpm-build" )
   local library_dependencies_sles=( "make" "cmake" "gcc-c++" "libcxxtools9" "rpm-build" )
