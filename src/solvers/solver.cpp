@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -557,6 +557,9 @@ namespace rocalution
 
         if(this->iter_ctrl_.GetMaximumIterations() > 0)
         {
+            // Modified Richardson Iteration
+            // x^(k+1) = x^k + omega * (b - Ax^k)
+
             // inital residual x_res = b - Ax
             this->op_->Apply(*x, &this->x_res_);
             this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
@@ -569,29 +572,33 @@ namespace rocalution
                 return;
             }
 
-            // Solve M x_old = x_res
-            this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);
-
-            // x = x + x_old
-            x->ScaleAdd(static_cast<ValueType>(1), this->x_old_);
-
-            // x_res = b - Ax
-            this->op_->Apply(*x, &this->x_res_);
-            this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
-
-            res = this->Norm_(this->x_res_);
-            while(!this->iter_ctrl_.CheckResidual(std::abs(res), this->index_))
+            while(true)
             {
                 // Solve M x_old = x_res
                 this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);
 
-                // x = x + omega*x_old
+                // x = x + omega * x_old
                 x->AddScale(this->x_old_, this->omega_);
+
+                // Check if maximum number of iterations have been reached,
+                // as we do not need to compute the residual in that case.
+                // This will significantly improve smoother applications.
+                // Note: This check will not increment iteration count!
+                if(this->iter_ctrl_.CheckMaximumIterNoCount() == true)
+                {
+                    break;
+                }
 
                 // x_res = b - Ax
                 this->op_->Apply(*x, &this->x_res_);
                 this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
+
                 res = this->Norm_(this->x_res_);
+
+                if(this->iter_ctrl_.CheckResidual(std::abs(res), this->index_) == true)
+                {
+                    break;
+                }
             }
         }
 

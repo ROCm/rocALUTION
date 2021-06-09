@@ -27,7 +27,7 @@
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
 
-#include "../preconditioners/preconditioner_multicolored_gs.hpp"
+#include "../preconditioners/preconditioner.hpp"
 
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
@@ -42,6 +42,9 @@ namespace rocalution
 
         // parameter for strong couplings in smoothed aggregation
         this->eps_ = static_cast<ValueType>(0.25);
+
+        // Disable scaling
+        this->scaling_ = false;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -106,15 +109,14 @@ namespace rocalution
         {
             FixedPoint<OperatorType, VectorType, ValueType>* sm
                 = new FixedPoint<OperatorType, VectorType, ValueType>;
-            MultiColoredGS<OperatorType, VectorType, ValueType>* gs
-                = new MultiColoredGS<OperatorType, VectorType, ValueType>;
+            Jacobi<OperatorType, VectorType, ValueType>* j
+                = new Jacobi<OperatorType, VectorType, ValueType>;
 
-            gs->SetPrecondMatrixFormat(this->sm_format_);
-            sm->SetRelaxation(static_cast<ValueType>(1.3));
-            sm->SetPreconditioner(*gs);
+            sm->SetRelaxation(static_cast<ValueType>(0.67));
+            sm->SetPreconditioner(*j);
             sm->Verbose(0);
             this->smoother_level_[i] = sm;
-            this->sm_default_[i]     = gs;
+            this->sm_default_[i]     = j;
         }
 
         log_debug(this, "RugeStuebenAMG::BuildSmoothers()", " #*# end");

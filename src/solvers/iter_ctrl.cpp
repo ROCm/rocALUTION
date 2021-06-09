@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -284,6 +284,19 @@ namespace rocalution
         }
 
         if(this->iteration_ >= this->maximum_iter_)
+        {
+            this->reached_ = 4;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool IterationControl::CheckMaximumIterNoCount(void)
+    {
+        assert(this->init_res_ == true);
+
+        if(this->iteration_ + 1 >= this->maximum_iter_)
         {
             this->reached_ = 4;
             return true;
