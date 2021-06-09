@@ -24,6 +24,7 @@ function display_help()
   echo "    [--static] build static library"
   echo "    [--compiler] compiler to build with"
   echo "    [--verbose] print additional cmake build information"
+  echo "    [--address-sanitizer] Build with address sanitizer enabled. Uses hipcc as compiler"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -269,6 +270,7 @@ install_prefix=rocalution-install
 rocm_path=/opt/rocm
 build_relocatable=false
 build_static=false
+build_address_sanitizer=false
 compiler=c++
 verb=false
 
@@ -279,7 +281,7 @@ verb=false
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,static,compiler:,verbose --options hicgdr -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,static,compiler:,verbose,address-sanitizer --options hicgdr -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -321,6 +323,10 @@ while true; do
         shift ;;
     --no-openmp)
         build_omp=false
+        shift ;;
+    --address-sanitizer)
+        build_address_sanitizer=true
+        compiler=hipcc
         shift ;;
     --mpi)
         mpi_dir=${2}
@@ -469,6 +475,11 @@ pushd .
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=OFF"
   else
     cmake_common_options="${cmake_common_options} -DSUPPORT_HIP=ON"
+  fi
+
+  # sanitizer
+  if [[ "${build_address_sanitizer}" == true ]]; then
+    cmake_common_options="${cmake_common_options} -DBUILD_ADDRESS_SANITIZER=ON"
   fi
 
   # Verbose cmake

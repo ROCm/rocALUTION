@@ -68,6 +68,7 @@ option(BUILD_CLIENTS_TESTS "Build tests (requires googletest)" OFF)
 option(BUILD_CLIENTS_BENCHMARKS "Build benchmarks (requires boost)" OFF)
 option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
 option(BUILD_VERBOSE "Output additional build information" OFF)
+option(BUILD_ADDRESS_SANITIZER "Build with address sanitizer enabled" OFF)
 
 # Dependencies
 include(cmake/Dependencies.cmake)
@@ -97,6 +98,13 @@ if(SUPPORT_HIP)
   find_package(rocprim REQUIRED)
   find_package(rocrand REQUIRED)
 endif()
+
+if(BUILD_ADDRESS_SANITIZER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -shared-libasan")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -shared-libasan")
+    add_link_options(-fuse-ld=lld)
+endif()
+
 
 # Setup version
 set(VERSION_STRING "1.12.2")
