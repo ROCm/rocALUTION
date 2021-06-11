@@ -2,6 +2,21 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## [rocALUTION 1.12.1 for ROCm 4.3.0]
+### Added
+- support for gfx90a target
+- support for gfx1030 target
+### Improved
+- install script
+### Known Issues
+- none
+
+## [rocALUTION 1.11.5 for ROCm 4.2.0]
+### Added
+- none
+### Known Issues
+- none
+
 ## [rocALUTION 1.11.5 for ROCm 4.1.0]
 ### Added
 - none
