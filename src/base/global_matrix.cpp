@@ -1357,7 +1357,10 @@ namespace rocalution
             host_interior.ConvertTo(this->GetInterior().GetFormat());
             host_interior.CopyFrom(this->GetInterior());
 
-            host_interior.CoarsenOperator(&tmp, nrow, nrow, G, Gsize, rG, rGsize);
+            LocalVector<int> host_G;
+            host_G.CopyFrom(G);
+
+            host_interior.CoarsenOperator(&tmp, nrow, nrow, host_G, Gsize, rG, rGsize);
         }
         else
         {

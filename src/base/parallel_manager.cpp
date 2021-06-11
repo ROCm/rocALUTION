@@ -43,11 +43,6 @@ namespace rocalution
 
     ParallelManager::ParallelManager()
     {
-#ifndef SUPPORT_MULTINODE
-        LOG_INFO("Multinode support disabled");
-        FATAL_ERROR(__FILE__, __LINE__);
-#endif
-
         this->comm_      = NULL;
         this->rank_      = -1;
         this->num_procs_ = -1;

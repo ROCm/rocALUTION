@@ -58,6 +58,12 @@ namespace rocalution
         /** \brief Clear all allocated resources */
         void Clear(void);
 
+        /** \brief Return rank */
+        int GetRank(void) const
+        {
+            return this->rank_;
+        }
+
         /** \brief Return the global size */
         IndexType2 GetGlobalSize(void) const;
         /** \brief Return the local size */
