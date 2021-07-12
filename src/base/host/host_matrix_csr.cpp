@@ -4329,7 +4329,6 @@ namespace rocalution
 
         // Allocate
         cast_prolong->Clear();
-        cast_prolong->AllocateCSR(this->nnz_, this->nrow_, this->ncol_);
 
         // Array to hold C-F points
         int* connect = NULL;
@@ -4594,6 +4593,14 @@ namespace rocalution
         std::vector<ValueType> Amin(this->nrow_);
         std::vector<ValueType> Amax(this->nrow_);
 
+        // Allocate P row pointer array
+        allocate_host(this->nrow_ + 1, &cast_prolong->mat_.row_offset);
+
+        // Initialize P row pointer array with zeros
+        set_to_zero_host(this->nrow_ + 1, cast_prolong->mat_.row_offset);
+
+        cast_prolong->nrow_ = this->nrow_;
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -4641,12 +4648,12 @@ namespace rocalution
             cast_prolong->mat_.row_offset[i + 1] += cast_prolong->mat_.row_offset[i];
         }
 
-        cast_prolong->mat_.col = (int*)realloc(
-            cast_prolong->mat_.col, cast_prolong->mat_.row_offset[this->nrow_] * sizeof(int));
-        cast_prolong->mat_.val = (ValueType*)realloc(
-            cast_prolong->mat_.val, cast_prolong->mat_.row_offset[this->nrow_] * sizeof(ValueType));
+        int nnz_prolong = cast_prolong->mat_.row_offset[this->nrow_];
 
-        cast_prolong->nnz_  = cast_prolong->mat_.row_offset[this->nrow_];
+        allocate_host(nnz_prolong, &cast_prolong->mat_.col);
+        allocate_host(nnz_prolong, &cast_prolong->mat_.val);
+
+        cast_prolong->nnz_  = nnz_prolong;
         cast_prolong->ncol_ = nc;
 
 #ifdef _OPENMP

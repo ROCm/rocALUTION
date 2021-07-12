@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,14 +47,14 @@ namespace rocalution
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
     template <class OperatorType, class VectorType, typename ValueType>
-    class GlobalPairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
+    class [[deprecated("Use class rocalution::PairwiseAMG instead")]] GlobalPairwiseAMG
+        : public BaseAMG<OperatorType, VectorType, ValueType>
     {
     public:
         GlobalPairwiseAMG();
         virtual ~GlobalPairwiseAMG();
 
         virtual void Print(void) const;
-        virtual void BuildHierarchy(void);
         virtual void ClearLocal(void);
 
         /** \brief Set beta for pairwise aggregation */
@@ -68,18 +68,12 @@ namespace rocalution
 
     protected:
         /** \brief Constructs the prolongation, restriction and coarse operator */
-        void Aggregate_(const OperatorType&  op,
-                        Operator<ValueType>* pro,
-                        Operator<ValueType>* res,
-                        OperatorType*        coarse,
-                        ParallelManager*     pm,
-                        LocalVector<int>*    trans);
-
-        /** \private */
         virtual void Aggregate_(const OperatorType&  op,
                                 Operator<ValueType>* pro,
                                 Operator<ValueType>* res,
-                                OperatorType*        coarse);
+                                OperatorType*        coarse,
+                                ParallelManager*     pm,
+                                LocalVector<int>*    trans);
 
         virtual void PrintStart_(void) const;
         virtual void PrintEnd_(void) const;
@@ -92,12 +86,6 @@ namespace rocalution
         double coarsening_factor_;
         // Ordering for the aggregation scheme
         int aggregation_ordering_;
-
-        // Parallel Manager for coarser levels
-        ParallelManager** pm_level_;
-
-        // Transfer mapping
-        LocalVector<int>** trans_level_;
 
         // Dimension of the coarse operators
         std::vector<int>  dim_level_;

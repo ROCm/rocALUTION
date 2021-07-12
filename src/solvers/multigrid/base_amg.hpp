@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -94,7 +94,9 @@ namespace rocalution
         virtual void Aggregate_(const OperatorType&  op,
                                 Operator<ValueType>* pro,
                                 Operator<ValueType>* res,
-                                OperatorType*        coarse)
+                                OperatorType*        coarse,
+                                ParallelManager*     pm,
+                                LocalVector<int>*    trans)
             = 0;
 
         /** \brief Maximal coarse grid size */

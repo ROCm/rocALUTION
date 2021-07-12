@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -111,12 +111,20 @@ namespace rocalution
       */
         virtual void Verbose(int verb = 1);
 
+        inline void FlagPrecond(void)
+        {
+            this->is_precond_ = true;
+        }
+
     protected:
         /** \brief Pointer to the operator */
         const OperatorType* op_;
 
         /** \brief Pointer to the defined preconditioner */
         Solver<OperatorType, VectorType, ValueType>* precond_;
+
+        /** \brief Flag to store whether this solver is a preconditioner or not */
+        bool is_precond_;
 
         /** \brief Flag == true after building the solver (e.g. Build()) */
         bool build_;

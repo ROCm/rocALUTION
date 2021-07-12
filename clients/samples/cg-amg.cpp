@@ -82,9 +82,6 @@ int main(int argc, char* argv[])
     // AMG Preconditioner
     SAAMG<LocalMatrix<double>, LocalVector<double>, double> p;
 
-    // Limit AMG preconditioner to 1 iteration per CG iteration
-    p.InitMaxIter(1);
-
     // Disable verbosity output of AMG preconditioner
     p.Verbose(0);
 

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@
 #include "../../utils/def.hpp"
 #include "../../utils/types.hpp"
 
+#include "../../base/global_matrix.hpp"
+#include "../../base/global_vector.hpp"
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
 
@@ -52,7 +54,7 @@ namespace rocalution
         this->coarsening_factor_ = 4.0;
 
         // number of pre- and post-smoothing steps
-        this->iter_pre_smooth_  = 2;
+        this->iter_pre_smooth_  = 1;
         this->iter_post_smooth_ = 2;
 
         // set K-cycle to default
@@ -80,7 +82,8 @@ namespace rocalution
         LOG_INFO("AMG number of levels " << this->levels_);
         LOG_INFO("AMG using pairwise aggregation");
         LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
-        LOG_INFO("AMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
+        int global_nnz = this->op_level_[this->levels_ - 2]->GetNnz();
+        LOG_INFO("AMG coarsest level nnz = " << global_nnz);
         LOG_INFO("AMG with smoother:");
         this->smoother_level_[0]->Print();
     }
@@ -94,7 +97,8 @@ namespace rocalution
         LOG_INFO("AMG number of levels " << this->levels_);
         LOG_INFO("AMG using pairwise aggregation");
         LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
-        LOG_INFO("AMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
+        int global_nnz = this->op_level_[this->levels_ - 2]->GetNnz();
+        LOG_INFO("AMG coarsest level nnz = " << global_nnz);
         LOG_INFO("AMG with smoother:");
         this->smoother_level_[0]->Print();
     }
@@ -138,135 +142,6 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void)
-    {
-        log_debug(this, "PairwiseAMG::BuildHierarchy()", " #*# begin");
-
-        if(this->hierarchy_ == false)
-        {
-            assert(this->build_ == false);
-            this->hierarchy_ = true;
-
-            // AMG will use operators for inter grid transfers
-            assert(this->op_ != NULL);
-            assert(this->coarse_size_ > 0);
-
-            if(this->op_->GetM() <= (IndexType2)this->coarse_size_)
-            {
-                LOG_INFO("Problem size too small for AMG, use Krylov solver instead");
-                FATAL_ERROR(__FILE__, __LINE__);
-            }
-
-            // Lists for the building procedure
-            std::list<OperatorType*>     op_list_;
-            std::list<OperatorType*>     restrict_list_;
-            std::list<OperatorType*>     prolong_list_;
-            std::list<LocalVector<int>*> trans_list_;
-
-            this->levels_ = 1;
-
-            // Build finest hierarchy
-            op_list_.push_back(new OperatorType);
-            restrict_list_.push_back(new OperatorType);
-            prolong_list_.push_back(new OperatorType);
-            trans_list_.push_back(new LocalVector<int>);
-
-            op_list_.back()->CloneBackend(*this->op_);
-            restrict_list_.back()->CloneBackend(*this->op_);
-            prolong_list_.back()->CloneBackend(*this->op_);
-            trans_list_.back()->CloneBackend(*this->op_);
-
-            // Create prolongation and restriction operators
-            this->Aggregate_(*this->op_,
-                             prolong_list_.back(),
-                             restrict_list_.back(),
-                             op_list_.back(),
-                             trans_list_.back());
-
-            ++this->levels_;
-
-            while(op_list_.back()->GetM() > (IndexType2)this->coarse_size_)
-            {
-                // Add new list elements
-                restrict_list_.push_back(new OperatorType);
-                prolong_list_.push_back(new OperatorType);
-                OperatorType* prev_op_ = op_list_.back();
-                op_list_.push_back(new OperatorType);
-                trans_list_.push_back(new LocalVector<int>);
-
-                op_list_.back()->CloneBackend(*this->op_);
-                restrict_list_.back()->CloneBackend(*this->op_);
-                prolong_list_.back()->CloneBackend(*this->op_);
-                trans_list_.back()->CloneBackend(*this->op_);
-
-                this->Aggregate_(*prev_op_,
-                                 prolong_list_.back(),
-                                 restrict_list_.back(),
-                                 op_list_.back(),
-                                 trans_list_.back());
-
-                ++this->levels_;
-            }
-
-            // Allocate data structures
-            this->op_level_          = new OperatorType*[this->levels_ - 1];
-            this->restrict_op_level_ = new Operator<ValueType>*[this->levels_ - 1];
-            this->prolong_op_level_  = new Operator<ValueType>*[this->levels_ - 1];
-            this->trans_level_       = new LocalVector<int>*[this->levels_ - 1];
-
-            typename std::list<OperatorType*>::iterator     op_it    = op_list_.begin();
-            typename std::list<OperatorType*>::iterator     pro_it   = prolong_list_.begin();
-            typename std::list<OperatorType*>::iterator     res_it   = restrict_list_.begin();
-            typename std::list<LocalVector<int>*>::iterator trans_it = trans_list_.begin();
-
-            for(int i = 0; i < this->levels_ - 1; ++i)
-            {
-                this->op_level_[i] = *op_it;
-                this->op_level_[i]->Sort();
-                ++op_it;
-
-                this->restrict_op_level_[i] = *res_it;
-                ++res_it;
-
-                this->prolong_op_level_[i] = *pro_it;
-                ++pro_it;
-
-                this->trans_level_[i] = *trans_it;
-                ++trans_it;
-            }
-        }
-
-        log_debug(this, "PairwiseAMG::BuildHierarchy()", " #*# end");
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
-    void PairwiseAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void)
-    {
-        log_debug(this, "PairwiseAMG::BuildSmoothers()", " #*# begin");
-
-        // Smoother for each level
-        this->smoother_level_
-            = new IterativeLinearSolver<OperatorType, VectorType, ValueType>*[this->levels_ - 1];
-        this->sm_default_ = new Solver<OperatorType, VectorType, ValueType>*[this->levels_ - 1];
-
-        for(int i = 0; i < this->levels_ - 1; ++i)
-        {
-            FixedPoint<OperatorType, VectorType, ValueType>* sm
-                = new FixedPoint<OperatorType, VectorType, ValueType>;
-            Jacobi<OperatorType, VectorType, ValueType>* jac
-                = new Jacobi<OperatorType, VectorType, ValueType>;
-
-            sm->SetRelaxation(static_cast<ValueType>(0.67));
-            sm->SetPreconditioner(*jac);
-            sm->Verbose(0);
-            this->smoother_level_[i] = sm;
-            this->sm_default_[i]     = jac;
-        }
-
-        log_debug(this, "PairwiseAMG::BuildSmoothers()", " #*# end");
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
     void PairwiseAMG<OperatorType, VectorType, ValueType>::ReBuildNumeric(void)
     {
         log_debug(this, "PairwiseAMG::ReBuildNumeric()", " #*# begin");
@@ -282,6 +157,7 @@ namespace rocalution
         this->trans_level_[0]->CloneBackend(*this->op_);
 
         this->op_->CoarsenOperator(this->op_level_[0],
+                                   this->pm_level_[0],
                                    this->dim_level_[0],
                                    this->dim_level_[0],
                                    *this->trans_level_[0],
@@ -302,6 +178,7 @@ namespace rocalution
             }
 
             this->op_level_[i - 1]->CoarsenOperator(this->op_level_[i],
+                                                    this->pm_level_[i],
                                                     this->dim_level_[i],
                                                     this->dim_level_[i],
                                                     *this->trans_level_[i],
@@ -351,12 +228,8 @@ namespace rocalution
         {
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
-                delete this->trans_level_[i];
-
                 free_host(&this->rG_level_[i]);
             }
-
-            delete[] this->trans_level_;
 
             this->dim_level_.clear();
             this->Gsize_level_.clear();
@@ -370,6 +243,7 @@ namespace rocalution
                                                                       Operator<ValueType>* pro,
                                                                       Operator<ValueType>* res,
                                                                       OperatorType*        coarse,
+                                                                      ParallelManager*     pm,
                                                                       LocalVector<int>*    trans)
     {
         log_debug(this, "PairwiseAMG::Aggregate_()", (const void*&)op, pro, res, coarse, trans);
@@ -377,9 +251,10 @@ namespace rocalution
         assert(pro != NULL);
         assert(res != NULL);
         assert(coarse != NULL);
+        assert(trans != NULL);
 
-        OperatorType* cast_res = dynamic_cast<OperatorType*>(res);
-        OperatorType* cast_pro = dynamic_cast<OperatorType*>(pro);
+        LocalMatrix<ValueType>* cast_res = dynamic_cast<LocalMatrix<ValueType>*>(res);
+        LocalMatrix<ValueType>* cast_pro = dynamic_cast<LocalMatrix<ValueType>*>(pro);
 
         assert(cast_res != NULL);
         assert(cast_pro != NULL);
@@ -394,7 +269,7 @@ namespace rocalution
 
         op.InitialPairwiseAggregation(
             this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
-        op.CoarsenOperator(coarse, nc, nc, *trans, Gsize, rG, rGsize);
+        op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
 
         int cycle = 0;
 
@@ -403,7 +278,7 @@ namespace rocalution
         {
             coarse->FurtherPairwiseAggregation(
                 this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
-            op.CoarsenOperator(coarse, nc, nc, *trans, Gsize, rG, rGsize);
+            op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
 
             ++cycle;
 
@@ -424,25 +299,23 @@ namespace rocalution
         this->rG_level_.push_back(rG);
     }
 
-    // disabled function
-    template <class OperatorType, class VectorType, typename ValueType>
-    void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType&  op,
-                                                                      Operator<ValueType>* pro,
-                                                                      Operator<ValueType>* res,
-                                                                      OperatorType*        coarse)
-    {
-        FATAL_ERROR(__FILE__, __LINE__);
-    }
-
-    template class PairwiseAMG<LocalMatrix<double>, LocalVector<double>, double>;
     template class PairwiseAMG<LocalMatrix<float>, LocalVector<float>, float>;
+    template class PairwiseAMG<GlobalMatrix<float>, GlobalVector<float>, float>;
+    template class PairwiseAMG<LocalMatrix<double>, LocalVector<double>, double>;
+    template class PairwiseAMG<GlobalMatrix<double>, GlobalVector<double>, double>;
 #ifdef SUPPORT_COMPLEX
-    template class PairwiseAMG<LocalMatrix<std::complex<double>>,
-                               LocalVector<std::complex<double>>,
-                               std::complex<double>>;
     template class PairwiseAMG<LocalMatrix<std::complex<float>>,
                                LocalVector<std::complex<float>>,
                                std::complex<float>>;
+    template class PairwiseAMG<GlobalMatrix<std::complex<float>>,
+                               GlobalVector<std::complex<float>>,
+                               std::complex<float>>;
+    template class PairwiseAMG<LocalMatrix<std::complex<double>>,
+                               LocalVector<std::complex<double>>,
+                               std::complex<double>>;
+    template class PairwiseAMG<GlobalMatrix<std::complex<double>>,
+                               GlobalVector<std::complex<double>>,
+                               std::complex<double>>;
 #endif
 
 } // namespace rocalution

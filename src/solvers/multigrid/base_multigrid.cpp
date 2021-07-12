@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,9 +49,9 @@ namespace rocalution
         this->current_level_ = 0;
 
         this->iter_pre_smooth_  = 1;
-        this->iter_post_smooth_ = 2;
+        this->iter_post_smooth_ = 1;
 
-        this->scaling_ = true;
+        this->scaling_ = false;
 
         this->op_level_ = NULL;
 
@@ -62,10 +62,7 @@ namespace rocalution
         this->r_level_ = NULL;
         this->t_level_ = NULL;
         this->s_level_ = NULL;
-        this->p_level_ = NULL;
         this->q_level_ = NULL;
-        this->k_level_ = NULL;
-        this->l_level_ = NULL;
 
         this->solver_coarse_  = NULL;
         this->smoother_level_ = NULL;
@@ -74,6 +71,8 @@ namespace rocalution
         this->host_level_ = 0;
 
         this->kcycle_full_ = true;
+
+        this->pm_level_ = NULL;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -148,7 +147,16 @@ namespace rocalution
     {
         log_debug(this, "BaseMultiGrid::SetScaling()", scaling);
 
-        this->scaling_ = scaling;
+        // Scaling can only be enabled pre-building, as it requires additional temporary
+        // storage
+        if(this->build_ == true)
+        {
+            LOG_VERBOSE_INFO(2, "*** warning: Scaling must be set before building");
+        }
+        else
+        {
+            this->scaling_ = scaling;
+        }
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -158,9 +166,15 @@ namespace rocalution
 
         assert(this->build_ == true);
         assert(levels > 0);
-        assert(levels < this->levels_);
 
-        this->host_level_ = levels;
+        if(levels > this->levels_)
+        {
+            LOG_VERBOSE_INFO(2,
+                             "*** warning: Specified number of host levels is larger than "
+                             "the total number of levels");
+        }
+
+        this->host_level_ = std::min(levels, this->levels_ - 1);
         this->MoveHostLevels_();
     }
 
@@ -204,82 +218,68 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void BaseMultiGrid<OperatorType, VectorType, ValueType>::Build(void)
+    void BaseMultiGrid<OperatorType, VectorType, ValueType>::Initialize(void)
     {
-        log_debug(this, "BaseMultiGrid::Build()", this->build_, " #*# begin");
-
-        if(this->build_ == true)
-        {
-            this->Clear();
-        }
+        log_debug(this, "BaseMultiGrid::Initialize()", " #*# begin");
 
         assert(this->build_ == false);
-        this->build_ = true;
 
-        for(int i = 0; i < this->levels_ - 1; ++i)
-        {
-            assert(this->op_level_[i] != NULL);
-            assert(this->smoother_level_[i] != NULL);
-            assert(this->restrict_op_level_[i] != NULL);
-            assert(this->prolong_op_level_[i] != NULL);
-        }
-        assert(this->op_ != NULL);
-        assert(this->solver_coarse_ != NULL);
-        assert(this->levels_ > 0);
+        // Initialize smoothers
+        assert(this->smoother_level_ != NULL);
 
-        log_debug(this, "BaseMultiGrid::Build()", "#*# setup finest level 0");
+        // Finest level 0
+        assert(this->smoother_level_[0] != NULL);
 
-        // Setup finest level 0
         this->smoother_level_[0]->SetOperator(*this->op_);
         this->smoother_level_[0]->Build();
 
-        log_debug(this, "BaseMultiGrid::Build()", "#*# setup coarser levels");
-
-        // Setup coarser levels
+        // Coarse levels
         for(int i = 1; i < this->levels_ - 1; ++i)
         {
+            assert(this->smoother_level_[i] != NULL);
+
             this->smoother_level_[i]->SetOperator(*this->op_level_[i - 1]);
             this->smoother_level_[i]->Build();
         }
 
-        log_debug(this, "BaseMultiGrid::Build()", "#*# setup coarse grid solver");
-        // Setup coarse grid solver
+        // Initialize coarse grid solver
+        assert(this->solver_coarse_ != NULL);
+
         this->solver_coarse_->SetOperator(*op_level_[this->levels_ - 2]);
         this->solver_coarse_->Build();
-
-        log_debug(this, "BaseMultiGrid::Build()", "#*# setup all tmp vectors");
 
         // Setup all temporary vectors for the cycles - needed on all levels
         this->d_level_ = new VectorType*[this->levels_];
         this->r_level_ = new VectorType*[this->levels_];
         this->t_level_ = new VectorType*[this->levels_];
-        this->s_level_ = new VectorType*[this->levels_];
 
-        // Extra structure for K-cycle
+        // Extra vector for scaling
+        if(this->scaling_)
+        {
+            this->s_level_ = new VectorType*[this->levels_];
+
+            this->s_level_[0] = new VectorType;
+            this->s_level_[0]->CloneBackend(*this->op_);
+            this->s_level_[0]->Allocate("temporary", this->op_->GetM());
+
+            for(int i = 1; i < this->levels_; ++i)
+            {
+                this->s_level_[i] = new VectorType;
+                this->s_level_[i]->CloneBackend(*this->op_level_[i - 1]);
+                this->s_level_[i]->Allocate("temporary", this->op_level_[i - 1]->GetM());
+            }
+        }
+
+        // Extra vector for K-cycle
         if(this->cycle_ == Kcycle)
         {
-            this->p_level_ = new VectorType*[this->levels_ - 2];
             this->q_level_ = new VectorType*[this->levels_ - 2];
-            this->k_level_ = new VectorType*[this->levels_ - 2];
-            this->l_level_ = new VectorType*[this->levels_ - 2];
 
             for(int i = 0; i < this->levels_ - 2; ++i)
             {
-                this->p_level_[i] = new VectorType;
-                this->p_level_[i]->CloneBackend(*this->op_level_[i]);
-                this->p_level_[i]->Allocate("p", this->op_level_[i]->GetM());
-
                 this->q_level_[i] = new VectorType;
                 this->q_level_[i]->CloneBackend(*this->op_level_[i]);
                 this->q_level_[i]->Allocate("q", this->op_level_[i]->GetM());
-
-                this->k_level_[i] = new VectorType;
-                this->k_level_[i]->CloneBackend(*this->op_level_[i]);
-                this->k_level_[i]->Allocate("k", this->op_level_[i]->GetM());
-
-                this->l_level_[i] = new VectorType;
-                this->l_level_[i]->CloneBackend(*this->op_level_[i]);
-                this->l_level_[i]->Allocate("l", this->op_level_[i]->GetM());
             }
         }
 
@@ -297,10 +297,6 @@ namespace rocalution
             this->t_level_[i] = new VectorType;
             this->t_level_[i]->CloneBackend(*this->op_level_[i - 1]);
             this->t_level_[i]->Allocate("temporary", this->op_level_[i - 1]->GetM());
-
-            this->s_level_[i] = new VectorType;
-            this->s_level_[i]->CloneBackend(*this->op_level_[i - 1]);
-            this->s_level_[i]->Allocate("temporary", this->op_level_[i - 1]->GetM());
         }
 
         this->r_level_[0] = new VectorType;
@@ -311,9 +307,37 @@ namespace rocalution
         this->t_level_[0]->CloneBackend(*this->op_);
         this->t_level_[0]->Allocate("temporary", this->op_->GetM());
 
-        this->s_level_[0] = new VectorType;
-        this->s_level_[0]->CloneBackend(*this->op_);
-        this->s_level_[0]->Allocate("temporary", this->op_->GetM());
+        log_debug(this, "BaseMultiGrid::Initialize()", " #*# end");
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void BaseMultiGrid<OperatorType, VectorType, ValueType>::Build(void)
+    {
+        log_debug(this, "BaseMultiGrid::Build()", this->build_, " #*# begin");
+
+        if(this->build_ == true)
+        {
+            this->Clear();
+        }
+
+        assert(this->build_ == false);
+
+        // Check if all required structures are filled by the user
+        for(int i = 0; i < this->levels_ - 1; ++i)
+        {
+            assert(this->op_level_[i] != NULL);
+            assert(this->smoother_level_[i] != NULL);
+            assert(this->restrict_op_level_[i] != NULL);
+            assert(this->prolong_op_level_[i] != NULL);
+        }
+
+        assert(this->op_ != NULL);
+        assert(this->solver_coarse_ != NULL);
+        assert(this->levels_ > 0);
+
+        this->Initialize();
+
+        this->build_ = true;
 
         log_debug(this, "BaseMultiGrid::Build()", this->build_, " #*# end");
     }
@@ -325,55 +349,87 @@ namespace rocalution
 
         if(this->build_ == true)
         {
+            this->Finalize();
+
+            this->levels_ = -1;
+            this->build_  = false;
+        }
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void BaseMultiGrid<OperatorType, VectorType, ValueType>::Finalize(void)
+    {
+        log_debug(this, "BaseMultiGrid::Finalize()", this->build_, " #*# begin");
+
+        if(this->build_ == true)
+        {
+            // Clear transfer mapping
+            for(int i = 0; i < this->levels_ - 1; ++i)
+            {
+                delete this->trans_level_[i];
+            }
+
+            delete[] this->trans_level_;
+
+            // Clear parallel manager
+            for(int i = 0; i < this->levels_ - 1; ++i)
+            {
+                delete this->pm_level_[i];
+            }
+
+            delete[] this->pm_level_;
+
+            // Clear temporary VectorTypes
             for(int i = 0; i < this->levels_; ++i)
             {
-                // Clear temporary VectorTypes
                 if(i > 0)
                 {
                     delete this->d_level_[i];
                 }
                 delete this->r_level_[i];
                 delete this->t_level_[i];
-                delete this->s_level_[i];
             }
 
             delete[] this->d_level_;
             delete[] this->r_level_;
             delete[] this->t_level_;
-            delete[] this->s_level_;
 
-            // Extra structure for K-cycle
+            // Clear structure for scaling
+            if(this->scaling_)
+            {
+                for(int i = 0; i < this->levels_; ++i)
+                {
+                    delete this->s_level_[i];
+                }
+
+                delete[] this->s_level_;
+            }
+
+            // Clear structure for K-cycle
             if(this->cycle_ == Kcycle)
             {
                 for(int i = 0; i < this->levels_ - 2; ++i)
                 {
-                    delete this->p_level_[i];
                     delete this->q_level_[i];
-                    delete this->k_level_[i];
-                    delete this->l_level_[i];
                 }
 
-                delete[] this->p_level_;
                 delete[] this->q_level_;
-                delete[] this->k_level_;
-                delete[] this->l_level_;
             }
 
-            // Clear smoothers - we built it
+            // Clear smoothers
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
                 this->smoother_level_[i]->Clear();
             }
 
-            // Clear coarse grid solver - we built it
+            // Clear coarse grid solver
             this->solver_coarse_->Clear();
 
-            this->levels_ = -1;
-
+            // Reset iteration control
             this->iter_ctrl_.Clear();
-
-            this->build_ = false;
         }
+
+        log_debug(this, "BaseMultiGrid::Finalize()", this->build_, " #*# end");
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -386,7 +442,6 @@ namespace rocalution
             this->r_level_[this->levels_ - 1]->MoveToHost();
             this->d_level_[this->levels_ - 1]->MoveToHost();
             this->t_level_[this->levels_ - 1]->MoveToHost();
-            this->s_level_[this->levels_ - 1]->MoveToHost();
             this->solver_coarse_->MoveToHost();
 
             for(int i = 0; i < this->levels_ - 1; ++i)
@@ -399,10 +454,20 @@ namespace rocalution
                     this->d_level_[i]->MoveToHost();
                 }
                 this->t_level_[i]->MoveToHost();
-                this->s_level_[i]->MoveToHost();
 
                 this->restrict_op_level_[i]->MoveToHost();
                 this->prolong_op_level_[i]->MoveToHost();
+            }
+
+            // Extra structure for scaling
+            if(this->scaling_)
+            {
+                this->s_level_[this->levels_ - 1]->MoveToHost();
+
+                for(int i = 0; i < this->levels_ - 1; ++i)
+                {
+                    this->s_level_[i]->MoveToHost();
+                }
             }
 
             // Extra structure for K-cycle
@@ -410,10 +475,7 @@ namespace rocalution
             {
                 for(int i = 0; i < this->levels_ - 2; ++i)
                 {
-                    this->p_level_[i]->MoveToHost();
                     this->q_level_[i]->MoveToHost();
-                    this->k_level_[i]->MoveToHost();
-                    this->l_level_[i]->MoveToHost();
                 }
             }
 
@@ -468,7 +530,18 @@ namespace rocalution
                         this->d_level_[i]->MoveToAccelerator();
                     }
                     this->t_level_[i]->MoveToAccelerator();
-                    this->s_level_[i]->MoveToAccelerator();
+                }
+            }
+
+            // Extra structure for scaling
+            if(this->scaling_)
+            {
+                for(int i = 0; i < this->levels_; ++i)
+                {
+                    if(i < this->levels_ - this->host_level_)
+                    {
+                        this->s_level_[i]->MoveToAccelerator();
+                    }
                 }
             }
 
@@ -479,10 +552,7 @@ namespace rocalution
                 {
                     if(i < this->levels_ - this->host_level_ - 1)
                     {
-                        this->p_level_[i]->MoveToAccelerator();
                         this->q_level_[i]->MoveToAccelerator();
-                        this->k_level_[i]->MoveToAccelerator();
-                        this->l_level_[i]->MoveToAccelerator();
                     }
                 }
             }
@@ -499,58 +569,41 @@ namespace rocalution
     {
         log_debug(this, "BaseMultiGrid::MoveHostLevels_()", this->build_);
 
-        // If coarsest level on accelerator
+        // Move coarse grid solver
         if(this->host_level_ != 0)
         {
             this->solver_coarse_->MoveToHost();
         }
 
         // Move operators
-        for(int i = 0; i < this->levels_ - 1; ++i)
+        for(int i = 0; i < this->host_level_; ++i)
         {
-            if(i >= this->levels_ - this->host_level_ - 1)
-            {
-                this->op_level_[i]->MoveToHost();
-                this->restrict_op_level_[i]->MoveToHost();
-                this->prolong_op_level_[i]->MoveToHost();
-            }
-        }
+            int level = this->levels_ - i;
 
-        // Move smoothers
-        for(int i = 0; i < this->levels_ - 1; ++i)
-        {
-            if(i >= this->levels_ - this->host_level_)
-            {
-                this->smoother_level_[i]->MoveToHost();
-            }
-        }
+            this->op_level_[level - 2]->MoveToHost();
+            this->restrict_op_level_[level - 2]->MoveToHost();
+            this->prolong_op_level_[level - 2]->MoveToHost();
 
-        // Move temporary vectors
-        for(int i = 0; i < this->levels_; ++i)
-        {
-            if(i >= this->levels_ - this->host_level_)
+            // Move temporary vectors
+            this->t_level_[level - 1]->MoveToHost();
+            this->r_level_[level - 1]->MoveToHost();
+            this->d_level_[level - 1]->MoveToHost();
+
+            // Extra structure for scaling
+            if(this->scaling_)
             {
-                this->r_level_[i]->MoveToHost();
-                if(i > 0)
+                this->s_level_[level - 1]->MoveToHost();
+            }
+
+            if(i > 0)
+            {
+                // Move smoothers
+                this->smoother_level_[level - 1]->MoveToHost();
+
+                // Move K-cycle temporary vectors
+                if(this->cycle_ == Kcycle)
                 {
-                    this->d_level_[i]->MoveToHost();
-                }
-                this->t_level_[i]->MoveToHost();
-                this->s_level_[i]->MoveToHost();
-            }
-        }
-
-        // Extra structure for K-cycle
-        if(this->cycle_ == Kcycle)
-        {
-            for(int i = 0; i < this->levels_ - 2; ++i)
-            {
-                if(i >= this->levels_ - this->host_level_ - 1)
-                {
-                    this->p_level_[i]->MoveToHost();
-                    this->q_level_[i]->MoveToHost();
-                    this->k_level_[i]->MoveToHost();
-                    this->l_level_[i]->MoveToHost();
+                    this->q_level_[level - 2]->MoveToHost();
                 }
             }
         }
@@ -578,16 +631,17 @@ namespace rocalution
             }
             assert(this->r_level_[i] != NULL);
             assert(this->t_level_[i] != NULL);
-            assert(this->s_level_[i] != NULL);
+
+            if(this->scaling_)
+            {
+                assert(this->s_level_[i] != NULL);
+            }
         }
 
         if(this->cycle_ == Kcycle)
         {
             for(int i = 0; i < this->levels_ - 2; ++i)
             {
-                assert(this->k_level_[i] != NULL);
-                assert(this->l_level_[i] != NULL);
-                assert(this->p_level_[i] != NULL);
                 assert(this->q_level_[i] != NULL);
             }
         }
@@ -610,24 +664,37 @@ namespace rocalution
             this->iter_ctrl_.PrintInit();
         }
 
-        // initial residual = b - Ax
-        this->op_->Apply(*x, this->r_level_[0]);
-        this->r_level_[0]->ScaleAdd(static_cast<ValueType>(-1), rhs);
-
-        this->res_norm_ = std::abs(this->Norm_(*this->r_level_[0]));
-
-        if(this->iter_ctrl_.InitResidual(this->res_norm_) == false)
+        // Skip residual, if preconditioner
+        if(this->is_precond_ == false)
         {
-            log_debug(this, "BaseMultiGrid::Solve()", " #*# end");
+            // initial residual = b - Ax
+            this->op_->Apply(*x, this->r_level_[0]);
+            this->r_level_[0]->ScaleAdd(static_cast<ValueType>(-1), rhs);
 
-            return;
+            this->res_norm_ = std::abs(this->Norm_(*this->r_level_[0]));
+
+            if(this->iter_ctrl_.InitResidual(this->res_norm_) == false)
+            {
+                log_debug(this, "BaseMultiGrid::Solve()", " #*# end");
+
+                return;
+            }
+        }
+        else
+        {
+            // Initialize dummy residual
+            this->iter_ctrl_.InitResidual(1.0);
         }
 
         this->Vcycle_(rhs, x);
 
-        while(!this->iter_ctrl_.CheckResidual(this->res_norm_, this->index_))
+        // If no preconditioner, compute until convergence
+        if(this->is_precond_ == false)
         {
-            this->Vcycle_(rhs, x);
+            while(!this->iter_ctrl_.CheckResidual(this->res_norm_, this->index_))
+            {
+                this->Vcycle_(rhs, x);
+            }
         }
 
         if(this->verb_ > 0)
@@ -641,22 +708,22 @@ namespace rocalution
 
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseMultiGrid<OperatorType, VectorType, ValueType>::Restrict_(const VectorType& fine,
-                                                                       VectorType*       coarse,
-                                                                       int               level)
+                                                                       VectorType*       coarse)
     {
-        log_debug(this, "BaseMultiGrid::Restrict_()", (const void*&)fine, coarse, level);
+        log_debug(this, "BaseMultiGrid::Restrict_()", (const void*&)fine, coarse);
 
-        this->restrict_op_level_[level]->Apply(fine.GetInterior(), &(coarse->GetInterior()));
+        this->restrict_op_level_[this->current_level_]->Apply(fine.GetInterior(),
+                                                              &(coarse->GetInterior()));
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseMultiGrid<OperatorType, VectorType, ValueType>::Prolong_(const VectorType& coarse,
-                                                                      VectorType*       fine,
-                                                                      int               level)
+                                                                      VectorType*       fine)
     {
-        log_debug(this, "BaseMultiGrid::Prolong_()", (const void*&)coarse, fine, level);
+        log_debug(this, "BaseMultiGrid::Prolong_()", (const void*&)coarse, fine);
 
-        this->prolong_op_level_[level]->Apply(coarse.GetInterior(), &(fine->GetInterior()));
+        this->prolong_op_level_[this->current_level_]->Apply(coarse.GetInterior(),
+                                                             &(fine->GetInterior()));
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -665,178 +732,59 @@ namespace rocalution
     {
         log_debug(this, "BaseMultiGrid::Vcycle_()", " #*# begin", (const void*&)rhs, x);
 
-        // Perform cycle
-        if(this->current_level_ < this->levels_ - 1)
+        // Run coarse grid solver, if coarsest grid has been reached
+        if(this->current_level_ == this->levels_ - 1)
         {
-            ValueType factor;
-            ValueType divisor;
+            this->solver_coarse_->SolveZeroSol(rhs, x);
+            return;
+        }
 
-            // Pre-smoothing on finest level
-            this->smoother_level_[this->current_level_]->InitMaxIter(this->iter_pre_smooth_);
-            this->smoother_level_[this->current_level_]->Solve(rhs, x);
+        // Smoother on the current level
+        IterativeLinearSolver<OperatorType, VectorType, ValueType>* smoother
+            = this->smoother_level_[this->current_level_];
 
-            if(this->scaling_ == true)
+        // Operator on the current level
+        const OperatorType* op
+            = (this->current_level_ == 0) ? this->op_ : this->op_level_[this->current_level_ - 1];
+
+        // Temporary vectors on the current level
+        VectorType* r  = this->r_level_[this->current_level_];
+        VectorType* rc = this->t_level_[this->current_level_ + 1];
+        VectorType* rf = this->t_level_[this->current_level_];
+        VectorType* xc = this->d_level_[this->current_level_ + 1];
+        VectorType* s  = (this->scaling_) ? this->s_level_[this->current_level_] : NULL;
+
+        // Perform cycle
+        ValueType factor;
+        ValueType divisor;
+
+        // Pre-smoothing
+        smoother->InitMaxIter(this->iter_pre_smooth_);
+        if(this->is_precond_ || this->current_level_ != 0)
+        {
+            // When this AMG is a preconditioner or if we are not on the finest level,
+            // we have to use a zero initial guess
+            smoother->SolveZeroSol(rhs, x);
+        }
+        else
+        {
+            // For AMG as a solver, x cannot be zero
+            smoother->Solve(rhs, x);
+        }
+
+        // Scaling
+        if(this->scaling_ == true)
+        {
+            if(this->current_level_ > 0 && this->current_level_ < this->levels_ - 2
+               && this->iter_pre_smooth_ > 0)
             {
-                if(this->current_level_ > 0 && this->current_level_ < this->levels_ - 2
-                   && this->iter_pre_smooth_ > 0)
-                {
-                    this->r_level_[this->current_level_]->PointWiseMult(rhs, *x);
-                    factor = this->r_level_[this->current_level_]->Reduce();
-                    this->op_level_[this->current_level_ - 1]->Apply(
-                        *x, this->r_level_[this->current_level_]);
-                    this->r_level_[this->current_level_]->PointWiseMult(*x);
+                s->PointWiseMult(rhs, *x);
+                factor = s->Reduce();
+                op->Apply(*x, s);
+                s->PointWiseMult(*x);
 
-                    divisor = this->r_level_[this->current_level_]->Reduce();
+                divisor = s->Reduce();
 
-                    if(divisor == static_cast<ValueType>(0))
-                    {
-                        factor = static_cast<ValueType>(1);
-                    }
-                    else
-                    {
-                        factor /= divisor;
-                    }
-
-                    x->Scale(factor);
-                }
-            }
-
-            // Update residual
-            if(this->current_level_ == 0)
-            {
-                this->op_->Apply(*x, this->s_level_[this->current_level_]);
-            }
-            else
-            {
-                this->op_level_[this->current_level_ - 1]->Apply(
-                    *x, this->s_level_[this->current_level_]);
-            }
-
-            this->s_level_[this->current_level_]->ScaleAdd(static_cast<ValueType>(-1), rhs);
-
-            if(this->current_level_ == this->levels_ - this->host_level_ - 1)
-            {
-                this->s_level_[this->current_level_]->MoveToHost();
-            }
-
-            // Restrict residual vector on finest
-            // level
-            this->Restrict_(*this->s_level_[this->current_level_],
-                            this->t_level_[this->current_level_ + 1],
-                            this->current_level_);
-
-            if(this->current_level_ == this->levels_ - this->host_level_ - 1)
-            {
-                if(this->current_level_ == 0)
-                {
-                    this->s_level_[this->current_level_]->CloneBackend(*this->op_);
-                }
-                else
-                {
-                    this->s_level_[this->current_level_]->CloneBackend(
-                        *this->op_level_[this->current_level_ - 1]);
-                }
-            }
-
-            ++this->current_level_;
-
-            // Set new solution for recursion to
-            // zero
-            this->d_level_[this->current_level_]->Zeros();
-
-            // Recursive call dependent on the
-            // cycle
-            switch(this->cycle_)
-            {
-            // V-cycle
-            case 0:
-                this->Vcycle_(*this->t_level_[this->current_level_],
-                              d_level_[this->current_level_]);
-                break;
-
-            // W-cycle
-            case 1:
-                this->Wcycle_(*this->t_level_[this->current_level_],
-                              d_level_[this->current_level_]);
-                break;
-
-            // K-cycle
-            case 2:
-                this->Kcycle_(*this->t_level_[this->current_level_],
-                              d_level_[this->current_level_]);
-                break;
-
-            // F-cycle
-            case 3:
-                this->Fcycle_(*this->t_level_[this->current_level_],
-                              d_level_[this->current_level_]);
-                break;
-
-            default:
-                FATAL_ERROR(__FILE__, __LINE__);
-                break;
-            }
-
-            if(this->current_level_ == this->levels_ - this->host_level_)
-            {
-                this->r_level_[this->current_level_ - 1]->MoveToHost();
-            }
-
-            // Prolong solution vector on finest
-            // level
-            this->Prolong_(*this->d_level_[this->current_level_],
-                           this->r_level_[this->current_level_ - 1],
-                           this->current_level_ - 1);
-
-            if(this->current_level_ == this->levels_ - this->host_level_)
-            {
-                if(this->current_level_ == 1)
-                {
-                    this->r_level_[this->current_level_ - 1]->CloneBackend(*this->op_);
-                }
-                else
-                {
-                    this->r_level_[this->current_level_ - 1]->CloneBackend(
-                        *this->op_level_[this->current_level_ - 2]);
-                }
-            }
-
-            --this->current_level_;
-
-            // Scaling
-            if(this->scaling_ == true && this->current_level_ < this->levels_ - 2)
-            {
-                if(this->current_level_ == 0)
-                {
-                    this->s_level_[this->current_level_]->PointWiseMult(
-                        *this->r_level_[this->current_level_]);
-                }
-                else
-                {
-                    this->s_level_[this->current_level_]->PointWiseMult(
-                        *this->r_level_[this->current_level_],
-                        *this->t_level_[this->current_level_]);
-                }
-
-                factor = this->s_level_[this->current_level_]->Reduce();
-
-                if(this->current_level_ == 0)
-                {
-                    this->op_->Apply(*this->r_level_[this->current_level_],
-                                     this->s_level_[this->current_level_]);
-                }
-                else
-                {
-                    this->op_level_[this->current_level_ - 1]->Apply(
-                        *this->r_level_[this->current_level_],
-                        this->s_level_[this->current_level_]);
-                }
-
-                this->s_level_[this->current_level_]->PointWiseMult(
-                    *this->r_level_[this->current_level_]);
-
-                // Check for division by zero
-                divisor = this->s_level_[this->current_level_]->Reduce();
                 if(divisor == static_cast<ValueType>(0))
                 {
                     factor = static_cast<ValueType>(1);
@@ -846,29 +794,133 @@ namespace rocalution
                     factor /= divisor;
                 }
 
-                // Defect correction
-                x->AddScale(*this->r_level_[this->current_level_], factor);
-            }
-            else
-                // Defect correction
-                x->AddScale(*this->r_level_[this->current_level_], static_cast<ValueType>(1));
-
-            // Post-smoothing on finest level
-            this->smoother_level_[this->current_level_]->InitMaxIter(this->iter_post_smooth_);
-            this->smoother_level_[this->current_level_]->Solve(rhs, x);
-
-            if(this->current_level_ == 0)
-            {
-                // Update residual
-                this->op_->Apply(*x, this->r_level_[this->current_level_]);
-                this->r_level_[this->current_level_]->ScaleAdd(static_cast<ValueType>(-1), rhs);
-
-                this->res_norm_ = std::abs(this->Norm_(*this->r_level_[this->current_level_]));
+                x->Scale(factor);
             }
         }
+
+        // Update residual r = b - Ax
+        op->Apply(*x, r);
+        r->ScaleAdd(static_cast<ValueType>(-1), rhs);
+
+        // Copy s when scaling is enabled
+        if(this->scaling_ && this->current_level_ == 0)
+        {
+            s->CopyFrom(*r);
+        }
+
+        // Check if 'continue computation on host' flag is set for this new level
+        if(this->current_level_ + 1 == this->levels_ - this->host_level_)
+        {
+            r->MoveToHost();
+        }
+
+        // Restrict residual vector on finest level
+        this->Restrict_(*r, rc);
+
+        if(this->current_level_ + 1 == this->levels_ - this->host_level_)
+        {
+            r->CloneBackend(*op);
+        }
+
+        ++this->current_level_;
+
+        // Recursive call dependent on the
+        // cycle
+        switch(this->cycle_)
+        {
+        // V-cycle
+        case 0:
+            this->Vcycle_(*rc, xc);
+            break;
+
+        // W-cycle
+        case 1:
+            this->Wcycle_(*rc, xc);
+            break;
+
+        // K-cycle
+        case 2:
+            this->Kcycle_(*rc, xc);
+            break;
+
+        // F-cycle
+        case 3:
+            this->Fcycle_(*rc, xc);
+            break;
+
+        default:
+            FATAL_ERROR(__FILE__, __LINE__);
+            break;
+        }
+
+        --this->current_level_;
+
+        if(this->current_level_ + 1 == this->levels_ - this->host_level_)
+        {
+            r->MoveToHost();
+        }
+
+        // Prolong solution vector on finest level
+        this->Prolong_(*xc, r);
+
+        // Check if 'continue computation on host' flag is set for this level
+        if(this->current_level_ + 1 == this->levels_ - this->host_level_)
+        {
+            r->CloneBackend(*op);
+        }
+
+        // Scaling
+        if(this->scaling_ == true && this->current_level_ < this->levels_ - 2)
+        {
+            if(this->current_level_ == 0)
+            {
+                s->PointWiseMult(*r);
+            }
+            else
+            {
+                s->PointWiseMult(*r, *rf);
+            }
+
+            factor = s->Reduce();
+
+            op->Apply(*r, s);
+
+            s->PointWiseMult(*r);
+
+            // Check for division by zero
+            divisor = s->Reduce();
+
+            if(divisor == static_cast<ValueType>(0))
+            {
+                factor = static_cast<ValueType>(1);
+            }
+            else
+            {
+                factor /= divisor;
+            }
+
+            // Defect correction
+            x->AddScale(*r, factor);
+        }
         else
-            // Coarse grid solver
-            this->solver_coarse_->SolveZeroSol(rhs, x);
+        {
+            // Defect correction
+            x->AddScale(*r, static_cast<ValueType>(1));
+        }
+
+        // Post-smoothing on finest level
+        smoother->InitMaxIter(this->iter_post_smooth_);
+        smoother->Solve(rhs, x);
+
+        // Only update the residual, if this is not a preconditioner
+        if(this->current_level_ == 0 && this->is_precond_ == false)
+        {
+            // Update residual
+            op->Apply(*x, r);
+            r->ScaleAdd(static_cast<ValueType>(-1), rhs);
+
+            this->res_norm_ = std::abs(this->Norm_(*r));
+        }
 
         log_debug(this, "BaseMultiGrid::Vcycle_()", " #*# end");
     }
@@ -902,66 +954,64 @@ namespace rocalution
         }
         else if(this->current_level_ < this->levels_ - 1)
         {
-            VectorType* r = this->k_level_[this->current_level_ - 1];
-            VectorType* s = this->l_level_[this->current_level_ - 1];
-            VectorType* p = this->p_level_[this->current_level_ - 1];
             VectorType* q = this->q_level_[this->current_level_ - 1];
+            VectorType* r = this->t_level_[this->current_level_];
+
+            const OperatorType* op = this->op_level_[this->current_level_ - 1];
 
             // Start 2 CG iterations
 
-            ValueType rho = static_cast<ValueType>(0);
+            ValueType rho;
             ValueType rho_old;
             ValueType alpha;
-            ValueType beta;
-
-            // r = rhs
-            r->CopyFrom(rhs);
 
             // Cycle
-            s->Zeros();
-            this->Vcycle_(*r, s);
+            this->Vcycle_(rhs, x);
 
-            // rho = (r,s)
-            rho = r->Dot(*s);
+            // r = rhs
+            if(r != &rhs)
+            {
+                r->CopyFrom(rhs);
+            }
 
-            // s = Ap
-            this->op_level_[this->current_level_ - 1]->Apply(*s, q);
+            // rho = (r,x)
+            rho = r->DotNonConj(*x);
 
-            // alpha = rho / (s,q)
-            alpha = rho / s->Dot(*q);
+            // q = Ax
+            op->Apply(*x, q);
 
-            // x = x + alpha*s
-            x->AddScale(*s, alpha);
+            // alpha = rho / (x,q)
+            alpha = rho / x->DotNonConj(*q);
 
-            // r = r - alpha*q
+            // r = r - alpha * q
             r->AddScale(*q, -alpha);
 
-            // 2nd CG iteration
+            // Cycle
+            this->Vcycle_(*r, q);
 
             // rho_old = rho
             rho_old = rho;
 
-            // Cycle
-            p->Zeros();
-            this->Vcycle_(*r, p);
+            // rho = (r,q)
+            rho = r->DotNonConj(*q);
 
-            // rho = (r,p)
-            rho = r->Dot(*p);
+            // r = x
+            r->CopyFrom(*x);
 
-            // beta = rho / rho_old
-            beta = rho / rho_old;
+            // r = r * rho / rho_old + q
+            r->ScaleAdd(rho / rho_old, *q);
 
-            // s = beta*s + p
-            s->ScaleAdd(beta, *p);
+            // q = Ar
+            op->Apply(*r, q);
 
-            // q = As
-            this->op_level_[this->current_level_ - 1]->Apply(*s, q);
+            // x = x * alpha
+            x->Scale(alpha);
 
-            // alpha = rho / (s,q)
-            alpha = rho / s->Dot(*q);
+            // alpha = rho / (r,q)
+            alpha = rho / r->DotNonConj(*q);
 
-            // x = x + alpha*s
-            x->AddScale(*s, alpha);
+            // x = x + alpha * r
+            x->AddScale(*r, alpha);
         }
         else
         {

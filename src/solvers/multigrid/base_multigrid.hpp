@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -98,14 +98,16 @@ namespace rocalution
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         virtual void Build(void);
+        virtual void Initialize(void);
         virtual void Clear(void);
+        virtual void Finalize(void);
 
     protected:
-        /** \brief Restricts from level 'level' to 'level-1' */
-        void Restrict_(const VectorType& fine, VectorType* coarse, int level);
+        /** \brief Restricts a given fine vector to a coarse vector */
+        void Restrict_(const VectorType& fine, VectorType* coarse);
 
-        /** \brief Prolongs from level 'level' to 'level+1' */
-        void Prolong_(const VectorType& coarse, VectorType* fine, int level);
+        /** \brief Prolongs a given coarse vector to a fine vector */
+        void Prolong_(const VectorType& coarse, VectorType* fine);
 
         /** \brief V-cycle */
         void Vcycle_(const VectorType& rhs, VectorType* x);
@@ -163,15 +165,19 @@ namespace rocalution
         VectorType** r_level_; /**< \private */
         VectorType** t_level_; /**< \private */
         VectorType** s_level_; /**< \private */
-        VectorType** p_level_; /**< \private */
         VectorType** q_level_; /**< \private */
-        VectorType** k_level_; /**< \private */
-        VectorType** l_level_; /**< \private */
+
+        /** \brief Transfer mapping */
+        LocalVector<int>** trans_level_;
 
         /** \brief Coarse grid solver */
         Solver<OperatorType, VectorType, ValueType>* solver_coarse_;
+
         /** \brief Smoother for each level */
         IterativeLinearSolver<OperatorType, VectorType, ValueType>** smoother_level_;
+
+        /** \brief Parallel Manager for coarser levels */
+        ParallelManager** pm_level_;
     };
 
 } // namespace rocalution

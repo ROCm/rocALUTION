@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -93,33 +93,6 @@ namespace rocalution
         log_debug(this, "RugeStuebenAMG::SetCouplingStrength()", eps);
 
         this->eps_ = eps;
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
-    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void)
-    {
-        log_debug(this, "RugeStuebenAMG::BuildSmoothers()", " #*# begin");
-
-        // Smoother for each level
-        this->smoother_level_
-            = new IterativeLinearSolver<OperatorType, VectorType, ValueType>*[this->levels_ - 1];
-        this->sm_default_ = new Solver<OperatorType, VectorType, ValueType>*[this->levels_ - 1];
-
-        for(int i = 0; i < this->levels_ - 1; ++i)
-        {
-            FixedPoint<OperatorType, VectorType, ValueType>* sm
-                = new FixedPoint<OperatorType, VectorType, ValueType>;
-            Jacobi<OperatorType, VectorType, ValueType>* j
-                = new Jacobi<OperatorType, VectorType, ValueType>;
-
-            sm->SetRelaxation(static_cast<ValueType>(0.67));
-            sm->SetPreconditioner(*j);
-            sm->Verbose(0);
-            this->smoother_level_[i] = sm;
-            this->sm_default_[i]     = j;
-        }
-
-        log_debug(this, "RugeStuebenAMG::BuildSmoothers()", " #*# end");
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -233,7 +206,9 @@ namespace rocalution
     void RugeStuebenAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType&  op,
                                                                          Operator<ValueType>* pro,
                                                                          Operator<ValueType>* res,
-                                                                         OperatorType* coarse)
+                                                                         OperatorType*     coarse,
+                                                                         ParallelManager*  pm,
+                                                                         LocalVector<int>* trans)
     {
         log_debug(this, "RugeStuebenAMG::Aggregate_()", (const void*&)op, pro, res, coarse);
 

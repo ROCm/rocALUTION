@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
 
-#include "../../solvers/preconditioners/preconditioner.hpp"
+#include "../preconditioners/preconditioner.hpp"
 
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/log.hpp"
@@ -52,8 +52,6 @@ namespace rocalution
 
         // target coarsening factor
         this->coarsening_factor_ = 4.0;
-
-        this->pm_level_ = NULL;
 
         // number of pre- and post-smoothing steps
         this->iter_pre_smooth_  = 2;
@@ -198,118 +196,6 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::BuildHierarchy(void)
-    {
-        log_debug(this, "GlobalPairwiseAMG::BuildHierarchy()", " #*# begin");
-
-        if(this->hierarchy_ == false)
-        {
-            assert(this->build_ == false);
-            this->hierarchy_ = true;
-
-            // AMG will use operators for inter grid transfers
-            assert(this->op_ != NULL);
-            assert(this->coarse_size_ > 0);
-
-            if(this->op_->GetM() <= (IndexType2)this->coarse_size_)
-            {
-                LOG_INFO("Problem size too small for AMG, use Krylov solver instead");
-                FATAL_ERROR(__FILE__, __LINE__);
-            }
-
-            // Lists for the building procedure
-            std::list<OperatorType*>           op_list_;
-            std::list<ParallelManager*>        pm_list_;
-            std::list<LocalMatrix<ValueType>*> restrict_list_;
-            std::list<LocalMatrix<ValueType>*> prolong_list_;
-            std::list<LocalVector<int>*>       trans_list_;
-
-            this->levels_ = 1;
-
-            // Build finest hierarchy
-            op_list_.push_back(new OperatorType);
-            pm_list_.push_back(new ParallelManager);
-            restrict_list_.push_back(new LocalMatrix<ValueType>);
-            prolong_list_.push_back(new LocalMatrix<ValueType>);
-            trans_list_.push_back(new LocalVector<int>);
-
-            op_list_.back()->CloneBackend(*this->op_);
-            restrict_list_.back()->CloneBackend(*this->op_);
-            prolong_list_.back()->CloneBackend(*this->op_);
-            trans_list_.back()->CloneBackend(*this->op_);
-
-            // Create prolongation and restriction operators
-            this->Aggregate_(*this->op_,
-                             prolong_list_.back(),
-                             restrict_list_.back(),
-                             op_list_.back(),
-                             pm_list_.back(),
-                             trans_list_.back());
-
-            ++this->levels_;
-
-            while(op_list_.back()->GetM() > (IndexType2)this->coarse_size_)
-            {
-                // Add new list elements
-                OperatorType* prev_op_ = op_list_.back();
-                op_list_.push_back(new OperatorType);
-                pm_list_.push_back(new ParallelManager);
-                restrict_list_.push_back(new LocalMatrix<ValueType>);
-                prolong_list_.push_back(new LocalMatrix<ValueType>);
-                trans_list_.push_back(new LocalVector<int>);
-
-                op_list_.back()->CloneBackend(*this->op_);
-                restrict_list_.back()->CloneBackend(*this->op_);
-                prolong_list_.back()->CloneBackend(*this->op_);
-                trans_list_.back()->CloneBackend(*this->op_);
-
-                this->Aggregate_(*prev_op_,
-                                 prolong_list_.back(),
-                                 restrict_list_.back(),
-                                 op_list_.back(),
-                                 pm_list_.back(),
-                                 trans_list_.back());
-
-                ++this->levels_;
-            }
-
-            // Allocate data structures
-            this->op_level_          = new OperatorType*[this->levels_ - 1];
-            this->pm_level_          = new ParallelManager*[this->levels_ - 1];
-            this->restrict_op_level_ = new Operator<ValueType>*[this->levels_ - 1];
-            this->prolong_op_level_  = new Operator<ValueType>*[this->levels_ - 1];
-            this->trans_level_       = new LocalVector<int>*[this->levels_ - 1];
-
-            typename std::list<OperatorType*>::iterator           op_it    = op_list_.begin();
-            typename std::list<ParallelManager*>::iterator        pm_it    = pm_list_.begin();
-            typename std::list<LocalMatrix<ValueType>*>::iterator pro_it   = prolong_list_.begin();
-            typename std::list<LocalMatrix<ValueType>*>::iterator res_it   = restrict_list_.begin();
-            typename std::list<LocalVector<int>*>::iterator       trans_it = trans_list_.begin();
-
-            for(int i = 0; i < this->levels_ - 1; ++i)
-            {
-                this->op_level_[i] = *op_it;
-                this->op_level_[i]->Sort();
-                ++op_it;
-
-                this->pm_level_[i] = *pm_it;
-                ++pm_it;
-
-                this->restrict_op_level_[i] = *res_it;
-                ++res_it;
-
-                this->prolong_op_level_[i] = *pro_it;
-                ++pro_it;
-
-                this->trans_level_[i] = *trans_it;
-                ++trans_it;
-            }
-        }
-
-        log_debug(this, "GlobalPairwiseAMG::BuildHierarchy()", " #*# end");
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
     void GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::ClearLocal(void)
     {
         log_debug(this, "GlobalPairwiseAMG::ClearLocal()", this->build_);
@@ -318,14 +204,8 @@ namespace rocalution
         {
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
-                delete this->pm_level_[i];
-                delete this->trans_level_[i];
-
                 free_host(&this->rG_level_[i]);
             }
-
-            delete[] this->pm_level_;
-            delete[] this->trans_level_;
 
             this->dim_level_.clear();
             this->Gsize_level_.clear();
@@ -384,17 +264,6 @@ namespace rocalution
         this->Gsize_level_.push_back(Gsize);
         this->rGsize_level_.push_back(rGsize);
         this->rG_level_.push_back(rG);
-    }
-
-    // disabled function
-    template <class OperatorType, class VectorType, typename ValueType>
-    void
-        GlobalPairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType&  op,
-                                                                           Operator<ValueType>* pro,
-                                                                           Operator<ValueType>* res,
-                                                                           OperatorType* coarse)
-    {
-        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template class GlobalPairwiseAMG<GlobalMatrix<double>, GlobalVector<double>, double>;

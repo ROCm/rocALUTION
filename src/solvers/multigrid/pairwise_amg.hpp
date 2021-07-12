@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,11 +47,12 @@ namespace rocalution
   * The Pairwise Aggregation Algebraic MultiGrid method is based on a pairwise
   * aggregation matching scheme. It delivers very efficient building phase which is
   * suitable for Poisson-like equation. Most of the time it requires K-cycle for the
-  * solving phase to provide low number of iterations.
+  * solving phase to provide low number of iterations. This version has multi-node
+  * support.
   * \cite pairwiseamg
   *
-  * \tparam OperatorType - can be LocalMatrix
-  * \tparam VectorType - can be LocalVector
+  * \tparam OperatorType - can be LocalMatrix or GlobalMatrix
+  * \tparam VectorType - can be LocalVector or GlobalVector
   * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
   */
     template <class OperatorType, class VectorType, typename ValueType>
@@ -62,9 +63,7 @@ namespace rocalution
         virtual ~PairwiseAMG();
 
         virtual void Print(void) const;
-        virtual void BuildHierarchy(void);
         virtual void ClearLocal(void);
-        virtual void BuildSmoothers(void);
 
         /** \brief Set beta for pairwise aggregation */
         void SetBeta(ValueType beta);
@@ -77,17 +76,12 @@ namespace rocalution
 
     protected:
         /** \brief Constructs the prolongation, restriction and coarse operator */
-        void Aggregate_(const OperatorType&  op,
-                        Operator<ValueType>* pro,
-                        Operator<ValueType>* res,
-                        OperatorType*        coarse,
-                        LocalVector<int>*    trans);
-
-        /** \private */
         virtual void Aggregate_(const OperatorType&  op,
                                 Operator<ValueType>* pro,
                                 Operator<ValueType>* res,
-                                OperatorType*        coarse);
+                                OperatorType*        coarse,
+                                ParallelManager*     pm,
+                                LocalVector<int>*    trans);
 
         virtual void PrintStart_(void) const;
         virtual void PrintEnd_(void) const;
@@ -100,9 +94,6 @@ namespace rocalution
         double coarsening_factor_;
         // Ordering for the aggregation scheme
         unsigned int aggregation_ordering_;
-
-        // Transfer mapping
-        LocalVector<int>** trans_level_;
 
         // Dimension of the coarse operators
         std::vector<int>  dim_level_;

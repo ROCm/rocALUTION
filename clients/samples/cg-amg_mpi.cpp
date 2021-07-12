@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -98,11 +98,9 @@ int main(int argc, char* argv[])
 
     // Linear solver
     CG<GlobalMatrix<double>, GlobalVector<double>, double> ls;
-    // Global preconditioner
-    GlobalPairwiseAMG<GlobalMatrix<double>, GlobalVector<double>, double> p;
+    // Preconditioner
+    PairwiseAMG<GlobalMatrix<double>, GlobalVector<double>, double> p;
 
-    // Limit number of AMG preconditioner iterations to 1 iteration per CG iteration
-    p.InitMaxIter(1);
     // Disable AMG preconditioner verbosity output
     p.Verbose(0);
 
@@ -125,7 +123,7 @@ int main(int argc, char* argv[])
     ls.Verbose(2);
 
     // Set host levels (requires solver built)
-    p.SetHostLevels(3);
+    p.SetHostLevels(2);
 
     // Print matrix info
     mat.Info();

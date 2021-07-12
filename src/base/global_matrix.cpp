@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1360,11 +1360,11 @@ namespace rocalution
             LocalVector<int> host_G;
             host_G.CopyFrom(G);
 
-            host_interior.CoarsenOperator(&tmp, nrow, nrow, host_G, Gsize, rG, rGsize);
+            host_interior.CoarsenOperator(&tmp, pm, nrow, nrow, host_G, Gsize, rG, rGsize);
         }
         else
         {
-            this->matrix_interior_.CoarsenOperator(&tmp, nrow, nrow, G, Gsize, rG, rGsize);
+            this->matrix_interior_.CoarsenOperator(&tmp, pm, nrow, nrow, G, Gsize, rG, rGsize);
         }
 
         int*       Ac_interior_row_offset = NULL;
@@ -1435,12 +1435,12 @@ namespace rocalution
             host_ghost.CopyFrom(this->GetGhost());
 
             host_ghost.CoarsenOperator(
-                &tmp_ghost, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
+                &tmp_ghost, pm, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
         }
         else
         {
             this->matrix_ghost_.CoarsenOperator(
-                &tmp_ghost, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
+                &tmp_ghost, pm, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
         }
 
         G_ghost.Clear();

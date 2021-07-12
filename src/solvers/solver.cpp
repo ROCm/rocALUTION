@@ -47,7 +47,8 @@ namespace rocalution
         this->op_      = NULL;
         this->precond_ = NULL;
 
-        this->build_ = false;
+        this->is_precond_ = false;
+        this->build_      = false;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -406,6 +407,8 @@ namespace rocalution
 
         assert(this != &precond);
         this->precond_ = &precond;
+
+        this->precond_->FlagPrecond();
     }
 
     template <class OperatorType, class VectorType, typename ValueType>

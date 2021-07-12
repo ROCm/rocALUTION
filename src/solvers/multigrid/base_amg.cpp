@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -142,132 +142,33 @@ namespace rocalution
 
         assert(this->build_ == false);
 
+        // Build hierarchy
         this->BuildHierarchy();
 
-        this->build_ = true;
-
-        log_debug(this, "BaseAMG::Build()", "#*# allocate data");
-
-        this->d_level_ = new VectorType*[this->levels_];
-        this->r_level_ = new VectorType*[this->levels_];
-        this->t_level_ = new VectorType*[this->levels_];
-        this->s_level_ = new VectorType*[this->levels_];
-
-        // Extra structure for K-cycle
-        if(this->cycle_ == 2)
-        {
-            this->p_level_ = new VectorType*[this->levels_ - 2];
-            this->q_level_ = new VectorType*[this->levels_ - 2];
-            this->k_level_ = new VectorType*[this->levels_ - 2];
-            this->l_level_ = new VectorType*[this->levels_ - 2];
-
-            for(int i = 0; i < this->levels_ - 2; ++i)
-            {
-                this->p_level_[i] = new VectorType;
-                this->p_level_[i]->CloneBackend(*this->op_level_[i]);
-                this->p_level_[i]->Allocate("p", this->op_level_[i]->GetM());
-
-                this->q_level_[i] = new VectorType;
-                this->q_level_[i]->CloneBackend(*this->op_level_[i]);
-                this->q_level_[i]->Allocate("q", this->op_level_[i]->GetM());
-
-                this->k_level_[i] = new VectorType;
-                this->k_level_[i]->CloneBackend(*this->op_level_[i]);
-                this->k_level_[i]->Allocate("k", this->op_level_[i]->GetM());
-
-                this->l_level_[i] = new VectorType;
-                this->l_level_[i]->CloneBackend(*this->op_level_[i]);
-                this->l_level_[i]->Allocate("l", this->op_level_[i]->GetM());
-            }
-        }
-
-        for(int i = 0; i < this->levels_; ++i)
-        {
-            this->r_level_[i] = new VectorType;
-            this->t_level_[i] = new VectorType;
-            this->s_level_[i] = new VectorType;
-            if(i > 0)
-            {
-                this->d_level_[i] = new VectorType;
-            }
-
-            if(i > 0)
-            {
-                this->d_level_[i]->CloneBackend(*this->op_level_[i - 1]);
-                this->r_level_[i]->CloneBackend(*this->op_level_[i - 1]);
-                this->t_level_[i]->CloneBackend(*this->op_level_[i - 1]);
-                this->s_level_[i]->CloneBackend(*this->op_level_[i - 1]);
-            }
-            else
-            {
-                this->r_level_[i]->CloneBackend(*this->op_);
-                this->t_level_[i]->CloneBackend(*this->op_);
-                this->s_level_[i]->CloneBackend(*this->op_);
-            }
-        }
-
-        // Allocate temporary vectors for cycles
-        for(int level = 0; level < this->levels_; ++level)
-        {
-            if(level > 0)
-            {
-                this->d_level_[level]->Allocate("defect correction",
-                                                this->op_level_[level - 1]->GetM());
-                this->r_level_[level]->Allocate("residual", this->op_level_[level - 1]->GetM());
-                this->t_level_[level]->Allocate("temporary", this->op_level_[level - 1]->GetM());
-                this->s_level_[level]->Allocate("temporary", this->op_level_[level - 1]->GetM());
-            }
-            else
-            {
-                this->r_level_[level]->Allocate("residual", this->op_->GetM());
-                this->t_level_[level]->Allocate("temporary", this->op_->GetM());
-                this->s_level_[level]->Allocate("temporary", this->op_->GetM());
-            }
-        }
-
-        log_debug(this, "BaseAMG::Build()", "#*# setup smoothers");
-
-        // Setup and build smoothers
+        // Build smoothers, if not passed by the user
         if(this->set_sm_ == false)
         {
             this->BuildSmoothers();
         }
 
-        for(int i = 0; i < this->levels_ - 1; ++i)
-        {
-            if(i > 0)
-            {
-                this->smoother_level_[i]->SetOperator(*this->op_level_[i - 1]);
-            }
-            else
-            {
-                this->smoother_level_[i]->SetOperator(*this->op_);
-            }
-
-            this->smoother_level_[i]->Build();
-        }
-
-        log_debug(this, "BaseAMG::Build()", "#*# setup coarse solver");
-
-        // Setup and build coarse grid solver
+        // Build coarse grid solver, if not passed by the user
         if(this->set_s_ == false)
         {
             // Coarse Grid Solver
             CG<OperatorType, VectorType, ValueType>* cgs
                 = new CG<OperatorType, VectorType, ValueType>;
 
-            // set absolute tolerance to 0 to avoid issues with very small numbers
-            cgs->Init(0.0, 1e-6, 1e+8, 1000000);
-            // be quite
+            // Set absolute tolerance to 0 to avoid issues with very small numbers
+            cgs->Init(0.0, 1e-6, 1e+8, 1000);
+
+            // No verbose output
             cgs->Verbose(0);
 
             this->solver_coarse_ = cgs;
         }
 
-        this->solver_coarse_->SetOperator(*this->op_level_[this->levels_ - 2]);
-        this->solver_coarse_->Build();
-
-        log_debug(this, "BaseAMG::Build()", "#*# convert operators");
+        // Initialize multigrid structures
+        this->Initialize();
 
         // Convert operator to op_format
         if(this->op_format_ != CSR)
@@ -277,6 +178,8 @@ namespace rocalution
                 this->op_level_[i]->ConvertTo(this->op_format_);
             }
         }
+
+        this->build_ = true;
 
         log_debug(this, "BaseAMG::Build()", this->build_, " #*# end");
     }
@@ -302,41 +205,57 @@ namespace rocalution
             }
 
             // Lists for the building procedure
-            std::list<OperatorType*> op_list_;
-            std::list<OperatorType*> restrict_list_;
-            std::list<OperatorType*> prolong_list_;
+            std::list<OperatorType*>           op_list_;
+            std::list<ParallelManager*>        pm_list_;
+            std::list<LocalMatrix<ValueType>*> restrict_list_;
+            std::list<LocalMatrix<ValueType>*> prolong_list_;
+            std::list<LocalVector<int>*>       trans_list_;
 
             this->levels_ = 1;
 
             // Build finest hierarchy
             op_list_.push_back(new OperatorType);
-            restrict_list_.push_back(new OperatorType);
-            prolong_list_.push_back(new OperatorType);
+            pm_list_.push_back(new ParallelManager);
+            restrict_list_.push_back(new LocalMatrix<ValueType>);
+            prolong_list_.push_back(new LocalMatrix<ValueType>);
+            trans_list_.push_back(new LocalVector<int>);
 
             op_list_.back()->CloneBackend(*this->op_);
             restrict_list_.back()->CloneBackend(*this->op_);
             prolong_list_.back()->CloneBackend(*this->op_);
+            trans_list_.back()->CloneBackend(*this->op_);
 
             // Create prolongation and restriction operators
-            this->Aggregate_(
-                *this->op_, prolong_list_.back(), restrict_list_.back(), op_list_.back());
+            this->Aggregate_(*this->op_,
+                             prolong_list_.back(),
+                             restrict_list_.back(),
+                             op_list_.back(),
+                             pm_list_.back(),
+                             trans_list_.back());
 
             ++this->levels_;
 
             while(op_list_.back()->GetM() > (IndexType2)this->coarse_size_)
             {
                 // Add new list elements
-                restrict_list_.push_back(new OperatorType);
-                prolong_list_.push_back(new OperatorType);
+                restrict_list_.push_back(new LocalMatrix<ValueType>);
+                prolong_list_.push_back(new LocalMatrix<ValueType>);
                 OperatorType* prev_op_ = op_list_.back();
                 op_list_.push_back(new OperatorType);
+                pm_list_.push_back(new ParallelManager);
+                trans_list_.push_back(new LocalVector<int>);
 
                 op_list_.back()->CloneBackend(*this->op_);
                 restrict_list_.back()->CloneBackend(*this->op_);
                 prolong_list_.back()->CloneBackend(*this->op_);
+                trans_list_.back()->CloneBackend(*this->op_);
 
-                this->Aggregate_(
-                    *prev_op_, prolong_list_.back(), restrict_list_.back(), op_list_.back());
+                this->Aggregate_(*prev_op_,
+                                 prolong_list_.back(),
+                                 restrict_list_.back(),
+                                 op_list_.back(),
+                                 pm_list_.back(),
+                                 trans_list_.back());
 
                 ++this->levels_;
 
@@ -350,12 +269,16 @@ namespace rocalution
 
             // Allocate data structures
             this->op_level_          = new OperatorType*[this->levels_ - 1];
+            this->pm_level_          = new ParallelManager*[this->levels_ - 1];
             this->restrict_op_level_ = new Operator<ValueType>*[this->levels_ - 1];
             this->prolong_op_level_  = new Operator<ValueType>*[this->levels_ - 1];
+            this->trans_level_       = new LocalVector<int>*[this->levels_ - 1];
 
-            typename std::list<OperatorType*>::iterator op_it  = op_list_.begin();
-            typename std::list<OperatorType*>::iterator pro_it = prolong_list_.begin();
-            typename std::list<OperatorType*>::iterator res_it = restrict_list_.begin();
+            typename std::list<OperatorType*>::iterator           op_it    = op_list_.begin();
+            typename std::list<ParallelManager*>::iterator        pm_it    = pm_list_.begin();
+            typename std::list<LocalMatrix<ValueType>*>::iterator pro_it   = prolong_list_.begin();
+            typename std::list<LocalMatrix<ValueType>*>::iterator res_it   = restrict_list_.begin();
+            typename std::list<LocalVector<int>*>::iterator       trans_it = trans_list_.begin();
 
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
@@ -363,11 +286,17 @@ namespace rocalution
                 this->op_level_[i]->Sort();
                 ++op_it;
 
+                this->pm_level_[i] = *pm_it;
+                ++pm_it;
+
                 this->restrict_op_level_[i] = *res_it;
                 ++res_it;
 
                 this->prolong_op_level_[i] = *pro_it;
                 ++pro_it;
+
+                this->trans_level_[i] = *trans_it;
+                ++trans_it;
             }
         }
 
@@ -391,7 +320,7 @@ namespace rocalution
             Jacobi<OperatorType, VectorType, ValueType>* jac
                 = new Jacobi<OperatorType, VectorType, ValueType>;
 
-            sm->SetRelaxation(static_cast<ValueType>(0.67));
+            sm->SetRelaxation(static_cast<ValueType>(2.0 / 3.0));
             sm->SetPreconditioner(*jac);
             sm->Verbose(0);
             this->smoother_level_[i] = sm;
@@ -408,82 +337,45 @@ namespace rocalution
 
         if(this->build_ == true)
         {
+            // Clear AMG specific data
             this->ClearLocal();
 
-            for(int i = 0; i < this->levels_; ++i)
-            {
-                // Clear temporary VectorTypes
-                if(i > 0)
-                {
-                    delete this->d_level_[i];
-                }
-                delete this->r_level_[i];
-                delete this->t_level_[i];
-                delete this->s_level_[i];
-            }
+            // Uninitialize multigrid structures
+            this->Finalize();
 
-            delete[] this->d_level_;
-            delete[] this->r_level_;
-            delete[] this->t_level_;
-            delete[] this->s_level_;
-
-            // Extra structure for K-cycle
-            if(this->cycle_ == 2)
-            {
-                for(int i = 0; i < this->levels_ - 2; ++i)
-                {
-                    delete this->p_level_[i];
-                    delete this->q_level_[i];
-                    delete this->k_level_[i];
-                    delete this->l_level_[i];
-                }
-
-                delete[] this->p_level_;
-                delete[] this->q_level_;
-                delete[] this->k_level_;
-                delete[] this->l_level_;
-            }
-
+            // De-allocate operator data structures
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
                 // Clear operator data structure
                 delete this->op_level_[i];
                 delete this->restrict_op_level_[i];
                 delete this->prolong_op_level_[i];
-
-                if(this->set_sm_ == false)
-                {
-                    delete this->smoother_level_[i];
-                    delete this->sm_default_[i];
-                }
-                else
-                    this->smoother_level_[i]->Clear();
-            }
-
-            // Clear coarse grid solver - we built it
-            if(this->set_s_ == false)
-            {
-                delete this->solver_coarse_;
-            }
-            else
-            {
-                this->solver_coarse_->Clear();
             }
 
             delete[] this->op_level_;
             delete[] this->restrict_op_level_;
             delete[] this->prolong_op_level_;
 
+            // De-allocate smoothers, if not allocated by the user
             if(this->set_sm_ == false)
             {
+                for(int i = 0; i < this->levels_ - 1; ++i)
+                {
+                    delete this->smoother_level_[i];
+                    delete this->sm_default_[i];
+                }
+
                 delete[] this->smoother_level_;
                 delete[] this->sm_default_;
             }
 
-            this->levels_ = -1;
+            // De-allocate coarse grid solver, if not allocated by user
+            if(this->set_s_ == false)
+            {
+                delete this->solver_coarse_;
+            }
 
-            this->iter_ctrl_.Clear();
-
+            this->levels_    = -1;
             this->build_     = false;
             this->hierarchy_ = false;
         }

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
 
-#include "../../solvers/preconditioners/preconditioner_multicolored_gs.hpp"
+#include "../../solvers/preconditioners/preconditioner.hpp"
 
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
@@ -99,33 +99,6 @@ namespace rocalution
         log_debug(this, "SAAMG::SetCouplingStrength()", eps);
 
         this->eps_ = eps;
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
-    void SAAMG<OperatorType, VectorType, ValueType>::BuildSmoothers(void)
-    {
-        log_debug(this, "SAAMG::BuildSmoothers()", " #*# begin");
-
-        // Smoother for each level
-        this->smoother_level_
-            = new IterativeLinearSolver<OperatorType, VectorType, ValueType>*[this->levels_ - 1];
-        this->sm_default_ = new Solver<OperatorType, VectorType, ValueType>*[this->levels_ - 1];
-
-        for(int i = 0; i < this->levels_ - 1; ++i)
-        {
-            FixedPoint<OperatorType, VectorType, ValueType>* sm
-                = new FixedPoint<OperatorType, VectorType, ValueType>;
-            MultiColoredGS<OperatorType, VectorType, ValueType>* gs
-                = new MultiColoredGS<OperatorType, VectorType, ValueType>;
-
-            gs->SetPrecondMatrixFormat(this->sm_format_);
-            sm->SetRelaxation(static_cast<ValueType>(1.3));
-            sm->SetPreconditioner(*gs);
-            sm->Verbose(0);
-
-            this->smoother_level_[i] = sm;
-            this->sm_default_[i]     = gs;
-        }
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -237,7 +210,9 @@ namespace rocalution
     void SAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType&  op,
                                                                 Operator<ValueType>* pro,
                                                                 Operator<ValueType>* res,
-                                                                OperatorType*        coarse)
+                                                                OperatorType*        coarse,
+                                                                ParallelManager*     pm,
+                                                                LocalVector<int>*    trans)
     {
         log_debug(this, "SAAMG::Aggregate_()", this->build_);
 
