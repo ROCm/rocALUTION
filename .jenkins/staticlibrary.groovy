@@ -104,7 +104,7 @@ ci: {
 
     String defaultBuildCommand = './install.sh -c --static'
     String hostBuildCommand = './install.sh -c --host --static'
-    String mpiBuildCommand = './install.sh -c --host --mpi --no-openmp --static'
+    String mpiBuildCommand = './install.sh -c --host --mpi=on --no-openmp --static'
 
     setupCI(urlJobName, defaultJobNameList, defaultBuildCommand, runCI, '')
     setupCI(urlJobName, hostJobNameList, hostBuildCommand, runCI, 'Host')

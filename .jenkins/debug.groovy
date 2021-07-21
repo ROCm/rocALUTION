@@ -89,7 +89,7 @@ ci: {
 
     String defaultBuildCommand = './install.sh -c'
     String hostBuildCommand = './install.sh -c --host'
-    String mpiBuildCommand = './install.sh -c --host --mpi --no-openmp'
+    String mpiBuildCommand = './install.sh -c --host --mpi=on --no-openmp'
 
     setupCI(urlJobName, defaultJobNameList, defaultBuildCommand, runCI, '')
     setupCI(urlJobName, hostJobNameList, hostBuildCommand, runCI, 'Host')
