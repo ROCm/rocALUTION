@@ -86,7 +86,9 @@ def runPackageCommand(platform, project, jobName, label='')
                     done
                 fi
                 mv *.deb package/
-                dpkg -c package/*.deb
+                for pkg in package/*.deb; do
+                    dpkg -c \$pkg
+                done
             """
 
         platform.runCommand(this, command)
