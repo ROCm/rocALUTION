@@ -115,5 +115,11 @@ set(rocalution_SOVERSION 0.1)
 add_subdirectory(src)
 
 if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
+  set( BUILD_CLIENTS ON )
+endif()
+
+# Trigger client builds if selected
+if(BUILD_CLIENTS)
   add_subdirectory(clients)
 endif()
+

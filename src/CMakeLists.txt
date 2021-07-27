@@ -150,7 +150,9 @@ if(SUPPORT_HIP)
   target_link_libraries(rocalution PRIVATE rocalution_hip hip::host)
 endif()
 
-if(WIN32 AND BUILD_CLIENTS)
+set_target_properties(rocalution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
+
+if(WIN32 AND BUILD_CLIENTS AND BUILD_SHARED_LIBS)
   add_custom_command(TARGET rocalution POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/staging/$<TARGET_FILE_NAME:rocalution> ${PROJECT_BINARY_DIR}/clients/staging/$<TARGET_FILE_NAME:rocalution>)
   if( ${CMAKE_BUILD_TYPE} MATCHES "Debug")
     add_custom_command(TARGET rocalution POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/staging/rocalution.pdb ${PROJECT_BINARY_DIR}/clients/staging/rocalution.pdb )
