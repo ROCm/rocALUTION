@@ -25,6 +25,7 @@
 #define ROCALUTION_KRYLOV_BICGSTABL_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 #include <vector>
 
@@ -48,16 +49,23 @@ namespace rocalution
     class BiCGStabl : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         BiCGStabl();
+        ROCALUTION_EXPORT
         virtual ~BiCGStabl();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the order */
+        ROCALUTION_EXPORT
         virtual void SetOrder(int l);
 
     protected:

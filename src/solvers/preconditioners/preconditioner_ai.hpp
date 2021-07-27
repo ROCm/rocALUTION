@@ -25,6 +25,7 @@
 #define ROCALUTION_PRECONDITIONER_AI_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 #include "preconditioner.hpp"
 
 namespace rocalution
@@ -47,15 +48,22 @@ namespace rocalution
     class AIChebyshev : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         AIChebyshev();
+        ROCALUTION_EXPORT
         virtual ~AIChebyshev();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         /** \brief Set order, min and max eigenvalues */
-        void         Set(int p, ValueType lambda_min, ValueType lambda_max);
+        ROCALUTION_EXPORT
+        void Set(int p, ValueType lambda_min, ValueType lambda_max);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:
@@ -91,21 +99,30 @@ namespace rocalution
     class FSAI : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         FSAI();
+        ROCALUTION_EXPORT
         virtual ~FSAI();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         /** \brief Set the power of the system matrix sparsity pattern */
+        ROCALUTION_EXPORT
         void Set(int power);
         /** \brief Set an external sparsity pattern */
+        ROCALUTION_EXPORT
         void Set(const OperatorType& pattern);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the matrix format of the preconditioner */
+        ROCALUTION_EXPORT
         void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
     protected:
@@ -148,15 +165,22 @@ namespace rocalution
     class SPAI : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         SPAI();
+        ROCALUTION_EXPORT
         virtual ~SPAI();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the matrix format of the preconditioner */
+        ROCALUTION_EXPORT
         void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
     protected:
@@ -195,19 +219,27 @@ namespace rocalution
     class TNS : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         TNS();
+        ROCALUTION_EXPORT
         virtual ~TNS();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
         /** \brief Set implicit (true) or explicit (false) computation */
+        ROCALUTION_EXPORT
         void Set(bool imp);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the matrix format of the preconditioner */
+        ROCALUTION_EXPORT
         void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
     protected:

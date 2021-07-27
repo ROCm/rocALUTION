@@ -24,6 +24,8 @@
 #ifndef ROCALUTION_BACKEND_MANAGER_HPP_
 #define ROCALUTION_BACKEND_MANAGER_HPP_
 
+#include "export.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -141,6 +143,7 @@ namespace rocalution
   *   }
   * \endcode
   */
+    ROCALUTION_EXPORT
     int init_rocalution(int rank = -1, int dev_per_node = 1);
 
     /** \ingroup backend_module
@@ -148,6 +151,7 @@ namespace rocalution
   * \details
   * \p stop_rocalution shuts down the rocALUTION platform.
   */
+    ROCALUTION_EXPORT
     int stop_rocalution(void);
 
     /** \ingroup backend_module
@@ -159,6 +163,7 @@ namespace rocalution
   * @param[in]
   * dev     accelerator device ID for computation
   */
+    ROCALUTION_EXPORT
     void set_device_rocalution(int dev);
 
     /** \ingroup backend_module
@@ -188,6 +193,7 @@ namespace rocalution
   * @param[in]
   * nthreads    number of OpenMP threads
   */
+    ROCALUTION_EXPORT
     void set_omp_threads_rocalution(int nthreads);
 
     /** \ingroup backend_module
@@ -198,6 +204,7 @@ namespace rocalution
   * @param[in]
   * affinity    boolean to turn on/off OpenMP host affinity
   */
+    ROCALUTION_EXPORT
     void set_omp_affinity_rocalution(bool affinity);
 
     /** \ingroup backend_module
@@ -215,6 +222,7 @@ namespace rocalution
   * @param[in]
   * threshold   OpenMP threshold size
   */
+    ROCALUTION_EXPORT
     void set_omp_threshold_rocalution(int threshold);
 
     /** \ingroup backend_module
@@ -222,6 +230,7 @@ namespace rocalution
   * \details
   * \p info_rocalution prints information about the rocALUTION platform
   */
+    ROCALUTION_EXPORT
     void info_rocalution(void);
 
     /** \ingroup backend_module
@@ -233,6 +242,7 @@ namespace rocalution
   * @param[in]
   * backend_descriptor  rocALUTION backend descriptor
   */
+    ROCALUTION_EXPORT
     void info_rocalution(const struct Rocalution_Backend_Descriptor backend_descriptor);
 
     /** \ingroup backend_module
@@ -244,6 +254,7 @@ namespace rocalution
   * @param[in]
   * onoff   boolean to turn on/off the accelerator
   */
+    ROCALUTION_EXPORT
     void disable_accelerator_rocalution(bool onoff = true);
 
     // Return true if any accelerator is available
@@ -279,6 +290,7 @@ namespace rocalution
   * \details
   * \p _rocalution_sync blocks the host until all active asynchronous transfers are completed.
   */
+    ROCALUTION_EXPORT
     void _rocalution_sync(void);
 
     size_t _rocalution_add_obj(class RocalutionObj* ptr);

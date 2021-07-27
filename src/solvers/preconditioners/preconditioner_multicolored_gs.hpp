@@ -26,6 +26,7 @@
 
 #include "../../base/local_vector.hpp"
 #include "../solver.hpp"
+#include "export.hpp"
 #include "preconditioner.hpp"
 #include "preconditioner_multicolored.hpp"
 
@@ -52,14 +53,19 @@ namespace rocalution
     class MultiColoredSGS : public MultiColored<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         MultiColoredSGS();
+        ROCALUTION_EXPORT
         virtual ~MultiColoredSGS();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
         /** \brief Set the relaxation parameter for the SOR/SSOR scheme */
+        ROCALUTION_EXPORT
         void SetRelaxation(ValueType omega);
 
     protected:
@@ -91,9 +97,12 @@ namespace rocalution
     class MultiColoredGS : public MultiColoredSGS<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         MultiColoredGS();
+        ROCALUTION_EXPORT
         virtual ~MultiColoredGS();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
     protected:

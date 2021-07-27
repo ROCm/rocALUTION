@@ -24,12 +24,15 @@
 #ifndef ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
 #define ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
 
+#include "export.hpp"
+
 namespace rocalution
 {
 
     /** \ingroup backend_module
   * \brief Return current time in microseconds
   */
+    ROCALUTION_EXPORT
     double rocalution_time(void);
 
 } // namespace rocalution

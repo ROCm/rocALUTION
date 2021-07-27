@@ -25,6 +25,7 @@
 #define ROCALUTION_LOCAL_VECTOR_HPP_
 
 #include "../utils/types.hpp"
+#include "export.hpp"
 #include "vector.hpp"
 
 namespace rocalution
@@ -58,23 +59,35 @@ namespace rocalution
     class LocalVector : public Vector<ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         LocalVector();
+        ROCALUTION_EXPORT
         virtual ~LocalVector();
 
+        ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
+        ROCALUTION_EXPORT
         virtual void MoveToAcceleratorAsync(void);
+        ROCALUTION_EXPORT
         virtual void MoveToHost(void);
+        ROCALUTION_EXPORT
         virtual void MoveToHostAsync(void);
+        ROCALUTION_EXPORT
         virtual void Sync(void);
 
-        virtual void       Info(void) const;
+        ROCALUTION_EXPORT
+        virtual void Info(void) const;
+        ROCALUTION_EXPORT
         virtual IndexType2 GetSize(void) const;
 
         /** \private */
+        ROCALUTION_EXPORT
         const LocalVector<ValueType>& GetInterior() const;
         /** \private */
+        ROCALUTION_EXPORT
         LocalVector<ValueType>& GetInterior();
 
+        ROCALUTION_EXPORT
         virtual bool Check(void) const;
 
         /** \brief Allocate a local vector with name and size
@@ -95,6 +108,7 @@ namespace rocalution
       *   vec.Clear();
       * \endcode
       */
+        ROCALUTION_EXPORT
         void Allocate(std::string name, IndexType2 size);
 
         /** \brief Initialize a LocalVector on the host with externally allocated data
@@ -120,6 +134,7 @@ namespace rocalution
       *   vec.SetDataPtr(&ptr_vec, "my_vector", 200);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void SetDataPtr(ValueType** ptr, std::string name, int size);
 
         /** \brief Leave a LocalVector to host pointers
@@ -145,15 +160,22 @@ namespace rocalution
       *   vec.LeaveDataPtr(&ptr_vec);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void LeaveDataPtr(ValueType** ptr);
 
+        ROCALUTION_EXPORT
         virtual void Clear();
+        ROCALUTION_EXPORT
         virtual void Zeros();
+        ROCALUTION_EXPORT
         virtual void Ones();
+        ROCALUTION_EXPORT
         virtual void SetValues(ValueType val);
+        ROCALUTION_EXPORT
         virtual void SetRandomUniform(unsigned long long seed,
                                       ValueType          a = static_cast<ValueType>(-1),
                                       ValueType          b = static_cast<ValueType>(1));
+        ROCALUTION_EXPORT
         virtual void SetRandomNormal(unsigned long long seed,
                                      ValueType          mean = static_cast<ValueType>(0),
                                      ValueType          var  = static_cast<ValueType>(1));
@@ -187,31 +209,45 @@ namespace rocalution
       * \endcode
       */
         /**@{*/
-        ValueType&       operator[](int i);
+        ROCALUTION_EXPORT
+        ValueType& operator[](int i);
+        ROCALUTION_EXPORT
         const ValueType& operator[](int i) const;
         /**@}*/
 
+        ROCALUTION_EXPORT
         virtual void ReadFileASCII(const std::string filename);
+        ROCALUTION_EXPORT
         virtual void WriteFileASCII(const std::string filename) const;
+        ROCALUTION_EXPORT
         virtual void ReadFileBinary(const std::string filename);
+        ROCALUTION_EXPORT
         virtual void WriteFileBinary(const std::string filename) const;
 
+        ROCALUTION_EXPORT
         virtual void CopyFrom(const LocalVector<ValueType>& src);
+        ROCALUTION_EXPORT
         virtual void CopyFromAsync(const LocalVector<ValueType>& src);
+        ROCALUTION_EXPORT
         virtual void CopyFromFloat(const LocalVector<float>& src);
+        ROCALUTION_EXPORT
         virtual void CopyFromDouble(const LocalVector<double>& src);
 
+        ROCALUTION_EXPORT
         virtual void
             CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
 
         /** \brief Copy a vector under permutation (forward permutation) */
+        ROCALUTION_EXPORT
         void CopyFromPermute(const LocalVector<ValueType>& src,
                              const LocalVector<int>&       permutation);
 
         /** \brief Copy a vector under permutation (backward permutation) */
+        ROCALUTION_EXPORT
         void CopyFromPermuteBackward(const LocalVector<ValueType>& src,
                                      const LocalVector<int>&       permutation);
 
+        ROCALUTION_EXPORT
         virtual void CloneFrom(const LocalVector<ValueType>& src);
 
         /** \brief Copy (import) vector
@@ -223,6 +259,7 @@ namespace rocalution
       * @param[in]
       * data    data to be imported.
       */
+        ROCALUTION_EXPORT
         void CopyFromData(const ValueType* data);
 
         /** \brief Copy (export) vector
@@ -234,61 +271,88 @@ namespace rocalution
       * @param[out]
       * data    exported data.
       */
+        ROCALUTION_EXPORT
         void CopyToData(ValueType* data) const;
 
         /** \brief Perform in-place permutation (forward) of the vector */
+        ROCALUTION_EXPORT
         void Permute(const LocalVector<int>& permutation);
 
         /** \brief Perform in-place permutation (backward) of the vector */
+        ROCALUTION_EXPORT
         void PermuteBackward(const LocalVector<int>& permutation);
 
         /** \brief Restriction operator based on restriction mapping vector */
+        ROCALUTION_EXPORT
         void Restriction(const LocalVector<ValueType>& vec_fine, const LocalVector<int>& map);
 
         /** \brief Prolongation operator based on restriction mapping vector */
+        ROCALUTION_EXPORT
         void Prolongation(const LocalVector<ValueType>& vec_coarse, const LocalVector<int>& map);
 
+        ROCALUTION_EXPORT
         virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);
+        ROCALUTION_EXPORT
         virtual void ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x);
+        ROCALUTION_EXPORT
         virtual void
             ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
-        virtual void      ScaleAddScale(ValueType                     alpha,
-                                        const LocalVector<ValueType>& x,
-                                        ValueType                     beta,
-                                        int                           src_offset,
-                                        int                           dst_offset,
-                                        int                           size);
-        virtual void      ScaleAdd2(ValueType                     alpha,
-                                    const LocalVector<ValueType>& x,
-                                    ValueType                     beta,
-                                    const LocalVector<ValueType>& y,
-                                    ValueType                     gamma);
-        virtual void      Scale(ValueType alpha);
+        ROCALUTION_EXPORT
+        virtual void ScaleAddScale(ValueType                     alpha,
+                                   const LocalVector<ValueType>& x,
+                                   ValueType                     beta,
+                                   int                           src_offset,
+                                   int                           dst_offset,
+                                   int                           size);
+        ROCALUTION_EXPORT
+        virtual void ScaleAdd2(ValueType                     alpha,
+                               const LocalVector<ValueType>& x,
+                               ValueType                     beta,
+                               const LocalVector<ValueType>& y,
+                               ValueType                     gamma);
+        ROCALUTION_EXPORT
+        virtual void Scale(ValueType alpha);
+        ROCALUTION_EXPORT
         virtual ValueType Dot(const LocalVector<ValueType>& x) const;
+        ROCALUTION_EXPORT
         virtual ValueType DotNonConj(const LocalVector<ValueType>& x) const;
+        ROCALUTION_EXPORT
         virtual ValueType Norm(void) const;
+        ROCALUTION_EXPORT
         virtual ValueType Reduce(void) const;
+        ROCALUTION_EXPORT
         virtual ValueType Asum(void) const;
-        virtual int       Amax(ValueType& value) const;
-        virtual void      PointWiseMult(const LocalVector<ValueType>& x);
-        virtual void      PointWiseMult(const LocalVector<ValueType>& x,
-                                        const LocalVector<ValueType>& y);
-        virtual void      Power(double power);
+        ROCALUTION_EXPORT
+        virtual int Amax(ValueType& value) const;
+        ROCALUTION_EXPORT
+        virtual void PointWiseMult(const LocalVector<ValueType>& x);
+        ROCALUTION_EXPORT
+        virtual void PointWiseMult(const LocalVector<ValueType>& x,
+                                   const LocalVector<ValueType>& y);
+        ROCALUTION_EXPORT
+        virtual void Power(double power);
 
         /** \brief Set index array */
+        ROCALUTION_EXPORT
         void SetIndexArray(int size, const int* index);
         /** \brief Get indexed values */
+        ROCALUTION_EXPORT
         void GetIndexValues(ValueType* values) const;
         /** \brief Set indexed values */
+        ROCALUTION_EXPORT
         void SetIndexValues(const ValueType* values);
         /** \brief Get continuous indexed values */
+        ROCALUTION_EXPORT
         void GetContinuousValues(int start, int end, ValueType* values) const;
         /** \brief Set continuous indexed values */
+        ROCALUTION_EXPORT
         void SetContinuousValues(int start, int end, const ValueType* values);
         /** \brief Extract coarse boundary mapping */
+        ROCALUTION_EXPORT
         void ExtractCoarseMapping(
             int start, int end, const int* index, int nc, int* size, int* map) const;
         /** \brief Extract coarse boundary index */
+        ROCALUTION_EXPORT
         void ExtractCoarseBoundary(
             int start, int end, const int* index, int nc, int* size, int* boundary) const;
 

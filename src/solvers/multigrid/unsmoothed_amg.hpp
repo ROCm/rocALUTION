@@ -26,6 +26,7 @@
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
+#include "export.hpp"
 
 #include <vector>
 
@@ -48,16 +49,22 @@ namespace rocalution
     class UAAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         UAAMG();
+        ROCALUTION_EXPORT
         virtual ~UAAMG();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
         /** \brief Set coupling strength */
+        ROCALUTION_EXPORT
         void SetCouplingStrength(ValueType eps);
         /** \brief Set over-interpolation parameter for aggregation */
+        ROCALUTION_EXPORT
         void SetOverInterp(ValueType overInterp);
 
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
     protected:

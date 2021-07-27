@@ -25,6 +25,7 @@
 #define ROCALUTION_MULTIGRID_HPP_
 
 #include "base_multigrid.hpp"
+#include "export.hpp"
 
 namespace rocalution
 {
@@ -59,11 +60,16 @@ namespace rocalution
     class MultiGrid : public BaseMultiGrid<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         MultiGrid();
+        ROCALUTION_EXPORT
         virtual ~MultiGrid();
 
+        ROCALUTION_EXPORT
         virtual void SetRestrictOperator(OperatorType** op);
+        ROCALUTION_EXPORT
         virtual void SetProlongOperator(OperatorType** op);
+        ROCALUTION_EXPORT
         virtual void SetOperatorHierarchy(OperatorType** op);
     };
 

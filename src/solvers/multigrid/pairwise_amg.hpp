@@ -26,6 +26,7 @@
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
+#include "export.hpp"
 
 namespace rocalution
 {
@@ -59,19 +60,27 @@ namespace rocalution
     class PairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         PairwiseAMG();
+        ROCALUTION_EXPORT
         virtual ~PairwiseAMG();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void ClearLocal(void);
 
         /** \brief Set beta for pairwise aggregation */
+        ROCALUTION_EXPORT
         void SetBeta(ValueType beta);
         /** \brief Set re-ordering for aggregation */
+        ROCALUTION_EXPORT
         void SetOrdering(unsigned int ordering);
         /** \brief Set target coarsening factor */
+        ROCALUTION_EXPORT
         void SetCoarseningFactor(double factor);
 
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
     protected:

@@ -25,6 +25,7 @@
 #define ROCALUTION_KRYLOV_BICGSTAB_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 namespace rocalution
 {
@@ -45,13 +46,19 @@ namespace rocalution
     class BiCGStab : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         BiCGStab();
+        ROCALUTION_EXPORT
         virtual ~BiCGStab();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

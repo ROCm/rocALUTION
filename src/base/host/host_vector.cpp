@@ -20,6 +20,9 @@
  * THE SOFTWARE.
  *
  * ************************************************************************ */
+#if defined(WIN32)
+#define _USE_MATH_DEFINES
+#endif
 
 #include "host_vector.hpp"
 #include "../../utils/allocate_free.hpp"

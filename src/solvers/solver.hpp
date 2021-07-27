@@ -26,6 +26,7 @@
 
 #include "../base/base_rocalution.hpp"
 #include "../base/local_vector.hpp"
+#include "export.hpp"
 #include "iter_ctrl.hpp"
 
 namespace rocalution
@@ -63,13 +64,17 @@ namespace rocalution
     class Solver : public RocalutionObj
     {
     public:
+        ROCALUTION_EXPORT
         Solver();
+        ROCALUTION_EXPORT
         virtual ~Solver();
 
         /** \brief Set the Operator of the solver */
+        ROCALUTION_EXPORT
         void SetOperator(const OperatorType& op);
 
         /** \brief Reset the operator; see ReBuildNumeric() */
+        ROCALUTION_EXPORT
         virtual void ResetOperator(const OperatorType& op);
 
         /** \brief Print information about the solver */
@@ -79,28 +84,36 @@ namespace rocalution
         virtual void Solve(const VectorType& rhs, VectorType* x) = 0;
 
         /** \brief Solve Operator x = rhs, setting initial x = 0 */
+        ROCALUTION_EXPORT
         virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
         /** \brief Clear (free all local data) the solver */
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Build the solver (data allocation, structure and numerical computation) */
+        ROCALUTION_EXPORT
         virtual void Build(void);
 
         /** \brief Build the solver and move it to the accelerator asynchronously */
+        ROCALUTION_EXPORT
         virtual void BuildMoveToAcceleratorAsync(void);
 
         /** \brief Synchronize the solver */
+        ROCALUTION_EXPORT
         virtual void Sync(void);
 
         /** \brief Rebuild the solver only with numerical computation (no allocation or data
       * structure computation)
       */
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
         /** \brief Move all data (i.e. move the solver) to the host */
+        ROCALUTION_EXPORT
         virtual void MoveToHost(void);
         /** \brief Move all data (i.e. move the solver) to the accelerator */
+        ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
 
         /** \brief Provide verbose output of the solver
@@ -109,8 +122,10 @@ namespace rocalution
       * - verb = 1 -> print info about the solver (start, end);
       * - verb = 2 -> print (iter, residual) via iteration control;
       */
+        ROCALUTION_EXPORT
         virtual void Verbose(int verb = 1);
 
+        ROCALUTION_EXPORT
         inline void FlagPrecond(void)
         {
             this->is_precond_ = true;
@@ -200,26 +215,33 @@ namespace rocalution
     class IterativeLinearSolver : public Solver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         IterativeLinearSolver();
+        ROCALUTION_EXPORT
         virtual ~IterativeLinearSolver();
 
         /** \brief Initialize the solver with absolute/relative/divergence tolerance and
       * maximum number of iterations
       */
+        ROCALUTION_EXPORT
         void Init(double abs_tol, double rel_tol, double div_tol, int max_iter);
 
         /** \brief Initialize the solver with absolute/relative/divergence tolerance and
       * minimum/maximum number of iterations
       */
+        ROCALUTION_EXPORT
         void Init(double abs_tol, double rel_tol, double div_tol, int min_iter, int max_iter);
 
         /** \brief Set the minimum number of iterations */
+        ROCALUTION_EXPORT
         void InitMinIter(int min_iter);
 
         /** \brief Set the maximum number of iterations */
+        ROCALUTION_EXPORT
         void InitMaxIter(int max_iter);
 
         /** \brief Set the absolute/relative/divergence tolerance */
+        ROCALUTION_EXPORT
         void InitTol(double abs, double rel, double div);
 
         /** \brief Set the residual norm to \f$L_1\f$, \f$L_2\f$ or \f$L_\infty\f$ norm
@@ -228,35 +250,45 @@ namespace rocalution
       * - resnorm = 2 -> \f$L_2\f$ norm
       * - resnorm = 3 -> \f$L_\infty\f$ norm
       */
+        ROCALUTION_EXPORT
         void SetResidualNorm(int resnorm);
 
         /** \brief Record the residual history */
+        ROCALUTION_EXPORT
         void RecordResidualHistory(void);
 
         /** \brief Write the history to file */
+        ROCALUTION_EXPORT
         void RecordHistory(const std::string filename) const;
 
         /** \brief Set the solver verbosity output */
+        ROCALUTION_EXPORT
         virtual void Verbose(int verb = 1);
 
         /** \brief Solve Operator x = rhs */
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         /** \brief Set a preconditioner of the linear solver */
+        ROCALUTION_EXPORT
         virtual void SetPreconditioner(Solver<OperatorType, VectorType, ValueType>& precond);
 
         /** \brief Return the iteration count */
+        ROCALUTION_EXPORT
         virtual int GetIterationCount(void);
 
         /** \brief Return the current residual */
+        ROCALUTION_EXPORT
         virtual double GetCurrentResidual(void);
 
         /** \brief Return the current status */
+        ROCALUTION_EXPORT
         virtual int GetSolverStatus(void);
 
         /** \brief Return absolute maximum index of residual vector when using
       * \f$L_\infty\f$ norm
       */
+        ROCALUTION_EXPORT
         virtual int GetAmaxResidualIndex(void);
 
     protected:
@@ -303,17 +335,24 @@ namespace rocalution
     class FixedPoint : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         FixedPoint();
+        ROCALUTION_EXPORT
         virtual ~FixedPoint();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
         /** \brief Set relaxation parameter \f$\omega\f$ */
+        ROCALUTION_EXPORT
         void SetRelaxation(ValueType omega);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:
@@ -350,11 +389,15 @@ namespace rocalution
     class DirectLinearSolver : public Solver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         DirectLinearSolver();
+        ROCALUTION_EXPORT
         virtual ~DirectLinearSolver();
 
+        ROCALUTION_EXPORT
         virtual void Verbose(int verb = 1);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
     protected:

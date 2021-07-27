@@ -26,6 +26,7 @@
 
 #include "../utils/types.hpp"
 #include "base_rocalution.hpp"
+#include "export.hpp"
 
 #include <complex>
 #include <string>
@@ -50,63 +51,83 @@ namespace rocalution
     class ParallelManager : public RocalutionObj
     {
     public:
+        ROCALUTION_EXPORT
         ParallelManager();
+        ROCALUTION_EXPORT
         ~ParallelManager();
 
         /** \brief Set the MPI communicator */
+        ROCALUTION_EXPORT
         void SetMPICommunicator(const void* comm);
         /** \brief Clear all allocated resources */
+        ROCALUTION_EXPORT
         void Clear(void);
 
         /** \brief Return rank */
+        ROCALUTION_EXPORT
         int GetRank(void) const
         {
             return this->rank_;
         }
 
         /** \brief Return the global size */
+        ROCALUTION_EXPORT
         IndexType2 GetGlobalSize(void) const;
         /** \brief Return the local size */
+        ROCALUTION_EXPORT
         int GetLocalSize(void) const;
 
         /** \brief Return the number of receivers */
+        ROCALUTION_EXPORT
         int GetNumReceivers(void) const;
         /** \brief Return the number of senders */
+        ROCALUTION_EXPORT
         int GetNumSenders(void) const;
         /** \brief Return the number of involved processes */
+        ROCALUTION_EXPORT
         int GetNumProcs(void) const;
 
         /** \brief Initialize the global size */
+        ROCALUTION_EXPORT
         void SetGlobalSize(IndexType2 size);
         /** \brief Initialize the local size */
+        ROCALUTION_EXPORT
         void SetLocalSize(int size);
 
         /** \brief Set all boundary indices of this ranks process */
+        ROCALUTION_EXPORT
         void SetBoundaryIndex(int size, const int* index);
 
         /** \brief Number of processes, the current process is receiving data from, array of
       * the processes, the current process is receiving data from and offsets, where the
       * boundary for process 'receiver' starts
       */
+        ROCALUTION_EXPORT
         void SetReceivers(int nrecv, const int* recvs, const int* recv_offset);
 
         /** \brief Number of processes, the current process is sending data to, array of the
       * processes, the current process is sending data to and offsets where the ghost
       * part for process 'sender' starts
       */
+        ROCALUTION_EXPORT
         void SetSenders(int nsend, const int* sends, const int* send_offset);
 
         /** \brief Mapping local to global */
+        ROCALUTION_EXPORT
         void LocalToGlobal(int proc, int local, int& global);
         /** \brief Mapping global to local */
+        ROCALUTION_EXPORT
         void GlobalToLocal(int global, int& proc, int& local);
 
         /** \brief Check sanity status of parallel manager */
+        ROCALUTION_EXPORT
         bool Status(void) const;
 
         /** \brief Read file that contains all relevant parallel manager data */
+        ROCALUTION_EXPORT
         void ReadFileASCII(const std::string filename);
         /** \brief Write file that contains all relevant parallel manager data */
+        ROCALUTION_EXPORT
         void WriteFileASCII(const std::string filename) const;
 
     private:

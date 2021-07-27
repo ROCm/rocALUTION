@@ -2088,19 +2088,31 @@ namespace rocalution
                 }
             }
 
+            std::ostringstream row_begin;
+            std::ostringstream row_end;
+            std::ostringstream col_begin;
+            std::ostringstream col_end;
+
+            row_begin << row_offset;
+            row_end << row_offset + row_size - 1;
+            col_begin << col_offset;
+            col_end << col_offset + row_size - 1;
+
             std::string mat_name
                 = "Submatrix of " + this->object_name_ + " " + "["
-                  + static_cast<std::ostringstream*>(&(std::ostringstream() << row_offset))->str()
+                  + row_begin
+                        .str() //static_cast<std::ostringstream*>(&(std::ostringstream() << row_offset))->str()
                   + ","
-                  + static_cast<std::ostringstream*>(&(std::ostringstream() << col_offset))->str()
+                  + col_begin
+                        .str() //static_cast<std::ostringstream*>(&(std::ostringstream() << col_offset))->str()
                   + "]-" + "["
-                  + static_cast<std::ostringstream*>(
-                        &(std::ostringstream() << row_offset + row_size - 1))
-                        ->str()
+                  + row_end.str() //static_cast<std::ostringstream*>(
+                  //    &(std::ostringstream() << row_offset + row_size - 1))
+                  //    ->str()
                   + ","
-                  + static_cast<std::ostringstream*>(
-                        &(std::ostringstream() << col_offset + row_size - 1))
-                        ->str()
+                  + col_end.str() //static_cast<std::ostringstream*>(
+                  //&(std::ostringstream() << col_offset + row_size - 1))
+                  //->str()
                   + "]";
 
             mat->object_name_ = mat_name;

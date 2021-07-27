@@ -26,6 +26,7 @@
 
 #include "../utils/types.hpp"
 #include "base_rocalution.hpp"
+#include "export.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -52,14 +53,18 @@ namespace rocalution
     class Vector : public BaseRocalution<ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         Vector();
+        ROCALUTION_EXPORT
         virtual ~Vector();
 
         /** \brief Return the size of the vector */
         virtual IndexType2 GetSize(void) const = 0;
         /** \brief Return the size of the local vector */
+        ROCALUTION_EXPORT
         virtual int GetLocalSize(void) const;
         /** \brief Return the size of the ghost vector */
+        ROCALUTION_EXPORT
         virtual int GetGhostSize(void) const;
 
         /** \brief Perform a sanity check of the vector
@@ -211,17 +216,22 @@ namespace rocalution
       * \endcode
       */
         /**@{*/
+        ROCALUTION_EXPORT
         virtual void CopyFrom(const LocalVector<ValueType>& src);
+        ROCALUTION_EXPORT
         virtual void CopyFrom(const GlobalVector<ValueType>& src);
         /**@}*/
 
         /** \brief Async copy from another local vector */
+        ROCALUTION_EXPORT
         virtual void CopyFromAsync(const LocalVector<ValueType>& src);
 
         /** \brief Copy values from another local float vector */
+        ROCALUTION_EXPORT
         virtual void CopyFromFloat(const LocalVector<float>& src);
 
         /** \brief Copy values from another local double vector */
+        ROCALUTION_EXPORT
         virtual void CopyFromDouble(const LocalVector<double>& src);
 
         /** \brief Copy vector from another vector with offsets and size
@@ -242,6 +252,7 @@ namespace rocalution
       * @param[in]
       * size        number of entries to be copied.
       */
+        ROCALUTION_EXPORT
         virtual void
             CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
 
@@ -267,28 +278,37 @@ namespace rocalution
       * \endcode
       */
         /**@{*/
+        ROCALUTION_EXPORT
         virtual void CloneFrom(const LocalVector<ValueType>& src);
+        ROCALUTION_EXPORT
         virtual void CloneFrom(const GlobalVector<ValueType>& src);
         /**@}*/
 
         /** \brief Perform vector update of type this = this + alpha * x */
+        ROCALUTION_EXPORT
         virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);
         /** \brief Perform vector update of type this = this + alpha * x */
+        ROCALUTION_EXPORT
         virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
 
         /** \brief Perform vector update of type this = alpha * this + x */
+        ROCALUTION_EXPORT
         virtual void ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x);
         /** \brief Perform vector update of type this = alpha * this + x */
+        ROCALUTION_EXPORT
         virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);
 
         /** \brief Perform vector update of type this = alpha * this + x * beta */
+        ROCALUTION_EXPORT
         virtual void
             ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
         /** \brief Perform vector update of type this = alpha * this + x * beta */
+        ROCALUTION_EXPORT
         virtual void
             ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
 
         /** \brief Perform vector update of type this = alpha * this + x * beta with offsets */
+        ROCALUTION_EXPORT
         virtual void ScaleAddScale(ValueType                     alpha,
                                    const LocalVector<ValueType>& x,
                                    ValueType                     beta,
@@ -296,6 +316,7 @@ namespace rocalution
                                    int                           dst_offset,
                                    int                           size);
         /** \brief Perform vector update of type this = alpha * this + x * beta with offsets */
+        ROCALUTION_EXPORT
         virtual void ScaleAddScale(ValueType                      alpha,
                                    const GlobalVector<ValueType>& x,
                                    ValueType                      beta,
@@ -304,12 +325,14 @@ namespace rocalution
                                    int                            size);
 
         /** \brief Perform vector update of type this = alpha * this + x * beta + y * gamma */
+        ROCALUTION_EXPORT
         virtual void ScaleAdd2(ValueType                     alpha,
                                const LocalVector<ValueType>& x,
                                ValueType                     beta,
                                const LocalVector<ValueType>& y,
                                ValueType                     gamma);
         /** \brief Perform vector update of type this = alpha * this + x * beta + y * gamma */
+        ROCALUTION_EXPORT
         virtual void ScaleAdd2(ValueType                      alpha,
                                const GlobalVector<ValueType>& x,
                                ValueType                      beta,
@@ -320,13 +343,17 @@ namespace rocalution
         virtual void Scale(ValueType alpha) = 0;
 
         /** \brief Compute dot (scalar) product, return this^T y */
+        ROCALUTION_EXPORT
         virtual ValueType Dot(const LocalVector<ValueType>& x) const;
         /** \brief Compute dot (scalar) product, return this^T y */
+        ROCALUTION_EXPORT
         virtual ValueType Dot(const GlobalVector<ValueType>& x) const;
 
         /** \brief Compute non-conjugate dot (scalar) product, return this^T y */
+        ROCALUTION_EXPORT
         virtual ValueType DotNonConj(const LocalVector<ValueType>& x) const;
         /** \brief Compute non-conjugate dot (scalar) product, return this^T y */
+        ROCALUTION_EXPORT
         virtual ValueType DotNonConj(const GlobalVector<ValueType>& x) const;
 
         /** \brief Compute \f$L_2\f$ norm of the vector, return = srqt(this^T this) */
@@ -342,14 +369,18 @@ namespace rocalution
         virtual int Amax(ValueType& value) const = 0;
 
         /** \brief Perform point-wise multiplication (element-wise) of this = this * x */
+        ROCALUTION_EXPORT
         virtual void PointWiseMult(const LocalVector<ValueType>& x);
         /** \brief Perform point-wise multiplication (element-wise) of this = this * x */
+        ROCALUTION_EXPORT
         virtual void PointWiseMult(const GlobalVector<ValueType>& x);
 
         /** \brief Perform point-wise multiplication (element-wise) of this = x * y */
+        ROCALUTION_EXPORT
         virtual void PointWiseMult(const LocalVector<ValueType>& x,
                                    const LocalVector<ValueType>& y);
         /** \brief Perform point-wise multiplication (element-wise) of this = x * y */
+        ROCALUTION_EXPORT
         virtual void PointWiseMult(const GlobalVector<ValueType>& x,
                                    const GlobalVector<ValueType>& y);
 

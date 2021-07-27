@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
 #define ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
 
+#include "export.hpp"
 #include "preconditioner.hpp"
 
 namespace rocalution
@@ -44,20 +45,29 @@ namespace rocalution
     class BlockJacobi : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         BlockJacobi();
+        ROCALUTION_EXPORT
         virtual ~BlockJacobi();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
         /** \brief Set local preconditioner */
+        ROCALUTION_EXPORT
         void Set(Solver<LocalMatrix<ValueType>, LocalVector<ValueType>, ValueType>& precond);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
+        ROCALUTION_EXPORT
         virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

@@ -25,6 +25,7 @@
 #define ROCALUTION_GMRES_GMRES_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 #include <vector>
 
@@ -53,16 +54,23 @@ namespace rocalution
     class GMRES : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         GMRES();
+        ROCALUTION_EXPORT
         virtual ~GMRES();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the size of the Krylov subspace basis */
+        ROCALUTION_EXPORT
         virtual void SetBasisSize(int size_basis);
 
     protected:

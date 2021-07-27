@@ -84,7 +84,11 @@ add_library(roc::rocalution ALIAS rocalution)
 
 # Target link libraries
 if(SUPPORT_OMP)
-  target_link_libraries(rocalution PRIVATE OpenMP::OpenMP_CXX)
+  if(WIN32)
+    target_link_libraries(rocalution PRIVATE OpenMP::OpenMP_CXX libomp)
+  else()
+    target_link_libraries(rocalution PRIVATE OpenMP::OpenMP_CXX)
+  endif()
 endif()
 
 if(SUPPORT_MPI)
@@ -103,11 +107,13 @@ endif()
 # Target properties
 rocm_set_soversion(rocalution ${rocalution_SOVERSION})
 set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
-#set_target_properties(rocalution PROPERTIES CXX_VISIBILITY_PRESET "hidden" VISIBILITY_INLINES_HIDDEN ON)
+if(WIN32)
+  set_target_properties(rocalution PROPERTIES CXX_VISIBILITY_PRESET "hidden" VISIBILITY_INLINES_HIDDEN ON)
+endif()
 
 # Generate export header
-#include(GenerateExportHeader)
-#generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/export.hpp)
+include(GenerateExportHeader)
+generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/export.hpp)
 
 list(APPEND CMAKE_HOST_FLAGS "-O3;-march=native")
 target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
@@ -126,13 +132,29 @@ if(SUPPORT_HIP)
   endforeach()
 
   # Create rocALUTION HIP library
-  hip_add_library(rocalution_hip ${HIP_SOURCES})
+  if(WIN32)
+    add_library(rocalution_hip OBJECT ${HIP_SOURCES})
+  else()
+    hip_add_library(rocalution_hip ${HIP_SOURCES})
+  endif()
 
   rocm_set_soversion(rocalution_hip ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
-  target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim roc::rocrand)
+  if(WIN32)
+    target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim roc::rocrand hip::device)
+  else()
+    target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim roc::rocrand)
+  endif()
+
   target_link_libraries(rocalution PRIVATE rocalution_hip hip::host)
+endif()
+
+if(WIN32 AND BUILD_CLIENTS)
+  add_custom_command(TARGET rocalution POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/staging/$<TARGET_FILE_NAME:rocalution> ${PROJECT_BINARY_DIR}/clients/staging/$<TARGET_FILE_NAME:rocalution>)
+  if( ${CMAKE_BUILD_TYPE} MATCHES "Debug")
+    add_custom_command(TARGET rocalution POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/staging/rocalution.pdb ${PROJECT_BINARY_DIR}/clients/staging/rocalution.pdb )
+  endif()
 endif()
 
 # Install targets
@@ -171,8 +193,19 @@ endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.md")
 
-if(NOT CPACK_PACKAGING_INSTALL_PREFIX)
-  set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+if(WIN32)
+  set(CPACK_SOURCE_GENERATOR "ZIP")
+  set(CPACK_GENERATOR "ZIP")
+  set(CMAKE_INSTALL_PREFIX "C:/hipSDK" CACHE PATH "Install path" FORCE)
+  set(INSTALL_PREFIX "C:/hipSDK")
+  set(CPACK_SET_DESTDIR OFF)
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "C:/hipSDK")
+  set(CPACK_PACKAGING_INSTALL_PREFIX "")
+  set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+else()
+  if(NOT CPACK_PACKAGING_INSTALL_PREFIX)
+    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+  endif()
 endif()
 
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "\${CPACK_PACKAGING_INSTALL_PREFIX}" "\${CPACK_PACKAGING_INSTALL_PREFIX}/include")

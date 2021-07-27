@@ -24,6 +24,8 @@
 #ifndef ROCALUTION_UTILS_ALLOCATE_FREE_HPP_
 #define ROCALUTION_UTILS_ALLOCATE_FREE_HPP_
 
+#include "export.hpp"
+
 namespace rocalution
 {
 
@@ -42,7 +44,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    void allocate_host(int size, DataType** ptr);
+    ROCALUTION_EXPORT void allocate_host(int size, DataType** ptr);
 
     /** \ingroup backend_module
   * \brief Free buffer on the host
@@ -58,7 +60,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    void free_host(DataType** ptr);
+    ROCALUTION_EXPORT void free_host(DataType** ptr);
 
     /** \ingroup backend_module
   * \brief Set a host buffer to zero
@@ -74,7 +76,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    void set_to_zero_host(int size, DataType* ptr);
+    ROCALUTION_EXPORT void set_to_zero_host(int size, DataType* ptr);
 
 } // namespace rocalution
 

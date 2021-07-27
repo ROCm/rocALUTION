@@ -29,10 +29,6 @@ find_package(Threads REQUIRED)
 # Non MPI tests
 set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
-# Local structures
-  test_local_matrix.cpp
-  test_local_stencil.cpp
-  test_local_vector.cpp
 # Krylov solvers
   test_backend.cpp
   test_bicgstab.cpp
@@ -50,6 +46,15 @@ set(ROCALUTION_TEST_SOURCES
   test_saamg.cpp
   test_uaamg.cpp
 )
+
+if(NOT WIN32)
+# Local structures - skip on Windows, as google test does not support union for death tests
+list(APPEND ROCALUTION_TEST_SOURCES
+    test_local_matrix.cpp
+    test_local_stencil.cpp
+    test_local_vector.cpp
+  )
+endif()
 
 # MPI tests
 if(SUPPORT_MPI)
@@ -82,3 +87,21 @@ endif()
 
 # Add tests
 add_test(rocalution-test rocalution-test)
+
+if (WIN32)
+  # for now adding in all .dll as dependency chain is not cmake based on win32
+  file( GLOB third_party_dlls
+    LIST_DIRECTORIES OFF
+    CONFIGURE_DEPENDS
+    ${HIP_DIR}/bin/*.dll
+    ${HIP_DIR}/bin/hipinfo.exe
+    ${CMAKE_SOURCE_DIR}/rtest.*
+    $ENV{rocsparse_DIR}/bin/*.dll
+    $ENV{rocrand_DIR}/bin/*.dll
+    $ENV{rocblas_DIR}/bin/*.dll
+    C:/Windows/System32/libomp140*.dll
+  )
+  foreach( file_i ${third_party_dlls})
+    add_custom_command( TARGET rocalution-test POST_BUILD COMMAND ${CMAKE_COMMAND} ARGS -E copy ${file_i} ${PROJECT_BINARY_DIR}/staging/ )
+  endforeach( file_i )
+endif()

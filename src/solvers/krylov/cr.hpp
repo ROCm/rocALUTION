@@ -25,6 +25,7 @@
 #define ROCALUTION_KRYLOV_CR_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 #include <vector>
 
@@ -50,13 +51,19 @@ namespace rocalution
     class CR : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         CR();
+        ROCALUTION_EXPORT
         virtual ~CR();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

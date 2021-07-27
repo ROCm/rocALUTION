@@ -25,6 +25,7 @@
 #define ROCALUTION_KRYLOV_QMRCGSTAB_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 #include <vector>
 
@@ -48,13 +49,19 @@ namespace rocalution
     class QMRCGStab : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         QMRCGStab();
+        ROCALUTION_EXPORT
         virtual ~QMRCGStab();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

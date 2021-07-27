@@ -26,6 +26,7 @@
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
+#include "export.hpp"
 
 #include <vector>
 
@@ -50,14 +51,19 @@ namespace rocalution
     class RugeStuebenAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         RugeStuebenAMG();
+        ROCALUTION_EXPORT
         virtual ~RugeStuebenAMG();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
         /** \brief Set coupling strength */
+        ROCALUTION_EXPORT
         void SetCouplingStrength(ValueType eps);
 
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
     protected:

@@ -26,6 +26,7 @@
 
 #include "../../base/operator.hpp"
 #include "../solver.hpp"
+#include "export.hpp"
 
 namespace rocalution
 {
@@ -54,21 +55,27 @@ namespace rocalution
         BaseMultiGrid();
         virtual ~BaseMultiGrid();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
         /** \private */
+        ROCALUTION_EXPORT
         virtual void SetPreconditioner(Solver<OperatorType, VectorType, ValueType>& precond);
 
         /** \brief Set the coarse grid solver */
+        ROCALUTION_EXPORT
         void SetSolver(Solver<OperatorType, VectorType, ValueType>& solver);
 
         /** \brief Set the smoother for each level */
+        ROCALUTION_EXPORT
         void SetSmoother(IterativeLinearSolver<OperatorType, VectorType, ValueType>** smoother);
 
         /** \brief Set the number of pre-smoothing steps */
+        ROCALUTION_EXPORT
         void SetSmootherPreIter(int iter);
 
         /** \brief Set the number of post-smoothing steps */
+        ROCALUTION_EXPORT
         void SetSmootherPostIter(int iter);
 
         /** \brief Set the restriction operator for each level */
@@ -81,20 +88,26 @@ namespace rocalution
         virtual void SetOperatorHierarchy(OperatorType** op) = 0;
 
         /** \brief Enable/disable scaling of intergrid transfers */
+        ROCALUTION_EXPORT
         void SetScaling(bool scaling);
 
         /** \brief Force computation of coarser levels on the host backend */
+        ROCALUTION_EXPORT
         void SetHostLevels(int levels);
 
         /** \brief Set the MultiGrid Cycle (default: Vcycle) */
+        ROCALUTION_EXPORT
         void SetCycle(unsigned int cycle);
 
         /** \brief Set the MultiGrid Kcycle on all levels or only on finest level */
+        ROCALUTION_EXPORT
         void SetKcycleFull(bool kcycle_full);
 
         /** \brief Set the depth of the multigrid solver */
+        ROCALUTION_EXPORT
         void InitLevels(int levels);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         virtual void Build(void);

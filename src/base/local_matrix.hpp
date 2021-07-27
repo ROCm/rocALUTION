@@ -26,6 +26,7 @@
 
 #include "../utils/types.hpp"
 #include "backend_manager.hpp"
+#include "export.hpp"
 #include "matrix_formats.hpp"
 #include "operator.hpp"
 
@@ -58,16 +59,23 @@ namespace rocalution
     class LocalMatrix : public Operator<ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         LocalMatrix();
+        ROCALUTION_EXPORT
         virtual ~LocalMatrix();
 
+        ROCALUTION_EXPORT
         virtual void Info(void) const;
 
         /** \brief Return the matrix format id (see matrix_formats.hpp) */
+        ROCALUTION_EXPORT
         unsigned int GetFormat(void) const;
 
+        ROCALUTION_EXPORT
         virtual IndexType2 GetM(void) const;
+        ROCALUTION_EXPORT
         virtual IndexType2 GetN(void) const;
+        ROCALUTION_EXPORT
         virtual IndexType2 GetNnz(void) const;
 
         /** \brief Perform a sanity check of the matrix
@@ -79,6 +87,7 @@ namespace rocalution
       * \retval true if the matrix is ok (empty matrix is also ok).
       * \retval false if there is something wrong with the structure or values.
       */
+        ROCALUTION_EXPORT
         bool Check(void) const;
 
         /** \brief Allocate a local matrix with name and sizes
@@ -100,14 +109,22 @@ namespace rocalution
       * \endcode
       */
         /**@{*/
+        ROCALUTION_EXPORT
         void AllocateCSR(const std::string name, int nnz, int nrow, int ncol);
+        ROCALUTION_EXPORT
         void AllocateBCSR(const std::string name, int nnzb, int nrowb, int ncolb, int blockdim);
+        ROCALUTION_EXPORT
         void AllocateMCSR(const std::string name, int nnz, int nrow, int ncol);
+        ROCALUTION_EXPORT
         void AllocateCOO(const std::string name, int nnz, int nrow, int ncol);
+        ROCALUTION_EXPORT
         void AllocateDIA(const std::string name, int nnz, int nrow, int ncol, int ndiag);
+        ROCALUTION_EXPORT
         void AllocateELL(const std::string name, int nnz, int nrow, int ncol, int max_row);
+        ROCALUTION_EXPORT
         void AllocateHYB(
             const std::string name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
+        ROCALUTION_EXPORT
         void AllocateDENSE(const std::string name, int nrow, int ncol);
         /**@}*/
 
@@ -138,8 +155,10 @@ namespace rocalution
       * \endcode
       */
         /**@{*/
+        ROCALUTION_EXPORT
         void SetDataPtrCOO(
             int** row, int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol);
+        ROCALUTION_EXPORT
         void SetDataPtrCSR(int**       row_offset,
                            int**       col,
                            ValueType** val,
@@ -147,6 +166,7 @@ namespace rocalution
                            int         nnz,
                            int         nrow,
                            int         ncol);
+        ROCALUTION_EXPORT
         void SetDataPtrBCSR(int**       row_offset,
                             int**       col,
                             ValueType** val,
@@ -155,6 +175,7 @@ namespace rocalution
                             int         nrowb,
                             int         ncolb,
                             int         blockdim);
+        ROCALUTION_EXPORT
         void SetDataPtrMCSR(int**       row_offset,
                             int**       col,
                             ValueType** val,
@@ -162,8 +183,10 @@ namespace rocalution
                             int         nnz,
                             int         nrow,
                             int         ncol);
+        ROCALUTION_EXPORT
         void SetDataPtrELL(
             int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol, int max_row);
+        ROCALUTION_EXPORT
         void SetDataPtrDIA(int**       offset,
                            ValueType** val,
                            std::string name,
@@ -171,6 +194,7 @@ namespace rocalution
                            int         nrow,
                            int         ncol,
                            int         num_diag);
+        ROCALUTION_EXPORT
         void SetDataPtrDENSE(ValueType** val, std::string name, int nrow, int ncol);
         /**@}*/
 
@@ -201,42 +225,58 @@ namespace rocalution
       * \endcode
       */
         /**@{*/
+        ROCALUTION_EXPORT
         void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
+        ROCALUTION_EXPORT
         void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
+        ROCALUTION_EXPORT
         void LeaveDataPtrBCSR(int** row_offset, int** col, ValueType** val, int& blockdim);
+        ROCALUTION_EXPORT
         void LeaveDataPtrMCSR(int** row_offset, int** col, ValueType** val);
+        ROCALUTION_EXPORT
         void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
+        ROCALUTION_EXPORT
         void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
+        ROCALUTION_EXPORT
         void LeaveDataPtrDENSE(ValueType** val);
         /**@}*/
 
+        ROCALUTION_EXPORT
         void Clear(void);
 
         /** \brief Set all matrix values to zero */
+        ROCALUTION_EXPORT
         void Zeros(void);
 
         /** \brief Scale all values in the matrix */
+        ROCALUTION_EXPORT
         void Scale(ValueType alpha);
         /** \brief Scale the diagonal entries of the matrix with alpha, all diagonal elements
       * must exist
       */
+        ROCALUTION_EXPORT
         void ScaleDiagonal(ValueType alpha);
         /** \brief Scale the off-diagonal entries of the matrix with alpha, all diagonal
       * elements must exist */
+        ROCALUTION_EXPORT
         void ScaleOffDiagonal(ValueType alpha);
 
         /** \brief Add a scalar to all matrix values */
+        ROCALUTION_EXPORT
         void AddScalar(ValueType alpha);
         /** \brief Add alpha to the diagonal entries of the matrix, all diagonal elements
       * must exist
       */
+        ROCALUTION_EXPORT
         void AddScalarDiagonal(ValueType alpha);
         /** \brief Add alpha to the off-diagonal entries of the matrix, all diagonal elements
       * must exist
       */
+        ROCALUTION_EXPORT
         void AddScalarOffDiagonal(ValueType alpha);
 
         /** \brief Extract a sub-matrix with row/col_offset and row/col_size */
+        ROCALUTION_EXPORT
         void ExtractSubMatrix(int                     row_offset,
                               int                     col_offset,
                               int                     row_size,
@@ -247,6 +287,7 @@ namespace rocalution
       * the blocks for rows/columns; row/col_offset have sizes col/row_num_blocks+1,
       * where [i+1]-[i] defines the i-th size of the sub-matrix)
       */
+        ROCALUTION_EXPORT
         void ExtractSubMatrices(int                       row_num_blocks,
                                 int                       col_num_blocks,
                                 const int*                row_offset,
@@ -254,22 +295,28 @@ namespace rocalution
                                 LocalMatrix<ValueType>*** mat) const;
 
         /** \brief Extract the diagonal values of the matrix into a LocalVector */
+        ROCALUTION_EXPORT
         void ExtractDiagonal(LocalVector<ValueType>* vec_diag) const;
 
         /** \brief Extract the inverse (reciprocal) diagonal values of the matrix into a
       * LocalVector
       */
+        ROCALUTION_EXPORT
         void ExtractInverseDiagonal(LocalVector<ValueType>* vec_inv_diag) const;
 
         /** \brief Extract the upper triangular matrix */
+        ROCALUTION_EXPORT
         void ExtractU(LocalMatrix<ValueType>* U, bool diag) const;
         /** \brief Extract the lower triangular matrix */
+        ROCALUTION_EXPORT
         void ExtractL(LocalMatrix<ValueType>* L, bool diag) const;
 
         /** \brief Perform (forward) permutation of the matrix */
+        ROCALUTION_EXPORT
         void Permute(const LocalVector<int>& permutation);
 
         /** \brief Perform (backward) permutation of the matrix */
+        ROCALUTION_EXPORT
         void PermuteBackward(const LocalVector<int>& permutation);
 
         /** \brief Create permutation vector for CMK reordering of the matrix
@@ -287,6 +334,7 @@ namespace rocalution
       *   mat.Permute(cmk);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void CMK(LocalVector<int>* permutation) const;
 
         /** \brief Create permutation vector for reverse CMK reordering of the matrix
@@ -305,6 +353,7 @@ namespace rocalution
       *   mat.Permute(rcmk);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void RCMK(LocalVector<int>* permutation) const;
 
         /** \brief Create permutation vector for connectivity reordering of the matrix
@@ -323,6 +372,7 @@ namespace rocalution
       *   mat.Permute(conn);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void ConnectivityOrder(LocalVector<int>* permutation) const;
 
         /** \brief Perform multi-coloring decomposition of the matrix
@@ -347,6 +397,7 @@ namespace rocalution
       *   mat.Permute(mc);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void MultiColoring(int& num_colors, int** size_colors, LocalVector<int>* permutation) const;
 
         /** \brief Perform maximal independent set decomposition of the matrix
@@ -368,6 +419,7 @@ namespace rocalution
       *   mat.Permute(mis);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void MaximalIndependentSet(int& size, LocalVector<int>* permutation) const;
 
         /** \brief Return a permutation for saddle-point problems (zero diagonal entries)
@@ -391,43 +443,56 @@ namespace rocalution
       * \endcode
 
       */
+        ROCALUTION_EXPORT
         void ZeroBlockPermutation(int& size, LocalVector<int>* permutation) const;
 
         /** \brief Perform ILU(0) factorization */
+        ROCALUTION_EXPORT
         void ILU0Factorize(void);
         /** \brief Perform LU factorization */
+        ROCALUTION_EXPORT
         void LUFactorize(void);
 
         /** \brief Perform ILU(t,m) factorization based on threshold and maximum number of
       * elements per row
       */
+        ROCALUTION_EXPORT
         void ILUTFactorize(double t, int maxrow);
 
         /** \brief Perform ILU(p) factorization based on power */
+        ROCALUTION_EXPORT
         void ILUpFactorize(int p, bool level = true);
         /** \brief Analyse the structure (level-scheduling) */
+        ROCALUTION_EXPORT
         void LUAnalyse(void);
         /** \brief Delete the analysed data (see LUAnalyse) */
+        ROCALUTION_EXPORT
         void LUAnalyseClear(void);
         /** \brief Solve LU out = in; if level-scheduling algorithm is provided then the
       * graph traversing is performed in parallel
       */
+        ROCALUTION_EXPORT
         void LUSolve(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
 
         /** \brief Perform IC(0) factorization */
+        ROCALUTION_EXPORT
         void ICFactorize(LocalVector<ValueType>* inv_diag);
 
         /** \brief Analyse the structure (level-scheduling) */
+        ROCALUTION_EXPORT
         void LLAnalyse(void);
         /** \brief Delete the analysed data (see LLAnalyse) */
+        ROCALUTION_EXPORT
         void LLAnalyseClear(void);
         /** \brief Solve LL^T out = in; if level-scheduling algorithm is provided then the
       * graph traversing is performed in parallel
       */
+        ROCALUTION_EXPORT
         void LLSolve(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
         /** \brief Solve LL^T out = in; if level-scheduling algorithm is provided then the
       * graph traversing is performed in parallel
       */
+        ROCALUTION_EXPORT
         void LLSolve(const LocalVector<ValueType>& in,
                      const LocalVector<ValueType>& inv_diag,
                      LocalVector<ValueType>*       out) const;
@@ -436,34 +501,44 @@ namespace rocalution
       * - diag_unit == true the diag is 1;
       * - diag_unit == false the diag is 0;
       */
+        ROCALUTION_EXPORT
         void LAnalyse(bool diag_unit = false);
         /** \brief Delete the analysed data (see LAnalyse) L-part */
+        ROCALUTION_EXPORT
         void LAnalyseClear(void);
         /** \brief Solve L out = in; if level-scheduling algorithm is provided then the
       * graph traversing is performed in parallel
       */
+        ROCALUTION_EXPORT
         void LSolve(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
 
         /** \brief Analyse the structure (level-scheduling) U-part;
       * - diag_unit == true the diag is 1;
       * - diag_unit == false the diag is 0;
       */
+        ROCALUTION_EXPORT
         void UAnalyse(bool diag_unit = false);
         /** \brief Delete the analysed data (see UAnalyse) U-part */
+        ROCALUTION_EXPORT
         void UAnalyseClear(void);
         /** \brief Solve U out = in; if level-scheduling algorithm is provided then the
       * graph traversing is performed in parallel
       */
+        ROCALUTION_EXPORT
         void USolve(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
 
         /** \brief Compute Householder vector */
+        ROCALUTION_EXPORT
         void Householder(int idx, ValueType& beta, LocalVector<ValueType>* vec) const;
         /** \brief QR Decomposition */
+        ROCALUTION_EXPORT
         void QRDecompose(void);
         /** \brief Solve QR out = in */
+        ROCALUTION_EXPORT
         void QRSolve(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
 
         /** \brief Matrix inversion using QR decomposition */
+        ROCALUTION_EXPORT
         void Invert(void);
 
         /** \brief Read matrix from MTX (Matrix Market Format) file
@@ -479,6 +554,7 @@ namespace rocalution
       *   mat.ReadFileMTX("my_matrix.mtx");
       * \endcode
       */
+        ROCALUTION_EXPORT
         void ReadFileMTX(const std::string filename);
 
         /** \brief Write matrix to MTX (Matrix Market Format) file
@@ -498,6 +574,7 @@ namespace rocalution
       *   mat.WriteFileMTX("my_matrix.mtx");
       * \endcode
       */
+        ROCALUTION_EXPORT
         void WriteFileMTX(const std::string filename) const;
 
         /** \brief Read matrix from CSR (rocALUTION binary format) file
@@ -514,6 +591,7 @@ namespace rocalution
       *   mat.ReadFileCSR("my_matrix.csr");
       * \endcode
       */
+        ROCALUTION_EXPORT
         void ReadFileCSR(const std::string filename);
 
         /** \brief Write CSR matrix to binary file
@@ -555,12 +633,18 @@ namespace rocalution
       *   mat.WriteFileCSR("my_matrix.csr");
       * \endcode
       */
+        ROCALUTION_EXPORT
         void WriteFileCSR(const std::string filename) const;
 
+        ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
+        ROCALUTION_EXPORT
         virtual void MoveToAcceleratorAsync(void);
+        ROCALUTION_EXPORT
         virtual void MoveToHost(void);
+        ROCALUTION_EXPORT
         virtual void MoveToHostAsync(void);
+        ROCALUTION_EXPORT
         virtual void Sync(void);
 
         /** \brief Copy matrix from another LocalMatrix
@@ -593,9 +677,11 @@ namespace rocalution
       *   mat1.CopyFrom(mat2);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void CopyFrom(const LocalMatrix<ValueType>& src);
 
         /** \brief Async copy matrix (values and structure) from another LocalMatrix */
+        ROCALUTION_EXPORT
         void CopyFromAsync(const LocalMatrix<ValueType>& src);
 
         /** \brief Clone the matrix
@@ -620,29 +706,35 @@ namespace rocalution
       *   tmp.CloneFrom(mat);
       * \endcode
       */
+        ROCALUTION_EXPORT
         void CloneFrom(const LocalMatrix<ValueType>& src);
 
         /** \brief Update CSR matrix entries only, structure will remain the same */
+        ROCALUTION_EXPORT
         void UpdateValuesCSR(ValueType* val);
 
         /** \brief Copy (import) CSR matrix described in three arrays (offsets, columns,
       * values). The object data has to be allocated (call AllocateCSR first)
       */
+        ROCALUTION_EXPORT
         void CopyFromCSR(const int* row_offsets, const int* col, const ValueType* val);
 
         /** \brief Copy (export) CSR matrix described in three arrays (offsets, columns,
       * values). The output arrays have to be allocated
       */
+        ROCALUTION_EXPORT
         void CopyToCSR(int* row_offsets, int* col, ValueType* val) const;
 
         /** \brief Copy (import) COO matrix described in three arrays (rows, columns,
       * values). The object data has to be allocated (call AllocateCOO first)
       */
+        ROCALUTION_EXPORT
         void CopyFromCOO(const int* row, const int* col, const ValueType* val);
 
         /** \brief Copy (export) COO matrix described in three arrays (rows, columns,
       * values). The output arrays have to be allocated
       */
+        ROCALUTION_EXPORT
         void CopyToCOO(int* row, int* col, ValueType* val) const;
 
         /** \brief Allocates and copies (imports) a host CSR matrix
@@ -667,6 +759,7 @@ namespace rocalution
       * @param[in]
       * ncol        Number of columns.
       */
+        ROCALUTION_EXPORT
         void CopyFromHostCSR(const int*        row_offset,
                              const int*        col,
                              const ValueType*  val,
@@ -676,75 +769,97 @@ namespace rocalution
                              int               ncol);
 
         /** \brief Create a restriction matrix operator based on an int vector map */
+        ROCALUTION_EXPORT
         void CreateFromMap(const LocalVector<int>& map, int n, int m);
         /** \brief Create a restriction and prolongation matrix operator based on an int
       * vector map
       */
+        ROCALUTION_EXPORT
         void CreateFromMap(const LocalVector<int>& map, int n, int m, LocalMatrix<ValueType>* pro);
 
         /** \brief Convert the matrix to CSR structure */
+        ROCALUTION_EXPORT
         void ConvertToCSR(void);
         /** \brief Convert the matrix to MCSR structure */
+        ROCALUTION_EXPORT
         void ConvertToMCSR(void);
         /** \brief Convert the matrix to BCSR structure */
+        ROCALUTION_EXPORT
         void ConvertToBCSR(int blockdim);
         /** \brief Convert the matrix to COO structure */
+        ROCALUTION_EXPORT
         void ConvertToCOO(void);
         /** \brief Convert the matrix to ELL structure */
+        ROCALUTION_EXPORT
         void ConvertToELL(void);
         /** \brief Convert the matrix to DIA structure */
+        ROCALUTION_EXPORT
         void ConvertToDIA(void);
         /** \brief Convert the matrix to HYB structure */
+        ROCALUTION_EXPORT
         void ConvertToHYB(void);
         /** \brief Convert the matrix to DENSE structure */
+        ROCALUTION_EXPORT
         void ConvertToDENSE(void);
         /** \brief Convert the matrix to specified matrix ID format */
+        ROCALUTION_EXPORT
         void ConvertTo(unsigned int matrix_format, int blockdim = 1);
 
+        ROCALUTION_EXPORT
         virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+        ROCALUTION_EXPORT
         virtual void ApplyAdd(const LocalVector<ValueType>& in,
                               ValueType                     scalar,
                               LocalVector<ValueType>*       out) const;
 
         /** \brief Perform symbolic computation (structure only) of \f$|this|^p\f$ */
+        ROCALUTION_EXPORT
         void SymbolicPower(int p);
 
         /** \brief Perform matrix addition, this = alpha*this + beta*mat;
       * - if structure==false the sparsity pattern of the matrix is not changed;
       * - if structure==true a new sparsity pattern is computed
       */
+        ROCALUTION_EXPORT
         void MatrixAdd(const LocalMatrix<ValueType>& mat,
                        ValueType                     alpha     = static_cast<ValueType>(1),
                        ValueType                     beta      = static_cast<ValueType>(1),
                        bool                          structure = false);
 
         /** \brief Multiply two matrices, this = A * B */
+        ROCALUTION_EXPORT
         void MatrixMult(const LocalMatrix<ValueType>& A, const LocalMatrix<ValueType>& B);
 
         /** \brief Multiply the matrix with diagonal matrix (stored in LocalVector), as
       * DiagonalMatrixMultR()
       */
+        ROCALUTION_EXPORT
         void DiagonalMatrixMult(const LocalVector<ValueType>& diag);
 
         /** \brief Multiply the matrix with diagonal matrix (stored in LocalVector),
       * this=diag*this
       */
+        ROCALUTION_EXPORT
         void DiagonalMatrixMultL(const LocalVector<ValueType>& diag);
 
         /** \brief Multiply the matrix with diagonal matrix (stored in LocalVector),
       * this=this*diag
       */
+        ROCALUTION_EXPORT
         void DiagonalMatrixMultR(const LocalVector<ValueType>& diag);
 
         /** \brief Compute the spectrum approximation with Gershgorin circles theorem */
+        ROCALUTION_EXPORT
         void Gershgorin(ValueType& lambda_min, ValueType& lambda_max) const;
 
         /** \brief Delete all entries in the matrix which abs(a_ij) <= drop_off;
       * the diagonal elements are never deleted
       */
+        ROCALUTION_EXPORT
         void Compress(double drop_off);
 
         /** \brief Transpose the matrix */
+        ROCALUTION_EXPORT
         void Transpose(void);
 
         /** \brief Sort the matrix indices
@@ -753,6 +868,7 @@ namespace rocalution
       * - For CSR matrices, column values are sorted.
       * - For COO matrices, row indices are sorted.
       */
+        ROCALUTION_EXPORT
         void Sort(void);
 
         /** \brief Compute a unique hash key for the matrix arrays
@@ -768,38 +884,48 @@ namespace rocalution
       * @param[out]
       * val_key values array key
       */
+        ROCALUTION_EXPORT
         void Key(long int& row_key, long int& col_key, long int& val_key) const;
 
         /** \brief Replace a column vector of a matrix */
+        ROCALUTION_EXPORT
         void ReplaceColumnVector(int idx, const LocalVector<ValueType>& vec);
 
         /** \brief Replace a row vector of a matrix */
+        ROCALUTION_EXPORT
         void ReplaceRowVector(int idx, const LocalVector<ValueType>& vec);
 
         /** \brief Extract values from a column of a matrix to a vector */
+        ROCALUTION_EXPORT
         void ExtractColumnVector(int idx, LocalVector<ValueType>* vec) const;
 
         /** \brief Extract values from a row of a matrix to a vector */
+        ROCALUTION_EXPORT
         void ExtractRowVector(int idx, LocalVector<ValueType>* vec) const;
 
         /** \brief Strong couplings for aggregation-based AMG */
+        ROCALUTION_EXPORT
         void AMGConnect(ValueType eps, LocalVector<int>* connections) const;
         /** \brief Plain aggregation - Modification of a greedy aggregation scheme from
       * Vanek (1996)
       */
+        ROCALUTION_EXPORT
         void AMGAggregate(const LocalVector<int>& connections, LocalVector<int>* aggregates) const;
         /** \brief Interpolation scheme based on smoothed aggregation from Vanek (1996) */
+        ROCALUTION_EXPORT
         void AMGSmoothedAggregation(ValueType               relax,
                                     const LocalVector<int>& aggregates,
                                     const LocalVector<int>& connections,
                                     LocalMatrix<ValueType>* prolong,
                                     LocalMatrix<ValueType>* restrict) const;
         /** \brief Aggregation-based interpolation scheme */
+        ROCALUTION_EXPORT
         void AMGAggregation(const LocalVector<int>& aggregates,
                             LocalMatrix<ValueType>* prolong,
                             LocalMatrix<ValueType>* restrict) const;
 
         /** \brief Ruge Stueben coarsening */
+        ROCALUTION_EXPORT
         void RugeStueben(ValueType               eps,
                          LocalMatrix<ValueType>* prolong,
                          LocalMatrix<ValueType>* restrict) const;
@@ -807,12 +933,15 @@ namespace rocalution
         /** \brief Factorized Sparse Approximate Inverse assembly for given system matrix
       * power pattern or external sparsity pattern
       */
+        ROCALUTION_EXPORT
         void FSAI(int power, const LocalMatrix<ValueType>* pattern);
 
         /** \brief SParse Approximate Inverse assembly for given system matrix pattern */
+        ROCALUTION_EXPORT
         void SPAI(void);
 
         /** \brief Initial Pairwise Aggregation scheme */
+        ROCALUTION_EXPORT
         void InitialPairwiseAggregation(ValueType         beta,
                                         int&              nc,
                                         LocalVector<int>* G,
@@ -821,6 +950,7 @@ namespace rocalution
                                         int&              rGsize,
                                         int               ordering) const;
         /** \brief Initial Pairwise Aggregation scheme for split matrices */
+        ROCALUTION_EXPORT
         void InitialPairwiseAggregation(const LocalMatrix<ValueType>& mat,
                                         ValueType                     beta,
                                         int&                          nc,
@@ -830,6 +960,7 @@ namespace rocalution
                                         int&                          rGsize,
                                         int                           ordering) const;
         /** \brief Further Pairwise Aggregation scheme */
+        ROCALUTION_EXPORT
         void FurtherPairwiseAggregation(ValueType         beta,
                                         int&              nc,
                                         LocalVector<int>* G,
@@ -838,6 +969,7 @@ namespace rocalution
                                         int&              rGsize,
                                         int               ordering) const;
         /** \brief Further Pairwise Aggregation scheme for split matrices */
+        ROCALUTION_EXPORT
         void FurtherPairwiseAggregation(const LocalMatrix<ValueType>& mat,
                                         ValueType                     beta,
                                         int&                          nc,
@@ -847,6 +979,7 @@ namespace rocalution
                                         int&                          rGsize,
                                         int                           ordering) const;
         /** \brief Build coarse operator for pairwise aggregation scheme */
+        ROCALUTION_EXPORT
         void CoarsenOperator(LocalMatrix<ValueType>* Ac,
                              ParallelManager*        pm,
                              int                     nrow,

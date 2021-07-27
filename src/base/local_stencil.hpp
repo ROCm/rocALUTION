@@ -25,6 +25,7 @@
 #define ROCALUTION_LOCAL_STENCIL_HPP_
 
 #include "../utils/types.hpp"
+#include "export.hpp"
 #include "local_vector.hpp"
 #include "operator.hpp"
 #include "stencil_types.hpp"
@@ -59,30 +60,44 @@ namespace rocalution
     class LocalStencil : public Operator<ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         LocalStencil();
         /** \brief Initialize a local stencil with a type */
+        ROCALUTION_EXPORT
         LocalStencil(unsigned int type);
+        ROCALUTION_EXPORT
         virtual ~LocalStencil();
 
+        ROCALUTION_EXPORT
         virtual void Info() const;
 
         /** \brief Return the dimension of the stencil */
-        int                GetNDim(void) const;
+        ROCALUTION_EXPORT
+        int GetNDim(void) const;
+        ROCALUTION_EXPORT
         virtual IndexType2 GetM(void) const;
+        ROCALUTION_EXPORT
         virtual IndexType2 GetN(void) const;
+        ROCALUTION_EXPORT
         virtual IndexType2 GetNnz(void) const;
 
         /** \brief Set the stencil grid size */
+        ROCALUTION_EXPORT
         void SetGrid(int size);
 
+        ROCALUTION_EXPORT
         virtual void Clear();
 
+        ROCALUTION_EXPORT
         virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+        ROCALUTION_EXPORT
         virtual void ApplyAdd(const LocalVector<ValueType>& in,
                               ValueType                     scalar,
                               LocalVector<ValueType>*       out) const;
 
+        ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
+        ROCALUTION_EXPORT
         virtual void MoveToHost(void);
 
     protected:

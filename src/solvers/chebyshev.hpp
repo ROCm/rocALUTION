@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_KRYLOV_CHEBYSHEV_HPP_
 #define ROCALUTION_KRYLOV_CHEBYSHEV_HPP_
 
+#include "export.hpp"
 #include "solver.hpp"
 
 #include <vector>
@@ -47,16 +48,23 @@ namespace rocalution
     class Chebyshev : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         Chebyshev();
+        ROCALUTION_EXPORT
         virtual ~Chebyshev();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
         /** \brief Set the minimum and maximum eigenvalues of the operator */
+        ROCALUTION_EXPORT
         void Set(ValueType lambda_min, ValueType lambda_max);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

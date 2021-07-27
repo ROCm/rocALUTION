@@ -26,6 +26,7 @@
 
 #include "../../base/local_vector.hpp"
 #include "../solver.hpp"
+#include "export.hpp"
 #include "preconditioner.hpp"
 
 #include <vector>
@@ -61,37 +62,47 @@ namespace rocalution
     class MultiElimination : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         MultiElimination();
+        ROCALUTION_EXPORT
         virtual ~MultiElimination();
 
         /** \brief Returns the size of the first (diagonal) block of the preconditioner */
+        ROCALUTION_EXPORT
         inline int GetSizeDiagBlock(void) const
         {
             return this->size_;
         }
 
         /** \brief Return the depth of the current level */
+        ROCALUTION_EXPORT
         inline int GetLevel(void) const
         {
             return this->level_;
         }
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Initialize (recursively) ME-ILU with level (depth of recursion)
       * \details AA_Solvers - defines the last-block solver <br>
       * drop_off - defines drop-off tolerance
       */
+        ROCALUTION_EXPORT
         void Set(Solver<OperatorType, VectorType, ValueType>& AA_Solver,
                  int                                          level,
                  double                                       drop_off = 0.0);
 
         /** \brief Set a specific matrix type of the decomposed block matrices */
+        ROCALUTION_EXPORT
         void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
     protected:

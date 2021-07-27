@@ -25,6 +25,7 @@
 #define ROCALUTION_DIRECT_INVERSION_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 namespace rocalution
 {
@@ -43,12 +44,17 @@ namespace rocalution
     class Inversion : public DirectLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         Inversion();
+        ROCALUTION_EXPORT
         virtual ~Inversion();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

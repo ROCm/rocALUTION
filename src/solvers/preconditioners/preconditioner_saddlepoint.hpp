@@ -26,6 +26,7 @@
 
 #include "../../base/local_vector.hpp"
 #include "../solver.hpp"
+#include "export.hpp"
 #include "preconditioner.hpp"
 
 #include <vector>
@@ -58,18 +59,25 @@ namespace rocalution
     class DiagJacobiSaddlePointPrecond : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         DiagJacobiSaddlePointPrecond();
+        ROCALUTION_EXPORT
         virtual ~DiagJacobiSaddlePointPrecond();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Initialize solver for \f$K\f$ and \f$S\f$ */
+        ROCALUTION_EXPORT
         void Set(Solver<OperatorType, VectorType, ValueType>& K_Solver,
                  Solver<OperatorType, VectorType, ValueType>& S_Solver);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
     protected:

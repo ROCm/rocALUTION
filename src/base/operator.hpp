@@ -26,6 +26,7 @@
 
 #include "../utils/types.hpp"
 #include "base_rocalution.hpp"
+#include "export.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -53,7 +54,9 @@ namespace rocalution
     class Operator : public BaseRocalution<ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         Operator();
+        ROCALUTION_EXPORT
         virtual ~Operator();
 
         /** \brief Return the number of rows in the matrix/stencil */
@@ -64,27 +67,35 @@ namespace rocalution
         virtual IndexType2 GetNnz(void) const = 0;
 
         /** \brief Return the number of rows in the local matrix/stencil */
+        ROCALUTION_EXPORT
         virtual int GetLocalM(void) const;
         /** \brief Return the number of columns in the local matrix/stencil */
+        ROCALUTION_EXPORT
         virtual int GetLocalN(void) const;
         /** \brief Return the number of non-zeros in the local matrix/stencil */
+        ROCALUTION_EXPORT
         virtual int GetLocalNnz(void) const;
 
         /** \brief Return the number of rows in the ghost matrix/stencil */
+        ROCALUTION_EXPORT
         virtual int GetGhostM(void) const;
         /** \brief Return the number of columns in the ghost matrix/stencil */
+        ROCALUTION_EXPORT
         virtual int GetGhostN(void) const;
         /** \brief Return the number of non-zeros in the ghost matrix/stencil */
+        ROCALUTION_EXPORT
         virtual int GetGhostNnz(void) const;
 
         /** \brief Apply the operator, out = Operator(in), where in and out are local
       * vectors
       */
+        ROCALUTION_EXPORT
         virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
 
         /** \brief Apply and add the operator, out += scalar * Operator(in), where in and out
       * are local vectors
       */
+        ROCALUTION_EXPORT
         virtual void ApplyAdd(const LocalVector<ValueType>& in,
                               ValueType                     scalar,
                               LocalVector<ValueType>*       out) const;
@@ -92,11 +103,13 @@ namespace rocalution
         /** \brief Apply the operator, out = Operator(in), where in and out are global
       * vectors
       */
+        ROCALUTION_EXPORT
         virtual void Apply(const GlobalVector<ValueType>& in, GlobalVector<ValueType>* out) const;
 
         /** \brief Apply and add the operator, out += scalar * Operator(in), where in and out
       * are global vectors
       */
+        ROCALUTION_EXPORT
         virtual void ApplyAdd(const GlobalVector<ValueType>& in,
                               ValueType                      scalar,
                               GlobalVector<ValueType>*       out) const;

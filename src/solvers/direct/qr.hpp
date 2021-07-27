@@ -25,6 +25,7 @@
 #define ROCALUTION_DIRECT_QR_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 namespace rocalution
 {
@@ -44,12 +45,17 @@ namespace rocalution
     class QR : public DirectLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         QR();
+        ROCALUTION_EXPORT
         virtual ~QR();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

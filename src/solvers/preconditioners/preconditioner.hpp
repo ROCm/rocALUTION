@@ -25,6 +25,7 @@
 #define ROCALUTION_PRECONDITIONER_HPP_
 
 #include "../solver.hpp"
+#include "export.hpp"
 
 namespace rocalution
 {
@@ -41,9 +42,12 @@ namespace rocalution
     class Preconditioner : public Solver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         Preconditioner();
+        ROCALUTION_EXPORT
         virtual ~Preconditioner();
 
+        ROCALUTION_EXPORT
         virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
     protected:
@@ -74,14 +78,21 @@ namespace rocalution
     class Jacobi : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         Jacobi();
+        ROCALUTION_EXPORT
         virtual ~Jacobi();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
+        ROCALUTION_EXPORT
         virtual void ResetOperator(const OperatorType& op);
 
     protected:
@@ -115,14 +126,21 @@ namespace rocalution
     class GS : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         GS();
+        ROCALUTION_EXPORT
         virtual ~GS();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
+        ROCALUTION_EXPORT
         virtual void ResetOperator(const OperatorType& op);
 
     protected:
@@ -148,14 +166,21 @@ namespace rocalution
     class SGS : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         SGS();
+        ROCALUTION_EXPORT
         virtual ~SGS();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
+        ROCALUTION_EXPORT
         virtual void ResetOperator(const OperatorType& op);
 
     protected:
@@ -184,10 +209,14 @@ namespace rocalution
     class ILU : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         ILU();
+        ROCALUTION_EXPORT
         virtual ~ILU();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         /** \brief Initialize ILU(p) factorization
@@ -197,8 +226,11 @@ namespace rocalution
       * - level = true build the structure based on levels
       * - level = false build the structure only based on the power(p+1)
       */
+        ROCALUTION_EXPORT
         virtual void Set(int p, bool level = true);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:
@@ -228,19 +260,27 @@ namespace rocalution
     class ILUT : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         ILUT();
+        ROCALUTION_EXPORT
         virtual ~ILUT();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         /** \brief Set drop-off threshold */
+        ROCALUTION_EXPORT
         virtual void Set(double t);
 
         /** \brief Set drop-off threshold and maximum fill-ins per row */
+        ROCALUTION_EXPORT
         virtual void Set(double t, int maxrow);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:
@@ -269,12 +309,18 @@ namespace rocalution
     class IC : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         IC();
+        ROCALUTION_EXPORT
         virtual ~IC();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:
@@ -304,15 +350,22 @@ namespace rocalution
     class VariablePreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         VariablePreconditioner();
+        ROCALUTION_EXPORT
         virtual ~VariablePreconditioner();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the preconditioner sequence */
+        ROCALUTION_EXPORT
         virtual void SetPreconditioner(int                                           n,
                                        Solver<OperatorType, VectorType, ValueType>** precond);
 

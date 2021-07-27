@@ -26,6 +26,7 @@
 
 #include "../solver.hpp"
 #include "base_multigrid.hpp"
+#include "export.hpp"
 
 #include <vector>
 
@@ -54,32 +55,41 @@ namespace rocalution
         BaseAMG();
         virtual ~BaseAMG();
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Clear all local data */
         virtual void ClearLocal(void);
 
         /** \brief Create AMG hierarchy */
+        ROCALUTION_EXPORT
         virtual void BuildHierarchy(void);
 
         /** \brief Create AMG smoothers */
         virtual void BuildSmoothers(void);
 
         /** \brief Set coarsest level for hierarchy creation */
+        ROCALUTION_EXPORT
         void SetCoarsestLevel(int coarse_size);
 
         /** \brief Set flag to pass smoothers manually for each level */
+        ROCALUTION_EXPORT
         void SetManualSmoothers(bool sm_manual);
         /** \brief Set flag to pass coarse grid solver manually */
+        ROCALUTION_EXPORT
         void SetManualSolver(bool s_manual);
 
         /** \brief Set the smoother operator format */
+        ROCALUTION_EXPORT
         void SetDefaultSmootherFormat(unsigned int op_format);
         /** \brief Set the operator format */
+        ROCALUTION_EXPORT
         void SetOperatorFormat(unsigned int op_format);
 
         /** \brief Returns the number of levels in hierarchy */
+        ROCALUTION_EXPORT
         int GetNumLevels(void);
 
         /** \private */

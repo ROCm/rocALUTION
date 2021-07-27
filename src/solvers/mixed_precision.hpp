@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_MIXED_PRECISION_HPP_
 #define ROCALUTION_MIXED_PRECISION_HPP_
 
+#include "export.hpp"
 #include "solver.hpp"
 
 namespace rocalution
@@ -61,16 +62,23 @@ namespace rocalution
     class MixedPrecisionDC : public IterativeLinearSolver<OperatorTypeH, VectorTypeH, ValueTypeH>
     {
     public:
+        ROCALUTION_EXPORT
         MixedPrecisionDC();
+        ROCALUTION_EXPORT
         virtual ~MixedPrecisionDC();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
 
         /** \brief Set the inner solver for \f$Ad_{k} = r_{k}\f$ */
+        ROCALUTION_EXPORT
         void Set(Solver<OperatorTypeL, VectorTypeL, ValueTypeL>& Solver_L);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
+        ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
     protected:

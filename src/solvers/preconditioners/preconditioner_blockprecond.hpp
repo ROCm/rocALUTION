@@ -26,6 +26,7 @@
 
 #include "../../base/local_vector.hpp"
 #include "../solver.hpp"
+#include "export.hpp"
 #include "preconditioner.hpp"
 
 #include <vector>
@@ -63,28 +64,39 @@ namespace rocalution
     class BlockPreconditioner : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         BlockPreconditioner();
+        ROCALUTION_EXPORT
         virtual ~BlockPreconditioner();
 
+        ROCALUTION_EXPORT
         virtual void Print(void) const;
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set number, size and diagonal solver */
+        ROCALUTION_EXPORT
         void Set(int n, const int* size, Solver<OperatorType, VectorType, ValueType>** D_solver);
 
         /** \brief Set diagonal solver mode */
+        ROCALUTION_EXPORT
         void SetDiagonalSolver(void);
         /** \brief Set lower triangular sweep mode */
+        ROCALUTION_EXPORT
         void SetLSolver(void);
 
         /** \brief Set external last block matrix */
+        ROCALUTION_EXPORT
         void SetExternalLastMatrix(const OperatorType& mat);
 
         /** \brief Set permutation vector */
+        ROCALUTION_EXPORT
         virtual void SetPermutation(const LocalVector<int>& perm);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
     protected:
