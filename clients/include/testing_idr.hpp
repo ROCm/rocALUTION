@@ -149,7 +149,7 @@ bool testing_idr(Arguments argus)
 
     ls.Init(1e-8, 0.0, 1e+8, 10000);
     ls.SetShadowSpace(l);
-    ls.SetRandomSeed(123456ULL);
+    ls.SetRandomSeed(12345ULL);
     ls.Build();
 
     // Matrix format
