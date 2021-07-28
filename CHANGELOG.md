@@ -2,6 +2,23 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## (Unreleased) rocALUTION 1.13.0
+### Added
+- Enabling beta support for Windows 10
+### Changed
+- Packaging split into a runtime package called rocalution and a development package called rocalution-devel. The development package depends on runtime. The runtime package suggests the development package for all supported OSes except CentOS 7 to aid in the transition. The suggests feature in packaging is introduced as a deprecated feature and will be removed in a future rocm release.
+### Improved
+- (A)MG solving phase optimization
+
+## (Unreleased) rocALUTION 1.12.3
+### Added
+- Address sanitizer build option added
+### Changed
+- Deprecated GlobalPairwiseAMG, please use PairwiseAMG instead. GlobalPairwiseAMG will be removed in a future major release.
+### Improved
+- (A)MG smoothing and convergence rate improvement
+- Improved IDR Gram-Schmidt process
+
 ## [rocALUTION 1.12.1 for ROCm 4.3.0]
 ### Added
 - support for gfx90a target
