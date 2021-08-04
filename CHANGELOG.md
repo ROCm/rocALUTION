@@ -2,6 +2,15 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## [rocALUTION 1.12.3 for ROCm 4.4.0]
+### Added
+- Address sanitizer build option added
+### Changed
+- Deprecated GlobalPairwiseAMG, please use PairwiseAMG instead. GlobalPairwiseAMG will be removed in a future major release.
+### Improved
+- (A)MG smoothing and convergence rate improvement
+- Improved IDR Gram-Schmidt process
+
 ## [rocALUTION 1.12.1 for ROCm 4.3.0]
 ### Added
 - support for gfx90a target
