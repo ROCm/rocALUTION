@@ -33,7 +33,11 @@ using namespace rocalution;
 
 static bool check_residual(float res)
 {
+#ifdef WIN32
+    return (res < 1e-1f);
+#else
     return (res < 1e-2f);
+#endif
 }
 
 static bool check_residual(double res)
