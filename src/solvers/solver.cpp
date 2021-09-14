@@ -47,8 +47,9 @@ namespace rocalution
         this->op_      = NULL;
         this->precond_ = NULL;
 
-        this->is_precond_ = false;
-        this->build_      = false;
+        this->is_precond_  = false;
+        this->is_smoother_ = false;
+        this->build_       = false;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -539,6 +540,33 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
+    void FixedPoint<OperatorType, VectorType, ValueType>::SolveZeroSol(const VectorType& rhs,
+                                                                       VectorType*       x)
+    {
+        log_debug(this, "FixedPoint::SolveZeroSol()", (const void*&)rhs, x);
+
+        assert(x != NULL);
+        assert(x != &rhs);
+        assert(this->op_ != NULL);
+        assert(this->precond_ != NULL);
+        assert(this->build_ == true);
+
+        if(this->verb_ > 0)
+        {
+            this->PrintStart_();
+            this->iter_ctrl_.PrintInit();
+        }
+
+        this->SolveZeroSol_(rhs, x);
+
+        if(this->verb_ > 0)
+        {
+            this->iter_ctrl_.PrintStatus();
+            this->PrintEnd_();
+        }
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
     void FixedPoint<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                            VectorType*       x)
     {
@@ -558,8 +586,54 @@ namespace rocalution
         assert(this->precond_ != NULL);
         assert(this->build_ == true);
 
-        if(this->iter_ctrl_.GetMaximumIterations() > 0)
+        // Differentiate between smoothing and non-smoothing, as we can skip norm
+        // computation in smoothing case
+        if(this->is_smoother_)
         {
+            // Number of smoothing steps to perform
+            int steps = this->iter_ctrl_.GetMaximumIterations();
+
+            if(steps < 1)
+            {
+                return;
+            }
+
+            // Feed some dummy residual to initialize IterationControl class
+            this->iter_ctrl_.InitResidual(1.0);
+
+            // Modified Richardson Iteration
+            // x^(k+1) = x^k + omega * (b - Ax^k)
+
+            // inital residual x_res = b - Ax
+            this->op_->Apply(*x, &this->x_res_);
+            this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
+
+            // Solve M x_old = x_res
+            this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);
+
+            // x = x + omega * x_old
+            x->AddScale(this->x_old_, this->omega_);
+
+            for(int iter = 1; iter < steps; ++iter)
+            {
+                // x_res = b - Ax
+                this->op_->Apply(*x, &this->x_res_);
+                this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
+
+                // Solve M x_old = x_res
+                this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);
+
+                // x = x + x_old
+                x->AddScale(this->x_old_, this->omega_);
+            }
+        }
+        else
+        {
+            if(this->iter_ctrl_.GetMaximumIterations() < 1)
+            {
+                return;
+            }
+
             // Modified Richardson Iteration
             // x^(k+1) = x^k + omega * (b - Ax^k)
 
@@ -606,6 +680,113 @@ namespace rocalution
         }
 
         log_debug(this, "FixedPoint::SolvePrecond_()", " #*# end");
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void FixedPoint<OperatorType, VectorType, ValueType>::SolveZeroSol_(const VectorType& rhs,
+                                                                        VectorType*       x)
+    {
+        log_debug(this, "FixedPoint::SolveZeroSol_()", " #*# begin", (const void*&)rhs, x);
+
+        assert(x != NULL);
+        assert(x != &rhs);
+        assert(this->op_ != NULL);
+        assert(this->precond_ != NULL);
+        assert(this->build_ == true);
+
+        // Differentiate between smoothing and non-smoothing, as we can skip norm
+        // computation in smoothing case
+        if(this->is_smoother_)
+        {
+            // Number of smoothing steps to perform
+            int steps = this->iter_ctrl_.GetMaximumIterations();
+
+            if(steps < 1)
+            {
+                return;
+            }
+
+            // Feed some dummy residual to initialize IterationControl class
+            this->iter_ctrl_.InitResidual(1.0);
+
+            // Modified Richardson Iteration
+            // x^(k+1) = x^k + omega * (b - Ax^k)
+
+            // Solve M x = rhs
+            this->precond_->Solve(rhs, x);
+
+            // x *= omega
+            x->Scale(this->omega_);
+
+            // Do remaining smoothing steps
+            for(int iter = 1; iter < steps; ++iter)
+            {
+                // x_res = rhs - Ax
+                this->op_->Apply(*x, &this->x_res_);
+                this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
+
+                // Solve M x_old = x_res
+                this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);
+
+                // x = x + omega * x_old
+                x->AddScale(this->x_old_, this->omega_);
+            }
+        }
+        else
+        {
+            if(this->iter_ctrl_.GetMaximumIterations() < 1)
+            {
+                return;
+            }
+
+            // Modified Richardson Iteration
+            // x^(k+1) = x^k + omega * (rhs - Ax^k)
+
+            // inital residual x_res = rhs
+            ValueType res = this->Norm_(rhs);
+
+            if(this->iter_ctrl_.InitResidual(std::abs(res)) == false)
+            {
+                log_debug(this, "FixedPoint::SolveZeroSol_()", " #*# end");
+                return;
+            }
+
+            // Solve M x_old = rhs
+            this->precond_->Solve(rhs, x);
+
+            // x *= omega
+            x->Scale(this->omega_);
+
+            if(this->iter_ctrl_.CheckMaximumIterNoCount() != true)
+            {
+                while(true)
+                {
+                    // x_res = rhs - Ax
+                    this->op_->Apply(*x, &this->x_res_);
+                    this->x_res_.ScaleAdd(static_cast<ValueType>(-1), rhs);
+
+                    res = this->Norm_(this->x_res_);
+
+                    if(this->iter_ctrl_.CheckResidual(std::abs(res), this->index_) == true)
+                    {
+                        break;
+                    }
+
+                    // Solve M x_old = x_res
+                    this->precond_->SolveZeroSol(this->x_res_, &this->x_old_);
+
+                    // x = x + omega * x_old
+                    x->AddScale(this->x_old_, this->omega_);
+
+                    if(this->iter_ctrl_.CheckMaximumIterNoCount() == true)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        log_debug(this, "FixedPoint::SolveZeroSol_()", " #*# end");
     }
 
     template <class OperatorType, class VectorType, typename ValueType>

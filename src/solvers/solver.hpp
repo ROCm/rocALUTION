@@ -131,6 +131,12 @@ namespace rocalution
             this->is_precond_ = true;
         }
 
+        ROCALUTION_EXPORT
+        inline void FlagSmoother(void)
+        {
+            this->is_smoother_ = true;
+        }
+
     protected:
         /** \brief Pointer to the operator */
         const OperatorType* op_;
@@ -140,6 +146,9 @@ namespace rocalution
 
         /** \brief Flag to store whether this solver is a preconditioner or not */
         bool is_precond_;
+
+        /** \brief Flag to store whether this solver is a smoother or not */
+        bool is_smoother_;
 
         /** \brief Flag == true after building the solver (e.g. Build()) */
         bool build_;
@@ -355,7 +364,13 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual void Clear(void);
 
+        /** \brief Solve Operator x = rhs, setting initial x = 0 */
+        ROCALUTION_EXPORT
+        virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
+
     protected:
+        void SolveZeroSol_(const VectorType& rhs, VectorType* x);
+
         /** \brief Relaxation parameter */
         ValueType  omega_;
         VectorType x_old_; /**< \private */

@@ -232,6 +232,7 @@ namespace rocalution
 
         this->smoother_level_[0]->SetOperator(*this->op_);
         this->smoother_level_[0]->Build();
+        this->smoother_level_[0]->FlagSmoother();
 
         // Coarse levels
         for(int i = 1; i < this->levels_ - 1; ++i)
@@ -240,6 +241,7 @@ namespace rocalution
 
             this->smoother_level_[i]->SetOperator(*this->op_level_[i - 1]);
             this->smoother_level_[i]->Build();
+            this->smoother_level_[i]->FlagSmoother();
         }
 
         // Initialize coarse grid solver
