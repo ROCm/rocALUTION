@@ -54,6 +54,12 @@ namespace rocalution
   *
   * \tparam ValueType - can be int, float, double, std::complex<float> and
   *                     std::complex<double>
+  *
+  * A number of matrix formats are supported. These are CSR, BCSR, MCSR, COO, DIA, ELL, HYB, and DENSE.
+  * \note For CSR type matrices, the column indices must be sorted in increasing order. For COO matrices, the row
+  * indices must be sorted in increasing order. The function \p Check can be used to check whether a matrix
+  * contains valid data. For CSR and COO matrices, the function \p Sort can be used to sort the row or column
+  * indices respectively.
   */
     template <typename ValueType>
     class LocalMatrix : public Operator<ValueType>

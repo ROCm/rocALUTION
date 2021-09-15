@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,12 @@ namespace rocalution
   *
   * \tparam ValueType - can be int, float, double, std::complex<float> and
   *                     std::complex<double>
+  *
+  * A number of matrix formats are supported. These are CSR, BCSR, MCSR, COO, DIA, ELL, HYB, and DENSE.
+  * \note For CSR type matrices, the column indices must be sorted in increasing order. For COO matrices, the row
+  * indices must be sorted in increasing order. The function \p Check can be used to check whether a matrix
+  * contains valid data. For CSR and COO matrices, the function \p Sort can be used to sort the row or column
+  * indices respectively.
   */
     template <typename ValueType>
     class GlobalMatrix : public Operator<ValueType>
@@ -77,8 +83,14 @@ namespace rocalution
 
         virtual void Info(void) const;
 
-        /** \brief Return true if the matrix is ok (empty matrix is also ok) and false if
-      * there is something wrong with the strcture or some of values are NaN
+        /** \brief Perform a sanity check of the matrix
+      * \details
+      * Checks, if the matrix contains valid data, i.e. if the values are not infinity
+      * and not NaN (not a number) and if the structure of the matrix is correct (e.g.
+      * indices cannot be negative, CSR and COO matrices have to be sorted, etc.).
+      *
+      * \retval true if the matrix is ok (empty matrix is also ok).
+      * \retval false if there is something wrong with the structure or values.
       */
         virtual bool Check(void) const;
 
@@ -188,7 +200,12 @@ namespace rocalution
         /** \brief Write matrix to CSR (ROCALUTION binary format) file */
         void WriteFileCSR(const std::string filename) const;
 
-        /** \brief Sort the matrix indices */
+        /** \brief Sort the matrix indices
+      * \details
+      * Sorts the matrix by indices.
+      * - For CSR matrices, column values are sorted.
+      * - For COO matrices, row indices are sorted.
+      */
         void Sort(void);
 
         /** \brief Extract the inverse (reciprocal) diagonal values of the matrix into a
