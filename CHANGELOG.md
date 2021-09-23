@@ -2,7 +2,7 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION 1.13.0 for ROCm 4.5.0
+## rocALUTION 1.13.2 for ROCm 4.5.0
 ### Added
 - Address sanitizer build option added
 - Enabling beta support for Windows 10
