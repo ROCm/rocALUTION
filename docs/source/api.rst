@@ -176,9 +176,6 @@ MultiGrid Solvers
 .. doxygenclass:: rocalution::PairwiseAMG
    :members:
 
-.. doxygenclass:: rocalution::GlobalPairwiseAMG
-   :members:
-
 Direct Solvers
 --------------
 .. doxygenclass:: rocalution::DirectLinearSolver

@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,6 @@ set(SOLVERS_SOURCES
   solvers/multigrid/smoothed_amg.cpp
   solvers/multigrid/ruge_stueben_amg.cpp
   solvers/multigrid/pairwise_amg.cpp
-  solvers/multigrid/global_pairwise_amg.cpp
   solvers/direct/inversion.cpp
   solvers/direct/lu.cpp
   solvers/direct/qr.cpp
@@ -75,7 +74,6 @@ set(SOLVERS_PUBLIC_HEADERS
   solvers/multigrid/smoothed_amg.hpp
   solvers/multigrid/ruge_stueben_amg.hpp
   solvers/multigrid/pairwise_amg.hpp
-  solvers/multigrid/global_pairwise_amg.hpp
   solvers/direct/inversion.hpp
   solvers/direct/lu.hpp
   solvers/direct/qr.hpp

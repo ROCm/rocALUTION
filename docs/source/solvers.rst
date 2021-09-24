@@ -232,7 +232,6 @@ For further details, see :cite:`stueben`.
 Pairwise AMG
 ============
 .. doxygenclass:: rocalution::PairwiseAMG
-.. doxygenclass:: rocalution::GlobalPairwiseAMG
 .. doxygenfunction:: rocalution::PairwiseAMG::SetBeta
 .. doxygenfunction:: rocalution::PairwiseAMG::SetOrdering
 .. doxygenfunction:: rocalution::PairwiseAMG::SetCoarseningFactor
