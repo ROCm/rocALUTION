@@ -76,6 +76,6 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 ### Added
 - static build
 - BCSR matrix format for SpMV
-- Bug fixing in conversion from CSR to HYB format. 
+- Bug fixing in conversion from CSR to HYB format.
 ### Known Issues
 - none

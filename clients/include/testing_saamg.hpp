@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -116,22 +116,21 @@ bool testing_saamg(Arguments argus)
     IterativeLinearSolver<LocalMatrix<T>, LocalVector<T>, T>** sm
         = new IterativeLinearSolver<LocalMatrix<T>, LocalVector<T>, T>*[levels - 1];
 
+    Preconditioner<LocalMatrix<T>, LocalVector<T>, T>** smooth
+        = new Preconditioner<LocalMatrix<T>, LocalVector<T>, T>*[levels - 1];
+
     for(int i = 0; i < levels - 1; ++i)
     {
-        FixedPoint<LocalMatrix<T>, LocalVector<T>, T>* fp
-            = new FixedPoint<LocalMatrix<T>, LocalVector<T>, T>;
-        sm[i] = fp;
-
-        Preconditioner<LocalMatrix<T>, LocalVector<T>, T>* smooth;
+        sm[i] = new FixedPoint<LocalMatrix<T>, LocalVector<T>, T>;
 
         if(smoother == "FSAI")
-            smooth = new FSAI<LocalMatrix<T>, LocalVector<T>, T>;
+            smooth[i] = new FSAI<LocalMatrix<T>, LocalVector<T>, T>;
         else if(smoother == "SPAI")
-            smooth = new SPAI<LocalMatrix<T>, LocalVector<T>, T>;
+            smooth[i] = new SPAI<LocalMatrix<T>, LocalVector<T>, T>;
         else
             return false;
 
-        sm[i]->SetPreconditioner(*smooth);
+        sm[i]->SetPreconditioner(*(smooth[i]));
         sm[i]->Verbose(0);
     }
 
@@ -166,6 +165,14 @@ bool testing_saamg(Arguments argus)
 
     // Stop rocALUTION platform
     stop_rocalution();
+
+    for(int i = 0; i < levels - 1; ++i)
+    {
+        delete smooth[i];
+        delete sm[i];
+    }
+    delete[] smooth;
+    delete[] sm;
 
     return success;
 }
