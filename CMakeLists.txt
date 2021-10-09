@@ -32,12 +32,12 @@ else()
 endif()
 
 # Needed to pickup static library files
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-     ${ROCM_PATH}/hip/cmake)
+     ${ROCM_PATH}/lib/cmake/hip)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
