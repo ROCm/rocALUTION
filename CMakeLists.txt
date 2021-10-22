@@ -32,7 +32,7 @@ else()
 endif()
 
 # Needed to pickup static library files
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm)
 
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
