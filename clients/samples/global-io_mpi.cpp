@@ -23,7 +23,7 @@
 
 #include <iostream>
 #include <mpi.h>
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 
 using namespace rocalution;
 

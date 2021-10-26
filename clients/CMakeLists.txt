@@ -46,7 +46,7 @@ if(NOT TARGET rocalution)
   # This project may compile dependencies for clients
   project(rocalution-clients LANGUAGES CXX)
 
-  find_package(rocalution REQUIRED CONFIG PATHS ${ROCM_PATH}/rocalution)
+  find_package(rocalution REQUIRED CONFIG PATHS ${ROCM_PATH})
   get_target_property(depends roc::rocalution INTERFACE_LINK_LIBRARIES)
 
   # Check for MPI build

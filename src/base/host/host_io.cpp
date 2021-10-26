@@ -25,7 +25,7 @@
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/def.hpp"
 #include "../../utils/log.hpp"
-#include "version.hpp"
+#include "rocalution/version.hpp"
 
 #include <complex>
 #include <fstream>
