@@ -32,7 +32,7 @@ endif()
 
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
-               "${PROJECT_BINARY_DIR}/include/version.hpp"
+               "${PROJECT_BINARY_DIR}/include/rocalution/version.hpp"
 )
 
 # Include sub-directories
@@ -108,6 +108,9 @@ set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 # Generate export header
 #include(GenerateExportHeader)
 #generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/export.hpp)
+
+# Private Header include
+target_include_directories(rocalution PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 
 list(APPEND CMAKE_HOST_FLAGS "-O3;-march=native")
 target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
