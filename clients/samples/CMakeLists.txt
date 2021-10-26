@@ -28,6 +28,7 @@ function(add_rocalution_example EXAMPLE_SOURCE)
 
   # Include common client headers
   target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
+  target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 
   # Link rocALUTION library
   target_link_libraries(${EXAMPLE_TARGET} PRIVATE roc::rocalution)
