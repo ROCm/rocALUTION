@@ -27,7 +27,7 @@
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
 #include "../base_vector.hpp"
-#include "version.hpp"
+#include "rocalution/version.hpp"
 
 #include <complex>
 #include <fstream>
