@@ -2,6 +2,12 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## (Unreleased) rocALUTION 1.14.0
+### Changed
+- Removed deprecated GlobalPairwiseAMG class, please use PairwiseAMG instead.
+### Improved
+- Improved documentation
+
 ## rocALUTION 1.13.2 for ROCm 4.5.0
 ### Added
 - Address sanitizer build option added
