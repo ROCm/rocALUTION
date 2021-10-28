@@ -2,7 +2,7 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## (Unreleased) rocALUTION 1.14.0
+## (Unreleased) rocALUTION 2.0.0
 ### Changed
 - Removed deprecated GlobalPairwiseAMG class, please use PairwiseAMG instead.
 ### Improved
