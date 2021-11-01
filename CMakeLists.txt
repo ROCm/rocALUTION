@@ -51,13 +51,13 @@ if(POLICY CMP0066)
   cmake_policy(SET CMP0066 NEW)
 endif()
 
+# rocALUTION project
+project(rocalution LANGUAGES CXX)
+
 # Build flags
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-# rocALUTION project
-project(rocalution LANGUAGES CXX)
 
 # Force library install path to lib (CentOS 7 defaults to lib64)
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE INTERNAL "Installation directory for libraries" FORCE)
