@@ -42,6 +42,11 @@ endif()
 # This tells cmake to create a compile_commands.json file that can be used with clang tooling or vim
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Build flags
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if(NOT TARGET rocalution)
   # This project may compile dependencies for clients
   project(rocalution-clients LANGUAGES CXX)
@@ -61,11 +66,6 @@ if(NOT TARGET rocalution)
   option(BUILD_CLIENTS_BENCHMARKS "Build benchmarks." OFF)
   option(BUILD_CLIENTS_TESTS "Build tests." OFF)
 endif()
-
-# Build flags
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(BUILD_CLIENTS_SAMPLES)
   add_subdirectory(samples)
