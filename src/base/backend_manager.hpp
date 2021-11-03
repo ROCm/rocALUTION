@@ -125,7 +125,7 @@ namespace rocalution
   *
   * \par Example
   * \code{.cpp}
-  *   #include <rocalution.hpp>
+  *   #include <rocalution/rocalution.hpp>
   *
   *   using namespace rocalution;
   *
