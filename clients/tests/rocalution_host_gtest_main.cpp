@@ -24,7 +24,7 @@
 #include "utility.hpp"
 
 #include <gtest/gtest.h>
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 #include <stdexcept>
 
 int device;
