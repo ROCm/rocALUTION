@@ -27,7 +27,7 @@
 
 #include "utility.hpp"
 
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 
 using namespace rocalution;
 
