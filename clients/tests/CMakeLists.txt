@@ -69,6 +69,7 @@ target_include_directories(rocalution-test SYSTEM PRIVATE $<BUILD_INTERFACE:${GT
 target_link_libraries(rocalution-test PRIVATE ${GTEST_BOTH_LIBRARIES} Threads::Threads)
 
 # Include common client headers
+target_include_directories(rocalution-test PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 target_include_directories(rocalution-test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
 
 # Link rocALUTION library
