@@ -92,7 +92,7 @@ Thus, the user can run two MPI processes on systems with two accelerators by spe
 
 .. code-block:: cpp
 
-  #include <rocalution.hpp>
+  #include <rocalution/rocalution.hpp>
   #include <mpi.h>
 
   using namespace rocalution;
