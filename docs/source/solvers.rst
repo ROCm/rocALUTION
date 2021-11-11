@@ -118,65 +118,45 @@ CG
 --
 .. doxygenclass:: rocalution::CG
 
-For further details, see :cite:`SAAD`.
-
 CR
 --
 .. doxygenclass:: rocalution::CR
-
-For further details, see :cite:`SAAD`.
 
 GMRES
 -----
 .. doxygenclass:: rocalution::GMRES
 .. doxygenfunction:: rocalution::GMRES::SetBasisSize
 
-For further details, see :cite:`SAAD`.
-
 FGMRES
 ------
 .. doxygenclass:: rocalution::FGMRES
 .. doxygenfunction:: rocalution::FGMRES::SetBasisSize
 
-For further details, see :cite:`SAAD`.
-
 BiCGStab
 --------
 .. doxygenclass:: rocalution::BiCGStab
-
-For further details, see :cite:`SAAD`.
 
 IDR
 ---
 .. doxygenclass:: rocalution::IDR
 .. doxygenfunction:: rocalution::IDR::SetShadowSpace
 
-For further details, see :cite:`IDR1` and :cite:`IDR2`.
-
 FCG
 ---
 .. doxygenclass:: rocalution::FCG
 
-For further details, see :cite:`fcg`.
-
 QMRCGStab
 ---------
 .. doxygenclass:: rocalution::QMRCGStab
-
-For further details, see :cite:`qmrcgstab`.
 
 BiCGStab(l)
 -----------
 .. doxygenclass:: rocalution::BiCGStabl
 .. doxygenfunction:: rocalution::BiCGStabl::SetOrder
 
-For further details, see :cite:`bicgstabl`.
-
 Chebyshev Iteration Scheme
 ==========================
 .. doxygenclass:: rocalution::Chebyshev
-
-For further details, see :cite:`templates`.
 
 Mixed-Precision Defect Correction Scheme
 ========================================
@@ -191,8 +171,6 @@ The library provides algebraic multigrid as well as a skeleton for geometric mul
 Geometric MultiGrid
 -------------------
 .. doxygenclass:: rocalution::MultiGrid
-
-For further details, see :cite:`Trottenberg2003`.
 
 Algebraic MultiGrid
 -------------------
@@ -212,22 +190,16 @@ Unsmoothed Aggregation AMG
 .. doxygenfunction:: rocalution::UAAMG::SetCouplingStrength
 .. doxygenfunction:: rocalution::UAAMG::SetOverInterp
 
-For further details, see :cite:`stueben`.
-
 Smoothed Aggregation AMG
 ========================
 .. doxygenclass:: rocalution::SAAMG
 .. doxygenfunction:: rocalution::SAAMG::SetCouplingStrength
 .. doxygenfunction:: rocalution::SAAMG::SetInterpRelax
 
-For further details, see :cite:`vanek`.
-
 Ruge-Stueben AMG
 ================
 .. doxygenclass:: rocalution::RugeStuebenAMG
 .. doxygenfunction:: rocalution::RugeStuebenAMG::SetCouplingStrength
-
-For further details, see :cite:`stueben`.
 
 Pairwise AMG
 ============
@@ -235,8 +207,6 @@ Pairwise AMG
 .. doxygenfunction:: rocalution::PairwiseAMG::SetBeta
 .. doxygenfunction:: rocalution::PairwiseAMG::SetOrdering
 .. doxygenfunction:: rocalution::PairwiseAMG::SetCoarseningFactor
-
-For further details, see :cite:`pairwiseamg`.
 
 Direct Linear Solvers
 =====================

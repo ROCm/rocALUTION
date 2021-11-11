@@ -54,8 +54,8 @@ The following table lists common uses of `install.sh` to build dependencies + li
 .. tabularcolumns::
       |\X{1}{6}|\X{5}{6}|
 
-===================== ====
-Command               Description
+========================== ====
+Command                    Description
 ========================== ====
 `./install.sh -h`          Print help information.
 `./install.sh -d`          Build dependencies and library in your local directory. The `-d` flag only needs to be used once. For subsequent invocations of `install.sh` it is not necessary to rebuild the dependencies.

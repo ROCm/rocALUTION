@@ -26,7 +26,7 @@ Accelerators
 
 Correctness
 ===========
-* If you are assembling or modifying your matrix, you can check it in octave/MATLAB by just writing it into a matrix-market file and read it via `mmread()` function, see :cite:`mm-read`. You can also input a MATLAB/octave matrix in such a way.
+* If you are assembling or modifying your matrix, you can check it in octave/MATLAB by just writing it into a matrix-market file and read it via `mmread()` function. You can also input a MATLAB/octave matrix in such a way.
 * Be sure, to set the correct relative and absolute tolerance values for your problem.
 * Check the computation of the relative stopping criteria, if it is based on :math:`|b-Ax^k|_2/|b-Ax^0|_2` or :math:`|b-Ax^k|_2/|b|_2`.
 * Solving very ill-conditioned problems by iterative methods without a proper preconditioning technique might produce wrong results. The solver could stop by showing a low relative tolerance based on the residual but this might be wrong.
