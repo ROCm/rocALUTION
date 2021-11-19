@@ -26,7 +26,7 @@
 
 #include "hip_rand.hpp"
 #include <hip/hip_runtime.h>
-#include <rocrand.hpp>
+#include <rocrand/rocrand.hpp>
 
 namespace rocalution
 {

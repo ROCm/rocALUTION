@@ -142,7 +142,8 @@ if(SUPPORT_HIP)
 
   rocm_set_soversion(rocalution_hip ${rocalution_SOVERSION})
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
-
+	
+  target_include_directories(rocalution_hip PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
   if(WIN32)
     target_link_libraries(rocalution_hip PRIVATE roc::rocblas roc::rocsparse roc::rocprim roc::rocrand hip::device)
   else()
