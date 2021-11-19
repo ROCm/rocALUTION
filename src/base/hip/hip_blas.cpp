@@ -27,7 +27,7 @@
 
 #include <hip/hip_complex.h>
 #include <hip/hip_runtime_api.h>
-#include <rocblas.h>
+#include <rocblas/rocblas.h>
 #include <rocprim/rocprim.hpp>
 
 #include <complex>

@@ -22,7 +22,7 @@
  * ************************************************************************ */
 
 #include <iostream>
-#include <rocalution.hpp>
+#include <rocalution/rocalution.hpp>
 
 using namespace rocalution;
 

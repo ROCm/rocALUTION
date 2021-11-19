@@ -32,7 +32,7 @@ endif()
 
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
-               "${PROJECT_BINARY_DIR}/include/version.hpp"
+               "${PROJECT_BINARY_DIR}/include/rocalution/version.hpp"
 )
 
 # Include sub-directories
@@ -55,7 +55,7 @@ set(PUBLIC_HEADERS
 
 # Copy public headers to include directory
 foreach(i ${PUBLIC_HEADERS})
-  configure_file("${i}" "${PROJECT_BINARY_DIR}/include/${i}" COPYONLY)
+  configure_file("${i}" "${PROJECT_BINARY_DIR}/include/rocalution/${i}" COPYONLY)
 endforeach()
 
 source_group("Header Files\\Public" FILES ${PUBLIC_HEADERS})
@@ -114,6 +114,8 @@ endif()
 # Generate export header
 include(GenerateExportHeader)
 generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/export.hpp)
+# Private Header include
+target_include_directories(rocalution PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 
 list(APPEND CMAKE_HOST_FLAGS "-O3;-march=native")
 target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
@@ -161,31 +163,32 @@ endif()
 
 # Install targets
 if(SUPPORT_HIP)
-  rocm_install_targets(TARGETS rocalution rocalution_hip
-                       INCLUDE ${CMAKE_BINARY_DIR}/include
-                       PREFIX rocalution)
+  rocm_install_targets(TARGETS rocalution rocalution_hip)
 else()
-  rocm_install_targets(TARGETS rocalution
-                       INCLUDE ${CMAKE_BINARY_DIR}/include
-                       PREFIX rocalution)
+  rocm_install_targets(TARGETS rocalution)
 endif()
+install(
+  DIRECTORY
+  "${PROJECT_BINARY_DIR}/include/rocalution/"
+  DESTINATION "include/rocalution/"
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ
+)
 
 # Export targets
 if(SUPPORT_OMP)
   rocm_export_targets(TARGETS roc::rocalution
-                      PREFIX rocalution
                       DEPENDS PACKAGE HIP
                       DEPENDS PACKAGE OpenMP
                       NAMESPACE roc::)
 else()
   rocm_export_targets(TARGETS roc::rocalution
-                      PREFIX rocalution
                       DEPENDS PACKAGE HIP
                       NAMESPACE roc::)
 endif()
 
-# Symbolic links
-rocm_install_symlink_subdir(rocalution)
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
