@@ -25,7 +25,7 @@
 #define ROCALUTION_HIP_RAND_NORMAL_HPP_
 
 #include "hip_rand.hpp"
-#include <rocrand.hpp>
+#include <rocrand/rocrand.hpp>
 
 namespace rocalution
 {

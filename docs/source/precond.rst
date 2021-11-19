@@ -28,15 +28,11 @@ ILU
 .. doxygenclass:: rocalution::ILU
 .. doxygenfunction:: rocalution::ILU::Set
 
-For further details, see :cite:`SAAD`.
-
 ILUT
 ----
 .. doxygenclass:: rocalution::ILUT
 .. doxygenfunction:: rocalution::ILUT::Set(double)
 .. doxygenfunction:: rocalution::ILUT::Set(double, int)
-
-For further details, see :cite:`SAAD`.
 
 IC
 --
@@ -47,8 +43,6 @@ AI Chebyshev
 .. doxygenclass:: rocalution::AIChebyshev
 .. doxygenfunction:: rocalution::AIChebyshev::Set
 
-For further details, see :cite:`chebpoly`.
-
 FSAI
 ====
 .. doxygenclass:: rocalution::FSAI
@@ -56,14 +50,10 @@ FSAI
 .. doxygenfunction:: rocalution::FSAI::Set(const OperatorType&)
 .. doxygenfunction:: rocalution::FSAI::SetPrecondMatrixFormat
 
-For further details, see :cite:`kolotilina`.
-
 SPAI
 ====
 .. doxygenclass:: rocalution::SPAI
 .. doxygenfunction:: rocalution::SPAI::SetPrecondMatrixFormat
-
-For further details, see :cite:`grote`.
 
 TNS
 ===
@@ -91,8 +81,6 @@ MultiColored Power(q)-pattern method ILU(p,q)
 .. doxygenfunction:: rocalution::MultiColoredILU::Set(int, int, bool)
 .. note:: The preconditioner matrix format can be changed using :cpp:func:`rocalution::MultiColored::SetPrecondMatrixFormat`.
 
-For further details, see :cite:`Lukarski2012`.
-
 Multi-Elimination Incomplete LU
 ===============================
 .. doxygenclass:: rocalution::MultiElimination
@@ -100,8 +88,6 @@ Multi-Elimination Incomplete LU
 .. doxygenfunction:: rocalution::MultiElimination::GetLevel
 .. doxygenfunction:: rocalution::MultiElimination::Set
 .. doxygenfunction:: rocalution::MultiElimination::SetPrecondMatrixFormat
-
-For further details, see :cite:`SAAD`.
 
 Diagonal Preconditioner for Saddle-Point Problems
 =================================================
@@ -122,8 +108,6 @@ The overlapped area is shown in :numref:`AS`.
   :align: center
 
   Example of a 4 block-decomposed matrix - Additive Schwarz with overlapping preconditioner (left) and Restricted Additive Schwarz preconditioner (right).
-
-For further details, see :cite:`RAS`.
 
 Block-Jacobi (MPI) Preconditioner
 =================================

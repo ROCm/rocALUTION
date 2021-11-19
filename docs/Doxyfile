@@ -38,7 +38,7 @@ PROJECT_NAME           = "rocALUTION"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = v1.12.4
+PROJECT_NUMBER         = v2.0.1
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -706,7 +706,7 @@ LAYOUT_FILE            =
 # LATEX_BIB_STYLE. To use this feature you need bibtex and perl available in the
 # search path. See also \cite for info how to create references.
 
-CITE_BIB_FILES         = source/references.bib
+CITE_BIB_FILES         = 
 
 #---------------------------------------------------------------------------
 # Configuration options related to warning and progress messages

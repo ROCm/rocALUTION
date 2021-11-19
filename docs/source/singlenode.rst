@@ -240,8 +240,6 @@ coo_row_ind array of ``nnz`` elements containing the COO part row indices (integ
 coo_col_ind array of ``nnz`` elements containing the COO part column indices (integer).
 =========== =========================================================================================
 
-For further details on matrix formats, see :cite:`SAAD`.
-
 Memory Usage
 ------------
 The memory footprint of the different matrix formats is presented in the following table, considering a :math:`N \times N` matrix, where the number of non-zero entries is denoted with `nnz`.
@@ -268,8 +266,6 @@ File I/O
 .. doxygenfunction:: rocalution::LocalMatrix::WriteFileMTX
 .. doxygenfunction:: rocalution::LocalMatrix::ReadFileCSR
 .. doxygenfunction:: rocalution::LocalMatrix::WriteFileCSR
-
-For further details on the Matrix Market Format, see :cite:`mm`.
 
 Access
 ======
@@ -408,8 +404,6 @@ The following functions are available for analyzing the connectivity in graph of
 * Connectivity Ordering
 
 All graph analyzing functions return a permutation vector (integer type), which is supposed to be used with the :cpp:func:`rocalution::LocalMatrix::Permute` and :cpp:func:`rocalution::LocalMatrix::PermuteBackward` functions in the matrix and vector classes.
-
-For further details, see :cite:`SAAD`.
 
 Cuthill-McKee Ordering
 ----------------------

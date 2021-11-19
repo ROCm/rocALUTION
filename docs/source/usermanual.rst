@@ -18,11 +18,3 @@ User Manual
    backend
    remarks
    targets
-
-.. _bib:
-
-************
-Bibliography
-************
-
-.. bibliography:: references.bib
