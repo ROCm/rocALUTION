@@ -754,6 +754,12 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::Transpose(BaseMatrix<ValueType>* T) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::Sort(void)
     {
         return false;

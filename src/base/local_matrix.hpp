@@ -868,6 +868,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         void Transpose(void);
 
+        /** \brief Transpose the matrix */
+        ROCALUTION_EXPORT
+        void Transpose(LocalMatrix<ValueType>* T) const;
+
         /** \brief Sort the matrix indices
       * \details
       * Sorts the matrix by indices.

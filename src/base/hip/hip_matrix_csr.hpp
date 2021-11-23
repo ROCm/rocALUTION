@@ -152,6 +152,7 @@ namespace rocalution
         virtual bool ExtractRowVector(int idx, BaseVector<ValueType>* vec) const;
 
         virtual bool Transpose(void);
+        virtual bool Transpose(BaseMatrix<ValueType>* T) const;
 
     private:
         MatrixCSR<ValueType, int> mat_;

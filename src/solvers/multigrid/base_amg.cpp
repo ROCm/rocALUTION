@@ -283,7 +283,6 @@ namespace rocalution
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
                 this->op_level_[i] = *op_it;
-                this->op_level_[i]->Sort();
                 ++op_it;
 
                 this->pm_level_[i] = *pm_it;

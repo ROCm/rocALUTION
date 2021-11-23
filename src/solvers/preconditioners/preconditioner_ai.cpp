@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -277,8 +277,8 @@ namespace rocalution
         this->FSAI_L_.CloneFrom(*this->op_);
         this->FSAI_L_.FSAI(this->matrix_power_, this->matrix_pattern_);
 
-        this->FSAI_LT_.CloneFrom(this->FSAI_L_);
-        this->FSAI_LT_.Transpose();
+        this->FSAI_LT_.CloneBackend(*this->op_);
+        this->FSAI_L_.Transpose(&this->FSAI_LT_);
 
         this->t_.CloneBackend(*this->op_);
         this->t_.Allocate("temporary", this->op_->GetM());
@@ -549,9 +549,7 @@ namespace rocalution
 
             this->op_->ExtractL(&this->L_, false);
             this->L_.DiagonalMatrixMultR(this->Dinv_);
-
-            this->LT_.CloneFrom(this->L_);
-            this->LT_.Transpose();
+            this->L_.Transpose(&this->LT_);
 
             this->tmp1_.Allocate("tmp1 vec for TNS", this->op_->GetM());
             this->tmp2_.Allocate("tmp2 vec for TNS", this->op_->GetM());
@@ -587,8 +585,7 @@ namespace rocalution
                         static_cast<ValueType>(-1), // for (-I+L)
                         true);
 
-            KT.CloneFrom(K);
-            KT.Transpose();
+            K.Transpose(&KT);
 
             KT.DiagonalMatrixMultR(this->Dinv_);
 

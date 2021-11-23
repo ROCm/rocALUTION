@@ -388,6 +388,8 @@ namespace rocalution
 
         /// Transpose the matrix
         virtual bool Transpose(void);
+        /// Transpose the matrix
+        virtual bool Transpose(BaseMatrix<ValueType>* T) const;
 
         /// Sort the matrix indices
         virtual bool Sort(void);

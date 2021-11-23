@@ -161,6 +161,7 @@ namespace rocalution
 
         virtual bool Compress(double drop_off);
         virtual bool Transpose(void);
+        virtual bool Transpose(BaseMatrix<ValueType>* T) const;
         virtual bool Sort(void);
         virtual bool Key(long int& row_key, long int& col_key, long int& val_key) const;
 

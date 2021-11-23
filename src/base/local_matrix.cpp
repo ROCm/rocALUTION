@@ -4759,6 +4759,74 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::Transpose(LocalMatrix<ValueType>* T) const
+    {
+        log_debug(this, "LocalMatrix::Transpose()", T);
+
+        assert(T != NULL);
+        assert(T != this);
+
+        assert(((this->matrix_ == this->matrix_host_) && (T->matrix_ == T->matrix_host_))
+               || ((this->matrix_ == this->matrix_accel_) && (T->matrix_ == T->matrix_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->Transpose(T->matrix_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::Transpose() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                // Move to host
+                LocalMatrix<ValueType> mat_host;
+                mat_host.ConvertTo(this->GetFormat());
+                mat_host.CopyFrom(*this);
+
+                T->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->Transpose(T->matrix_) == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::Transpose() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::Transpose() is performed in CSR format");
+
+                    T->ConvertTo(this->GetFormat());
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::Transpose() is performed on the host");
+
+                    T->MoveToAccelerator();
+                }
+            }
+        }
+
+#ifdef DEBUG_MODE
+        T->Check();
+#endif
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::Sort(void)
     {
         log_debug(this, "LocalMatrix::Sort()");

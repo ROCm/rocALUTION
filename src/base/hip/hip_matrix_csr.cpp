@@ -3403,20 +3403,36 @@ namespace rocalution
             HIPAcceleratorMatrixCSR<ValueType> tmp(this->local_backend_);
 
             tmp.CopyFrom(*this);
+            tmp.Transpose(this);
+        }
 
-            this->Clear();
-            this->AllocateCSR(tmp.nnz_, tmp.ncol_, tmp.nrow_);
+        return true;
+    }
 
-            rocsparse_status status;
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::Transpose(BaseMatrix<ValueType>* T) const
+    {
+        assert(T != NULL);
 
-            size_t buffer_size = 0;
-            status             = rocsparse_csr2csc_buffer_size(
+        HIPAcceleratorMatrixCSR<ValueType>* cast_T
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(T);
+
+        assert(cast_T != NULL);
+
+        if(this->nnz_ > 0)
+        {
+            cast_T->Clear();
+            cast_T->AllocateCSR(this->nnz_, this->ncol_, this->nrow_);
+
+            size_t buffer_size;
+
+            rocsparse_status status = rocsparse_csr2csc_buffer_size(
                 ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                tmp.nrow_,
-                tmp.ncol_,
-                tmp.nnz_,
-                tmp.mat_.row_offset,
-                tmp.mat_.col,
+                this->nrow_,
+                this->ncol_,
+                this->nnz_,
+                this->mat_.row_offset,
+                this->mat_.col,
                 rocsparse_action_numeric,
                 &buffer_size);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
@@ -3425,15 +3441,15 @@ namespace rocalution
             hipMalloc(&buffer, buffer_size);
 
             status = rocsparseTcsr2csc(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                       tmp.nrow_,
-                                       tmp.ncol_,
-                                       tmp.nnz_,
-                                       tmp.mat_.val,
-                                       tmp.mat_.row_offset,
-                                       tmp.mat_.col,
+                                       this->nrow_,
+                                       this->ncol_,
+                                       this->nnz_,
                                        this->mat_.val,
-                                       this->mat_.col,
                                        this->mat_.row_offset,
+                                       this->mat_.col,
+                                       cast_T->mat_.val,
+                                       cast_T->mat_.col,
+                                       cast_T->mat_.row_offset,
                                        rocsparse_action_numeric,
                                        rocsparse_index_base_zero,
                                        buffer);
@@ -3442,7 +3458,7 @@ namespace rocalution
             hipFree(buffer);
         }
 
-        this->ApplyAnalysis();
+        cast_T->ApplyAnalysis();
 
         return true;
     }

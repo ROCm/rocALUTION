@@ -3180,45 +3180,61 @@ namespace rocalution
             HostMatrixCSR<ValueType> tmp(this->local_backend_);
 
             tmp.CopyFrom(*this);
+            tmp.Transpose(this);
+        }
 
-            this->Clear();
-            this->AllocateCSR(tmp.nnz_, tmp.ncol_, tmp.nrow_);
+        return true;
+    }
 
-            for(int i = 0; i < this->nnz_; ++i)
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::Transpose(BaseMatrix<ValueType>* T) const
+    {
+        assert(T != NULL);
+
+        HostMatrixCSR<ValueType>* cast_T = dynamic_cast<HostMatrixCSR<ValueType>*>(T);
+
+        assert(cast_T != NULL);
+
+        if(this->nnz_ > 0)
+        {
+            cast_T->Clear();
+            cast_T->AllocateCSR(this->nnz_, this->ncol_, this->nrow_);
+
+            for(int i = 0; i < cast_T->nnz_; ++i)
             {
-                this->mat_.row_offset[tmp.mat_.col[i] + 1] += 1;
+                cast_T->mat_.row_offset[this->mat_.col[i] + 1] += 1;
             }
 
-            for(int i = 0; i < this->nrow_; ++i)
+            for(int i = 0; i < cast_T->nrow_; ++i)
             {
-                this->mat_.row_offset[i + 1] += this->mat_.row_offset[i];
+                cast_T->mat_.row_offset[i + 1] += cast_T->mat_.row_offset[i];
             }
 
-            for(int ai = 0; ai < this->ncol_; ++ai)
+            for(int ai = 0; ai < cast_T->ncol_; ++ai)
             {
-                for(int aj = tmp.mat_.row_offset[ai]; aj < tmp.mat_.row_offset[ai + 1]; ++aj)
+                for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
                 {
-                    int ind_col = tmp.mat_.col[aj];
-                    int ind     = this->mat_.row_offset[ind_col];
+                    int ind_col = this->mat_.col[aj];
+                    int ind     = cast_T->mat_.row_offset[ind_col];
 
-                    this->mat_.col[ind] = ai;
-                    this->mat_.val[ind] = tmp.mat_.val[aj];
+                    cast_T->mat_.col[ind] = ai;
+                    cast_T->mat_.val[ind] = this->mat_.val[aj];
 
-                    this->mat_.row_offset[ind_col] += 1;
+                    cast_T->mat_.row_offset[ind_col] += 1;
                 }
             }
 
             int shift = 0;
-            for(int i = 0; i < this->nrow_; ++i)
+            for(int i = 0; i < cast_T->nrow_; ++i)
             {
-                int tmp                  = this->mat_.row_offset[i];
-                this->mat_.row_offset[i] = shift;
-                shift                    = tmp;
+                int tmp                    = cast_T->mat_.row_offset[i];
+                cast_T->mat_.row_offset[i] = shift;
+                shift                      = tmp;
             }
 
-            this->mat_.row_offset[this->nrow_] = shift;
+            cast_T->mat_.row_offset[cast_T->nrow_] = shift;
 
-            assert(tmp.nnz_ == shift);
+            assert(this->nnz_ == shift);
         }
 
         return true;
@@ -3970,9 +3986,7 @@ namespace rocalution
         }
 
         cast_prolong->Sort();
-
-        cast_restrict->CopyFrom(*cast_prolong);
-        cast_restrict->Transpose();
+        cast_prolong->Transpose(cast_restrict);
 
         return true;
     }
@@ -4052,8 +4066,7 @@ namespace rocalution
         cast_prolong->SetDataPtrCSR(
             &row_offset, &col, &val, row_offset[this->nrow_], this->nrow_, ncol);
 
-        cast_restrict->CopyFrom(*cast_prolong);
-        cast_restrict->Transpose();
+        cast_prolong->Transpose(cast_restrict);
 
         return true;
     }
@@ -4800,8 +4813,7 @@ namespace rocalution
             }
         }
 
-        cast_restrict->CopyFrom(*cast_prolong);
-        cast_restrict->Transpose();
+        cast_prolong->Transpose(cast_restrict);
 
         return true;
     }
