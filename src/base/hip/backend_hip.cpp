@@ -353,7 +353,7 @@ namespace rocalution
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
 #endif
     template AcceleratorVector<bool>* _rocalution_init_base_hip_vector(
-        const struct Rocalution_Backend_Descriptor backend_descriptor);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor);
     template AcceleratorVector<int>* _rocalution_init_base_hip_vector(
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
