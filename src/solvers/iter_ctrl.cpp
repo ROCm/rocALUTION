@@ -172,22 +172,22 @@ namespace rocalution
         return this->maximum_iter_;
     }
 
-    int IterationControl::GetIterationCount(void)
+    int IterationControl::GetIterationCount(void) const
     {
         return this->iteration_;
     }
 
-    double IterationControl::GetCurrentResidual(void)
+    double IterationControl::GetCurrentResidual(void) const
     {
         return this->current_res_;
     }
 
-    int IterationControl::GetAmaxResidualIndex(void)
+    int IterationControl::GetAmaxResidualIndex(void) const
     {
         return this->current_index_;
     }
 
-    int IterationControl::GetSolverStatus(void)
+    int IterationControl::GetSolverStatus(void) const
     {
         return this->reached_;
     }
@@ -315,10 +315,9 @@ namespace rocalution
         this->verb_ = verb;
     }
 
-    void IterationControl::WriteHistoryToFile(const std::string filename) const
+    void IterationControl::WriteHistoryToFile(const std::string& filename) const
     {
         std::ofstream file;
-        std::string   line;
 
         assert(this->residual_history_.size() > 0);
         assert(this->iteration_ > 0);
@@ -345,7 +344,7 @@ namespace rocalution
         LOG_INFO("Writing residual history to filename = " << filename << "; done");
     }
 
-    void IterationControl::PrintInit(void)
+    void IterationControl::PrintInit(void) const
     {
         if(this->minimum_iter_ > 0)
         {

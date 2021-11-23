@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,7 +55,7 @@ namespace rocalution
     public:
         GlobalVector();
         /** \brief Initialize a global vector with a parallel manager */
-        GlobalVector(const ParallelManager& pm);
+        explicit GlobalVector(const ParallelManager& pm);
         virtual ~GlobalVector();
 
         virtual void MoveToAccelerator(void);
@@ -108,10 +108,10 @@ namespace rocalution
         void LeaveDataPtr(ValueType** ptr);
 
         virtual void CopyFrom(const GlobalVector<ValueType>& src);
-        virtual void ReadFileASCII(const std::string filename);
-        virtual void WriteFileASCII(const std::string filename) const;
-        virtual void ReadFileBinary(const std::string filename);
-        virtual void WriteFileBinary(const std::string filename) const;
+        virtual void ReadFileASCII(const std::string& filename);
+        virtual void WriteFileASCII(const std::string& filename) const;
+        virtual void ReadFileBinary(const std::string& filename);
+        virtual void WriteFileBinary(const std::string& filename) const;
 
         virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
         virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);

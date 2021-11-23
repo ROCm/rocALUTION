@@ -60,7 +60,7 @@ namespace rocalution
     public:
         GlobalMatrix();
         /** \brief Initialize a global matrix with a parallel manager */
-        GlobalMatrix(const ParallelManager& pm);
+        explicit GlobalMatrix(const ParallelManager& pm);
         virtual ~GlobalMatrix();
 
         virtual IndexType2 GetM(void) const;
@@ -95,9 +95,9 @@ namespace rocalution
         virtual bool Check(void) const;
 
         /** \brief Allocate CSR Matrix */
-        void AllocateCSR(std::string name, int local_nnz, int ghost_nnz);
+        void AllocateCSR(const std::string& name, int local_nnz, int ghost_nnz);
         /** \brief Allocate COO Matrix */
-        void AllocateCOO(std::string name, int local_nnz, int ghost_nnz);
+        void AllocateCOO(const std::string& name, int local_nnz, int ghost_nnz);
 
         virtual void Clear(void);
 
@@ -192,13 +192,13 @@ namespace rocalution
                               GlobalVector<ValueType>*       out) const;
 
         /** \brief Read matrix from MTX (Matrix Market Format) file */
-        void ReadFileMTX(const std::string filename);
+        void ReadFileMTX(const std::string& filename);
         /** \brief Write matrix to MTX (Matrix Market Format) file */
-        void WriteFileMTX(const std::string filename) const;
+        void WriteFileMTX(const std::string& filename) const;
         /** \brief Read matrix from CSR (ROCALUTION binary format) file */
-        void ReadFileCSR(const std::string filename);
+        void ReadFileCSR(const std::string& filename);
         /** \brief Write matrix to CSR (ROCALUTION binary format) file */
-        void WriteFileCSR(const std::string filename) const;
+        void WriteFileCSR(const std::string& filename) const;
 
         /** \brief Sort the matrix indices
       * \details

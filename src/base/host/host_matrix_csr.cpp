@@ -68,7 +68,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    HostMatrixCSR<ValueType>::HostMatrixCSR(const Rocalution_Backend_Descriptor local_backend)
+    HostMatrixCSR<ValueType>::HostMatrixCSR(const Rocalution_Backend_Descriptor& local_backend)
     {
         log_debug(this, "HostMatrixCSR::HostMatrixCSR()", "constructor with local_backend");
 
@@ -402,7 +402,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string filename)
+    bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string& filename)
     {
         int nrow;
         int ncol;
@@ -472,7 +472,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool HostMatrixCSR<ValueType>::WriteFileCSR(const std::string filename) const
+    bool HostMatrixCSR<ValueType>::WriteFileCSR(const std::string& filename) const
     {
         if(write_matrix_csr(this->nrow_,
                             this->ncol_,
@@ -1713,13 +1713,24 @@ namespace rocalution
             if(alloc_size < nnz + 2 * maxrow + 1)
             {
                 alloc_size += int(nnzA * 1.5);
-                col = (int*)realloc(col, alloc_size * sizeof(int));
-                val = (ValueType*)realloc(val, alloc_size * sizeof(ValueType));
+                int*       col_tmp = (int*)realloc(col, alloc_size * sizeof(int));
+                ValueType* val_tmp = (ValueType*)realloc(val, alloc_size * sizeof(ValueType));
+
+                if(col_tmp == NULL || val_tmp == NULL)
+                {
+                    free(col);
+                    free(val);
+
+                    LOG_INFO("ILUTFactorize failed on realloc");
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+                else
+                {
+                    col = col_tmp;
+                    val = val_tmp;
+                }
             }
         }
-
-        //  col = (int*) realloc(col, nnz*sizeof(int));
-        //  val = (ValueType*) realloc(val, nnz*sizeof(ValueType));
 
         free_host(&w);
         free_host(&diag_offset);
@@ -3372,12 +3383,11 @@ namespace rocalution
         cast_perm->Clear();
         cast_perm->Allocate(this->nrow_);
 
-        int next     = 0;
-        int head     = 0;
-        int tmp      = 0;
-        int test     = 1;
-        int position = 0;
-        int maxdeg   = 0;
+        int next   = 0;
+        int head   = 0;
+        int tmp    = 0;
+        int test   = 1;
+        int maxdeg = 0;
 
         int* nd         = NULL;
         int* marker     = NULL;
@@ -3410,7 +3420,7 @@ namespace rocalution
 
         while(next < this->nrow_)
         {
-            position = 0;
+            int position = 0;
 
             for(int h = 0; h < qlength; ++h)
             {

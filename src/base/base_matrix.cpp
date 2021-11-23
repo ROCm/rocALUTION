@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::set_backend(const Rocalution_Backend_Descriptor local_backend)
+    void BaseMatrix<ValueType>::set_backend(const Rocalution_Backend_Descriptor& local_backend)
     {
         this->local_backend_ = local_backend;
     }
@@ -227,26 +227,26 @@ namespace rocalution
 
     // The conversion CSR->COO (or X->CSR->COO)
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::ReadFileMTX(const std::string filename)
+    bool BaseMatrix<ValueType>::ReadFileMTX(const std::string& filename)
     {
         return false;
     }
 
     // The conversion CSR->COO (or X->CSR->COO)
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::WriteFileMTX(const std::string filename) const
+    bool BaseMatrix<ValueType>::WriteFileMTX(const std::string& filename) const
     {
         return false;
     }
 
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::ReadFileCSR(const std::string filename)
+    bool BaseMatrix<ValueType>::ReadFileCSR(const std::string& filename)
     {
         return false;
     }
 
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::WriteFileCSR(const std::string filename) const
+    bool BaseMatrix<ValueType>::WriteFileCSR(const std::string& filename) const
     {
         return false;
     }

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,7 +65,7 @@ namespace rocalution
         /// Return the stencil format id (see stencil_formats.hpp)
         virtual unsigned int GetStencilId(void) const = 0;
         /// Copy the backend descriptor information
-        virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
+        virtual void set_backend(const Rocalution_Backend_Descriptor& local_backend);
         // Set the grid size
         virtual void SetGrid(int size);
 

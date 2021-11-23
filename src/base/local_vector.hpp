@@ -216,13 +216,13 @@ namespace rocalution
         /**@}*/
 
         ROCALUTION_EXPORT
-        virtual void ReadFileASCII(const std::string filename);
+        virtual void ReadFileASCII(const std::string& filename);
         ROCALUTION_EXPORT
-        virtual void WriteFileASCII(const std::string filename) const;
+        virtual void WriteFileASCII(const std::string& filename) const;
         ROCALUTION_EXPORT
-        virtual void ReadFileBinary(const std::string filename);
+        virtual void ReadFileBinary(const std::string& filename);
         ROCALUTION_EXPORT
-        virtual void WriteFileBinary(const std::string filename) const;
+        virtual void WriteFileBinary(const std::string& filename) const;
 
         ROCALUTION_EXPORT
         virtual void CopyFrom(const LocalVector<ValueType>& src);

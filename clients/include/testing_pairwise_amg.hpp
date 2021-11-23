@@ -49,7 +49,7 @@ bool testing_pairwise_amg(Arguments argus)
     int          post_iter = argus.post_smooth;
     std::string  smoother  = argus.smoother;
     unsigned int format    = argus.format;
-    int          ordering  = argus.ordering;
+    unsigned int ordering  = argus.ordering;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);

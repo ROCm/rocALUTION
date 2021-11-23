@@ -125,10 +125,10 @@ namespace rocalution
 
         /** \brief Read file that contains all relevant parallel manager data */
         ROCALUTION_EXPORT
-        void ReadFileASCII(const std::string filename);
+        void ReadFileASCII(const std::string& filename);
         /** \brief Write file that contains all relevant parallel manager data */
         ROCALUTION_EXPORT
-        void WriteFileASCII(const std::string filename) const;
+        void WriteFileASCII(const std::string& filename) const;
 
     private:
         const void* comm_;

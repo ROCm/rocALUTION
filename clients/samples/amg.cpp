@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -101,16 +101,15 @@ int main(int argc, char* argv[])
     // Obtain number of AMG levels
     int levels = ls.GetNumLevels();
 
-    // Smoother for each level
-    IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double>** sm = NULL;
-    MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>**        gs = NULL;
-
     // Coarse Grid Solver
     CG<LocalMatrix<double>, LocalVector<double>, double> cgs;
     cgs.Verbose(0);
 
-    sm = new IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double>*[levels - 1];
-    gs = new MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>*[levels - 1];
+    // Smoother for each level
+    IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double>** sm
+        = new IterativeLinearSolver<LocalMatrix<double>, LocalVector<double>, double>*[levels - 1];
+    MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>** gs
+        = new MultiColoredGS<LocalMatrix<double>, LocalVector<double>, double>*[levels - 1];
 
     // Coarse grid solver with preconditioner
     //  MultiColoredILU<LocalMatrix<double>, LocalVector<double>, double > p;

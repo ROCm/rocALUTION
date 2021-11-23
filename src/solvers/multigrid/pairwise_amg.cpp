@@ -136,7 +136,7 @@ namespace rocalution
     {
         log_debug(this, "PairwiseAMG::SetOrdering()", ordering);
 
-        assert(ordering >= 0 && ordering <= 5);
+        assert(ordering <= 5);
 
         this->aggregation_ordering_ = ordering;
     }

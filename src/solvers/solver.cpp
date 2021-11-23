@@ -206,8 +206,8 @@ namespace rocalution
 
         this->verb_ = 1;
 
-        this->res_norm_ = 2;
-        this->index_    = -1;
+        this->res_norm_type_ = 2;
+        this->index_         = -1;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -293,7 +293,7 @@ namespace rocalution
         int ind = this->iter_ctrl_.GetAmaxResidualIndex();
         log_debug(this, "IterativeLinearSolver::GetAmaxResidualIndex()", ind);
 
-        if(this->res_norm_ != 3)
+        if(this->res_norm_type_ != 3)
         {
             LOG_INFO(
                 "Absolute maximum index of residual vector is only available when using Linf norm");
@@ -312,7 +312,7 @@ namespace rocalution
 
     template <class OperatorType, class VectorType, typename ValueType>
     void IterativeLinearSolver<OperatorType, VectorType, ValueType>::RecordHistory(
-        std::string filename) const
+        const std::string& filename) const
     {
         log_debug(this, "IterativeLinearSolver::RecordHistory()", filename);
 
@@ -335,29 +335,29 @@ namespace rocalution
 
         assert(resnorm == 1 || resnorm == 2 || resnorm == 3);
 
-        this->res_norm_ = resnorm;
+        this->res_norm_type_ = resnorm;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
     ValueType
         IterativeLinearSolver<OperatorType, VectorType, ValueType>::Norm_(const VectorType& vec)
     {
-        log_debug(this, "IterativeLinearSolver::Norm_()", (const void*&)vec, this->res_norm_);
+        log_debug(this, "IterativeLinearSolver::Norm_()", (const void*&)vec, this->res_norm_type_);
 
         // L1 norm
-        if(this->res_norm_ == 1)
+        if(this->res_norm_type_ == 1)
         {
             return vec.Asum();
         }
 
         // L2 norm
-        if(this->res_norm_ == 2)
+        if(this->res_norm_type_ == 2)
         {
             return vec.Norm();
         }
 
         // Infinity norm
-        if(this->res_norm_ == 3)
+        if(this->res_norm_type_ == 3)
         {
             ValueType amax;
             this->index_ = vec.Amax(amax);

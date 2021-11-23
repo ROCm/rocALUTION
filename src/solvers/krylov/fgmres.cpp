@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -119,11 +119,11 @@ namespace rocalution
 
         assert(this->build_ == false);
 
-        if(this->res_norm_ != 2)
+        if(this->res_norm_type_ != 2)
         {
             LOG_INFO(
                 "FGMRES solver supports only L2 residual norm. The solver is switching to L2 norm");
-            this->res_norm_ = 2;
+            this->res_norm_type_ = 2;
         }
 
         allocate_host(this->size_basis_, &this->c_);
@@ -298,7 +298,7 @@ namespace rocalution
         assert(this->precond_ == NULL);
         assert(this->build_ == true);
         assert(this->size_basis_ > 0);
-        assert(this->res_norm_ == 2);
+        assert(this->res_norm_type_ == 2);
 
         const OperatorType* op = this->op_;
 
@@ -311,7 +311,6 @@ namespace rocalution
 
         ValueType one = static_cast<ValueType>(1);
 
-        int i;
         int size = this->size_basis_;
 
         // Initial residual
@@ -337,7 +336,7 @@ namespace rocalution
             v[0]->Scale(one / r[0]);
 
             // Arnoldi iteration
-            i = 0;
+            int i = 0;
             while(i < size)
             {
                 // v_i+1 = Az_i
@@ -438,7 +437,7 @@ namespace rocalution
         assert(this->precond_ != NULL);
         assert(this->build_ == true);
         assert(this->size_basis_ > 0);
-        assert(this->res_norm_ == 2);
+        assert(this->res_norm_type_ == 2);
 
         const OperatorType* op = this->op_;
 
@@ -452,7 +451,6 @@ namespace rocalution
 
         ValueType one = static_cast<ValueType>(1);
 
-        int i;
         int size = this->size_basis_;
 
         // Initial residual
@@ -478,7 +476,7 @@ namespace rocalution
             v[0]->Scale(one / r[0]);
 
             // Arnoldi iteration
-            i = 0;
+            int i = 0;
             while(i < size)
             {
                 // Solve Mz_i = v_i
@@ -574,7 +572,7 @@ namespace rocalution
     void FGMRES<OperatorType, VectorType, ValueType>::GenerateGivensRotation_(ValueType  dx,
                                                                               ValueType  dy,
                                                                               ValueType& c,
-                                                                              ValueType& s) const
+                                                                              ValueType& s)
     {
         ValueType zero = static_cast<ValueType>(0);
         ValueType one  = static_cast<ValueType>(1);
@@ -607,7 +605,7 @@ namespace rocalution
     void FGMRES<OperatorType, VectorType, ValueType>::ApplyGivensRotation_(ValueType  c,
                                                                            ValueType  s,
                                                                            ValueType& dx,
-                                                                           ValueType& dy) const
+                                                                           ValueType& dy)
     {
         ValueType temp = dx;
         dx             = rocalution_conj(c) * dx + rocalution_conj(s) * dy;

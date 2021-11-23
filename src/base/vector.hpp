@@ -113,7 +113,7 @@ namespace rocalution
       *   vec.ReadFileASCII("my_vector.dat");
       * \endcode
       */
-        virtual void ReadFileASCII(const std::string filename) = 0;
+        virtual void ReadFileASCII(const std::string& filename) = 0;
 
         /** \brief Write vector to ASCII file
       * \details
@@ -132,7 +132,7 @@ namespace rocalution
       *   vec.WriteFileASCII("my_vector.dat");
       * \endcode
       */
-        virtual void WriteFileASCII(const std::string filename) const = 0;
+        virtual void WriteFileASCII(const std::string& filename) const = 0;
 
         /** \brief Read vector from binary file
       * \details
@@ -147,7 +147,7 @@ namespace rocalution
       *   vec.ReadFileBinary("my_vector.bin");
       * \endcode
       */
-        virtual void ReadFileBinary(const std::string filename) = 0;
+        virtual void ReadFileBinary(const std::string& filename) = 0;
 
         /** \brief Write vector to binary file
       * \details
@@ -184,7 +184,7 @@ namespace rocalution
       *   vec.WriteFileBinary("my_vector.bin");
       * \endcode
       */
-        virtual void WriteFileBinary(const std::string filename) const = 0;
+        virtual void WriteFileBinary(const std::string& filename) const = 0;
 
         /** \brief Copy vector from another vector
       * \details

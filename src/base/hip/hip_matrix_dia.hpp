@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ namespace rocalution
     {
     public:
         HIPAcceleratorMatrixDIA();
-        HIPAcceleratorMatrixDIA(const Rocalution_Backend_Descriptor local_backend);
+        explicit HIPAcceleratorMatrixDIA(const Rocalution_Backend_Descriptor& local_backend);
         virtual ~HIPAcceleratorMatrixDIA();
 
         inline int GetNDiag(void) const
@@ -58,10 +58,10 @@ namespace rocalution
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
-        virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
-        virtual void CopyFromAsync(const BaseMatrix<ValueType>& mat);
-        virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
-        virtual void CopyToAsync(BaseMatrix<ValueType>* mat) const;
+        virtual void CopyFrom(const BaseMatrix<ValueType>& src);
+        virtual void CopyFromAsync(const BaseMatrix<ValueType>& src);
+        virtual void CopyTo(BaseMatrix<ValueType>* dst) const;
+        virtual void CopyToAsync(BaseMatrix<ValueType>* dst) const;
 
         virtual void CopyFromHost(const HostMatrix<ValueType>& src);
         virtual void CopyFromHostAsync(const HostMatrix<ValueType>& src);

@@ -84,9 +84,9 @@ namespace rocalution
         virtual void MoveToAcceleratorLocalData_(void);
 
         /** \brief Generate Givens rotation */
-        void GenerateGivensRotation_(ValueType dx, ValueType dy, ValueType& c, ValueType& s) const;
+        static void GenerateGivensRotation_(ValueType dx, ValueType dy, ValueType& c, ValueType& s);
         /** \brief Apply Givens rotation */
-        void ApplyGivensRotation_(ValueType c, ValueType s, ValueType& dx, ValueType& dy) const;
+        static void ApplyGivensRotation_(ValueType c, ValueType s, ValueType& dx, ValueType& dy);
 
     private:
         VectorType** v_;

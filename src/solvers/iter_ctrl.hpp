@@ -85,28 +85,28 @@ namespace rocalution
         void RecordHistory(void);
 
         // Write the history of the residual to an ASCII file
-        void WriteHistoryToFile(const std::string filename) const;
+        void WriteHistoryToFile(const std::string& filename) const;
 
         // Provide verbose output of the solver (iter, residual)
         void Verbose(int verb = 1);
 
         // Print the initialized information of the iteration control
-        void PrintInit(void);
+        void PrintInit(void) const;
 
         // Print the current status (is the any criteria reached or not)
         void PrintStatus(void);
 
         // Return the iteration count
-        int GetIterationCount(void);
+        int GetIterationCount(void) const;
 
         // Return the current residual
-        double GetCurrentResidual(void);
+        double GetCurrentResidual(void) const;
 
         // Return the current status
-        int GetSolverStatus(void);
+        int GetSolverStatus(void) const;
 
         // Return absolute maximum index of residual vector when using Linf norm
-        int GetAmaxResidualIndex(void);
+        int GetAmaxResidualIndex(void) const;
 
     private:
         // Verbose flag

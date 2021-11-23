@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,7 +90,7 @@ namespace rocalution
         /// Return the matrix format id (see matrix_formats.hpp)
         virtual unsigned int GetMatFormat(void) const = 0;
         /// Copy the backend descriptor information
-        virtual void set_backend(const Rocalution_Backend_Descriptor local_backend);
+        virtual void set_backend(const Rocalution_Backend_Descriptor& local_backend);
         /// Set matrix value block dimension
         void set_block_dimension(int blockdim);
 
@@ -268,14 +268,14 @@ namespace rocalution
             CreateFromMap(const BaseVector<int>& map, int n, int m, BaseMatrix<ValueType>* pro);
 
         /// Read matrix from MTX (Matrix Market Format) file
-        virtual bool ReadFileMTX(const std::string filename);
+        virtual bool ReadFileMTX(const std::string& filename);
         /// Write matrix to MTX (Matrix Market Format) file
-        virtual bool WriteFileMTX(const std::string filename) const;
+        virtual bool WriteFileMTX(const std::string& filename) const;
 
         /// Read matrix from CSR (ROCALUTION binary format) file
-        virtual bool ReadFileCSR(const std::string filename);
+        virtual bool ReadFileCSR(const std::string& filename);
         /// Write matrix to CSR (ROCALUTION binary format) file
-        virtual bool WriteFileCSR(const std::string filename) const;
+        virtual bool WriteFileCSR(const std::string& filename) const;
 
         /// Perform symbolic computation (structure only) of |this|^p
         virtual bool SymbolicPower(int p);

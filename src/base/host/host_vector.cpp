@@ -61,7 +61,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    HostVector<ValueType>::HostVector(const Rocalution_Backend_Descriptor local_backend)
+    HostVector<ValueType>::HostVector(const Rocalution_Backend_Descriptor& local_backend)
     {
         log_debug(this, "HostVector::HostVector()", "constructor with local_backend");
 
@@ -437,7 +437,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::ReadFileASCII(const std::string filename)
+    void HostVector<ValueType>::ReadFileASCII(const std::string& filename)
     {
         std::ifstream file;
         std::string   line;
@@ -477,7 +477,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::WriteFileASCII(const std::string filename) const
+    void HostVector<ValueType>::WriteFileASCII(const std::string& filename) const
     {
         std::ofstream file;
         std::string   line;
@@ -505,7 +505,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::ReadFileBinary(const std::string filename)
+    void HostVector<ValueType>::ReadFileBinary(const std::string& filename)
     {
         LOG_INFO("ReadFileBinary: filename=" << filename << "; reading...");
 
@@ -585,7 +585,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::WriteFileBinary(const std::string filename) const
+    void HostVector<ValueType>::WriteFileBinary(const std::string& filename) const
     {
         LOG_INFO("WriteFileBinary: filename=" << filename << "; writing...");
 

@@ -263,7 +263,7 @@ namespace rocalution
         return true;
     }
 
-    void ParallelManager::WriteFileASCII(const std::string filename) const
+    void ParallelManager::WriteFileASCII(const std::string& filename) const
     {
         log_debug(this, "ParallelManager::WriteFileASCII()", filename);
 
@@ -358,7 +358,7 @@ namespace rocalution
         LOG_INFO("WriteFileASCII: filename=" << name << "; done");
     }
 
-    void ParallelManager::ReadFileASCII(const std::string filename)
+    void ParallelManager::ReadFileASCII(const std::string& filename)
     {
         log_debug(this, "ParallelManager::ReadFileASCII()", filename);
 

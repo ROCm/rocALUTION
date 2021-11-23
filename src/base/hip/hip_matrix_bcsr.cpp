@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,7 @@ namespace rocalution
 
     template <typename ValueType>
     HIPAcceleratorMatrixBCSR<ValueType>::HIPAcceleratorMatrixBCSR(
-        const Rocalution_Backend_Descriptor local_backend)
+        const Rocalution_Backend_Descriptor& local_backend)
     {
         log_debug(this,
                   "HIPAcceleratorMatrixBCSR::HIPAcceleratorMatrixBCSR()",
@@ -1129,6 +1129,8 @@ namespace rocalution
                                           this->mat_.blockdim,
                                           this->mat_info_,
                                           &buffer_size_L);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
         status
             = rocsparseTbsrsv_buffer_size(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                                           dir,
@@ -1142,6 +1144,7 @@ namespace rocalution
                                           this->mat_.blockdim,
                                           this->mat_info_,
                                           &buffer_size_Lt);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         size_t buffer_size = std::max(buffer_size_L, buffer_size_Lt);
 

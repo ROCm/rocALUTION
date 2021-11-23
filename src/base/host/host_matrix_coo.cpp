@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    HostMatrixCOO<ValueType>::HostMatrixCOO(const Rocalution_Backend_Descriptor local_backend)
+    HostMatrixCOO<ValueType>::HostMatrixCOO(const Rocalution_Backend_Descriptor& local_backend)
     {
         log_debug(this, "HostMatrixCOO::HostMatrixCOO()", "constructor with local_backend");
 
@@ -342,7 +342,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool HostMatrixCOO<ValueType>::ReadFileMTX(const std::string filename)
+    bool HostMatrixCOO<ValueType>::ReadFileMTX(const std::string& filename)
     {
         int nrow;
         int ncol;
@@ -364,7 +364,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool HostMatrixCOO<ValueType>::WriteFileMTX(const std::string filename) const
+    bool HostMatrixCOO<ValueType>::WriteFileMTX(const std::string& filename) const
     {
         if(write_matrix_mtx(this->nrow_,
                             this->ncol_,

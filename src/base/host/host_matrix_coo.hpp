@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ namespace rocalution
     {
     public:
         HostMatrixCOO();
-        HostMatrixCOO(const Rocalution_Backend_Descriptor local_backend);
+        explicit HostMatrixCOO(const Rocalution_Backend_Descriptor& local_backend);
         virtual ~HostMatrixCOO();
 
         virtual void         Info(void) const;
@@ -71,8 +71,8 @@ namespace rocalution
         virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
         virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
-        virtual bool ReadFileMTX(const std::string);
-        virtual bool WriteFileMTX(const std::string) const;
+        virtual bool ReadFileMTX(const std::string& filename);
+        virtual bool WriteFileMTX(const std::string& filename) const;
 
         virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
         virtual void ApplyAdd(const BaseVector<ValueType>& in,

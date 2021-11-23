@@ -116,22 +116,22 @@ namespace rocalution
       */
         /**@{*/
         ROCALUTION_EXPORT
-        void AllocateCSR(const std::string name, int nnz, int nrow, int ncol);
+        void AllocateCSR(const std::string& name, int nnz, int nrow, int ncol);
         ROCALUTION_EXPORT
-        void AllocateBCSR(const std::string name, int nnzb, int nrowb, int ncolb, int blockdim);
+        void AllocateBCSR(const std::string& name, int nnzb, int nrowb, int ncolb, int blockdim);
         ROCALUTION_EXPORT
-        void AllocateMCSR(const std::string name, int nnz, int nrow, int ncol);
+        void AllocateMCSR(const std::string& name, int nnz, int nrow, int ncol);
         ROCALUTION_EXPORT
-        void AllocateCOO(const std::string name, int nnz, int nrow, int ncol);
+        void AllocateCOO(const std::string& name, int nnz, int nrow, int ncol);
         ROCALUTION_EXPORT
-        void AllocateDIA(const std::string name, int nnz, int nrow, int ncol, int ndiag);
+        void AllocateDIA(const std::string& name, int nnz, int nrow, int ncol, int ndiag);
         ROCALUTION_EXPORT
-        void AllocateELL(const std::string name, int nnz, int nrow, int ncol, int max_row);
+        void AllocateELL(const std::string& name, int nnz, int nrow, int ncol, int max_row);
         ROCALUTION_EXPORT
         void AllocateHYB(
-            const std::string name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
+            const std::string& name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
         ROCALUTION_EXPORT
-        void AllocateDENSE(const std::string name, int nrow, int ncol);
+        void AllocateDENSE(const std::string& name, int nrow, int ncol);
         /**@}*/
 
         /** \brief Initialize a LocalMatrix on the host with externally allocated data
@@ -561,7 +561,7 @@ namespace rocalution
       * \endcode
       */
         ROCALUTION_EXPORT
-        void ReadFileMTX(const std::string filename);
+        void ReadFileMTX(const std::string& filename);
 
         /** \brief Write matrix to MTX (Matrix Market Format) file
       * \details
@@ -581,7 +581,7 @@ namespace rocalution
       * \endcode
       */
         ROCALUTION_EXPORT
-        void WriteFileMTX(const std::string filename) const;
+        void WriteFileMTX(const std::string& filename) const;
 
         /** \brief Read matrix from CSR (rocALUTION binary format) file
       * \details
@@ -598,7 +598,7 @@ namespace rocalution
       * \endcode
       */
         ROCALUTION_EXPORT
-        void ReadFileCSR(const std::string filename);
+        void ReadFileCSR(const std::string& filename);
 
         /** \brief Write CSR matrix to binary file
       * \details
@@ -640,7 +640,7 @@ namespace rocalution
       * \endcode
       */
         ROCALUTION_EXPORT
-        void WriteFileCSR(const std::string filename) const;
+        void WriteFileCSR(const std::string& filename) const;
 
         ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
@@ -766,13 +766,13 @@ namespace rocalution
       * ncol        Number of columns.
       */
         ROCALUTION_EXPORT
-        void CopyFromHostCSR(const int*        row_offset,
-                             const int*        col,
-                             const ValueType*  val,
-                             const std::string name,
-                             int               nnz,
-                             int               nrow,
-                             int               ncol);
+        void CopyFromHostCSR(const int*         row_offset,
+                             const int*         col,
+                             const ValueType*   val,
+                             const std::string& name,
+                             int                nnz,
+                             int                nrow,
+                             int                ncol);
 
         /** \brief Create a restriction matrix operator based on an int vector map */
         ROCALUTION_EXPORT

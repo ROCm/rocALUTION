@@ -26,7 +26,7 @@ Backend Manager
 .. doxygenfunction:: rocalution::set_omp_affinity_rocalution
 .. doxygenfunction:: rocalution::set_omp_threshold_rocalution
 .. doxygenfunction:: rocalution::info_rocalution(void)
-.. doxygenfunction:: rocalution::info_rocalution(const struct Rocalution_Backend_Descriptor backend_descriptor)
+.. doxygenfunction:: rocalution::info_rocalution(const struct Rocalution_Backend_Descriptor& backend_descriptor)
 .. doxygenfunction:: rocalution::disable_accelerator_rocalution
 .. doxygenfunction:: rocalution::_rocalution_sync
 

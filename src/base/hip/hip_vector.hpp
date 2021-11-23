@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ namespace rocalution
     {
     public:
         HIPAcceleratorVector();
-        HIPAcceleratorVector(const Rocalution_Backend_Descriptor local_backend);
+        explicit HIPAcceleratorVector(const Rocalution_Backend_Descriptor& local_backend);
         virtual ~HIPAcceleratorVector();
 
         virtual void Info(void) const;

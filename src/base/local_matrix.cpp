@@ -159,7 +159,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateCSR(const std::string name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateCSR(const std::string& name, int nnz, int nrow, int ncol)
     {
         log_debug(this, "LocalMatrix::AllocateCSR()", name, nnz, nrow, ncol);
 
@@ -206,7 +206,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateBCSR(
-        const std::string name, int nnzb, int nrowb, int ncolb, int blockdim)
+        const std::string& name, int nnzb, int nrowb, int ncolb, int blockdim)
     {
         log_debug(this, "LocalMatrix::AllocateBCSR()", name, nnzb, nrowb, ncolb, blockdim);
 
@@ -253,7 +253,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateCOO(const std::string name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateCOO(const std::string& name, int nnz, int nrow, int ncol)
     {
         log_debug(this, "LocalMatrix::AllocateCOO()", name, nnz, nrow, ncol);
 
@@ -300,7 +300,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateDIA(
-        const std::string name, int nnz, int nrow, int ncol, int ndiag)
+        const std::string& name, int nnz, int nrow, int ncol, int ndiag)
     {
         log_debug(this, "LocalMatrix::AllocateDIA()", name, nnz, nrow, ncol, ndiag);
 
@@ -346,7 +346,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateMCSR(const std::string name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateMCSR(const std::string& name, int nnz, int nrow, int ncol)
     {
         log_debug(this, "LocalMatrix::AllocateMCSR()", name, nnz, nrow, ncol);
 
@@ -393,7 +393,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateELL(
-        const std::string name, int nnz, int nrow, int ncol, int max_row)
+        const std::string& name, int nnz, int nrow, int ncol, int max_row)
     {
         log_debug(this, "LocalMatrix::AllocateELL()", name, nnz, nrow, ncol, max_row);
 
@@ -440,7 +440,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateHYB(
-        const std::string name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)
+        const std::string& name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)
     {
         log_debug(
             this, "LocalMatrix::AllocateHYB()", name, ell_nnz, coo_nnz, ell_max_row, nrow, ncol);
@@ -488,7 +488,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateDENSE(const std::string name, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateDENSE(const std::string& name, int nrow, int ncol)
     {
         log_debug(this, "LocalMatrix::AllocateDENSE()", name, nrow, ncol);
 
@@ -1079,13 +1079,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::CopyFromHostCSR(const int*        row_offset,
-                                                 const int*        col,
-                                                 const ValueType*  val,
-                                                 const std::string name,
-                                                 int               nnz,
-                                                 int               nrow,
-                                                 int               ncol)
+    void LocalMatrix<ValueType>::CopyFromHostCSR(const int*         row_offset,
+                                                 const int*         col,
+                                                 const ValueType*   val,
+                                                 const std::string& name,
+                                                 int                nnz,
+                                                 int                nrow,
+                                                 int                ncol)
     {
         log_debug(
             this, "LocalMatrix::CopyFromHostCSR()", row_offset, col, val, name, nnz, nrow, ncol);
@@ -1135,7 +1135,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::ReadFileMTX(const std::string filename)
+    void LocalMatrix<ValueType>::ReadFileMTX(const std::string& filename)
     {
         log_debug(this, "LocalMatrix::ReadFileMTX()", filename);
 
@@ -1193,7 +1193,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::WriteFileMTX(const std::string filename) const
+    void LocalMatrix<ValueType>::WriteFileMTX(const std::string& filename) const
     {
         log_debug(this, "LocalMatrix::WriteFileMTX()", filename);
 
@@ -1234,7 +1234,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::ReadFileCSR(const std::string filename)
+    void LocalMatrix<ValueType>::ReadFileCSR(const std::string& filename)
     {
         log_debug(this, "LocalMatrix::ReadFileCSR()", filename);
 
@@ -1286,7 +1286,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::WriteFileCSR(const std::string filename) const
+    void LocalMatrix<ValueType>::WriteFileCSR(const std::string& filename) const
     {
         log_debug(this, "LocalMatrix::WriteFileCSR()", filename);
 

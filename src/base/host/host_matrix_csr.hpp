@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ namespace rocalution
     {
     public:
         HostMatrixCSR();
-        HostMatrixCSR(const Rocalution_Backend_Descriptor local_backend);
+        explicit HostMatrixCSR(const Rocalution_Backend_Descriptor& local_backend);
         virtual ~HostMatrixCSR();
 
         virtual void         Info(void) const;
@@ -120,8 +120,8 @@ namespace rocalution
                                      int              nrow,
                                      int              ncol);
 
-        virtual bool ReadFileCSR(const std::string);
-        virtual bool WriteFileCSR(const std::string) const;
+        virtual bool ReadFileCSR(const std::string& filename);
+        virtual bool WriteFileCSR(const std::string& filename) const;
 
         virtual bool CreateFromMap(const BaseVector<int>& map, int n, int m);
         virtual bool

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -128,9 +128,9 @@ namespace rocalution
 
     template <class OperatorType, class VectorType, typename ValueType>
     void BlockPreconditioner<OperatorType, VectorType, ValueType>::Set(
-        int n, const int* size, Solver<OperatorType, VectorType, ValueType>** D_Solver)
+        int n, const int* size, Solver<OperatorType, VectorType, ValueType>** D_solver)
     {
-        log_debug(this, "BlockPreconditioner::Set()", n, size, D_Solver);
+        log_debug(this, "BlockPreconditioner::Set()", n, size, D_solver);
 
         assert(this->build_ == false);
 
@@ -143,7 +143,7 @@ namespace rocalution
         for(int i = 0; i < this->num_blocks_; ++i)
         {
             this->block_sizes_[i] = size[i];
-            this->D_solver_[i]    = D_Solver[i];
+            this->D_solver_[i]    = D_solver[i];
         }
     }
 

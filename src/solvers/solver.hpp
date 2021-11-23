@@ -268,7 +268,7 @@ namespace rocalution
 
         /** \brief Write the history to file */
         ROCALUTION_EXPORT
-        void RecordHistory(const std::string filename) const;
+        void RecordHistory(const std::string& filename) const;
 
         /** \brief Set the solver verbosity output */
         ROCALUTION_EXPORT
@@ -310,8 +310,8 @@ namespace rocalution
         /** \brief Preconditioned solution procedure */
         virtual void SolvePrecond_(const VectorType& rhs, VectorType* x) = 0;
 
-        /** \brief Residual norm */
-        int res_norm_;
+        /** \brief Residual norm type (i.e. L1, L2, L-infinity etc) */
+        int res_norm_type_;
 
         /** \brief Absolute maximum index of residual vector when using \f$L_\infty\f$ */
         int index_;

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ namespace rocalution
     void rocalution_stop_hip();
 
     /// Print information about the HIPs in the systems
-    void rocalution_info_hip(const struct Rocalution_Backend_Descriptor);
+    void rocalution_info_hip(const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     /// Sync the device (for async transfers)
     void rocalution_hip_sync(void);
@@ -50,12 +50,12 @@ namespace rocalution
     /// Build (and return) a vector on HIP
     template <typename ValueType>
     AcceleratorVector<ValueType>* _rocalution_init_base_hip_vector(
-        const struct Rocalution_Backend_Descriptor backend_descriptor);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     /// Build (and return) a matrix on HIP
     template <typename ValueType>
     AcceleratorMatrix<ValueType>* _rocalution_init_base_hip_matrix(
-        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
 
 } // namespace rocalution
 

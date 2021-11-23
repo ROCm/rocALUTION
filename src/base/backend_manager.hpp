@@ -243,7 +243,7 @@ namespace rocalution
   * backend_descriptor  rocALUTION backend descriptor
   */
     ROCALUTION_EXPORT
-    void info_rocalution(const struct Rocalution_Backend_Descriptor backend_descriptor);
+    void info_rocalution(const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     /** \ingroup backend_module
   * \brief Disable/Enable the accelerator
@@ -264,26 +264,26 @@ namespace rocalution
     struct Rocalution_Backend_Descriptor* _get_backend_descriptor(void);
 
     // Set backend descriptor
-    void _set_backend_descriptor(const struct Rocalution_Backend_Descriptor backend_descriptor);
+    void _set_backend_descriptor(const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     // Set the OMP threads based on the size threshold
-    void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor backend_descriptor,
-                                  int                                        size);
+    void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor& backend_descriptor,
+                                  int                                         size);
 
     // Build (and return) a vector on the selected in the descriptor accelerator
     template <typename ValueType>
     AcceleratorVector<ValueType>* _rocalution_init_base_backend_vector(
-        const struct Rocalution_Backend_Descriptor backend_descriptor);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     // Build (and return) a matrix on the host
     template <typename ValueType>
     HostMatrix<ValueType>* _rocalution_init_base_host_matrix(
-        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
 
     // Build (and return) a matrix on the selected in the descriptor accelerator
     template <typename ValueType>
     AcceleratorMatrix<ValueType>* _rocalution_init_base_backend_matrix(
-        const struct Rocalution_Backend_Descriptor backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
 
     /** \ingroup backend_module
   * \brief Sync rocALUTION

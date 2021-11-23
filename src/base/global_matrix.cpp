@@ -172,7 +172,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::AllocateCSR(const std::string name, int local_nnz, int ghost_nnz)
+    void GlobalMatrix<ValueType>::AllocateCSR(const std::string& name, int local_nnz, int ghost_nnz)
     {
         log_debug(this, "GlobalMatrix::AllocateCSR()", name, local_nnz, ghost_nnz);
 
@@ -203,7 +203,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::AllocateCOO(const std::string name, int local_nnz, int ghost_nnz)
+    void GlobalMatrix<ValueType>::AllocateCOO(const std::string& name, int local_nnz, int ghost_nnz)
     {
         log_debug(this, "GlobalMatrix::AllocateCOO()", name, local_nnz, ghost_nnz);
 
@@ -916,7 +916,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::ReadFileMTX(const std::string filename)
+    void GlobalMatrix<ValueType>::ReadFileMTX(const std::string& filename)
     {
         log_debug(this, "GlobalMatrix::ReadFileMTX()", filename);
 
@@ -977,7 +977,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::WriteFileMTX(const std::string filename) const
+    void GlobalMatrix<ValueType>::WriteFileMTX(const std::string& filename) const
     {
         log_debug(this, "GlobalMatrix::WriteFileMTX()", filename);
 
@@ -1017,7 +1017,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::ReadFileCSR(const std::string filename)
+    void GlobalMatrix<ValueType>::ReadFileCSR(const std::string& filename)
     {
         log_debug(this, "GlobalMatrix::ReadFileCSR()", filename);
 
@@ -1078,7 +1078,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::WriteFileCSR(const std::string filename) const
+    void GlobalMatrix<ValueType>::WriteFileCSR(const std::string& filename) const
     {
         log_debug(this, "GlobalMatrix::WriteFileCSR()", filename);
 

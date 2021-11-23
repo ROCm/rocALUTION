@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@ namespace rocalution
     {
     public:
         HostVector();
-        HostVector(const Rocalution_Backend_Descriptor local_backend);
+        explicit HostVector(const Rocalution_Backend_Descriptor& local_backend);
         virtual ~HostVector();
 
         virtual void Info(void) const;
@@ -79,13 +79,13 @@ namespace rocalution
                                   const BaseVector<int>&       map);
 
         /// Read vector from ASCII file
-        void ReadFileASCII(const std::string filename);
+        void ReadFileASCII(const std::string& filename);
         /// Write vector to ASCII file
-        void WriteFileASCII(const std::string filename) const;
+        void WriteFileASCII(const std::string& filename) const;
         /// Read vector from binary file
-        void ReadFileBinary(const std::string filename);
+        void ReadFileBinary(const std::string& filename);
         /// Write vector to binary file
-        void WriteFileBinary(const std::string filename) const;
+        void WriteFileBinary(const std::string& filename) const;
 
         // this = this + alpha*x
         virtual void AddScale(const BaseVector<ValueType>& x, ValueType alpha);

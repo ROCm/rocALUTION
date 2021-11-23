@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -510,9 +510,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::ReadFileASCII(const std::string name)
+    void LocalVector<ValueType>::ReadFileASCII(const std::string& filename)
     {
-        log_debug(this, "LocalVector::ReadFileASCII()", name);
+        log_debug(this, "LocalVector::ReadFileASCII()", filename);
 
         this->Clear();
 
@@ -524,9 +524,9 @@ namespace rocalution
         }
 
         assert(this->vector_ == this->vector_host_);
-        this->vector_host_->ReadFileASCII(name);
+        this->vector_host_->ReadFileASCII(filename);
 
-        this->object_name_ = name;
+        this->object_name_ = filename;
 
         if(on_host == false)
         {
@@ -535,14 +535,14 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::WriteFileASCII(const std::string name) const
+    void LocalVector<ValueType>::WriteFileASCII(const std::string& filename) const
     {
-        log_debug(this, "LocalVector::WriteFileASCII()", name);
+        log_debug(this, "LocalVector::WriteFileASCII()", filename);
 
         if(this->is_host_() == true)
         {
             assert(this->vector_ == this->vector_host_);
-            this->vector_host_->WriteFileASCII(name);
+            this->vector_host_->WriteFileASCII(filename);
         }
         else
         {
@@ -550,14 +550,14 @@ namespace rocalution
             vec_host.CopyFrom(*this);
 
             assert(vec_host.vector_ == vec_host.vector_host_);
-            vec_host.vector_host_->WriteFileASCII(name);
+            vec_host.vector_host_->WriteFileASCII(filename);
         }
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::ReadFileBinary(const std::string name)
+    void LocalVector<ValueType>::ReadFileBinary(const std::string& filename)
     {
-        log_debug(this, "LocalVector::ReadFileBinary()", name);
+        log_debug(this, "LocalVector::ReadFileBinary()", filename);
 
         // host only
         bool on_host = this->is_host_();
@@ -567,9 +567,9 @@ namespace rocalution
         }
 
         assert(this->vector_ == this->vector_host_);
-        this->vector_host_->ReadFileBinary(name);
+        this->vector_host_->ReadFileBinary(filename);
 
-        this->object_name_ = name;
+        this->object_name_ = filename;
 
         if(on_host == false)
         {
@@ -578,14 +578,14 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::WriteFileBinary(const std::string name) const
+    void LocalVector<ValueType>::WriteFileBinary(const std::string& filename) const
     {
-        log_debug(this, "LocalVector::WriteFileBinary()", name);
+        log_debug(this, "LocalVector::WriteFileBinary()", filename);
 
         if(this->is_host_() == true)
         {
             assert(this->vector_ == this->vector_host_);
-            this->vector_host_->WriteFileBinary(name);
+            this->vector_host_->WriteFileBinary(filename);
         }
         else
         {
@@ -593,7 +593,7 @@ namespace rocalution
             vec_host.CopyFrom(*this);
 
             assert(vec_host.vector_ == vec_host.vector_host_);
-            vec_host.vector_host_->WriteFileBinary(name);
+            vec_host.vector_host_->WriteFileBinary(filename);
         }
     }
 
