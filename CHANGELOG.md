@@ -2,6 +2,13 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## (Unreleased) rocALUTION
+### Added
+- out-of-place matrix transpose functionality
+- LocalVector<bool> added
+### Changed
+- Updated to C++14 Standard
+
 ## (Unreleased) rocALUTION 2.0.0
 ### Changed
 - Removed deprecated GlobalPairwiseAMG class, please use PairwiseAMG instead.
