@@ -171,6 +171,7 @@ namespace rocalution
         friend class BaseRocalution<std::complex<double>>;
         friend class BaseRocalution<std::complex<float>>;
 
+        friend class BaseRocalution<bool>;
         friend class BaseRocalution<int>;
 
         friend class GlobalVector<int>;

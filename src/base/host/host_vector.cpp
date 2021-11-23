@@ -1564,6 +1564,7 @@ namespace rocalution
         }
     }
 
+    template class HostVector<bool>;
     template class HostVector<double>;
     template class HostVector<float>;
 #ifdef SUPPORT_COMPLEX

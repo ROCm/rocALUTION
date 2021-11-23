@@ -150,6 +150,7 @@ namespace rocalution
         // for [] operator in LocalVector
         friend class LocalVector<ValueType>;
 
+        friend class HostVector<bool>;
         friend class HostVector<double>;
         friend class HostVector<float>;
         friend class HostVector<std::complex<double>>;

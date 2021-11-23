@@ -1196,6 +1196,7 @@ namespace rocalution
         }
     }
 
+    template class LocalVector<bool>;
     template class LocalVector<double>;
     template class LocalVector<float>;
 #ifdef SUPPORT_COMPLEX

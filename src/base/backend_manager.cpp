@@ -622,6 +622,8 @@ namespace rocalution
     template AcceleratorVector<std::complex<double>>* _rocalution_init_base_backend_vector(
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
 #endif
+    template AcceleratorVector<bool>* _rocalution_init_base_backend_vector(
+        const struct Rocalution_Backend_Descriptor backend_descriptor);
     template AcceleratorVector<int>* _rocalution_init_base_backend_vector(
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
 

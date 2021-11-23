@@ -370,6 +370,7 @@ namespace rocalution
         // Accelerator Vector
         AcceleratorVector<ValueType>* vector_accel_;
 
+        friend class LocalVector<bool>;
         friend class LocalVector<double>;
         friend class LocalVector<float>;
         friend class LocalVector<std::complex<double>>;

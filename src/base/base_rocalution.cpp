@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -173,7 +173,11 @@ namespace rocalution
     template class BaseRocalution<std::complex<double>>;
     template class BaseRocalution<std::complex<float>>;
 #endif
+    template class BaseRocalution<bool>;
     template class BaseRocalution<int>;
+
+    template void BaseRocalution<bool>::CloneBackend(const BaseRocalution<double>& src);
+    template void BaseRocalution<bool>::CloneBackend(const BaseRocalution<float>& src);
 
     template void BaseRocalution<int>::CloneBackend(const BaseRocalution<double>& src);
     template void BaseRocalution<int>::CloneBackend(const BaseRocalution<float>& src);
@@ -185,6 +189,11 @@ namespace rocalution
     template void
         BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
     template void BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
+
+    template void
+        BaseRocalution<bool>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
+    template void
+        BaseRocalution<bool>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
 
     template void BaseRocalution<std::complex<float>>::CloneBackend(
         const BaseRocalution<std::complex<double>>& src);

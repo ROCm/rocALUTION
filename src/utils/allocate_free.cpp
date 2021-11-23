@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -143,6 +143,7 @@ namespace rocalution
     template void allocate_host<std::complex<float>>(int size, std::complex<float>** ptr);
     template void allocate_host<std::complex<double>>(int size, std::complex<double>** ptr);
 #endif
+    template void allocate_host<bool>(int size, bool** ptr);
     template void allocate_host<int>(int size, int** ptr);
     template void allocate_host<unsigned int>(int size, unsigned int** ptr);
     template void allocate_host<char>(int size, char** ptr);
@@ -153,6 +154,7 @@ namespace rocalution
     template void free_host<std::complex<float>>(std::complex<float>** ptr);
     template void free_host<std::complex<double>>(std::complex<double>** ptr);
 #endif
+    template void free_host<bool>(bool** ptr);
     template void free_host<int>(int** ptr);
     template void free_host<unsigned int>(unsigned int** ptr);
     template void free_host<char>(char** ptr);
@@ -163,6 +165,7 @@ namespace rocalution
     template void set_to_zero_host<std::complex<float>>(int size, std::complex<float>* ptr);
     template void set_to_zero_host<std::complex<double>>(int size, std::complex<double>* ptr);
 #endif
+    template void set_to_zero_host<bool>(int size, bool* ptr);
     template void set_to_zero_host<int>(int size, int* ptr);
     template void set_to_zero_host<unsigned int>(int size, unsigned int* ptr);
     template void set_to_zero_host<char>(int size, char* ptr);

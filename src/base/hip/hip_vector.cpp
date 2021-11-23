@@ -781,6 +781,13 @@ namespace rocalution
     }
 
     template <>
+    void HIPAcceleratorVector<bool>::AddScale(const BaseVector<bool>& x, bool alpha)
+    {
+        LOG_INFO("No bool axpy function");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
     void HIPAcceleratorVector<int>::AddScale(const BaseVector<int>& x, int alpha)
     {
         LOG_INFO("No int axpy function");
@@ -941,9 +948,16 @@ namespace rocalution
     }
 
     template <>
+    void HIPAcceleratorVector<bool>::Scale(bool alpha)
+    {
+        LOG_INFO("No bool rocBLAS scale function");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
     void HIPAcceleratorVector<int>::Scale(int alpha)
     {
-        LOG_INFO("No int CUBLAS scale function");
+        LOG_INFO("No int rocBLAS scale function");
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -972,6 +986,13 @@ namespace rocalution
         }
 
         return res;
+    }
+
+    template <>
+    bool HIPAcceleratorVector<bool>::Dot(const BaseVector<bool>& x) const
+    {
+        LOG_INFO("No bool dot function");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <>
@@ -1009,6 +1030,13 @@ namespace rocalution
     }
 
     template <>
+    bool HIPAcceleratorVector<bool>::DotNonConj(const BaseVector<bool>& x) const
+    {
+        LOG_INFO("No bool dotc function");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
     int HIPAcceleratorVector<int>::DotNonConj(const BaseVector<int>& x) const
     {
         LOG_INFO("No int dotc function");
@@ -1032,6 +1060,13 @@ namespace rocalution
         }
 
         return res;
+    }
+
+    template <>
+    bool HIPAcceleratorVector<bool>::Norm(void) const
+    {
+        LOG_INFO("What is bool HIPAcceleratorVector<ValueType>::Norm(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <>
@@ -1072,6 +1107,13 @@ namespace rocalution
         return res;
     }
 
+    template <>
+    bool HIPAcceleratorVector<bool>::Reduce(void) const
+    {
+        LOG_INFO("What is bool HIPAcceleratorVector::<ValueType>::Reduce(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     ValueType HIPAcceleratorVector<ValueType>::Asum(void) const
     {
@@ -1089,6 +1131,13 @@ namespace rocalution
         }
 
         return res;
+    }
+
+    template <>
+    bool HIPAcceleratorVector<bool>::Asum(void) const
+    {
+        LOG_INFO("Asum<bool> not implemented");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <>
@@ -1120,6 +1169,13 @@ namespace rocalution
 
         value = std::abs(value);
         return index;
+    }
+
+    template <>
+    int HIPAcceleratorVector<bool>::Amax(bool& value) const
+    {
+        LOG_INFO("Amax<bool> not implemented");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <>
@@ -1476,6 +1532,17 @@ namespace rocalution
     // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
     //
     template <>
+    void HIPAcceleratorVector<bool>::SetRandomUniform(unsigned long long seed, bool a, bool b)
+    {
+        LOG_INFO("HIPAcceleratorVector::SetRandomUniform(), available implementation are for "
+                 "float, double, complex float and complex double only.");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    //
+    // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
+    //
+    template <>
     void HIPAcceleratorVector<int>::SetRandomUniform(unsigned long long seed, int a, int b)
     {
         LOG_INFO("HIPAcceleratorVector::SetRandomUniform(), available implementation are for "
@@ -1497,6 +1564,17 @@ namespace rocalution
         // Apply the random calculator.
         //
         this->SetRandom(rand_engine_normal);
+    }
+
+    //
+    // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
+    //
+    template <>
+    void HIPAcceleratorVector<bool>::SetRandomNormal(unsigned long long seed, bool mean, bool var)
+    {
+        LOG_INFO("HIPAcceleratorVector::SetRandomNormal(), available implementation are for float, "
+                 "double, complex float and complex double only.");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     //
@@ -1546,6 +1624,7 @@ namespace rocalution
     template class HIPAcceleratorVector<std::complex<double>>;
     template class HIPAcceleratorVector<std::complex<float>>;
 #endif
+    template class HIPAcceleratorVector<bool>;
     template class HIPAcceleratorVector<int>;
 
 } // namespace rocalution

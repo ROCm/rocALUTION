@@ -162,6 +162,7 @@ namespace rocalution
         friend class HIPAcceleratorVector<double>;
         friend class HIPAcceleratorVector<std::complex<float>>;
         friend class HIPAcceleratorVector<std::complex<double>>;
+        friend class HIPAcceleratorVector<bool>;
         friend class HIPAcceleratorVector<int>;
 
         friend class HostVector<ValueType>;
