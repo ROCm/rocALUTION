@@ -2,10 +2,12 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## (Unreleased) rocALUTION 2.0.0
+## rocALUTION 2.0.1 for ROCm 5.0.0
 ### Changed
 - Removed deprecated GlobalPairwiseAMG class, please use PairwiseAMG instead.
+- Changed to C++ 14 Standard
 ### Improved
+- Added sanitizer option
 - Improved documentation
 
 ## rocALUTION 1.13.2 for ROCm 4.5.0
