@@ -25,6 +25,7 @@ function display_help()
   echo "    [--compiler] compiler to build with"
   echo "    [--verbose] print additional cmake build information"
   echo "    [--address-sanitizer] Build with address sanitizer enabled. Uses hipcc as compiler"
+  echo "    [--codecoverage] build with code coverage profiling enabled"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -271,6 +272,7 @@ rocm_path=/opt/rocm
 build_relocatable=false
 build_static=false
 build_address_sanitizer=false
+build_codecoverage=false
 compiler=c++
 verb=false
 
@@ -281,7 +283,7 @@ verb=false
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,static,compiler:,verbose,address-sanitizer --options hicgdr -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,codecoverage,static,compiler:,verbose,address-sanitizer --options hicgdr -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -327,6 +329,9 @@ while true; do
     --address-sanitizer)
         build_address_sanitizer=true
         compiler=hipcc
+        shift ;;
+    --codecoverage)
+        build_codecoverage=true
         shift ;;
     --mpi)
         mpi_dir=${2}
@@ -480,6 +485,15 @@ pushd .
   # sanitizer
   if [[ "${build_address_sanitizer}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DBUILD_ADDRESS_SANITIZER=ON"
+  fi
+
+  # code coverage
+  if [[ "${build_codecoverage}" == true ]]; then
+      if [[ "${build_release}" == true ]]; then
+          echo "Code coverage is disabled in Release mode, to enable code coverage select either Debug mode (-g | --debug) or RelWithDebInfo mode (-k | --relwithdebinfo); aborting";
+          exit 1
+      fi
+      cmake_common_options="${cmake_common_options} -DBUILD_CODE_COVERAGE=ON"
   fi
 
   # Verbose cmake

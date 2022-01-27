@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,13 +44,14 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_saamg(Arguments argus)
 {
-    int          ndim      = argus.size;
-    int          pre_iter  = argus.pre_smooth;
-    int          post_iter = argus.post_smooth;
-    std::string  smoother  = argus.smoother;
-    unsigned int format    = argus.format;
-    int          cycle     = argus.cycle;
-    bool         scaling   = argus.ordering;
+    int          ndim           = argus.size;
+    int          pre_iter       = argus.pre_smooth;
+    int          post_iter      = argus.post_smooth;
+    std::string  smoother       = argus.smoother;
+    unsigned int format         = argus.format;
+    int          cycle          = argus.cycle;
+    bool         scaling        = argus.ordering;
+    bool         rebuildnumeric = argus.rebuildnumeric;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);
@@ -60,6 +61,7 @@ bool testing_saamg(Arguments argus)
     LocalMatrix<T> A;
     LocalVector<T> x;
     LocalVector<T> b;
+    LocalVector<T> b2;
     LocalVector<T> e;
 
     // Generate A
@@ -70,17 +72,33 @@ bool testing_saamg(Arguments argus)
     int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
     int nnz  = csr_ptr[nrow];
 
+    T* csr_val2 = NULL;
+    if(rebuildnumeric)
+    {
+        csr_val2 = new T[nnz];
+        for(int i = 0; i < nnz; i++)
+        {
+            csr_val2[i] = csr_val[i];
+        }
+    }
+
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
+
+    assert(csr_ptr == NULL);
+    assert(csr_col == NULL);
+    assert(csr_val == NULL);
 
     // Move data to accelerator
     A.MoveToAccelerator();
     x.MoveToAccelerator();
     b.MoveToAccelerator();
+    b2.MoveToAccelerator();
     e.MoveToAccelerator();
 
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
     b.Allocate("b", A.GetM());
+    b2.Allocate("b2", A.GetM());
     e.Allocate("e", A.GetN());
 
     // b = A * 1
@@ -103,6 +121,8 @@ bool testing_saamg(Arguments argus)
     p.SetManualSmoothers(true);
     p.SetManualSolver(true);
     p.SetScaling(scaling);
+    p.SetCouplingStrength(0.001);
+    p.SetInterpRelax(2.0 / 3.0);
     p.BuildHierarchy();
 
     // Get number of hierarchy levels
@@ -149,10 +169,21 @@ bool testing_saamg(Arguments argus)
     ls.Init(1e-8, 0.0, 1e+8, 10000);
     ls.Build();
 
-    // Matrix format
-    A.ConvertTo(format, 3);
+    if(rebuildnumeric)
+    {
+        A.UpdateValuesCSR(csr_val2);
+        delete[] csr_val2;
 
-    ls.Solve(b, &x);
+        // b2 = A * 1
+        A.Apply(e, &b2);
+
+        ls.ReBuildNumeric();
+    }
+
+    // Matrix format
+    A.ConvertTo(format, format == BCSR ? 3 : 1);
+
+    ls.Solve(rebuildnumeric ? b2 : b, &x);
 
     // Verify solution
     x.ScaleAdd(-1.0, e);

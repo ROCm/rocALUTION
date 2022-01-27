@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@
 
 #include <algorithm>
 #include <string>
+
+#include "random.hpp"
 
 extern int device;
 
@@ -138,6 +140,71 @@ int gen_permuted_identity(int ndim, int** rowptr, int** col, T** val)
 }
 
 /* ============================================================================================ */
+/*! \brief  Generate random sparse matrix */
+template <typename T>
+int gen_random(int m, int n, int max_nnz_per_row, int** rowptr, int** col, T** val)
+{
+    if(m == 0 || n == 0)
+    {
+        return 0;
+    }
+
+    int  nnz         = 0;
+    int* nnz_per_row = new int[m];
+    for(int i = 0; i < m; i++)
+    {
+        nnz_per_row[i] = random_generator_exact<int>(0, max_nnz_per_row);
+        nnz += nnz_per_row[i];
+    }
+
+    *rowptr = new int[m + 1];
+    *col    = new int[nnz];
+    *val    = new T[nnz];
+
+    (*rowptr)[0] = 0;
+    for(int i = 1; i < m + 1; i++)
+    {
+        (*rowptr)[i] = (*rowptr)[i - 1] + nnz_per_row[i - 1];
+    }
+
+    for(int i = 0; i < m; i++)
+    {
+        int row_start = (*rowptr)[i];
+        int row_end   = (*rowptr)[i + 1];
+
+        for(int j = row_start; j < row_end; j++)
+        {
+            (*col)[j] = random_generator<int>(0, n);
+            (*val)[j] = random_generator<T>();
+        }
+    }
+
+    auto compare = [](const void* a, const void* b) {
+        int ai = *((int*)a);
+        int bi = *((int*)b);
+
+        if(ai == bi)
+        {
+            return 0;
+        }
+        else if(ai < bi)
+        {
+            return -1;
+        }
+        else
+        {
+            return 1;
+        }
+    };
+
+    qsort(*col, nnz, sizeof(int), compare);
+
+    delete[] nnz_per_row;
+
+    return m;
+}
+
+/* ============================================================================================ */
 
 /*! \brief Class used to parse command arguments in both client & gtest   */
 
@@ -164,6 +231,7 @@ public:
     int size       = 100;
     int index      = 50;
     int chunk_size = 20;
+    int blockdim   = 4;
 
     // Computation variables
     double alpha = 1.0;
@@ -171,15 +239,17 @@ public:
     double gamma = 0.0;
 
     // Solver variables
-    std::string solver   = "";
-    std::string precond  = "";
-    std::string smoother = "";
-    std::string matrix   = "";
+    std::string solver      = "";
+    std::string precond     = "";
+    std::string smoother    = "";
+    std::string matrix      = "";
+    std::string matrix_type = "";
 
-    int pre_smooth  = 2;
-    int post_smooth = 2;
-    int ordering    = 1;
-    int cycle       = 0;
+    int pre_smooth     = 2;
+    int post_smooth    = 2;
+    int ordering       = 1;
+    int cycle          = 0;
+    int rebuildnumeric = 0;
 
     unsigned int format;
 
@@ -198,20 +268,23 @@ public:
         this->size       = rhs.size;
         this->index      = rhs.index;
         this->chunk_size = rhs.chunk_size;
+        this->blockdim   = rhs.blockdim;
 
         this->alpha = rhs.alpha;
         this->beta  = rhs.beta;
         this->gamma = rhs.gamma;
 
-        this->solver   = rhs.solver;
-        this->precond  = rhs.precond;
-        this->smoother = rhs.smoother;
-        this->matrix   = rhs.matrix;
+        this->solver      = rhs.solver;
+        this->precond     = rhs.precond;
+        this->smoother    = rhs.smoother;
+        this->matrix      = rhs.matrix;
+        this->matrix_type = rhs.matrix_type;
 
-        this->pre_smooth  = rhs.pre_smooth;
-        this->post_smooth = rhs.post_smooth;
-        this->ordering    = rhs.ordering;
-        this->cycle       = rhs.cycle;
+        this->pre_smooth     = rhs.pre_smooth;
+        this->post_smooth    = rhs.post_smooth;
+        this->ordering       = rhs.ordering;
+        this->cycle          = rhs.cycle;
+        this->rebuildnumeric = rhs.rebuildnumeric;
 
         this->format = rhs.format;
 

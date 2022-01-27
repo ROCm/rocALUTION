@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,10 +37,9 @@ namespace rocalution
     {
         log_debug(this, "BaseMatrix::BaseMatrix()");
 
-        this->nrow_     = 0;
-        this->ncol_     = 0;
-        this->nnz_      = 0;
-        this->blockdim_ = 1;
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -76,7 +75,17 @@ namespace rocalution
     template <typename ValueType>
     void BaseMatrix<ValueType>::set_block_dimension(int blockdim)
     {
-        this->blockdim_ = blockdim;
+        LOG_INFO("BaseMatrix<ValueType>::set_block_dimension()");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function can only be called on matrices with BCSR format!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    int BaseMatrix<ValueType>::GetMatBlockDimension(void) const
+    {
+        return 1;
     }
 
     template <typename ValueType>

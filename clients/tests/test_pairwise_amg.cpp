@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,15 @@
 
 #include <gtest/gtest.h>
 
-typedef std::tuple<int, std::string, int, int, unsigned int, int> pwamg_tuple;
+typedef std::tuple<int, std::string, unsigned int, int, int, int, int> pwamg_tuple;
 
-int         pwamg_size[]      = {63, 134};
-std::string pwamg_smoother[]  = {"Jacobi"}; //, "MCILU"};
-int         pwamg_pre_iter[]  = {1, 2};
-int         pwamg_post_iter[] = {1, 2};
-int         pwamg_ordering[]  = {0, 1, 2, 3, 4, 5};
-
-unsigned int pwamg_format[] = {1, 7};
+int          pwamg_size[]           = {63, 134};
+std::string  pwamg_smoother[]       = {"Jacobi"}; //, "MCILU"};
+unsigned int pwamg_format[]         = {1, 7};
+int          pwamg_pre_iter[]       = {1, 2};
+int          pwamg_post_iter[]      = {1, 2};
+int          pwamg_ordering[]       = {0, 1, 2, 3, 4, 5};
+int          pwamg_rebuildnumeric[] = {0, 1};
 
 class parameterized_pairwise_amg : public testing::TestWithParam<pwamg_tuple>
 {
@@ -48,12 +48,13 @@ protected:
 Arguments setup_pwamg_arguments(pwamg_tuple tup)
 {
     Arguments arg;
-    arg.size        = std::get<0>(tup);
-    arg.smoother    = std::get<1>(tup);
-    arg.format      = std::get<2>(tup);
-    arg.pre_smooth  = std::get<3>(tup);
-    arg.post_smooth = std::get<4>(tup);
-    arg.ordering    = std::get<5>(tup);
+    arg.size           = std::get<0>(tup);
+    arg.smoother       = std::get<1>(tup);
+    arg.format         = std::get<2>(tup);
+    arg.pre_smooth     = std::get<3>(tup);
+    arg.post_smooth    = std::get<4>(tup);
+    arg.ordering       = std::get<5>(tup);
+    arg.rebuildnumeric = std::get<6>(tup);
     return arg;
 }
 
@@ -73,7 +74,8 @@ INSTANTIATE_TEST_CASE_P(pairwise_amg,
                         parameterized_pairwise_amg,
                         testing::Combine(testing::ValuesIn(pwamg_size),
                                          testing::ValuesIn(pwamg_smoother),
+                                         testing::ValuesIn(pwamg_format),
                                          testing::ValuesIn(pwamg_pre_iter),
                                          testing::ValuesIn(pwamg_post_iter),
-                                         testing::ValuesIn(pwamg_format),
-                                         testing::ValuesIn(pwamg_ordering)));
+                                         testing::ValuesIn(pwamg_ordering),
+                                         testing::ValuesIn(pwamg_rebuildnumeric)));

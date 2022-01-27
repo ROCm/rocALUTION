@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,8 @@
 typedef std::tuple<int, std::string, unsigned int, int> idr_tuple;
 
 int          idr_size[]    = {7, 63};
-std::string  idr_precond[] = {"None", "SPAI", /*"GS", "ILU",*/ "ILUT", "MCGS" /*, "MCILU"*/};
-unsigned int idr_format[]  = {1, 2, 3, 4, 5, 6, 7};
+std::string  idr_precond[] = {"None", "SPAI", "GS", "ILU", "MCILU"};
+unsigned int idr_format[]  = {1, 4, 5, 6};
 int          idr_level[]   = {1, 2, 4};
 
 class parameterized_idr : public testing::TestWithParam<idr_tuple>

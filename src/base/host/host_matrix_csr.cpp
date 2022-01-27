@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -129,6 +129,10 @@ namespace rocalution
 
         if(this->nnz_ > 0)
         {
+            assert(this->mat_.row_offset != NULL);
+            assert(this->mat_.val != NULL);
+            assert(this->mat_.col != NULL);
+
             // check nnz
             if((std::abs(this->nnz_) == std::numeric_limits<int>::infinity()) || // inf
                (this->nnz_ != this->nnz_))
@@ -353,6 +357,7 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
+        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixCSR<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
@@ -512,8 +517,8 @@ namespace rocalution
         {
             this->Clear();
 
-            int nrow = cast_mat->mat_.nrowb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
-            int ncol = cast_mat->mat_.ncolb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
+            int nrow = cast_mat->mat_.nrowb * cast_mat->mat_.blockdim;
+            int ncol = cast_mat->mat_.ncolb * cast_mat->mat_.blockdim;
             int nnz  = cast_mat->mat_.nnzb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
 
             if(bcsr_to_csr(this->local_backend_.OpenMP_threads,

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,20 +28,9 @@
 
 typedef std::tuple<int, std::string, unsigned int> cg_tuple;
 
-int         cg_size[]    = {7, 63};
-std::string cg_precond[] = {"None",
-                            "Chebyshev",
-                            "FSAI",
-                            "SPAI",
-                            "TNS",
-                            "Jacobi",
-                            //                            "SGS",
-                            //                            "ILU",
-                            "ILUT",
-                            "IC",
-                            "MCSGS"}; //,
-//                            "MCILU"};
-unsigned int cg_format[] = {1, 2, 3, 4, 5, 6, 7};
+int          cg_size[]    = {7, 63};
+std::string  cg_precond[] = {"None", "FSAI", "SPAI", "TNS", "Jacobi", "IC", "MCSGS"};
+unsigned int cg_format[]  = {1, 3, 4, 6};
 
 class parameterized_cg : public testing::TestWithParam<cg_tuple>
 {

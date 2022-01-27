@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -299,9 +299,16 @@ namespace rocalution
 
     template <typename ValueType>
     AcceleratorMatrix<ValueType>* _rocalution_init_base_hip_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format)
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim)
     {
         assert(backend_descriptor.backend == HIP);
+
+        if(matrix_format != BCSR)
+        {
+            assert(blockdim == 1);
+        }
 
         switch(matrix_format)
         {
@@ -320,7 +327,7 @@ namespace rocalution
         case HYB:
             return new HIPAcceleratorMatrixHYB<ValueType>(backend_descriptor);
         case BCSR:
-            return new HIPAcceleratorMatrixBCSR<ValueType>(backend_descriptor);
+            return new HIPAcceleratorMatrixBCSR<ValueType>(backend_descriptor, blockdim);
         default:
             LOG_INFO("This backed is not supported for Matrix types");
             FATAL_ERROR(__FILE__, __LINE__);
@@ -358,14 +365,22 @@ namespace rocalution
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     template AcceleratorMatrix<float>* _rocalution_init_base_hip_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
     template AcceleratorMatrix<double>* _rocalution_init_base_hip_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
 #ifdef SUPPORT_COMPLEX
     template AcceleratorMatrix<std::complex<float>>* _rocalution_init_base_hip_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
     template AcceleratorMatrix<std::complex<double>>* _rocalution_init_base_hip_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
 #endif
 
 } // namespace rocalution

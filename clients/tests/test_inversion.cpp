@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,49 +21,49 @@
  *
  * ************************************************************************ */
 
-#include "testing_fcg.hpp"
+#include "testing_inversion.hpp"
 #include "utility.hpp"
 
 #include <gtest/gtest.h>
 
-typedef std::tuple<int, std::string, unsigned int> fcg_tuple;
+typedef std::tuple<int, unsigned int, std::string> inversion_tuple;
 
-int          fcg_size[]    = {7, 63};
-std::string  fcg_precond[] = {"None", "Chebyshev", "SPAI", "TNS", "ILUT", "MCSGS"};
-unsigned int fcg_format[]  = {2, 5, 6, 7};
+int          inversion_size[]        = {7, 16, 21};
+unsigned int inversion_format[]      = {1, 2, 3, 4, 5, 6, 7};
+std::string  inversion_matrix_type[] = {"Laplacian2D", "PermutedIdentity"};
 
-class parameterized_fcg : public testing::TestWithParam<fcg_tuple>
+class parameterized_inversion : public testing::TestWithParam<inversion_tuple>
 {
 protected:
-    parameterized_fcg() {}
-    virtual ~parameterized_fcg() {}
+    parameterized_inversion() {}
+    virtual ~parameterized_inversion() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
 
-Arguments setup_fcg_arguments(fcg_tuple tup)
+Arguments setup_inversion_arguments(inversion_tuple tup)
 {
     Arguments arg;
-    arg.size    = std::get<0>(tup);
-    arg.precond = std::get<1>(tup);
-    arg.format  = std::get<2>(tup);
+    arg.size        = std::get<0>(tup);
+    arg.format      = std::get<1>(tup);
+    arg.matrix_type = std::get<2>(tup);
     return arg;
 }
 
-TEST_P(parameterized_fcg, fcg_float)
+TEST_P(parameterized_inversion, inversion_float)
 {
-    Arguments arg = setup_fcg_arguments(GetParam());
-    ASSERT_EQ(testing_fcg<float>(arg), true);
+    Arguments arg = setup_inversion_arguments(GetParam());
+    ASSERT_EQ(testing_inversion<float>(arg), true);
 }
 
-TEST_P(parameterized_fcg, fcg_double)
+TEST_P(parameterized_inversion, inversion_double)
 {
-    Arguments arg = setup_fcg_arguments(GetParam());
-    ASSERT_EQ(testing_fcg<double>(arg), true);
+    Arguments arg = setup_inversion_arguments(GetParam());
+    ASSERT_EQ(testing_inversion<double>(arg), true);
 }
 
-INSTANTIATE_TEST_CASE_P(fcg,
-                        parameterized_fcg,
-                        testing::Combine(testing::ValuesIn(fcg_size),
-                                         testing::ValuesIn(fcg_precond),
-                                         testing::ValuesIn(fcg_format)));
+INSTANTIATE_TEST_CASE_P(inversion,
+                        parameterized_inversion,
+                        testing::Combine(testing::ValuesIn(inversion_size),
+                                         testing::ValuesIn(inversion_format),
+                                         testing::ValuesIn(inversion_matrix_type)));

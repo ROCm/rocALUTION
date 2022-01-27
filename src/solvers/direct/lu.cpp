@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,7 @@ namespace rocalution
 
         this->lu_.CloneFrom(*this->op_);
         this->lu_.LUFactorize();
+        this->lu_.LUAnalyse();
 
         log_debug(this, "LU::Build()", this->build_, " #*# end");
     }
@@ -98,6 +99,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             this->lu_.Clear();
+            this->lu_.LUAnalyseClear();
             this->build_ = false;
         }
     }
@@ -110,6 +112,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             this->lu_.MoveToHost();
+            this->lu_.LUAnalyse();
         }
     }
 
@@ -121,6 +124,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             this->lu_.MoveToAccelerator();
+            this->lu_.LUAnalyse();
         }
     }
 

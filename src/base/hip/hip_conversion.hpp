@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,7 +64,9 @@ namespace rocalution
                          IndexType                               nrow,
                          IndexType                               ncol,
                          const MatrixBCSR<ValueType, IndexType>& src,
-                         MatrixCSR<ValueType, IndexType>*        dst);
+                         const rocsparse_mat_descr               src_descr,
+                         MatrixCSR<ValueType, IndexType>*        dst,
+                         rocsparse_mat_descr                     dst_descr);
 
     template <typename ValueType, typename IndexType>
     bool csr_to_ell_hip(const rocsparse_handle                 handle,
@@ -125,7 +127,8 @@ namespace rocalution
                           IndexType                        ncol,
                           const MatrixDENSE<ValueType>&    src,
                           MatrixCSR<ValueType, IndexType>* dst,
-                          const rocsparse_mat_descr        dst_descr);
+                          const rocsparse_mat_descr        dst_descr,
+                          IndexType*                       nnz_csr);
 
 } // namespace rocalution
 

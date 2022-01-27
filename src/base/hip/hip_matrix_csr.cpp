@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -257,6 +257,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -309,6 +310,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -464,6 +466,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -525,6 +528,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -838,12 +842,41 @@ namespace rocalution
                                 cast_mat_dense->ncol_,
                                 cast_mat_dense->mat_,
                                 &this->mat_,
-                                this->mat_descr_)
+                                this->mat_descr_,
+                                &nnz)
                == true)
             {
                 this->nrow_ = cast_mat_dense->nrow_;
                 this->ncol_ = cast_mat_dense->ncol_;
-                this->nnz_  = cast_mat_dense->nnz_;
+                this->nnz_  = nnz;
+
+                return true;
+            }
+        }
+
+        const HIPAcceleratorMatrixBCSR<ValueType>* cast_mat_bcsr;
+        if((cast_mat_bcsr = dynamic_cast<const HIPAcceleratorMatrixBCSR<ValueType>*>(&mat)) != NULL)
+        {
+            this->Clear();
+
+            int nrow = cast_mat_bcsr->mat_.nrowb * cast_mat_bcsr->mat_.blockdim;
+            int ncol = cast_mat_bcsr->mat_.ncolb * cast_mat_bcsr->mat_.blockdim;
+            int nnz  = cast_mat_bcsr->mat_.nnzb * cast_mat_bcsr->mat_.blockdim
+                      * cast_mat_bcsr->mat_.blockdim;
+
+            if(bcsr_to_csr_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                               nnz,
+                               nrow,
+                               ncol,
+                               cast_mat_bcsr->mat_,
+                               cast_mat_bcsr->mat_descr_,
+                               &this->mat_,
+                               this->mat_descr_)
+               == true)
+            {
+                this->nrow_ = nrow;
+                this->ncol_ = ncol;
+                this->nnz_  = nnz;
 
                 return true;
             }

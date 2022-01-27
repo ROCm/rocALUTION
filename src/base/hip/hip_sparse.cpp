@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -2998,6 +2998,127 @@ namespace rocalution
                                   bsr_col_ind);
     }
 
+    // rocsparse_bsr2csr
+    template <>
+    rocsparse_status rocsparseTbsr2csr(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       mb,
+                                       int                       nb,
+                                       const rocsparse_mat_descr bsr_descr,
+                                       const float*              bsr_val,
+                                       const int*                bsr_row_ptr,
+                                       const int*                bsr_col_ind,
+                                       int                       block_dim,
+                                       const rocsparse_mat_descr csr_descr,
+                                       float*                    csr_val,
+                                       int*                      csr_row_ptr,
+                                       int*                      csr_col_ind)
+    {
+        return rocsparse_sbsr2csr(handle,
+                                  dir,
+                                  mb,
+                                  nb,
+                                  bsr_descr,
+                                  bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  block_dim,
+                                  csr_descr,
+                                  csr_val,
+                                  csr_row_ptr,
+                                  csr_col_ind);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsr2csr(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       mb,
+                                       int                       nb,
+                                       const rocsparse_mat_descr bsr_descr,
+                                       const double*             bsr_val,
+                                       const int*                bsr_row_ptr,
+                                       const int*                bsr_col_ind,
+                                       int                       block_dim,
+                                       const rocsparse_mat_descr csr_descr,
+                                       double*                   csr_val,
+                                       int*                      csr_row_ptr,
+                                       int*                      csr_col_ind)
+    {
+        return rocsparse_dbsr2csr(handle,
+                                  dir,
+                                  mb,
+                                  nb,
+                                  bsr_descr,
+                                  bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  block_dim,
+                                  csr_descr,
+                                  csr_val,
+                                  csr_row_ptr,
+                                  csr_col_ind);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsr2csr(rocsparse_handle           handle,
+                                       rocsparse_direction        dir,
+                                       int                        mb,
+                                       int                        nb,
+                                       const rocsparse_mat_descr  bsr_descr,
+                                       const std::complex<float>* bsr_val,
+                                       const int*                 bsr_row_ptr,
+                                       const int*                 bsr_col_ind,
+                                       int                        block_dim,
+                                       const rocsparse_mat_descr  csr_descr,
+                                       std::complex<float>*       csr_val,
+                                       int*                       csr_row_ptr,
+                                       int*                       csr_col_ind)
+    {
+        return rocsparse_cbsr2csr(handle,
+                                  dir,
+                                  mb,
+                                  nb,
+                                  bsr_descr,
+                                  (const rocsparse_float_complex*)bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  block_dim,
+                                  csr_descr,
+                                  (rocsparse_float_complex*)csr_val,
+                                  csr_row_ptr,
+                                  csr_col_ind);
+    }
+
+    template <>
+    rocsparse_status rocsparseTbsr2csr(rocsparse_handle            handle,
+                                       rocsparse_direction         dir,
+                                       int                         mb,
+                                       int                         nb,
+                                       const rocsparse_mat_descr   bsr_descr,
+                                       const std::complex<double>* bsr_val,
+                                       const int*                  bsr_row_ptr,
+                                       const int*                  bsr_col_ind,
+                                       int                         block_dim,
+                                       const rocsparse_mat_descr   csr_descr,
+                                       std::complex<double>*       csr_val,
+                                       int*                        csr_row_ptr,
+                                       int*                        csr_col_ind)
+    {
+        return rocsparse_zbsr2csr(handle,
+                                  dir,
+                                  mb,
+                                  nb,
+                                  bsr_descr,
+                                  (const rocsparse_double_complex*)bsr_val,
+                                  bsr_row_ptr,
+                                  bsr_col_ind,
+                                  block_dim,
+                                  csr_descr,
+                                  (rocsparse_double_complex*)csr_val,
+                                  csr_row_ptr,
+                                  csr_col_ind);
+    }
+
     // rocsparse csr2csc
     template <>
     rocsparse_status rocsparseTcsr2csc(rocsparse_handle     handle,
@@ -3321,6 +3442,7 @@ namespace rocalution
                                   csr_col_ind);
     }
 
+    // rocsparse csr2dense
     template <>
     rocsparse_status rocsparseTcsr2dense(rocsparse_handle          handle,
                                          int                       m,
@@ -3395,6 +3517,7 @@ namespace rocalution
                                     ld);
     }
 
+    // rocsparse dense2csr
     template <>
     rocsparse_status rocsparseTdense2csr(rocsparse_handle          handle,
                                          int                       m,
@@ -3475,6 +3598,7 @@ namespace rocalution
                                     csr_col_ind);
     }
 
+    // rocsparse nnz
     template <>
     rocsparse_status rocsparseTnnz(rocsparse_handle          handle,
                                    rocsparse_direction       dir_A,
@@ -3545,6 +3669,197 @@ namespace rocalution
                               lda,
                               nnz_per_row_column,
                               nnz_total);
+    }
+
+    // rocsparse nnz compress
+    template <>
+    rocsparse_status rocsparseTnnz_compress(rocsparse_handle          handle,
+                                            rocsparse_int             m,
+                                            const rocsparse_mat_descr descr_A,
+                                            const float*              csr_val_A,
+                                            const rocsparse_int*      csr_row_ptr_A,
+                                            rocsparse_int*            nnz_per_row,
+                                            rocsparse_int*            nnz_C,
+                                            float                     tol)
+    {
+        return rocsparse_snnz_compress(
+            handle, m, descr_A, csr_val_A, csr_row_ptr_A, nnz_per_row, nnz_C, tol);
+    }
+
+    template <>
+    rocsparse_status rocsparseTnnz_compress(rocsparse_handle          handle,
+                                            rocsparse_int             m,
+                                            const rocsparse_mat_descr descr_A,
+                                            const double*             csr_val_A,
+                                            const rocsparse_int*      csr_row_ptr_A,
+                                            rocsparse_int*            nnz_per_row,
+                                            rocsparse_int*            nnz_C,
+                                            double                    tol)
+    {
+        return rocsparse_dnnz_compress(
+            handle, m, descr_A, csr_val_A, csr_row_ptr_A, nnz_per_row, nnz_C, tol);
+    }
+
+    template <>
+    rocsparse_status rocsparseTnnz_compress(rocsparse_handle           handle,
+                                            rocsparse_int              m,
+                                            const rocsparse_mat_descr  descr_A,
+                                            const std::complex<float>* csr_val_A,
+                                            const rocsparse_int*       csr_row_ptr_A,
+                                            rocsparse_int*             nnz_per_row,
+                                            rocsparse_int*             nnz_C,
+                                            std::complex<float>        tol)
+    {
+        return rocsparse_cnnz_compress(handle,
+                                       m,
+                                       descr_A,
+                                       (const rocsparse_float_complex*)csr_val_A,
+                                       csr_row_ptr_A,
+                                       nnz_per_row,
+                                       nnz_C,
+                                       rocsparse_float_complex(std::real(tol), std::imag(tol)));
+    }
+
+    template <>
+    rocsparse_status rocsparseTnnz_compress(rocsparse_handle            handle,
+                                            rocsparse_int               m,
+                                            const rocsparse_mat_descr   descr_A,
+                                            const std::complex<double>* csr_val_A,
+                                            const rocsparse_int*        csr_row_ptr_A,
+                                            rocsparse_int*              nnz_per_row,
+                                            rocsparse_int*              nnz_C,
+                                            std::complex<double>        tol)
+    {
+        return rocsparse_znnz_compress(handle,
+                                       m,
+                                       descr_A,
+                                       (const rocsparse_double_complex*)csr_val_A,
+                                       csr_row_ptr_A,
+                                       nnz_per_row,
+                                       nnz_C,
+                                       rocsparse_double_complex(std::real(tol), std::imag(tol)));
+    }
+
+    // rocsparse csr2csr compress
+    template <>
+    rocsparse_status rocsparseTcsr2csr_compress(rocsparse_handle          handle,
+                                                rocsparse_int             m,
+                                                rocsparse_int             n,
+                                                const rocsparse_mat_descr descr_A,
+                                                const float*              csr_val_A,
+                                                const rocsparse_int*      csr_row_ptr_A,
+                                                const rocsparse_int*      csr_col_ind_A,
+                                                rocsparse_int             nnz_A,
+                                                const rocsparse_int*      nnz_per_row,
+                                                float*                    csr_val_C,
+                                                rocsparse_int*            csr_row_ptr_C,
+                                                rocsparse_int*            csr_col_ind_C,
+                                                float                     tol)
+    {
+        return rocsparse_scsr2csr_compress(handle,
+                                           m,
+                                           n,
+                                           descr_A,
+                                           csr_val_A,
+                                           csr_row_ptr_A,
+                                           csr_col_ind_A,
+                                           nnz_A,
+                                           nnz_per_row,
+                                           csr_val_C,
+                                           csr_row_ptr_C,
+                                           csr_col_ind_C,
+                                           tol);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsr2csr_compress(rocsparse_handle          handle,
+                                                rocsparse_int             m,
+                                                rocsparse_int             n,
+                                                const rocsparse_mat_descr descr_A,
+                                                const double*             csr_val_A,
+                                                const rocsparse_int*      csr_row_ptr_A,
+                                                const rocsparse_int*      csr_col_ind_A,
+                                                rocsparse_int             nnz_A,
+                                                const rocsparse_int*      nnz_per_row,
+                                                double*                   csr_val_C,
+                                                rocsparse_int*            csr_row_ptr_C,
+                                                rocsparse_int*            csr_col_ind_C,
+                                                double                    tol)
+    {
+        return rocsparse_dcsr2csr_compress(handle,
+                                           m,
+                                           n,
+                                           descr_A,
+                                           csr_val_A,
+                                           csr_row_ptr_A,
+                                           csr_col_ind_A,
+                                           nnz_A,
+                                           nnz_per_row,
+                                           csr_val_C,
+                                           csr_row_ptr_C,
+                                           csr_col_ind_C,
+                                           tol);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsr2csr_compress(rocsparse_handle           handle,
+                                                rocsparse_int              m,
+                                                rocsparse_int              n,
+                                                const rocsparse_mat_descr  descr_A,
+                                                const std::complex<float>* csr_val_A,
+                                                const rocsparse_int*       csr_row_ptr_A,
+                                                const rocsparse_int*       csr_col_ind_A,
+                                                rocsparse_int              nnz_A,
+                                                const rocsparse_int*       nnz_per_row,
+                                                std::complex<float>*       csr_val_C,
+                                                rocsparse_int*             csr_row_ptr_C,
+                                                rocsparse_int*             csr_col_ind_C,
+                                                std::complex<float>        tol)
+    {
+        return rocsparse_ccsr2csr_compress(handle,
+                                           m,
+                                           n,
+                                           descr_A,
+                                           (const rocsparse_float_complex*)csr_val_A,
+                                           csr_row_ptr_A,
+                                           csr_col_ind_A,
+                                           nnz_A,
+                                           nnz_per_row,
+                                           (rocsparse_float_complex*)csr_val_C,
+                                           csr_row_ptr_C,
+                                           csr_col_ind_C,
+                                           rocsparse_float_complex(std::real(tol), std::imag(tol)));
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsr2csr_compress(rocsparse_handle            handle,
+                                                rocsparse_int               m,
+                                                rocsparse_int               n,
+                                                const rocsparse_mat_descr   descr_A,
+                                                const std::complex<double>* csr_val_A,
+                                                const rocsparse_int*        csr_row_ptr_A,
+                                                const rocsparse_int*        csr_col_ind_A,
+                                                rocsparse_int               nnz_A,
+                                                const rocsparse_int*        nnz_per_row,
+                                                std::complex<double>*       csr_val_C,
+                                                rocsparse_int*              csr_row_ptr_C,
+                                                rocsparse_int*              csr_col_ind_C,
+                                                std::complex<double>        tol)
+    {
+        return rocsparse_zcsr2csr_compress(
+            handle,
+            m,
+            n,
+            descr_A,
+            (const rocsparse_double_complex*)csr_val_A,
+            csr_row_ptr_A,
+            csr_col_ind_A,
+            nnz_A,
+            nnz_per_row,
+            (rocsparse_double_complex*)csr_val_C,
+            csr_row_ptr_C,
+            csr_col_ind_C,
+            rocsparse_double_complex(std::real(tol), std::imag(tol)));
     }
 
 } // namespace rocalution

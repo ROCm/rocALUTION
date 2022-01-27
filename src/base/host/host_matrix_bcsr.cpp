@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2020-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,13 +50,15 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    HostMatrixBCSR<ValueType>::HostMatrixBCSR(const Rocalution_Backend_Descriptor& local_backend)
+    HostMatrixBCSR<ValueType>::HostMatrixBCSR(const Rocalution_Backend_Descriptor& local_backend,
+                                              int                                  blockdim)
     {
         log_debug(this, "HostMatrixBCSR::HostMatrixBCSR()", "constructor with local_backend");
 
         this->mat_.row_offset = NULL;
         this->mat_.col        = NULL;
         this->mat_.val        = NULL;
+        this->mat_.blockdim   = blockdim;
 
         this->set_backend(local_backend);
     }
@@ -139,10 +141,9 @@ namespace rocalution
 
         this->Clear();
 
-        this->blockdim_ = blockdim;
-        this->nrow_     = nrowb * blockdim;
-        this->ncol_     = ncolb * blockdim;
-        this->nnz_      = nnzb * blockdim * blockdim;
+        this->nrow_ = nrowb * blockdim;
+        this->ncol_ = ncolb * blockdim;
+        this->nnz_  = nnzb * blockdim * blockdim;
 
         this->mat_.nrowb    = nrowb;
         this->mat_.ncolb    = ncolb;
@@ -187,6 +188,7 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
+        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixBCSR<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&mat))
@@ -264,8 +266,6 @@ namespace rocalution
            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
         {
             this->Clear();
-
-            this->mat_.blockdim = this->blockdim_;
 
             if(csr_to_bcsr(this->local_backend_.OpenMP_threads,
                            cast_mat->nnz_,

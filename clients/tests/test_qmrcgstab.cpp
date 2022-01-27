@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,10 +28,9 @@
 
 typedef std::tuple<int, std::string, unsigned int> qmrcgstab_tuple;
 
-int         qmrcgstab_size[] = {7, 63};
-std::string qmrcgstab_precond[]
-    = {"None", "Chebyshev", "SPAI", "TNS", "Jacobi", /*"GS", "ILU",*/ "ILUT", "MCGS" /*, "MCILU"*/};
-unsigned int qmrcgstab_format[] = {1, 2, 3, 4, 5, 6, 7};
+int          qmrcgstab_size[]    = {7, 63};
+std::string  qmrcgstab_precond[] = {"None", "Chebyshev", "SPAI", "Jacobi", "GS", "ILU"};
+unsigned int qmrcgstab_format[]  = {1, 2, 3, 7};
 
 class parameterized_qmrcgstab : public testing::TestWithParam<qmrcgstab_tuple>
 {

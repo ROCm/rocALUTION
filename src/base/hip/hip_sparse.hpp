@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -433,6 +433,22 @@ namespace rocalution
                                        int*                      bsr_row_ptr,
                                        int*                      bsr_col_ind);
 
+    // rocsparse_bsr2csr
+    template <typename ValueType>
+    rocsparse_status rocsparseTbsr2csr(rocsparse_handle          handle,
+                                       rocsparse_direction       dir,
+                                       int                       mb,
+                                       int                       nb,
+                                       const rocsparse_mat_descr bsr_descr,
+                                       const ValueType*          bsr_val,
+                                       const int*                bsr_row_ptr,
+                                       const int*                bsr_col_ind,
+                                       int                       block_dim,
+                                       const rocsparse_mat_descr csr_descr,
+                                       ValueType*                csr_val,
+                                       int*                      csr_row_ptr,
+                                       int*                      csr_col_ind);
+
     // rocsparse csr2csc
     template <typename ValueType>
     rocsparse_status rocsparseTcsr2csc(rocsparse_handle     handle,
@@ -512,6 +528,33 @@ namespace rocalution
                                    int                       lda,
                                    int*                      nnz_per_row_column,
                                    int*                      nnz_total);
+
+    // rocsparse nnz compress
+    template <typename ValueType>
+    rocsparse_status rocsparseTnnz_compress(rocsparse_handle          handle,
+                                            rocsparse_int             m,
+                                            const rocsparse_mat_descr descr_A,
+                                            const ValueType*          csr_val_A,
+                                            const rocsparse_int*      csr_row_ptr_A,
+                                            rocsparse_int*            nnz_per_row,
+                                            rocsparse_int*            nnz_C,
+                                            ValueType                 tol);
+
+    // rocsparse csr2csr compress
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsr2csr_compress(rocsparse_handle          handle,
+                                                rocsparse_int             m,
+                                                rocsparse_int             n,
+                                                const rocsparse_mat_descr descr_A,
+                                                const ValueType*          csr_val_A,
+                                                const rocsparse_int*      csr_row_ptr_A,
+                                                const rocsparse_int*      csr_col_ind_A,
+                                                rocsparse_int             nnz_A,
+                                                const rocsparse_int*      nnz_per_row,
+                                                ValueType*                csr_val_C,
+                                                rocsparse_int*            csr_row_ptr_C,
+                                                rocsparse_int*            csr_col_ind_C,
+                                                ValueType                 tol);
 
 } // namespace rocalution
 

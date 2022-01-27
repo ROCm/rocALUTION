@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ typedef std::tuple<int, std::string, unsigned int, int> bicgstabl_tuple;
 
 int         bicgstabl_size[] = {7, 63};
 std::string bicgstabl_precond[]
-    = {"None", "SPAI", "TNS", "Jacobi", /*"GS", "ILU",*/ "ILUT", "IC", "MCGS" /*, "MCILU"*/};
+    = {"None", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ILUT", "IC", "MCGS", "MCILU"};
 unsigned int bicgstabl_format[] = {1, 2, 4, 5, 6, 7};
 int          bicgstabl_level[]  = {1, 2, 4};
 

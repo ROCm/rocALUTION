@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -436,15 +436,23 @@ namespace rocalution
 
     template <typename ValueType>
     AcceleratorMatrix<ValueType>* _rocalution_init_base_backend_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format)
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim)
     {
-        log_debug(0, "_rocalution_init_base_backend_matrix()", matrix_format);
+        log_debug(0, "_rocalution_init_base_backend_matrix()", matrix_format, blockdim);
+
+        if(matrix_format != BCSR)
+        {
+            assert(blockdim == 1);
+        }
 
         switch(backend_descriptor.backend)
         {
 #ifdef SUPPORT_HIP
         case HIP:
-            return _rocalution_init_base_hip_matrix<ValueType>(backend_descriptor, matrix_format);
+            return _rocalution_init_base_hip_matrix<ValueType>(
+                backend_descriptor, matrix_format, blockdim);
             break;
 #endif
 
@@ -462,9 +470,16 @@ namespace rocalution
 
     template <typename ValueType>
     HostMatrix<ValueType>* _rocalution_init_base_host_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format)
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim)
     {
-        log_debug(0, "_rocalution_init_base_host_matrix()", matrix_format);
+        log_debug(0, "_rocalution_init_base_host_matrix()", matrix_format, blockdim);
+
+        if(matrix_format != BCSR)
+        {
+            assert(blockdim == 1);
+        }
 
         switch(matrix_format)
         {
@@ -490,7 +505,7 @@ namespace rocalution
             return new HostMatrixMCSR<ValueType>(backend_descriptor);
             break;
         case BCSR:
-            return new HostMatrixBCSR<ValueType>(backend_descriptor);
+            return new HostMatrixBCSR<ValueType>(backend_descriptor, blockdim);
             break;
         default:
             return NULL;
@@ -628,24 +643,40 @@ namespace rocalution
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     template AcceleratorMatrix<float>* _rocalution_init_base_backend_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
     template AcceleratorMatrix<double>* _rocalution_init_base_backend_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
 #ifdef SUPPORT_COMPLEX
     template AcceleratorMatrix<std::complex<float>>* _rocalution_init_base_backend_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
     template AcceleratorMatrix<std::complex<double>>* _rocalution_init_base_backend_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
 #endif
     template HostMatrix<float>* _rocalution_init_base_host_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
     template HostMatrix<double>* _rocalution_init_base_host_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
 #ifdef SUPPORT_COMPLEX
     template HostMatrix<std::complex<float>>* _rocalution_init_base_host_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
     template HostMatrix<std::complex<double>>* _rocalution_init_base_host_matrix(
-        const struct Rocalution_Backend_Descriptor& backend_descriptor, unsigned int matrix_format);
+        const struct Rocalution_Backend_Descriptor& backend_descriptor,
+        unsigned int                                matrix_format,
+        int                                         blockdim);
 #endif
 
 } // namespace rocalution

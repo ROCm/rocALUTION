@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -89,10 +89,13 @@ namespace rocalution
         virtual void Info(void) const = 0;
         /// Return the matrix format id (see matrix_formats.hpp)
         virtual unsigned int GetMatFormat(void) const = 0;
+        /// Return the block dimension of the matrix
+        virtual int GetMatBlockDimension(void) const;
         /// Copy the backend descriptor information
         virtual void set_backend(const Rocalution_Backend_Descriptor& local_backend);
         /// Set matrix value block dimension
-        void set_block_dimension(int blockdim);
+        [[deprecated("Method will be removed in a future release")]] virtual void
+            set_block_dimension(int blockdim);
 
         virtual bool Check(void) const;
 
@@ -483,8 +486,6 @@ namespace rocalution
         int ncol_;
         /// Number of non-zero elements
         int nnz_;
-        /// Block dimension
-        int blockdim_;
 
         /// Backend descriptor (local copy)
         Rocalution_Backend_Descriptor local_backend_;

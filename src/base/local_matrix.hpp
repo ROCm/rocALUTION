@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,6 +76,9 @@ namespace rocalution
         /** \brief Return the matrix format id (see matrix_formats.hpp) */
         ROCALUTION_EXPORT
         unsigned int GetFormat(void) const;
+        /** \brief Return the matrix block dimension */
+        ROCALUTION_EXPORT
+        int GetBlockDimension(void) const;
 
         ROCALUTION_EXPORT
         virtual IndexType2 GetM(void) const;

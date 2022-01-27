@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -85,8 +85,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         void SetDefaultSmootherFormat(unsigned int op_format);
         /** \brief Set the operator format */
+        [[deprecated("Method will be removed in a future release")]] ROCALUTION_EXPORT void
+            SetOperatorFormat(unsigned int op_format);
         ROCALUTION_EXPORT
-        void SetOperatorFormat(unsigned int op_format);
+        void SetOperatorFormat(unsigned int op_format, int op_blockdim);
 
         /** \brief Returns the number of levels in hierarchy */
         ROCALUTION_EXPORT
@@ -127,6 +129,8 @@ namespace rocalution
         unsigned int sm_format_;
         /** \brief Operator format */
         unsigned int op_format_;
+        /** \brief Operator block dimension */
+        int op_blockdim_;
     };
 
 } // namespace rocalution

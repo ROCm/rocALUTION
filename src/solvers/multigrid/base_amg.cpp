@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,6 +56,8 @@ namespace rocalution
         this->sm_format_ = CSR;
         // default operator format
         this->op_format_ = CSR;
+        // default operator block dimension
+        this->op_blockdim_ = 1;
 
         // since hierarchy has not been built yet
         this->hierarchy_ = false;
@@ -119,7 +121,18 @@ namespace rocalution
     {
         log_debug(this, "BaseAMG::SetOperatorFormat()", op_format);
 
-        this->op_format_ = op_format;
+        this->op_format_   = op_format;
+        this->op_blockdim_ = 1;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void BaseAMG<OperatorType, VectorType, ValueType>::SetOperatorFormat(unsigned int op_format,
+                                                                         int          op_blockdim)
+    {
+        log_debug(this, "BaseAMG::SetOperatorFormat()", op_format, op_blockdim);
+
+        this->op_format_   = op_format;
+        this->op_blockdim_ = op_blockdim;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -175,7 +188,7 @@ namespace rocalution
         {
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
-                this->op_level_[i]->ConvertTo(this->op_format_);
+                this->op_level_[i]->ConvertTo(this->op_format_, this->op_blockdim_);
             }
         }
 

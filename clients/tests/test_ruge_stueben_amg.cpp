@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,16 +26,16 @@
 
 #include <gtest/gtest.h>
 
-typedef std::tuple<int, std::string, int, int, unsigned int, int, int> rsamg_tuple;
+typedef std::tuple<int, std::string, unsigned int, int, int, int, int, int> rsamg_tuple;
 
-int         rsamg_size[]      = {63, 134};
-std::string rsamg_smoother[]  = {/*"ILU",*/ "MCGS"};
-int         rsamg_pre_iter[]  = {1, 2};
-int         rsamg_post_iter[] = {1, 2};
-int         rsamg_cycle[]     = {0, 1};
-int         rsamg_scaling[]   = {0, 1};
-
-unsigned int rsamg_format[] = {1, 7};
+int          rsamg_size[]           = {63, 134};
+std::string  rsamg_smoother[]       = {/*"ILU",*/ "MCGS"};
+unsigned int rsamg_format[]         = {1, 7};
+int          rsamg_pre_iter[]       = {1, 2};
+int          rsamg_post_iter[]      = {1, 2};
+int          rsamg_cycle[]          = {0, 1};
+int          rsamg_scaling[]        = {0, 1};
+int          rsamg_rebuildnumeric[] = {0, 1};
 
 class parameterized_ruge_stueben_amg : public testing::TestWithParam<rsamg_tuple>
 {
@@ -49,13 +49,14 @@ protected:
 Arguments setup_rsamg_arguments(rsamg_tuple tup)
 {
     Arguments arg;
-    arg.size        = std::get<0>(tup);
-    arg.smoother    = std::get<1>(tup);
-    arg.format      = std::get<2>(tup);
-    arg.pre_smooth  = std::get<3>(tup);
-    arg.post_smooth = std::get<4>(tup);
-    arg.cycle       = std::get<5>(tup);
-    arg.ordering    = std::get<6>(tup);
+    arg.size           = std::get<0>(tup);
+    arg.smoother       = std::get<1>(tup);
+    arg.format         = std::get<2>(tup);
+    arg.pre_smooth     = std::get<3>(tup);
+    arg.post_smooth    = std::get<4>(tup);
+    arg.cycle          = std::get<5>(tup);
+    arg.ordering       = std::get<6>(tup);
+    arg.rebuildnumeric = std::get<7>(tup);
     return arg;
 }
 
@@ -75,8 +76,9 @@ INSTANTIATE_TEST_CASE_P(ruge_stueben_amg,
                         parameterized_ruge_stueben_amg,
                         testing::Combine(testing::ValuesIn(rsamg_size),
                                          testing::ValuesIn(rsamg_smoother),
+                                         testing::ValuesIn(rsamg_format),
                                          testing::ValuesIn(rsamg_pre_iter),
                                          testing::ValuesIn(rsamg_post_iter),
-                                         testing::ValuesIn(rsamg_format),
                                          testing::ValuesIn(rsamg_cycle),
-                                         testing::ValuesIn(rsamg_scaling)));
+                                         testing::ValuesIn(rsamg_scaling),
+                                         testing::ValuesIn(rsamg_rebuildnumeric)));

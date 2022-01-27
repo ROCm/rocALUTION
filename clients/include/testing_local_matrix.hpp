@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -338,6 +338,156 @@ void testing_local_matrix_bad_args(void)
 
     // Stop rocALUTION
     stop_rocalution();
+}
+
+template <typename T>
+bool testing_local_matrix_conversions(Arguments argus)
+{
+    int         size        = argus.size;
+    int         blockdim    = argus.blockdim;
+    std::string matrix_type = argus.matrix_type;
+
+    // Initialize rocALUTION
+    set_device_rocalution(device);
+    init_rocalution();
+
+    // Generate A
+    int* csr_ptr = NULL;
+    int* csr_col = NULL;
+    T*   csr_val = NULL;
+
+    int nrow = 0;
+    int ncol = 0;
+    if(matrix_type == "Laplacian2D")
+    {
+        nrow = gen_2d_laplacian(size, &csr_ptr, &csr_col, &csr_val);
+        ncol = nrow;
+    }
+    else if(matrix_type == "PermutedIdentity")
+    {
+        nrow = gen_permuted_identity(size, &csr_ptr, &csr_col, &csr_val);
+        ncol = nrow;
+    }
+    else if(matrix_type == "Random")
+    {
+        nrow = gen_random(100 * size, 50 * size, 6, &csr_ptr, &csr_col, &csr_val);
+        ncol = 50 * size;
+    }
+    else
+    {
+        return false;
+    }
+
+    int nnz = csr_ptr[nrow];
+
+    LocalMatrix<T> A;
+    A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, ncol);
+
+    assert(csr_ptr == NULL);
+    assert(csr_col == NULL);
+    assert(csr_val == NULL);
+
+    bool success = true;
+
+    // Check host conversions
+    A.ConvertToCOO();
+    success &= A.Check();
+    A.ConvertToDIA();
+    success &= A.Check();
+    A.ConvertToELL();
+    success &= A.Check();
+    A.ConvertToHYB();
+    success &= A.Check();
+    A.ConvertToDENSE();
+    success &= A.Check();
+    A.ConvertToMCSR();
+    success &= A.Check();
+    A.ConvertToBCSR(blockdim);
+    success &= A.Check();
+    A.ConvertToCSR();
+    success &= A.Check();
+
+    // Check accelerator conversions
+    A.MoveToAccelerator();
+
+    A.ConvertToCOO();
+    success &= A.Check();
+    A.ConvertToDIA();
+    success &= A.Check();
+    A.ConvertToELL();
+    success &= A.Check();
+    A.ConvertToHYB();
+    success &= A.Check();
+    A.ConvertToDENSE();
+    success &= A.Check();
+    A.ConvertToMCSR();
+    success &= A.Check();
+    A.ConvertToBCSR(blockdim);
+    success &= A.Check();
+    A.ConvertToCSR();
+    success &= A.Check();
+
+    // Stop rocALUTION platform
+    stop_rocalution();
+
+    return success;
+}
+
+template <typename T>
+bool testing_local_matrix_allocations(Arguments argus)
+{
+    int size     = argus.size;
+    int blockdim = argus.blockdim;
+
+    int m  = size;
+    int n  = size;
+    int mb = (m + blockdim - 1) / blockdim;
+    int nb = (n + blockdim - 1) / blockdim;
+
+    int nnz = 0.05 * m * n;
+    if(nnz == 0)
+    {
+        nnz = m * n;
+    }
+
+    int nnzb = 0.01 * mb * nb;
+    if(nnzb == 0)
+    {
+        nnzb = mb * nb;
+    }
+
+    // Initialize rocALUTION
+    set_device_rocalution(device);
+    init_rocalution();
+
+    int ndiag       = 5;
+    int ell_max_row = 6;
+    int ell_nnz     = ell_max_row * m;
+    int coo_nnz     = (nnz - ell_nnz) < 0 ? 0 : nnz - ell_nnz;
+
+    // Testing allocating matrix types
+    LocalMatrix<T> A;
+    A.AllocateCSR("A", nnz, m, n);
+
+    LocalMatrix<T> B;
+    B.AllocateBCSR("B", nnzb, mb, nb, blockdim);
+
+    LocalMatrix<T> C;
+    C.AllocateCOO("C", nnz, m, n);
+
+    LocalMatrix<T> D;
+    D.AllocateDIA("D", nnz, m, n, ndiag);
+
+    LocalMatrix<T> F;
+    F.AllocateELL("F", ell_nnz, m, n, ell_max_row);
+
+    LocalMatrix<T> G;
+    G.AllocateHYB("G", ell_nnz, coo_nnz, ell_max_row, m, n);
+
+    // Stop rocALUTION platform
+    stop_rocalution();
+
+    return true;
 }
 
 #endif // TESTING_LOCAL_MATRIX_HPP

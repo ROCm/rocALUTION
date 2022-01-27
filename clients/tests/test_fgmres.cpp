@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,10 @@
 
 typedef std::tuple<int, int, std::string, unsigned int> fgmres_tuple;
 
-int         fgmres_size[]  = {7, 63};
-int         fgmres_basis[] = {20, 60};
-std::string fgmres_precond[]
-    = {"None", "Chebyshev", "SPAI", "TNS", "Jacobi", /*"GS", "ILU",*/ "ILUT", "MCGS" /*, "MCILU"*/};
-unsigned int fgmres_format[] = {1, 2, 4, 5, 6, 7};
+int          fgmres_size[]    = {7, 63};
+int          fgmres_basis[]   = {20, 60};
+std::string  fgmres_precond[] = {"None", "SPAI", "TNS", "Jacobi", "GS", "ILUT", "MCGS"};
+unsigned int fgmres_format[]  = {1, 4, 5, 7};
 
 class parameterized_fgmres : public testing::TestWithParam<fgmres_tuple>
 {

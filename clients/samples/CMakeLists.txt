@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,10 @@ function(add_rocalution_example EXAMPLE_SOURCE)
 
   # Link rocALUTION library
   target_link_libraries(${EXAMPLE_TARGET} PRIVATE roc::rocalution)
+
+  if (BUILD_CODE_COVERAGE)
+    target_link_libraries(${EXAMPLE_TARGET} PRIVATE -lgcov)
+  endif()
 
   # Examples output directory
   if(NOT TARGET rocalution)

@@ -25,7 +25,7 @@ The new routines can be added as public member function, e.g.
 .. code-block:: cpp
 
   ...
-  void ConvertTo(unsigned int matrix_format);
+  void ConvertTo(unsigned int matrix_format, int blockdim);
 
   void MyNewFunctionality(void);
 
@@ -56,6 +56,7 @@ This will be subject to the API function implementation:
           // As we want to implement our function only for CSR, we first need to convert
           // the matrix to CSR format
           unsigned int format = this->GetFormat();
+          int blockdim = this->GetBlockDimension();
           this->ConvertToCSR();
 
           // Call the corresponding base matrix implementation
@@ -104,7 +105,7 @@ This will be subject to the API function implementation:
               // even though the initial matrix format was different
               LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::MyNewFunctionality() was performed in CSR format");
 
-              this->ConvertTo(format);
+              this->ConvertTo(format, blockdim);
           }
       }
 

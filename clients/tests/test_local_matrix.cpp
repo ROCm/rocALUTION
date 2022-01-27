@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,57 +25,90 @@
 #include "utility.hpp"
 
 #include <gtest/gtest.h>
-/*
-typedef std::tuple<int, int, int, int, bool, int, bool> backend_tuple;
 
-int backend_rank[] = {-1, 0, 13};
-int backend_dev_node[] = {-1, 0, 13};
-int backend_dev[] = {-1, 0, 13};
-int backend_omp_threads[] = {-1, 0, 8};
-bool backend_affinity[] = {true, false};
-int backend_omp_threshold[] = {-1, 0, 20000};
-bool backend_disable_acc[] = {true, false};
+typedef std::tuple<int, int, std::string> local_matrix_conversions_tuple;
+typedef std::tuple<int, int>              local_matrix_allocations_tuple;
 
-class parameterized_backend : public testing::TestWithParam<backend_tuple>
+int         local_matrix_conversions_size[]     = {10, 17, 21};
+int         local_matrix_conversions_blockdim[] = {4, 7, 11};
+std::string local_matrix_type[]                 = {"Laplacian2D", "PermutedIdentity", "Random"};
+
+int local_matrix_allocations_size[]     = {100, 1475, 2524};
+int local_matrix_allocations_blockdim[] = {4, 7, 11};
+
+class parameterized_local_matrix_conversions
+    : public testing::TestWithParam<local_matrix_conversions_tuple>
 {
-    protected:
-    parameterized_backend() {}
-    virtual ~parameterized_backend() {}
+protected:
+    parameterized_local_matrix_conversions() {}
+    virtual ~parameterized_local_matrix_conversions() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
 
-Arguments setup_backend_arguments(backend_tuple tup)
+Arguments setup_local_matrix_conversions_arguments(local_matrix_conversions_tuple tup)
 {
     Arguments arg;
-    arg.rank          = std::get<0>(tup);
-    arg.dev_per_node  = std::get<1>(tup);
-    arg.dev           = std::get<2>(tup);
-    arg.omp_nthreads  = std::get<3>(tup);
-    arg.omp_affinity  = std::get<4>(tup);
-    arg.omp_threshold = std::get<5>(tup);
-    arg.use_acc       = std::get<6>(tup);
+    arg.size        = std::get<0>(tup);
+    arg.blockdim    = std::get<1>(tup);
+    arg.matrix_type = std::get<2>(tup);
     return arg;
 }
-*/
+
+class parameterized_local_matrix_allocations
+    : public testing::TestWithParam<local_matrix_allocations_tuple>
+{
+protected:
+    parameterized_local_matrix_allocations() {}
+    virtual ~parameterized_local_matrix_allocations() {}
+    virtual void SetUp() {}
+    virtual void TearDown() {}
+};
+
+Arguments setup_local_matrix_allocations_arguments(local_matrix_allocations_tuple tup)
+{
+    Arguments arg;
+    arg.size     = std::get<0>(tup);
+    arg.blockdim = std::get<1>(tup);
+    return arg;
+}
+
 TEST(local_matrix_bad_args, local_matrix)
 {
     testing_local_matrix_bad_args<float>();
 }
-/*
-TEST_P(parameterized_backend, backend)
+
+TEST_P(parameterized_local_matrix_conversions, local_matrix_conversions_float)
 {
-    Arguments arg = setup_backend_arguments(GetParam());
-    testing_backend(arg);
+    Arguments arg = setup_local_matrix_conversions_arguments(GetParam());
+    ASSERT_EQ(testing_local_matrix_conversions<float>(arg), true);
 }
 
-INSTANTIATE_TEST_CASE_P(backend,
-                        parameterized_backend,
-                        testing::Combine(testing::ValuesIn(backend_rank),
-                                         testing::ValuesIn(backend_dev_node),
-                                         testing::ValuesIn(backend_dev),
-                                         testing::ValuesIn(backend_omp_threads),
-                                         testing::ValuesIn(backend_affinity),
-                                         testing::ValuesIn(backend_omp_threshold),
-                                         testing::ValuesIn(backend_disable_acc)));
-*/
+TEST_P(parameterized_local_matrix_conversions, local_matrix_conversions_double)
+{
+    Arguments arg = setup_local_matrix_conversions_arguments(GetParam());
+    ASSERT_EQ(testing_local_matrix_conversions<double>(arg), true);
+}
+
+INSTANTIATE_TEST_CASE_P(local_matrix_conversions,
+                        parameterized_local_matrix_conversions,
+                        testing::Combine(testing::ValuesIn(local_matrix_conversions_size),
+                                         testing::ValuesIn(local_matrix_conversions_blockdim),
+                                         testing::ValuesIn(local_matrix_type)));
+
+TEST_P(parameterized_local_matrix_allocations, local_matrix_allocations_float)
+{
+    Arguments arg = setup_local_matrix_allocations_arguments(GetParam());
+    ASSERT_EQ(testing_local_matrix_allocations<float>(arg), true);
+}
+
+TEST_P(parameterized_local_matrix_allocations, local_matrix_allocations_double)
+{
+    Arguments arg = setup_local_matrix_allocations_arguments(GetParam());
+    ASSERT_EQ(testing_local_matrix_allocations<double>(arg), true);
+}
+
+INSTANTIATE_TEST_CASE_P(local_matrix_allocations,
+                        parameterized_local_matrix_allocations,
+                        testing::Combine(testing::ValuesIn(local_matrix_allocations_size),
+                                         testing::ValuesIn(local_matrix_allocations_blockdim)));

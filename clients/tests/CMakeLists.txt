@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+# Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,10 @@ find_package(Threads REQUIRED)
 # Non MPI tests
 set(ROCALUTION_TEST_SOURCES
   rocalution_host_gtest_main.cpp
+# Direct solvers
+  test_qr.cpp
+  test_lu.cpp
+  test_inversion.cpp
 # Krylov solvers
   test_backend.cpp
   test_bicgstab.cpp
@@ -65,6 +69,11 @@ if(SUPPORT_MPI)
     test_parallel_manager.cpp
   )
 endif()
+
+# Common
+list(APPEND ROCALUTION_TEST_SOURCES
+  ../include/random.cpp
+)
 
 add_executable(rocalution-test ${ROCALUTION_TEST_SOURCES} ${ROCALUTION_CLIENTS_COMMON})
 

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,7 @@ namespace rocalution
 
     template <typename ValueType>
     HIPAcceleratorMatrixBCSR<ValueType>::HIPAcceleratorMatrixBCSR(
-        const Rocalution_Backend_Descriptor& local_backend)
+        const Rocalution_Backend_Descriptor& local_backend, int blockdim)
     {
         log_debug(this,
                   "HIPAcceleratorMatrixBCSR::HIPAcceleratorMatrixBCSR()",
@@ -60,6 +60,7 @@ namespace rocalution
         this->mat_.row_offset = NULL;
         this->mat_.col        = NULL;
         this->mat_.val        = NULL;
+        this->mat_.blockdim   = blockdim;
         this->set_backend(local_backend);
 
         this->L_mat_descr_ = 0;
@@ -186,10 +187,9 @@ namespace rocalution
 
         hipDeviceSynchronize();
 
-        this->blockdim_ = blockdim;
-        this->nrow_     = nrowb * blockdim;
-        this->ncol_     = ncolb * blockdim;
-        this->nnz_      = nnzb * blockdim * blockdim;
+        this->nrow_ = nrowb * blockdim;
+        this->ncol_ = ncolb * blockdim;
+        this->nnz_  = nnzb * blockdim * blockdim;
 
         this->mat_.nrowb    = nrowb;
         this->mat_.ncolb    = ncolb;
@@ -238,6 +238,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -349,6 +350,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -476,6 +478,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -593,6 +596,7 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
+        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -742,8 +746,6 @@ namespace rocalution
         if((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&mat)) != NULL)
         {
             this->Clear();
-
-            this->mat_.blockdim = this->blockdim_;
 
             if(csr_to_bcsr_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                                cast_mat_csr->nnz_,

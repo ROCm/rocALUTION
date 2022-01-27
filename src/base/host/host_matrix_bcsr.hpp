@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2020-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,13 +36,24 @@ namespace rocalution
     {
     public:
         HostMatrixBCSR();
-        explicit HostMatrixBCSR(const Rocalution_Backend_Descriptor& local_backend);
+        explicit HostMatrixBCSR(const Rocalution_Backend_Descriptor& local_backend, int blockdim);
         virtual ~HostMatrixBCSR();
+
+        [[deprecated("Method will be removed in a future release")]] virtual void
+            set_block_dimension(int blockdim)
+        {
+            this->mat_.blockdim = blockdim;
+        }
 
         virtual void         Info(void) const;
         virtual unsigned int GetMatFormat(void) const
         {
             return BCSR;
+        }
+
+        virtual int GetMatBlockDimension(void) const
+        {
+            return this->mat_.blockdim;
         }
 
         virtual void Clear(void);
