@@ -3671,6 +3671,60 @@ namespace rocalution
                               nnz_total);
     }
 
+    template <>
+    rocsparse_status rocsparseTgthr(rocsparse_handle     handle,
+                                    int                  nnz,
+                                    float*               y,
+                                    float*               x_val,
+                                    int*                 x_ind,
+                                    rocsparse_index_base idx_base)
+    {
+        return rocsparse_sgthr(handle, nnz, y, x_val, x_ind, idx_base);
+    }
+
+    template <>
+    rocsparse_status rocsparseTgthr(rocsparse_handle     handle,
+                                    int                  nnz,
+                                    double*              y,
+                                    double*              x_val,
+                                    int*                 x_ind,
+                                    rocsparse_index_base idx_base)
+    {
+        return rocsparse_dgthr(handle, nnz, y, x_val, x_ind, idx_base);
+    }
+
+    template <>
+    rocsparse_status rocsparseTgthr(rocsparse_handle     handle,
+                                    int                  nnz,
+                                    std::complex<float>* y,
+                                    std::complex<float>* x_val,
+                                    int*                 x_ind,
+                                    rocsparse_index_base idx_base)
+    {
+        return rocsparse_cgthr(handle,
+                               nnz,
+                               (rocsparse_float_complex*)y,
+                               (rocsparse_float_complex*)x_val,
+                               x_ind,
+                               idx_base);
+    }
+
+    template <>
+    rocsparse_status rocsparseTgthr(rocsparse_handle      handle,
+                                    int                   nnz,
+                                    std::complex<double>* y,
+                                    std::complex<double>* x_val,
+                                    int*                  x_ind,
+                                    rocsparse_index_base  idx_base)
+    {
+        return rocsparse_zgthr(handle,
+                               nnz,
+                               (rocsparse_double_complex*)y,
+                               (rocsparse_double_complex*)x_val,
+                               x_ind,
+                               idx_base);
+    }
+
     // rocsparse nnz compress
     template <>
     rocsparse_status rocsparseTnnz_compress(rocsparse_handle          handle,

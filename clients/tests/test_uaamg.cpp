@@ -26,16 +26,20 @@
 
 #include <gtest/gtest.h>
 
-typedef std::tuple<int, std::string, unsigned int, int, int, int, int, int> uaamg_tuple;
+typedef std::
+    tuple<int, int, int, std::string, std::string, std::string, unsigned int, int, int, int>
+        uaamg_tuple;
 
-int          uaamg_size[]           = {63, 134};
-std::string  uaamg_smoother[]       = {"FSAI" /*, "ILU"*/};
-unsigned int uaamg_format[]         = {1, 6};
-int          uaamg_pre_iter[]       = {1, 2};
-int          uaamg_post_iter[]      = {1, 2};
-int          uaamg_cycle[]          = {0, 2};
-int          uaamg_scaling[]        = {0, 1};
-int          uaamg_rebuildnumeric[] = {0, 1};
+int          uaamg_size[]             = {22, 63, 134, 207};
+int          uaamg_pre_iter[]         = {2};
+int          uaamg_post_iter[]        = {2};
+std::string  uaamg_smoother[]         = {"FSAI" /*, "ILU"*/};
+std::string  uaamg_coarsening_strat[] = {"Greedy", "PMIS"};
+std::string  uaamg_matrix_type[]      = {"Laplacian2D", "Laplacian3D"};
+unsigned int uaamg_format[]           = {1, 6};
+int          uaamg_cycle[]            = {2};
+int          uaamg_scaling[]          = {1};
+int          uaamg_rebuildnumeric[]   = {0, 1};
 
 class parameterized_uaamg : public testing::TestWithParam<uaamg_tuple>
 {
@@ -49,14 +53,17 @@ protected:
 Arguments setup_uaamg_arguments(uaamg_tuple tup)
 {
     Arguments arg;
-    arg.size           = std::get<0>(tup);
-    arg.smoother       = std::get<1>(tup);
-    arg.format         = std::get<2>(tup);
-    arg.pre_smooth     = std::get<3>(tup);
-    arg.post_smooth    = std::get<4>(tup);
-    arg.cycle          = std::get<5>(tup);
-    arg.ordering       = std::get<6>(tup);
-    arg.rebuildnumeric = std::get<7>(tup);
+    arg.size                = std::get<0>(tup);
+    arg.pre_smooth          = std::get<1>(tup);
+    arg.post_smooth         = std::get<2>(tup);
+    arg.smoother            = std::get<3>(tup);
+    arg.coarsening_strategy = std::get<4>(tup);
+    arg.matrix_type         = std::get<5>(tup);
+    arg.format              = std::get<6>(tup);
+    arg.cycle               = std::get<7>(tup);
+    arg.ordering            = std::get<8>(tup);
+    arg.rebuildnumeric      = std::get<9>(tup);
+
     return arg;
 }
 
@@ -75,10 +82,12 @@ TEST_P(parameterized_uaamg, uaamg_double)
 INSTANTIATE_TEST_CASE_P(uaamg,
                         parameterized_uaamg,
                         testing::Combine(testing::ValuesIn(uaamg_size),
-                                         testing::ValuesIn(uaamg_smoother),
-                                         testing::ValuesIn(uaamg_format),
                                          testing::ValuesIn(uaamg_pre_iter),
                                          testing::ValuesIn(uaamg_post_iter),
+                                         testing::ValuesIn(uaamg_smoother),
+                                         testing::ValuesIn(uaamg_coarsening_strat),
+                                         testing::ValuesIn(uaamg_matrix_type),
+                                         testing::ValuesIn(uaamg_format),
                                          testing::ValuesIn(uaamg_cycle),
                                          testing::ValuesIn(uaamg_scaling),
                                          testing::ValuesIn(uaamg_rebuildnumeric)));

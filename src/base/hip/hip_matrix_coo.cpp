@@ -917,6 +917,44 @@ namespace rocalution
         return true;
     }
 
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCOO<ValueType>::Sort(void)
+    {
+        if(this->nnz_ > 0)
+        {
+            rocsparse_status status;
+
+            size_t buffer_size = 0;
+            status             = rocsparse_coosort_buffer_size(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                this->nrow_,
+                this->ncol_,
+                this->nnz_,
+                this->mat_.row,
+                this->mat_.col,
+                &buffer_size);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            void* buffer = nullptr;
+            hipMalloc(&buffer, buffer_size);
+
+            status
+                = rocsparse_coosort_by_row(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                           this->nrow_,
+                                           this->ncol_,
+                                           this->nnz_,
+                                           this->mat_.row,
+                                           this->mat_.col,
+                                           nullptr,
+                                           buffer);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            hipFree(buffer);
+        }
+
+        return true;
+    }
+
     template class HIPAcceleratorMatrixCOO<double>;
     template class HIPAcceleratorMatrixCOO<float>;
 #ifdef SUPPORT_COMPLEX

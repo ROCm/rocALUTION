@@ -44,14 +44,16 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_saamg(Arguments argus)
 {
-    int          ndim           = argus.size;
-    int          pre_iter       = argus.pre_smooth;
-    int          post_iter      = argus.post_smooth;
-    std::string  smoother       = argus.smoother;
-    unsigned int format         = argus.format;
-    int          cycle          = argus.cycle;
-    bool         scaling        = argus.ordering;
-    bool         rebuildnumeric = argus.rebuildnumeric;
+    int          ndim                = argus.size;
+    int          pre_iter            = argus.pre_smooth;
+    int          post_iter           = argus.post_smooth;
+    std::string  smoother            = argus.smoother;
+    std::string  coarsening_strategy = argus.coarsening_strategy;
+    std::string  matrix_type         = argus.matrix_type;
+    unsigned int format              = argus.format;
+    int          cycle               = argus.cycle;
+    bool         scaling             = argus.ordering;
+    bool         rebuildnumeric      = argus.rebuildnumeric;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);
@@ -69,8 +71,20 @@ bool testing_saamg(Arguments argus)
     int* csr_col = NULL;
     T*   csr_val = NULL;
 
-    int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
-    int nnz  = csr_ptr[nrow];
+    int nrow = 0;
+    if(matrix_type == "Laplacian2D")
+    {
+        nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
+    }
+    else if(matrix_type == "Laplacian3D")
+    {
+        nrow = gen_3d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
+    }
+    else
+    {
+        return false;
+    }
+    int nnz = csr_ptr[nrow];
 
     T* csr_val2 = NULL;
     if(rebuildnumeric)
@@ -111,19 +125,43 @@ bool testing_saamg(Arguments argus)
     // Solver
     FCG<LocalMatrix<T>, LocalVector<T>, T> ls;
 
+    // Start time measurement
+    double tick = rocalution_time();
+    double tack = rocalution_time();
+
     // AMG
     SAAMG<LocalMatrix<T>, LocalVector<T>, T> p;
 
     // Setup SAAMG
-    p.SetCoarsestLevel(200);
+    p.SetCoarsestLevel(10);
     p.SetCycle(cycle);
     p.SetOperator(A);
     p.SetManualSmoothers(true);
     p.SetManualSolver(true);
     p.SetScaling(scaling);
+
+    if(coarsening_strategy == "Greedy")
+    {
+        p.SetCoarseningStrategy(CoarseningStrategy::Greedy);
+    }
+    else if(coarsening_strategy == "PMIS")
+    {
+        p.SetCoarseningStrategy(CoarseningStrategy::PMIS);
+    }
+    else
+    {
+        return false;
+    }
+
     p.SetCouplingStrength(0.001);
     p.SetInterpRelax(2.0 / 3.0);
     p.BuildHierarchy();
+
+    // Stop build hierarchy time measurement
+    tack = rocalution_time();
+    std::cout << "Build Hierarchy took: " << (tack - tick) / 1e6 << " sec" << std::endl;
+    // Start smoother time measurement
+    tick = rocalution_time();
 
     // Get number of hierarchy levels
     int levels = p.GetNumLevels();
@@ -167,6 +205,12 @@ bool testing_saamg(Arguments argus)
     ls.SetPreconditioner(p);
 
     ls.Init(1e-8, 0.0, 1e+8, 10000);
+
+    // Stop build smoother time measurement
+    tack = rocalution_time();
+    std::cout << "Smoother build took: " << (tack - tick) / 1e6 << " sec" << std::endl;
+    // Start build time measurement
+    tick = rocalution_time();
     ls.Build();
 
     if(rebuildnumeric)
@@ -183,7 +227,17 @@ bool testing_saamg(Arguments argus)
     // Matrix format
     A.ConvertTo(format, format == BCSR ? 3 : 1);
 
+    // Stop building time measurement
+    tack = rocalution_time();
+    std::cout << "Build took: " << (tack - tick) / 1e6 << " sec" << std::endl;
+    // Start solving time measurement
+    tick = rocalution_time();
+
     ls.Solve(rebuildnumeric ? b2 : b, &x);
+
+    // Stop solving time measurement
+    tack = rocalution_time();
+    std::cout << "Solving took: " << (tack - tick) / 1e6 << " sec" << std::endl;
 
     // Verify solution
     x.ScaleAdd(-1.0, e);
@@ -204,6 +258,11 @@ bool testing_saamg(Arguments argus)
     }
     delete[] smooth;
     delete[] sm;
+
+    if(!success)
+    {
+        std::cout << "nrm2: " << nrm2 << std::endl;
+    }
 
     return success;
 }

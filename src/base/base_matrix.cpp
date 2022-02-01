@@ -587,6 +587,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGPMISAggregate(const BaseVector<int>& connections,
+                                                 BaseVector<int>*       aggregates) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::AMGSmoothedAggregation(ValueType              relax,
                                                        const BaseVector<int>& aggregates,
                                                        const BaseVector<int>& connections,

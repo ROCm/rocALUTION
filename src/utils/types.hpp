@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,12 @@
 
 namespace rocalution
 {
+    struct mis_tuple
+    {
+        int          s;
+        unsigned int v;
+        int          i;
+    };
 
     inline static int IndexTypeToInt(IndexType2 idx)
     {

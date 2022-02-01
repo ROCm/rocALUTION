@@ -44,14 +44,16 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_uaamg(Arguments argus)
 {
-    int          ndim           = argus.size;
-    int          pre_iter       = argus.pre_smooth;
-    int          post_iter      = argus.post_smooth;
-    std::string  smoother       = argus.smoother;
-    unsigned int format         = argus.format;
-    int          cycle          = argus.cycle;
-    bool         scaling        = argus.ordering;
-    bool         rebuildnumeric = argus.rebuildnumeric;
+    int          ndim                = argus.size;
+    int          pre_iter            = argus.pre_smooth;
+    int          post_iter           = argus.post_smooth;
+    std::string  smoother            = argus.smoother;
+    std::string  coarsening_strategy = argus.coarsening_strategy;
+    std::string  matrix_type         = argus.matrix_type;
+    unsigned int format              = argus.format;
+    int          cycle               = argus.cycle;
+    bool         scaling             = argus.ordering;
+    bool         rebuildnumeric      = argus.rebuildnumeric;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);
@@ -69,8 +71,20 @@ bool testing_uaamg(Arguments argus)
     int* csr_col = NULL;
     T*   csr_val = NULL;
 
-    int nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
-    int nnz  = csr_ptr[nrow];
+    int nrow = 0;
+    if(matrix_type == "Laplacian2D")
+    {
+        nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
+    }
+    else if(matrix_type == "Laplacian3D")
+    {
+        nrow = gen_3d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
+    }
+    else
+    {
+        return false;
+    }
+    int nnz = csr_ptr[nrow];
 
     T* csr_val2 = NULL;
     if(rebuildnumeric)
@@ -121,6 +135,20 @@ bool testing_uaamg(Arguments argus)
     p.SetManualSmoothers(true);
     p.SetManualSolver(true);
     p.SetScaling(scaling);
+
+    if(coarsening_strategy == "Greedy")
+    {
+        p.SetCoarseningStrategy(CoarseningStrategy::Greedy);
+    }
+    else if(coarsening_strategy == "PMIS")
+    {
+        p.SetCoarseningStrategy(CoarseningStrategy::PMIS);
+    }
+    else
+    {
+        return false;
+    }
+
     p.SetCouplingStrength(0.005);
     p.SetOverInterp(1.2);
     p.BuildHierarchy();

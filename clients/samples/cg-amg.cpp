@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,10 +29,6 @@ using namespace rocalution;
 
 int main(int argc, char* argv[])
 {
-    // Start time measurement
-    double tick, tack, start, end;
-    start = rocalution_time();
-
     // Check command line parameters
     if(argc == 1)
     {
@@ -61,6 +57,19 @@ int main(int argc, char* argv[])
     // Read matrix from MTX file
     mat.ReadFileMTX(std::string(argv[1]));
 
+    // Run a simple kernel to avoid slow down on first kernel call in hip
+    LocalVector<double> diag;
+    diag.Allocate("diag", mat.GetN());
+    mat.MoveToAccelerator();
+    diag.MoveToAccelerator();
+    mat.ExtractDiagonal(&diag);
+    mat.MoveToHost();
+    diag.MoveToHost();
+
+    // Start time measurement
+    double tick, tack, start, end;
+    start = rocalution_time();
+
     // Allocate vectors
     x.Allocate("x", mat.GetN());
     rhs.Allocate("rhs", mat.GetM());
@@ -81,6 +90,9 @@ int main(int argc, char* argv[])
 
     // AMG Preconditioner
     SAAMG<LocalMatrix<double>, LocalVector<double>, double> p;
+    p.SetCoarseningStrategy(CoarseningStrategy::Greedy);
+    p.SetCoarsestLevel(200);
+    p.SetCouplingStrength(0.001);
 
     // Disable verbosity output of AMG preconditioner
     p.Verbose(0);

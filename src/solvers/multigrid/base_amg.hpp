@@ -32,6 +32,11 @@
 
 namespace rocalution
 {
+    typedef enum _coarsening_strategy
+    {
+        Greedy = 0,
+        PMIS   = 1
+    } CoarseningStrategy;
 
     /** \ingroup solver_module
   * \class BaseAMG

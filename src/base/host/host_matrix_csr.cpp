@@ -26,6 +26,7 @@
 #include "../../utils/def.hpp"
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
+#include "../../utils/types.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
 #include "host_io.hpp"
@@ -3807,6 +3808,198 @@ namespace rocalution
                     {
                         cast_agg->vec_[this->mat_.col[j]] = last_g;
                     }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGPMISAggregate(const BaseVector<int>& connections,
+                                                    BaseVector<int>*       aggregates) const
+    {
+        assert(aggregates != NULL);
+
+        HostVector<int>*       cast_agg  = dynamic_cast<HostVector<int>*>(aggregates);
+        const HostVector<int>* cast_conn = dynamic_cast<const HostVector<int>*>(&connections);
+
+        assert(cast_agg != NULL);
+        assert(cast_conn != NULL);
+
+        aggregates->Clear();
+        aggregates->Allocate(this->nrow_);
+
+        std::vector<mis_tuple> tuples(this->nrow_);
+        std::vector<mis_tuple> max_tuples(this->nrow_);
+
+        // Initialize tuples
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int state = -2;
+
+            int row_start = this->mat_.row_offset[i];
+            int row_end   = this->mat_.row_offset[i + 1];
+            for(int j = row_start; j < row_end; j++)
+            {
+                if(cast_conn->vec_[j] == 1)
+                {
+                    state = 0;
+                    break;
+                }
+            }
+
+            unsigned int hash = i;
+            hash              = ((hash >> 16) ^ hash) * 0x45d9f3b;
+            hash              = ((hash >> 16) ^ hash) * 0x45d9f3b;
+            hash              = (hash >> 16) ^ hash;
+
+            tuples[i].s = state;
+            tuples[i].v = hash;
+            tuples[i].i = i;
+        }
+
+        bool done = false;
+        int  iter = 0;
+        while(!done)
+        {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                max_tuples[i] = tuples[i];
+            }
+
+            for(int k = 0; k < 2; k++)
+            {
+                // Find max tuples
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+                for(int i = 0; i < this->nrow_; ++i)
+                {
+                    mis_tuple t_max = max_tuples[i];
+
+                    int row_start = this->mat_.row_offset[t_max.i];
+                    int row_end   = this->mat_.row_offset[t_max.i + 1];
+                    for(int j = row_start; j < row_end; j++)
+                    {
+                        if(cast_conn->vec_[j] == 1)
+                        {
+                            int       c  = this->mat_.col[j];
+                            mis_tuple tj = tuples[c];
+
+                            // find lexographical maximum
+                            if(tj.s > t_max.s)
+                            {
+                                t_max = tj;
+                            }
+                            else if(tj.s == t_max.s && (tj.v > t_max.v))
+                            {
+                                t_max = tj;
+                            }
+                        }
+                    }
+
+                    max_tuples[i] = t_max;
+                }
+            }
+
+            done = true;
+
+            // Update tuples
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                if(tuples[i].s == 0)
+                {
+                    mis_tuple t_max = max_tuples[i];
+
+                    if(t_max.i == i)
+                    {
+                        tuples[i].s       = 1;
+                        cast_agg->vec_[i] = 1;
+                    }
+                    else if(t_max.s == 1)
+                    {
+                        tuples[i].s       = -1;
+                        cast_agg->vec_[i] = 0;
+                    }
+                    else
+                    {
+                        done = false;
+                    }
+                }
+            }
+
+            iter++;
+
+            if(iter > 10)
+            {
+                LOG_VERBOSE_INFO(
+                    2,
+                    "*** warning: HostMatrixCSR::AMGPMISAggregate() Current number of iterations: "
+                        << iter);
+            }
+        }
+
+        // exclusive scan on aggregates array
+        int sum = 0;
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int temp          = cast_agg->vec_[i];
+            cast_agg->vec_[i] = sum;
+            sum += temp;
+        }
+
+        for(int k = 0; k < 2; k++)
+        {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                max_tuples[i] = tuples[i];
+            }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                mis_tuple t = max_tuples[i];
+
+                assert(t.s != 0);
+
+                if(t.s == -1)
+                {
+                    int row_start = this->mat_.row_offset[i];
+                    int row_end   = this->mat_.row_offset[i + 1];
+
+                    for(int j = row_start; j < row_end; j++)
+                    {
+                        if(cast_conn->vec_[j] == 1)
+                        {
+                            int c = this->mat_.col[j];
+
+                            if(max_tuples[c].s == 1)
+                            {
+                                cast_agg->vec_[i] = cast_agg->vec_[c];
+                                tuples[i].s       = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else if(t.s == -2)
+                {
+                    cast_agg->vec_[i] = -2;
                 }
             }
         }

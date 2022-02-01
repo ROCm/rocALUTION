@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,8 @@
 
 #include "../matrix_formats_ind.hpp"
 #include "hip_utils.hpp"
+
+#include "../../utils/types.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -124,25 +126,31 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
+    template <unsigned int WFSIZE, typename ValueType, typename IndexType>
     __global__ void kernel_csr_extract_diag(IndexType nrow,
                                             const IndexType* __restrict__ row_offset,
                                             const IndexType* __restrict__ col,
                                             const ValueType* __restrict__ val,
                                             ValueType* __restrict__ vec)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        IndexType tid = hipThreadIdx_x;
+        IndexType gid = hipBlockIdx_x * hipBlockDim_x + tid;
+        IndexType lid = tid & (WFSIZE - 1);
+        IndexType row = gid / WFSIZE;
 
-        if(ai >= nrow)
+        if(row >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        IndexType start = row_offset[row];
+        IndexType end   = row_offset[row + 1];
+
+        for(IndexType aj = start + lid; aj < end; aj += WFSIZE)
         {
-            if(ai == col[aj])
+            if(row == col[aj])
             {
-                vec[ai] = val[aj];
+                vec[row] = val[aj];
             }
         }
     }
@@ -897,6 +905,651 @@ namespace rocalution
 
         IndexType aj = row_offset[idx] + ai;
         vec[col[aj]] = val[aj];
+    }
+
+    // AMG Connect
+    template <typename ValueType, typename IndexType, unsigned int WF_SIZE>
+    __global__ void kernel_csr_amg_connect(IndexType nrow,
+                                           ValueType eps2,
+                                           const IndexType* __restrict__ row_offset,
+                                           const IndexType* __restrict__ col,
+                                           const ValueType* __restrict__ val,
+                                           const ValueType* __restrict__ diag,
+                                           IndexType* __restrict__ connections)
+    {
+        IndexType tid = hipThreadIdx_x;
+        IndexType gid = hipBlockIdx_x * hipBlockDim_x + tid;
+        IndexType lid = tid & (WF_SIZE - 1);
+        IndexType row = gid / WF_SIZE;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        ValueType eps_diag_r = eps2 * diag[row];
+
+        IndexType start = row_offset[row];
+        IndexType end   = row_offset[row + 1];
+
+        for(IndexType i = start + lid; i < end; i += WF_SIZE)
+        {
+            IndexType c = col[i];
+            ValueType v = val[i];
+
+            connections[i] = (c != row) && (hip_real(v * v) > hip_real(eps_diag_r * diag[c]));
+        }
+    }
+
+    // AMG Aggregate
+    __device__ __forceinline__ unsigned int hash(unsigned int x)
+    {
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = (x >> 16) ^ x;
+        return x;
+    }
+
+    template <typename IndexType>
+    __global__ void kernel_csr_amg_init_mis_tuples(IndexType nrow,
+                                                   const IndexType* __restrict__ row_offset,
+                                                   const IndexType* __restrict__ connections,
+                                                   mis_tuple* __restrict__ tuples)
+    {
+        IndexType row = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        IndexType state = -2;
+
+        IndexType row_start = row_offset[row];
+        IndexType row_end   = row_offset[row + 1];
+
+        for(IndexType j = row_start; j < row_end; j++)
+        {
+            if(connections[j] == 1)
+            {
+                state = 0;
+                break;
+            }
+        }
+
+        tuples[row].s = state;
+        tuples[row].v = hash(row);
+        tuples[row].i = row;
+    }
+
+    __device__ __forceinline__ mis_tuple lexographical_max(mis_tuple* ti, mis_tuple* tj)
+    {
+        // find lexographical maximum
+        if(tj->s > ti->s)
+        {
+            return *tj;
+        }
+        else if(tj->s == ti->s && (tj->v > ti->v))
+        {
+            return *tj;
+        }
+
+        return *ti;
+    }
+
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_amg_find_max_mis_tuples_shared(IndexType nrow,
+                                                       const IndexType* __restrict__ row_offset,
+                                                       const IndexType* __restrict__ cols,
+                                                       const IndexType* __restrict__ connections,
+                                                       const mis_tuple* __restrict__ tuples,
+                                                       mis_tuple* __restrict__ max_tuples,
+                                                       bool* done)
+    {
+        IndexType tid = hipThreadIdx_x;
+        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
+        IndexType lid = tid & (WFSIZE - 1);
+        IndexType wid = tid / WFSIZE;
+        IndexType row = gid / WFSIZE;
+
+        __shared__ mis_tuple smax_tuple[BLOCKSIZE];
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        smax_tuple[WFSIZE * wid] = max_tuples[row];
+
+        __syncthreads();
+
+        for(IndexType k = 0; k < 2; k++)
+        {
+            mis_tuple t_max = smax_tuple[WFSIZE * wid];
+
+            IndexType row_start = row_offset[t_max.i];
+            IndexType row_end   = row_offset[t_max.i + 1];
+
+            for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+            {
+                if(connections[j] == 1)
+                {
+                    IndexType col = cols[j];
+                    mis_tuple tj  = tuples[col];
+
+                    t_max = lexographical_max(&tj, &t_max);
+                }
+            }
+
+            smax_tuple[WFSIZE * wid + lid] = t_max;
+
+            __syncthreads();
+
+            // Finish reducing the intra block lexographical max
+            if(WFSIZE >= 64)
+            {
+                if(lid < 32)
+                    smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                        &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 32]);
+                __threadfence_block();
+            }
+            if(WFSIZE >= 32)
+            {
+                if(lid < 16)
+                    smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                        &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 16]);
+                __threadfence_block();
+            }
+            if(WFSIZE >= 16)
+            {
+                if(lid < 8)
+                    smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                        &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 8]);
+                __threadfence_block();
+            }
+            if(WFSIZE >= 8)
+            {
+                if(lid < 4)
+                    smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                        &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 4]);
+                __threadfence_block();
+            }
+            if(WFSIZE >= 4)
+            {
+                if(lid < 2)
+                    smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                        &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 2]);
+                __threadfence_block();
+            }
+            if(WFSIZE >= 2)
+            {
+                if(lid < 1)
+                    smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                        &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 1]);
+                __threadfence_block();
+            }
+
+            __syncthreads();
+        }
+
+        if(lid == 0)
+        {
+            max_tuples[row] = smax_tuple[WFSIZE * wid];
+        }
+
+        if(gid == 0)
+        {
+            *done = true;
+        }
+    }
+
+    template <typename IndexType>
+    __global__ void kernel_csr_amg_update_mis_tuples(IndexType nrow,
+                                                     const mis_tuple* __restrict__ max_tuples,
+                                                     mis_tuple* __restrict__ tuples,
+                                                     IndexType* __restrict__ aggregates,
+                                                     bool* done)
+    {
+        IndexType row = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        if(tuples[row].s == 0)
+        {
+            mis_tuple t_max = max_tuples[row];
+
+            if(t_max.i == row)
+            {
+                tuples[row].s   = 1;
+                aggregates[row] = 1;
+            }
+            else if(t_max.s == 1)
+            {
+                tuples[row].s   = -1;
+                aggregates[row] = 0;
+            }
+            else
+            {
+                *done = false;
+            }
+        }
+    }
+
+    template <typename IndexType>
+    __global__ void kernel_csr_amg_update_aggregates(IndexType nrow,
+                                                     const IndexType* __restrict__ row_offset,
+                                                     const IndexType* __restrict__ cols,
+                                                     const IndexType* __restrict__ connections,
+                                                     const mis_tuple* __restrict__ max_tuples,
+                                                     mis_tuple* __restrict__ tuples,
+                                                     IndexType* __restrict__ aggregates)
+    {
+        IndexType row = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        mis_tuple t = max_tuples[row];
+
+        if(t.s == -1)
+        {
+            IndexType row_start = row_offset[row];
+            IndexType row_end   = row_offset[row + 1];
+
+            for(IndexType j = row_start; j < row_end; j++)
+            {
+                if(connections[j] == 1)
+                {
+                    IndexType col = cols[j];
+
+                    if(max_tuples[col].s == 1)
+                    {
+                        aggregates[row] = aggregates[col];
+                        tuples[row].s   = 1;
+                        break;
+                    }
+                }
+            }
+        }
+        else if(t.s == -2)
+        {
+            aggregates[row] = -2;
+        }
+    }
+
+    // AMGSmoothedAggregation
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, unsigned int HASH, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_prolong_nnz_per_row(IndexType nrow,
+                                            const IndexType* __restrict__ row_offset,
+                                            const IndexType* __restrict__ cols,
+                                            const IndexType* __restrict__ connections,
+                                            const IndexType* __restrict__ aggregates,
+                                            IndexType* __restrict__ prolong_row_offset)
+    {
+        IndexType tid = hipThreadIdx_x;
+        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
+        IndexType lid = tid & (WFSIZE - 1);
+        IndexType wid = tid / WFSIZE;
+        IndexType row = gid / WFSIZE;
+
+        __shared__ IndexType stable[(BLOCKSIZE / WFSIZE) * HASH];
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Pointer to each wavefronts shared data
+        IndexType* table = &stable[wid * HASH];
+
+        // Initialize hash table with -1
+        for(IndexType j = lid; j < HASH; j += WFSIZE)
+        {
+            table[j] = -1;
+        }
+
+        __syncthreads();
+
+        IndexType row_start = row_offset[row];
+        IndexType row_end   = row_offset[row + 1];
+
+        for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+        {
+            IndexType col = cols[j];
+
+            if(row == col || row != col && connections[j] == 1)
+            {
+                IndexType key = aggregates[col];
+
+                if(key >= 0)
+                {
+                    // Compute hash
+                    IndexType hash = (key * 103) & (HASH - 1);
+
+                    // Hash operation
+                    while(true)
+                    {
+                        if(table[hash] == key)
+                        {
+                            // key is already inserted, done
+                            break;
+                        }
+                        else if(table[hash] == -1)
+                        {
+                            if(atomicCAS(&table[hash], -1, key) == -1)
+                            {
+                                atomicAdd(&prolong_row_offset[row + 1], 1);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            // collision, compute new hash
+                            hash = (hash + 1) & (HASH - 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, unsigned int HASH, typename ValueType, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_prolong_fill(IndexType nrow,
+                                     ValueType relax,
+                                     const IndexType* __restrict__ row_offset,
+                                     const IndexType* __restrict__ cols,
+                                     const ValueType* __restrict__ vals,
+                                     const IndexType* __restrict__ connections,
+                                     const IndexType* __restrict__ aggregates,
+                                     const IndexType* __restrict__ prolong_row_offset,
+                                     IndexType* __restrict__ prolong_cols,
+                                     ValueType* __restrict__ prolong_vals)
+    {
+        IndexType tid = hipThreadIdx_x;
+        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
+
+        __shared__ IndexType stable[BLOCKSIZE * HASH];
+        __shared__ IndexType sdata[BLOCKSIZE * HASH];
+
+        IndexType* table = &stable[tid * HASH];
+        IndexType* data  = &sdata[tid * HASH];
+
+        // Initialize hash table with -1
+        for(IndexType j = 0; j < HASH; j++)
+        {
+            table[j] = -1;
+            data[j]  = -1;
+        }
+
+        __syncthreads();
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        IndexType row_start = row_offset[row];
+        IndexType row_end   = row_offset[row + 1];
+
+        ValueType dia = static_cast<ValueType>(0);
+        for(IndexType j = row_start; j < row_end; j++)
+        {
+            if(cols[j] == row)
+            {
+                dia += vals[j];
+            }
+            else if(!connections[j])
+            {
+                dia -= vals[j];
+            }
+        }
+
+        dia = static_cast<ValueType>(1) / dia;
+
+        IndexType prolong_row_start = prolong_row_offset[row];
+
+        IndexType counter = prolong_row_start;
+        for(IndexType j = row_start; j < row_end; j++)
+        {
+            IndexType col = cols[j];
+
+            if(row == col || row != col && connections[j] == 1)
+            {
+                IndexType key = aggregates[col];
+
+                if(key >= 0)
+                {
+                    ValueType val
+                        = (col == row) ? static_cast<ValueType>(1) - relax : -relax * dia * vals[j];
+
+                    IndexType hash = (key * 103) & (HASH - 1);
+
+                    // Hash operation
+                    while(true)
+                    {
+                        if(table[hash] == key)
+                        {
+                            prolong_vals[data[hash]] += val;
+                            break;
+                        }
+                        else if(table[hash] == -1)
+                        {
+                            table[hash]           = key;
+                            data[hash]            = counter;
+                            prolong_cols[counter] = key;
+                            prolong_vals[counter] = val;
+                            counter++;
+                            break;
+                        }
+                        else
+                        {
+                            // collision, compute new hash
+                            hash = (hash + 1) & (HASH - 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    template <unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASH,
+              typename ValueType,
+              typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_prolong_fill2(IndexType nrow,
+                                      ValueType relax,
+                                      const IndexType* __restrict__ row_offset,
+                                      const IndexType* __restrict__ cols,
+                                      const ValueType* __restrict__ vals,
+                                      const IndexType* __restrict__ connections,
+                                      const IndexType* __restrict__ aggregates,
+                                      const IndexType* __restrict__ prolong_row_offset,
+                                      IndexType* __restrict__ prolong_cols,
+                                      ValueType* __restrict__ prolong_vals)
+    {
+        IndexType tid = hipThreadIdx_x;
+        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
+        IndexType lid = tid & (WFSIZE - 1);
+        IndexType wid = tid / WFSIZE;
+        IndexType row = gid / WFSIZE;
+
+        __shared__ IndexType stable[(BLOCKSIZE / WFSIZE) * HASH];
+        __shared__ IndexType sdata[(BLOCKSIZE / WFSIZE) * HASH];
+        __shared__ IndexType scounter[(BLOCKSIZE / WFSIZE)];
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        IndexType* table   = &stable[wid * HASH];
+        IndexType* data    = &sdata[wid * HASH];
+        IndexType* counter = &scounter[wid];
+
+        for(IndexType j = lid; j < HASH; j += WFSIZE)
+        {
+            table[j] = -1;
+            data[j]  = -1;
+        }
+
+        *counter = prolong_row_offset[row];
+
+        __syncthreads();
+
+        IndexType row_start = row_offset[row];
+        IndexType row_end   = row_offset[row + 1];
+
+        ValueType dia = static_cast<ValueType>(0);
+        for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+        {
+            if(cols[j] == row)
+            {
+                dia += vals[j];
+            }
+            else if(!connections[j])
+            {
+                dia -= vals[j];
+            }
+        }
+
+        wf_reduce_sum<WFSIZE>(&dia);
+
+        dia = shfl(dia, 0, WFSIZE);
+
+        dia = static_cast<ValueType>(1) / dia;
+
+        for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+        {
+            IndexType col = cols[j];
+
+            if(row == col || row != col && connections[j] == 1)
+            {
+                IndexType key = aggregates[col];
+
+                if(key >= 0)
+                {
+                    ValueType val
+                        = (col == row) ? static_cast<ValueType>(1) - relax : -relax * dia * vals[j];
+
+                    IndexType hash = (key * 103) & (HASH - 1);
+
+                    // Hash operation
+                    while(true)
+                    {
+                        if(table[hash] == key)
+                        {
+                            atomicAdd(&prolong_vals[data[hash]], val);
+                            break;
+                        }
+                        else if(table[hash] == -1)
+                        {
+                            if(atomicCAS(&table[hash], -1, key) == -1)
+                            {
+                                IndexType old_counter = atomicAdd(counter, 1);
+
+                                data[hash]                = old_counter;
+                                prolong_cols[old_counter] = key;
+                                prolong_vals[old_counter] = val;
+                                __threadfence();
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            // collision, compute new hash
+                            hash = (hash + 1) & (HASH - 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_unsmoothed_prolong_nnz_per_row(IndexType nrow,
+                                                       const IndexType* __restrict__ aggregates,
+                                                       IndexType* __restrict__ prolong_row_offset)
+    {
+        IndexType tid = hipThreadIdx_x;
+        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        if(aggregates[row] >= 0)
+        {
+            prolong_row_offset[row + 1] = 1;
+        }
+        else
+        {
+            prolong_row_offset[row + 1] = 0;
+        }
+
+        if(row == 0)
+        {
+            prolong_row_offset[row] = 0;
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_unsmoothed_prolong_fill_simple(IndexType nrow,
+                                                       const IndexType* __restrict__ aggregates,
+                                                       IndexType* __restrict__ prolong_cols,
+                                                       ValueType* __restrict__ prolong_vals)
+    {
+
+        IndexType tid = hipThreadIdx_x;
+        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        prolong_cols[row] = aggregates[row];
+        prolong_vals[row] = static_cast<ValueType>(1);
+    }
+
+    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_unsmoothed_prolong_fill(IndexType nrow,
+                                                const IndexType* __restrict__ aggregates,
+                                                const IndexType* __restrict__ prolong_row_offset,
+                                                IndexType* __restrict__ prolong_cols,
+                                                ValueType* __restrict__ prolong_vals)
+    {
+
+        IndexType tid = hipThreadIdx_x;
+        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        IndexType agg = aggregates[row];
+
+        if(agg >= 0)
+        {
+            IndexType j = prolong_row_offset[row];
+
+            prolong_cols[j] = agg;
+            prolong_vals[j] = static_cast<ValueType>(1);
+        }
     }
 
 } // namespace rocalution

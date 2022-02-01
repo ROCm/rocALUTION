@@ -5122,6 +5122,77 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::AMGPMISAggregate(const LocalVector<int>& connections,
+                                                  LocalVector<int>*       aggregates) const
+    {
+        log_debug(this, "LocalMatrix::AMGPMISAggregate()", (const void*&)connections, aggregates);
+
+        assert(aggregates != NULL);
+
+        assert(((this->matrix_ == this->matrix_host_)
+                && (connections.vector_ == connections.vector_host_)
+                && (aggregates->vector_ == aggregates->vector_host_))
+               || ((this->matrix_ == this->matrix_accel_)
+                   && (connections.vector_ == connections.vector_accel_)
+                   && (aggregates->vector_ == aggregates->vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->AMGPMISAggregate(*connections.vector_, aggregates->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::AMGPMISAggregate() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                LocalVector<int>       conn_host;
+
+                mat_host.ConvertTo(this->GetFormat());
+                mat_host.CopyFrom(*this);
+                conn_host.CopyFrom(connections);
+
+                // Move to host
+                aggregates->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->AMGPMISAggregate(*conn_host.vector_, aggregates->vector_)
+                   == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::AMGPMISAggregate() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2,
+                        "*** warning: LocalMatrix::AMGPMISAggregate() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::AMGPMISAggregate() is performed on the host");
+
+                    aggregates->MoveToAccelerator();
+                }
+            }
+        }
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::AMGSmoothedAggregation(ValueType               relax,
                                                         const LocalVector<int>& aggregates,
                                                         const LocalVector<int>& connections,

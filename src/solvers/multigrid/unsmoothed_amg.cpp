@@ -43,6 +43,7 @@ namespace rocalution
         // parameter for strong couplings in smoothed aggregation
         this->eps_         = static_cast<ValueType>(0.01);
         this->over_interp_ = static_cast<ValueType>(1.5);
+        this->strat_       = CoarseningStrategy::Greedy;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -99,6 +100,14 @@ namespace rocalution
         log_debug(this, "UAAMG::SetCouplingStrength()", eps);
 
         this->eps_ = eps;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void UAAMG<OperatorType, VectorType, ValueType>::SetCoarseningStrategy(CoarseningStrategy strat)
+    {
+        log_debug(this, "UAAMG::SetCoarseningStrategy()", strat);
+
+        this->strat_ = strat;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -239,7 +248,16 @@ namespace rocalution
         }
 
         op.AMGConnect(eps, &connections);
-        op.AMGAggregate(connections, &aggregates);
+
+        if(strat_ == CoarseningStrategy::Greedy)
+        {
+            op.AMGAggregate(connections, &aggregates);
+        }
+        else if(strat_ == CoarseningStrategy::PMIS)
+        {
+            op.AMGPMISAggregate(connections, &aggregates);
+        }
+
         op.AMGAggregation(aggregates, cast_pro, cast_res);
 
         // Free unused vectors

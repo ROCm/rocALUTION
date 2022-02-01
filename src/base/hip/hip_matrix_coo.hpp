@@ -76,6 +76,7 @@ namespace rocalution
         virtual void ApplyAdd(const BaseVector<ValueType>& in,
                               ValueType                    scalar,
                               BaseVector<ValueType>*       out) const;
+        virtual bool Sort(void);
 
     private:
         MatrixCOO<ValueType, int> mat_;

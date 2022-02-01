@@ -24,6 +24,7 @@
 #include "hip_allocate_free.hpp"
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/def.hpp"
+#include "../../utils/types.hpp"
 #include "hip_kernels_general.hpp"
 #include "hip_utils.hpp"
 
@@ -164,6 +165,7 @@ namespace rocalution
     template void allocate_hip<int>(int size, int** ptr);
     template void allocate_hip<unsigned int>(int size, unsigned int** ptr);
     template void allocate_hip<char>(int size, char** ptr);
+    template void allocate_hip<mis_tuple>(int size, mis_tuple** ptr);
 
     template void free_hip<float>(float** ptr);
     template void free_hip<double>(double** ptr);
@@ -175,6 +177,7 @@ namespace rocalution
     template void free_hip<int>(int** ptr);
     template void free_hip<unsigned int>(unsigned int** ptr);
     template void free_hip<char>(char** ptr);
+    template void free_hip<mis_tuple>(mis_tuple** ptr);
 
     template void set_to_zero_hip<float>(int blocksize, int size, float* ptr);
     template void set_to_zero_hip<double>(int blocksize, int size, double* ptr);

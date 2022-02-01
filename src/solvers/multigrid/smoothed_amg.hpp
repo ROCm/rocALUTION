@@ -32,7 +32,6 @@
 
 namespace rocalution
 {
-
     /** \ingroup solver_module
   * \class SAAMG
   * \brief Smoothed Aggregation Algebraic MultiGrid Method
@@ -64,6 +63,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         void SetInterpRelax(ValueType relax);
 
+        /** \brief Set Coarsening strategy */
+        ROCALUTION_EXPORT
+        void SetCoarseningStrategy(CoarseningStrategy strat);
+
         ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
@@ -84,6 +87,9 @@ namespace rocalution
 
         /** \brief Relaxation parameter */
         ValueType relax_;
+
+        /** \brief Coarsening strategy */
+        CoarseningStrategy strat_;
     };
 
 } // namespace rocalution

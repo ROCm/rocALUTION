@@ -146,6 +146,7 @@ namespace rocalution
                               BaseVector<ValueType>*       out) const;
 
         virtual bool Compress(double drop_off);
+        virtual bool Sort(void);
 
         virtual bool ReplaceColumnVector(int idx, const BaseVector<ValueType>& vec);
         virtual bool ExtractColumnVector(int idx, BaseVector<ValueType>* vec) const;
@@ -153,6 +154,18 @@ namespace rocalution
 
         virtual bool Transpose(void);
         virtual bool Transpose(BaseMatrix<ValueType>* T) const;
+
+        virtual bool AMGConnect(ValueType eps, BaseVector<int>* connections) const;
+        virtual bool AMGPMISAggregate(const BaseVector<int>& connections,
+                                      BaseVector<int>*       aggregates) const;
+        virtual bool AMGSmoothedAggregation(ValueType              relax,
+                                            const BaseVector<int>& aggregates,
+                                            const BaseVector<int>& connections,
+                                            BaseMatrix<ValueType>* prolong,
+                                            BaseMatrix<ValueType>* restrict) const;
+        virtual bool AMGAggregation(const BaseVector<int>& aggregates,
+                                    BaseMatrix<ValueType>* prolong,
+                                    BaseMatrix<ValueType>* restrict) const;
 
     private:
         MatrixCSR<ValueType, int> mat_;

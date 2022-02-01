@@ -529,6 +529,14 @@ namespace rocalution
                                    int*                      nnz_per_row_column,
                                    int*                      nnz_total);
 
+    // rocsparse gthr
+    template <typename ValueType>
+    rocsparse_status rocsparseTgthr(rocsparse_handle     handle,
+                                    int                  nnz,
+                                    ValueType*           y,
+                                    ValueType*           x_val,
+                                    int*                 x_ind,
+                                    rocsparse_index_base idx_base);
     // rocsparse nnz compress
     template <typename ValueType>
     rocsparse_status rocsparseTnnz_compress(rocsparse_handle          handle,

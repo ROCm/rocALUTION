@@ -32,7 +32,6 @@
 
 namespace rocalution
 {
-
     template <typename ValueType>
     class GlobalVector;
     template <typename ValueType>

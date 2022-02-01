@@ -98,6 +98,77 @@ int gen_2d_laplacian(int ndim, int** rowptr, int** col, T** val)
 }
 
 /* ============================================================================================ */
+/*! \brief  Generate 3D laplacian on unit square in CSR format */
+template <typename T>
+int gen_3d_laplacian(int ndim, int** row_ptr, int** col_ind, T** val)
+{
+    // Do nothing
+    if(ndim == 0)
+    {
+        return 0;
+    }
+
+    int n = ndim * ndim * ndim;
+
+    // Approximate 27pt stencil
+    int nnz_mat = 27 * n;
+
+    *row_ptr = new int[n + 1];
+    *col_ind = new int[nnz_mat];
+    *val     = new T[nnz_mat];
+
+    int nnz       = 0;
+    (*row_ptr)[0] = 0;
+
+    // Fill local arrays
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for(int32_t iz = 0; iz < ndim; ++iz)
+    {
+        for(int32_t iy = 0; iy < ndim; ++iy)
+        {
+            for(int32_t ix = 0; ix < ndim; ++ix)
+            {
+                int row = iz * ndim * ndim + iy * ndim + ix;
+
+                for(int32_t sz = -1; sz <= 1; ++sz)
+                {
+                    if(iz + sz > -1 && iz + sz < ndim)
+                    {
+                        for(int32_t sy = -1; sy <= 1; ++sy)
+                        {
+                            if(iy + sy > -1 && iy + sy < ndim)
+                            {
+                                for(int32_t sx = -1; sx <= 1; ++sx)
+                                {
+                                    if(ix + sx > -1 && ix + sx < ndim)
+                                    {
+                                        int col = row + sz * ndim * ndim + sy * ndim + sx;
+
+                                        (*col_ind)[nnz - 0] = col + 0;
+                                        (*val)[nnz - 0]     = (col == row) ? 26.0 : -1.0;
+
+                                        ++nnz;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                (*row_ptr)[row + 1] = nnz;
+            }
+        }
+    }
+
+    // Adjust nnz by index base
+    nnz -= 0;
+
+    return n;
+}
+
+/* ============================================================================================ */
 /*! \brief  Generate full rank identity matrix where the row order has been permuted */
 template <typename T>
 int gen_permuted_identity(int ndim, int** rowptr, int** col, T** val)
@@ -239,11 +310,12 @@ public:
     double gamma = 0.0;
 
     // Solver variables
-    std::string solver      = "";
-    std::string precond     = "";
-    std::string smoother    = "";
-    std::string matrix      = "";
-    std::string matrix_type = "";
+    std::string solver              = "";
+    std::string precond             = "";
+    std::string smoother            = "";
+    std::string matrix              = "";
+    std::string coarsening_strategy = "";
+    std::string matrix_type         = "";
 
     int pre_smooth     = 2;
     int post_smooth    = 2;
@@ -285,6 +357,9 @@ public:
         this->ordering       = rhs.ordering;
         this->cycle          = rhs.cycle;
         this->rebuildnumeric = rhs.rebuildnumeric;
+
+        this->coarsening_strategy = rhs.coarsening_strategy;
+        this->matrix_type         = rhs.matrix_type;
 
         this->format = rhs.format;
 

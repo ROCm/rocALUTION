@@ -68,7 +68,6 @@
 
 namespace rocalution
 {
-
     template <typename ValueType>
     HIPAcceleratorMatrixCSR<ValueType>::HIPAcceleratorMatrixCSR()
     {
@@ -976,6 +975,67 @@ namespace rocalution
         }
 
         this->ApplyAnalysis();
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::Sort(void)
+    {
+        if(this->nnz_ > 0)
+        {
+            rocsparse_status status;
+
+            size_t buffer_size = 0;
+            status             = rocsparse_csrsort_buffer_size(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                this->nrow_,
+                this->ncol_,
+                this->nnz_,
+                this->mat_.row_offset,
+                this->mat_.col,
+                &buffer_size);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            void* buffer = nullptr;
+            hipMalloc(&buffer, buffer_size);
+
+            int* perm = nullptr;
+            hipMalloc((void**)&perm, this->nnz_ * sizeof(int));
+            status = rocsparse_create_identity_permutation(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle), this->nnz_, perm);
+
+            status = rocsparse_csrsort(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                       this->nrow_,
+                                       this->ncol_,
+                                       this->nnz_,
+                                       this->mat_descr_,
+                                       this->mat_.row_offset,
+                                       this->mat_.col,
+                                       perm,
+                                       buffer);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            // Gather sorted csr_val array
+            ValueType* csr_val_sorted;
+            hipMalloc((void**)&csr_val_sorted, sizeof(ValueType) * this->nnz_);
+            status = rocsparseTgthr(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                    this->nnz_,
+                                    this->mat_.val,
+                                    csr_val_sorted,
+                                    perm,
+                                    rocsparse_index_base_zero);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            hipFree(this->mat_.val);
+
+            this->mat_.val = csr_val_sorted;
+
+            hipFree(buffer);
+            hipFree(perm);
+        }
+
+        this->ApplyAnalysis();
+
+        return true;
     }
 
     template <typename ValueType>
@@ -2190,20 +2250,108 @@ namespace rocalution
             HIPAcceleratorVector<ValueType>* cast_vec_diag
                 = dynamic_cast<HIPAcceleratorVector<ValueType>*>(vec_diag);
 
-            int  nrow = this->nrow_;
-            dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+            int nrow            = this->nrow_;
+            int nnz             = this->nnz_;
+            int avg_nnz_per_row = nnz / nrow;
 
-            hipLaunchKernelGGL((kernel_csr_extract_diag<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val,
-                               cast_vec_diag->vec_);
+            if(avg_nnz_per_row <= 8)
+            {
+                hipLaunchKernelGGL(
+                    (kernel_csr_extract_diag<1, ValueType, int>),
+                    dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
+                    dim3(this->local_backend_.HIP_block_size),
+                    0,
+                    0,
+                    nrow,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_vec_diag->vec_);
+            }
+            else if(avg_nnz_per_row <= 16)
+            {
+                hipLaunchKernelGGL(
+                    (kernel_csr_extract_diag<2, ValueType, int>),
+                    dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
+                    dim3(this->local_backend_.HIP_block_size),
+                    0,
+                    0,
+                    nrow,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_vec_diag->vec_);
+            }
+            else if(avg_nnz_per_row <= 32)
+            {
+                hipLaunchKernelGGL(
+                    (kernel_csr_extract_diag<4, ValueType, int>),
+                    dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
+                    dim3(this->local_backend_.HIP_block_size),
+                    0,
+                    0,
+                    nrow,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_vec_diag->vec_);
+            }
+            else if(avg_nnz_per_row <= 64)
+            {
+                hipLaunchKernelGGL(
+                    (kernel_csr_extract_diag<8, ValueType, int>),
+                    dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
+                    dim3(this->local_backend_.HIP_block_size),
+                    0,
+                    0,
+                    nrow,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_vec_diag->vec_);
+            }
+            else if(avg_nnz_per_row <= 128)
+            {
+                hipLaunchKernelGGL(
+                    (kernel_csr_extract_diag<16, ValueType, int>),
+                    dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
+                    dim3(this->local_backend_.HIP_block_size),
+                    0,
+                    0,
+                    nrow,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_vec_diag->vec_);
+            }
+            else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
+            {
+                hipLaunchKernelGGL(
+                    (kernel_csr_extract_diag<32, ValueType, int>),
+                    dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
+                    dim3(this->local_backend_.HIP_block_size),
+                    0,
+                    0,
+                    nrow,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_vec_diag->vec_);
+            }
+            else
+            {
+                hipLaunchKernelGGL(
+                    (kernel_csr_extract_diag<64, ValueType, int>),
+                    dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
+                    dim3(this->local_backend_.HIP_block_size),
+                    0,
+                    0,
+                    nrow,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_vec_diag->vec_);
+            }
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3647,6 +3795,636 @@ namespace rocalution
                                cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGConnect(ValueType        eps,
+                                                        BaseVector<int>* connections) const
+    {
+        assert(connections != NULL);
+
+        HIPAcceleratorVector<int>* cast_conn
+            = dynamic_cast<HIPAcceleratorVector<int>*>(connections);
+        assert(cast_conn != NULL);
+
+        cast_conn->Clear();
+        cast_conn->Allocate(this->nnz_);
+
+        ValueType eps2 = eps * eps;
+
+        HIPAcceleratorVector<ValueType> vec_diag(this->local_backend_);
+        vec_diag.Allocate(this->nrow_);
+
+        this->ExtractDiagonal(&vec_diag);
+
+        int avg_nnz_per_row = this->nnz_ / this->nrow_;
+
+        if(avg_nnz_per_row <= 8)
+        {
+            hipLaunchKernelGGL(
+                (kernel_csr_amg_connect<ValueType, int, 1>),
+                dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
+                dim3(this->local_backend_.HIP_block_size),
+                0,
+                0,
+                this->nrow_,
+                eps2,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                vec_diag.vec_,
+                cast_conn->vec_);
+        }
+        else if(avg_nnz_per_row <= 16)
+        {
+            hipLaunchKernelGGL(
+                (kernel_csr_amg_connect<ValueType, int, 2>),
+                dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
+                dim3(this->local_backend_.HIP_block_size),
+                0,
+                0,
+                this->nrow_,
+                eps2,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                vec_diag.vec_,
+                cast_conn->vec_);
+        }
+        else if(avg_nnz_per_row <= 32)
+        {
+            hipLaunchKernelGGL(
+                (kernel_csr_amg_connect<ValueType, int, 4>),
+                dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
+                dim3(this->local_backend_.HIP_block_size),
+                0,
+                0,
+                this->nrow_,
+                eps2,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                vec_diag.vec_,
+                cast_conn->vec_);
+        }
+        else if(avg_nnz_per_row <= 64)
+        {
+            hipLaunchKernelGGL(
+                (kernel_csr_amg_connect<ValueType, int, 8>),
+                dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
+                dim3(this->local_backend_.HIP_block_size),
+                0,
+                0,
+                this->nrow_,
+                eps2,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                vec_diag.vec_,
+                cast_conn->vec_);
+        }
+        else if(avg_nnz_per_row <= 128)
+        {
+            hipLaunchKernelGGL(
+                (kernel_csr_amg_connect<ValueType, int, 16>),
+                dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
+                dim3(this->local_backend_.HIP_block_size),
+                0,
+                0,
+                this->nrow_,
+                eps2,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                vec_diag.vec_,
+                cast_conn->vec_);
+        }
+        else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
+        {
+            hipLaunchKernelGGL(
+                (kernel_csr_amg_connect<ValueType, int, 32>),
+                dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
+                dim3(this->local_backend_.HIP_block_size),
+                0,
+                0,
+                this->nrow_,
+                eps2,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                vec_diag.vec_,
+                cast_conn->vec_);
+        }
+        else
+        {
+            hipLaunchKernelGGL(
+                (kernel_csr_amg_connect<ValueType, int, 64>),
+                dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
+                dim3(this->local_backend_.HIP_block_size),
+                0,
+                0,
+                this->nrow_,
+                eps2,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                vec_diag.vec_,
+                cast_conn->vec_);
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGPMISAggregate(const BaseVector<int>& connections,
+                                                              BaseVector<int>* aggregates) const
+    {
+        int avg_nnz_per_row = this->nnz_ / this->nrow_;
+
+        assert(aggregates != NULL);
+
+        HIPAcceleratorVector<int>* cast_agg = dynamic_cast<HIPAcceleratorVector<int>*>(aggregates);
+        const HIPAcceleratorVector<int>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&connections);
+
+        assert(cast_agg != NULL);
+        assert(cast_conn != NULL);
+
+        aggregates->Clear();
+        aggregates->Allocate(this->nrow_);
+
+        mis_tuple* tuples     = nullptr;
+        mis_tuple* max_tuples = nullptr;
+        allocate_hip(this->nrow_, &tuples);
+        allocate_hip(this->nrow_, &max_tuples);
+
+        bool  hdone = false;
+        bool* ddone = nullptr;
+        allocate_hip(1, &ddone);
+
+        dim3 BlockSize(this->local_backend_.HIP_block_size);
+        dim3 GridSize((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1);
+
+        hipLaunchKernelGGL((kernel_csr_amg_init_mis_tuples<int>),
+                           GridSize,
+                           BlockSize,
+                           0,
+                           0,
+                           this->nrow_,
+                           this->mat_.row_offset,
+                           cast_conn->vec_,
+                           tuples);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        int iter = 0;
+        while(!hdone)
+        {
+            hipMemcpy(max_tuples, tuples, sizeof(mis_tuple) * this->nrow_, hipMemcpyDeviceToDevice);
+
+            if(avg_nnz_per_row <= 8)
+            {
+                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 1, int>),
+                                   dim3((this->nrow_ * 1 - 1) / 256 + 1),
+                                   dim3(256),
+                                   0,
+                                   0,
+                                   this->nrow_,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   cast_conn->vec_,
+                                   tuples,
+                                   max_tuples,
+                                   ddone);
+            }
+            else if(avg_nnz_per_row <= 16)
+            {
+                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 2, int>),
+                                   dim3((this->nrow_ * 2 - 1) / 256 + 1),
+                                   dim3(256),
+                                   0,
+                                   0,
+                                   this->nrow_,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   cast_conn->vec_,
+                                   tuples,
+                                   max_tuples,
+                                   ddone);
+            }
+            else if(avg_nnz_per_row <= 32)
+            {
+                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 4, int>),
+                                   dim3((this->nrow_ * 4 - 1) / 256 + 1),
+                                   dim3(256),
+                                   0,
+                                   0,
+                                   this->nrow_,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   cast_conn->vec_,
+                                   tuples,
+                                   max_tuples,
+                                   ddone);
+            }
+            else if(avg_nnz_per_row <= 64)
+            {
+                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 8, int>),
+                                   dim3((this->nrow_ * 8 - 1) / 256 + 1),
+                                   dim3(256),
+                                   0,
+                                   0,
+                                   this->nrow_,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   cast_conn->vec_,
+                                   tuples,
+                                   max_tuples,
+                                   ddone);
+            }
+            else if(avg_nnz_per_row <= 128)
+            {
+                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 16, int>),
+                                   dim3((this->nrow_ * 16 - 1) / 256 + 1),
+                                   dim3(256),
+                                   0,
+                                   0,
+                                   this->nrow_,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   cast_conn->vec_,
+                                   tuples,
+                                   max_tuples,
+                                   ddone);
+            }
+            else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
+            {
+                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 32, int>),
+                                   dim3((this->nrow_ * 32 - 1) / 256 + 1),
+                                   dim3(256),
+                                   0,
+                                   0,
+                                   this->nrow_,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   cast_conn->vec_,
+                                   tuples,
+                                   max_tuples,
+                                   ddone);
+            }
+            else
+            {
+                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 64, int>),
+                                   dim3((this->nrow_ * 64 - 1) / 256 + 1),
+                                   dim3(256),
+                                   0,
+                                   0,
+                                   this->nrow_,
+                                   this->mat_.row_offset,
+                                   this->mat_.col,
+                                   cast_conn->vec_,
+                                   tuples,
+                                   max_tuples,
+                                   ddone);
+            }
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipLaunchKernelGGL((kernel_csr_amg_update_mis_tuples<int>),
+                               GridSize,
+                               BlockSize,
+                               0,
+                               0,
+                               this->nrow_,
+                               max_tuples,
+                               tuples,
+                               cast_agg->vec_,
+                               ddone);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipMemcpy(&hdone, ddone, sizeof(bool), hipMemcpyDeviceToHost);
+
+            iter++;
+
+            if(iter > 10)
+            {
+                LOG_VERBOSE_INFO(2,
+                                 "*** warning: HIPAcceleratorMatrixCSR::AMGPMISAggregate() Current "
+                                 "number of iterations: "
+                                     << iter);
+            }
+        }
+
+        // exclusive scan on aggregates array
+        size_t rocprim_size;
+        void*  rocprim_buffer;
+
+        rocprim::exclusive_scan(NULL,
+                                rocprim_size,
+                                cast_agg->vec_,
+                                cast_agg->vec_,
+                                0,
+                                this->nrow_,
+                                rocprim::plus<int>());
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                cast_agg->vec_,
+                                cast_agg->vec_,
+                                0,
+                                this->nrow_,
+                                rocprim::plus<int>());
+        hipFree(rocprim_buffer);
+
+        for(int k = 0; k < 2; k++)
+        {
+            hipMemcpy(max_tuples, tuples, sizeof(mis_tuple) * this->nrow_, hipMemcpyDeviceToDevice);
+
+            hipLaunchKernelGGL((kernel_csr_amg_update_aggregates<int>),
+                               GridSize,
+                               BlockSize,
+                               0,
+                               0,
+                               this->nrow_,
+                               this->mat_.row_offset,
+                               this->mat_.col,
+                               cast_conn->vec_,
+                               max_tuples,
+                               tuples,
+                               cast_agg->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+
+        free_hip(&tuples);
+        free_hip(&max_tuples);
+        free_hip(&ddone);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGSmoothedAggregation(
+        ValueType              relax,
+        const BaseVector<int>& aggregates,
+        const BaseVector<int>& connections,
+        BaseMatrix<ValueType>* prolong,
+        BaseMatrix<ValueType>* restrict) const
+    {
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+
+        const HIPAcceleratorVector<int>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&aggregates);
+        const HIPAcceleratorVector<int>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&connections);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_restrict
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(restrict);
+
+        assert(cast_agg != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_prolong != NULL);
+        assert(cast_restrict != NULL);
+
+        int*       prolong_row_offset = nullptr;
+        int*       prolong_cols       = nullptr;
+        ValueType* prolong_vals       = nullptr;
+
+        // Allocate prolongation matrix row offset array
+        allocate_hip(this->nrow_ + 1, &prolong_row_offset);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, this->nrow_ + 1, prolong_row_offset);
+
+        int* workspace;
+        hipMalloc((void**)&workspace, 256 * sizeof(int));
+
+        hipLaunchKernelGGL((kernel_find_maximum_blockreduce<256, int>),
+                           dim3(256),
+                           dim3(256),
+                           0,
+                           0,
+                           cast_agg->GetSize(),
+                           cast_agg->vec_,
+                           workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipLaunchKernelGGL((kernel_find_maximum_finalreduce<256, int>),
+                           dim3(1),
+                           dim3(256),
+                           0,
+                           0,
+                           cast_agg->GetSize(),
+                           workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        int prolong_ncol = 0;
+        int prolong_nrow = this->nrow_;
+        hipMemcpy(&prolong_ncol, workspace, sizeof(int), hipMemcpyDeviceToHost);
+        hipFree(workspace);
+
+        hipLaunchKernelGGL((kernel_csr_prolong_nnz_per_row<256, 8, 128, int>),
+                           dim3((this->nrow_ * 8 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           0,
+                           this->nrow_,
+                           this->mat_.row_offset,
+                           this->mat_.col,
+                           cast_conn->vec_,
+                           cast_agg->vec_,
+                           prolong_row_offset);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Perform inclusive scan on csr row pointer array
+        size_t rocprim_size;
+        void*  rocprim_buffer;
+        rocprim::inclusive_scan(nullptr,
+                                rocprim_size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+
+        hipMalloc((void**)&rocprim_buffer, rocprim_size);
+
+        rocprim::inclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+
+        hipFree(rocprim_buffer);
+
+        int prolong_nnz = 0;
+        hipMemcpy(
+            &prolong_nnz, &prolong_row_offset[this->nrow_], sizeof(int), hipMemcpyDeviceToHost);
+
+        // Allocate prolongation matrix col indices and values arrays
+        allocate_hip(prolong_nnz, &prolong_cols);
+        allocate_hip(prolong_nnz, &prolong_vals);
+
+        cast_prolong->Clear();
+        cast_prolong->SetDataPtrCSR(&prolong_row_offset,
+                                    &prolong_cols,
+                                    &prolong_vals,
+                                    prolong_nnz,
+                                    prolong_nrow,
+                                    prolong_ncol);
+
+        hipLaunchKernelGGL((kernel_csr_prolong_fill2<256, 8, 128, ValueType, int>),
+                           dim3((this->nrow_ * 8 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           0,
+                           this->nrow_,
+                           relax,
+                           this->mat_.row_offset,
+                           this->mat_.col,
+                           this->mat_.val,
+                           cast_conn->vec_,
+                           cast_agg->vec_,
+                           prolong_row_offset,
+                           prolong_cols,
+                           prolong_vals);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // cast_prolong->Sort();
+        cast_prolong->Transpose(cast_restrict);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGAggregation(const BaseVector<int>& aggregates,
+                                                            BaseMatrix<ValueType>* prolong,
+                                                            BaseMatrix<ValueType>* restrict) const
+    {
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+
+        const HIPAcceleratorVector<int>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&aggregates);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_restrict
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(restrict);
+
+        assert(cast_agg != NULL);
+        assert(cast_prolong != NULL);
+        assert(cast_restrict != NULL);
+
+        int*       prolong_row_offset = nullptr;
+        int*       prolong_cols       = nullptr;
+        ValueType* prolong_vals       = nullptr;
+
+        // Allocate prolongation matrix row offset array
+        allocate_hip(this->nrow_ + 1, &prolong_row_offset);
+
+        int* workspace;
+        hipMalloc((void**)&workspace, 256 * sizeof(int));
+
+        hipLaunchKernelGGL((kernel_find_maximum_blockreduce<256, int>),
+                           dim3(256),
+                           dim3(256),
+                           0,
+                           0,
+                           cast_agg->GetSize(),
+                           cast_agg->vec_,
+                           workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipLaunchKernelGGL((kernel_find_maximum_finalreduce<256, int>),
+                           dim3(1),
+                           dim3(256),
+                           0,
+                           0,
+                           cast_agg->GetSize(),
+                           workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        int prolong_ncol = 0;
+        int prolong_nrow = this->nrow_;
+        hipMemcpy(&prolong_ncol, workspace, sizeof(int), hipMemcpyDeviceToHost);
+        hipFree(workspace);
+
+        hipLaunchKernelGGL((kernel_csr_unsmoothed_prolong_nnz_per_row<256, int>),
+                           dim3((this->nrow_ - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           0,
+                           this->nrow_,
+                           cast_agg->vec_,
+                           prolong_row_offset);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Perform inclusive scan on csr row pointer array
+        size_t rocprim_size;
+        void*  rocprim_buffer;
+        rocprim::inclusive_scan(nullptr,
+                                rocprim_size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+
+        hipMalloc((void**)&rocprim_buffer, rocprim_size);
+
+        rocprim::inclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+
+        hipFree(rocprim_buffer);
+
+        int prolong_nnz = 0;
+        hipMemcpy(
+            &prolong_nnz, &prolong_row_offset[this->nrow_], sizeof(int), hipMemcpyDeviceToHost);
+
+        // Allocate prolongation matrix col indices and values arrays
+        allocate_hip(prolong_nnz, &prolong_cols);
+        allocate_hip(prolong_nnz, &prolong_vals);
+
+        cast_prolong->Clear();
+        cast_prolong->SetDataPtrCSR(&prolong_row_offset,
+                                    &prolong_cols,
+                                    &prolong_vals,
+                                    prolong_nnz,
+                                    prolong_nrow,
+                                    prolong_ncol);
+
+        if(prolong_nrow == prolong_nnz)
+        {
+            hipLaunchKernelGGL((kernel_csr_unsmoothed_prolong_fill_simple<256, ValueType, int>),
+                               dim3((this->nrow_ - 1) / 256 + 1),
+                               dim3(256),
+                               0,
+                               0,
+                               this->nrow_,
+                               cast_agg->vec_,
+                               prolong_cols,
+                               prolong_vals);
+        }
+        else
+        {
+            hipLaunchKernelGGL((kernel_csr_unsmoothed_prolong_fill<256, ValueType, int>),
+                               dim3((this->nrow_ - 1) / 256 + 1),
+                               dim3(256),
+                               0,
+                               0,
+                               this->nrow_,
+                               cast_agg->vec_,
+                               prolong_row_offset,
+                               prolong_cols,
+                               prolong_vals);
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // cast_prolong->Sort();
+        cast_prolong->Transpose(cast_restrict);
 
         return true;
     }

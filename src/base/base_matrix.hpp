@@ -415,6 +415,8 @@ namespace rocalution
         virtual bool AMGConnect(ValueType eps, BaseVector<int>* connections) const;
         virtual bool AMGAggregate(const BaseVector<int>& connections,
                                   BaseVector<int>*       aggregates) const;
+        virtual bool AMGPMISAggregate(const BaseVector<int>& connections,
+                                      BaseVector<int>*       aggregates) const;
         virtual bool AMGSmoothedAggregation(ValueType              relax,
                                             const BaseVector<int>& aggregates,
                                             const BaseVector<int>& connections,

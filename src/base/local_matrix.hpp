@@ -924,6 +924,14 @@ namespace rocalution
       */
         ROCALUTION_EXPORT
         void AMGAggregate(const LocalVector<int>& connections, LocalVector<int>* aggregates) const;
+
+        /** \brief Parallel aggregation - Parallel maximal independent set aggregation scheme from
+      * Bell, Dalton, & Olsen (2012)
+      */
+        ROCALUTION_EXPORT
+        void AMGPMISAggregate(const LocalVector<int>& connections,
+                              LocalVector<int>*       aggregates) const;
+
         /** \brief Interpolation scheme based on smoothed aggregation from Vanek (1996) */
         ROCALUTION_EXPORT
         void AMGSmoothedAggregation(ValueType               relax,

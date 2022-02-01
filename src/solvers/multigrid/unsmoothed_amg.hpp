@@ -64,6 +64,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         void SetOverInterp(ValueType overInterp);
 
+        /** \brief Set Coarsening strategy */
+        ROCALUTION_EXPORT
+        void SetCoarseningStrategy(CoarseningStrategy strat);
+
         ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
@@ -84,6 +88,9 @@ namespace rocalution
 
         /** \brief Over-interpolation parameter for aggregation */
         ValueType over_interp_;
+
+        /** \brief Coarsening strategy */
+        CoarseningStrategy strat_;
     };
 
 } // namespace rocalution

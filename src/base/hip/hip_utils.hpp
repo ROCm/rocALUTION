@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -124,7 +124,58 @@ namespace rocalution
     }
 #endif
 
+    // real()
+    static __device__ __forceinline__ float hip_real(float val)
+    {
+        return val;
+    }
+
+    static __device__ __forceinline__ double hip_real(double val)
+    {
+        return val;
+    }
+
+#ifdef SUPPORT_COMPLEX
+    static __device__ __forceinline__ float hip_real(std::complex<float> val)
+    {
+        return val.real();
+    }
+
+    static __device__ __forceinline__ double hip_real(std::complex<double> val)
+    {
+        return val.real();
+    }
+#endif
+
     __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
+
+#ifndef __gfx1030__
+    template <unsigned int WFSIZE>
+    static __device__ __forceinline__ void wf_reduce_sum(int* sum)
+    {
+        if(WFSIZE > 1)
+            *sum += __hip_move_dpp(*sum, 0x111, 0xf, 0xf, 0);
+        if(WFSIZE > 2)
+            *sum += __hip_move_dpp(*sum, 0x112, 0xf, 0xf, 0);
+        if(WFSIZE > 4)
+            *sum += __hip_move_dpp(*sum, 0x114, 0xf, 0xe, 0);
+        if(WFSIZE > 8)
+            *sum += __hip_move_dpp(*sum, 0x118, 0xf, 0xc, 0);
+        if(WFSIZE > 16)
+            *sum += __hip_move_dpp(*sum, 0x142, 0xa, 0xf, 0);
+        if(WFSIZE > 32)
+            *sum += __hip_move_dpp(*sum, 0x143, 0xc, 0xf, 0);
+    }
+#else
+    template <unsigned int WFSIZE>
+    static __device__ __forceinline__ void wf_reduce_sum(int* sum)
+    {
+        for(int i = WFSIZE >> 1; i > 0; i >>= 1)
+        {
+            *sum += __shfl_xor(*sum, i);
+        }
+    }
+#endif
 
     template <unsigned int WF_SIZE>
     static __device__ __forceinline__ void wf_reduce_sum(float* sum)
@@ -271,6 +322,225 @@ namespace rocalution
     static __device__ __forceinline__ void wf_reduce_sum(std::complex<double>* sum)
     {
         wf_reduce_sum<WF_SIZE>((hipDoubleComplex*)sum);
+    }
+#endif
+
+    static __device__ __forceinline__ float shfl(float var, int src_lane, int width = warpSize)
+    {
+        return __shfl(var, src_lane, width);
+    }
+    static __device__ __forceinline__ double shfl(double var, int src_lane, int width = warpSize)
+    {
+        return __shfl(var, src_lane, width);
+    }
+#ifdef SUPPORT_COMPLEX
+    static __device__ __forceinline__ hipComplex shfl(hipComplex var,
+                                                      int        src_lane,
+                                                      int        width = warpSize)
+    {
+        return make_hipFloatComplex(__shfl(hipCrealf(var), src_lane, width),
+                                    __shfl(hipCimagf(var), src_lane, width));
+    }
+    static __device__ __forceinline__ hipDoubleComplex shfl(hipDoubleComplex var,
+                                                            int              src_lane,
+                                                            int              width = warpSize)
+    {
+        return make_hipDoubleComplex(__shfl(hipCreal(var), src_lane, width),
+                                     __shfl(hipCimag(var), src_lane, width));
+    }
+
+    static __device__ __forceinline__ std::complex<float>
+        shfl(std::complex<float> var, int src_lane, int width = warpSize)
+    {
+        return std::complex<float>(__shfl(var.real(), src_lane, width),
+                                   __shfl(var.imag(), src_lane, width));
+    }
+    static __device__ __forceinline__ std::complex<double>
+        shfl(std::complex<double> var, int src_lane, int width = warpSize)
+    {
+        return std::complex<double>(__shfl(var.real(), src_lane, width),
+                                    __shfl(var.imag(), src_lane, width));
+    }
+
+#endif
+
+    // Block reduce kernel computing blockwide maximum entry
+    template <unsigned int BLOCKSIZE, typename T>
+    static __device__ __forceinline__ void blockreduce_max(int i, T* data)
+    {
+        if(BLOCKSIZE > 512)
+        {
+            if(i < 512 && i + 512 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 512]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 256)
+        {
+            if(i < 256 && i + 256 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 256]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 128)
+        {
+            if(i < 128 && i + 128 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 128]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 64)
+        {
+            if(i < 64 && i + 64 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 64]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 32)
+        {
+            if(i < 32 && i + 32 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 32]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 16)
+        {
+            if(i < 16 && i + 16 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 16]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 8)
+        {
+            if(i < 8 && i + 8 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 8]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 4)
+        {
+            if(i < 4 && i + 4 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 4]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 2)
+        {
+            if(i < 2 && i + 2 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 2]);
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 1)
+        {
+            if(i < 1 && i + 1 < BLOCKSIZE)
+            {
+                data[i] = max(data[i], data[i + 1]);
+            }
+            __syncthreads();
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_find_maximum_blockreduce(IndexType m,
+                                             const IndexType* __restrict__ array,
+                                             IndexType* __restrict__ workspace)
+    {
+        IndexType tid = hipThreadIdx_x;
+        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
+
+        __shared__ IndexType smax[BLOCKSIZE];
+
+        IndexType t_max = -2;
+
+        for(IndexType idx = gid; idx < m; idx += hipGridDim_x * BLOCKSIZE)
+        {
+            t_max = max(t_max, array[idx]);
+        }
+
+        smax[tid] = t_max;
+
+        __syncthreads();
+
+        blockreduce_max<BLOCKSIZE>(tid, smax);
+
+        if(tid == 0)
+        {
+            workspace[hipBlockIdx_x] = smax[0];
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_find_maximum_finalreduce(IndexType m, IndexType* __restrict__ workspace)
+    {
+        IndexType tid = hipThreadIdx_x;
+
+        __shared__ IndexType sdata[BLOCKSIZE];
+
+        sdata[tid] = workspace[tid];
+
+        __syncthreads();
+
+        blockreduce_max<BLOCKSIZE>(tid, sdata);
+
+        if(tid == 0)
+        {
+            workspace[0] = sdata[0] + 1;
+        }
+    }
+
+    __device__ __forceinline__ int atomicAdd(int* ptr, int val)
+    {
+        return ::atomicAdd(ptr, val);
+    }
+
+    __device__ __forceinline__ float atomicAdd(float* ptr, float val)
+    {
+        return ::atomicAdd(ptr, val);
+    }
+
+    __device__ __forceinline__ double atomicAdd(double* ptr, double val)
+    {
+        return ::atomicAdd(ptr, val);
+    }
+
+#ifdef SUPPORT_COMPLEX
+    __device__ __forceinline__ hipComplex atomicAdd(hipComplex* ptr, hipComplex val)
+    {
+        return make_hipFloatComplex(atomicAdd((float*)ptr, hipCrealf(val)),
+                                    atomicAdd((float*)ptr + 1, hipCimagf(val)));
+    }
+
+    __device__ __forceinline__ hipDoubleComplex atomicAdd(hipDoubleComplex* ptr,
+                                                          hipDoubleComplex  val)
+    {
+        return make_hipDoubleComplex(atomicAdd((double*)ptr, hipCreal(val)),
+                                     atomicAdd((double*)ptr + 1, hipCimag(val)));
+    }
+
+    __device__ __forceinline__ std::complex<float> atomicAdd(std::complex<float>* ptr,
+                                                             std::complex<float>  val)
+    {
+        return std::complex<float>(atomicAdd((float*)ptr, val.real()),
+                                   atomicAdd((float*)ptr + 1, val.imag()));
+    }
+
+    __device__ __forceinline__ std::complex<double> atomicAdd(std::complex<double>* ptr,
+                                                              std::complex<double>  val)
+    {
+        return std::complex<double>(atomicAdd((double*)ptr, val.real()),
+                                    atomicAdd((double*)ptr + 1, val.imag()));
     }
 #endif
 

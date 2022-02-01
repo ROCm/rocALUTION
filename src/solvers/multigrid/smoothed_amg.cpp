@@ -31,6 +31,7 @@
 
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
+#include "../../utils/time_functions.hpp"
 
 namespace rocalution
 {
@@ -43,6 +44,7 @@ namespace rocalution
         // parameter for strong couplings in smoothed aggregation
         this->eps_   = static_cast<ValueType>(0.01);
         this->relax_ = static_cast<ValueType>(2) / static_cast<ValueType>(3);
+        this->strat_ = CoarseningStrategy::Greedy;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -58,7 +60,14 @@ namespace rocalution
     {
         LOG_INFO("SAAMG solver");
         LOG_INFO("SAAMG number of levels " << this->levels_);
-        LOG_INFO("SAAMG using smoothed aggregation");
+        if(this->strat_ == CoarseningStrategy::Greedy)
+        {
+            LOG_INFO("SAAMG using greedy smoothed aggregation");
+        }
+        else if(this->strat_ == CoarseningStrategy::PMIS)
+        {
+            LOG_INFO("SAAMG using PMIS smoothed aggregation");
+        }
         LOG_INFO("SAAMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
         LOG_INFO("SAAMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
         LOG_INFO("SAAMG with smoother:");
@@ -72,7 +81,14 @@ namespace rocalution
 
         LOG_INFO("SAAMG solver starts");
         LOG_INFO("SAAMG number of levels " << this->levels_);
-        LOG_INFO("SAAMG using smoothed aggregation");
+        if(this->strat_ == CoarseningStrategy::Greedy)
+        {
+            LOG_INFO("SAAMG using greedy smoothed aggregation");
+        }
+        else if(this->strat_ == CoarseningStrategy::PMIS)
+        {
+            LOG_INFO("SAAMG using PMIS smoothed aggregation");
+        }
         LOG_INFO("SAAMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
         LOG_INFO("SAAMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
         LOG_INFO("SAAMG with smoother:");
@@ -99,6 +115,14 @@ namespace rocalution
         log_debug(this, "SAAMG::SetCouplingStrength()", eps);
 
         this->eps_ = eps;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void SAAMG<OperatorType, VectorType, ValueType>::SetCoarseningStrategy(CoarseningStrategy strat)
+    {
+        log_debug(this, "SAAMG::SetCoarseningStrategy()", strat);
+
+        this->strat_ = strat;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -239,7 +263,16 @@ namespace rocalution
         }
 
         op.AMGConnect(eps, &connections);
-        op.AMGAggregate(connections, &aggregates);
+
+        if(strat_ == CoarseningStrategy::Greedy)
+        {
+            op.AMGAggregate(connections, &aggregates);
+        }
+        else if(strat_ == CoarseningStrategy::PMIS)
+        {
+            op.AMGPMISAggregate(connections, &aggregates);
+        }
+
         op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, cast_res);
 
         // Free unused vectors
