@@ -54,21 +54,14 @@ int main(int argc, char* argv[])
     LocalVector<double> e;
     LocalMatrix<double> mat;
 
+    // Move objects to accelerator
+    mat.MoveToAccelerator();
+    x.MoveToAccelerator();
+    rhs.MoveToAccelerator();
+    e.MoveToAccelerator();
+
     // Read matrix from MTX file
     mat.ReadFileMTX(std::string(argv[1]));
-
-    // Run a simple kernel to avoid slow down on first kernel call in hip
-    LocalVector<double> diag;
-    diag.Allocate("diag", mat.GetN());
-    mat.MoveToAccelerator();
-    diag.MoveToAccelerator();
-    mat.ExtractDiagonal(&diag);
-    mat.MoveToHost();
-    diag.MoveToHost();
-
-    // Start time measurement
-    double tick, tack, start, end;
-    start = rocalution_time();
 
     // Allocate vectors
     x.Allocate("x", mat.GetN());
@@ -83,16 +76,13 @@ int main(int argc, char* argv[])
     x.Zeros();
 
     // Start time measurement
-    tick = rocalution_time();
+    double tick = rocalution_time();
 
     // Linear Solver
     CG<LocalMatrix<double>, LocalVector<double>, double> ls;
 
     // AMG Preconditioner
     SAAMG<LocalMatrix<double>, LocalVector<double>, double> p;
-    p.SetCoarseningStrategy(CoarseningStrategy::Greedy);
-    p.SetCoarsestLevel(200);
-    p.SetCouplingStrength(0.001);
 
     // Disable verbosity output of AMG preconditioner
     p.Verbose(0);
@@ -106,21 +96,11 @@ int main(int argc, char* argv[])
     ls.Build();
 
     // Compute 2 coarsest levels on the host
-    if(p.GetNumLevels() > 2)
-    {
-        p.SetHostLevels(2);
-    }
+    p.SetHostLevels(2);
 
     // Stop time measurement
-    tack = rocalution_time();
+    double tack = rocalution_time();
     std::cout << "Building took: " << (tack - tick) / 1e6 << " sec" << std::endl;
-
-    // Move objects to accelerator
-    mat.MoveToAccelerator();
-    x.MoveToAccelerator();
-    rhs.MoveToAccelerator();
-    e.MoveToAccelerator();
-    ls.MoveToAccelerator();
 
     // Print matrix info
     mat.Info();
@@ -129,7 +109,7 @@ int main(int argc, char* argv[])
     ls.Init(1e-8, 1e-8, 1e+8, 10000);
 
     // Set verbosity output
-    ls.Verbose(2);
+    ls.Verbose(1);
 
     // Start time measurement
     tick = rocalution_time();
@@ -148,10 +128,6 @@ int main(int argc, char* argv[])
     e.ScaleAdd(-1.0, x);
     double error = e.Norm();
     std::cout << "||e - x||_2 = " << error << std::endl;
-
-    // Stop time measurement
-    end = rocalution_time();
-    std::cout << "Total runtime: " << (end - start) / 1e6 << " sec" << std::endl;
 
     // Stop rocALUTION platform
     stop_rocalution();

@@ -938,6 +938,11 @@ namespace rocalution
             void* buffer = nullptr;
             hipMalloc(&buffer, buffer_size);
 
+            int* perm = nullptr;
+            allocate_hip(this->nnz_, &perm);
+            status = rocsparse_create_identity_permutation(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle), this->nnz_, perm);
+
             status
                 = rocsparse_coosort_by_row(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                                            this->nrow_,
@@ -945,9 +950,25 @@ namespace rocalution
                                            this->nnz_,
                                            this->mat_.row,
                                            this->mat_.col,
-                                           nullptr,
+                                           perm,
                                            buffer);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            // Gather sorted coo_val array
+            ValueType* coo_val_sorted = nullptr;
+            allocate_hip(this->nnz_, &coo_val_sorted);
+            status = rocsparseTgthr(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                    this->nnz_,
+                                    this->mat_.val,
+                                    coo_val_sorted,
+                                    perm,
+                                    rocsparse_index_base_zero);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            free_hip(&perm);
+            free_hip(&this->mat_.val);
+
+            this->mat_.val = coo_val_sorted;
 
             hipFree(buffer);
         }
