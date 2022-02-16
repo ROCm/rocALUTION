@@ -12,12 +12,7 @@ def runCompileCommand(platform, project, boolean sameOrg=false)
     {
         project.libraryDependencies.each
         { libraryName ->
-            def old_change_target = env.CHANGE_TARGET
-            if (libraryName == 'rocRAND'){
-                env.CHANGE_TARGET = 'master'
-            }
             getDependenciesCommand += auxiliary.getLibrary(libraryName, platform.jenkinsLabel, 'develop', sameOrg)
-            env.CHANGE_TARGET = old_change_target
         }
     }
 
