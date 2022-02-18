@@ -359,7 +359,6 @@ public:
         this->rebuildnumeric = rhs.rebuildnumeric;
 
         this->coarsening_strategy = rhs.coarsening_strategy;
-        this->matrix_type         = rhs.matrix_type;
 
         this->format = rhs.format;
 

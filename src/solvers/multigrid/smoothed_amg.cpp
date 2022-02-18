@@ -42,9 +42,10 @@ namespace rocalution
         log_debug(this, "SAAMG::SAAMG()", "default constructor");
 
         // parameter for strong couplings in smoothed aggregation
-        this->eps_   = static_cast<ValueType>(0.01);
-        this->relax_ = static_cast<ValueType>(2) / static_cast<ValueType>(3);
-        this->strat_ = CoarseningStrategy::Greedy;
+        this->eps_           = static_cast<ValueType>(0.01);
+        this->relax_         = static_cast<ValueType>(2) / static_cast<ValueType>(3);
+        this->strat_         = CoarseningStrategy::Greedy;
+        this->lumping_strat_ = LumpingStrategy::AddWeakConnections;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -68,6 +69,15 @@ namespace rocalution
         {
             LOG_INFO("SAAMG using PMIS smoothed aggregation");
         }
+        if(this->lumping_strat_ == LumpingStrategy::AddWeakConnections)
+        {
+            LOG_INFO("SAAMG lumping strategy adds weak connections to diagonal in filter matrix");
+        }
+        else if(this->lumping_strat_ == LumpingStrategy::SubtractWeakConnections)
+        {
+            LOG_INFO(
+                "SAAMG lumping strategy subtracts weak connections to diagonal in filter matrix");
+        }
         LOG_INFO("SAAMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
         LOG_INFO("SAAMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
         LOG_INFO("SAAMG with smoother:");
@@ -88,6 +98,15 @@ namespace rocalution
         else if(this->strat_ == CoarseningStrategy::PMIS)
         {
             LOG_INFO("SAAMG using PMIS smoothed aggregation");
+        }
+        if(this->lumping_strat_ == LumpingStrategy::AddWeakConnections)
+        {
+            LOG_INFO("SAAMG lumping strategy adds weak connections to diagonal in filter matrix");
+        }
+        else if(this->lumping_strat_ == LumpingStrategy::SubtractWeakConnections)
+        {
+            LOG_INFO(
+                "SAAMG lumping strategy subtracts weak connections to diagonal in filter matrix");
         }
         LOG_INFO("SAAMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
         LOG_INFO("SAAMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
@@ -123,6 +142,15 @@ namespace rocalution
         log_debug(this, "SAAMG::SetCoarseningStrategy()", strat);
 
         this->strat_ = strat;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void SAAMG<OperatorType, VectorType, ValueType>::SetLumpingStrategy(
+        LumpingStrategy lumping_strat)
+    {
+        log_debug(this, "SAAMG::SetLumpingStrategy()", lumping_strat);
+
+        this->lumping_strat_ = lumping_strat;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -273,7 +301,14 @@ namespace rocalution
             op.AMGPMISAggregate(connections, &aggregates);
         }
 
-        op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, cast_res);
+        if(lumping_strat_ == LumpingStrategy::AddWeakConnections)
+        {
+            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, cast_res, 0);
+        }
+        else if(lumping_strat_ == LumpingStrategy::SubtractWeakConnections)
+        {
+            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, cast_res, 1);
+        }
 
         // Free unused vectors
         connections.Clear();

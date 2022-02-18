@@ -1260,122 +1260,23 @@ namespace rocalution
         }
     }
 
-    template <unsigned int BLOCKSIZE, unsigned int HASH, typename ValueType, typename IndexType>
-    __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_prolong_fill(IndexType nrow,
-                                     ValueType relax,
-                                     const IndexType* __restrict__ row_offset,
-                                     const IndexType* __restrict__ cols,
-                                     const ValueType* __restrict__ vals,
-                                     const IndexType* __restrict__ connections,
-                                     const IndexType* __restrict__ aggregates,
-                                     const IndexType* __restrict__ prolong_row_offset,
-                                     IndexType* __restrict__ prolong_cols,
-                                     ValueType* __restrict__ prolong_vals)
-    {
-        IndexType tid = hipThreadIdx_x;
-        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
-
-        __shared__ IndexType stable[BLOCKSIZE * HASH];
-        __shared__ IndexType sdata[BLOCKSIZE * HASH];
-
-        IndexType* table = &stable[tid * HASH];
-        IndexType* data  = &sdata[tid * HASH];
-
-        // Initialize hash table with -1
-        for(IndexType j = 0; j < HASH; j++)
-        {
-            table[j] = -1;
-            data[j]  = -1;
-        }
-
-        __syncthreads();
-
-        if(row >= nrow)
-        {
-            return;
-        }
-
-        IndexType row_start = row_offset[row];
-        IndexType row_end   = row_offset[row + 1];
-
-        ValueType dia = static_cast<ValueType>(0);
-        for(IndexType j = row_start; j < row_end; j++)
-        {
-            if(cols[j] == row)
-            {
-                dia += vals[j];
-            }
-            else if(!connections[j])
-            {
-                dia -= vals[j];
-            }
-        }
-
-        dia = static_cast<ValueType>(1) / dia;
-
-        IndexType prolong_row_start = prolong_row_offset[row];
-
-        IndexType counter = prolong_row_start;
-        for(IndexType j = row_start; j < row_end; j++)
-        {
-            IndexType col = cols[j];
-
-            if(row == col || row != col && connections[j] == 1)
-            {
-                IndexType key = aggregates[col];
-
-                if(key >= 0)
-                {
-                    ValueType val
-                        = (col == row) ? static_cast<ValueType>(1) - relax : -relax * dia * vals[j];
-
-                    IndexType hash = (key * 103) & (HASH - 1);
-
-                    // Hash operation
-                    while(true)
-                    {
-                        if(table[hash] == key)
-                        {
-                            prolong_vals[data[hash]] += val;
-                            break;
-                        }
-                        else if(table[hash] == -1)
-                        {
-                            table[hash]           = key;
-                            data[hash]            = counter;
-                            prolong_cols[counter] = key;
-                            prolong_vals[counter] = val;
-                            counter++;
-                            break;
-                        }
-                        else
-                        {
-                            // collision, compute new hash
-                            hash = (hash + 1) & (HASH - 1);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     template <unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
               unsigned int HASH,
               typename ValueType,
               typename IndexType>
-    __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_prolong_fill2(IndexType nrow,
-                                      ValueType relax,
-                                      const IndexType* __restrict__ row_offset,
-                                      const IndexType* __restrict__ cols,
-                                      const ValueType* __restrict__ vals,
-                                      const IndexType* __restrict__ connections,
-                                      const IndexType* __restrict__ aggregates,
-                                      const IndexType* __restrict__ prolong_row_offset,
-                                      IndexType* __restrict__ prolong_cols,
-                                      ValueType* __restrict__ prolong_vals)
+    __launch_bounds__(BLOCKSIZE) __global__ void kernel_csr_prolong_fill_jacobi_smoother(
+        IndexType nrow,
+        ValueType relax,
+        int       lumping_strat,
+        const IndexType* __restrict__ row_offset,
+        const IndexType* __restrict__ cols,
+        const ValueType* __restrict__ vals,
+        const IndexType* __restrict__ connections,
+        const IndexType* __restrict__ aggregates,
+        const IndexType* __restrict__ prolong_row_offset,
+        IndexType* __restrict__ prolong_cols,
+        ValueType* __restrict__ prolong_vals)
     {
         IndexType tid = hipThreadIdx_x;
         IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
@@ -1418,7 +1319,14 @@ namespace rocalution
             }
             else if(!connections[j])
             {
-                dia -= vals[j];
+                if(lumping_strat == 0)
+                {
+                    dia += vals[j];
+                }
+                else
+                {
+                    dia -= vals[j];
+                }
             }
         }
 

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -180,7 +180,8 @@ namespace rocalution
                                             const BaseVector<int>& aggregates,
                                             const BaseVector<int>& connections,
                                             BaseMatrix<ValueType>* prolong,
-                                            BaseMatrix<ValueType>* restrict) const;
+                                            BaseMatrix<ValueType>* restrict,
+                                            int lumping_strat = 0) const;
         virtual bool AMGAggregation(const BaseVector<int>& aggregates,
                                     BaseMatrix<ValueType>* prolong,
                                     BaseMatrix<ValueType>* restrict) const;

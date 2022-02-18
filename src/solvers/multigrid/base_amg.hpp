@@ -38,6 +38,12 @@ namespace rocalution
         PMIS   = 1
     } CoarseningStrategy;
 
+    typedef enum _lumping_strategy
+    {
+        AddWeakConnections      = 0,
+        SubtractWeakConnections = 1
+    } LumpingStrategy;
+
     /** \ingroup solver_module
   * \class BaseAMG
   * \brief Base class for all algebraic multigrid solvers

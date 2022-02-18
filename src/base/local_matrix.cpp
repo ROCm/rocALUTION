@@ -5197,7 +5197,8 @@ namespace rocalution
                                                         const LocalVector<int>& aggregates,
                                                         const LocalVector<int>& connections,
                                                         LocalMatrix<ValueType>* prolong,
-                                                        LocalMatrix<ValueType>* restrict) const
+                                                        LocalMatrix<ValueType>* restrict,
+                                                        int lumping_strat) const
     {
         log_debug(this,
                   "LocalMatrix::AMGSmoothedAggregation()",
@@ -5236,7 +5237,8 @@ namespace rocalution
                                                              *aggregates.vector_,
                                                              *connections.vector_,
                                                              prolong->matrix_,
-                                                             restrict->matrix_);
+                                                             restrict->matrix_,
+                                                             lumping_strat);
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5266,7 +5268,8 @@ namespace rocalution
                                                             *aggr_host.vector_,
                                                             *conn_host.vector_,
                                                             prolong->matrix_,
-                                                            restrict->matrix_)
+                                                            restrict->matrix_,
+                                                            lumping_strat)
                    == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");

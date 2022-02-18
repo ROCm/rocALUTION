@@ -938,7 +938,8 @@ namespace rocalution
                                     const LocalVector<int>& aggregates,
                                     const LocalVector<int>& connections,
                                     LocalMatrix<ValueType>* prolong,
-                                    LocalMatrix<ValueType>* restrict) const;
+                                    LocalMatrix<ValueType>* restrict,
+                                    int lumping_strat = 0) const;
         /** \brief Aggregation-based interpolation scheme */
         ROCALUTION_EXPORT
         void AMGAggregation(const LocalVector<int>& aggregates,

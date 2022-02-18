@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,6 +67,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         void SetCoarseningStrategy(CoarseningStrategy strat);
 
+        /** \brief Set lumping strategy */
+        ROCALUTION_EXPORT
+        void SetLumpingStrategy(LumpingStrategy lumping_strat);
+
         ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
@@ -90,6 +94,9 @@ namespace rocalution
 
         /** \brief Coarsening strategy */
         CoarseningStrategy strat_;
+
+        /** \brief Lumping strategy */
+        LumpingStrategy lumping_strat_;
     };
 
 } // namespace rocalution

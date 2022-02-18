@@ -54,17 +54,14 @@ int main(int argc, char* argv[])
     LocalVector<double> e;
     LocalMatrix<double> mat;
 
+    // Move objects to accelerator
+    mat.MoveToAccelerator();
+    x.MoveToAccelerator();
+    rhs.MoveToAccelerator();
+    e.MoveToAccelerator();
+
     // Read matrix from MTX file
     mat.ReadFileMTX(std::string(argv[1]));
-
-    // Run a simple kernel to avoid slow down on first kernel call in hip
-    LocalVector<double> diag;
-    diag.Allocate("diag", mat.GetN());
-    mat.MoveToAccelerator();
-    diag.MoveToAccelerator();
-    mat.ExtractDiagonal(&diag);
-    mat.MoveToHost();
-    diag.MoveToHost();
 
     // Start time measurement
     double tick, tack, start, end;
@@ -91,18 +88,12 @@ int main(int argc, char* argv[])
     // AMG Preconditioner
     SAAMG<LocalMatrix<double>, LocalVector<double>, double> p;
     p.SetCoarseningStrategy(CoarseningStrategy::PMIS);
+    p.SetLumpingStrategy(LumpingStrategy::AddWeakConnections);
     p.SetCoarsestLevel(200);
     p.SetCouplingStrength(0.001);
 
     // Disable verbosity output of AMG preconditioner
     p.Verbose(0);
-
-    // Move objects to accelerator
-    mat.MoveToAccelerator();
-    x.MoveToAccelerator();
-    rhs.MoveToAccelerator();
-    e.MoveToAccelerator();
-    ls.MoveToAccelerator();
 
     // Set solver preconditioner
     ls.SetPreconditioner(p);
@@ -113,10 +104,7 @@ int main(int argc, char* argv[])
     ls.Build();
 
     // Compute 2 coarsest levels on the host
-    if(p.GetNumLevels() > 2)
-    {
-        p.SetHostLevels(2);
-    }
+    p.SetHostLevels(2);
 
     // Stop time measurement
     tack = rocalution_time();

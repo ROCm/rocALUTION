@@ -162,7 +162,8 @@ namespace rocalution
                                             const BaseVector<int>& aggregates,
                                             const BaseVector<int>& connections,
                                             BaseMatrix<ValueType>* prolong,
-                                            BaseMatrix<ValueType>* restrict) const;
+                                            BaseMatrix<ValueType>* restrict,
+                                            int lumping_strat = 0) const;
         virtual bool AMGAggregation(const BaseVector<int>& aggregates,
                                     BaseMatrix<ValueType>* prolong,
                                     BaseMatrix<ValueType>* restrict) const;

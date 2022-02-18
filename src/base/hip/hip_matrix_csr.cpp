@@ -4169,7 +4169,8 @@ namespace rocalution
         const BaseVector<int>& aggregates,
         const BaseVector<int>& connections,
         BaseMatrix<ValueType>* prolong,
-        BaseMatrix<ValueType>* restrict) const
+        BaseMatrix<ValueType>* restrict,
+        int lumping_strat) const
     {
         assert(prolong != NULL);
         assert(restrict != NULL);
@@ -4273,13 +4274,14 @@ namespace rocalution
                                     prolong_nrow,
                                     prolong_ncol);
 
-        hipLaunchKernelGGL((kernel_csr_prolong_fill2<256, 8, 128, ValueType, int>),
+        hipLaunchKernelGGL((kernel_csr_prolong_fill_jacobi_smoother<256, 8, 128, ValueType, int>),
                            dim3((this->nrow_ * 8 - 1) / 256 + 1),
                            dim3(256),
                            0,
                            0,
                            this->nrow_,
                            relax,
+                           lumping_strat,
                            this->mat_.row_offset,
                            this->mat_.col,
                            this->mat_.val,

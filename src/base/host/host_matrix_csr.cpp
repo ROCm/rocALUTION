@@ -4023,7 +4023,8 @@ namespace rocalution
                                                           const BaseVector<int>& aggregates,
                                                           const BaseVector<int>& connections,
                                                           BaseMatrix<ValueType>* prolong,
-                                                          BaseMatrix<ValueType>* restrict) const
+                                                          BaseMatrix<ValueType>* restrict,
+                                                          int lumping_strat) const
     {
         assert(prolong != NULL);
         assert(restrict != NULL);
@@ -4128,8 +4129,8 @@ namespace rocalution
             // Fill the interpolation matrix.
             for(int i = chunk_start; i < chunk_end; ++i)
             {
-                // Diagonal of the filtered matrix is original matrix diagonal minus
-                // its weak connections.
+                // Diagonal of the filtered matrix is original matrix diagonal plus (lumping_strat = 0) or
+                // minus (lumping_strat = 1) its weak connections.
                 ValueType dia = static_cast<ValueType>(0);
                 for(int j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
                 {
@@ -4139,7 +4140,14 @@ namespace rocalution
                     }
                     else if(!cast_conn->vec_[j])
                     {
-                        dia -= this->mat_.val[j];
+                        if(lumping_strat == 0)
+                        {
+                            dia += this->mat_.val[j];
+                        }
+                        else
+                        {
+                            dia -= this->mat_.val[j];
+                        }
                     }
                 }
 
