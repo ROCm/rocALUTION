@@ -26,7 +26,7 @@
 
 #include "../utils/types.hpp"
 #include "backend_manager.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 #include "matrix_formats.hpp"
 #include "operator.hpp"
 

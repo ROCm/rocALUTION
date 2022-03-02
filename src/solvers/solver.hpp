@@ -26,7 +26,7 @@
 
 #include "../base/base_rocalution.hpp"
 #include "../base/local_vector.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 #include "iter_ctrl.hpp"
 
 namespace rocalution

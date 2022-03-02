@@ -273,6 +273,7 @@ build_relocatable=false
 build_static=false
 build_address_sanitizer=false
 build_codecoverage=false
+build_freorg_bkwdcomp=true
 compiler=c++
 verb=false
 
@@ -283,7 +284,7 @@ verb=false
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,codecoverage,static,compiler:,verbose,address-sanitizer --options hicgdr -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,codecoverage,static,compiler:,verbose,address-sanitizer,rm-legacy-include-dir --options hicgdr -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -332,6 +333,9 @@ while true; do
         shift ;;
     --codecoverage)
         build_codecoverage=true
+        shift ;;
+    --rm-legacy-include-dir)
+        build_freorg_bkwdcomp=false
         shift ;;
     --mpi)
         mpi_dir=${2}
@@ -496,6 +500,12 @@ pushd .
       cmake_common_options="${cmake_common_options} -DBUILD_CODE_COVERAGE=ON"
   fi
 
+  #Enable backward compatibility wrappers 
+  if [[ "${build_freorg_bkwdcomp}" == true ]]; then
+    cmake_common_options="${cmake_common_options} -DBUILD_FILE_REORG_BACKWARD_COMPATIBILITY=ON"
+  else
+    cmake_common_options="${cmake_common_options} -DBUILD_FILE_REORG_BACKWARD_COMPATIBILITY=OFF"
+  fi
   # Verbose cmake
   if [[ "${verb}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DBUILD_VERBOSE=ON"

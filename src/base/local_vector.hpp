@@ -25,7 +25,7 @@
 #define ROCALUTION_LOCAL_VECTOR_HPP_
 
 #include "../utils/types.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 #include "vector.hpp"
 
 namespace rocalution

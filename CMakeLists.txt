@@ -32,11 +32,12 @@ else()
 endif()
 
 # Needed to pickup static library files
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm ${ROCM_PATH})
 
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+     ${ROCM_PATH}/lib/hip/cmake
      ${ROCM_PATH}/hip/cmake)
 
 # Set a default build type if none was specified
@@ -70,6 +71,7 @@ option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
 option(BUILD_VERBOSE "Output additional build information" OFF)
 option(BUILD_CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(BUILD_ADDRESS_SANITIZER "Build with address sanitizer enabled" OFF)
+option(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY "Build with file/folder reorg with backward compatibility enabled" ON)
 
 # Dependencies
 include(cmake/Dependencies.cmake)

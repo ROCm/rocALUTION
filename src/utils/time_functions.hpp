@@ -24,7 +24,7 @@
 #ifndef ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
 #define ROCALUTION_UTILS_TIME_FUNCTIONS_HPP_
 
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {

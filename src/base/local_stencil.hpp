@@ -25,7 +25,7 @@
 #define ROCALUTION_LOCAL_STENCIL_HPP_
 
 #include "../utils/types.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 #include "local_vector.hpp"
 #include "operator.hpp"
 #include "stencil_types.hpp"

@@ -24,7 +24,7 @@
 #ifndef ROCALUTION_KRYLOV_CHEBYSHEV_HPP_
 #define ROCALUTION_KRYLOV_CHEBYSHEV_HPP_
 
-#include "export.hpp"
+#include "rocalution/export.hpp"
 #include "solver.hpp"
 
 #include <vector>

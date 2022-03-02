@@ -26,7 +26,7 @@
 
 #include "../solver.hpp"
 #include "base_amg.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {

@@ -26,7 +26,7 @@
 
 #include "../../base/local_vector.hpp"
 #include "../solver.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 #include "preconditioner.hpp"
 
 #include <vector>
