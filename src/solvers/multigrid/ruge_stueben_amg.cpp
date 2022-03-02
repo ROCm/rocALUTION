@@ -41,7 +41,13 @@ namespace rocalution
         log_debug(this, "RugeStuebenAMG::RugeStuebenAMG()", "default constructor");
 
         // parameter for strong couplings in smoothed aggregation
-        this->eps_ = static_cast<ValueType>(0.25);
+        this->eps_ = 0.25f;
+
+        // Coarsening strategy default
+        this->coarsening_ = Greedy;
+
+        // Interpolation type default
+        this->interpolation_ = Direct;
 
         // Disable scaling
         this->scaling_ = false;
@@ -58,9 +64,29 @@ namespace rocalution
     template <class OperatorType, class VectorType, typename ValueType>
     void RugeStuebenAMG<OperatorType, VectorType, ValueType>::Print(void) const
     {
+        std::string coarsening;
+        switch(this->coarsening_)
+        {
+        case Greedy:
+            coarsening = "Greedy";
+            break;
+        case PMIS:
+            coarsening = "PMIS";
+            break;
+        }
+
+        std::string interpolation;
+        switch(this->interpolation_)
+        {
+        case Direct:
+            interpolation = "Direct";
+            break;
+        }
+
         LOG_INFO("AMG solver");
         LOG_INFO("AMG number of levels " << this->levels_);
-        LOG_INFO("AMG using Ruge-Stuben coarsening");
+        LOG_INFO("AMG Ruge-Stuben using " << coarsening << " coarsening with " << interpolation
+                                          << " interpolation");
         LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
         LOG_INFO("AMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
         LOG_INFO("AMG with smoother:");
@@ -72,9 +98,29 @@ namespace rocalution
     {
         assert(this->levels_ > 0);
 
+        std::string coarsening;
+        switch(this->coarsening_)
+        {
+        case Greedy:
+            coarsening = "Greedy";
+            break;
+        case PMIS:
+            coarsening = "PMIS";
+            break;
+        }
+
+        std::string interpolation;
+        switch(this->interpolation_)
+        {
+        case Direct:
+            interpolation = "Direct";
+            break;
+        }
+
         LOG_INFO("AMG solver starts");
         LOG_INFO("AMG number of levels " << this->levels_);
-        LOG_INFO("AMG using Ruge-Stuben coarsening");
+        LOG_INFO("AMG Ruge-Stuben using " << coarsening << " coarsening with " << interpolation
+                                          << " interpolation");
         LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
         LOG_INFO("AMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
         LOG_INFO("AMG with smoother:");
@@ -92,7 +138,33 @@ namespace rocalution
     {
         log_debug(this, "RugeStuebenAMG::SetCouplingStrength()", eps);
 
+        this->eps_ = static_cast<float>(std::real(eps));
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetStrengthThreshold(float eps)
+    {
+        log_debug(this, "RugeStuebenAMG::SetStrengthThreshold()", eps);
+
         this->eps_ = eps;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetCoarseningStrategy(
+        CoarseningStrategy strat)
+    {
+        log_debug(this, "RugeStuebenAMG::SetCoarseningStrategy()", strat);
+
+        this->coarsening_ = strat;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetInterpolationType(
+        InterpolationType type)
+    {
+        log_debug(this, "RugeStuebenAMG::SetInterpolationType()", type);
+
+        this->interpolation_ = type;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -222,8 +294,34 @@ namespace rocalution
         assert(cast_res != NULL);
         assert(cast_pro != NULL);
 
+        // Determine C/F map and S
+        LocalVector<int>  CFmap;
+        LocalVector<bool> S;
+
+        CFmap.CloneBackend(op);
+        S.CloneBackend(op);
+
+        switch(this->coarsening_)
+        {
+        case Greedy:
+            op.RSCoarsening(this->eps_, &CFmap, &S);
+            break;
+        case PMIS:
+            op.RSPMISCoarsening(this->eps_, &CFmap, &S);
+            break;
+        }
+
         // Create prolongation and restriction operators
-        op.RugeStueben(this->eps_, cast_pro, cast_res);
+        switch(this->interpolation_)
+        {
+        case Direct:
+            op.RSDirectInterpolation(CFmap, S, cast_pro, cast_res);
+            break;
+        }
+
+        // Clean up
+        CFmap.Clear();
+        S.Clear();
 
         // Create coarse operator
         OperatorType tmp;

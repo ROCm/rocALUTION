@@ -428,7 +428,18 @@ namespace rocalution
                                     BaseMatrix<ValueType>* restrict) const;
 
         /// Ruge Stueben coarsening
-        virtual bool RugeStueben(ValueType              eps,
+        virtual bool RSCoarsening(float eps, BaseVector<int>* CFmap, BaseVector<bool>* S) const;
+        /// Parallel maximal independent set coarsening
+        virtual bool RSPMISCoarsening(float eps, BaseVector<int>* CFmap, BaseVector<bool>* S) const;
+
+        /// Ruge Stueben Direct Interpolation
+        virtual bool RSDirectInterpolation(const BaseVector<int>&  CFmap,
+                                           const BaseVector<bool>& S,
+                                           BaseMatrix<ValueType>*  prolong,
+                                           BaseMatrix<ValueType>* restrict) const;
+
+        /// Ruge Stueben operator generation
+        virtual bool RugeStueben(float                  eps,
                                  BaseMatrix<ValueType>* prolong,
                                  BaseMatrix<ValueType>* restrict) const;
 

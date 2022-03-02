@@ -33,7 +33,6 @@
 
 namespace rocalution
 {
-
     template <typename ValueType, typename IndexType>
     __global__ void kernel_csr_scale_diagonal(IndexType nrow,
                                               const IndexType* __restrict__ row_offset,
@@ -1460,6 +1459,507 @@ namespace rocalution
         }
     }
 
+    // Determine strong influences
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename ValueType, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_pmis_strong_influences(IndexType nrow,
+                                                  const IndexType* __restrict__ csr_row_ptr,
+                                                  const IndexType* __restrict__ csr_col_ind,
+                                                  const ValueType* __restrict__ csr_val,
+                                                  float eps,
+                                                  float* __restrict__ omega,
+                                                  bool* __restrict__ S)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        // The row this wavefront operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Determine minimum and maximum off-diagonal of the current row
+        ValueType min_a_ik = static_cast<ValueType>(0);
+        ValueType max_a_ik = static_cast<ValueType>(0);
+
+        // Shared boolean that holds diagonal sign for each wavefront
+        // where true means, the diagonal element is negative
+        __shared__ bool sign[BLOCKSIZE / WFSIZE];
+
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        // Determine diagonal sign and min/max
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            IndexType col = csr_col_ind[j];
+            ValueType val = csr_val[j];
+
+            if(col == row)
+            {
+                // Get diagonal entry sign
+                sign[wid] = val < static_cast<ValueType>(0);
+            }
+            else
+            {
+                // Get min / max entries
+                min_a_ik = (min_a_ik < val) ? min_a_ik : val;
+                max_a_ik = (max_a_ik > val) ? max_a_ik : val;
+            }
+        }
+
+        __threadfence_block();
+
+        // Maximum or minimum, depending on the diagonal sign
+        ValueType cond = sign[wid] ? max_a_ik : min_a_ik;
+
+        // Obtain extrema on all threads of the wavefront
+        if(sign[wid])
+        {
+            wf_reduce_max<WFSIZE>(&cond);
+        }
+        else
+        {
+            wf_reduce_min<WFSIZE>(&cond);
+        }
+
+        // Threshold to check for strength of connection
+        cond *= eps;
+
+        // Fill S
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            IndexType col = csr_col_ind[j];
+            ValueType val = csr_val[j];
+
+            if(col != row && val < cond)
+            {
+                // col is strongly connected to row
+                S[j] = true;
+
+                // Increment omega, as it holds all strongly connected edges
+                // of vertex col.
+                // Additionally, omega holds a random number between 0 and 1 to
+                // distinguish neighbor points with equal number of strong
+                // connections.
+                atomicAdd(&omega[col], 1.0f);
+            }
+        }
+    }
+
+    // Mark all vertices that have not been assigned yet, as coarse
+    template <typename IndexType>
+    __global__ void kernel_csr_rs_pmis_unassigned_to_coarse(IndexType nrow,
+                                                            const float* __restrict__ omega,
+                                                            int* __restrict__ cf,
+                                                            IndexType* __restrict__ workspace)
+    {
+        // Each thread processes a row
+        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // workspace keeps track, whether a vertex has been marked coarse
+        // during the current iteration, or not.
+        bool flag = false;
+
+        // Check only undecided vertices
+        if(cf[row] == 0)
+        {
+            // If this vertex has an edge, it might be a coarse one
+            if(omega[row] >= 1.0f)
+            {
+                cf[row] = 1;
+
+                // Keep in mind, that this vertex has been marked coarse in the
+                // current iteration
+                flag = true;
+            }
+            else
+            {
+                // This point does not influence any other points and thus is a
+                // fine point
+                cf[row] = 2;
+            }
+        }
+
+        workspace[row] = flag;
+    }
+
+    // Correct previously marked vertices with respect to omega
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_pmis_correct_coarse(IndexType nrow,
+                                               const IndexType* __restrict__ csr_row_ptr,
+                                               const IndexType* __restrict__ csr_col_ind,
+                                               const float* __restrict__ omega,
+                                               const bool* __restrict__ S,
+                                               int* __restrict__ cf,
+                                               IndexType* __restrict__ workspace)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        // The row this wavefront operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // If this vertex has been marked coarse in the current iteration,
+        // process it for further checks
+        if(workspace[row])
+        {
+            IndexType row_begin = csr_row_ptr[row];
+            IndexType row_end   = csr_row_ptr[row + 1];
+
+            // Get the weight of the current row for comparison
+            float omega_row = omega[row];
+
+            // Loop over the full row to compare weights of other vertices that
+            // have been marked coarse in the current iteration
+            for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+            {
+                // Process only vertices that are strongly connected
+                if(S[j])
+                {
+                    IndexType col = csr_col_ind[j];
+
+                    // If this vertex has been marked coarse in the current iteration,
+                    // we need to check whether it is accepted as a coarse vertex or not.
+                    if(workspace[col])
+                    {
+                        // Get the weight of the current vertex for comparison
+                        float omega_col = omega[col];
+
+                        if(omega_row > omega_col)
+                        {
+                            // The diagonal entry has more edges and will remain
+                            // a coarse point, whereas this vertex gets reverted
+                            // back to undecided, for further processing.
+                            cf[col] = 0;
+                        }
+                        else if(omega_row < omega_col)
+                        {
+                            // The diagonal entry has fewer edges and gets
+                            // reverted back to undecided for further processing,
+                            // whereas this vertex stays
+                            // a coarse one.
+                            cf[row] = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Mark remaining edges of a coarse point to fine
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_pmis_coarse_edges_to_fine(IndexType nrow,
+                                                     const IndexType* __restrict__ csr_row_ptr,
+                                                     const IndexType* __restrict__ csr_col_ind,
+                                                     const bool* __restrict__ S,
+                                                     int* __restrict__ cf)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        // The row this wavefront operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Process only undecided vertices
+        if(cf[row] == 0)
+        {
+            IndexType row_begin = csr_row_ptr[row];
+            IndexType row_end   = csr_row_ptr[row + 1];
+
+            // Loop over all edges of this undecided vertex
+            // and check, if there is a coarse point connected
+            for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+            {
+                // Check, whether this edge is strongly connected to the vertex
+                if(S[j])
+                {
+                    IndexType col = csr_col_ind[j];
+
+                    // If this edge is coarse, our vertex must be fine
+                    if(cf[col] == 1)
+                    {
+                        cf[row] = 2;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    // Check for undecided vertices
+    template <unsigned int BLOCKSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_pmis_check_undecided(IndexType nrow,
+                                                const int* __restrict__ cf,
+                                                IndexType* __restrict__ undecided)
+    {
+        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Check whether current vertex is undecided
+        if(cf[row] == 0)
+        {
+            *undecided = true;
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_direct_interp_nnz(IndexType nrow,
+                                             const IndexType* __restrict__ csr_row_ptr,
+                                             const IndexType* __restrict__ csr_col_ind,
+                                             const ValueType* __restrict__ csr_val,
+                                             const bool* __restrict__ S,
+                                             const int* __restrict__ cf,
+                                             ValueType* __restrict__ Amin,
+                                             ValueType* __restrict__ Amax,
+                                             IndexType* __restrict__ row_nnz,
+                                             IndexType* __restrict__ coarse_idx)
+    {
+        // The row this thread operates on
+        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Counter
+        IndexType nnz = 0;
+
+        // Coarse points generate a single entry
+        if(cf[row] == 1)
+        {
+            // Set coarse flag
+            coarse_idx[row] = nnz = 1;
+        }
+        else
+        {
+            // Set non-coarse flag
+            coarse_idx[row] = 0;
+
+            ValueType amin = static_cast<ValueType>(0);
+            ValueType amax = static_cast<ValueType>(0);
+
+            IndexType row_begin = csr_row_ptr[row];
+            IndexType row_end   = csr_row_ptr[row + 1];
+
+            // Loop over the full row and determine minimum and maximum
+            for(IndexType j = row_begin; j < row_end; ++j)
+            {
+                // Process only vertices that are strongly connected
+                if(S[j])
+                {
+                    IndexType col = csr_col_ind[j];
+
+                    // Process only coarse points
+                    if(cf[col] == 1)
+                    {
+                        ValueType val = csr_val[j];
+
+                        amin = (amin < val) ? amin : val;
+                        amax = (amax > val) ? amax : val;
+                    }
+                }
+            }
+
+            Amin[row] = amin = amin * static_cast<ValueType>(0.2);
+            Amax[row] = amax = amax * static_cast<ValueType>(0.2);
+
+            // Loop over the full row to count eligible entries
+            for(IndexType j = row_begin; j < row_end; ++j)
+            {
+                // Process only vertices that are strongly connected
+                if(S[j])
+                {
+                    IndexType col = csr_col_ind[j];
+
+                    // Process only coarse points
+                    if(cf[col] == 1)
+                    {
+                        ValueType val = csr_val[j];
+
+                        // If conditions are fulfilled, count up row nnz
+                        if(val <= amin || val >= amax)
+                        {
+                            ++nnz;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Write row nnz back to global memory
+        row_nnz[row] = nnz;
+    }
+
+    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_direct_interp_fill(IndexType nrow,
+                                              const IndexType* __restrict__ csr_row_ptr,
+                                              const IndexType* __restrict__ csr_col_ind,
+                                              const ValueType* __restrict__ csr_val,
+                                              const IndexType* __restrict__ prolong_csr_row_ptr,
+                                              IndexType* __restrict__ prolong_csr_col_ind,
+                                              ValueType* __restrict__ prolong_csr_val,
+                                              const bool* __restrict__ S,
+                                              const int* __restrict__ cf,
+                                              const ValueType* __restrict__ Amin,
+                                              const ValueType* __restrict__ Amax,
+                                              const IndexType* __restrict__ coarse_idx)
+    {
+        // The row this thread operates on
+        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // The row of P this thread operates on
+        IndexType row_P = prolong_csr_row_ptr[row];
+
+        // If this is a coarse point, we can fill P and return
+        if(cf[row] == 1)
+        {
+            prolong_csr_col_ind[row_P] = coarse_idx[row];
+            prolong_csr_val[row_P]     = static_cast<ValueType>(1);
+
+            return;
+        }
+
+        ValueType diag  = static_cast<ValueType>(0);
+        ValueType a_num = static_cast<ValueType>(0), a_den = static_cast<ValueType>(0);
+        ValueType b_num = static_cast<ValueType>(0), b_den = static_cast<ValueType>(0);
+        ValueType d_neg = static_cast<ValueType>(0), d_pos = static_cast<ValueType>(0);
+
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        // Loop over the full row
+        for(IndexType j = row_begin; j < row_end; ++j)
+        {
+            IndexType col = csr_col_ind[j];
+            ValueType val = csr_val[j];
+
+            // Do not process the vertex itself
+            if(col == row)
+            {
+                diag = val;
+                continue;
+            }
+
+            if(val < static_cast<ValueType>(0))
+            {
+                a_num += val;
+
+                // Only process vertices that are strongly connected and coarse
+                if(S[j] && cf[col] == 1)
+                {
+                    a_den += val;
+
+                    if(val > Amin[row])
+                    {
+                        d_neg += val;
+                    }
+                }
+            }
+            else
+            {
+                b_num += val;
+
+                // Only process vertices that are strongly connected and coarse
+                if(S[j] && cf[col] == 1)
+                {
+                    b_den += val;
+
+                    if(val < Amax[row])
+                    {
+                        d_pos += val;
+                    }
+                }
+            }
+        }
+
+        ValueType cf_neg = static_cast<ValueType>(1);
+        ValueType cf_pos = static_cast<ValueType>(1);
+
+        if(abs(a_den - d_neg) > 1e-32)
+        {
+            cf_neg = a_den / (a_den - d_neg);
+        }
+
+        if(abs(b_den - d_pos) > 1e-32)
+        {
+            cf_pos = b_den / (b_den - d_pos);
+        }
+
+        if(b_num > static_cast<ValueType>(0) && abs(b_den) < 1e-32)
+        {
+            diag += b_num;
+        }
+
+        ValueType alpha
+            = abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : static_cast<ValueType>(0);
+        ValueType beta
+            = abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : static_cast<ValueType>(0);
+
+        // Loop over the full row to fill eligible entries
+        for(IndexType j = row_begin; j < row_end; ++j)
+        {
+            // Process only vertices that are strongly connected
+            if(S[j])
+            {
+                IndexType col = csr_col_ind[j];
+                ValueType val = csr_val[j];
+
+                // Process only coarse points
+                if(cf[col] == 1)
+                {
+                    if(val > Amin[row] && val < Amax[row])
+                    {
+                        continue;
+                    }
+
+                    // Fill P
+                    prolong_csr_col_ind[row_P] = coarse_idx[col];
+                    prolong_csr_val[row_P] = (val < static_cast<ValueType>(0) ? alpha : beta) * val;
+                    ++row_P;
+                }
+            }
+        }
+    }
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_

@@ -101,6 +101,63 @@
 
 namespace rocalution
 {
+    static __device__ __forceinline__ float hip_nontemporal_load(const float* ptr)
+    {
+        return __builtin_nontemporal_load(ptr);
+    }
+    static __device__ __forceinline__ double hip_nontemporal_load(const double* ptr)
+    {
+        return __builtin_nontemporal_load(ptr);
+    }
+    static __device__ __forceinline__ std::complex<float>
+                                      hip_nontemporal_load(const std::complex<float>* ptr)
+    {
+        return std::complex<float>(__builtin_nontemporal_load((const float*)ptr),
+                                   __builtin_nontemporal_load((const float*)ptr + 1));
+    }
+    static __device__ __forceinline__ std::complex<double>
+                                      hip_nontemporal_load(const std::complex<double>* ptr)
+    {
+        return std::complex<double>(__builtin_nontemporal_load((const double*)ptr),
+                                    __builtin_nontemporal_load((const double*)ptr + 1));
+    }
+    static __device__ __forceinline__ int32_t hip_nontemporal_load(const int32_t* ptr)
+    {
+        return __builtin_nontemporal_load(ptr);
+    }
+    static __device__ __forceinline__ int64_t hip_nontemporal_load(const int64_t* ptr)
+    {
+        return __builtin_nontemporal_load(ptr);
+    }
+
+    template <typename ValueType>
+    static __device__ __forceinline__ bool operator<(const std::complex<ValueType>& lhs,
+                                                     const std::complex<ValueType>& rhs)
+    {
+        return std::real(lhs) < std::real(rhs);
+    }
+
+    template <typename ValueType>
+    static __device__ __forceinline__ bool operator>(const std::complex<ValueType>& lhs,
+                                                     const std::complex<ValueType>& rhs)
+    {
+        return std::real(lhs) > std::real(rhs);
+    }
+
+    template <typename ValueType>
+    static __device__ __forceinline__ bool operator<=(const std::complex<ValueType>& lhs,
+                                                      const std::complex<ValueType>& rhs)
+    {
+        return std::real(lhs) <= std::real(rhs);
+    }
+
+    template <typename ValueType>
+    static __device__ __forceinline__ bool operator>=(const std::complex<ValueType>& lhs,
+                                                      const std::complex<ValueType>& rhs)
+    {
+        return std::real(lhs) >= std::real(rhs);
+    }
+
     // abs()
     static __device__ __forceinline__ float hip_abs(float val)
     {
@@ -325,6 +382,50 @@ namespace rocalution
     }
 #endif
 
+    template <unsigned int WF_SIZE, typename ValueType>
+    static __device__ __forceinline__ void wf_reduce_min(ValueType* val)
+    {
+        for(unsigned int i = WF_SIZE >> 1; i > 0; i >>= 1)
+        {
+            *val = min(*val, __shfl_xor(*val, i));
+        }
+    }
+
+#ifdef SUPPORT_COMPLEX
+    template <unsigned int WF_SIZE, typename ValueType>
+    static __device__ __forceinline__ void wf_reduce_min(std::complex<ValueType>* val)
+    {
+        ValueType real = std::real(*val);
+        ValueType imag = std::imag(*val);
+
+        wf_reduce_min<WF_SIZE>(&real);
+
+        *val = std::complex<ValueType>(real, static_cast<ValueType>(0));
+    }
+#endif
+
+    template <unsigned int WF_SIZE, typename ValueType>
+    static __device__ __forceinline__ void wf_reduce_max(ValueType* val)
+    {
+        for(unsigned int i = WF_SIZE >> 1; i > 0; i >>= 1)
+        {
+            *val = max(*val, __shfl_xor(*val, i));
+        }
+    }
+
+#ifdef SUPPORT_COMPLEX
+    template <unsigned int WF_SIZE, typename ValueType>
+    static __device__ __forceinline__ void wf_reduce_max(std::complex<ValueType>* val)
+    {
+        ValueType real = std::real(*val);
+        ValueType imag = std::imag(*val);
+
+        wf_reduce_max<WF_SIZE>(&real);
+
+        *val = std::complex<ValueType>(real, static_cast<ValueType>(0));
+    }
+#endif
+
     static __device__ __forceinline__ float shfl(float var, int src_lane, int width = warpSize)
     {
         return __shfl(var, src_lane, width);
@@ -363,6 +464,92 @@ namespace rocalution
     }
 
 #endif
+
+    // Block reduce kernel computing block sum
+    template <unsigned int BLOCKSIZE, typename ValueType>
+    static __device__ __forceinline__ void block_reduce_sum(int i, ValueType* data)
+    {
+        if(BLOCKSIZE > 512)
+        {
+            if(i < 512 && i + 512 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 512];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 256)
+        {
+            if(i < 256 && i + 256 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 256];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 128)
+        {
+            if(i < 128 && i + 128 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 128];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 64)
+        {
+            if(i < 64 && i + 64 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 64];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 32)
+        {
+            if(i < 32 && i + 32 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 32];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 16)
+        {
+            if(i < 16 && i + 16 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 16];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 8)
+        {
+            if(i < 8 && i + 8 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 8];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 4)
+        {
+            if(i < 4 && i + 4 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 4];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 2)
+        {
+            if(i < 2 && i + 2 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 2];
+            }
+            __syncthreads();
+        }
+        if(BLOCKSIZE > 1)
+        {
+            if(i < 1 && i + 1 < BLOCKSIZE)
+            {
+                data[i] = data[i] + data[i + 1];
+            }
+            __syncthreads();
+        }
+    }
 
     // Block reduce kernel computing blockwide maximum entry
     template <unsigned int BLOCKSIZE, typename T>
