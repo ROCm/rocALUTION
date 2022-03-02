@@ -5396,14 +5396,272 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::RugeStueben(ValueType               eps,
+    void LocalMatrix<ValueType>::RSCoarsening(float              eps,
+                                              LocalVector<int>*  CFmap,
+                                              LocalVector<bool>* S) const
+    {
+        log_debug(this, "LocalMatrix::RSCoarsening()", eps, CFmap, S);
+
+        assert(eps < 1.0f);
+        assert(eps > 0.0f);
+        assert(CFmap != NULL);
+        assert(S != NULL);
+
+        assert(((this->matrix_ == this->matrix_host_) && (CFmap->vector_ == CFmap->vector_host_)
+                && (S->vector_ == S->vector_host_))
+               || ((this->matrix_ == this->matrix_accel_)
+                   && (CFmap->vector_ == CFmap->vector_accel_)
+                   && (S->vector_ == S->vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->RSCoarsening(eps, CFmap->vector_, S->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::RSCoarsening() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                mat_host.ConvertTo(this->GetFormat());
+                mat_host.CopyFrom(*this);
+
+                // Move to host
+                CFmap->MoveToHost();
+                S->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->RSCoarsening(eps, CFmap->vector_, S->vector_) == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::RSCoarsening() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::RSCoarsening() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::RSCoarsening() is performed on the host");
+
+                    CFmap->MoveToAccelerator();
+                    S->MoveToAccelerator();
+                }
+            }
+        }
+
+        std::string CFmap_name = "CF map of " + this->object_name_;
+        std::string S_name     = "S of " + this->object_name_;
+
+        CFmap->object_name_ = CFmap_name;
+        S->object_name_     = S_name;
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::RSPMISCoarsening(float              eps,
+                                                  LocalVector<int>*  CFmap,
+                                                  LocalVector<bool>* S) const
+    {
+        log_debug(this, "LocalMatrix::RSPMISCoarsening()", eps, CFmap, S);
+
+        assert(eps < 1.0f);
+        assert(eps > 0.0f);
+        assert(CFmap != NULL);
+        assert(S != NULL);
+
+        assert(((this->matrix_ == this->matrix_host_) && (CFmap->vector_ == CFmap->vector_host_)
+                && (S->vector_ == S->vector_host_))
+               || ((this->matrix_ == this->matrix_accel_)
+                   && (CFmap->vector_ == CFmap->vector_accel_)
+                   && (S->vector_ == S->vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->RSPMISCoarsening(eps, CFmap->vector_, S->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::RSPMISCoarsening() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                mat_host.ConvertTo(this->GetFormat());
+                mat_host.CopyFrom(*this);
+
+                // Move to host
+                CFmap->MoveToHost();
+                S->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->RSPMISCoarsening(eps, CFmap->vector_, S->vector_) == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::RSPMISCoarsening() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2,
+                        "*** warning: LocalMatrix::RSPMISCoarsening() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::RSPMISCoarsening() is performed on the host");
+
+                    CFmap->MoveToAccelerator();
+                    S->MoveToAccelerator();
+                }
+            }
+        }
+
+        std::string CFmap_name = "CF map of " + this->object_name_;
+        std::string S_name     = "S of " + this->object_name_;
+
+        CFmap->object_name_ = CFmap_name;
+        S->object_name_     = S_name;
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::RSDirectInterpolation(const LocalVector<int>&  CFmap,
+                                                       const LocalVector<bool>& S,
+                                                       LocalMatrix<ValueType>*  prolong,
+                                                       LocalMatrix<ValueType>* restrict) const
+    {
+        log_debug(this,
+                  "LocalMatrix::RSDirectInterpolation()",
+                  (const void*&)CFmap,
+                  (const void*&)S,
+                  prolong,
+                  restrict);
+
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+        assert(this != prolong);
+        assert(this != restrict);
+
+        assert(((this->matrix_ == this->matrix_host_) && (prolong->matrix_ == prolong->matrix_host_)
+                && (restrict->matrix_ == restrict->matrix_host_)
+                && (CFmap.vector_ == CFmap.vector_host_) && (S.vector_ == S.vector_host_))
+               || ((this->matrix_ == this->matrix_accel_)
+                   && (prolong->matrix_ == prolong->matrix_accel_)
+                   && (restrict->matrix_ == restrict->matrix_accel_)
+                   && (CFmap.vector_ == CFmap.vector_accel_) && (S.vector_ == S.vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->RSDirectInterpolation(
+                *CFmap.vector_, *S.vector_, prolong->matrix_, restrict->matrix_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::RSDirectInterpolation() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                LocalVector<int>       CFmap_host;
+                LocalVector<bool>      S_host;
+
+                mat_host.ConvertTo(this->GetFormat());
+                mat_host.CopyFrom(*this);
+                CFmap_host.CopyFrom(CFmap);
+                S_host.CopyFrom(S);
+
+                // Move to host
+                prolong->MoveToHost();
+                restrict->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->RSDirectInterpolation(
+                       *CFmap_host.vector_, *S_host.vector_, prolong->matrix_, restrict->matrix_)
+                   == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::RSDirectInterpolation() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::RSDirectInterpolation() is "
+                                     "performed in CSR format");
+
+                    prolong->ConvertTo(this->GetFormat());
+                    restrict->ConvertTo(this->GetFormat());
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::RSDirectInterpolation() is "
+                                     "performed on the host");
+
+                    prolong->MoveToAccelerator();
+                    restrict->MoveToAccelerator();
+                }
+            }
+        }
+
+        std::string prolong_name  = "Prolongation Operator of " + this->object_name_;
+        std::string restrict_name = "Restriction Operator of " + this->object_name_;
+
+        prolong->object_name_  = prolong_name;
+        restrict->object_name_ = restrict_name;
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+        restrict->Check();
+#endif
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::RugeStueben(float                   eps,
                                              LocalMatrix<ValueType>* prolong,
                                              LocalMatrix<ValueType>* restrict) const
     {
         log_debug(this, "LocalMatrix::RugeStueben()", eps, prolong, restrict);
 
-        assert(eps < static_cast<ValueType>(1));
-        assert(eps > static_cast<ValueType>(0));
+        assert(eps < 1.0f);
+        assert(eps > 0.0f);
         assert(prolong != NULL);
         assert(restrict != NULL);
         assert(this != prolong);

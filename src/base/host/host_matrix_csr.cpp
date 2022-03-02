@@ -4531,9 +4531,6 @@ namespace rocalution
     //           float eps_strong,
     //           backend::crs<char, Col, Ptr> &S,
     //           std::vector<char> &cf)
-    //   cfsplit(backend::crs<Val, Col, Ptr> const &A,
-    //           backend::crs<char, Col, Ptr> const &S,
-    //           std::vector<char> &cf)
     // ----------------------------------------------------------
     // Modified and adopted from AMGCL,
     // https://github.com/ddemidov/amgcl
@@ -4543,42 +4540,48 @@ namespace rocalution
     // - adopted interface
     // ----------------------------------------------------------
     template <typename ValueType>
-    bool HostMatrixCSR<ValueType>::RugeStueben(ValueType              eps,
-                                               BaseMatrix<ValueType>* prolong,
-                                               BaseMatrix<ValueType>* restrict) const
+    bool HostMatrixCSR<ValueType>::RSCoarsening(float             eps,
+                                                BaseVector<int>*  CFmap,
+                                                BaseVector<bool>* S) const
     {
-        assert(prolong != NULL);
-        assert(restrict != NULL);
+        assert(CFmap != NULL);
+        assert(S != NULL);
 
-        HostMatrixCSR<ValueType>* cast_prolong  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
-        HostMatrixCSR<ValueType>* cast_restrict = dynamic_cast<HostMatrixCSR<ValueType>*>(restrict);
+        HostVector<int>*  cast_cf = dynamic_cast<HostVector<int>*>(CFmap);
+        HostVector<bool>* cast_S  = dynamic_cast<HostVector<bool>*>(S);
 
-        assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
 
-        // Allocate
-        cast_prolong->Clear();
+        // Allocate CF mapping
+        cast_cf->Clear();
+        cast_cf->Allocate(this->nrow_);
 
-        // Array to hold C-F points
-        int* connect = NULL;
+        // Mark all vertices as undecided
+        cast_cf->Zeros();
 
-        allocate_host(this->nrow_, &connect);
+        // Allocate S
+        // S is the auxiliary strength matrix such that
+        //
+        // S_ij = { 1   if i != j and -a_ij > eps * max(-a_ik) for k != i
+        //        { 0   otherwise
+        //
+        // This means, S_ij is 1, only if i strongly depends on j.
+        // S has been extended to also work with matrices that do not have
+        // fully non-positive off-diagonal entries.
 
-        for(int i = 0; i < this->nrow_; ++i)
-        {
-            connect[i] = -1;
-        }
+        cast_S->Clear();
+        cast_S->Allocate(this->nnz_);
+
+        // Initialize S to false (no dependencies)
+        cast_S->Zeros();
 
         // Array of strong couplings S
         int* S_row_offset = NULL;
         int* S_col        = NULL;
-        int* S_val        = NULL;
 
         allocate_host(this->nrow_ + 1, &S_row_offset);
-        allocate_host(this->nnz_, &S_val);
-
         set_to_zero_host(this->nrow_ + 1, S_row_offset);
-        set_to_zero_host(this->nnz_, S_val);
 
 // Determine strong influences in matrix (Ruge Stuben approach)
 #ifdef _OPENMP
@@ -4586,57 +4589,58 @@ namespace rocalution
 #endif
         for(int i = 0; i < this->nrow_; ++i)
         {
-            int sign_diag = -1;
+            // Determine minimum and maximum off-diagonal of the current row
+            ValueType min_a_ik = static_cast<ValueType>(0);
+            ValueType max_a_ik = static_cast<ValueType>(0);
 
-            // Determine diagonal sign
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            int row_begin = this->mat_.row_offset[i];
+            int row_end   = this->mat_.row_offset[i + 1];
+
+            // True, if the diagonal element is negative
+            bool sign = false;
+
+            // Determine diagonal sign and min/max
+            for(int j = row_begin; j < row_end; ++j)
             {
-                if(this->mat_.col[j] == i)
+                int       col = this->mat_.col[j];
+                ValueType val = this->mat_.val[j];
+
+                if(col == i)
                 {
-                    sign_diag = (this->mat_.val[j] < static_cast<ValueType>(0)) ? -1 : 1;
+                    // Get diagonal entry sign
+                    sign = val < static_cast<ValueType>(0);
+                }
+                else
+                {
+                    // Get min / max entries
+                    min_a_ik = (min_a_ik < val) ? min_a_ik : val;
+                    max_a_ik = (max_a_ik > val) ? max_a_ik : val;
                 }
             }
 
-            ValueType val = static_cast<ValueType>(0);
-
-            // Look up val = max|a_ik| with i != k and a_ik < 0 if a_ii > 0 or a_ik > 0 if a_ii < 0
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
-            {
-                if(this->mat_.col[j] != i)
-                {
-                    if(sign_diag == 1)
-                    {
-                        val = (this->mat_.val[j] < val) ? this->mat_.val[j] : val;
-                    }
-
-                    if(sign_diag == -1)
-                    {
-                        val = (this->mat_.val[j] > val) ? this->mat_.val[j] : val;
-                    }
-                }
-            }
-
-            // if val is zero -> i is independent of other grid points
-            if(val == static_cast<ValueType>(0))
-            {
-                connect[i] = 0;
-                continue;
-            }
-
-            // val = eps * a_ik
-            val *= eps;
+            // Threshold to check for strength of connection
+            ValueType cond = (sign ? max_a_ik : min_a_ik) * static_cast<ValueType>(eps);
 
             // Fill S
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(int j = row_begin; j < row_end; ++j)
             {
-                S_val[j] = this->mat_.col[j] != i && this->mat_.val[j] < val;
+                int       col = this->mat_.col[j];
+                ValueType val = this->mat_.val[j];
+
+                cast_S->vec_[j] = (col != i) && (val < cond);
+            }
+
+            // If cond is zero -> i is independent of other grid points
+            if(cond == static_cast<ValueType>(0))
+            {
+                cast_cf->vec_[i] = 2;
             }
         }
 
         // Transpose S
         for(int i = 0; i < this->nnz_; ++i)
         {
-            if(S_val[i])
+            if(cast_S->vec_[i])
             {
                 S_row_offset[this->mat_.col[i] + 1]++;
             }
@@ -4653,7 +4657,7 @@ namespace rocalution
         {
             for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
-                if(S_val[j])
+                if(cast_S->vec_[j])
                 {
                     S_col[S_row_offset[this->mat_.col[j]]++] = i;
                 }
@@ -4675,7 +4679,7 @@ namespace rocalution
             int temp = 0;
             for(int j = S_row_offset[i]; j < S_row_offset[i + 1]; ++j)
             {
-                temp += (connect[S_col[j]] == -1 ? 1 : 2);
+                temp += (cast_cf->vec_[S_col[j]] == 0 ? 1 : 2);
             }
 
             lambda[i] = temp;
@@ -4713,9 +4717,9 @@ namespace rocalution
             {
                 for(int ai = 0; ai < this->nrow_; ++ai)
                 {
-                    if(connect[ai] == -1)
+                    if(cast_cf->vec_[ai] == 0)
                     {
-                        connect[ai] = 1;
+                        cast_cf->vec_[ai] = 1;
                     }
                 }
 
@@ -4724,29 +4728,29 @@ namespace rocalution
 
             cnt[lam]--;
 
-            if(connect[i] == 0)
+            if(cast_cf->vec_[i] == 2)
             {
                 continue;
             }
 
-            assert(connect[i] == -1);
+            assert(cast_cf->vec_[i] == 0);
 
-            connect[i] = 1;
+            cast_cf->vec_[i] = 1;
 
             for(int j = S_row_offset[i]; j < S_row_offset[i + 1]; ++j)
             {
                 int c = S_col[j];
 
-                if(connect[c] != -1)
+                if(cast_cf->vec_[c] != 0)
                 {
                     continue;
                 }
 
-                connect[c] = 0;
+                cast_cf->vec_[c] = 2;
 
                 for(int jj = this->mat_.row_offset[c]; jj < this->mat_.row_offset[c + 1]; ++jj)
                 {
-                    if(!S_val[jj])
+                    if(!cast_S->vec_[jj])
                     {
                         continue;
                     }
@@ -4754,7 +4758,7 @@ namespace rocalution
                     int cc     = this->mat_.col[jj];
                     int lam_cc = lambda[cc];
 
-                    if(connect[cc] != -1 || lam_cc >= this->nrow_ - 1)
+                    if(cast_cf->vec_[cc] != 0 || lam_cc >= this->nrow_ - 1)
                     {
                         continue;
                     }
@@ -4777,7 +4781,7 @@ namespace rocalution
 
             for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
-                if(!S_val[j])
+                if(!cast_S->vec_[j])
                 {
                     continue;
                 }
@@ -4785,7 +4789,7 @@ namespace rocalution
                 int c   = this->mat_.col[j];
                 int lam = lambda[c];
 
-                if(connect[c] != -1 || lam == 0)
+                if(cast_cf->vec_[c] != 0 || lam == 0)
                 {
                     continue;
                 }
@@ -4807,13 +4811,321 @@ namespace rocalution
             }
         }
 
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::RSPMISCoarsening(float             eps,
+                                                    BaseVector<int>*  CFmap,
+                                                    BaseVector<bool>* S) const
+    {
+        assert(CFmap != NULL);
+        assert(S != NULL);
+
+        HostVector<int>*  cast_cf = dynamic_cast<HostVector<int>*>(CFmap);
+        HostVector<bool>* cast_S  = dynamic_cast<HostVector<bool>*>(S);
+
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+
+        // Allocate CF mapping
+        cast_cf->Clear();
+        cast_cf->Allocate(this->nrow_);
+
+        // Allocate S
+        // S is the auxiliary strength matrix such that
+        //
+        // S_ij = { 1   if i != j and -a_ij > eps * max(-a_ik) for k != i
+        //        { 0   otherwise
+        //
+        // This means, S_ij is 1, only if i strongly depends on j.
+        // S has been extended to also work with matrices that do not have
+        // fully non-positive off-diagonal entries.
+
+        cast_S->Clear();
+        cast_S->Allocate(this->nnz_);
+
+        // Initialize S to false (no dependencies)
+        cast_S->Zeros();
+
+        // Sample rng
+        HostVector<float> omega(this->local_backend_);
+        omega.Allocate(this->nrow_);
+        omega.SetRandomUniform(1234ULL, 0, 1);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        // Determine strong influences in the matrix
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            // Determine minimum and maximum off-diagonal of the current row
+            ValueType min_a_ik = static_cast<ValueType>(0);
+            ValueType max_a_ik = static_cast<ValueType>(0);
+
+            int row_begin = this->mat_.row_offset[i];
+            int row_end   = this->mat_.row_offset[i + 1];
+
+            // True, if the diagonal element is negative
+            bool sign = false;
+
+            // Determine diagonal sign and min/max
+            for(int j = row_begin; j < row_end; ++j)
+            {
+                int       col = this->mat_.col[j];
+                ValueType val = this->mat_.val[j];
+
+                if(col == i)
+                {
+                    // Get diagonal entry sign
+                    sign = val < static_cast<ValueType>(0);
+                }
+                else
+                {
+                    // Get min / max entries
+                    min_a_ik = (min_a_ik < val) ? min_a_ik : val;
+                    max_a_ik = (max_a_ik > val) ? max_a_ik : val;
+                }
+            }
+
+            // Threshold to check for strength of connection
+            ValueType cond = (sign ? max_a_ik : min_a_ik) * static_cast<ValueType>(eps);
+
+            // Fill S
+            for(int j = row_begin; j < row_end; ++j)
+            {
+                int       col = this->mat_.col[j];
+                ValueType val = this->mat_.val[j];
+
+                if(col != i && val < cond)
+                {
+                    // col is strongly connected to i
+                    cast_S->vec_[j] = true;
+
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+                    // Increment omega, as it holds all strongly connected edges
+                    // of vertex col.
+                    // Additionally, omega holds a random number between 0 and 1 to
+                    // distinguish neighbor points with equal number of strong
+                    // connections.
+                    omega.vec_[col] += 1.0f;
+                }
+            }
+        }
+
+        // Mark all vertices as undecided
+        cast_cf->Zeros();
+
+        bool* workspace = NULL;
+        allocate_host(this->nrow_, &workspace);
+
+        // Iteratively find coarse and fine vertices until all undecided vertices have
+        // been marked (JPL approach)
+        int iter = 0;
+
+        while(true)
+        {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            // First, mark all vertices that have not been assigned yet, as coarse
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                // workspace keeps track, whether a vertex has been marked coarse
+                // during the current iteration, or not.
+                workspace[i] = false;
+
+                // Check only undecided vertices
+                if(cast_cf->vec_[i] == 0)
+                {
+                    // If this vertex has an edge, it might be a coarse one
+                    if(omega.vec_[i] >= 1.0f)
+                    {
+                        cast_cf->vec_[i] = 1;
+
+                        // Keep in mind, that this vertex has been marked coarse in the
+                        // current iteration
+                        workspace[i] = true;
+                    }
+                    else
+                    {
+                        // This point does not influence any other points and thus is a
+                        // fine point
+                        cast_cf->vec_[i] = 2;
+                    }
+                }
+            }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            // Now, correct previously marked vertices with respect to omega
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                int row_begin = this->mat_.row_offset[i];
+                int row_end   = this->mat_.row_offset[i + 1];
+
+                // If this vertex has been marked coarse in the current iteration,
+                // process it for further checks
+                if(workspace[i])
+                {
+                    // Get the weight of the current row for comparison
+                    float omega_row = omega.vec_[i];
+
+                    // Loop over the full row to compare weights of other vertices that
+                    // have been marked coarse in the current iteration
+                    for(int j = row_begin; j < row_end; ++j)
+                    {
+                        // Process only vertices that are strongly connected
+                        if(cast_S->vec_[j])
+                        {
+                            int col = this->mat_.col[j];
+
+                            // If this vertex has been marked coarse in the current iteration,
+                            // we need to check whether it is accepted as a coarse vertex or not.
+                            if(workspace[col])
+                            {
+                                // Get the weight of the current vertex for comparison
+                                float omega_col = omega.vec_[col];
+
+                                if(omega_row > omega_col)
+                                {
+                                    // The diagonal entry has more edges and will remain
+                                    // a coarse point, whereas this vertex gets reverted
+                                    // back to undecided, for further processing.
+                                    cast_cf->vec_[col] = 0;
+                                }
+                                else if(omega_row < omega_col)
+                                {
+                                    // The diagonal entry has fewer edges and gets
+                                    // reverted back to undecided for further processing,
+                                    // whereas this vertex stays
+                                    // a coarse one.
+                                    cast_cf->vec_[i] = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            // Mark remaining edges of a coarse point to fine
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                // Process only undecided vertices
+                if(cast_cf->vec_[i] == 0)
+                {
+                    int row_begin = this->mat_.row_offset[i];
+                    int row_end   = this->mat_.row_offset[i + 1];
+
+                    // Loop over all edges of this undecided vertex
+                    // and check, if there is a coarse point connected
+                    for(int j = row_begin; j < row_end; ++j)
+                    {
+                        // Check, whether this edge is strongly connected to the vertex
+                        if(cast_S->vec_[j])
+                        {
+                            int col = this->mat_.col[j];
+
+                            // If this edge is coarse, our vertex must be fine
+                            if(cast_cf->vec_[col] == 1)
+                            {
+                                cast_cf->vec_[i] = 2;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Now, we need to check whether we have vertices left that are marked
+            // undecided, in order to restart the loop
+            bool undecided = false;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                // Check whether this vertex is undecided or not
+                if(cast_cf->vec_[i] == 0)
+                {
+                    undecided = true;
+                    i         = this->nrow_;
+                }
+            }
+
+            // If no more undecided vertices are left, we are done
+            if(undecided == false)
+            {
+                break;
+            }
+
+            ++iter;
+
+            // Print some warning if number of iteration is getting huge
+            if(iter > 20)
+            {
+                LOG_VERBOSE_INFO(2,
+                                 "*** warning: HostMatrixCSR::RSPMISCoarsening() Current "
+                                 "number of iterations: "
+                                     << iter);
+            }
+        }
+
+        free_host(&workspace);
+
+        return true;
+    }
+
+    // ----------------------------------------------------------
+    // original functions:
+    //   cfsplit(backend::crs<Val, Col, Ptr> const &A,
+    //           backend::crs<char, Col, Ptr> const &S,
+    //           std::vector<char> &cf)
+    // ----------------------------------------------------------
+    // Modified and adopted from AMGCL,
+    // https://github.com/ddemidov/amgcl
+    // MIT License
+    // ----------------------------------------------------------
+    // CHANGELOG
+    // - adopted interface
+    // ----------------------------------------------------------
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::RSDirectInterpolation(const BaseVector<int>&  CFmap,
+                                                         const BaseVector<bool>& S,
+                                                         BaseMatrix<ValueType>*  prolong,
+                                                         BaseMatrix<ValueType>* restrict) const
+    {
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+
+        HostMatrixCSR<ValueType>* cast_prolong  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
+        HostMatrixCSR<ValueType>* cast_restrict = dynamic_cast<HostMatrixCSR<ValueType>*>(restrict);
+
+        const HostVector<int>*  cast_cf = dynamic_cast<const HostVector<int>*>(&CFmap);
+        const HostVector<bool>* cast_S  = dynamic_cast<const HostVector<bool>*>(&S);
+
+        assert(cast_prolong != NULL);
+        assert(cast_restrict != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+
+        // Allocate
+        cast_prolong->Clear();
+
         // Build coarsening operators
         int              nc = 0;
         std::vector<int> cidx(this->nrow_);
 
         for(int i = 0; i < this->nrow_; ++i)
         {
-            if(connect[i] == 1)
+            if(cast_cf->vec_[i] == 1)
             {
                 cidx[i] = nc++;
             }
@@ -4835,7 +5147,7 @@ namespace rocalution
 #endif
         for(int i = 0; i < this->nrow_; ++i)
         {
-            if(connect[i] == 1)
+            if(cast_cf->vec_[i] == 1)
             {
                 ++cast_prolong->mat_.row_offset[i + 1];
                 continue;
@@ -4846,7 +5158,7 @@ namespace rocalution
 
             for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
-                if(!S_val[j] || connect[this->mat_.col[j]] != 1)
+                if(!cast_S->vec_[j] || cast_cf->vec_[this->mat_.col[j]] != 1)
                 {
                     continue;
                 }
@@ -4860,7 +5172,7 @@ namespace rocalution
 
             for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
-                if(!S_val[j] || connect[this->mat_.col[j]] != 1)
+                if(!cast_S->vec_[j] || cast_cf->vec_[this->mat_.col[j]] != 1)
                 {
                     continue;
                 }
@@ -4892,7 +5204,7 @@ namespace rocalution
         {
             int row_head = cast_prolong->mat_.row_offset[i];
 
-            if(connect[i] == 1)
+            if(cast_cf->vec_[i] == 1)
             {
                 cast_prolong->mat_.col[row_head] = cidx[i];
                 cast_prolong->mat_.val[row_head] = static_cast<ValueType>(1);
@@ -4918,7 +5230,7 @@ namespace rocalution
                 if(v < static_cast<ValueType>(0))
                 {
                     a_num += v;
-                    if(S_val[j] && connect[c] == 1)
+                    if(cast_S->vec_[j] && cast_cf->vec_[c] == 1)
                     {
                         a_den += v;
                         if(v > Amin[i])
@@ -4930,7 +5242,7 @@ namespace rocalution
                 else
                 {
                     b_num += v;
-                    if(S_val[j] && connect[c] == 1)
+                    if(cast_S->vec_[j] && cast_cf->vec_[c] == 1)
                     {
                         b_den += v;
                         if(v < Amax[i])
@@ -4969,7 +5281,7 @@ namespace rocalution
                 int       c = this->mat_.col[j];
                 ValueType v = this->mat_.val[j];
 
-                if(!S_val[j] || connect[c] != 1)
+                if(!cast_S->vec_[j] || cast_cf->vec_[c] != 1)
                 {
                     continue;
                 }
@@ -4985,11 +5297,6 @@ namespace rocalution
                 ++row_head;
             }
         }
-
-        free_host(&connect);
-        free_host(&S_row_offset);
-        free_host(&S_col);
-        free_host(&S_val);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -5020,6 +5327,23 @@ namespace rocalution
         }
 
         cast_prolong->Transpose(cast_restrict);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::RugeStueben(float                  eps,
+                                               BaseMatrix<ValueType>* prolong,
+                                               BaseMatrix<ValueType>* restrict) const
+    {
+        HostVector<int>  CFmap(this->local_backend_);
+        HostVector<bool> S(this->local_backend_);
+
+        this->RSCoarsening(eps, &CFmap, &S);
+        this->RSDirectInterpolation(CFmap, S, prolong, restrict);
+
+        CFmap.Clear();
+        S.Clear();
 
         return true;
     }

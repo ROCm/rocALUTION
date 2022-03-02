@@ -115,6 +115,8 @@ bool testing_ruge_stueben_amg(Arguments argus)
     RugeStuebenAMG<LocalMatrix<T>, LocalVector<T>, T> p;
 
     // Setup AMG
+    p.SetCoarseningStrategy(PMIS);
+    p.SetInterpolationType(Direct);
     p.SetCoarsestLevel(300);
     p.SetCycle(cycle);
     p.SetOperator(A);
@@ -143,8 +145,11 @@ bool testing_ruge_stueben_amg(Arguments argus)
             = new FixedPoint<LocalMatrix<T>, LocalVector<T>, T>;
         sm[i] = fp;
 
-        if(smoother == "ILU")
-            smooth[i] = new ILU<LocalMatrix<T>, LocalVector<T>, T>;
+        if(smoother == "Jacobi")
+        {
+            smooth[i] = new Jacobi<LocalMatrix<T>, LocalVector<T>, T>;
+            fp->SetRelaxation(0.67);
+        }
         else if(smoother == "MCGS")
         {
             smooth[i] = new MultiColoredGS<LocalMatrix<T>, LocalVector<T>, T>;

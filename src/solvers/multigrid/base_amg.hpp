@@ -38,6 +38,11 @@ namespace rocalution
         PMIS   = 1
     } CoarseningStrategy;
 
+    typedef enum _interpolation_type
+    {
+        Direct = 0
+    } InterpolationType;
+
     typedef enum _lumping_strategy
     {
         AddWeakConnections      = 0,

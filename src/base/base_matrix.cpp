@@ -613,7 +613,32 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::RugeStueben(ValueType              eps,
+    bool BaseMatrix<ValueType>::RSCoarsening(float             eps,
+                                             BaseVector<int>*  CFmap,
+                                             BaseVector<bool>* S) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSPMISCoarsening(float             eps,
+                                                 BaseVector<int>*  CFmap,
+                                                 BaseVector<bool>* S) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSDirectInterpolation(const BaseVector<int>&  CFmap,
+                                                      const BaseVector<bool>& S,
+                                                      BaseMatrix<ValueType>*  prolong,
+                                                      BaseMatrix<ValueType>* restrict) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RugeStueben(float                  eps,
                                             BaseMatrix<ValueType>* prolong,
                                             BaseMatrix<ValueType>* restrict) const
     {

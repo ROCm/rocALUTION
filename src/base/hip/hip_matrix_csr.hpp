@@ -168,6 +168,12 @@ namespace rocalution
                                     BaseMatrix<ValueType>* prolong,
                                     BaseMatrix<ValueType>* restrict) const;
 
+        virtual bool RSPMISCoarsening(float eps, BaseVector<int>* CFmap, BaseVector<bool>* S) const;
+        virtual bool RSDirectInterpolation(const BaseVector<int>&  CFmap,
+                                           const BaseVector<bool>& S,
+                                           BaseMatrix<ValueType>*  prolong,
+                                           BaseMatrix<ValueType>* restrict) const;
+
     private:
         MatrixCSR<ValueType, int> mat_;
 

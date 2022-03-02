@@ -4431,6 +4431,261 @@ namespace rocalution
         return true;
     }
 
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::RSPMISCoarsening(float             eps,
+                                                              BaseVector<int>*  CFmap,
+                                                              BaseVector<bool>* S) const
+    {
+        assert(CFmap != NULL);
+        assert(S != NULL);
+
+        HIPAcceleratorVector<int>*  cast_cf = dynamic_cast<HIPAcceleratorVector<int>*>(CFmap);
+        HIPAcceleratorVector<bool>* cast_S  = dynamic_cast<HIPAcceleratorVector<bool>*>(S);
+
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+
+        // Allocate CF mapping
+        cast_cf->Clear();
+        cast_cf->Allocate(this->nrow_);
+
+        // Allocate S
+        // S is the auxiliary strength matrix such that
+        //
+        // S_ij = { 1   if i != j and -a_ij > eps * max(-a_ik) for k != i
+        //        { 0   otherwise
+        //
+        // This means, S_ij is 1, only if i strongly depends on j.
+        // S has been extended to also work with matrices that do not have
+        // fully non-positive off-diagonal entries.
+
+        cast_S->Clear();
+        cast_S->Allocate(this->nnz_);
+
+        // Initialize S to false (no dependencies)
+        cast_S->Zeros();
+
+        // Sample rng
+        HIPAcceleratorVector<float> omega(this->local_backend_);
+        omega.Allocate(this->nrow_);
+        omega.SetRandomUniform(1234ULL, 0, 1);
+
+        dim3 BlockSize(256);
+        dim3 GridSize((this->nrow_ * 8 - 1) / 256 + 1);
+
+        // Determine strong influences in the matrix
+        kernel_csr_rs_pmis_strong_influences<256, 8><<<GridSize, BlockSize>>>(this->nrow_,
+                                                                              this->mat_.row_offset,
+                                                                              this->mat_.col,
+                                                                              this->mat_.val,
+                                                                              eps,
+                                                                              omega.vec_,
+                                                                              cast_S->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Mark all vertices as undecided
+        cast_cf->Zeros();
+
+        int* workspace = NULL;
+        allocate_hip(this->nrow_ + 1, &workspace);
+
+        // Iteratively find coarse and fine vertices until all undecided vertices have
+        // been marked (JPL approach)
+        int iter = 0;
+
+        while(true)
+        {
+            // First, mark all vertices that have not been assigned yet, as coarse
+            kernel_csr_rs_pmis_unassigned_to_coarse<<<(this->nrow_ - 1) / 256 + 1, 256>>>(
+                this->nrow_, omega.vec_, cast_cf->vec_, workspace);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Now, correct previously marked vertices with respect to omega
+            kernel_csr_rs_pmis_correct_coarse<256, 8>
+                <<<GridSize, BlockSize>>>(this->nrow_,
+                                          this->mat_.row_offset,
+                                          this->mat_.col,
+                                          omega.vec_,
+                                          cast_S->vec_,
+                                          cast_cf->vec_,
+                                          workspace);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Mark remaining edges of a coarse point to fine
+            kernel_csr_rs_pmis_coarse_edges_to_fine<256, 8><<<GridSize, BlockSize>>>(
+                this->nrow_, this->mat_.row_offset, this->mat_.col, cast_S->vec_, cast_cf->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Now, we need to check whether we have vertices left that are marked
+            // undecided, in order to restart the loop
+            hipMemsetAsync(workspace, 0, sizeof(int));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            kernel_csr_rs_pmis_check_undecided<1024>
+                <<<(this->nrow_ - 1) / 1024 + 1, 1024>>>(this->nrow_, cast_cf->vec_, workspace);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            int undecided;
+
+            hipMemcpy(&undecided, workspace, sizeof(int), hipMemcpyDeviceToHost);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // If no more undecided vertices are left, we are done
+            if(undecided == false)
+            {
+                break;
+            }
+
+            ++iter;
+
+            // Print some warning if number of iteration is getting huge
+            if(iter > 20)
+            {
+                LOG_VERBOSE_INFO(2,
+                                 "*** warning: HIPAcceleratorMatrixCSR::RSPMISCoarsening() Current "
+                                 "number of iterations: "
+                                     << iter);
+            }
+        }
+
+        free_hip(&workspace);
+
+        omega.Clear();
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::RSDirectInterpolation(
+        const BaseVector<int>&  CFmap,
+        const BaseVector<bool>& S,
+        BaseMatrix<ValueType>*  prolong,
+        BaseMatrix<ValueType>* restrict) const
+    {
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+
+        HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_restrict
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(restrict);
+        const HIPAcceleratorVector<int>* cast_cf
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&CFmap);
+        const HIPAcceleratorVector<bool>* cast_S
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&S);
+
+        assert(cast_prolong != NULL);
+        assert(cast_restrict != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+
+        // Allocate
+        cast_prolong->Clear();
+
+        ValueType* Amin = NULL;
+        ValueType* Amax = NULL;
+
+        int* workspace = NULL;
+
+        allocate_hip(this->nrow_, &Amin);
+        allocate_hip(this->nrow_, &Amax);
+        allocate_hip(this->nrow_ + 1, &workspace);
+
+        // Allocate P row pointer array
+        allocate_hip(this->nrow_ + 1, &cast_prolong->mat_.row_offset);
+
+        cast_prolong->nrow_ = this->nrow_;
+
+        dim3 BlockSize(256);
+        dim3 GridSize((this->nrow_ - 1) / 256 + 1);
+
+        // Determine nnz per row of P
+        kernel_csr_rs_direct_interp_nnz<256><<<GridSize, BlockSize>>>(this->nrow_,
+                                                                      this->mat_.row_offset,
+                                                                      this->mat_.col,
+                                                                      this->mat_.val,
+                                                                      cast_S->vec_,
+                                                                      cast_cf->vec_,
+                                                                      Amin,
+                                                                      Amax,
+                                                                      cast_prolong->mat_.row_offset,
+                                                                      workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        size_t rocprim_size;
+        void*  rocprim_buffer;
+
+        // Exclusive sum to obtain row offset pointers of P
+        rocprim::exclusive_scan(NULL,
+                                rocprim_size,
+                                cast_prolong->mat_.row_offset,
+                                cast_prolong->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                cast_prolong->mat_.row_offset,
+                                cast_prolong->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                workspace,
+                                workspace,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipFree(rocprim_buffer);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Copy ncol and nnz back to host
+        hipMemcpy(&cast_prolong->nnz_,
+                  cast_prolong->mat_.row_offset + this->nrow_,
+                  sizeof(int),
+                  hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipMemcpy(
+            &cast_prolong->ncol_, workspace + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Allocate column and value arrays
+        allocate_hip(cast_prolong->nnz_, &cast_prolong->mat_.col);
+        allocate_hip(cast_prolong->nnz_, &cast_prolong->mat_.val);
+
+        // Fill column indices and values of P
+        kernel_csr_rs_direct_interp_fill<256>
+            <<<GridSize, BlockSize>>>(this->nrow_,
+                                      this->mat_.row_offset,
+                                      this->mat_.col,
+                                      this->mat_.val,
+                                      cast_prolong->mat_.row_offset,
+                                      cast_prolong->mat_.col,
+                                      cast_prolong->mat_.val,
+                                      cast_S->vec_,
+                                      cast_cf->vec_,
+                                      Amin,
+                                      Amax,
+                                      workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Free temporary buffers
+        free_hip(&Amin);
+        free_hip(&Amax);
+        free_hip(&workspace);
+
+        // Transpose P to obtain R
+        cast_prolong->Transpose(cast_restrict);
+
+        return true;
+    }
+
     template class HIPAcceleratorMatrixCSR<double>;
     template class HIPAcceleratorMatrixCSR<float>;
 #ifdef SUPPORT_COMPLEX

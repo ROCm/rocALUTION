@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,6 @@
 
 namespace rocalution
 {
-
     /** \ingroup solver_module
   * \class RugeStuebenAMG
   * \brief Ruge-Stueben Algebraic MultiGrid Method
@@ -61,7 +60,21 @@ namespace rocalution
 
         /** \brief Set coupling strength */
         ROCALUTION_EXPORT
-        void SetCouplingStrength(ValueType eps);
+        [[deprecated("This function will be removed in a future release. Use "
+                     "SetStrengthThreshold() instead")]] void
+            SetCouplingStrength(ValueType eps);
+
+        /** \brief Set strength threshold */
+        ROCALUTION_EXPORT
+        void SetStrengthThreshold(float eps);
+
+        /** \brief Set Coarsening strategy */
+        ROCALUTION_EXPORT
+        void SetCoarseningStrategy(CoarseningStrategy strat);
+
+        /** \brief Set Interpolation type */
+        ROCALUTION_EXPORT
+        void SetInterpolationType(InterpolationType type);
 
         ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
@@ -79,7 +92,13 @@ namespace rocalution
 
     private:
         /** \brief Coupling strength */
-        ValueType eps_;
+        float eps_;
+
+        /** \brief Coarsening strategy */
+        CoarseningStrategy coarsening_;
+
+        /** \brief Interpolation type */
+        InterpolationType interpolation_;
     };
 
 } // namespace rocalution

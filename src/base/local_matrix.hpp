@@ -948,7 +948,21 @@ namespace rocalution
 
         /** \brief Ruge Stueben coarsening */
         ROCALUTION_EXPORT
-        void RugeStueben(ValueType               eps,
+        void RSCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;
+        /** \brief Parallel maximal independent set coarsening for RS AMG*/
+        ROCALUTION_EXPORT
+        void RSPMISCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;
+
+        /** \brief Ruge Stueben Direct Interpolation */
+        ROCALUTION_EXPORT
+        void RSDirectInterpolation(const LocalVector<int>&  CFmap,
+                                   const LocalVector<bool>& S,
+                                   LocalMatrix<ValueType>*  prolong,
+                                   LocalMatrix<ValueType>* restrict) const;
+
+        /** \brief Generate Ruge Stueben operators */
+        ROCALUTION_EXPORT
+        void RugeStueben(float                   eps,
                          LocalMatrix<ValueType>* prolong,
                          LocalMatrix<ValueType>* restrict) const;
 

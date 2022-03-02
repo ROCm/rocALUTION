@@ -29,7 +29,7 @@
 typedef std::tuple<int, std::string, unsigned int, int, int, int, int, int> rsamg_tuple;
 
 int          rsamg_size[]           = {63, 134};
-std::string  rsamg_smoother[]       = {/*"ILU",*/ "MCGS"};
+std::string  rsamg_smoother[]       = {"Jacobi"};
 unsigned int rsamg_format[]         = {1, 7};
 int          rsamg_pre_iter[]       = {1, 2};
 int          rsamg_post_iter[]      = {1, 2};
