@@ -37,7 +37,7 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm ${ROCM_PATH})
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-     ${ROCM_PATH}/lib/hip/cmake
+     ${ROCM_PATH}/lib/cmake/hip
      ${ROCM_PATH}/hip/cmake)
 
 # Set a default build type if none was specified

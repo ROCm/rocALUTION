@@ -37,7 +37,7 @@
 #include "host/host_matrix_hyb.hpp"
 #include "host/host_matrix_mcsr.hpp"
 #include "host/host_vector.hpp"
-#include "version.hpp"
+#include "rocalution/version.hpp"
 
 #include <stdlib.h>
 #include <string.h>
