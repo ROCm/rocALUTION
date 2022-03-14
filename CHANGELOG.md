@@ -2,6 +2,11 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## rocALUTION 2.0.2 for ROCm 5.1.0
+### Added
+- Added out-of-place matrix transpose functionality
+- Added LocalVector<bool>
+
 ## rocALUTION 2.0.1 for ROCm 5.0.0
 ### Changed
 - Removed deprecated GlobalPairwiseAMG class, please use PairwiseAMG instead.
