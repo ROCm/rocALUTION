@@ -24,8 +24,8 @@
 #ifndef ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
 #define ROCALUTION_PRECONDITIONER_BLOCKJACOBI_HPP_
 
-#include "rocalution/export.hpp"
 #include "preconditioner.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {
