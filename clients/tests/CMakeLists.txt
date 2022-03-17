@@ -97,6 +97,8 @@ endif()
 # Add tests
 add_test(rocalution-test rocalution-test)
 
+rocm_install(TARGETS rocalution-test COMPONENT tests)
+
 if (WIN32)
   # for now adding in all .dll as dependency chain is not cmake based on win32
   file( GLOB third_party_dlls

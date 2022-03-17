@@ -2,6 +2,10 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## rocALUTION 2.0.3
+### Added
+- Packages for test and benchmark executables on all supported OSes using CPack.
+
 ## rocALUTION 2.0.2 for ROCm 5.1.0
 ### Added
 - Added out-of-place matrix transpose functionality
