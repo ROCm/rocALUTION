@@ -24,8 +24,8 @@
 #ifndef ROCALUTION_PRECONDITIONER_AS_HPP_
 #define ROCALUTION_PRECONDITIONER_AS_HPP_
 
-#include "export.hpp"
 #include "preconditioner.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {

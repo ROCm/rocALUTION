@@ -25,7 +25,7 @@
 #define ROCALUTION_BASE_HPP_
 
 #include "backend_manager.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 #include <complex>
 #include <vector>

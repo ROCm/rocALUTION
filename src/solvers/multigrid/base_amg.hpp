@@ -26,7 +26,7 @@
 
 #include "../solver.hpp"
 #include "base_multigrid.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 #include <vector>
 

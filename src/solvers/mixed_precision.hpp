@@ -24,7 +24,7 @@
 #ifndef ROCALUTION_MIXED_PRECISION_HPP_
 #define ROCALUTION_MIXED_PRECISION_HPP_
 
-#include "export.hpp"
+#include "rocalution/export.hpp"
 #include "solver.hpp"
 
 namespace rocalution

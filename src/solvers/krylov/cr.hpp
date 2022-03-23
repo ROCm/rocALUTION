@@ -25,7 +25,7 @@
 #define ROCALUTION_KRYLOV_CR_HPP_
 
 #include "../solver.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 #include <vector>
 

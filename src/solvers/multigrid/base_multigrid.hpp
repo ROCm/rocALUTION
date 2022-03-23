@@ -26,7 +26,7 @@
 
 #include "../../base/operator.hpp"
 #include "../solver.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {

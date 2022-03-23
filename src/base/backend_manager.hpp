@@ -24,7 +24,7 @@
 #ifndef ROCALUTION_BACKEND_MANAGER_HPP_
 #define ROCALUTION_BACKEND_MANAGER_HPP_
 
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -127,7 +127,7 @@ namespace rocalution
   *
   * \par Example
   * \code{.cpp}
-  *   #include <rocalution.hpp>
+  *   #include <rocalution/rocalution.hpp>
   *
   *   using namespace rocalution;
   *

@@ -25,7 +25,7 @@
 #define ROCALUTION_MULTIGRID_HPP_
 
 #include "base_multigrid.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {

@@ -26,9 +26,9 @@
 
 #include "../utils/types.hpp"
 #include "backend_manager.hpp"
-#include "export.hpp"
 #include "matrix_formats.hpp"
 #include "operator.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {

@@ -26,7 +26,7 @@
 
 #include "../utils/types.hpp"
 #include "base_rocalution.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 #include <cstdlib>
 #include <iostream>

@@ -25,7 +25,7 @@
 #define ROCALUTION_DIRECT_QR_HPP_
 
 #include "../solver.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {

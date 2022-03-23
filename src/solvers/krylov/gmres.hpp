@@ -25,7 +25,7 @@
 #define ROCALUTION_GMRES_GMRES_HPP_
 
 #include "../solver.hpp"
-#include "export.hpp"
+#include "rocalution/export.hpp"
 
 #include <vector>
 

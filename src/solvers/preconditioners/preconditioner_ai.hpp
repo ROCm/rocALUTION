@@ -25,8 +25,8 @@
 #define ROCALUTION_PRECONDITIONER_AI_HPP_
 
 #include "../solver.hpp"
-#include "export.hpp"
 #include "preconditioner.hpp"
+#include "rocalution/export.hpp"
 
 namespace rocalution
 {
