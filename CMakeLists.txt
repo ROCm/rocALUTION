@@ -121,6 +121,13 @@ set(rocalution_SOVERSION 0.1)
 
 if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
   set( BUILD_CLIENTS ON )
+  rocm_package_setup_component(clients)
+  if(BUILD_CLIENTS_TESTS)
+    rocm_package_setup_client_component(tests)
+  endif()
+  if(BUILD_CLIENTS_BENCHMARKS)
+    rocm_package_setup_client_component(benchmarks)
+  endif()
 endif()
 
 # rocALUTION library
@@ -130,6 +137,43 @@ add_subdirectory(src)
 if(BUILD_CLIENTS)
   add_subdirectory(clients)
 endif()
+
+# Package specific CPACK vars
+if(SUPPORT_HIP)
+  rocm_package_add_dependencies(DEPENDS "hip-rocclr >= 4.0.0" "rocsparse >= 1.12.10" "rocblas >= 2.22.0" "rocrand >= 0.0.1")
+endif()
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
+
+if(WIN32)
+  set(CPACK_SOURCE_GENERATOR "ZIP")
+  set(CPACK_GENERATOR "ZIP")
+  set(CMAKE_INSTALL_PREFIX "C:/hipSDK" CACHE PATH "Install path" FORCE)
+  set(INSTALL_PREFIX "C:/hipSDK")
+  set(CPACK_SET_DESTDIR OFF)
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "C:/hipSDK")
+  set(CPACK_PACKAGING_INSTALL_PREFIX "")
+  set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+else()
+  if(NOT CPACK_PACKAGING_INSTALL_PREFIX)
+    set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+  endif()
+endif()
+
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "\${CPACK_PACKAGING_INSTALL_PREFIX}" "\${CPACK_PACKAGING_INSTALL_PREFIX}/include")
+
+# Package name
+set(package_name rocalution)
+
+set(ROCALUTION_CONFIG_DIR "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}" CACHE PATH "Path placed into ldconfig file")
+
+rocm_create_package(
+  NAME ${package_name}
+  DESCRIPTION "Radeon Open Compute library for sparse linear systems"
+  MAINTAINER "rocALUTION Maintainer <rocalution-maintainer@amd.com>"
+  LDCONFIG
+  LDCONFIG_DIR ${ROCALUTION_CONFIG_DIR}
+)
 
 #
 # ADDITIONAL TARGETS FOR CODE COVERAGE
