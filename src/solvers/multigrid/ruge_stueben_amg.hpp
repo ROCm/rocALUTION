@@ -79,6 +79,14 @@ namespace rocalution
         ROCALUTION_EXPORT
         void SetInterpolationType(InterpolationType type);
 
+        /** \brief Set interpolation truncation coefficient */
+        ROCALUTION_EXPORT
+        void SetInterpolationTruncation(float trunc);
+
+        /** \brief Enable FF1 interpolation limitation */
+        ROCALUTION_EXPORT
+        void SetInterpolationFF1Limit(bool FF1);
+
         ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
@@ -96,6 +104,12 @@ namespace rocalution
     private:
         /** \brief Coupling strength */
         float eps_;
+
+        /** \brief Truncation coefficient */
+        float trunc_;
+
+        /** \brief Flag to limit FF interpolation */
+        bool FF1_;
 
         /** \brief Coarsening strategy */
         CoarseningStrategy coarsening_;

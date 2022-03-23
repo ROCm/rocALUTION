@@ -45,6 +45,7 @@
 #include <map>
 #include <math.h>
 #include <string.h>
+#include <unordered_set>
 #include <vector>
 
 #ifdef _OPENMP
@@ -5326,6 +5327,436 @@ namespace rocalution
             }
         }
 
+        cast_prolong->Transpose(cast_restrict);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::RSExtPIInterpolation(const BaseVector<int>&  CFmap,
+                                                        const BaseVector<bool>& S,
+                                                        bool                    FF1,
+                                                        float                   trunc,
+                                                        BaseMatrix<ValueType>*  prolong,
+                                                        BaseMatrix<ValueType>* restrict) const
+    {
+        assert(trunc >= 0.0f);
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+
+        HostMatrixCSR<ValueType>* cast_prolong  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
+        HostMatrixCSR<ValueType>* cast_restrict = dynamic_cast<HostMatrixCSR<ValueType>*>(restrict);
+
+        const HostVector<int>*  cast_cf = dynamic_cast<const HostVector<int>*>(&CFmap);
+        const HostVector<bool>* cast_S  = dynamic_cast<const HostVector<bool>*>(&S);
+
+        assert(cast_prolong != NULL);
+        assert(cast_restrict != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+
+        // Start with fresh P
+        cast_prolong->Clear();
+
+        // Allocate P row pointer array
+        allocate_host(this->nrow_ + 1, &cast_prolong->mat_.row_offset);
+
+        // We already know the number of rows of P
+        cast_prolong->nrow_ = this->nrow_;
+
+        // Temporary buffer
+        int* workspace = NULL;
+        allocate_host(this->nrow_ + 1, &workspace);
+        set_to_zero_host(this->nrow_ + 1, workspace);
+
+        // Determine nnz per row of P
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            // Coarse points generate a single entry
+            if(cast_cf->vec_[i] == 1)
+            {
+                workspace[i + 1]                     = 1;
+                cast_prolong->mat_.row_offset[i + 1] = 1;
+
+                continue;
+            }
+
+            // Set, to discard duplicated column entries (no need to be ordered).
+            std::unordered_set<int> set;
+
+            // Row entry and exit points
+            int row_begin = this->mat_.row_offset[i];
+            int row_end   = this->mat_.row_offset[i + 1];
+
+            // Loop over all columns of the i-th row, whereas each lane processes a column
+            for(int j = row_begin; j < row_end; ++j)
+            {
+                // Skip points that do not influence the current point
+                if(cast_S->vec_[j] == false)
+                {
+                    continue;
+                }
+
+                // Get the column index
+                int col_j = this->mat_.col[j];
+
+                // Skip diagonal entries (i does not influence itself)
+                if(col_j == i)
+                {
+                    continue;
+                }
+
+                // Switch between coarse and fine points that influence the i-th point
+                if(cast_cf->vec_[col_j] == 1)
+                {
+                    // This is a coarse point and thus contributes, count it for the row nnz
+                    // We need to use a set here, to discard duplicates.
+                    set.insert(col_j);
+                }
+                else
+                {
+                    // This is a fine point, check for strongly connected coarse points
+
+                    // Row entry and exit of this fine point
+                    int row_begin_j = this->mat_.row_offset[col_j];
+                    int row_end_j   = this->mat_.row_offset[col_j + 1];
+
+                    // Loop over all columns of the fine point
+                    for(int k = row_begin_j; k < row_end_j; ++k)
+                    {
+                        // Skip points that do not influence the fine point
+                        if(cast_S->vec_[k] == false)
+                        {
+                            continue;
+                        }
+
+                        // Get the column index
+                        int col_k = this->mat_.col[k];
+
+                        // Skip diagonal entries (the fine point does not influence itself)
+                        if(col_k == col_j)
+                        {
+                            continue;
+                        }
+
+                        // Check whether k is a coarse point
+                        if(cast_cf->vec_[col_k] == 1)
+                        {
+                            set.insert(col_k);
+
+                            // FF1 limitation
+                            if(FF1 == true)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // The number of entries of the set results in the nnz of row i
+            cast_prolong->mat_.row_offset[i + 1] = set.size();
+        }
+
+        // Exclusive sum to obtain row pointers
+        cast_prolong->mat_.row_offset[0] = 0;
+
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            workspace[i + 1] += workspace[i];
+            cast_prolong->mat_.row_offset[i + 1] += cast_prolong->mat_.row_offset[i];
+        }
+
+        cast_prolong->ncol_ = workspace[this->nrow_];
+        cast_prolong->nnz_  = cast_prolong->mat_.row_offset[this->nrow_];
+
+        // Allocate column and value arrays
+        allocate_host(cast_prolong->nnz_, &cast_prolong->mat_.col);
+        allocate_host(cast_prolong->nnz_, &cast_prolong->mat_.val);
+
+        // Extract diagonal matrix entries
+        HostVector<ValueType> diag(this->local_backend_);
+        diag.Allocate(this->nrow_);
+
+        this->ExtractDiagonal(&diag);
+
+        // Fill column indices and values of P
+        ValueType one  = static_cast<ValueType>(1);
+        ValueType zero = static_cast<ValueType>(0);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            // Coarse points generate a single entry
+            if(cast_cf->vec_[i] == 1)
+            {
+                // Get index into P
+                int idx = cast_prolong->mat_.row_offset[i];
+
+                // Single entry in thie row (coarse point)
+                cast_prolong->mat_.col[idx] = workspace[i];
+                cast_prolong->mat_.val[idx] = one;
+
+                continue;
+            }
+
+            // Hash table
+            std::map<int, ValueType> table;
+
+            // Fill the hash table according to the nnz pattern of P
+            // This is identical to the nnz per row part
+
+            // Row entry and exit points
+            int row_begin = this->mat_.row_offset[i];
+            int row_end   = this->mat_.row_offset[i + 1];
+
+            // Loop over all columns of the i-th row, whereas each lane processes a column
+            for(int k = row_begin; k < row_end; ++k)
+            {
+                // Skip points that do not influence the current point
+                if(cast_S->vec_[k] == false)
+                {
+                    continue;
+                }
+
+                // Get the column index
+                int col_ik = this->mat_.col[k];
+
+                // Skip diagonal entries (i does not influence itself)
+                if(col_ik == i)
+                {
+                    continue;
+                }
+
+                // Switch between coarse and fine points that influence the i-th point
+                if(cast_cf->vec_[col_ik] == 1)
+                {
+                    // Explicitly create an entry in the hash table
+                    table[col_ik] = zero;
+                }
+                else
+                {
+                    // This is a fine point, check for strongly connected coarse points
+
+                    // Row entry and exit of this fine point
+                    int row_begin_k = this->mat_.row_offset[col_ik];
+                    int row_end_k   = this->mat_.row_offset[col_ik + 1];
+
+                    // Loop over all columns of the fine point
+                    for(int l = row_begin_k; l < row_end_k; ++l)
+                    {
+                        // Skip points that do not influence the fine point
+                        if(cast_S->vec_[l] == false)
+                        {
+                            continue;
+                        }
+
+                        // Get the column index
+                        int col_kl = this->mat_.col[l];
+
+                        // Skip diagonal entries (the fine point does not influence itself)
+                        if(col_kl == col_ik)
+                        {
+                            continue;
+                        }
+
+                        // Check whether l is a coarse point
+                        if(cast_cf->vec_[col_kl] == 1)
+                        {
+                            // Explicitly create an entry in the hash table
+                            table[col_kl] = zero;
+
+                            // FF1 limitation
+                            if(FF1 == true)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Now, we need to do the numerical part
+
+            // Diagonal entry of i-th row
+            ValueType val_ii = diag.vec_[i];
+
+            // Sign of diagonal entry of i-th row
+            bool pos_ii = val_ii >= zero;
+
+            // Accumulators
+            ValueType sum_k = zero;
+            ValueType sum_n = zero;
+
+            // Loop over all columns of the i-th row, whereas each lane processes a column
+            for(int k = row_begin; k < row_end; ++k)
+            {
+                // Get the column index
+                int col_ik = this->mat_.col[k];
+
+                // Skip diagonal entries (i does not influence itself)
+                if(col_ik == i)
+                {
+                    continue;
+                }
+
+                // Get the column value
+                ValueType val_ik = this->mat_.val[k];
+
+                // Check, whether the k-th entry of the row is a fine point and strongly
+                // connected to the i-th point (e.g. k \in F^S_i)
+                if(cast_S->vec_[k] == true && cast_cf->vec_[col_ik] == 2)
+                {
+                    // Accumulator for the sum over l
+                    ValueType sum_l = zero;
+
+                    // Diagonal entry of k-th row
+                    ValueType val_kk = diag.vec_[col_ik];
+
+                    // Store a_ki, if present
+                    ValueType val_ki = zero;
+
+                    // Row entry and exit of this fine point
+                    int row_begin_k = this->mat_.row_offset[col_ik];
+                    int row_end_k   = this->mat_.row_offset[col_ik + 1];
+
+                    // Loop over all columns of the fine point
+                    for(int l = row_begin_k; l < row_end_k; ++l)
+                    {
+                        // Get the column index
+                        int col_kl = this->mat_.col[l];
+
+                        // Get the column value
+                        ValueType val_kl = this->mat_.val[l];
+
+                        // Sign of a_kl
+                        bool pos_kl = val_kl >= zero;
+
+                        // Differentiate between diagonal and off-diagonal
+                        if(col_kl == i)
+                        {
+                            // Column that matches the i-th row
+                            // Since we sum up all l in C^hat_i and i, the diagonal need to
+                            // be added to the sum over l, e.g. a^bar_kl
+                            // a^bar contributes only, if the sign is different to the
+                            // i-th row diagonal sign.
+                            if(pos_ii != pos_kl)
+                            {
+                                sum_l += val_kl;
+                            }
+
+                            // If a_ki exists, keep it for later
+                            val_ki = val_kl;
+                        }
+                        else if(cast_cf->vec_[col_kl] == 1)
+                        {
+                            // Check if sign is different from i-th row diagonal
+                            if(pos_ii != pos_kl)
+                            {
+                                // Entry contributes only, if it is a coarse point
+                                // and part of C^hat (e.g. we need to check the hash table)
+                                if(table.find(col_kl) != table.end())
+                                {
+                                    sum_l += val_kl;
+                                }
+                            }
+                        }
+                    }
+
+                    // Update sum over l with a_ik
+                    sum_l = val_ik / sum_l;
+
+                    // Compute the sign of a_kk and a_ki, we need this for a_bar
+                    bool pos_kk = val_kk >= zero;
+                    bool pos_ki = val_ki >= zero;
+
+                    // Additionally, for eq19 we need to add all coarse points in row k,
+                    // if they have different sign than the diagonal a_kk
+                    for(int l = row_begin_k; l < row_end_k; ++l)
+                    {
+                        // Get the column index
+                        int col_kl = this->mat_.col[l];
+
+                        // Only coarse points contribute
+                        if(cast_cf->vec_[col_kl] != 1)
+                        {
+                            continue;
+                        }
+
+                        // Get the column value
+                        ValueType val_kl = this->mat_.val[l];
+
+                        // Compute the sign of a_kl
+                        bool pos_kl = val_kl >= zero;
+
+                        // Check for different sign
+                        if(pos_kk != pos_kl)
+                        {
+                            if(table.find(col_kl) != table.end())
+                            {
+                                table[col_kl] += val_kl * sum_l;
+                            }
+                        }
+                    }
+
+                    // If sign of a_ki and a_kk are different, a_ki contributes to the
+                    // sum over k in F^S_i
+                    if(pos_kk != pos_ki)
+                    {
+                        sum_k += val_ki * sum_l;
+                    }
+                }
+
+                // Boolean, to flag whether a_ik is in C hat or not
+                // (we can query the hash table for it)
+                bool in_C_hat = false;
+
+                // a_ik can only be in C^hat if it is coarse
+                if(cast_cf->vec_[col_ik] == 1)
+                {
+                    // Check, whether col_ik is in C hat or not
+                    if(table.find(col_ik) != table.end())
+                    {
+                        // Append a_ik to the sum of eq19
+                        table[col_ik] += val_ik;
+
+                        in_C_hat = true;
+                    }
+                }
+
+                // If a_ik is not in C^hat and does not strongly influence i, it contributes
+                // to sum_n
+                if(in_C_hat == false && cast_S->vec_[k] == false)
+                {
+                    sum_n += val_ik;
+                }
+            }
+
+            // Precompute a_ii tilde
+            ValueType a_ii_tilde = -one / (val_ii + sum_n + sum_k);
+
+            // Entry point into P
+            int idx = cast_prolong->mat_.row_offset[i];
+
+            // Finally, extract the numerical values from the hash table and fill P such
+            // that the resulting matrix is sorted by columns
+            for(auto it = table.begin(); it != table.end(); ++it)
+            {
+                cast_prolong->mat_.col[idx] = workspace[it->first];
+                cast_prolong->mat_.val[idx] = a_ii_tilde * it->second;
+                ++idx;
+            }
+        }
+
+        // Free temporary buffer
+        free_host(&workspace);
+
+        // Transpose P to obtain R
         cast_prolong->Transpose(cast_restrict);
 
         return true;

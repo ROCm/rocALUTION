@@ -731,6 +731,135 @@ namespace rocalution
     }
 #endif
 
+    static __device__ __forceinline__ float hip_shfl_xor(float val, int i)
+    {
+        return __shfl_xor(val, i);
+    }
+    static __device__ __forceinline__ double hip_shfl_xor(double val, int i)
+    {
+        return __shfl_xor(val, i);
+    }
+#ifdef SUPPORT_COMPLEX
+    static __device__ __forceinline__ std::complex<float> hip_shfl_xor(std::complex<float> val,
+                                                                       int                 i)
+    {
+        return std::complex<float>(__shfl_xor(std::real(val), i), __shfl_xor(std::imag(val), i));
+    }
+    static __device__ __forceinline__ std::complex<double> hip_shfl_xor(std::complex<double> val,
+                                                                        int                  i)
+    {
+        return std::complex<double>(__shfl_xor(std::real(val), i), __shfl_xor(std::imag(val), i));
+    }
+#endif
+
+    // Hash related functionality
+    // Insert key, returns true if key has been added, false if key is already present
+    template <unsigned int HASHVAL, unsigned int HASHSIZE, typename IndexType>
+    static __device__ __forceinline__ bool
+        insert_key(IndexType key, IndexType* table, IndexType empty)
+    {
+        if(key == empty)
+        {
+            return false;
+        }
+
+        // Compute hash
+        IndexType hash = (key * HASHVAL) & (HASHSIZE - 1);
+
+        // Loop until key has been inserted
+        while(true)
+        {
+            if(table[hash] == key)
+            {
+                // Element already present
+                return false;
+            }
+            else if(table[hash] == empty)
+            {
+                // If empty, add element with atomic
+                if(atomicCAS(&table[hash], empty, key) == empty)
+                {
+                    // Increment number of insertions
+                    return true;
+                }
+            }
+            else
+            {
+                // Linear probing, when hash is collided, try next entry
+                hash = (hash + 1) & (HASHSIZE - 1);
+            }
+        }
+    }
+
+    // Hash related functionality
+    // Appends value to existing key, returns true if appended, false else
+    template <unsigned int HASHVAL, unsigned int HASHSIZE, typename IndexType, typename ValueType>
+    static __device__ __forceinline__ bool append_pair(
+        IndexType key, ValueType val, IndexType* table, ValueType* data, IndexType empty)
+    {
+        if(key == empty)
+        {
+            return false;
+        }
+
+        // Compute hash
+        IndexType hash = (key * HASHVAL) & (HASHSIZE - 1);
+
+        // Loop until key has been inserted
+        while(true)
+        {
+            if(table[hash] == key)
+            {
+                // Element already present
+                atomicAdd(&data[hash], val);
+                return true;
+            }
+            else if(table[hash] == empty)
+            {
+                // If empty, nothing to append
+                return false;
+            }
+            else
+            {
+                // Linear probing, when hash is collided, try next entry
+                hash = (hash + 1) & (HASHSIZE - 1);
+            }
+        }
+    }
+
+    // Hash related functionality
+    // Checks for key, returns true if key exists, false else
+    template <unsigned int HASHVAL, unsigned int HASHSIZE, typename IndexType>
+    static __device__ __forceinline__ bool
+        key_exists(IndexType key, IndexType* table, IndexType empty)
+    {
+        if(key == empty)
+        {
+            return false;
+        }
+
+        // Compute hash
+        IndexType hash = (key * HASHVAL) & (HASHSIZE - 1);
+
+        // Loop until key has been inserted
+        while(true)
+        {
+            if(table[hash] == key)
+            {
+                // Element already present
+                return true;
+            }
+            else if(table[hash] == empty)
+            {
+                return false;
+            }
+            else
+            {
+                // Linear probing, when hash is collided, try next entry
+                hash = (hash + 1) & (HASHSIZE - 1);
+            }
+        }
+    }
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_UTILS_HPP_

@@ -40,7 +40,8 @@ namespace rocalution
 
     typedef enum _interpolation_type
     {
-        Direct = 0
+        Direct = 0,
+        ExtPI  = 1
     } InterpolationType;
 
     typedef enum _lumping_strategy

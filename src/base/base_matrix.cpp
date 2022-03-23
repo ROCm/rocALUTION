@@ -638,6 +638,17 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSExtPIInterpolation(const BaseVector<int>&  CFmap,
+                                                     const BaseVector<bool>& S,
+                                                     bool                    FF1,
+                                                     float                   trunc,
+                                                     BaseMatrix<ValueType>*  prolong,
+                                                     BaseMatrix<ValueType>* restrict) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::RugeStueben(float                  eps,
                                             BaseMatrix<ValueType>* prolong,
                                             BaseMatrix<ValueType>* restrict) const

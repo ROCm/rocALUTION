@@ -5654,6 +5654,117 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::RSExtPIInterpolation(const LocalVector<int>&  CFmap,
+                                                      const LocalVector<bool>& S,
+                                                      bool                     FF1,
+                                                      float                    trunc,
+                                                      LocalMatrix<ValueType>*  prolong,
+                                                      LocalMatrix<ValueType>* restrict) const
+    {
+        log_debug(this,
+                  "LocalMatrix::RSExtPIInterpolation()",
+                  (const void*&)CFmap,
+                  (const void*&)S,
+                  FF1,
+                  trunc,
+                  prolong,
+                  restrict);
+
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+        assert(this != prolong);
+        assert(this != restrict);
+
+        assert(((this->matrix_ == this->matrix_host_) && (prolong->matrix_ == prolong->matrix_host_)
+                && (restrict->matrix_ == restrict->matrix_host_)
+                && (CFmap.vector_ == CFmap.vector_host_) && (S.vector_ == S.vector_host_))
+               || ((this->matrix_ == this->matrix_accel_)
+                   && (prolong->matrix_ == prolong->matrix_accel_)
+                   && (restrict->matrix_ == restrict->matrix_accel_)
+                   && (CFmap.vector_ == CFmap.vector_accel_) && (S.vector_ == S.vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->RSExtPIInterpolation(
+                *CFmap.vector_, *S.vector_, FF1, trunc, prolong->matrix_, restrict->matrix_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::RSExtPIInterpolation() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                LocalVector<int>       CFmap_host;
+                LocalVector<bool>      S_host;
+
+                mat_host.ConvertTo(this->GetFormat());
+                mat_host.CopyFrom(*this);
+                CFmap_host.CopyFrom(CFmap);
+                S_host.CopyFrom(S);
+
+                // Move to host
+                prolong->MoveToHost();
+                restrict->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->RSExtPIInterpolation(*CFmap_host.vector_,
+                                                          *S_host.vector_,
+                                                          FF1,
+                                                          trunc,
+                                                          prolong->matrix_,
+                                                          restrict->matrix_)
+                   == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::RSExtPIInterpolation() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::RSExtPIInterpolation() is "
+                                     "performed in CSR format");
+
+                    prolong->ConvertTo(this->GetFormat());
+                    restrict->ConvertTo(this->GetFormat());
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::RSExtPIInterpolation() is "
+                                     "performed on the host");
+
+                    prolong->MoveToAccelerator();
+                    restrict->MoveToAccelerator();
+                }
+            }
+        }
+
+        std::string prolong_name  = "Prolongation Operator of " + this->object_name_;
+        std::string restrict_name = "Restriction Operator of " + this->object_name_;
+
+        prolong->object_name_  = prolong_name;
+        restrict->object_name_ = restrict_name;
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+        restrict->Check();
+#endif
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::RugeStueben(float                   eps,
                                              LocalMatrix<ValueType>* prolong,
                                              LocalMatrix<ValueType>* restrict) const

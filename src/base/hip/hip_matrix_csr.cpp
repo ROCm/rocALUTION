@@ -4686,6 +4686,501 @@ namespace rocalution
         return true;
     }
 
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::RSExtPIInterpolation(
+        const BaseVector<int>&  CFmap,
+        const BaseVector<bool>& S,
+        bool                    FF1,
+        float                   trunc,
+        BaseMatrix<ValueType>*  prolong,
+        BaseMatrix<ValueType>* restrict) const
+    {
+        assert(trunc >= 0.0f);
+        assert(prolong != NULL);
+        assert(restrict != NULL);
+
+        HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_restrict
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(restrict);
+
+        const HIPAcceleratorVector<int>* cast_cf
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&CFmap);
+        const HIPAcceleratorVector<bool>* cast_S
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&S);
+
+        assert(cast_prolong != NULL);
+        assert(cast_restrict != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+
+        // Start with fresh operators
+        cast_prolong->Clear();
+        cast_restrict->Clear();
+
+        // Allocate P row pointer array
+        allocate_hip(this->nrow_ + 1, &cast_prolong->mat_.row_offset);
+
+        // We already know the number of rows of P
+        cast_prolong->nrow_ = this->nrow_;
+
+        // Temporary buffer
+        int* workspace = NULL;
+        allocate_hip(this->nrow_ + 1, &workspace);
+
+#define BLOCKSIZE 256
+#define HASHVAL 79
+        // Obtain maximum row nnz
+        kernel_csr_rs_extpi_interp_max<BLOCKSIZE, 16>
+            <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(this->nrow_,
+                                                                    FF1,
+                                                                    this->mat_.row_offset,
+                                                                    this->mat_.col,
+                                                                    cast_S->vec_,
+                                                                    cast_cf->vec_,
+                                                                    cast_prolong->mat_.row_offset);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        size_t rocprim_size;
+        void*  rocprim_buffer;
+
+        // Determine maximum row nnz
+        rocprim::reduce(NULL,
+                        rocprim_size,
+                        cast_prolong->mat_.row_offset,
+                        cast_prolong->mat_.row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        cast_prolong->mat_.row_offset,
+                        cast_prolong->mat_.row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        int max_nnz;
+        hipMemcpy(&max_nnz,
+                  cast_prolong->mat_.row_offset + this->nrow_,
+                  sizeof(int),
+                  hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Determine nnz per row of P
+        if(max_nnz < 16)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 8, 16, HASHVAL>
+                <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 32)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 16, 32, HASHVAL>
+                <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 64)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 32, 64, HASHVAL>
+                <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 128)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 128, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 256)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 256, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 512)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 512, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 1024)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 1024, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 2048)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 2048, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else if(max_nnz < 4096)
+        {
+            kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 4096, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_prolong->mat_.row_offset,
+                    workspace);
+        }
+        else
+        {
+            // More nnz per row will not fit into LDS
+            // Fall back to host
+
+            // Free temporary buffer
+            free_hip(&workspace);
+            hipFree(rocprim_buffer);
+
+            return false;
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Determine maximum hash table fill
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        cast_prolong->mat_.row_offset,
+                        cast_prolong->mat_.row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipFree(rocprim_buffer);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        int max_hash_fill;
+        hipMemcpy(&max_hash_fill,
+                  cast_prolong->mat_.row_offset + this->nrow_,
+                  sizeof(int),
+                  hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Exclusive sum to obtain row offset pointers of P
+        rocprim::exclusive_scan(NULL,
+                                rocprim_size,
+                                cast_prolong->mat_.row_offset,
+                                cast_prolong->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                cast_prolong->mat_.row_offset,
+                                cast_prolong->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                workspace,
+                                workspace,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipFree(rocprim_buffer);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Copy number of columns of P and nnz of P back to host
+        hipMemcpy(&cast_prolong->nnz_,
+                  cast_prolong->mat_.row_offset + this->nrow_,
+                  sizeof(int),
+                  hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        hipMemcpy(
+            &cast_prolong->ncol_, workspace + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Allocate column and value arrays
+        allocate_hip(cast_prolong->nnz_, &cast_prolong->mat_.col);
+        allocate_hip(cast_prolong->nnz_, &cast_prolong->mat_.val);
+
+        // Extract diagonal matrix entries
+        HIPAcceleratorVector<ValueType> diag(this->local_backend_);
+        diag.Allocate(this->nrow_);
+
+        this->ExtractDiagonal(&diag);
+
+        // Fill column indices and values of P
+
+        if(max_hash_fill < 16)
+        {
+            size_t ssize = BLOCKSIZE / 8 * 16 * (sizeof(int) + sizeof(ValueType));
+            kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 8, 16, HASHVAL>
+                <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    diag.vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    workspace);
+        }
+        else if(max_hash_fill < 32)
+        {
+            size_t ssize = BLOCKSIZE / 16 * 32 * (sizeof(int) + sizeof(ValueType));
+            kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 16, 32, HASHVAL>
+                <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    diag.vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    workspace);
+        }
+        else if(max_hash_fill < 64)
+        {
+            size_t ssize = BLOCKSIZE / 32 * 64 * (sizeof(int) + sizeof(ValueType));
+            kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 32, 64, HASHVAL>
+                <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    diag.vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    workspace);
+        }
+        else if(max_hash_fill < 128)
+        {
+            size_t ssize = BLOCKSIZE / 64 * 128 * (sizeof(int) + sizeof(ValueType));
+            kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 64, 128, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    diag.vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    workspace);
+        }
+        else if(max_hash_fill < 256)
+        {
+            size_t ssize = BLOCKSIZE / 64 * 256 * (sizeof(int) + sizeof(ValueType));
+            kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 64, 256, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    diag.vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    workspace);
+        }
+        else if(max_hash_fill < 512)
+        {
+            size_t ssize = BLOCKSIZE / 64 * 512 * (sizeof(int) + sizeof(ValueType));
+            kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 64, 512, HASHVAL>
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                    this->nrow_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    diag.vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    workspace);
+        }
+        else
+        {
+            // More nnz per row will not fit into LDS
+            // Fall back to host
+
+            // Free temporary buffer
+            free_hip(&workspace);
+
+            return false;
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+#undef BLOCKSIZE
+#undef HASHVAL
+
+        // Free temporary buffer
+        free_hip(&workspace);
+
+        // Apply dropping strategy, if enabled
+        if(trunc > 0.0f)
+        {
+            // Allocate structures for "compressed" P
+            int compressed_nrow = cast_prolong->nrow_;
+            int compressed_ncol = cast_prolong->ncol_;
+
+            int*       compressed_csr_row_ptr = NULL;
+            int*       compressed_csr_col_ind = NULL;
+            ValueType* compressed_csr_val     = NULL;
+
+            allocate_hip(compressed_nrow + 1, &compressed_csr_row_ptr);
+
+            kernel_csr_rs_extpi_interp_compress_nnz<256, 8>
+                <<<(cast_prolong->nrow_ * 8 - 1) / 256 + 1, 256>>>(cast_prolong->nrow_,
+                                                                   cast_prolong->mat_.row_offset,
+                                                                   cast_prolong->mat_.col,
+                                                                   cast_prolong->mat_.val,
+                                                                   trunc,
+                                                                   compressed_csr_row_ptr);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprim::exclusive_scan(NULL,
+                                    rocprim_size,
+                                    compressed_csr_row_ptr,
+                                    compressed_csr_row_ptr,
+                                    0,
+                                    compressed_nrow + 1,
+                                    rocprim::plus<int>());
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            hipMalloc(&rocprim_buffer, rocprim_size);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    compressed_csr_row_ptr,
+                                    compressed_csr_row_ptr,
+                                    0,
+                                    compressed_nrow + 1,
+                                    rocprim::plus<int>());
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            hipFree(rocprim_buffer);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Get the new compressed nnz
+            int compressed_nnz;
+            hipMemcpy(&compressed_nnz,
+                      compressed_csr_row_ptr + compressed_nrow,
+                      sizeof(int),
+                      hipMemcpyDeviceToHost);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Allocate structures for "compressed" P
+            allocate_hip(compressed_nnz, &compressed_csr_col_ind);
+            allocate_hip(compressed_nnz, &compressed_csr_val);
+
+            // Copy column and value entries
+            kernel_csr_rs_extpi_interp_compress_fill<<<(cast_prolong->nrow_ - 1) / 256 + 1, 256>>>(
+                cast_prolong->nrow_,
+                cast_prolong->mat_.row_offset,
+                cast_prolong->mat_.col,
+                cast_prolong->mat_.val,
+                trunc,
+                compressed_csr_row_ptr,
+                compressed_csr_col_ind,
+                compressed_csr_val);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Update P
+            cast_prolong->Clear();
+            cast_prolong->SetDataPtrCSR(&compressed_csr_row_ptr,
+                                        &compressed_csr_col_ind,
+                                        &compressed_csr_val,
+                                        compressed_nnz,
+                                        compressed_nrow,
+                                        compressed_ncol);
+        }
+
+        // Transpose P to obtain R
+        cast_prolong->Transpose(cast_restrict);
+
+        return true;
+    }
+
     template class HIPAcceleratorMatrixCSR<double>;
     template class HIPAcceleratorMatrixCSR<float>;
 #ifdef SUPPORT_COMPLEX

@@ -438,6 +438,14 @@ namespace rocalution
                                            BaseMatrix<ValueType>*  prolong,
                                            BaseMatrix<ValueType>* restrict) const;
 
+        /// Ruge Stueben Ext+i Interpolation
+        virtual bool RSExtPIInterpolation(const BaseVector<int>&  CFmap,
+                                          const BaseVector<bool>& S,
+                                          bool                    FF1,
+                                          float                   trunc,
+                                          BaseMatrix<ValueType>*  prolong,
+                                          BaseMatrix<ValueType>* restrict) const;
+
         /// Ruge Stueben operator generation
         virtual bool RugeStueben(float                  eps,
                                  BaseMatrix<ValueType>* prolong,

@@ -40,8 +40,14 @@ namespace rocalution
     {
         log_debug(this, "RugeStuebenAMG::RugeStuebenAMG()", "default constructor");
 
-        // parameter for strong couplings in smoothed aggregation
+        // Parameter for strong couplings, for 3D problems 0.5 might work better
         this->eps_ = 0.25f;
+
+        // Truncation coefficient
+        this->trunc_ = 0.0f;
+
+        // FF interpolation limiter
+        this->FF1_ = false;
 
         // Coarsening strategy default
         this->coarsening_ = Greedy;
@@ -64,33 +70,41 @@ namespace rocalution
     template <class OperatorType, class VectorType, typename ValueType>
     void RugeStuebenAMG<OperatorType, VectorType, ValueType>::Print(void) const
     {
-        std::string coarsening;
-        switch(this->coarsening_)
-        {
-        case Greedy:
-            coarsening = "Greedy";
-            break;
-        case PMIS:
-            coarsening = "PMIS";
-            break;
-        }
-
-        std::string interpolation;
-        switch(this->interpolation_)
-        {
-        case Direct:
-            interpolation = "Direct";
-            break;
-        }
-
         LOG_INFO("AMG solver");
-        LOG_INFO("AMG number of levels " << this->levels_);
-        LOG_INFO("AMG Ruge-Stuben using " << coarsening << " coarsening with " << interpolation
-                                          << " interpolation");
-        LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
-        LOG_INFO("AMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
-        LOG_INFO("AMG with smoother:");
-        this->smoother_level_[0]->Print();
+
+        if(this->build_ == true)
+        {
+            std::string coarsening;
+            switch(this->coarsening_)
+            {
+            case Greedy:
+                coarsening = "Greedy";
+                break;
+            case PMIS:
+                coarsening = "PMIS";
+                break;
+            }
+
+            std::string interpolation;
+            switch(this->interpolation_)
+            {
+            case Direct:
+                interpolation = "Direct";
+                break;
+            case ExtPI:
+                interpolation = "Ext+i";
+                break;
+            }
+
+            LOG_INFO("AMG number of levels " << this->levels_);
+            LOG_INFO("AMG Ruge-Stuben using " << coarsening << " coarsening with " << interpolation
+                                              << " interpolation");
+            LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
+            LOG_INFO("AMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
+            LOG_INFO("AMG with smoother:");
+
+            this->smoother_level_[0]->Print();
+        }
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -114,6 +128,9 @@ namespace rocalution
         {
         case Direct:
             interpolation = "Direct";
+            break;
+        case ExtPI:
+            interpolation = "Ext+i";
             break;
         }
 
@@ -165,6 +182,28 @@ namespace rocalution
         log_debug(this, "RugeStuebenAMG::SetInterpolationType()", type);
 
         this->interpolation_ = type;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void
+        RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetInterpolationTruncation(float trunc)
+    {
+        log_debug(this, "RugeStuebenAMG::SetInterpolationTruncation()", trunc);
+
+        assert(this->build_ == false);
+        assert(this->trunc_ >= 0.0f);
+
+        this->trunc_ = trunc;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetInterpolationFF1Limit(bool FF1)
+    {
+        log_debug(this, "RugeStuebenAMG::SetInterpolationFF1Limit()", FF1);
+
+        assert(this->build_ == false);
+
+        this->FF1_ = FF1;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -316,6 +355,9 @@ namespace rocalution
         {
         case Direct:
             op.RSDirectInterpolation(CFmap, S, cast_pro, cast_res);
+            break;
+        case ExtPI:
+            op.RSExtPIInterpolation(CFmap, S, this->FF1_, this->trunc_, cast_pro, cast_res);
             break;
         }
 

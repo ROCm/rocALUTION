@@ -85,7 +85,11 @@ int main(int argc, char* argv[])
     p.Verbose(0);
 
     p.SetCoarseningStrategy(CoarseningStrategy::PMIS);
-    p.SetInterpolationType(InterpolationType::Direct);
+    p.SetInterpolationType(InterpolationType::ExtPI);
+
+    // Limit operator complexity
+    p.SetInterpolationTruncation(0.0f);
+    p.SetInterpolationFF1Limit(false);
 
     // Set solver preconditioner
     ls.SetPreconditioner(p);

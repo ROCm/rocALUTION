@@ -116,7 +116,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
 
     // Setup AMG
     p.SetCoarseningStrategy(PMIS);
-    p.SetInterpolationType(Direct);
+    p.SetInterpolationType(ExtPI);
     p.SetCoarsestLevel(300);
     p.SetCycle(cycle);
     p.SetOperator(A);

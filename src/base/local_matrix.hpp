@@ -960,6 +960,15 @@ namespace rocalution
                                    LocalMatrix<ValueType>*  prolong,
                                    LocalMatrix<ValueType>* restrict) const;
 
+        /** \brief Ruge Stueben Ext+i Interpolation */
+        ROCALUTION_EXPORT
+        void RSExtPIInterpolation(const LocalVector<int>&  CFmap,
+                                  const LocalVector<bool>& S,
+                                  bool                     FF1,
+                                  float                    trunc,
+                                  LocalMatrix<ValueType>*  prolong,
+                                  LocalMatrix<ValueType>* restrict) const;
+
         /** \brief Generate Ruge Stueben operators */
         ROCALUTION_EXPORT
         void RugeStueben(float                   eps,

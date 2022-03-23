@@ -173,6 +173,12 @@ namespace rocalution
                                            const BaseVector<bool>& S,
                                            BaseMatrix<ValueType>*  prolong,
                                            BaseMatrix<ValueType>* restrict) const;
+        virtual bool RSExtPIInterpolation(const BaseVector<int>&  CFmap,
+                                          const BaseVector<bool>& S,
+                                          bool                    FF1,
+                                          float                   trunc,
+                                          BaseMatrix<ValueType>*  prolong,
+                                          BaseMatrix<ValueType>* restrict) const;
 
     private:
         MatrixCSR<ValueType, int> mat_;

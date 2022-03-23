@@ -1960,6 +1960,771 @@ namespace rocalution
             }
         }
     }
-} // namespace rocalution
 
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_extpi_interp_max(IndexType nrow,
+                                            bool      FF1,
+                                            const IndexType* __restrict__ csr_row_ptr,
+                                            const IndexType* __restrict__ csr_col_ind,
+                                            const bool* __restrict__ S,
+                                            const int* __restrict__ cf,
+                                            IndexType* __restrict__ row_max)
+    {
+        int lid = threadIdx.x & (WFSIZE - 1);
+        int wid = threadIdx.x / WFSIZE;
+
+        // The row this thread operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Some helpers for readability
+        constexpr int COARSE = 1;
+
+        // Coarse points generate a single entry
+        if(cf[row] == COARSE)
+        {
+            if(lid == 0)
+            {
+                // Set row nnz to one
+                row_max[row] = 1;
+            }
+
+            return;
+        }
+
+        // Counter
+        IndexType nnz = 0;
+
+        // Row entry and exit points
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            // Skip points that do not influence the current point
+            if(S[j] == false)
+            {
+                continue;
+            }
+
+            // Get the column index
+            IndexType col_j = csr_col_ind[j];
+
+            // Skip diagonal entries (i does not influence itself)
+            if(col_j == row)
+            {
+                continue;
+            }
+
+            // Switch between coarse and fine points that influence the i-th point
+            if(cf[col_j] == COARSE)
+            {
+                // This is a coarse point and thus contributes, count it
+                ++nnz;
+            }
+            else
+            {
+                // This is a fine point, check for strongly connected coarse points
+
+                // Row entry and exit of this fine point
+                IndexType row_begin_j = csr_row_ptr[col_j];
+                IndexType row_end_j   = csr_row_ptr[col_j + 1];
+
+                // Loop over all columns of the fine point
+                for(IndexType k = row_begin_j; k < row_end_j; ++k)
+                {
+                    // Skip points that do not influence the fine point
+                    if(S[k] == false)
+                    {
+                        continue;
+                    }
+
+                    // Get the column index
+                    IndexType col_k = csr_col_ind[k];
+
+                    // Skip diagonal entries (the fine point does not influence itself)
+                    if(col_k == col_j)
+                    {
+                        continue;
+                    }
+
+                    // Check whether k is a coarse point
+                    if(cf[col_k] == COARSE)
+                    {
+                        // This is a coarse point, it contributes, count it
+                        ++nnz;
+
+                        // Stop if FF interpolation is limited
+                        if(FF1 == true)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sum up the row nnz from all lanes
+        wf_reduce_sum<WFSIZE>(&nnz);
+
+        if(lid == WFSIZE - 1)
+        {
+            // Write row nnz back to global memory
+            row_max[row] = nnz;
+        }
+    }
+
+    template <unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASHSIZE,
+              unsigned int HASHVAL,
+              typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_extpi_interp_nnz(IndexType nrow,
+                                            bool      FF1,
+                                            const IndexType* __restrict__ csr_row_ptr,
+                                            const IndexType* __restrict__ csr_col_ind,
+                                            const bool* __restrict__ S,
+                                            const int* __restrict__ cf,
+                                            IndexType* __restrict__ row_nnz,
+                                            IndexType* __restrict__ state)
+    {
+        int lid = threadIdx.x & (WFSIZE - 1);
+        int wid = threadIdx.x / WFSIZE;
+
+        // The row this thread operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Some helpers for readability
+        constexpr int COARSE = 1;
+
+        // Coarse points generate a single entry
+        if(cf[row] == COARSE)
+        {
+            if(lid == 0)
+            {
+                // Set this points state to coarse
+                state[row] = 1;
+
+                // Set row nnz to one
+                row_nnz[row] = 1;
+            }
+
+            return;
+        }
+
+        // Counter
+        IndexType nnz = 0;
+
+        // Shared memory for the unordered set
+        __shared__ IndexType suset[BLOCKSIZE / WFSIZE * HASHSIZE];
+
+        // Each wavefront operates on its own set
+        IndexType* uset = suset + wid * HASHSIZE;
+
+        // Initialize the set
+        for(unsigned int i = lid; i < HASHSIZE; i += WFSIZE)
+        {
+            uset[i] = INT32_MAX;
+        }
+
+        // Wait for all threads to finish initialization
+        __threadfence_block();
+
+        // Row entry and exit points
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            // Skip points that do not influence the current point
+            if(S[j] == false)
+            {
+                continue;
+            }
+
+            // Get the column index
+            IndexType col_j = csr_col_ind[j];
+
+            // Skip diagonal entries (i does not influence itself)
+            if(col_j == row)
+            {
+                continue;
+            }
+
+            // Switch between coarse and fine points that influence the i-th point
+            if(cf[col_j] == COARSE)
+            {
+                // This is a coarse point and thus contributes, count it for the row nnz
+                // We need to use a set here, to discard duplicates.
+                nnz += insert_key<HASHVAL, HASHSIZE>(col_j, uset, INT32_MAX);
+            }
+            else
+            {
+                // This is a fine point, check for strongly connected coarse points
+
+                // Row entry and exit of this fine point
+                IndexType row_begin_j = csr_row_ptr[col_j];
+                IndexType row_end_j   = csr_row_ptr[col_j + 1];
+
+                // Loop over all columns of the fine point
+                for(IndexType k = row_begin_j; k < row_end_j; ++k)
+                {
+                    // Skip points that do not influence the fine point
+                    if(S[k] == false)
+                    {
+                        continue;
+                    }
+
+                    // Get the column index
+                    IndexType col_k = csr_col_ind[k];
+
+                    // Skip diagonal entries (the fine point does not influence itself)
+                    if(col_k == col_j)
+                    {
+                        continue;
+                    }
+
+                    // Check whether k is a coarse point
+                    if(cf[col_k] == COARSE)
+                    {
+                        // This is a coarse point, it contributes, count it for the row nnz
+                        // We need to use a set here, to discard duplicates.
+                        nnz += insert_key<HASHVAL, HASHSIZE>(col_k, uset, INT32_MAX);
+
+                        // Stop if FF interpolation is limited
+                        if(FF1 == true)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sum up the row nnz from all lanes
+        wf_reduce_sum<WFSIZE>(&nnz);
+
+        if(lid == WFSIZE - 1)
+        {
+            // Write row nnz back to global memory
+            row_nnz[row] = nnz;
+
+            // Set this points state to fine
+            state[row] = 0;
+        }
+    }
+
+    template <unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASHSIZE,
+              unsigned int HASHVAL,
+              typename ValueType,
+              typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_extpi_interp_fill(IndexType nrow,
+                                             bool      FF1,
+                                             const IndexType* __restrict__ csr_row_ptr,
+                                             const IndexType* __restrict__ csr_col_ind,
+                                             const ValueType* __restrict__ csr_val,
+                                             const ValueType* __restrict__ diag,
+                                             const IndexType* __restrict__ prolong_csr_row_ptr,
+                                             IndexType* __restrict__ prolong_csr_col_ind,
+                                             ValueType* __restrict__ prolong_csr_val,
+                                             const bool* __restrict__ S,
+                                             const int* __restrict__ cf,
+                                             const IndexType* __restrict__ coarse_idx)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        // The row this thread operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Some helpers for readability
+        constexpr ValueType zero = static_cast<ValueType>(0);
+
+        constexpr int COARSE = 1;
+        constexpr int FINE   = 2;
+
+        // Coarse points generate a single entry
+        if(cf[row] == COARSE)
+        {
+            if(lid == 0)
+            {
+                // Get index into P
+                IndexType idx = prolong_csr_row_ptr[row];
+
+                // Single entry in this row (coarse point)
+                prolong_csr_col_ind[idx] = coarse_idx[row];
+                prolong_csr_val[idx]     = static_cast<ValueType>(1);
+            }
+
+            return;
+        }
+
+        // Shared memory for the hash table
+        extern __shared__ char smem[];
+
+        IndexType* stable = reinterpret_cast<IndexType*>(smem);
+        ValueType* sdata  = reinterpret_cast<ValueType*>(stable + BLOCKSIZE / WFSIZE * HASHSIZE);
+
+        // Each wavefront operates on its own hash table
+        IndexType* table = stable + wid * HASHSIZE;
+        ValueType* data  = sdata + wid * HASHSIZE;
+
+        // Initialize the hash table
+        for(unsigned int i = lid; i < HASHSIZE; i += WFSIZE)
+        {
+            table[i] = INT32_MAX;
+            data[i]  = zero;
+        }
+
+        // Wait for all threads to finish initialization
+        __threadfence_block();
+
+        // Fill the hash table according to the nnz pattern of P
+        // This is identical to the nnz per row kernel
+
+        // Row entry and exit points
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(IndexType k = row_begin + lid; k < row_end; k += WFSIZE)
+        {
+            // Skip points that do not influence the current point
+            if(S[k] == false)
+            {
+                continue;
+            }
+
+            // Get the column index
+            IndexType col_ik = csr_col_ind[k];
+
+            // Skip diagonal entries (i does not influence itself)
+            if(col_ik == row)
+            {
+                continue;
+            }
+
+            // Switch between coarse and fine points that influence the i-th point
+            if(cf[col_ik] == COARSE)
+            {
+                // This is a coarse point and thus contributes
+                insert_key<HASHVAL, HASHSIZE>(col_ik, table, INT32_MAX);
+            }
+            else
+            {
+                // This is a fine point, check for strongly connected coarse points
+
+                // Row entry and exit of this fine point
+                IndexType row_begin_k = csr_row_ptr[col_ik];
+                IndexType row_end_k   = csr_row_ptr[col_ik + 1];
+
+                // Loop over all columns of the fine point
+                for(IndexType l = row_begin_k; l < row_end_k; ++l)
+                {
+                    // Skip points that do not influence the fine point
+                    if(S[l] == false)
+                    {
+                        continue;
+                    }
+
+                    // Get the column index
+                    IndexType col_kl = csr_col_ind[l];
+
+                    // Skip diagonal entries (the fine point does not influence itself)
+                    if(col_kl == col_ik)
+                    {
+                        continue;
+                    }
+
+                    // Check whether l is a coarse point
+                    if(cf[col_kl] == COARSE)
+                    {
+                        // This is a coarse point, it contributes
+                        insert_key<HASHVAL, HASHSIZE>(col_kl, table, INT32_MAX);
+
+                        // Stop if FF interpolation is limited
+                        if(FF1 == true)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Now, we need to do the numerical part
+
+        // Diagonal entry of i-th row
+        ValueType val_ii = diag[row];
+
+        // Sign of diagonal entry of i-th row
+        bool pos_ii = val_ii >= zero;
+
+        // Accumulators
+        ValueType sum_k = zero;
+        ValueType sum_n = zero;
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(IndexType k = row_begin + lid; k < row_end; k += WFSIZE)
+        {
+            // Get the column index
+            IndexType col_ik = csr_col_ind[k];
+
+            // Skip diagonal entries (i does not influence itself)
+            if(col_ik == row)
+            {
+                continue;
+            }
+
+            // Get the column value
+            ValueType val_ik = csr_val[k];
+
+            // Check, whether the k-th entry of the row is a fine point and strongly
+            // connected to the i-th point (e.g. k \in F^S_i)
+            if(S[k] == true && cf[col_ik] == FINE)
+            {
+                // Accumulator for the sum over l
+                ValueType sum_l = zero;
+
+                // Diagonal entry of k-th row
+                ValueType val_kk = diag[col_ik];
+
+                // Store a_ki, if present
+                ValueType val_ki = zero;
+
+                // Row entry and exit of this fine point
+                IndexType row_begin_k = csr_row_ptr[col_ik];
+                IndexType row_end_k   = csr_row_ptr[col_ik + 1];
+
+                // Loop over all columns of the fine point
+                for(IndexType l = row_begin_k; l < row_end_k; ++l)
+                {
+                    // Get the column index
+                    IndexType col_kl = csr_col_ind[l];
+
+                    // Get the column value
+                    ValueType val_kl = csr_val[l];
+
+                    // Sign of a_kl
+                    bool pos_kl = val_kl >= zero;
+
+                    // Differentiate between diagonal and off-diagonal
+                    if(col_kl == row)
+                    {
+                        // Column that matches the i-th row
+                        // Since we sum up all l in C^hat_i and i, the diagonal need to
+                        // be added to the sum over l, e.g. a^bar_kl
+                        // a^bar contributes only, if the sign is different to the
+                        // i-th row diagonal sign.
+                        if(pos_ii != pos_kl)
+                        {
+                            sum_l += val_kl;
+                        }
+
+                        // If a_ki exists, keep it for later
+                        val_ki = val_kl;
+                    }
+                    else if(cf[col_kl] == COARSE)
+                    {
+                        // Check if sign is different from i-th row diagonal
+                        if(pos_ii != pos_kl)
+                        {
+                            // Entry contributes only, if it is a coarse point
+                            // and part of C^hat (e.g. we need to check the hash table)
+                            if(key_exists<HASHVAL, HASHSIZE>(col_kl, table, INT32_MAX))
+                            {
+                                sum_l += val_kl;
+                            }
+                        }
+                    }
+                }
+
+                // Update sum over l with a_ik
+                sum_l = val_ik / sum_l;
+
+                // Compute the sign of a_kk and a_ki, we need this for a_bar
+                bool pos_kk = val_kk >= zero;
+                bool pos_ki = val_ki >= zero;
+
+                // Additionally, for eq19 we need to add all coarse points in row k,
+                // if they have different sign than the diagonal a_kk
+                for(IndexType l = row_begin_k; l < row_end_k; ++l)
+                {
+                    // Get the column index
+                    IndexType col_kl = csr_col_ind[l];
+
+                    // Only coarse points contribute
+                    if(cf[col_kl] != COARSE)
+                    {
+                        continue;
+                    }
+
+                    // Get the column value
+                    ValueType val_kl = csr_val[l];
+
+                    // Compute the sign of a_kl
+                    bool pos_kl = val_kl >= zero;
+
+                    // Check for different sign
+                    if(pos_kk != pos_kl)
+                    {
+                        append_pair<HASHVAL, HASHSIZE>(
+                            col_kl, val_kl * sum_l, table, data, INT32_MAX);
+                    }
+                }
+
+                // If sign of a_ki and a_kk are different, a_ki contributes to the
+                // sum over k in F^S_i
+                if(pos_kk != pos_ki)
+                {
+                    sum_k += val_ki * sum_l;
+                }
+            }
+
+            // Boolean, to flag whether a_ik is in C hat or not
+            // (we can query the hash table for it)
+            bool in_C_hat = false;
+
+            // a_ik can only be in C^hat if it is coarse
+            if(cf[col_ik] == COARSE)
+            {
+                // Append a_ik to the sum of eq19
+                in_C_hat = append_pair<HASHVAL, HASHSIZE>(col_ik, val_ik, table, data, INT32_MAX);
+            }
+
+            // If a_ik is not in C^hat and does not strongly influence i, it contributes
+            // to sum_n
+            if(in_C_hat == false && S[k] == false)
+            {
+                sum_n += val_ik;
+            }
+        }
+
+        // Each lane accumulates the sums (over n and l)
+        ValueType a_ii_tilde = sum_n + sum_k;
+
+        // Now, each lane of the wavefront should hold the global row sum
+        for(unsigned int i = WFSIZE >> 1; i > 0; i >>= 1)
+        {
+            a_ii_tilde += hip_shfl_xor(a_ii_tilde, i);
+        }
+
+        // Precompute -1 / (a_ii_tilde + a_ii)
+        a_ii_tilde = static_cast<ValueType>(-1) / (a_ii_tilde + val_ii);
+
+        // Finally, extract the numerical values from the hash table and fill P such
+        // that the resulting matrix is sorted by columns
+        for(unsigned int i = lid; i < HASHSIZE; i += WFSIZE)
+        {
+            // Get column from hash table to fill into C hat
+            IndexType col = table[i];
+
+            // Skip, if table is empty
+            if(col == INT32_MAX)
+            {
+                continue;
+            }
+
+            // Get index into P
+            IndexType idx = prolong_csr_row_ptr[row];
+
+            // Hash table index counter
+            unsigned int cnt = 0;
+
+            // Go through the hash table, until we reach its end
+            while(cnt < HASHSIZE)
+            {
+                // We are searching for the right place in P to
+                // insert the i-th hash table entry.
+                // If the i-th hash table column entry is greater then the current one,
+                // we need to leave a slot to its left.
+                if(col > table[cnt])
+                {
+                    ++idx;
+                }
+
+                // Process next hash table entry
+                ++cnt;
+            }
+
+            // Add hash table entry into P
+            prolong_csr_col_ind[idx] = coarse_idx[col];
+            prolong_csr_val[idx]     = a_ii_tilde * data[i];
+        }
+    }
+
+    // Compress prolongation matrix
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename ValueType, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_rs_extpi_interp_compress_nnz(IndexType nrow,
+                                                     const IndexType* __restrict__ csr_row_ptr,
+                                                     const IndexType* __restrict__ csr_col_ind,
+                                                     const ValueType* __restrict__ csr_val,
+                                                     float trunc,
+                                                     IndexType* __restrict__ row_nnz)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        // Current row
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Row nnz counter
+        IndexType nnz = 0;
+
+        double row_max = 0.0;
+
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        // Obtain numbers for processing the row
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            // Compute absolute row maximum
+            row_max = max(row_max, hip_abs(csr_val[j]));
+        }
+
+        // Gather from other lanes
+        wf_reduce_max<WFSIZE>(&row_max);
+
+        // Threshold
+        double threshold = row_max * trunc;
+
+        // Count the row nnz
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            // Check whether we keep this entry or not
+            if(hip_abs(csr_val[j]) >= threshold)
+            {
+                // Count nnz
+                ++nnz;
+            }
+        }
+
+        // Gather from other lanes
+        for(unsigned int i = WFSIZE >> 1; i > 0; i >>= 1)
+        {
+            nnz += __shfl_xor(nnz, i);
+        }
+
+        if(lid == 0)
+        {
+            // Write back to global memory
+            row_nnz[row] = nnz;
+        }
+    }
+
+    // Compress
+    template <typename ValueType, typename IndexType>
+    __global__ void
+        kernel_csr_rs_extpi_interp_compress_fill(IndexType nrow,
+                                                 const IndexType* __restrict__ csr_row_ptr,
+                                                 const IndexType* __restrict__ csr_col_ind,
+                                                 const ValueType* __restrict__ csr_val,
+                                                 float trunc,
+                                                 const IndexType* __restrict__ comp_csr_row_ptr,
+                                                 IndexType* __restrict__ comp_csr_col_ind,
+                                                 ValueType* __restrict__ comp_csr_val)
+    {
+        // Current row
+        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Row entry and exit point
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        double    row_max = 0.0;
+        ValueType row_sum = static_cast<ValueType>(0);
+
+        // Obtain numbers for processing the row
+        for(IndexType j = row_begin; j < row_end; ++j)
+        {
+            // Get column value
+            ValueType val = csr_val[j];
+
+            // Compute absolute row maximum
+            row_max = max(row_max, hip_abs(val));
+
+            // Compute row sum
+            row_sum += val;
+        }
+
+        // Threshold
+        double threshold = row_max * trunc;
+
+        // Row entry point for the compressed matrix
+        IndexType comp_row_begin = comp_csr_row_ptr[row];
+        IndexType comp_row_end   = comp_csr_row_ptr[row + 1];
+
+        // Row nnz counter
+        IndexType nnz = 0;
+
+        // Row sum of not-dropped entries
+        ValueType comp_row_sum = static_cast<ValueType>(0);
+
+        for(IndexType j = row_begin; j < row_end; ++j)
+        {
+            // Get column value
+            ValueType val = csr_val[j];
+
+            // Check whether we keep this entry or not
+            if(hip_abs(val) >= threshold)
+            {
+                // Compute compressed row sum
+                comp_row_sum += val;
+
+                // Fill compressed structures
+                comp_csr_col_ind[comp_row_begin + nnz] = csr_col_ind[j];
+                comp_csr_val[comp_row_begin + nnz]     = csr_val[j];
+
+                ++nnz;
+            }
+        }
+
+        // Row scaling factor
+        ValueType scale = row_sum / comp_row_sum;
+
+        // Scale row entries
+        for(IndexType j = comp_row_begin; j < comp_row_end; ++j)
+        {
+            comp_csr_val[j] *= scale;
+        }
+    }
+} // namespace rocalution
 #endif // ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_
