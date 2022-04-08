@@ -30,7 +30,7 @@
 
 #include <hip/hip_runtime.h>
 #include <rocblas.h>
-#include <rocsparse.h>
+#include <rocsparse/rocsparse.h>
 
 #ifdef SUPPORT_COMPLEX
 #include <complex>

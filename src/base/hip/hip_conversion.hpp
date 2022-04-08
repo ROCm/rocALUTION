@@ -28,7 +28,7 @@
 #include "../matrix_formats.hpp"
 
 #include <rocblas.h>
-#include <rocsparse.h>
+#include <rocsparse/rocsparse.h>
 
 namespace rocalution
 {

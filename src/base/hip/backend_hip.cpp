@@ -41,7 +41,7 @@
 
 #include <hip/hip_runtime_api.h>
 #include <rocblas.h>
-#include <rocsparse.h>
+#include <rocsparse/rocsparse.h>
 
 #include <complex>
 
