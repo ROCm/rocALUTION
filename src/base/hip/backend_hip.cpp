@@ -40,7 +40,7 @@
 #include "hip_vector.hpp"
 
 #include <hip/hip_runtime_api.h>
-#include <rocblas.h>
+#include <rocblas/rocblas.h>
 #include <rocsparse/rocsparse.h>
 
 #include <complex>
