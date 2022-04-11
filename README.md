@@ -22,7 +22,7 @@ cd rocALUTION; mkdir build; cd build
 #   SUPPORT_MPI         - build rocALUTION with MPI (multi-node) support (OFF)
 #   BUILD_SHARED_LIBS   - build rocALUTION as shared library (ON, recommended)
 #   BUILD_EXAMPLES      - build rocALUTION examples (ON)
-cmake .. -DSUPPORT_HIP=ON
+cmake .. -DSUPPORT_HIP=ON -DROCM_PATH=/opt/rocm/
 
 # Build
 make
