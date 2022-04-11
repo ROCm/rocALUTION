@@ -160,24 +160,26 @@ if(WIN32 AND BUILD_CLIENTS AND BUILD_SHARED_LIBS)
 endif()
 
 #Install the warpper for header filers for backward compatibility
-if(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY)
-  rocm_wrap_header_file(
-    ${PUBLIC_HEADERS}
-    GUARDS SYMLINK WRAPPER
-    WRAPPER_LOCATIONS rocalution/include
-    OUTPUT_LOCATIONS rocalution/wrapper/include
-  )
-  rocm_wrap_header_file(
-    version.hpp export.hpp
-    GUARDS SYMLINK WRAPPER
-    WRAPPER_LOCATIONS rocalution/include
-    OUTPUT_LOCATIONS rocalution/wrapper/include
-  )
-  rocm_install(
-    DIRECTORY
-    "${PROJECT_BINARY_DIR}/rocalution/wrapper/"
-    DESTINATION rocalution/
-  )
+if(SUPPORT_HIP)
+  if(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY)
+    rocm_wrap_header_file(
+      ${PUBLIC_HEADERS}
+      GUARDS SYMLINK WRAPPER
+      WRAPPER_LOCATIONS rocalution/include
+      OUTPUT_LOCATIONS rocalution/wrapper/include
+    )
+    rocm_wrap_header_file(
+      version.hpp export.hpp
+      GUARDS SYMLINK WRAPPER
+      WRAPPER_LOCATIONS rocalution/include
+      OUTPUT_LOCATIONS rocalution/wrapper/include
+    )
+    rocm_install(
+      DIRECTORY
+      "${PROJECT_BINARY_DIR}/rocalution/wrapper/"
+      DESTINATION rocalution/
+    )
+  endif( )
 endif( )
 
 # Install targets
