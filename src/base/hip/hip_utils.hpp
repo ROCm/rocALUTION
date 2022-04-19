@@ -29,8 +29,8 @@
 #include "backend_hip.hpp"
 
 #include <hip/hip_runtime.h>
-#include <rocblas.h>
-#include <rocsparse.h>
+#include <rocblas/rocblas.h>
+#include <rocsparse/rocsparse.h>
 
 #ifdef SUPPORT_COMPLEX
 #include <complex>
