@@ -56,6 +56,14 @@ namespace rocalution
         this->object_name_ = "";
 
         this->nnz_ = 0;
+
+        this->recv_boundary_ = NULL;
+        this->send_boundary_ = NULL;
+
+#ifdef SUPPORT_MULTINODE
+        this->recv_event_ = NULL;
+        this->send_event_ = NULL;
+#endif
     }
 
     template <typename ValueType>
@@ -70,6 +78,14 @@ namespace rocalution
         this->pm_ = &pm;
 
         this->nnz_ = 0;
+
+        this->recv_boundary_ = NULL;
+        this->send_boundary_ = NULL;
+
+#ifdef SUPPORT_MULTINODE
+        this->recv_event_ = new MRequest[pm.nrecv_];
+        this->send_event_ = new MRequest[pm.nsend_];
+#endif
     }
 
     template <typename ValueType>
@@ -78,6 +94,20 @@ namespace rocalution
         log_debug(this, "GlobalMatrix::~GlobalMatrix()");
 
         this->Clear();
+
+#ifdef SUPPORT_MULTINODE
+        if(this->recv_event_ != NULL)
+        {
+            delete[] this->recv_event_;
+            this->recv_event_ = NULL;
+        }
+
+        if(this->send_event_ != NULL)
+        {
+            delete[] this->send_event_;
+            this->send_event_ = NULL;
+        }
+#endif
     }
 
     template <typename ValueType>
@@ -87,20 +117,31 @@ namespace rocalution
 
         this->matrix_interior_.Clear();
         this->matrix_ghost_.Clear();
+        this->halo_.Clear();
 
         this->nnz_ = 0;
+
+        if(this->recv_boundary_ != NULL)
+        {
+            free_host(&this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ != NULL)
+        {
+            free_host(&this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
     IndexType2 GlobalMatrix<ValueType>::GetM(void) const
     {
-        return this->pm_->GetGlobalSize();
+        return this->pm_->GetGlobalNrow();
     }
 
     template <typename ValueType>
     IndexType2 GlobalMatrix<ValueType>::GetN(void) const
     {
-        return this->pm_->GetGlobalSize();
+        return this->pm_->GetGlobalNcol();
     }
 
     template <typename ValueType>
@@ -185,9 +226,9 @@ namespace rocalution
         std::string ghost_name    = "Ghost of " + name;
 
         this->matrix_interior_.AllocateCSR(
-            interior_name, local_nnz, this->pm_->GetLocalSize(), this->pm_->GetLocalSize());
+            interior_name, local_nnz, this->pm_->GetLocalNrow(), this->pm_->GetLocalNcol());
         this->matrix_ghost_.AllocateCSR(
-            ghost_name, ghost_nnz, this->pm_->GetLocalSize(), this->pm_->GetNumReceivers());
+            ghost_name, ghost_nnz, this->pm_->GetLocalNrow(), this->pm_->GetNumReceivers());
 
 #ifdef SUPPORT_MULTINODE
         IndexType2 nnz_local;
@@ -199,7 +240,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -216,9 +281,9 @@ namespace rocalution
         std::string ghost_name    = "Ghost of " + name;
 
         this->matrix_interior_.AllocateCOO(
-            interior_name, local_nnz, this->pm_->GetLocalSize(), this->pm_->GetLocalSize());
+            interior_name, local_nnz, this->pm_->GetLocalNrow(), this->pm_->GetLocalNcol());
         this->matrix_ghost_.AllocateCOO(
-            ghost_name, ghost_nnz, this->pm_->GetLocalSize(), this->pm_->GetNumReceivers());
+            ghost_name, ghost_nnz, this->pm_->GetLocalNrow(), this->pm_->GetNumReceivers());
 
 #ifdef SUPPORT_MULTINODE
         IndexType2 nnz_local;
@@ -230,7 +295,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -287,14 +376,14 @@ namespace rocalution
                                              local_val,
                                              interior_name,
                                              local_nnz,
-                                             this->pm_->GetLocalSize(),
-                                             this->pm_->GetLocalSize());
+                                             this->pm_->GetLocalNrow(),
+                                             this->pm_->GetLocalNcol());
         this->matrix_ghost_.SetDataPtrCSR(ghost_row_offset,
                                           ghost_col,
                                           ghost_val,
                                           ghost_name,
                                           ghost_nnz,
-                                          this->pm_->GetLocalSize(),
+                                          this->pm_->GetLocalNrow(),
                                           this->pm_->GetNumReceivers());
 
         this->matrix_ghost_.ConvertTo(COO);
@@ -309,7 +398,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -366,14 +479,14 @@ namespace rocalution
                                              local_val,
                                              interior_name,
                                              local_nnz,
-                                             this->pm_->GetLocalSize(),
-                                             this->pm_->GetLocalSize());
+                                             this->pm_->GetLocalNrow(),
+                                             this->pm_->GetLocalNcol());
         this->matrix_ghost_.SetDataPtrCOO(ghost_row,
                                           ghost_col,
                                           ghost_val,
                                           ghost_name,
                                           ghost_nnz,
-                                          this->pm_->GetLocalSize(),
+                                          this->pm_->GetLocalNrow(),
                                           this->pm_->GetNumReceivers());
 
 #ifdef SUPPORT_MULTINODE
@@ -386,7 +499,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -415,8 +552,8 @@ namespace rocalution
                                              val,
                                              interior_name,
                                              nnz,
-                                             this->pm_->GetLocalSize(),
-                                             this->pm_->GetLocalSize());
+                                             this->pm_->GetLocalNrow(),
+                                             this->pm_->GetLocalNcol());
 
 #ifdef SUPPORT_MULTINODE
         IndexType2 nnz_local;
@@ -428,7 +565,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -457,8 +618,8 @@ namespace rocalution
                                              val,
                                              interior_name,
                                              nnz,
-                                             this->pm_->GetLocalSize(),
-                                             this->pm_->GetLocalSize());
+                                             this->pm_->GetLocalNrow(),
+                                             this->pm_->GetLocalNcol());
 
 #ifdef SUPPORT_MULTINODE
         IndexType2 nnz_local;
@@ -470,7 +631,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -498,7 +683,7 @@ namespace rocalution
                                           val,
                                           ghost_name,
                                           nnz,
-                                          this->pm_->GetLocalSize(),
+                                          this->pm_->GetLocalNrow(),
                                           this->pm_->GetNumReceivers());
 
         this->matrix_ghost_.ConvertTo(COO);
@@ -513,7 +698,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -541,7 +750,7 @@ namespace rocalution
                                           val,
                                           ghost_name,
                                           nnz,
-                                          this->pm_->GetLocalSize(),
+                                          this->pm_->GetLocalNrow(),
                                           this->pm_->GetNumReceivers());
 
         // Sort ghost matrix
@@ -557,7 +766,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -717,6 +950,7 @@ namespace rocalution
 
         this->matrix_interior_.MoveToAccelerator();
         this->matrix_ghost_.MoveToAccelerator();
+        this->halo_.MoveToAccelerator();
     }
 
     template <typename ValueType>
@@ -726,12 +960,14 @@ namespace rocalution
 
         this->matrix_interior_.MoveToHost();
         this->matrix_ghost_.MoveToHost();
+        this->halo_.MoveToHost();
     }
 
     template <typename ValueType>
     bool GlobalMatrix<ValueType>::is_host_(void) const
     {
         assert(this->matrix_interior_.is_host_() == this->matrix_ghost_.is_host_());
+        assert(this->matrix_interior_.is_host_() == this->halo_.is_host_());
         return this->matrix_interior_.is_host_();
     }
 
@@ -739,6 +975,7 @@ namespace rocalution
     bool GlobalMatrix<ValueType>::is_accel_(void) const
     {
         assert(this->matrix_interior_.is_accel_() == this->matrix_ghost_.is_accel_());
+        assert(this->matrix_interior_.is_accel_() == this->halo_.is_accel_());
         return this->matrix_interior_.is_accel_();
     }
 
@@ -804,6 +1041,8 @@ namespace rocalution
         assert(this != &src);
         assert(src.GetLocalNnz() != 0);
         assert(src.GetGhostNnz() != 0);
+        assert(this->recv_boundary_ != NULL);
+        assert(this->send_boundary_ != NULL);
 
         this->matrix_interior_.CopyFrom(src.GetInterior());
         this->matrix_ghost_.CopyFrom(src.GetGhost());
@@ -887,14 +1126,81 @@ namespace rocalution
         assert(this->is_host_() == in.is_host_());
         assert(this->is_host_() == out->is_host_());
 
-        out->UpdateGhostValuesAsync_(in);
+        this->UpdateGhostValuesAsync_(in);
 
         this->matrix_interior_.Apply(in.vector_interior_, &out->vector_interior_);
 
-        out->UpdateGhostValuesSync_();
+        this->UpdateGhostValuesSync_();
 
         this->matrix_ghost_.ApplyAdd(
-            out->vector_ghost_, static_cast<ValueType>(1), &out->vector_interior_);
+            this->halo_, static_cast<ValueType>(1), &out->vector_interior_);
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::UpdateGhostValuesAsync_(const GlobalVector<ValueType>& x) const
+    {
+        log_debug(this, "GlobalMatrix::UpdateGhostValuesAsync_()", "#*# begin", (const void*&)x);
+
+#ifdef SUPPORT_MULTINODE
+        int tag = 0;
+
+        // async recv boundary from neighbors
+        for(int n = 0; n < this->pm_->nrecv_; ++n)
+        {
+            // nnz that we receive from process n
+            int nnz = this->pm_->recv_offset_index_[n + 1] - this->pm_->recv_offset_index_[n];
+
+            // if this has ghost values that belong to process i
+            if(nnz > 0)
+            {
+                communication_async_recv(this->recv_boundary_ + this->pm_->recv_offset_index_[n],
+                                         nnz,
+                                         this->pm_->recvs_[n],
+                                         tag,
+                                         &this->recv_event_[n],
+                                         this->pm_->comm_);
+            }
+        }
+
+        // prepare send buffer
+        x.vector_interior_.GetIndexValues(this->send_boundary_);
+
+        // async send boundary to neighbors
+        for(int n = 0; n < this->pm_->nsend_; ++n)
+        {
+            // nnz that we send to process i
+            int nnz = this->pm_->send_offset_index_[n + 1] - this->pm_->send_offset_index_[n];
+
+            // if process i has ghost values that belong to this
+            if(nnz > 0)
+            {
+                communication_async_send(this->send_boundary_ + this->pm_->send_offset_index_[n],
+                                         nnz,
+                                         this->pm_->sends_[n],
+                                         tag,
+                                         &this->send_event_[n],
+                                         this->pm_->comm_);
+            }
+        }
+#endif
+
+        log_debug(this, "GlobalMatrix::UpdateGhostValuesAsync_()", "#*# end");
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::UpdateGhostValuesSync_(void) const
+    {
+        log_debug(this, "GlobalMatrix::UpdateGhostValuesSync_()", "#*# begin");
+
+#ifdef SUPPORT_MULTINODE
+        // Sync before updating ghost values
+        communication_syncall(this->pm_->nrecv_, this->recv_event_);
+        communication_syncall(this->pm_->nsend_, this->send_event_);
+
+        this->halo_.SetContinuousValues(0, this->pm_->GetNumReceivers(), this->recv_boundary_);
+#endif
+
+        log_debug(this, "GlobalMatrix::UpdateGhostValuesSync_()", "#*# end");
     }
 
     template <typename ValueType>
@@ -973,7 +1279,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + interior_name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -1074,7 +1404,31 @@ namespace rocalution
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
+
+        if(this->recv_event_ == NULL)
+        {
+            this->recv_event_ = new MRequest[this->pm_->nrecv_];
+        }
+
+        if(this->send_event_ == NULL)
+        {
+            this->send_event_ = new MRequest[this->pm_->nsend_];
+        }
 #endif
+
+        // Allocate send and receive buffer
+        std::string halo_name = "Buffer of " + interior_name;
+        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+
+        if(this->recv_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+        }
+
+        if(this->send_boundary_ == NULL)
+        {
+            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+        }
     }
 
     template <typename ValueType>
@@ -1124,7 +1478,6 @@ namespace rocalution
         log_debug(this, "GlobalMatrix::ExtractInverseDiagonal()", vec_inv_diag);
 
         assert(vec_inv_diag != NULL);
-        assert(vec_inv_diag->GetSize() == this->GetM());
 
         this->matrix_interior_.ExtractInverseDiagonal(&vec_inv_diag->vector_interior_);
     }
@@ -1461,10 +1814,12 @@ namespace rocalution
         // Get the global size
         int global_size;
         communication_allreduce_single_sum(nrow, &global_size, this->pm_->comm_);
-        pm->SetGlobalSize(global_size);
+        pm->SetGlobalNrow(global_size);
+        pm->SetGlobalNcol(global_size);
 
         // Local size
-        pm->SetLocalSize(nrow);
+        pm->SetLocalNrow(nrow);
+        pm->SetLocalNcol(nrow);
 
         // New boundary and boundary offsets
         pm->SetBoundaryIndex(boundary_size, boundary_index);

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@ namespace rocalution
     class LocalVector;
     template <typename ValueType>
     class LocalMatrix;
+    struct MRequest;
 
     /** \ingroup op_vec_module
   * \class GlobalMatrix
@@ -246,7 +247,20 @@ namespace rocalution
         virtual bool is_host_(void) const;
         virtual bool is_accel_(void) const;
 
+        /** \brief Update ghost values asynchronously */
+        void UpdateGhostValuesAsync_(const GlobalVector<ValueType>& x) const;
+        /** \brief Update ghost values synchronously */
+        void UpdateGhostValuesSync_(void) const;
+
     private:
+        MRequest* recv_event_;
+        MRequest* send_event_;
+
+        ValueType* recv_boundary_;
+        ValueType* send_boundary_;
+
+        mutable LocalVector<ValueType> halo_;
+
         IndexType2 nnz_;
 
         LocalMatrix<ValueType> matrix_interior_;

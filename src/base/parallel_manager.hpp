@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,10 +72,32 @@ namespace rocalution
 
         /** \brief Return the global size */
         ROCALUTION_EXPORT
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release. Use "
+                     "GetGlobalNrow() or GetGlobalNcol() instead")]]
+#endif
         IndexType2 GetGlobalSize(void) const;
+        /** \brief Return the global number of rows */
+        ROCALUTION_EXPORT
+        IndexType2 GetGlobalNrow(void) const;
+        /** \brief Return the global number of columns */
+        ROCALUTION_EXPORT
+        IndexType2 GetGlobalNcol(void) const;
         /** \brief Return the local size */
         ROCALUTION_EXPORT
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release. Use "
+                     "GetLocalNrow() or GetLocalNcol() instead")]]
+#endif
         int GetLocalSize(void) const;
+        /** \brief Return the local number of rows */
+        ROCALUTION_EXPORT
+        int GetLocalNrow(void) const;
+        /** \brief Return the local number of columns */
+        ROCALUTION_EXPORT
+        int GetLocalNcol(void) const;
 
         /** \brief Return the number of receivers */
         ROCALUTION_EXPORT
@@ -89,10 +111,32 @@ namespace rocalution
 
         /** \brief Initialize the global size */
         ROCALUTION_EXPORT
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release. Use "
+                     "SetGlobalNrow() or SetGlobalNcol() instead")]]
+#endif
         void SetGlobalSize(IndexType2 size);
+        /** \brief Initialize the global number of rows */
+        ROCALUTION_EXPORT
+        void SetGlobalNrow(IndexType2 nrow);
+        /** \brief Initialize the global number of columns */
+        ROCALUTION_EXPORT
+        void SetGlobalNcol(IndexType2 ncol);
         /** \brief Initialize the local size */
         ROCALUTION_EXPORT
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release. Use "
+                     "SetLocalNrow() or SetLocalNcol() instead")]]
+#endif
         void SetLocalSize(int size);
+        /** \brief Initialize the local number of rows */
+        ROCALUTION_EXPORT
+        void SetLocalNrow(int nrow);
+        /** \brief Initialize the local number of columns */
+        ROCALUTION_EXPORT
+        void SetLocalNcol(int ncol);
 
         /** \brief Set all boundary indices of this ranks process */
         ROCALUTION_EXPORT
@@ -135,8 +179,10 @@ namespace rocalution
         int         rank_;
         int         num_procs_;
 
-        IndexType2 global_size_;
-        int        local_size_;
+        IndexType2 global_nrow_;
+        IndexType2 global_ncol_;
+        int        local_nrow_;
+        int        local_ncol_;
 
         // Number of total ids, the current process is receiving
         int recv_index_size_;

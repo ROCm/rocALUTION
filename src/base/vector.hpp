@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,6 +65,10 @@ namespace rocalution
         virtual int GetLocalSize(void) const;
         /** \brief Return the size of the ghost vector */
         ROCALUTION_EXPORT
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         virtual int GetGhostSize(void) const;
 
         /** \brief Perform a sanity check of the vector

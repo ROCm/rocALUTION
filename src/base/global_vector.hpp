@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,14 +66,16 @@ namespace rocalution
 
         virtual IndexType2 GetSize(void) const;
         virtual int        GetLocalSize(void) const;
-        virtual int        GetGhostSize(void) const;
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
+        virtual int GetGhostSize(void) const;
 
         /** \private */
         const LocalVector<ValueType>& GetInterior() const;
         /** \private */
         LocalVector<ValueType>& GetInterior();
-        /** \private */
-        const LocalVector<ValueType>& GetGhost() const;
 
         /** \brief Allocate a global vector with name and size */
         virtual void Allocate(std::string name, IndexType2 size);
@@ -145,20 +147,8 @@ namespace rocalution
         virtual bool is_host_(void) const;
         virtual bool is_accel_(void) const;
 
-        /** \brief Update ghost values asynchronously */
-        void UpdateGhostValuesAsync_(const GlobalVector<ValueType>& in);
-        /** \brief Update ghost values synchronously */
-        void UpdateGhostValuesSync_(void);
-
     private:
-        MRequest* recv_event_;
-        MRequest* send_event_;
-
-        ValueType* recv_boundary_;
-        ValueType* send_boundary_;
-
         LocalVector<ValueType> vector_interior_;
-        LocalVector<ValueType> vector_ghost_;
 
         friend class LocalMatrix<ValueType>;
         friend class GlobalMatrix<ValueType>;

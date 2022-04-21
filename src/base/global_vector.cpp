@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,14 +52,6 @@ namespace rocalution
 #endif
 
         this->object_name_ = "";
-
-        this->recv_boundary_ = NULL;
-        this->send_boundary_ = NULL;
-
-#ifdef SUPPORT_MULTINODE
-        this->recv_event_ = NULL;
-        this->send_event_ = NULL;
-#endif
     }
 
     template <typename ValueType>
@@ -72,14 +64,6 @@ namespace rocalution
         this->object_name_ = "";
 
         this->pm_ = &pm;
-
-        this->recv_boundary_ = NULL;
-        this->send_boundary_ = NULL;
-
-#ifdef SUPPORT_MULTINODE
-        this->recv_event_ = new MRequest[pm.nrecv_];
-        this->send_event_ = new MRequest[pm.nsend_];
-#endif
     }
 
     template <typename ValueType>
@@ -88,20 +72,6 @@ namespace rocalution
         log_debug(this, "GlobalVector::~GlobalVector()");
 
         this->Clear();
-
-#ifdef SUPPORT_MULTINODE
-        if(this->recv_event_ != NULL)
-        {
-            delete[] this->recv_event_;
-            this->recv_event_ = NULL;
-        }
-
-        if(this->send_event_ != NULL)
-        {
-            delete[] this->send_event_;
-            this->send_event_ = NULL;
-        }
-#endif
     }
 
     template <typename ValueType>
@@ -110,17 +80,6 @@ namespace rocalution
         log_debug(this, "GlobalVector::Clear()");
 
         this->vector_interior_.Clear();
-        this->vector_ghost_.Clear();
-
-        if(this->recv_boundary_ != NULL)
-        {
-            free_host(&this->recv_boundary_);
-        }
-
-        if(this->send_boundary_ != NULL)
-        {
-            free_host(&this->send_boundary_);
-        }
     }
 
     template <typename ValueType>
@@ -136,7 +95,20 @@ namespace rocalution
     template <typename ValueType>
     IndexType2 GlobalVector<ValueType>::GetSize(void) const
     {
-        return this->pm_->global_size_;
+        int local_size = this->GetLocalSize();
+
+        int global_size = 0;
+
+        if(local_size == this->pm_->GetLocalNrow())
+        {
+            global_size = this->pm_->GetGlobalNrow();
+        }
+        else if(local_size == this->pm_->GetLocalNcol())
+        {
+            global_size = this->pm_->GetGlobalNcol();
+        }
+
+        return global_size;
     }
 
     template <typename ValueType>
@@ -148,7 +120,7 @@ namespace rocalution
     template <typename ValueType>
     int GlobalVector<ValueType>::GetGhostSize(void) const
     {
-        return this->vector_ghost_.GetLocalSize();
+        return this->pm_->GetNumReceivers();
     }
 
     template <typename ValueType>
@@ -168,48 +140,36 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    const LocalVector<ValueType>& GlobalVector<ValueType>::GetGhost() const
-    {
-        log_debug(this, "GlobalVector::GetGhost()");
-
-        return this->vector_ghost_;
-    }
-
-    template <typename ValueType>
     void GlobalVector<ValueType>::Allocate(std::string name, IndexType2 size)
     {
         log_debug(this, "GlobalVector::Allocate()", name, size);
 
         assert(this->pm_ != NULL);
-        assert(this->pm_->global_size_ == size);
+        assert(this->pm_->global_nrow_ == size || this->pm_->global_ncol_ == size);
         assert(size <= std::numeric_limits<IndexType2>::max());
 
         std::string interior_name = "Interior of " + name;
         std::string ghost_name    = "Ghost of " + name;
 
-#ifdef SUPPORT_MULTINODE
-        if(this->recv_event_ == NULL)
-        {
-            this->recv_event_ = new MRequest[this->pm_->nrecv_];
-        }
-
-        if(this->send_event_ == NULL)
-        {
-            this->send_event_ = new MRequest[this->pm_->nsend_];
-        }
-#endif
-
         this->object_name_ = name;
 
-        this->vector_interior_.Allocate(interior_name, this->pm_->GetLocalSize());
-        this->vector_ghost_.Allocate(ghost_name, this->pm_->GetNumReceivers());
+        int local_size = -1;
 
+        if(this->pm_->GetGlobalNrow() == size)
+        {
+            local_size = this->pm_->GetLocalNrow();
+        }
+
+        if(this->pm_->GetGlobalNcol() == size)
+        {
+            local_size = this->pm_->GetLocalNcol();
+        }
+
+        assert(local_size != -1);
+
+        this->vector_interior_.Allocate(interior_name, local_size);
         this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
                                              this->pm_->boundary_index_);
-
-        // Allocate send and receive buffer
-        allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
-        allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
     }
 
     template <typename ValueType>
@@ -244,7 +204,7 @@ namespace rocalution
         assert(ptr != NULL);
         assert(*ptr != NULL);
         assert(this->pm_ != NULL);
-        assert(this->pm_->global_size_ == size);
+        assert(this->pm_->global_nrow_ == size || this->pm_->global_ncol_ == size);
         assert(size <= std::numeric_limits<IndexType2>::max());
 
         this->Clear();
@@ -252,29 +212,25 @@ namespace rocalution
         std::string interior_name = "Interior of " + name;
         std::string ghost_name    = "Ghost of " + name;
 
-#ifdef SUPPORT_MULTINODE
-        if(this->recv_event_ == NULL)
-        {
-            this->recv_event_ = new MRequest[this->pm_->nrecv_];
-        }
-
-        if(this->send_event_ == NULL)
-        {
-            this->send_event_ = new MRequest[this->pm_->nsend_];
-        }
-#endif
-
         this->object_name_ = name;
 
-        this->vector_interior_.SetDataPtr(ptr, interior_name, this->pm_->local_size_);
-        this->vector_ghost_.Allocate(ghost_name, this->pm_->GetNumReceivers());
+        int local_size = -1;
 
+        if(this->pm_->GetGlobalNrow() == size)
+        {
+            local_size = this->pm_->GetLocalNrow();
+        }
+
+        if(this->pm_->GetGlobalNcol() == size)
+        {
+            local_size = this->pm_->GetLocalNcol();
+        }
+
+        assert(local_size != -1);
+
+        this->vector_interior_.SetDataPtr(ptr, interior_name, local_size);
         this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
                                              this->pm_->boundary_index_);
-
-        // Allocate send and receive buffer
-        allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
-        allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
     }
 
     template <typename ValueType>
@@ -286,11 +242,6 @@ namespace rocalution
         assert(this->vector_interior_.GetSize() > 0);
 
         this->vector_interior_.LeaveDataPtr(ptr);
-
-        free_host(&this->recv_boundary_);
-        free_host(&this->send_boundary_);
-
-        this->vector_ghost_.Clear();
     }
 
     template <typename ValueType>
@@ -319,8 +270,6 @@ namespace rocalution
 
         assert(this != &src);
         assert(this->pm_ == src.pm_);
-        assert(this->recv_boundary_ != NULL);
-        assert(this->send_boundary_ != NULL);
 
         this->vector_interior_.CopyFrom(src.vector_interior_);
     }
@@ -339,7 +288,6 @@ namespace rocalution
         log_debug(this, "GlobalVector::MoveToAccelerator()");
 
         this->vector_interior_.MoveToAccelerator();
-        this->vector_ghost_.MoveToAccelerator();
     }
 
     template <typename ValueType>
@@ -348,7 +296,6 @@ namespace rocalution
         log_debug(this, "GlobalVector::MoveToHost()");
 
         this->vector_interior_.MoveToHost();
-        this->vector_ghost_.MoveToHost();
     }
 
     template <typename ValueType>
@@ -356,7 +303,7 @@ namespace rocalution
     {
         log_debug(this, "GlobalVector::operator[]()", i);
 
-        assert((i >= 0) && (i < this->pm_->local_size_));
+        assert((i >= 0) && (i < this->GetLocalSize()));
 
         return this->vector_interior_[i];
     }
@@ -366,7 +313,7 @@ namespace rocalution
     {
         log_debug(this, "GlobalVector::operator[]() const", i);
 
-        assert((i >= 0) && (i < this->pm_->local_size_));
+        assert((i >= 0) && (i < this->GetLocalSize()));
 
         return this->vector_interior_[i];
     }
@@ -402,15 +349,7 @@ namespace rocalution
     {
         log_debug(this, "GlobalVector::Check()");
 
-        bool interior_check = this->vector_interior_.Check();
-        bool ghost_check    = this->vector_ghost_.Check();
-
-        if(interior_check == true && ghost_check == true)
-        {
-            return true;
-        }
-
-        return false;
+        return this->vector_interior_.Check();
     }
 
     template <typename ValueType>
@@ -448,29 +387,10 @@ namespace rocalution
 
         this->vector_interior_.ReadFileASCII(path + name);
 
-#ifdef SUPPORT_MULTINODE
-        if(this->recv_event_ == NULL)
-        {
-            this->recv_event_ = new MRequest[this->pm_->nrecv_];
-        }
-
-        if(this->send_event_ == NULL)
-        {
-            this->send_event_ = new MRequest[this->pm_->nsend_];
-        }
-#endif
-
         this->object_name_ = filename;
 
         this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
                                              this->pm_->boundary_index_);
-
-        // Allocate ghost vector
-        this->vector_ghost_.Allocate("ghost", this->pm_->GetNumReceivers());
-
-        // Allocate send and receive buffer
-        allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
-        allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
     }
 
     template <typename ValueType>
@@ -544,29 +464,10 @@ namespace rocalution
 
         this->vector_interior_.ReadFileBinary(path + name);
 
-#ifdef SUPPORT_MULTINODE
-        if(this->recv_event_ == NULL)
-        {
-            this->recv_event_ = new MRequest[this->pm_->nrecv_];
-        }
-
-        if(this->send_event_ == NULL)
-        {
-            this->send_event_ = new MRequest[this->pm_->nsend_];
-        }
-#endif
-
         this->object_name_ = filename;
 
         this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
                                              this->pm_->boundary_index_);
-
-        // Allocate ghost vector
-        this->vector_ghost_.Allocate("ghost", this->pm_->GetNumReceivers());
-
-        // Allocate send and receive buffer
-        allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
-        allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
     }
 
     template <typename ValueType>
@@ -760,76 +661,6 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalVector<ValueType>::UpdateGhostValuesAsync_(const GlobalVector<ValueType>& in)
-    {
-        log_debug(this, "GlobalVector::UpdateGhostValuesAsync_()", "#*# begin", (const void*&)in);
-
-#ifdef SUPPORT_MULTINODE
-        int tag = 0;
-
-        // async recv boundary from neighbors
-        for(int i = 0; i < this->pm_->nrecv_; ++i)
-        {
-            // nnz that we receive from process i
-            int boundary_nnz
-                = this->pm_->recv_offset_index_[i + 1] - this->pm_->recv_offset_index_[i];
-
-            // if this has ghost values that belong to process i
-            if(boundary_nnz > 0)
-            {
-                communication_async_recv(this->recv_boundary_ + this->pm_->recv_offset_index_[i],
-                                         boundary_nnz,
-                                         this->pm_->recvs_[i],
-                                         tag,
-                                         &this->recv_event_[i],
-                                         this->pm_->comm_);
-            }
-        }
-
-        // prepare send buffer
-        in.vector_interior_.GetIndexValues(this->send_boundary_);
-
-        // async send boundary to neighbors
-        for(int i = 0; i < this->pm_->nsend_; ++i)
-        {
-            // nnz that we send to process i
-            int boundary_nnz
-                = this->pm_->send_offset_index_[i + 1] - this->pm_->send_offset_index_[i];
-
-            // if process i has ghost values that belong to this
-            if(boundary_nnz > 0)
-            {
-                communication_async_send(this->send_boundary_ + this->pm_->send_offset_index_[i],
-                                         boundary_nnz,
-                                         this->pm_->sends_[i],
-                                         tag,
-                                         &this->send_event_[i],
-                                         this->pm_->comm_);
-            }
-        }
-#endif
-
-        log_debug(this, "GlobalVector::UpdateGhostValuesAsync_()", "#*# end");
-    }
-
-    template <typename ValueType>
-    void GlobalVector<ValueType>::UpdateGhostValuesSync_(void)
-    {
-        log_debug(this, "GlobalVector::UpdateGhostValuesSync_()", "#*# begin");
-
-#ifdef SUPPORT_MULTINODE
-        // Sync before updating ghost values
-        communication_syncall(this->pm_->nrecv_, this->recv_event_);
-        communication_syncall(this->pm_->nsend_, this->send_event_);
-
-        this->vector_ghost_.SetContinuousValues(
-            0, this->pm_->GetNumReceivers(), this->recv_boundary_);
-#endif
-
-        log_debug(this, "GlobalVector::UpdateGhostValuesSync_()", "#*# end");
-    }
-
-    template <typename ValueType>
     void GlobalVector<ValueType>::Power(double power)
     {
         log_debug(this, "GlobalVector::Power()", power);
@@ -852,14 +683,12 @@ namespace rocalution
     template <typename ValueType>
     bool GlobalVector<ValueType>::is_host_(void) const
     {
-        assert(this->vector_interior_.is_host_() == this->vector_ghost_.is_host_());
         return this->vector_interior_.is_host_();
     }
 
     template <typename ValueType>
     bool GlobalVector<ValueType>::is_accel_(void) const
     {
-        assert(this->vector_interior_.is_accel_() == this->vector_ghost_.is_accel_());
         return this->vector_interior_.is_accel_();
     }
 

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,8 +47,10 @@ namespace rocalution
         this->rank_      = -1;
         this->num_procs_ = -1;
 
-        this->global_size_ = 0;
-        this->local_size_  = 0;
+        this->global_nrow_ = 0;
+        this->global_ncol_ = 0;
+        this->local_nrow_  = 0;
+        this->local_ncol_  = 0;
 
         this->recv_index_size_ = 0;
         this->send_index_size_ = 0;
@@ -85,8 +87,10 @@ namespace rocalution
 
     void ParallelManager::Clear(void)
     {
-        this->global_size_ = 0;
-        this->local_size_  = 0;
+        this->global_nrow_ = 0;
+        this->global_ncol_ = 0;
+        this->local_nrow_  = 0;
+        this->local_ncol_  = 0;
 
         if(this->nrecv_ > 0)
         {
@@ -126,33 +130,92 @@ namespace rocalution
 
     void ParallelManager::SetGlobalSize(IndexType2 size)
     {
-        assert(size <= std::numeric_limits<IndexType2>::max());
-        assert(size > 0);
-        assert(size >= (IndexType2)this->local_size_);
+        this->SetGlobalNrow(size);
+        this->SetGlobalNcol(size);
+    }
 
-        this->global_size_ = size;
+    void ParallelManager::SetGlobalNrow(IndexType2 nrow)
+    {
+        assert(nrow <= std::numeric_limits<IndexType2>::max());
+        assert(nrow > 0);
+        assert(nrow >= (IndexType2)this->local_nrow_);
+
+        this->global_nrow_ = nrow;
+    }
+
+    void ParallelManager::SetGlobalNcol(IndexType2 ncol)
+    {
+        assert(ncol <= std::numeric_limits<IndexType2>::max());
+        assert(ncol > 0);
+        assert(ncol >= (IndexType2)this->local_ncol_);
+
+        this->global_ncol_ = ncol;
     }
 
     void ParallelManager::SetLocalSize(int size)
     {
-        assert(size > 0);
-        assert(size <= (IndexType2)this->global_size_);
+        this->SetLocalNrow(size);
+        this->SetLocalNcol(size);
+    }
 
-        this->local_size_ = size;
+    void ParallelManager::SetLocalNrow(int nrow)
+    {
+        assert(nrow > 0);
+        assert((IndexType2)nrow <= this->global_nrow_);
+
+        this->local_nrow_ = nrow;
+    }
+
+    void ParallelManager::SetLocalNcol(int ncol)
+    {
+        assert(ncol > 0);
+        assert((IndexType2)ncol <= this->global_ncol_);
+
+        this->local_ncol_ = ncol;
     }
 
     IndexType2 ParallelManager::GetGlobalSize(void) const
     {
         assert(this->Status());
+        assert(this->global_nrow_ == this->global_ncol_);
 
-        return this->global_size_;
+        return this->global_nrow_;
+    }
+
+    IndexType2 ParallelManager::GetGlobalNrow(void) const
+    {
+        assert(this->Status());
+
+        return this->global_nrow_;
+    }
+
+    IndexType2 ParallelManager::GetGlobalNcol(void) const
+    {
+        assert(this->Status());
+
+        return this->global_ncol_;
     }
 
     int ParallelManager::GetLocalSize(void) const
     {
         assert(this->Status());
+        assert(this->local_nrow_ == this->local_ncol_);
 
-        return this->local_size_;
+        return this->local_nrow_;
+    }
+
+    int ParallelManager::GetLocalNrow(void) const
+    {
+        assert(this->Status());
+
+        return this->local_nrow_;
+    }
+
+    int ParallelManager::GetLocalNcol(void) const
+    {
+        assert(this->Status());
+
+        return this->local_ncol_;
     }
 
     int ParallelManager::GetNumReceivers(void) const
@@ -247,8 +310,10 @@ namespace rocalution
         // clang-format off
     if(this->comm_ == NULL) return false;
     if(this->rank_ < 0) return false;
-    if(this->global_size_ == 0) return false;
-    if(this->local_size_ < 0) return false;
+    if(this->global_nrow_ == 0) return false;
+    if(this->global_ncol_ == 0) return false;
+    if(this->local_nrow_ < 0) return false;
+    if(this->local_ncol_ < 0) return false;
     if(this->nrecv_ < 0) return false;
     if(this->nsend_ < 0) return false;
     if(this->nrecv_ > 0 && this->recvs_ == NULL) return false;
@@ -313,9 +378,13 @@ namespace rocalution
         file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
         file << "#RANK\n" << this->rank_ << std::endl;
         file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
-        file << "#GLOBAL_SIZE\n" << this->global_size_ << std::endl;
+        file << "#GLOBAL_NROW\n" << this->global_nrow_ << std::endl;
         file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
-        file << "#LOCAL_SIZE\n" << this->local_size_ << std::endl;
+        file << "#GLOBAL_NCOL\n" << this->global_ncol_ << std::endl;
+        file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
+        file << "#LOCAL_NROW\n" << this->local_nrow_ << std::endl;
+        file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
+        file << "#LOCAL_NCOL\n" << this->local_ncol_ << std::endl;
         file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
         file << "#BOUNDARY_SIZE\n" << this->send_index_size_ << std::endl;
         file << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
@@ -418,11 +487,29 @@ namespace rocalution
             }
             if(line.find("#GLOBAL_SIZE") != std::string::npos)
             {
-                file >> this->global_size_;
+                file >> this->global_nrow_;
+                this->global_ncol_ = this->global_nrow_;
+            }
+            if(line.find("#GLOBAL_NROW") != std::string::npos)
+            {
+                file >> this->global_nrow_;
+            }
+            if(line.find("#GLOBAL_NCOL") != std::string::npos)
+            {
+                file >> this->global_ncol_;
             }
             if(line.find("#LOCAL_SIZE") != std::string::npos)
             {
-                file >> this->local_size_;
+                file >> this->local_nrow_;
+                this->local_ncol_ = this->local_nrow_;
+            }
+            if(line.find("#LOCAL_NROW") != std::string::npos)
+            {
+                file >> this->local_nrow_;
+            }
+            if(line.find("#LOCAL_NCOL") != std::string::npos)
+            {
+                file >> this->local_ncol_;
             }
             if(line.find("#BOUNDARY_SIZE") != std::string::npos)
             {

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -375,8 +375,10 @@ void distribute_matrix(const MPI_Comm*          comm,
     }
 
     pm->SetMPICommunicator(comm);
-    pm->SetGlobalSize(global_nrow);
-    pm->SetLocalSize(local_size[rank]);
+    pm->SetGlobalNrow(global_nrow);
+    pm->SetGlobalNcol(global_nrow);
+    pm->SetLocalNrow(local_size[rank]);
+    pm->SetLocalNcol(local_size[rank]);
     pm->SetBoundaryIndex(boundary_nnz, bnd.data());
     pm->SetReceivers(neighbors, recv.data(), recv_offset.data());
     pm->SetSenders(neighbors, sender.data(), send_offset.data());
