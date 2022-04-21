@@ -27,8 +27,8 @@
 #include "../backend_manager.hpp"
 #include "../matrix_formats.hpp"
 
-#include <rocblas.h>
-#include <rocsparse.h>
+#include <rocblas/rocblas.h>
+#include <rocsparse/rocsparse.h>
 
 namespace rocalution
 {

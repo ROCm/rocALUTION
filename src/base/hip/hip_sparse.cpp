@@ -26,7 +26,7 @@
 #include "../../utils/log.hpp"
 
 #include <complex>
-#include <rocsparse.h>
+#include <rocsparse/rocsparse.h>
 
 namespace rocalution
 {
