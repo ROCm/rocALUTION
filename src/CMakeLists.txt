@@ -160,7 +160,7 @@ if(WIN32 AND BUILD_CLIENTS AND BUILD_SHARED_LIBS)
 endif()
 
 #Install the warpper for header filers for backward compatibility
-if(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY)
+if(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY AND NOT WIN32) 
   rocm_wrap_header_file(
     ${PUBLIC_HEADERS}
     GUARDS SYMLINK WRAPPER
