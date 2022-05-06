@@ -30,6 +30,14 @@
 
 #include "random.hpp"
 
+template <std::size_t N, typename T>
+static constexpr std::size_t countof(T (&)[N])
+{
+    return N;
+}
+
+#define rocalution_bench_errmsg std::cerr << "// rocalution_bench_error msg: "
+
 extern int device;
 
 /* ============================================================================================ */
@@ -184,8 +192,6 @@ int gen_permuted_identity(int ndim, int** rowptr, int** col, T** val)
     *rowptr = new int[n + 1];
     *col    = new int[nnz_mat];
     *val    = new T[nnz_mat];
-
-    int nnz = 0;
 
     for(int i = 0; i < n + 1; i++)
     {

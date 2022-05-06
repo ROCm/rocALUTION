@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018-2020 Advanced Micro Devices, Inc.
+# Copyright (c) 2022 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,3 +21,35 @@
 #
 # ########################################################################
 
+set(ROCALUTION_BENCHMARK_SOURCES
+  client.cpp
+  rocalution_arguments_config.cpp
+  rocalution_bench.cpp
+  rocalution_bench_solver_parameters.cpp
+  rocalution_bench_solver_results.cpp
+  rocalution_enum_coarsening_strategy.cpp
+  rocalution_enum_directsolver.cpp
+  rocalution_enum_itsolver.cpp
+  rocalution_enum_matrix_init.cpp
+  rocalution_enum_preconditioner.cpp
+  rocalution_enum_smoother.cpp
+  rocalution_bench_cmdlines.cpp
+  rocalution_bench_app.cpp
+)
+
+add_executable(rocalution-bench ${ROCALUTION_BENCHMARK_SOURCES} ${ROCALUTION_CLIENTS_COMMON})
+
+# Target compile options
+target_compile_options(rocalution-bench PRIVATE -Wno-unused-command-line-argument -Wall)
+
+# Internal common header
+target_include_directories(rocalution-bench PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
+
+# Target link libraries
+target_link_libraries(rocalution-bench PRIVATE roc::rocalution)
+
+if(NOT TARGET rocalution)
+  set_target_properties(rocalution-bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/staging")
+else()
+  set_target_properties(rocalution-bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/clients/staging")
+endif()
