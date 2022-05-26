@@ -2,7 +2,7 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION 2.0.3
+## rocALUTION 2.0.3 for ROCm 5.2.0
 ### Added
 - Packages for test and benchmark executables on all supported OSes using CPack.
 
