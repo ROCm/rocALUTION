@@ -60,12 +60,6 @@ endforeach()
 
 source_group("Header Files\\Public" FILES ${PUBLIC_HEADERS})
 
-include(GNUInstallDirs)
-
-set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
-set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
-set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR})
-
 # rocALUTION source
 set(SOURCE
     ${BASE_SOURCES}
@@ -164,13 +158,13 @@ if(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY)
   rocm_wrap_header_file(
     ${PUBLIC_HEADERS}
     GUARDS SYMLINK WRAPPER
-    WRAPPER_LOCATIONS rocalution/include
+    WRAPPER_LOCATIONS rocalution/${CMAKE_INSTALL_INCLUDEDIR}
     OUTPUT_LOCATIONS rocalution/wrapper/include
   )
   rocm_wrap_header_file(
     version.hpp export.hpp
     GUARDS SYMLINK WRAPPER
-    WRAPPER_LOCATIONS rocalution/include
+    WRAPPER_LOCATIONS rocalution/${CMAKE_INSTALL_INCLUDEDIR}
     OUTPUT_LOCATIONS rocalution/wrapper/include
   )
   rocm_install(
