@@ -520,7 +520,7 @@ pushd .
     cmake_common_options="${cmake_common_options} -DCPACK_SET_DESTDIR=OFF -DCPACK_PACKAGING_INSTALL_PREFIX=/opt/rocm"
   fi
 
-  #Setting default GNU LIBDIR in build scripts as per architecture board decision
+  #Setting default GNU LIBDIR in build scripts as per arch board recommendation
   cmake_common_options="${cmake_common_options} -DCMAKE_INSTALL_LIBDIR=lib"
 
   # Build library with AMD toolchain because of existense of device kernels
