@@ -53,3 +53,5 @@ if(NOT TARGET rocalution)
 else()
   set_target_properties(rocalution-bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/clients/staging")
 endif()
+
+rocm_install(TARGETS rocalution-bench COMPONENT benchmarks)
