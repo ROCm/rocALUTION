@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2022 Advanced Micro Devices, Inc.
+ * Copyright (C) 2022 Advanced Micro Devices, Inc. All rights Reserved.
  * ************************************************************************ */
 // This emulates the required functionality of boost::program_options
 

@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018-2022 Advanced Micro Devices, Inc.
+# Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -112,7 +112,7 @@ endif()
 
 
 # Setup version
-set(VERSION_STRING "2.1.0")
+set(VERSION_STRING "2.1.1")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 
