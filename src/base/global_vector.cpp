@@ -568,7 +568,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif
@@ -585,7 +585,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif
@@ -611,7 +611,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif
@@ -628,7 +628,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif

@@ -234,9 +234,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -289,9 +289,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -392,9 +392,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -493,9 +493,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -559,9 +559,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -625,9 +625,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -692,9 +692,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -760,9 +760,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -1273,9 +1273,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -1398,9 +1398,9 @@ namespace rocalution
         IndexType2 nnz_local;
         IndexType2 nnz_ghost;
 
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_interior_.GetNnz(), &nnz_local, this->pm_->comm_);
-        communication_allreduce_single_sum(
+        communication_sync_allreduce_single_sum(
             this->matrix_ghost_.GetNnz(), &nnz_ghost, this->pm_->comm_);
 
         this->nnz_ = nnz_local + nnz_ghost;
@@ -1813,7 +1813,7 @@ namespace rocalution
 
         // Get the global size
         int global_size;
-        communication_allreduce_single_sum(nrow, &global_size, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(nrow, &global_size, this->pm_->comm_);
         pm->SetGlobalNrow(global_size);
         pm->SetGlobalNcol(global_size);
 

@@ -29,25 +29,26 @@
 
 namespace rocalution
 {
-
+    // Allreduce single SUM - SYNC
     template <>
-    void communication_allreduce_single_sum(double local, double* global, const void* comm)
+    void communication_sync_allreduce_single_sum(double local, double* global, const void* comm)
     {
         int status = MPI_Allreduce(&local, global, 1, MPI_DOUBLE, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
     template <>
-    void communication_allreduce_single_sum(float local, float* global, const void* comm)
+    void communication_sync_allreduce_single_sum(float local, float* global, const void* comm)
     {
         int status = MPI_Allreduce(&local, global, 1, MPI_FLOAT, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
+#ifdef SUPPORT_COMPLEX
     template <>
-    void communication_allreduce_single_sum(std::complex<double>  local,
-                                            std::complex<double>* global,
-                                            const void*           comm)
+    void communication_sync_allreduce_single_sum(std::complex<double>  local,
+                                                 std::complex<double>* global,
+                                                 const void*           comm)
     {
         int status
             = MPI_Allreduce(&local, global, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, *(MPI_Comm*)comm);
@@ -55,71 +56,462 @@ namespace rocalution
     }
 
     template <>
-    void communication_allreduce_single_sum(std::complex<float>  local,
-                                            std::complex<float>* global,
-                                            const void*          comm)
+    void communication_sync_allreduce_single_sum(std::complex<float>  local,
+                                                 std::complex<float>* global,
+                                                 const void*          comm)
     {
-        // TODO check the type
         int status = MPI_Allreduce(&local, global, 1, MPI_COMPLEX, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
+#endif
 
     template <>
-    void communication_allreduce_single_sum(int local, int* global, const void* comm)
+    void communication_sync_allreduce_single_sum(int local, int* global, const void* comm)
     {
         int status = MPI_Allreduce(&local, global, 1, MPI_INT, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
     template <>
-    void communication_allreduce_single_sum(unsigned int  local,
-                                            unsigned int* global,
-                                            const void*   comm)
+    void communication_sync_allreduce_single_sum(unsigned int  local,
+                                                 unsigned int* global,
+                                                 const void*   comm)
     {
         int status = MPI_Allreduce(&local, global, 1, MPI_UNSIGNED, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
     template <>
-    void communication_allreduce_single_sum(long local, long* global, const void* comm)
+    void communication_sync_allreduce_single_sum(long local, long* global, const void* comm)
     {
         int status = MPI_Allreduce(&local, global, 1, MPI_LONG, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
     template <>
-    void communication_allreduce_single_sum(unsigned long  local,
-                                            unsigned long* global,
-                                            const void*    comm)
+    void communication_sync_allreduce_single_sum(unsigned long  local,
+                                                 unsigned long* global,
+                                                 const void*    comm)
     {
         int status = MPI_Allreduce(&local, global, 1, MPI_UNSIGNED_LONG, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
     template <>
-    void communication_allreduce_single_sum(long long local, long long* global, const void* comm)
+    void communication_sync_allreduce_single_sum(long long   local,
+                                                 long long*  global,
+                                                 const void* comm)
     {
         int status = MPI_Allreduce(&local, global, 1, MPI_LONG_LONG, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
     template <>
-    void communication_allreduce_single_sum(unsigned long long  local,
-                                            unsigned long long* global,
-                                            const void*         comm)
+    void communication_sync_allreduce_single_sum(unsigned long long  local,
+                                                 unsigned long long* global,
+                                                 const void*         comm)
     {
         int status
             = MPI_Allreduce(&local, global, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, *(MPI_Comm*)comm);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
+    // Allreduce single MAX - SYNC
+    template <>
+    void communication_sync_allreduce_single_max(double local, double* global, const void* comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_DOUBLE, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allreduce_single_max(float local, float* global, const void* comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_FLOAT, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+#ifdef SUPPORT_COMPLEX
+    template <>
+    void communication_sync_allreduce_single_max(std::complex<double>  local,
+                                                 std::complex<double>* global,
+                                                 const void*           comm)
+    {
+        int status
+            = MPI_Allreduce(&local, global, 1, MPI_DOUBLE_COMPLEX, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allreduce_single_max(std::complex<float>  local,
+                                                 std::complex<float>* global,
+                                                 const void*          comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_COMPLEX, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+#endif
+
+    template <>
+    void communication_sync_allreduce_single_max(int local, int* global, const void* comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_INT, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allreduce_single_max(unsigned int  local,
+                                                 unsigned int* global,
+                                                 const void*   comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_UNSIGNED, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allreduce_single_max(long local, long* global, const void* comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_LONG, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allreduce_single_max(unsigned long  local,
+                                                 unsigned long* global,
+                                                 const void*    comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_UNSIGNED_LONG, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allreduce_single_max(long long   local,
+                                                 long long*  global,
+                                                 const void* comm)
+    {
+        int status = MPI_Allreduce(&local, global, 1, MPI_LONG_LONG, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allreduce_single_max(unsigned long long  local,
+                                                 unsigned long long* global,
+                                                 const void*         comm)
+    {
+        int status
+            = MPI_Allreduce(&local, global, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    // AlltoAll single - SYNC
+    template <>
+    void communication_sync_alltoall_single(double* send, double* recv, const void* comm)
+    {
+        int status = MPI_Alltoall(send, 1, MPI_DOUBLE, recv, 1, MPI_DOUBLE, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_alltoall_single(float* send, float* recv, const void* comm)
+    {
+        int status = MPI_Alltoall(send, 1, MPI_FLOAT, recv, 1, MPI_FLOAT, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+#ifdef SUPPORT_COMPLEX
+    template <>
+    void communication_sync_alltoall_single(std::complex<double>* send,
+                                            std::complex<double>* recv,
+                                            const void*           comm)
+    {
+        int status = MPI_Alltoall(
+            send, 1, MPI_DOUBLE_COMPLEX, recv, 1, MPI_DOUBLE_COMPLEX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_alltoall_single(std::complex<float>* send,
+                                            std::complex<float>* recv,
+                                            const void*          comm)
+    {
+        int status = MPI_Alltoall(send, 1, MPI_COMPLEX, recv, 1, MPI_COMPLEX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+#endif
+
+    template <>
+    void communication_sync_alltoall_single(int* send, int* recv, const void* comm)
+    {
+        int status = MPI_Alltoall(send, 1, MPI_INT, recv, 1, MPI_INT, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void
+        communication_sync_alltoall_single(unsigned int* send, unsigned int* recv, const void* comm)
+    {
+        int status = MPI_Alltoall(send, 1, MPI_UNSIGNED, recv, 1, MPI_UNSIGNED, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_alltoall_single(long* send, long* recv, const void* comm)
+    {
+        int status = MPI_Alltoall(send, 1, MPI_LONG, recv, 1, MPI_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_alltoall_single(unsigned long* send,
+                                            unsigned long* recv,
+                                            const void*    comm)
+    {
+        int status = MPI_Alltoall(
+            send, 1, MPI_UNSIGNED_LONG, recv, 1, MPI_UNSIGNED_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_alltoall_single(long long* send, long long* recv, const void* comm)
+    {
+        int status = MPI_Alltoall(send, 1, MPI_LONG_LONG, recv, 1, MPI_LONG_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_alltoall_single(unsigned long long* send,
+                                            unsigned long long* recv,
+                                            const void*         comm)
+    {
+        int status = MPI_Alltoall(
+            send, 1, MPI_UNSIGNED_LONG_LONG, recv, 1, MPI_UNSIGNED_LONG_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    // Allgather single - SYNC
+    template <>
+    void communication_sync_allgather_single(double send, double* recv, const void* comm)
+    {
+        int status = MPI_Allgather(&send, 1, MPI_DOUBLE, recv, 1, MPI_DOUBLE, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allgather_single(float send, float* recv, const void* comm)
+    {
+        int status = MPI_Allgather(&send, 1, MPI_FLOAT, recv, 1, MPI_FLOAT, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+#ifdef SUPPORT_COMPLEX
+    template <>
+    void communication_sync_allgather_single(std::complex<double>  send,
+                                             std::complex<double>* recv,
+                                             const void*           comm)
+    {
+        int status = MPI_Allgather(
+            &send, 1, MPI_DOUBLE_COMPLEX, recv, 1, MPI_DOUBLE_COMPLEX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allgather_single(std::complex<float>  send,
+                                             std::complex<float>* recv,
+                                             const void*          comm)
+    {
+        int status = MPI_Allgather(&send, 1, MPI_COMPLEX, recv, 1, MPI_COMPLEX, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+#endif
+
+    template <>
+    void communication_sync_allgather_single(int send, int* recv, const void* comm)
+    {
+        int status = MPI_Allgather(&send, 1, MPI_INT, recv, 1, MPI_INT, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void
+        communication_sync_allgather_single(unsigned int send, unsigned int* recv, const void* comm)
+    {
+        int status = MPI_Allgather(&send, 1, MPI_UNSIGNED, recv, 1, MPI_UNSIGNED, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allgather_single(long send, long* recv, const void* comm)
+    {
+        int status = MPI_Allgather(&send, 1, MPI_LONG, recv, 1, MPI_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allgather_single(unsigned long  send,
+                                             unsigned long* recv,
+                                             const void*    comm)
+    {
+        int status = MPI_Allgather(
+            &send, 1, MPI_UNSIGNED_LONG, recv, 1, MPI_UNSIGNED_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allgather_single(long long send, long long* recv, const void* comm)
+    {
+        int status
+            = MPI_Allgather(&send, 1, MPI_LONG_LONG, recv, 1, MPI_LONG_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_sync_allgather_single(unsigned long long  send,
+                                             unsigned long long* recv,
+                                             const void*         comm)
+    {
+        int status = MPI_Allgather(
+            &send, 1, MPI_UNSIGNED_LONG_LONG, recv, 1, MPI_UNSIGNED_LONG_LONG, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    // Allgather single - ASYNC
+    template <>
+    void communication_async_allgather_single(double      send,
+                                              double*     recv,
+                                              MRequest*   request,
+                                              const void* comm)
+    {
+        int status = MPI_Iallgather(
+            &send, 1, MPI_DOUBLE, recv, 1, MPI_DOUBLE, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_allgather_single(float       send,
+                                              float*      recv,
+                                              MRequest*   request,
+                                              const void* comm)
+    {
+        int status = MPI_Iallgather(
+            &send, 1, MPI_FLOAT, recv, 1, MPI_FLOAT, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+#ifdef SUPPORT_COMPLEX
+    template <>
+    void communication_async_allgather_single(std::complex<double>  send,
+                                              std::complex<double>* recv,
+                                              MRequest*             request,
+                                              const void*           comm)
+    {
+        int status = MPI_Iallgather(&send,
+                                    1,
+                                    MPI_DOUBLE_COMPLEX,
+                                    recv,
+                                    1,
+                                    MPI_DOUBLE_COMPLEX,
+                                    *(MPI_Comm*)comm,
+                                    &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_allgather_single(std::complex<float>  send,
+                                              std::complex<float>* recv,
+                                              MRequest*            request,
+                                              const void*          comm)
+    {
+        int status = MPI_Iallgather(
+            &send, 1, MPI_COMPLEX, recv, 1, MPI_COMPLEX, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+#endif
+
+    template <>
+    void communication_async_allgather_single(int         send,
+                                              int*        recv,
+                                              MRequest*   request,
+                                              const void* comm)
+    {
+        int status
+            = MPI_Iallgather(&send, 1, MPI_INT, recv, 1, MPI_INT, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_allgather_single(unsigned int  send,
+                                              unsigned int* recv,
+                                              MRequest*     request,
+                                              const void*   comm)
+    {
+        int status = MPI_Iallgather(
+            &send, 1, MPI_UNSIGNED, recv, 1, MPI_UNSIGNED, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_allgather_single(long        send,
+                                              long*       recv,
+                                              MRequest*   request,
+                                              const void* comm)
+    {
+        int status = MPI_Iallgather(
+            &send, 1, MPI_LONG, recv, 1, MPI_LONG, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_allgather_single(unsigned long  send,
+                                              unsigned long* recv,
+                                              MRequest*      request,
+                                              const void*    comm)
+    {
+        int status = MPI_Iallgather(&send,
+                                    1,
+                                    MPI_UNSIGNED_LONG,
+                                    recv,
+                                    1,
+                                    MPI_UNSIGNED_LONG,
+                                    *(MPI_Comm*)comm,
+                                    &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_allgather_single(long long   send,
+                                              long long*  recv,
+                                              MRequest*   request,
+                                              const void* comm)
+    {
+        int status = MPI_Iallgather(
+            &send, 1, MPI_LONG_LONG, recv, 1, MPI_LONG_LONG, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_allgather_single(unsigned long long  send,
+                                              unsigned long long* recv,
+                                              MRequest*           request,
+                                              const void*         comm)
+    {
+        int status = MPI_Iallgather(&send,
+                                    1,
+                                    MPI_UNSIGNED_LONG_LONG,
+                                    recv,
+                                    1,
+                                    MPI_UNSIGNED_LONG_LONG,
+                                    *(MPI_Comm*)comm,
+                                    &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    // Receive - ASYNC
     template <>
     void communication_async_recv(
         double* buf, int count, int source, int tag, MRequest* request, const void* comm)
     {
         int status
             = MPI_Irecv(buf, count, MPI_DOUBLE, source, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
@@ -128,10 +520,10 @@ namespace rocalution
         float* buf, int count, int source, int tag, MRequest* request, const void* comm)
     {
         int status = MPI_Irecv(buf, count, MPI_FLOAT, source, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
+#ifdef SUPPORT_COMPLEX
     template <>
     void communication_async_recv(std::complex<double>* buf,
                                   int                   count,
@@ -142,7 +534,6 @@ namespace rocalution
     {
         int status = MPI_Irecv(
             buf, count, MPI_DOUBLE_COMPLEX, source, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
@@ -156,25 +547,24 @@ namespace rocalution
     {
         int status
             = MPI_Irecv(buf, count, MPI_COMPLEX, source, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
+#endif
 
     template <>
     void communication_async_recv(
         int* buf, int count, int source, int tag, MRequest* request, const void* comm)
     {
         int status = MPI_Irecv(buf, count, MPI_INT, source, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
+    // Send - ASYNC
     template <>
     void communication_async_send(
         double* buf, int count, int dest, int tag, MRequest* request, const void* comm)
     {
         int status = MPI_Isend(buf, count, MPI_DOUBLE, dest, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
@@ -183,10 +573,10 @@ namespace rocalution
         float* buf, int count, int dest, int tag, MRequest* request, const void* comm)
     {
         int status = MPI_Isend(buf, count, MPI_FLOAT, dest, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
+#ifdef SUPPORT_COMPLEX
     template <>
     void communication_async_send(std::complex<double>* buf,
                                   int                   count,
@@ -197,7 +587,6 @@ namespace rocalution
     {
         int status
             = MPI_Isend(buf, count, MPI_DOUBLE_COMPLEX, dest, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
@@ -206,76 +595,29 @@ namespace rocalution
         std::complex<float>* buf, int count, int dest, int tag, MRequest* request, const void* comm)
     {
         int status = MPI_Isend(buf, count, MPI_COMPLEX, dest, tag, *(MPI_Comm*)comm, &request->req);
-
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
+#endif
 
     template <>
     void communication_async_send(
         int* buf, int count, int dest, int tag, MRequest* request, const void* comm)
     {
         int status = MPI_Isend(buf, count, MPI_INT, dest, tag, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
 
+    // Synchronization
+    void communication_sync(MRequest* request)
+    {
+        int status = MPI_Wait(&request->req, MPI_STATUSES_IGNORE);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 
     void communication_syncall(int count, MRequest* requests)
     {
-        int status = MPI_Waitall(count, &requests[0].req, MPI_STATUSES_IGNORE);
-
+        int status = MPI_Waitall(count, &requests->req, MPI_STATUSES_IGNORE);
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
-
-    template void
-        communication_allreduce_single_sum<double>(double local, double* global, const void* comm);
-    template void
-        communication_allreduce_single_sum<float>(float local, float* global, const void* comm);
-
-#ifdef SUPPORT_COMPLEX
-    template void communication_allreduce_single_sum<std::complex<double>>(
-        std::complex<double> local, std::complex<double>* global, const void* comm);
-    template void communication_allreduce_single_sum<std::complex<float>>(
-        std::complex<float> local, std::complex<float>* global, const void* comm);
-#endif
-
-    template void communication_async_recv<double>(
-        double* buf, int count, int source, int tag, MRequest* request, const void* comm);
-    template void communication_async_recv<float>(
-        float* buf, int count, int source, int tag, MRequest* request, const void* comm);
-
-#ifdef SUPPORT_COMPLEX
-    template void communication_async_recv<std::complex<double>>(std::complex<double>* buf,
-                                                                 int                   count,
-                                                                 int                   source,
-                                                                 int                   tag,
-                                                                 MRequest*             request,
-                                                                 const void*           comm);
-    template void communication_async_recv<std::complex<float>>(std::complex<float>* buf,
-                                                                int                  count,
-                                                                int                  source,
-                                                                int                  tag,
-                                                                MRequest*            request,
-                                                                const void*          comm);
-#endif
-
-    template void communication_async_send<double>(
-        double* buf, int count, int dest, int tag, MRequest* request, const void* comm);
-    template void communication_async_send<float>(
-        float* buf, int count, int dest, int tag, MRequest* request, const void* comm);
-
-#ifdef SUPPORT_COMPLEX
-    template void communication_async_send<std::complex<double>>(std::complex<double>* buf,
-                                                                 int                   count,
-                                                                 int                   dest,
-                                                                 int                   tag,
-                                                                 MRequest*             request,
-                                                                 const void*           comm);
-    template void communication_async_send<std::complex<float>>(std::complex<float>* buf,
-                                                                int                  count,
-                                                                int                  dest,
-                                                                int                  tag,
-                                                                MRequest*            request,
-                                                                const void*          comm);
-#endif
 
 } // namespace rocalution

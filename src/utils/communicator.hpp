@@ -21,7 +21,7 @@
  *
  * ************************************************************************ */
 
-#ifndef RCOALUTION_UTILS_COMMUNICATOR_HPP_
+#ifndef ROCALUTION_UTILS_COMMUNICATOR_HPP_
 #define ROCALUTION_UTILS_COMMUNICATOR_HPP_
 
 #include <mpi.h>
@@ -34,10 +34,27 @@ namespace rocalution
         MPI_Request req;
     };
 
-    // TODO make const what ever possible
+    template <typename ValueType>
+    void communication_sync_allreduce_single_sum(ValueType   local,
+                                                 ValueType*  global,
+                                                 const void* comm);
 
     template <typename ValueType>
-    void communication_allreduce_single_sum(ValueType local, ValueType* global, const void* comm);
+    void communication_sync_allreduce_single_max(ValueType   local,
+                                                 ValueType*  global,
+                                                 const void* comm);
+
+    template <typename ValueType>
+    void communication_sync_alltoall_single(ValueType* send, ValueType* recv, const void* comm);
+
+    template <typename ValueType>
+    void communication_sync_allgather_single(ValueType send, ValueType* recv, const void* comm);
+
+    template <typename ValueType>
+    void communication_async_allgather_single(ValueType   send,
+                                              ValueType*  recv,
+                                              MRequest*   request,
+                                              const void* comm);
 
     template <typename ValueType>
     void communication_async_recv(
@@ -47,6 +64,7 @@ namespace rocalution
     void communication_async_send(
         ValueType* buf, int count, int dest, int tag, MRequest* request, const void* comm);
 
+    void communication_sync(MRequest* request);
     void communication_syncall(int count, MRequest* requests);
 
 } // namespace rocalution
