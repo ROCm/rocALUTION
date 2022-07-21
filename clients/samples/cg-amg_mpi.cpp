@@ -43,13 +43,6 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &num_procs);
 
-    // Check command line parameters
-    if(num_procs < 2)
-    {
-        std::cerr << "Expecting at least 2 MPI processes" << std::endl;
-        return -1;
-    }
-
     if(argc < 2)
     {
         std::cerr << argv[0] << " <global_matrix>" << std::endl;

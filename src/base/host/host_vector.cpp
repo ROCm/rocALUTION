@@ -1359,27 +1359,34 @@ namespace rocalution
     template <typename ValueType>
     void HostVector<ValueType>::SetIndexArray(int size, const int* index)
     {
-        assert(index != NULL);
-        assert(size > 0);
+        assert(size >= 0);
 
         this->index_size_ = size;
 
-        allocate_host(this->index_size_, &this->index_array_);
-
-        for(int i = 0; i < this->index_size_; ++i)
+        if(this->index_size_ > 0)
         {
-            this->index_array_[i] = index[i];
+            assert(index != NULL);
+
+            allocate_host(this->index_size_, &this->index_array_);
+
+            for(int i = 0; i < this->index_size_; ++i)
+            {
+                this->index_array_[i] = index[i];
+            }
         }
     }
 
     template <typename ValueType>
     void HostVector<ValueType>::GetIndexValues(ValueType* values) const
     {
-        assert(values != NULL);
-
-        for(int i = 0; i < this->index_size_; ++i)
+        if(this->index_size_ > 0)
         {
-            values[i] = this->vec_[this->index_array_[i]];
+            assert(values != NULL);
+
+            for(int i = 0; i < this->index_size_; ++i)
+            {
+                values[i] = this->vec_[this->index_array_[i]];
+            }
         }
     }
 
@@ -1414,11 +1421,15 @@ namespace rocalution
         assert(start >= 0);
         assert(end >= start);
         assert(end <= this->GetSize());
-        assert(values != NULL);
 
-        for(int i = start, j = 0; i < end; ++i, ++j)
+        if(end - start > 0)
         {
-            this->vec_[i] = values[j];
+            assert(values != NULL);
+
+            for(int i = start, j = 0; i < end; ++i, ++j)
+            {
+                this->vec_[i] = values[j];
+            }
         }
     }
 

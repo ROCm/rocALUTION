@@ -79,12 +79,6 @@ void testing_local_vector_bad_args(void)
                      ".*Assertion.*index != (NULL|__null)*");
     }
 
-    // GetIndexValues
-    {
-        T* null_T = nullptr;
-        ASSERT_DEATH(vec.GetIndexValues(null_T), ".*Assertion.*values != (NULL|__null)*");
-    }
-
     // SetIndexValues
     {
         T* null_T = nullptr;
@@ -95,13 +89,6 @@ void testing_local_vector_bad_args(void)
     {
         T* null_T = nullptr;
         ASSERT_DEATH(vec.GetContinuousValues(0, 0, null_T),
-                     ".*Assertion.*values != (NULL|__null)*");
-    }
-
-    // SetContinuousValues
-    {
-        T* null_T = nullptr;
-        ASSERT_DEATH(vec.SetContinuousValues(0, 0, null_T),
                      ".*Assertion.*values != (NULL|__null)*");
     }
 

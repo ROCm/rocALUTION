@@ -53,6 +53,8 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
 #endif
 
+        this->pm_ = NULL;
+
         this->object_name_ = "";
 
         this->nnz_ = 0;
@@ -1518,14 +1520,20 @@ namespace rocalution
                   rGsize,
                   ordering);
 
-        // TODO asserts
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.InitialPairwiseAggregation(
+                beta, nc, G, Gsize, rG, rGsize, ordering);
+        }
+        else
+        {
+            LocalMatrix<ValueType> tmp;
+            tmp.CloneFrom(this->matrix_ghost_);
+            tmp.ConvertToCSR();
 
-        LocalMatrix<ValueType> tmp;
-        tmp.CloneFrom(this->matrix_ghost_);
-        tmp.ConvertToCSR();
-
-        this->matrix_interior_.InitialPairwiseAggregation(
-            tmp, beta, nc, G, Gsize, rG, rGsize, ordering);
+            this->matrix_interior_.InitialPairwiseAggregation(
+                tmp, beta, nc, G, Gsize, rG, rGsize, ordering);
+        }
     }
 
     template <typename ValueType>
@@ -1547,14 +1555,20 @@ namespace rocalution
                   rGsize,
                   ordering);
 
-        // TODO asserts
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.FurtherPairwiseAggregation(
+                beta, nc, G, Gsize, rG, rGsize, ordering);
+        }
+        else
+        {
+            LocalMatrix<ValueType> tmp;
+            tmp.CloneFrom(this->matrix_ghost_);
+            tmp.ConvertToCSR();
 
-        LocalMatrix<ValueType> tmp;
-        tmp.CloneFrom(this->matrix_ghost_);
-        tmp.ConvertToCSR();
-
-        this->matrix_interior_.FurtherPairwiseAggregation(
-            tmp, beta, nc, G, Gsize, rG, rGsize, ordering);
+            this->matrix_interior_.FurtherPairwiseAggregation(
+                tmp, beta, nc, G, Gsize, rG, rGsize, ordering);
+        }
     }
 
     template <typename ValueType>
@@ -1582,7 +1596,24 @@ namespace rocalution
         assert(pm != NULL);
         assert(rG != NULL);
 
-        // TODO asserts
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.CoarsenOperator(
+                &Ac->matrix_interior_, pm, nrow, ncol, G, Gsize, rG, rGsize);
+
+            pm->Clear();
+            pm->SetMPICommunicator(this->pm_->comm_);
+
+            pm->SetGlobalNrow(Ac->matrix_interior_.GetM());
+            pm->SetGlobalNcol(Ac->matrix_interior_.GetN());
+
+            pm->SetLocalNrow(Ac->matrix_interior_.GetM());
+            pm->SetLocalNcol(Ac->matrix_interior_.GetN());
+
+            Ac->SetParallelManager(*pm);
+
+            return;
+        }
 
 #ifdef SUPPORT_MULTINODE
         // MPI Requests for sync

@@ -6024,9 +6024,12 @@ namespace rocalution
                 }
             }
 
-            for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+            if(cast_mat->nnz_ > 0)
             {
-                sum += std::abs(cast_mat->mat_.val[j]);
+                for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+                {
+                    sum += std::abs(cast_mat->mat_.val[j]);
+                }
             }
 
             sum *= static_cast<ValueType>(5);
@@ -6157,18 +6160,21 @@ namespace rocalution
                 }
             }
 
-            for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+            if(cast_mat->nnz_ > 0)
             {
-                ValueType val_j = cast_mat->mat_.val[j];
-
-                if(neg == true)
+                for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
                 {
-                    val_j *= static_cast<ValueType>(-1);
-                }
+                    ValueType val_j = cast_mat->mat_.val[j];
 
-                if(val_j > max_a_ij)
-                {
-                    max_a_ij = val_j;
+                    if(neg == true)
+                    {
+                        val_j *= static_cast<ValueType>(-1);
+                    }
+
+                    if(val_j > max_a_ij)
+                    {
+                        max_a_ij = val_j;
+                    }
                 }
             }
 
@@ -6591,18 +6597,21 @@ namespace rocalution
                 }
             }
 
-            for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+            if(cast_mat->nnz_ > 0)
             {
-                ValueType val_j = cast_mat->mat_.val[j];
-
-                if(neg == true)
+                for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
                 {
-                    val_j *= static_cast<ValueType>(-1);
-                }
+                    ValueType val_j = cast_mat->mat_.val[j];
 
-                if(val_j > max_a_ij)
-                {
-                    max_a_ij = val_j;
+                    if(neg == true)
+                    {
+                        val_j *= static_cast<ValueType>(-1);
+                    }
+
+                    if(val_j > max_a_ij)
+                    {
+                        max_a_ij = val_j;
+                    }
                 }
             }
 

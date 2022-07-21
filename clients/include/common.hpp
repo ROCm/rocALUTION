@@ -40,12 +40,29 @@ void distribute_matrix(const MPI_Comm*          comm,
     MPI_Comm_size(*comm, &num_procs);
 
     size_t global_nrow = lmat->GetM();
+    size_t global_ncol = lmat->GetN();
+    size_t global_nnz  = lmat->GetNnz();
 
     int*       global_row_offset = NULL;
     int*       global_col        = NULL;
     ValueType* global_val        = NULL;
 
     lmat->LeaveDataPtrCSR(&global_row_offset, &global_col, &global_val);
+
+    // If we have only a single MPI rank, we are done
+    if(num_procs == 1)
+    {
+        pm->SetMPICommunicator(comm);
+        pm->SetGlobalNrow(global_nrow);
+        pm->SetGlobalNcol(global_ncol);
+        pm->SetLocalNrow(global_nrow);
+        pm->SetLocalNcol(global_ncol);
+
+        gmat->SetParallelManager(*pm);
+        gmat->SetLocalDataPtrCSR(&global_row_offset, &global_col, &global_val, "mat", global_nnz);
+
+        return;
+    }
 
     // Compute local matrix sizes
     std::vector<int> local_size(num_procs);

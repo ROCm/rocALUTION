@@ -1068,8 +1068,8 @@ namespace rocalution
     {
         log_debug(this, "LocalVector::SetIndexArray()", size, index);
 
-        assert(size > 0);
-        assert(index != NULL);
+        assert(size >= 0);
+        assert(index != NULL || size == 0);
 
         this->vector_->SetIndexArray(size, index);
     }
@@ -1078,8 +1078,6 @@ namespace rocalution
     void LocalVector<ValueType>::GetIndexValues(ValueType* values) const
     {
         log_debug(this, "LocalVector::GetIndexValues()", values);
-
-        assert(values != NULL);
 
         this->vector_->GetIndexValues(values);
     }
@@ -1112,10 +1110,10 @@ namespace rocalution
     {
         log_debug(this, "LocalVector::SetContinuousValues()", start, end, values);
 
-        assert(values != NULL);
         assert(start >= 0);
         assert(end >= start);
         assert(end <= this->GetSize());
+        assert(values != NULL || end - start == 0);
 
         this->vector_->SetContinuousValues(start, end, values);
     }

@@ -51,6 +51,8 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
 #endif
 
+        this->pm_ = NULL;
+
         this->object_name_ = "";
     }
 
