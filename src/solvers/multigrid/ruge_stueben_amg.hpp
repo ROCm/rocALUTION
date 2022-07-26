@@ -59,12 +59,12 @@ namespace rocalution
         virtual void Print(void) const;
 
         /** \brief Set coupling strength */
-        ROCALUTION_EXPORT
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release. Use "
                      "SetStrengthThreshold() instead")]]
 #endif
+        ROCALUTION_EXPORT
         void SetCouplingStrength(ValueType eps);
 
         /** \brief Set strength threshold */

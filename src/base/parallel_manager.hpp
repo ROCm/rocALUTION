@@ -71,12 +71,12 @@ namespace rocalution
         }
 
         /** \brief Return the global size */
-        ROCALUTION_EXPORT
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release. Use "
                      "GetGlobalNrow() or GetGlobalNcol() instead")]]
 #endif
+        ROCALUTION_EXPORT
         IndexType2 GetGlobalSize(void) const;
         /** \brief Return the global number of rows */
         ROCALUTION_EXPORT
@@ -85,12 +85,12 @@ namespace rocalution
         ROCALUTION_EXPORT
         IndexType2 GetGlobalNcol(void) const;
         /** \brief Return the local size */
-        ROCALUTION_EXPORT
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release. Use "
                      "GetLocalNrow() or GetLocalNcol() instead")]]
 #endif
+        ROCALUTION_EXPORT
         int GetLocalSize(void) const;
         /** \brief Return the local number of rows */
         ROCALUTION_EXPORT
@@ -110,12 +110,12 @@ namespace rocalution
         int GetNumProcs(void) const;
 
         /** \brief Initialize the global size */
-        ROCALUTION_EXPORT
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release. Use "
                      "SetGlobalNrow() or SetGlobalNcol() instead")]]
 #endif
+        ROCALUTION_EXPORT
         void SetGlobalSize(IndexType2 size);
         /** \brief Initialize the global number of rows */
         ROCALUTION_EXPORT
@@ -124,12 +124,12 @@ namespace rocalution
         ROCALUTION_EXPORT
         void SetGlobalNcol(IndexType2 ncol);
         /** \brief Initialize the local size */
-        ROCALUTION_EXPORT
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release. Use "
                      "SetLocalNrow() or SetLocalNcol() instead")]]
 #endif
+        ROCALUTION_EXPORT
         void SetLocalSize(int size);
         /** \brief Initialize the local number of rows */
         ROCALUTION_EXPORT

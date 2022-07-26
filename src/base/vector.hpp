@@ -64,11 +64,11 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual int GetLocalSize(void) const;
         /** \brief Return the size of the ghost vector */
-        ROCALUTION_EXPORT
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release.")]]
 #endif
+        ROCALUTION_EXPORT
         virtual int GetGhostSize(void) const;
 
         /** \brief Perform a sanity check of the vector
