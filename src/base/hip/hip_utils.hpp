@@ -206,7 +206,7 @@ namespace rocalution
 
     __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
 
-#ifndef __gfx1030__
+#if !defined(__gfx1030__) && !defined(__gfx1031__)
     template <unsigned int WFSIZE>
     static __device__ __forceinline__ void wf_reduce_sum(int* sum)
     {
