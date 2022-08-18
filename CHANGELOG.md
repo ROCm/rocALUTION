@@ -2,6 +2,10 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## rocALUTION
+### Changed
+- Switched GTest death test style to 'threadsafe'
+
 ## rocALUTION 2.1.0 for ROCm 5.3.0
 ### Added
 - Benchmarking tool
