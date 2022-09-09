@@ -37,6 +37,18 @@
 #include <hip/hip_complex.h>
 #endif
 
+#ifndef ROCALUTION_USE_MOVE_DPP
+#if defined(__gfx803__) || \
+    defined(__gfx900__) || \
+    defined(__gfx906__) || \
+    defined(__gfx908__) || \
+    defined(__gfx90a__)
+#define ROCALUTION_USE_MOVE_DPP 1
+#else
+#define ROCALUTION_USE_MOVE_DPP 0
+#endif
+#endif
+
 #define ROCBLAS_HANDLE(handle) *static_cast<rocblas_handle*>(handle)
 #define ROCSPARSE_HANDLE(handle) *static_cast<rocsparse_handle*>(handle)
 
@@ -206,7 +218,7 @@ namespace rocalution
 
     __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
 
-#ifndef __gfx1030__
+#if ROCALUTION_USE_MOVE_DPP
     template <unsigned int WFSIZE>
     static __device__ __forceinline__ void wf_reduce_sum(int* sum)
     {
@@ -223,7 +235,7 @@ namespace rocalution
         if(WFSIZE > 32)
             *sum += __hip_move_dpp(*sum, 0x143, 0xc, 0xf, 0);
     }
-#else
+#else /* ROCALUTION_USE_MOVE_DPP */
     template <unsigned int WFSIZE>
     static __device__ __forceinline__ void wf_reduce_sum(int* sum)
     {
@@ -232,7 +244,7 @@ namespace rocalution
             *sum += __shfl_xor(*sum, i);
         }
     }
-#endif
+#endif /* ROCALUTION_USE_MOVE_DPP */
 
     template <unsigned int WF_SIZE>
     static __device__ __forceinline__ void wf_reduce_sum(float* sum)
