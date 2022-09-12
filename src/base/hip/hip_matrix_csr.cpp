@@ -3354,6 +3354,9 @@ namespace rocalution
 
         this->ApplyAnalysis();
 
+        hipFree(buffer);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
         return true;
     }
 
