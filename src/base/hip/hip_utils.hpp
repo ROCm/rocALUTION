@@ -38,11 +38,8 @@
 #endif
 
 #ifndef ROCALUTION_USE_MOVE_DPP
-#if defined(__gfx803__) || \
-    defined(__gfx900__) || \
-    defined(__gfx906__) || \
-    defined(__gfx908__) || \
-    defined(__gfx90a__)
+#if defined(__gfx803__) || defined(__gfx900__) || defined(__gfx906__) || defined(__gfx908__) \
+    || defined(__gfx90a__)
 #define ROCALUTION_USE_MOVE_DPP 1
 #else
 #define ROCALUTION_USE_MOVE_DPP 0

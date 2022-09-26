@@ -5,6 +5,7 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 ## rocALUTION
 ### Changed
 - Switched GTest death test style to 'threadsafe'
+- Fixed a typo in MPI backend
 
 ## rocALUTION 2.1.0 for ROCm 5.3.0
 ### Added

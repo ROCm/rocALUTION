@@ -114,7 +114,7 @@ namespace rocalution
         {
             int current_rank = 0;
 
-#ifdef SUPPORT_MULITNODE
+#ifdef SUPPORT_MULTINODE
             int status_init;
 
             MPI_Initialized(&status_init);
