@@ -157,6 +157,8 @@ else()
   endif()
 endif()
 
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "\${CPACK_PACKAGING_INSTALL_PREFIX}" )
+
 # Package name
 set(package_name rocalution)
 
