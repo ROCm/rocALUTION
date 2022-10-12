@@ -627,6 +627,18 @@ namespace rocalution
         return true;
     }
 
+    std::string get_arch_rocalution(void)
+    {
+        if(_get_backend_descriptor()->backend == HIP)
+        {
+            return rocalution_get_arch_hip();
+        }
+        else
+        {
+            return "cpu";
+        }
+    }
+
     template AcceleratorVector<float>* _rocalution_init_base_backend_vector(
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
     template AcceleratorVector<double>* _rocalution_init_base_backend_vector(
