@@ -297,6 +297,13 @@ namespace rocalution
         }
     }
 
+    std::string rocalution_get_arch_hip(void)
+    {
+        struct hipDeviceProp_t dev_prop;
+        hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
+        return dev_prop.gcnArchName;
+    }
+
     template <typename ValueType>
     AcceleratorMatrix<ValueType>* _rocalution_init_base_hip_matrix(
         const struct Rocalution_Backend_Descriptor& backend_descriptor,

@@ -47,6 +47,9 @@ namespace rocalution
     /// Sync the device (for async transfers)
     void rocalution_hip_sync(void);
 
+    /// Returns name of device architecture
+    std::string rocalution_get_arch_hip(void);
+
     /// Build (and return) a vector on HIP
     template <typename ValueType>
     AcceleratorVector<ValueType>* _rocalution_init_base_hip_vector(

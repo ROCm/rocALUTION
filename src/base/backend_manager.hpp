@@ -297,6 +297,14 @@ namespace rocalution
     ROCALUTION_EXPORT
     void _rocalution_sync(void);
 
+    /** \ingroup backend_module
+  * \brief get rocALUTION backend architecture
+  * \details
+  * \p get_arch_rocalution returns the name of rocalution's backend architecture
+  */
+    ROCALUTION_EXPORT
+    std::string get_arch_rocalution(void);
+
     size_t _rocalution_add_obj(class RocalutionObj* ptr);
     bool   _rocalution_del_obj(class RocalutionObj* ptr, size_t id);
     void   _rocalution_delete_all_obj(void);
