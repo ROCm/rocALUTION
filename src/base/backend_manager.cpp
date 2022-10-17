@@ -629,11 +629,13 @@ namespace rocalution
 
     std::string get_arch_rocalution(void)
     {
+#ifdef SUPPORT_HIP
         if(_get_backend_descriptor()->backend == HIP)
         {
             return rocalution_get_arch_hip();
         }
         else
+#endif
         {
             return "cpu";
         }
