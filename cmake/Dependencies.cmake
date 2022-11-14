@@ -23,9 +23,6 @@
 
 # Dependencies
 
-# Git
-find_package(Git REQUIRED)
-
 # Find OpenMP package
 find_package(OpenMP)
 if (NOT OPENMP_FOUND)
