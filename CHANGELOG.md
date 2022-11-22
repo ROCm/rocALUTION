@@ -2,9 +2,20 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION
+## rocALUTION 2.1.3 for ROCm 5.4.0
+### Added
+- Added build support for Navi31 and Navi33
+- Added support for non-squared global matrices
+### Improved
+- Fixed a memory leak in MatrixMult on HIP backend
+- Global structures can now be used with a single process
 ### Changed
 - Switched GTest death test style to 'threadsafe'
+- GlobalVector::GetGhostSize() is deprecated and will be removed
+- ParallelManager::GetGlobalSize(), ParallelManager::GetLocalSize(), ParallelManager::SetGlobalSize() and ParallelManager::SetLocalSize() are deprecated and will be removed
+- Vector::GetGhostSize() is deprecated and will be removed
+- Multigrid::SetOperatorFormat(unsigned int) is deprecated and will be removed, use Multigrid::SetOperatorFormat(unsigned int, int) instead
+- RugeStuebenAMG::SetCouplingStrength(ValueType) is deprecated and will be removed, use SetStrengthThreshold(float) instead
 
 ## rocALUTION 2.1.0 for ROCm 5.3.0
 ### Added
