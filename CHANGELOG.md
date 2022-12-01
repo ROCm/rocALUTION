@@ -2,6 +2,12 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## rocALUTION 2.1.5
+### Added
+- Added build support for Navi32
+### Improved
+- Fixed a bug with the backend when HIP support is disabled
+
 ## rocALUTION 2.1.3 for ROCm 5.4.0
 ### Added
 - Added build support for Navi31 and Navi33
