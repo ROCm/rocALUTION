@@ -5104,7 +5104,6 @@ namespace rocalution
                                                          BaseMatrix<ValueType>* restrict) const
     {
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
         HostMatrixCSR<ValueType>* cast_prolong  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
         HostMatrixCSR<ValueType>* cast_restrict = dynamic_cast<HostMatrixCSR<ValueType>*>(restrict);
@@ -5113,7 +5112,6 @@ namespace rocalution
         const HostVector<bool>* cast_S  = dynamic_cast<const HostVector<bool>*>(&S);
 
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
         assert(cast_cf != NULL);
         assert(cast_S != NULL);
 
@@ -5327,7 +5325,10 @@ namespace rocalution
             }
         }
 
-        cast_prolong->Transpose(cast_restrict);
+        if(cast_restrict != NULL)
+        {
+            cast_prolong->Transpose(cast_restrict);
+        }
 
         return true;
     }
@@ -5342,7 +5343,6 @@ namespace rocalution
     {
         assert(trunc >= 0.0f);
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
         HostMatrixCSR<ValueType>* cast_prolong  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
         HostMatrixCSR<ValueType>* cast_restrict = dynamic_cast<HostMatrixCSR<ValueType>*>(restrict);
@@ -5351,7 +5351,6 @@ namespace rocalution
         const HostVector<bool>* cast_S  = dynamic_cast<const HostVector<bool>*>(&S);
 
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
         assert(cast_cf != NULL);
         assert(cast_S != NULL);
 
@@ -5757,7 +5756,10 @@ namespace rocalution
         free_host(&workspace);
 
         // Transpose P to obtain R
-        cast_prolong->Transpose(cast_restrict);
+        if(cast_restrict != NULL)
+        {
+            cast_prolong->Transpose(cast_restrict);
+        }
 
         return true;
     }

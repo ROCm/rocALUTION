@@ -1083,6 +1083,26 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalVector<ValueType>::GetIndexValues(const LocalVector<int>& index,
+                                                LocalVector<ValueType>* values) const
+    {
+        log_debug(this, "LocalVector::GetIndexValues()", (const void*&)index, values);
+
+        assert(values != NULL);
+
+        this->vector_->GetIndexValues(*index.vector_, values->vector_);
+    }
+
+    template <typename ValueType>
+    void LocalVector<ValueType>::SetIndexValues(const LocalVector<int>&       index,
+                                                const LocalVector<ValueType>& values)
+    {
+        log_debug(this, "LocalVector::SetIndexValues()", (const void*&)index, (const void*&)values);
+
+        this->vector_->SetIndexValues(*index.vector_, *values.vector_);
+    }
+
+    template <typename ValueType>
     void LocalVector<ValueType>::SetIndexValues(const ValueType* values)
     {
         log_debug(this, "LocalVector::SetIndexValues()", values);

@@ -333,14 +333,32 @@ namespace rocalution
         virtual void Power(double power);
 
         /** \brief Set index array */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void SetIndexArray(int size, const int* index);
         /** \brief Get indexed values */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void GetIndexValues(ValueType* values) const;
+        /** \brief Get indexed values */
+        ROCALUTION_EXPORT
+        void GetIndexValues(const LocalVector<int>& index, LocalVector<ValueType>* values) const;
         /** \brief Set indexed values */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void SetIndexValues(const ValueType* values);
+        /** \brief Set indexed values */
+        ROCALUTION_EXPORT
+        void SetIndexValues(const LocalVector<int>& index, const LocalVector<ValueType>& values);
         /** \brief Get continuous indexed values */
         ROCALUTION_EXPORT
         void GetContinuousValues(int start, int end, ValueType* values) const;

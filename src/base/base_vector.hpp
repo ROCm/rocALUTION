@@ -166,8 +166,15 @@ namespace rocalution
         virtual void SetIndexArray(int size, const int* index) = 0;
         /// Gets index values
         virtual void GetIndexValues(ValueType* values) const = 0;
+        /// Gets index values
+        virtual void GetIndexValues(const BaseVector<int>& index,
+                                    BaseVector<ValueType>* values) const = 0;
         /// Sets index values
         virtual void SetIndexValues(const ValueType* values) = 0;
+        /// Sets index values
+        virtual void SetIndexValues(const BaseVector<int>&       index,
+                                    const BaseVector<ValueType>& values)
+            = 0;
         /// Gets continuous index values
         virtual void GetContinuousValues(int start, int end, ValueType* values) const = 0;
         /// Sets continuous index values

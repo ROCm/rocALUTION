@@ -4566,7 +4566,6 @@ namespace rocalution
         BaseMatrix<ValueType>* restrict) const
     {
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
         HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
             = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
@@ -4578,7 +4577,6 @@ namespace rocalution
             = dynamic_cast<const HIPAcceleratorVector<bool>*>(&S);
 
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
         assert(cast_cf != NULL);
         assert(cast_S != NULL);
 
@@ -4684,7 +4682,10 @@ namespace rocalution
         free_hip(&workspace);
 
         // Transpose P to obtain R
-        cast_prolong->Transpose(cast_restrict);
+        if(cast_restrict != NULL)
+        {
+            cast_prolong->Transpose(cast_restrict);
+        }
 
         return true;
     }
@@ -4700,7 +4701,6 @@ namespace rocalution
     {
         assert(trunc >= 0.0f);
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
         HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
             = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
@@ -4713,13 +4713,11 @@ namespace rocalution
             = dynamic_cast<const HIPAcceleratorVector<bool>*>(&S);
 
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
         assert(cast_cf != NULL);
         assert(cast_S != NULL);
 
         // Start with fresh operators
         cast_prolong->Clear();
-        cast_restrict->Clear();
 
         // Allocate P row pointer array
         allocate_hip(this->nrow_ + 1, &cast_prolong->mat_.row_offset);
@@ -5179,7 +5177,10 @@ namespace rocalution
         }
 
         // Transpose P to obtain R
-        cast_prolong->Transpose(cast_restrict);
+        if(cast_restrict != NULL)
+        {
+            cast_prolong->Transpose(cast_restrict);
+        }
 
         return true;
     }

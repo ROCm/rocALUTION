@@ -80,6 +80,10 @@ namespace rocalution
         void SetInterpolationType(InterpolationType type);
 
         /** \brief Set interpolation truncation coefficient */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void SetInterpolationTruncation(float trunc);
 

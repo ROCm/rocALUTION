@@ -2,11 +2,18 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION 2.1.5
+## rocALUTION 2.1.6
 ### Added
 - Added build support for Navi32
 ### Improved
+- Fixed a typo in MPI backend
 - Fixed a bug with the backend when HIP support is disabled
+### Changed
+- LocalVector::GetIndexValues(ValueType\*) is deprecated, use LocalVector::GetIndexValues(const LocalVector&, LocalVector\*) instead
+- LocalVector::SetIndexValues(const ValueType\*) is deprecated, use LocalVector::SetIndexValues(const LocalVector&, const LocalVector&) instead
+- LocalMatrix::RSDirectInterpolation(const LocalVector&, const LocalVector&, LocalMatrix\*, LocalMatrix\*) is deprecated, use LocalMatrix::RSDirectInterpolation(const LocalVector&, const LocalVector&, LocalMatrix\*) instead
+- LocalMatrix::RSExtPIInterpolation(const LocalVector&, const LocalVector&, bool, float, LocalMatrix\*, LocalMatrix\*) is deprecated, use LocalMatrix::RSExtPIInterpolation(const LocalVector&, const LocalVector&, bool, LocalMatrix\*) instead
+- LocalMatrix::RugeStueben() is deprecated
 
 ## rocALUTION 2.1.3 for ROCm 5.4.0
 ### Added
@@ -17,7 +24,6 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 - Global structures can now be used with a single process
 ### Changed
 - Switched GTest death test style to 'threadsafe'
-- Fixed a typo in MPI backend
 - GlobalVector::GetGhostSize() is deprecated and will be removed
 - ParallelManager::GetGlobalSize(), ParallelManager::GetLocalSize(), ParallelManager::SetGlobalSize() and ParallelManager::SetLocalSize() are deprecated and will be removed
 - Vector::GetGhostSize() is deprecated and will be removed

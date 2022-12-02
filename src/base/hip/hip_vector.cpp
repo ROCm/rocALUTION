@@ -1423,6 +1423,57 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::GetIndexValues(const BaseVector<int>& index,
+                                                         BaseVector<ValueType>* values) const
+    {
+        assert(values != NULL);
+
+        const HIPAcceleratorVector<int>* cast_idx
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&index);
+        HIPAcceleratorVector<ValueType>* cast_vec
+            = dynamic_cast<HIPAcceleratorVector<ValueType>*>(values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+        if(cast_idx->size_ > 0)
+        {
+            dim3 BlockSize(this->local_backend_.HIP_block_size);
+            dim3 GridSize(cast_idx->size_ / this->local_backend_.HIP_block_size + 1);
+
+            // Prepare send buffer
+            kernel_get_index_values<<<GridSize, BlockSize, 0, 0>>>(
+                cast_idx->size_, cast_idx->vec_, this->vec_, cast_vec->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::SetIndexValues(const BaseVector<int>&       index,
+                                                         const BaseVector<ValueType>& values)
+    {
+        const HIPAcceleratorVector<int>* cast_idx
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&index);
+        const HIPAcceleratorVector<ValueType>* cast_vec
+            = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+        if(cast_idx->size_ > 0)
+        {
+            dim3 BlockSize(this->local_backend_.HIP_block_size);
+            dim3 GridSize(cast_idx->size_ / this->local_backend_.HIP_block_size + 1);
+
+            kernel_set_index_values<<<GridSize, BlockSize, 0, 0>>>(
+                cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::GetIndexValues(ValueType* values) const
     {
         if(this->index_size_ > 0)

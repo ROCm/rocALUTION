@@ -1357,6 +1357,48 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void HostVector<ValueType>::GetIndexValues(const BaseVector<int>& index,
+                                               BaseVector<ValueType>* values) const
+    {
+        assert(values != NULL);
+
+        const HostVector<int>* cast_idx = dynamic_cast<const HostVector<int>*>(&index);
+        HostVector<ValueType>* cast_vec = dynamic_cast<HostVector<ValueType>*>(values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+#ifdef _OPENMP
+#pragma parallel for schuedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < cast_idx->size_; ++i)
+        {
+            cast_vec->vec_[i] = this->vec_[cast_idx->vec_[i]];
+        }
+    }
+
+    template <typename ValueType>
+    void HostVector<ValueType>::SetIndexValues(const BaseVector<int>&       index,
+                                               const BaseVector<ValueType>& values)
+    {
+        const HostVector<int>*       cast_idx = dynamic_cast<const HostVector<int>*>(&index);
+        const HostVector<ValueType>* cast_vec = dynamic_cast<const HostVector<ValueType>*>(&values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+#ifdef _OPENMP
+#pragma parallel for schuedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < cast_idx->size_; ++i)
+        {
+            this->vec_[cast_idx->vec_[i]] = cast_vec->vec_[i];
+        }
+    }
+
+    template <typename ValueType>
     void HostVector<ValueType>::SetIndexArray(int size, const int* index)
     {
         assert(size >= 0);

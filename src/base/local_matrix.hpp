@@ -954,13 +954,26 @@ namespace rocalution
         void RSPMISCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;
 
         /** \brief Ruge Stueben Direct Interpolation */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void RSDirectInterpolation(const LocalVector<int>&  CFmap,
                                    const LocalVector<bool>& S,
                                    LocalMatrix<ValueType>*  prolong,
                                    LocalMatrix<ValueType>* restrict) const;
+        /** \brief Ruge Stueben Direct Interpolation */
+        ROCALUTION_EXPORT
+        void RSDirectInterpolation(const LocalVector<int>&  CFmap,
+                                   const LocalVector<bool>& S,
+                                   LocalMatrix<ValueType>*  prolong) const;
 
         /** \brief Ruge Stueben Ext+i Interpolation */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void RSExtPIInterpolation(const LocalVector<int>&  CFmap,
                                   const LocalVector<bool>& S,
@@ -968,8 +981,18 @@ namespace rocalution
                                   float                    trunc,
                                   LocalMatrix<ValueType>*  prolong,
                                   LocalMatrix<ValueType>* restrict) const;
+        /** \brief Ruge Stueben Ext+i Interpolation */
+        ROCALUTION_EXPORT
+        void RSExtPIInterpolation(const LocalVector<int>&  CFmap,
+                                  const LocalVector<bool>& S,
+                                  bool                     FF1,
+                                  LocalMatrix<ValueType>*  prolong) const;
 
         /** \brief Generate Ruge Stueben operators */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void RugeStueben(float                   eps,
                          LocalMatrix<ValueType>* prolong,
