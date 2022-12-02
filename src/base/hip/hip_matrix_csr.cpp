@@ -4290,9 +4290,9 @@ namespace rocalution
                            this->mat_.val,
                            cast_conn->vec_,
                            cast_agg->vec_,
-                           prolong_row_offset,
-                           prolong_cols,
-                           prolong_vals);
+                           cast_prolong->mat_.row_offset,
+                           cast_prolong->mat_.col,
+                           cast_prolong->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // cast_prolong->Sort();

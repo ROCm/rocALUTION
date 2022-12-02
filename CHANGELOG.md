@@ -8,6 +8,7 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 ### Improved
 - Fixed a typo in MPI backend
 - Fixed a bug with the backend when HIP support is disabled
+- Fixed a bug in SAAMG hierarchy building on HIP backend
 ### Changed
 - LocalVector::GetIndexValues(ValueType\*) is deprecated, use LocalVector::GetIndexValues(const LocalVector&, LocalVector\*) instead
 - LocalVector::SetIndexValues(const ValueType\*) is deprecated, use LocalVector::SetIndexValues(const LocalVector&, const LocalVector&) instead
