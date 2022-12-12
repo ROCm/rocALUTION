@@ -27,6 +27,7 @@
 #include "../../utils/log.hpp"
 #include "../backend_manager.hpp"
 #include "backend_hip.hpp"
+#include "hip_atomics.hpp"
 
 #include <hip/hip_runtime.h>
 #include <rocblas/rocblas.h>
@@ -697,50 +698,6 @@ namespace rocalution
             workspace[0] = sdata[0] + 1;
         }
     }
-
-    __device__ __forceinline__ int atomicAdd(int* ptr, int val)
-    {
-        return ::atomicAdd(ptr, val);
-    }
-
-    __device__ __forceinline__ float atomicAdd(float* ptr, float val)
-    {
-        return ::atomicAdd(ptr, val);
-    }
-
-    __device__ __forceinline__ double atomicAdd(double* ptr, double val)
-    {
-        return ::atomicAdd(ptr, val);
-    }
-
-#ifdef SUPPORT_COMPLEX
-    __device__ __forceinline__ hipComplex atomicAdd(hipComplex* ptr, hipComplex val)
-    {
-        return make_hipFloatComplex(atomicAdd((float*)ptr, hipCrealf(val)),
-                                    atomicAdd((float*)ptr + 1, hipCimagf(val)));
-    }
-
-    __device__ __forceinline__ hipDoubleComplex atomicAdd(hipDoubleComplex* ptr,
-                                                          hipDoubleComplex  val)
-    {
-        return make_hipDoubleComplex(atomicAdd((double*)ptr, hipCreal(val)),
-                                     atomicAdd((double*)ptr + 1, hipCimag(val)));
-    }
-
-    __device__ __forceinline__ std::complex<float> atomicAdd(std::complex<float>* ptr,
-                                                             std::complex<float>  val)
-    {
-        return std::complex<float>(atomicAdd((float*)ptr, val.real()),
-                                   atomicAdd((float*)ptr + 1, val.imag()));
-    }
-
-    __device__ __forceinline__ std::complex<double> atomicAdd(std::complex<double>* ptr,
-                                                              std::complex<double>  val)
-    {
-        return std::complex<double>(atomicAdd((double*)ptr, val.real()),
-                                    atomicAdd((double*)ptr + 1, val.imag()));
-    }
-#endif
 
     static __device__ __forceinline__ float hip_shfl_xor(float val, int i)
     {

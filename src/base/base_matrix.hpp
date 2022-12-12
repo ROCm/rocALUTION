@@ -421,11 +421,9 @@ namespace rocalution
                                             const BaseVector<int>& aggregates,
                                             const BaseVector<int>& connections,
                                             BaseMatrix<ValueType>* prolong,
-                                            BaseMatrix<ValueType>* restrict,
-                                            int lumping_strat) const;
+                                            int                    lumping_strat) const;
         virtual bool AMGAggregation(const BaseVector<int>& aggregates,
-                                    BaseMatrix<ValueType>* prolong,
-                                    BaseMatrix<ValueType>* restrict) const;
+                                    BaseMatrix<ValueType>* prolong) const;
 
         /// Ruge Stueben coarsening
         virtual bool RSCoarsening(float eps, BaseVector<int>* CFmap, BaseVector<bool>* S) const;

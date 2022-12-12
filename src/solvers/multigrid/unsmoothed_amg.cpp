@@ -258,11 +258,14 @@ namespace rocalution
             op.AMGPMISAggregate(connections, &aggregates);
         }
 
-        op.AMGAggregation(aggregates, cast_pro, cast_res);
+        op.AMGAggregation(aggregates, cast_pro);
 
         // Free unused vectors
         connections.Clear();
         aggregates.Clear();
+
+        // Transpose P to obtain R
+        cast_pro->Transpose(cast_res);
 
         OperatorType tmp;
         tmp.CloneBackend(op);

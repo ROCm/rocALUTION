@@ -4172,11 +4172,9 @@ namespace rocalution
         const BaseVector<int>& aggregates,
         const BaseVector<int>& connections,
         BaseMatrix<ValueType>* prolong,
-        BaseMatrix<ValueType>* restrict,
-        int lumping_strat) const
+        int                    lumping_strat) const
     {
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
         const HIPAcceleratorVector<int>* cast_agg
             = dynamic_cast<const HIPAcceleratorVector<int>*>(&aggregates);
@@ -4184,13 +4182,10 @@ namespace rocalution
             = dynamic_cast<const HIPAcceleratorVector<int>*>(&connections);
         HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
             = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
-        HIPAcceleratorMatrixCSR<ValueType>* cast_restrict
-            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(restrict);
 
         assert(cast_agg != NULL);
         assert(cast_conn != NULL);
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
 
         int*       prolong_row_offset = nullptr;
         int*       prolong_cols       = nullptr;
@@ -4198,72 +4193,256 @@ namespace rocalution
 
         // Allocate prolongation matrix row offset array
         allocate_hip(this->nrow_ + 1, &prolong_row_offset);
-        set_to_zero_hip(this->local_backend_.HIP_block_size, this->nrow_ + 1, prolong_row_offset);
 
-        int* workspace;
-        hipMalloc((void**)&workspace, 256 * sizeof(int));
-
-        hipLaunchKernelGGL((kernel_find_maximum_blockreduce<256, int>),
-                           dim3(256),
-                           dim3(256),
-                           0,
-                           0,
-                           cast_agg->GetSize(),
-                           cast_agg->vec_,
-                           workspace);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        hipLaunchKernelGGL((kernel_find_maximum_finalreduce<256, int>),
-                           dim3(1),
-                           dim3(256),
-                           0,
-                           0,
-                           cast_agg->GetSize(),
-                           workspace);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        int prolong_ncol = 0;
-        int prolong_nrow = this->nrow_;
-        hipMemcpy(&prolong_ncol, workspace, sizeof(int), hipMemcpyDeviceToHost);
-        hipFree(workspace);
-
-        hipLaunchKernelGGL((kernel_csr_prolong_nnz_per_row<256, 8, 128, int>),
-                           dim3((this->nrow_ * 8 - 1) / 256 + 1),
-                           dim3(256),
-                           0,
-                           0,
-                           this->nrow_,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           cast_conn->vec_,
-                           cast_agg->vec_,
-                           prolong_row_offset);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        // Perform inclusive scan on csr row pointer array
+        // rocprim buffer
         size_t rocprim_size;
-        void*  rocprim_buffer;
-        rocprim::inclusive_scan(nullptr,
+        char*  rocprim_buffer = NULL;
+
+        // Obtain maximum entry in aggregation array
+        rocprim::reduce(NULL,
+                        rocprim_size,
+                        cast_agg->vec_,
+                        prolong_row_offset,
+                        -2,
+                        cast_agg->size_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        cast_agg->vec_,
+                        prolong_row_offset,
+                        -2,
+                        cast_agg->size_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&rocprim_buffer);
+
+        // Obtain sizes of P
+        int prolong_ncol;
+        int prolong_nrow = this->nrow_;
+        hipMemcpy(&prolong_ncol, prolong_row_offset, sizeof(int), hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        ++prolong_ncol;
+
+        // Get maximum non-zeros per row to decided on size of unordered set
+        kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1, 256>>>(
+            this->nrow_, this->mat_.row_offset, prolong_row_offset + 1);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim::reduce(NULL,
+                        rocprim_size,
+                        prolong_row_offset + 1,
+                        prolong_row_offset,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        prolong_row_offset + 1,
+                        prolong_row_offset,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&rocprim_buffer);
+
+        int max_row_nnz;
+        hipMemcpy(&max_row_nnz, prolong_row_offset, sizeof(int), hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(max_row_nnz < 8)
+        {
+            kernel_csr_sa_prolong_nnz<256, 4, 8>
+                <<<(this->nrow_ - 1) / (256 / 4) + 1, 256>>>(this->nrow_,
+                                                             this->mat_.row_offset,
+                                                             this->mat_.col,
+                                                             cast_conn->vec_,
+                                                             cast_agg->vec_,
+                                                             prolong_row_offset);
+        }
+        else if(max_row_nnz < 16)
+        {
+            kernel_csr_sa_prolong_nnz<256, 4, 16>
+                <<<(this->nrow_ - 1) / (256 / 4) + 1, 256>>>(this->nrow_,
+                                                             this->mat_.row_offset,
+                                                             this->mat_.col,
+                                                             cast_conn->vec_,
+                                                             cast_agg->vec_,
+                                                             prolong_row_offset);
+        }
+        else if(max_row_nnz < 32)
+        {
+            kernel_csr_sa_prolong_nnz<256, 8, 32>
+                <<<(this->nrow_ - 1) / (256 / 8) + 1, 256>>>(this->nrow_,
+                                                             this->mat_.row_offset,
+                                                             this->mat_.col,
+                                                             cast_conn->vec_,
+                                                             cast_agg->vec_,
+                                                             prolong_row_offset);
+        }
+        else if(max_row_nnz < 64)
+        {
+            kernel_csr_sa_prolong_nnz<256, 16, 64>
+                <<<(this->nrow_ - 1) / (256 / 16) + 1, 256>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 128)
+        {
+            kernel_csr_sa_prolong_nnz<256, 16, 128>
+                <<<(this->nrow_ - 1) / (256 / 16) + 1, 256>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 256)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 256>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 512)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 512>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 1024)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 1024>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 2048)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 2048>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 4096)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 4096>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 8192)
+        {
+            kernel_csr_sa_prolong_nnz<128, 64, 8192>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              prolong_row_offset);
+        }
+        else if(max_row_nnz < 16384)
+        {
+            kernel_csr_sa_prolong_nnz<64, 64, 16384>
+                <<<(this->nrow_ - 1) / (64 / 64) + 1, 64>>>(this->nrow_,
+                                                            this->mat_.row_offset,
+                                                            this->mat_.col,
+                                                            cast_conn->vec_,
+                                                            cast_agg->vec_,
+                                                            prolong_row_offset);
+        }
+        else
+        {
+            // Fall back to host
+            free_hip(&prolong_row_offset);
+
+            return false;
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Obtain maximum row nnz to determine correct map size
+        rocprim::reduce(NULL,
+                        rocprim_size,
+                        prolong_row_offset,
+                        prolong_row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        prolong_row_offset,
+                        prolong_row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&rocprim_buffer);
+
+        hipMemcpy(
+            &max_row_nnz, prolong_row_offset + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Perform exclusive scan on csr row pointer array
+        rocprim::exclusive_scan(NULL,
                                 rocprim_size,
                                 prolong_row_offset,
                                 prolong_row_offset,
+                                0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipMalloc((void**)&rocprim_buffer, rocprim_size);
+        allocate_hip(rocprim_size, &rocprim_buffer);
 
-        rocprim::inclusive_scan(rocprim_buffer,
+        rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
                                 prolong_row_offset,
                                 prolong_row_offset,
+                                0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipFree(rocprim_buffer);
+        free_hip(&rocprim_buffer);
 
         int prolong_nnz = 0;
         hipMemcpy(
             &prolong_nnz, &prolong_row_offset[this->nrow_], sizeof(int), hipMemcpyDeviceToHost);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Allocate prolongation matrix col indices and values arrays
         allocate_hip(prolong_nnz, &prolong_cols);
@@ -4277,48 +4456,167 @@ namespace rocalution
                                     prolong_nrow,
                                     prolong_ncol);
 
-        hipLaunchKernelGGL((kernel_csr_prolong_fill_jacobi_smoother<256, 8, 128, ValueType, int>),
-                           dim3((this->nrow_ * 8 - 1) / 256 + 1),
-                           dim3(256),
-                           0,
-                           0,
-                           this->nrow_,
-                           relax,
-                           lumping_strat,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           this->mat_.val,
-                           cast_conn->vec_,
-                           cast_agg->vec_,
-                           cast_prolong->mat_.row_offset,
-                           cast_prolong->mat_.col,
-                           cast_prolong->mat_.val);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(max_row_nnz < 8)
+        {
+            kernel_csr_sa_prolong_fill<128, 4, 8>
+                <<<(this->nrow_ - 1) / (128 / 4) + 1, 128>>>(this->nrow_,
+                                                             relax,
+                                                             lumping_strat,
+                                                             this->mat_.row_offset,
+                                                             this->mat_.col,
+                                                             this->mat_.val,
+                                                             cast_conn->vec_,
+                                                             cast_agg->vec_,
+                                                             cast_prolong->mat_.row_offset,
+                                                             cast_prolong->mat_.col,
+                                                             cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 16)
+        {
+            kernel_csr_sa_prolong_fill<128, 8, 16>
+                <<<(this->nrow_ - 1) / (128 / 8) + 1, 128>>>(this->nrow_,
+                                                             relax,
+                                                             lumping_strat,
+                                                             this->mat_.row_offset,
+                                                             this->mat_.col,
+                                                             this->mat_.val,
+                                                             cast_conn->vec_,
+                                                             cast_agg->vec_,
+                                                             cast_prolong->mat_.row_offset,
+                                                             cast_prolong->mat_.col,
+                                                             cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 32)
+        {
+            kernel_csr_sa_prolong_fill<128, 16, 32>
+                <<<(this->nrow_ - 1) / (128 / 16) + 1, 128>>>(this->nrow_,
+                                                              relax,
+                                                              lumping_strat,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              this->mat_.val,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              cast_prolong->mat_.row_offset,
+                                                              cast_prolong->mat_.col,
+                                                              cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 64)
+        {
+            kernel_csr_sa_prolong_fill<128, 32, 64>
+                <<<(this->nrow_ - 1) / (128 / 32) + 1, 128>>>(this->nrow_,
+                                                              relax,
+                                                              lumping_strat,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              this->mat_.val,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              cast_prolong->mat_.row_offset,
+                                                              cast_prolong->mat_.col,
+                                                              cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 128)
+        {
+            kernel_csr_sa_prolong_fill<128, 64, 128>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
+                                                              relax,
+                                                              lumping_strat,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              this->mat_.val,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              cast_prolong->mat_.row_offset,
+                                                              cast_prolong->mat_.col,
+                                                              cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 256)
+        {
+            kernel_csr_sa_prolong_fill<128, 64, 256>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
+                                                              relax,
+                                                              lumping_strat,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              this->mat_.val,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              cast_prolong->mat_.row_offset,
+                                                              cast_prolong->mat_.col,
+                                                              cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 512)
+        {
+            kernel_csr_sa_prolong_fill<128, 64, 512>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
+                                                              relax,
+                                                              lumping_strat,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              this->mat_.val,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              cast_prolong->mat_.row_offset,
+                                                              cast_prolong->mat_.col,
+                                                              cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 1024)
+        {
+            kernel_csr_sa_prolong_fill<128, 64, 1024>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
+                                                              relax,
+                                                              lumping_strat,
+                                                              this->mat_.row_offset,
+                                                              this->mat_.col,
+                                                              this->mat_.val,
+                                                              cast_conn->vec_,
+                                                              cast_agg->vec_,
+                                                              cast_prolong->mat_.row_offset,
+                                                              cast_prolong->mat_.col,
+                                                              cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 2048)
+        {
+            kernel_csr_sa_prolong_fill<64, 64, 2048>
+                <<<(this->nrow_ - 1) / (64 / 64) + 1, 64>>>(this->nrow_,
+                                                            relax,
+                                                            lumping_strat,
+                                                            this->mat_.row_offset,
+                                                            this->mat_.col,
+                                                            this->mat_.val,
+                                                            cast_conn->vec_,
+                                                            cast_agg->vec_,
+                                                            cast_prolong->mat_.row_offset,
+                                                            cast_prolong->mat_.col,
+                                                            cast_prolong->mat_.val);
+        }
+        else
+        {
+            // Fall back to host
+            cast_prolong->Clear();
 
-        // cast_prolong->Sort();
-        cast_prolong->Transpose(cast_restrict);
+            return false;
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         return true;
     }
 
     template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::AMGAggregation(const BaseVector<int>& aggregates,
-                                                            BaseMatrix<ValueType>* prolong,
-                                                            BaseMatrix<ValueType>* restrict) const
+                                                            BaseMatrix<ValueType>* prolong) const
     {
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
         const HIPAcceleratorVector<int>* cast_agg
             = dynamic_cast<const HIPAcceleratorVector<int>*>(&aggregates);
         HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
             = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
-        HIPAcceleratorMatrixCSR<ValueType>* cast_restrict
-            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(restrict);
 
         assert(cast_agg != NULL);
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
 
         int*       prolong_row_offset = nullptr;
         int*       prolong_cols       = nullptr;
@@ -4429,7 +4727,6 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // cast_prolong->Sort();
-        cast_prolong->Transpose(cast_restrict);
 
         return true;
     }

@@ -598,16 +598,14 @@ namespace rocalution
                                                        const BaseVector<int>& aggregates,
                                                        const BaseVector<int>& connections,
                                                        BaseMatrix<ValueType>* prolong,
-                                                       BaseMatrix<ValueType>* restrict,
-                                                       int lumping_strat) const
+                                                       int                    lumping_strat) const
     {
         return false;
     }
 
     template <typename ValueType>
     bool BaseMatrix<ValueType>::AMGAggregation(const BaseVector<int>& aggregates,
-                                               BaseMatrix<ValueType>* prolong,
-                                               BaseMatrix<ValueType>* restrict) const
+                                               BaseMatrix<ValueType>* prolong) const
     {
         return false;
     }

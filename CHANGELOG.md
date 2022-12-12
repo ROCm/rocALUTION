@@ -2,19 +2,22 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION 2.1.6
+## rocALUTION 2.1.8
 ### Added
 - Added build support for Navi32
 ### Improved
 - Fixed a typo in MPI backend
 - Fixed a bug with the backend when HIP support is disabled
 - Fixed a bug in SAAMG hierarchy building on HIP backend
+- Improved SAAMG hierarchy build performance on HIP backend
 ### Changed
 - LocalVector::GetIndexValues(ValueType\*) is deprecated, use LocalVector::GetIndexValues(const LocalVector&, LocalVector\*) instead
 - LocalVector::SetIndexValues(const ValueType\*) is deprecated, use LocalVector::SetIndexValues(const LocalVector&, const LocalVector&) instead
 - LocalMatrix::RSDirectInterpolation(const LocalVector&, const LocalVector&, LocalMatrix\*, LocalMatrix\*) is deprecated, use LocalMatrix::RSDirectInterpolation(const LocalVector&, const LocalVector&, LocalMatrix\*) instead
 - LocalMatrix::RSExtPIInterpolation(const LocalVector&, const LocalVector&, bool, float, LocalMatrix\*, LocalMatrix\*) is deprecated, use LocalMatrix::RSExtPIInterpolation(const LocalVector&, const LocalVector&, bool, LocalMatrix\*) instead
 - LocalMatrix::RugeStueben() is deprecated
+- LocalMatrix::AMGSmoothedAggregation(ValueType, const LocalVector&, const LocalVector&, LocalMatrix\*, LocalMatrix\*, int) is deprecated, use LocalMatrix::AMGAggregation(ValueType, const LocalVector&, const LocalVector&, LocalMatrix\*, int) instead
+- LocalMatrix::AMGAggregation(const LocalVector&, LocalMatrix\*, LocalMatrix\*) is deprecated, use LocalMatrix::AMGAggregation(const LocalVector&, LocalMatrix\*) instead
 
 ## rocALUTION 2.1.3 for ROCm 5.4.0
 ### Added

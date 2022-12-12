@@ -303,16 +303,19 @@ namespace rocalution
 
         if(lumping_strat_ == LumpingStrategy::AddWeakConnections)
         {
-            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, cast_res, 0);
+            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, 0);
         }
         else if(lumping_strat_ == LumpingStrategy::SubtractWeakConnections)
         {
-            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, cast_res, 1);
+            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, cast_pro, 1);
         }
 
         // Free unused vectors
         connections.Clear();
         aggregates.Clear();
+
+        // Transpose P to obtain R
+        cast_pro->Transpose(cast_res);
 
         OperatorType tmp;
         tmp.CloneBackend(op);

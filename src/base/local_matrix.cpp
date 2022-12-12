@@ -5227,18 +5227,12 @@ namespace rocalution
 
 #ifdef DEBUG_MODE
         this->Check();
-        prolong->Check();
-        restrict->Check();
 #endif
 
         if(this->GetNnz() > 0)
         {
-            bool err = this->matrix_->AMGSmoothedAggregation(relax,
-                                                             *aggregates.vector_,
-                                                             *connections.vector_,
-                                                             prolong->matrix_,
-                                                             restrict->matrix_,
-                                                             lumping_strat);
+            bool err = this->matrix_->AMGSmoothedAggregation(
+                relax, *aggregates.vector_, *connections.vector_, prolong->matrix_, lumping_strat);
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5259,7 +5253,6 @@ namespace rocalution
 
                 // Move to host
                 prolong->MoveToHost();
-                restrict->MoveToHost();
 
                 // Convert to CSR
                 mat_host.ConvertToCSR();
@@ -5268,7 +5261,6 @@ namespace rocalution
                                                             *aggr_host.vector_,
                                                             *conn_host.vector_,
                                                             prolong->matrix_,
-                                                            restrict->matrix_,
                                                             lumping_strat)
                    == false)
                 {
@@ -5284,7 +5276,6 @@ namespace rocalution
                                      "performed in CSR format");
 
                     prolong->ConvertTo(this->GetFormat(), this->GetBlockDimension());
-                    restrict->ConvertTo(this->GetFormat(), this->GetBlockDimension());
                 }
 
                 if(this->is_accel_() == true)
@@ -5294,14 +5285,105 @@ namespace rocalution
                                      "performed on the host");
 
                     prolong->MoveToAccelerator();
-                    restrict->MoveToAccelerator();
+                }
+            }
+        }
+
+        prolong->Transpose(restrict);
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+        restrict->Check();
+#endif
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::AMGSmoothedAggregation(ValueType               relax,
+                                                        const LocalVector<int>& aggregates,
+                                                        const LocalVector<int>& connections,
+                                                        LocalMatrix<ValueType>* prolong,
+                                                        int                     lumping_strat) const
+    {
+        log_debug(this,
+                  "LocalMatrix::AMGSmoothedAggregation()",
+                  relax,
+                  (const void*&)aggregates,
+                  (const void*&)connections,
+                  prolong);
+
+        assert(relax > static_cast<ValueType>(0));
+        assert(prolong != NULL);
+        assert(this != prolong);
+        assert(this->is_host_() == aggregates.is_host_());
+        assert(this->is_host_() == connections.is_host_());
+        assert(this->is_host_() == prolong->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->AMGSmoothedAggregation(
+                relax, *aggregates.vector_, *connections.vector_, prolong->matrix_, lumping_strat);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                LocalVector<int>       conn_host;
+                LocalVector<int>       aggr_host;
+                mat_host.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_host.CopyFrom(*this);
+                conn_host.CopyFrom(connections);
+                aggr_host.CopyFrom(aggregates);
+
+                // Move to host
+                prolong->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->AMGSmoothedAggregation(relax,
+                                                            *aggr_host.vector_,
+                                                            *conn_host.vector_,
+                                                            prolong->matrix_,
+                                                            lumping_strat)
+                   == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::AMGSmoothedAggregation() is "
+                                     "performed in CSR format");
+
+                    prolong->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::AMGSmoothedAggregation() is "
+                                     "performed on the host");
+
+                    prolong->MoveToAccelerator();
                 }
             }
         }
 
 #ifdef DEBUG_MODE
         prolong->Check();
-        restrict->Check();
 #endif
     }
 
@@ -5329,14 +5411,11 @@ namespace rocalution
 
 #ifdef DEBUG_MODE
         this->Check();
-        prolong->Check();
-        restrict->Check();
 #endif
 
         if(this->GetNnz() > 0)
         {
-            bool err = this->matrix_->AMGAggregation(
-                *aggregates.vector_, prolong->matrix_, restrict->matrix_);
+            bool err = this->matrix_->AMGAggregation(*aggregates.vector_, prolong->matrix_);
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5355,14 +5434,11 @@ namespace rocalution
 
                 // Move to host
                 prolong->MoveToHost();
-                restrict->MoveToHost();
 
                 // Convert to CSR
                 mat_host.ConvertToCSR();
 
-                if(mat_host.matrix_->AMGAggregation(
-                       *aggr_host.vector_, prolong->matrix_, restrict->matrix_)
-                   == false)
+                if(mat_host.matrix_->AMGAggregation(*aggr_host.vector_, prolong->matrix_) == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::AMGAggregation() failed");
                     mat_host.Info();
@@ -5375,7 +5451,6 @@ namespace rocalution
                         2, "*** warning: LocalMatrix::AMGAggregation() is performed in CSR format");
 
                     prolong->ConvertTo(this->GetFormat(), this->GetBlockDimension());
-                    restrict->ConvertTo(this->GetFormat(), this->GetBlockDimension());
                 }
 
                 if(this->is_accel_() == true)
@@ -5384,14 +5459,85 @@ namespace rocalution
                         2, "*** warning: LocalMatrix::AMGAggregation() is performed on the host");
 
                     prolong->MoveToAccelerator();
-                    restrict->MoveToAccelerator();
+                }
+            }
+        }
+
+        prolong->Transpose(restrict);
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+        restrict->Check();
+#endif
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::AMGAggregation(const LocalVector<int>& aggregates,
+                                                LocalMatrix<ValueType>* prolong) const
+    {
+        log_debug(this, "LocalMatrix::AMGAggregation()", (const void*&)aggregates, prolong);
+
+        assert(prolong != NULL);
+        assert(this != prolong);
+        assert(this->is_host_() == aggregates.is_host_());
+        assert(this->is_host_() == prolong->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->AMGAggregation(*aggregates.vector_, prolong->matrix_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::AMGAggregation() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                LocalVector<int>       aggr_host;
+                mat_host.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_host.CopyFrom(*this);
+                aggr_host.CopyFrom(aggregates);
+
+                // Move to host
+                prolong->MoveToHost();
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+
+                if(mat_host.matrix_->AMGAggregation(*aggr_host.vector_, prolong->matrix_) == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::AMGAggregation() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::AMGAggregation() is performed in CSR format");
+
+                    prolong->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::AMGAggregation() is performed on the host");
+
+                    prolong->MoveToAccelerator();
                 }
             }
         }
 
 #ifdef DEBUG_MODE
         prolong->Check();
-        restrict->Check();
 #endif
     }
 

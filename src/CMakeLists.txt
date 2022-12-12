@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+# Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -122,7 +122,7 @@ if(SUPPORT_HIP)
   # HIP flags workaround while target_compile_options do not work
   list(APPEND HIP_HIPCC_FLAGS "-O3 -march=native -Wno-unused-command-line-argument -fPIC -std=c++14")
   foreach(target ${AMDGPU_TARGETS})
-    list(APPEND HIP_HIPCC_FLAGS "--amdgpu-target=${target}")
+    list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
   endforeach()
 
   # Create rocALUTION HIP library

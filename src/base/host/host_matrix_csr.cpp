@@ -4024,21 +4024,17 @@ namespace rocalution
                                                           const BaseVector<int>& aggregates,
                                                           const BaseVector<int>& connections,
                                                           BaseMatrix<ValueType>* prolong,
-                                                          BaseMatrix<ValueType>* restrict,
                                                           int lumping_strat) const
     {
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
         const HostVector<int>*    cast_agg     = dynamic_cast<const HostVector<int>*>(&aggregates);
         const HostVector<int>*    cast_conn    = dynamic_cast<const HostVector<int>*>(&connections);
         HostMatrixCSR<ValueType>* cast_prolong = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
-        HostMatrixCSR<ValueType>* cast_restrict = dynamic_cast<HostMatrixCSR<ValueType>*>(restrict);
 
         assert(cast_agg != NULL);
         assert(cast_conn != NULL);
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
 
         // Allocate
         cast_prolong->Clear();
@@ -4193,7 +4189,6 @@ namespace rocalution
         }
 
         cast_prolong->Sort();
-        cast_prolong->Transpose(cast_restrict);
 
         return true;
     }
@@ -4211,19 +4206,15 @@ namespace rocalution
     // ----------------------------------------------------------
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::AMGAggregation(const BaseVector<int>& aggregates,
-                                                  BaseMatrix<ValueType>* prolong,
-                                                  BaseMatrix<ValueType>* restrict) const
+                                                  BaseMatrix<ValueType>* prolong) const
     {
         assert(prolong != NULL);
-        assert(restrict != NULL);
 
-        const HostVector<int>*    cast_agg      = dynamic_cast<const HostVector<int>*>(&aggregates);
-        HostMatrixCSR<ValueType>* cast_prolong  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
-        HostMatrixCSR<ValueType>* cast_restrict = dynamic_cast<HostMatrixCSR<ValueType>*>(restrict);
+        const HostVector<int>*    cast_agg     = dynamic_cast<const HostVector<int>*>(&aggregates);
+        HostMatrixCSR<ValueType>* cast_prolong = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
 
         assert(cast_agg != NULL);
         assert(cast_prolong != NULL);
-        assert(cast_restrict != NULL);
 
         int ncol = 0;
 
@@ -4272,8 +4263,6 @@ namespace rocalution
         cast_prolong->Clear();
         cast_prolong->SetDataPtrCSR(
             &row_offset, &col, &val, row_offset[this->nrow_], this->nrow_, ncol);
-
-        cast_prolong->Transpose(cast_restrict);
 
         return true;
     }

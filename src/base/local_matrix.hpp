@@ -933,6 +933,10 @@ namespace rocalution
                               LocalVector<int>*       aggregates) const;
 
         /** \brief Interpolation scheme based on smoothed aggregation from Vanek (1996) */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void AMGSmoothedAggregation(ValueType               relax,
                                     const LocalVector<int>& aggregates,
@@ -940,11 +944,26 @@ namespace rocalution
                                     LocalMatrix<ValueType>* prolong,
                                     LocalMatrix<ValueType>* restrict,
                                     int lumping_strat = 0) const;
+        /** \brief Interpolation scheme based on smoothed aggregation from Vanek (1996) */
+        ROCALUTION_EXPORT
+        void AMGSmoothedAggregation(ValueType               relax,
+                                    const LocalVector<int>& aggregates,
+                                    const LocalVector<int>& connections,
+                                    LocalMatrix<ValueType>* prolong,
+                                    int                     lumping_strat = 0) const;
         /** \brief Aggregation-based interpolation scheme */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void AMGAggregation(const LocalVector<int>& aggregates,
                             LocalMatrix<ValueType>* prolong,
                             LocalMatrix<ValueType>* restrict) const;
+        /** \brief Aggregation-based interpolation scheme */
+        ROCALUTION_EXPORT
+        void AMGAggregation(const LocalVector<int>& aggregates,
+                            LocalMatrix<ValueType>* prolong) const;
 
         /** \brief Ruge Stueben coarsening */
         ROCALUTION_EXPORT

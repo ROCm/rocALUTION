@@ -25,6 +25,9 @@
 #define ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_
 
 #include "../matrix_formats_ind.hpp"
+#include "hip_atomics.hpp"
+#include "hip_unordered_map.hpp"
+#include "hip_unordered_set.hpp"
 #include "hip_utils.hpp"
 
 #include "../../utils/types.hpp"
@@ -1183,203 +1186,191 @@ namespace rocalution
     }
 
     // AMGSmoothedAggregation
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, unsigned int HASH, typename IndexType>
+    template <unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASHSIZE,
+              typename IndexType>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_prolong_nnz_per_row(IndexType nrow,
-                                            const IndexType* __restrict__ row_offset,
-                                            const IndexType* __restrict__ cols,
-                                            const IndexType* __restrict__ connections,
-                                            const IndexType* __restrict__ aggregates,
-                                            IndexType* __restrict__ prolong_row_offset)
+        void kernel_csr_sa_prolong_nnz(IndexType nrow,
+                                       const IndexType* __restrict__ csr_row_ptr,
+                                       const IndexType* __restrict__ csr_col_ind,
+                                       const IndexType* __restrict__ connections,
+                                       const IndexType* __restrict__ aggregates,
+                                       IndexType* __restrict__ row_nnz)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
-        IndexType lid = tid & (WFSIZE - 1);
-        IndexType wid = tid / WFSIZE;
-        IndexType row = gid / WFSIZE;
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
 
-        __shared__ IndexType stable[(BLOCKSIZE / WFSIZE) * HASH];
+        if(warpSize == WFSIZE)
+        {
+            wid = __builtin_amdgcn_readfirstlane(wid);
+        }
 
+        // The row this thread operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
         if(row >= nrow)
         {
             return;
         }
 
-        // Pointer to each wavefronts shared data
-        IndexType* table = &stable[wid * HASH];
+        // Shared memory for the unordered set
+        __shared__ IndexType stable[BLOCKSIZE / WFSIZE * HASHSIZE];
 
-        // Initialize hash table with -1
-        for(IndexType j = lid; j < HASH; j += WFSIZE)
+        // Each wavefront operates on its own set
+        unordered_set<IndexType, HASHSIZE, WFSIZE> set(&stable[wid * HASHSIZE]);
+
+        // Row nnz counter
+        IndexType nnz = 0;
+
+        // Row entry and exit points
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
         {
-            table[j] = -1;
+            // Get the column index
+            IndexType col = csr_col_ind[j];
+
+            // Get connection state
+            IndexType con = connections[j];
+
+            // Get aggregation state for this column
+            IndexType agg = aggregates[col];
+
+            // When aggregate is defined, diagonal entries and connected columns will
+            // generate a fill in
+            if((row == col || con) && agg >= 0)
+            {
+                // Insert into unordered set, to discard duplicates
+                nnz += set.insert(agg);
+            }
         }
 
-        __syncthreads();
+        // Sum up the row nnz from all lanes
+        wf_reduce_sum<WFSIZE>(&nnz);
 
-        IndexType row_start = row_offset[row];
-        IndexType row_end   = row_offset[row + 1];
-
-        for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+        if(lid == WFSIZE - 1)
         {
-            IndexType col = cols[j];
-
-            if(row == col || row != col && connections[j] == 1)
-            {
-                IndexType key = aggregates[col];
-
-                if(key >= 0)
-                {
-                    // Compute hash
-                    IndexType hash = (key * 103) & (HASH - 1);
-
-                    // Hash operation
-                    while(true)
-                    {
-                        if(table[hash] == key)
-                        {
-                            // key is already inserted, done
-                            break;
-                        }
-                        else if(table[hash] == -1)
-                        {
-                            if(atomicCAS(&table[hash], -1, key) == -1)
-                            {
-                                atomicAdd(&prolong_row_offset[row + 1], 1);
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            // collision, compute new hash
-                            hash = (hash + 1) & (HASH - 1);
-                        }
-                    }
-                }
-            }
+            // Write row nnz back to global memory
+            row_nnz[row] = nnz;
         }
     }
 
     template <unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
-              unsigned int HASH,
+              unsigned int HASHSIZE,
               typename ValueType,
               typename IndexType>
-    __launch_bounds__(BLOCKSIZE) __global__ void kernel_csr_prolong_fill_jacobi_smoother(
-        IndexType nrow,
-        ValueType relax,
-        int       lumping_strat,
-        const IndexType* __restrict__ row_offset,
-        const IndexType* __restrict__ cols,
-        const ValueType* __restrict__ vals,
-        const IndexType* __restrict__ connections,
-        const IndexType* __restrict__ aggregates,
-        const IndexType* __restrict__ prolong_row_offset,
-        IndexType* __restrict__ prolong_cols,
-        ValueType* __restrict__ prolong_vals)
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_sa_prolong_fill(IndexType nrow,
+                                        ValueType relax,
+                                        int       lumping_strat,
+                                        const IndexType* __restrict__ csr_row_ptr,
+                                        const IndexType* __restrict__ csr_col_ind,
+                                        const ValueType* __restrict__ csr_val,
+                                        const IndexType* __restrict__ connections,
+                                        const IndexType* __restrict__ aggregates,
+                                        const IndexType* __restrict__ csr_row_ptr_P,
+                                        IndexType* __restrict__ csr_col_ind_P,
+                                        ValueType* __restrict__ csr_val_P)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
-        IndexType lid = tid & (WFSIZE - 1);
-        IndexType wid = tid / WFSIZE;
-        IndexType row = gid / WFSIZE;
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
 
-        __shared__ IndexType stable[(BLOCKSIZE / WFSIZE) * HASH];
-        __shared__ IndexType sdata[(BLOCKSIZE / WFSIZE) * HASH];
-        __shared__ IndexType scounter[(BLOCKSIZE / WFSIZE)];
+        if(warpSize == WFSIZE)
+        {
+            wid = __builtin_amdgcn_readfirstlane(wid);
+        }
 
+        // The row this thread operates on
+        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
         if(row >= nrow)
         {
             return;
         }
 
-        IndexType* table   = &stable[wid * HASH];
-        IndexType* data    = &sdata[wid * HASH];
-        IndexType* counter = &scounter[wid];
+        // Shared memory for the unordered map
+        __shared__ IndexType stable[(BLOCKSIZE / WFSIZE) * HASHSIZE];
+        __shared__ char      smem[(BLOCKSIZE / WFSIZE) * HASHSIZE * sizeof(ValueType)];
 
-        for(IndexType j = lid; j < HASH; j += WFSIZE)
-        {
-            table[j] = -1;
-            data[j]  = -1;
-        }
+        ValueType* sdata = reinterpret_cast<ValueType*>(smem);
 
-        *counter = prolong_row_offset[row];
+        // Each wavefront operates on its own map
+        unordered_map<IndexType, ValueType, HASHSIZE, WFSIZE> map(&stable[wid * HASHSIZE],
+                                                                  &sdata[wid * HASHSIZE]);
 
-        __syncthreads();
+        // Row entry and exit points
+        IndexType row_begin = csr_row_ptr[row];
+        IndexType row_end   = csr_row_ptr[row + 1];
 
-        IndexType row_start = row_offset[row];
-        IndexType row_end   = row_offset[row + 1];
-
+        // Accumulator
         ValueType dia = static_cast<ValueType>(0);
-        for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
         {
-            if(cols[j] == row)
+            // Get the column index
+            IndexType col_j = csr_col_ind[j];
+
+            // Get the value
+            ValueType val_j = csr_val[j];
+
+            // Add the diagonal
+            if(col_j == row)
             {
-                dia += vals[j];
+                dia += val_j;
             }
-            else if(!connections[j])
+            else if(connections[j] == false)
             {
-                if(lumping_strat == 0)
-                {
-                    dia += vals[j];
-                }
-                else
-                {
-                    dia -= vals[j];
-                }
+                dia = (lumping_strat == 0) ? dia + val_j : dia - val_j;
             }
         }
 
-        wf_reduce_sum<WFSIZE>(&dia);
-
-        dia = shfl(dia, 0, WFSIZE);
+        // Sum up the accumulator from all lanes
+        for(unsigned int i = WFSIZE >> 1; i > 0; i >>= 1)
+        {
+            dia += hip_shfl_xor(dia, i);
+        }
 
         dia = static_cast<ValueType>(1) / dia;
 
-        for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
         {
-            IndexType col = cols[j];
+            // Get the column index
+            IndexType col_j = csr_col_ind[j];
 
-            if(row == col || row != col && connections[j] == 1)
+            // Get the value
+            ValueType val_j = csr_val[j];
+
+            // Get connection state
+            IndexType con = connections[j];
+
+            // Get aggregation state for this column
+            IndexType agg = aggregates[col_j];
+
+            // When aggregate is defined, diagonal entries and connected columns will
+            // generate a fill in
+            if((row == col_j || con) && agg >= 0)
             {
-                IndexType key = aggregates[col];
+                // Insert or add if already present into unordered map
+                ValueType val
+                    = (col_j == row) ? static_cast<ValueType>(1) - relax : -relax * dia * val_j;
 
-                if(key >= 0)
-                {
-                    ValueType val
-                        = (col == row) ? static_cast<ValueType>(1) - relax : -relax * dia * vals[j];
-
-                    IndexType hash = (key * 103) & (HASH - 1);
-
-                    // Hash operation
-                    while(true)
-                    {
-                        if(table[hash] == key)
-                        {
-                            atomicAdd(&prolong_vals[data[hash]], val);
-                            break;
-                        }
-                        else if(table[hash] == -1)
-                        {
-                            if(atomicCAS(&table[hash], -1, key) == -1)
-                            {
-                                IndexType old_counter = atomicAdd(counter, 1);
-
-                                data[hash]                = old_counter;
-                                prolong_cols[old_counter] = key;
-                                prolong_vals[old_counter] = val;
-                                __threadfence();
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            // collision, compute new hash
-                            hash = (hash + 1) & (HASH - 1);
-                        }
-                    }
-                }
+                map.insert_or_add(agg, val);
             }
         }
+
+        // Access into P
+        IndexType aj = csr_row_ptr_P[row];
+
+        // Store key val pairs from map into P
+        map.store_sorted(&csr_col_ind_P[aj], &csr_val_P[aj]);
     }
 
     template <unsigned int BLOCKSIZE, typename IndexType>
