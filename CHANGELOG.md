@@ -2,7 +2,7 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION 2.1.8
+## rocALUTION 2.1.8 for ROCm 5.5.0
 ### Added
 - Added build support for Navi32
 ### Improved
