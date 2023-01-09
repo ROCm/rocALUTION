@@ -27,6 +27,9 @@
 #include <rocalution/rocalution.hpp>
 #include <stdexcept>
 
+#define VAL(str) #str
+#define TOSTRING(str) VAL(str)
+
 int device;
 
 /* =====================================================================
@@ -43,6 +46,16 @@ int main(int argc, char** argv)
         if(strcmp(argv[i], "--device") == 0 && argc > i + 1)
         {
             device = atoi(argv[i + 1]);
+        }
+
+        if(strcmp(argv[i], "--version") == 0)
+        {
+            // Print version and exit, if requested
+            std::cout << "rocALUTION version: " << __ROCALUTION_VER_MAJOR << "."
+                      << __ROCALUTION_VER_MINOR << "." << __ROCALUTION_VER_PATCH << "-"
+                      << TOSTRING(__ROCALUTION_VER_TWEAK) << std::endl;
+
+            return 0;
         }
     }
 
