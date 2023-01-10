@@ -383,6 +383,11 @@ if [[ "${build_relocatable}" == true ]]; then
     if ! [ -z ${ROCM_PATH+x} ]; then
         rocm_path=${ROCM_PATH}
     fi
+
+    rocm_rpath=" -Wl,--enable-new-dtags -Wl,--rpath,/opt/rocm/lib:/opt/rocm/lib64"
+    if ! [ -z ${ROCM_RPATH+x} ]; then
+        rocm_rpath=" -Wl,--enable-new-dtags -Wl,--rpath,${ROCM_RPATH}"
+    fi
 fi
 
 # Default cmake executable is called cmake
@@ -519,9 +524,10 @@ pushd .
   if [[ "${build_relocatable}" == true ]]; then
     CXX=${compiler} ${cmake_executable} ${cmake_common_options} ${cmake_client_options} \
       -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
+      -DCMAKE_SHARED_LINKER_FLAGS="${rocm_rpath}" \
       -DCMAKE_PREFIX_PATH="${rocm_path} ${rocm_path}/hcc ${rocm_path}/hip" \
       -DCMAKE_MODULE_PATH="${rocm_path}/lib/cmake/hip ${rocm_path}/hip/cmake" \
-      -DCMAKE_SKIP_INSTALL_RPATH=TRUE \
+      -DCMAKE_EXE_LINKER_FLAGS=" -Wl,--enable-new-dtags -Wl,--rpath,${rocm_path}/lib:${rocm_path}/lib64" \
       -DROCM_DISABLE_LDCONFIG=ON \
       -DROCM_PATH="${rocm_path}" ../..
   else
