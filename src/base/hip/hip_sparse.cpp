@@ -1173,6 +1173,7 @@ namespace rocalution
                                 bsr_row_ptr,
                                 bsr_col_ind,
                                 bsr_dim,
+                                nullptr,
                                 x,
                                 beta,
                                 y);
@@ -1207,6 +1208,7 @@ namespace rocalution
                                 bsr_row_ptr,
                                 bsr_col_ind,
                                 bsr_dim,
+                                nullptr,
                                 x,
                                 beta,
                                 y);
@@ -1241,6 +1243,7 @@ namespace rocalution
                                 bsr_row_ptr,
                                 bsr_col_ind,
                                 bsr_dim,
+                                nullptr,
                                 (const rocsparse_float_complex*)x,
                                 (const rocsparse_float_complex*)beta,
                                 (rocsparse_float_complex*)y);
@@ -1275,6 +1278,7 @@ namespace rocalution
                                 bsr_row_ptr,
                                 bsr_col_ind,
                                 bsr_dim,
+                                nullptr,
                                 (const rocsparse_double_complex*)x,
                                 (const rocsparse_double_complex*)beta,
                                 (rocsparse_double_complex*)y);
