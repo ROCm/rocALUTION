@@ -1007,6 +1007,8 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
+            hipStreamSynchronize(0);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
         return res;
@@ -1048,6 +1050,8 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
+            hipStreamSynchronize(0);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
         return res;
@@ -1081,6 +1085,8 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
+            hipStreamSynchronize(0);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
         return res;
@@ -1152,6 +1158,8 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
+            hipStreamSynchronize(0);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
         return res;
