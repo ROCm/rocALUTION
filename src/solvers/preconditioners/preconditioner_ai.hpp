@@ -206,8 +206,8 @@ namespace rocalution
   * \f$M^{-1} = K^{T} D^{-1} K\f$, where \f$K=(I-LD^{-1}+(LD^{-1})^{2})\f$, with the
   * diagonal \f$D\f$ of \f$A\f$ and the strictly lower triangular part \f$L\f$ of
   * \f$A\f$. The preconditioner can be computed in two forms - explicitly and implicitly.
-  * In the implicit form, the full construction of \f$M\f$ is performed via matrix-matrix
-  * operations, whereas in the explicit from, the application of the preconditioner is
+  * In the explicit form, the full construction of \f$M\f$ is performed via matrix-matrix
+  * operations, whereas in the implicit from, the application of the preconditioner is
   * based on matrix-vector operations only. The matrix format for the stored matrices can
   * be specified.
   *
