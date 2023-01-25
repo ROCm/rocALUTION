@@ -38,7 +38,7 @@
 namespace rocalution
 {
     template <typename ValueType, typename IndexType>
-    bool csr_to_coo_hip(const rocsparse_handle                 handle,
+    bool csr_to_coo_hip(const Rocalution_Backend_Descriptor*   backend,
                         IndexType                              nnz,
                         IndexType                              nrow,
                         IndexType                              ncol,
@@ -54,7 +54,7 @@ namespace rocalution
         assert(src.val != NULL);
 
         assert(dst != NULL);
-        assert(handle != NULL);
+        assert(backend != NULL);
 
         allocate_hip(nnz, &dst->row);
         allocate_hip(nnz, &dst->col);
@@ -66,8 +66,12 @@ namespace rocalution
         hipMemcpyAsync(dst->val, src.val, sizeof(ValueType) * nnz, hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        rocsparse_status status = rocsparse_csr2coo(
-            handle, src.row_offset, nnz, nrow, dst->row, rocsparse_index_base_zero);
+        rocsparse_status status = rocsparse_csr2coo(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
+                                                    src.row_offset,
+                                                    nnz,
+                                                    nrow,
+                                                    dst->row,
+                                                    rocsparse_index_base_zero);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // Sync memcopy
@@ -77,7 +81,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool coo_to_csr_hip(const rocsparse_handle                 handle,
+    bool coo_to_csr_hip(const Rocalution_Backend_Descriptor*   backend,
                         IndexType                              nnz,
                         IndexType                              nrow,
                         IndexType                              ncol,
@@ -89,7 +93,7 @@ namespace rocalution
         assert(ncol > 0);
 
         assert(dst != NULL);
-        assert(handle != NULL);
+        assert(backend != NULL);
 
         allocate_hip(nrow + 1, &dst->row_offset);
         allocate_hip(nnz, &dst->col);
@@ -101,8 +105,12 @@ namespace rocalution
         hipMemcpyAsync(dst->val, src.val, sizeof(ValueType) * nnz, hipMemcpyDeviceToDevice);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        rocsparse_status status = rocsparse_coo2csr(
-            handle, src.row, nnz, nrow, dst->row_offset, rocsparse_index_base_zero);
+        rocsparse_status status = rocsparse_coo2csr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
+                                                    src.row,
+                                                    nnz,
+                                                    nrow,
+                                                    dst->row_offset,
+                                                    rocsparse_index_base_zero);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // Sync memcopy
@@ -112,7 +120,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool csr_to_bcsr_hip(const rocsparse_handle                 handle,
+    bool csr_to_bcsr_hip(const Rocalution_Backend_Descriptor*   backend,
                          IndexType                              nnz,
                          IndexType                              nrow,
                          IndexType                              ncol,
@@ -126,7 +134,7 @@ namespace rocalution
         assert(ncol > 0);
 
         assert(dst != NULL);
-        assert(handle != NULL);
+        assert(backend != NULL);
 
         IndexType blockdim = dst->blockdim;
 
@@ -148,23 +156,24 @@ namespace rocalution
 
         allocate_hip(mb + 1, &dst->row_offset);
 
-        rocsparse_status status = rocsparse_csr2bsr_nnz(handle,
-                                                        dir,
-                                                        nrow,
-                                                        ncol,
-                                                        src_descr,
-                                                        src.row_offset,
-                                                        src.col,
-                                                        blockdim,
-                                                        dst_descr,
-                                                        dst->row_offset,
-                                                        &nnzb);
+        rocsparse_status status
+            = rocsparse_csr2bsr_nnz(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
+                                    dir,
+                                    nrow,
+                                    ncol,
+                                    src_descr,
+                                    src.row_offset,
+                                    src.col,
+                                    blockdim,
+                                    dst_descr,
+                                    dst->row_offset,
+                                    &nnzb);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         allocate_hip(nnzb, &dst->col);
         allocate_hip(nnzb * blockdim * blockdim, &dst->val);
 
-        status = rocsparseTcsr2bsr(handle,
+        status = rocsparseTcsr2bsr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                    dir,
                                    nrow,
                                    ncol,
@@ -187,7 +196,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool bcsr_to_csr_hip(const rocsparse_handle                  handle,
+    bool bcsr_to_csr_hip(const Rocalution_Backend_Descriptor*    backend,
                          IndexType                               nnz,
                          IndexType                               nrow,
                          IndexType                               ncol,
@@ -201,7 +210,7 @@ namespace rocalution
         assert(ncol > 0);
 
         assert(dst != NULL);
-        assert(handle != NULL);
+        assert(backend != NULL);
 
         IndexType blockdim = src.blockdim;
 
@@ -221,7 +230,7 @@ namespace rocalution
         rocsparse_direction dir
             = BCSR_IND_BASE ? rocsparse_direction_row : rocsparse_direction_column;
 
-        rocsparse_status status = rocsparseTbsr2csr(handle,
+        rocsparse_status status = rocsparseTbsr2csr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                                     dir,
                                                     src.nrowb,
                                                     src.ncolb,
@@ -241,7 +250,7 @@ namespace rocalution
         // IndexType* nnz_per_row = NULL;
         // allocate_hip(nnz, &nnz_per_row);
 
-        // status = rocsparseTnnz_compress(handle, nrow, dst_descr, csr_val, csr_row_offset, nnz_per_row, &nnz_C, static_cast<ValueType>(0));
+        // status = rocsparseTnnz_compress(ROCSPARSE_HANDLE(backend->ROC_sparse_handle), nrow, dst_descr, csr_val, csr_row_offset, nnz_per_row, &nnz_C, static_cast<ValueType>(0));
         // CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // // Allocate device memory for the compressed version of the CSR matrix
@@ -250,7 +259,7 @@ namespace rocalution
         // allocate_hip(nnz_C, &dst->val);
 
         // // Finish compression
-        // status = rocsparseTcsr2csr_compress(handle,
+        // status = rocsparseTcsr2csr_compress(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
         //                                         nrow,
         //                                         ncol,
         //                                         dst_descr,
@@ -269,7 +278,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool csr_to_ell_hip(const rocsparse_handle                 handle,
+    bool csr_to_ell_hip(const Rocalution_Backend_Descriptor*   backend,
                         IndexType                              nnz,
                         IndexType                              nrow,
                         IndexType                              ncol,
@@ -285,15 +294,19 @@ namespace rocalution
 
         assert(dst != NULL);
         assert(nnz_ell != NULL);
-        assert(handle != NULL);
+        assert(backend != NULL);
         assert(src_descr != NULL);
         assert(dst_descr != NULL);
 
         rocsparse_status status;
 
         // Determine ELL width
-        status = rocsparse_csr2ell_width(
-            handle, nrow, src_descr, src.row_offset, dst_descr, &dst->max_row);
+        status = rocsparse_csr2ell_width(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
+                                         nrow,
+                                         src_descr,
+                                         src.row_offset,
+                                         dst_descr,
+                                         &dst->max_row);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // Limit ELL size to 5 times CSR nnz
@@ -310,7 +323,7 @@ namespace rocalution
         allocate_hip(*nnz_ell, &dst->val);
 
         // Conversion
-        status = rocsparseTcsr2ell(handle,
+        status = rocsparseTcsr2ell(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                    nrow,
                                    src_descr,
                                    src.val,
@@ -326,7 +339,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool ell_to_csr_hip(const rocsparse_handle                 handle,
+    bool ell_to_csr_hip(const Rocalution_Backend_Descriptor*   backend,
                         IndexType                              nnz,
                         IndexType                              nrow,
                         IndexType                              ncol,
@@ -342,7 +355,7 @@ namespace rocalution
 
         assert(dst != NULL);
         assert(nnz_csr != NULL);
-        assert(handle != NULL);
+        assert(backend != NULL);
         assert(src_descr != NULL);
         assert(dst_descr != NULL);
 
@@ -352,7 +365,7 @@ namespace rocalution
         allocate_hip(nrow + 1, &dst->row_offset);
 
         // Determine CSR nnz
-        status = rocsparse_ell2csr_nnz(handle,
+        status = rocsparse_ell2csr_nnz(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                        nrow,
                                        ncol,
                                        src_descr,
@@ -374,7 +387,7 @@ namespace rocalution
         allocate_hip(*nnz_csr, &dst->val);
 
         // Conversion
-        status = rocsparseTell2csr(handle,
+        status = rocsparseTell2csr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                    nrow,
                                    ncol,
                                    src_descr,
@@ -391,7 +404,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool csr_to_dia_hip(int                                    blocksize,
+    bool csr_to_dia_hip(const Rocalution_Backend_Descriptor*   backend,
                         IndexType                              nnz,
                         IndexType                              nrow,
                         IndexType                              ncol,
@@ -403,29 +416,25 @@ namespace rocalution
         assert(nnz > 0);
         assert(nrow > 0);
         assert(ncol > 0);
-        assert(blocksize > 0);
+        assert(backend != NULL);
 
         assert(dst != NULL);
         assert(nnz_dia != NULL);
         assert(num_diag != NULL);
+
+        // Get blocksize
+        int blocksize = backend->HIP_block_size;
+
+        // Get stream
+        hipStream_t stream = HIPSTREAM(backend->HIP_stream_current);
 
         // Get diagonal mapping vector
         IndexType* diag_idx = NULL;
         allocate_hip(nrow + ncol, &diag_idx);
         set_to_zero_hip(blocksize, nrow + ncol, diag_idx);
 
-        dim3 diag_blocks((nrow - 1) / blocksize + 1);
-        dim3 diag_threads(blocksize);
-
-        hipLaunchKernelGGL((kernel_dia_diag_idx<IndexType>),
-                           diag_blocks,
-                           diag_threads,
-                           0,
-                           0,
-                           nrow,
-                           src.row_offset,
-                           src.col,
-                           diag_idx);
+        kernel_dia_diag_idx<<<(nrow - 1) / blocksize + 1, blocksize, 0, stream>>>(
+            nrow, src.row_offset, src.col, diag_idx);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Reduction to obtain number of occupied diagonals
@@ -442,7 +451,8 @@ namespace rocalution
                         d_num_diag,
                         0,
                         nrow + ncol,
-                        rocprim::plus<IndexType>());
+                        rocprim::plus<IndexType>(),
+                        stream);
 
         // Allocate rocprim buffer
         hipMalloc(&rocprim_buffer, rocprim_size);
@@ -454,7 +464,8 @@ namespace rocalution
                         d_num_diag,
                         0,
                         nrow + ncol,
-                        rocprim::plus<IndexType>());
+                        rocprim::plus<IndexType>(),
+                        stream);
 
         // Clear rocprim buffer
         hipFree(rocprim_buffer);
@@ -496,7 +507,8 @@ namespace rocalution
                                 work,
                                 0,
                                 nrow + ncol,
-                                rocprim::plus<IndexType>());
+                                rocprim::plus<IndexType>(),
+                                stream);
 
         // Allocate rocprim buffer
         hipMalloc(&rocprim_buffer, rocprim_size);
@@ -508,44 +520,21 @@ namespace rocalution
                                 work,
                                 0,
                                 nrow + ncol,
-                                rocprim::plus<IndexType>());
+                                rocprim::plus<IndexType>(),
+                                stream);
 
         // Clear rocprim buffer
         hipFree(rocprim_buffer);
 
         // Fill DIA structures
-        dim3 fill_blocks((nrow + ncol) / blocksize + 1);
-        dim3 fill_threads(blocksize);
-
-        hipLaunchKernelGGL((kernel_dia_fill_offset<IndexType>),
-                           fill_blocks,
-                           fill_threads,
-                           0,
-                           0,
-                           nrow,
-                           ncol,
-                           diag_idx,
-                           work,
-                           dst->offset);
+        kernel_dia_fill_offset<<<(nrow + ncol) / blocksize + 1, blocksize, 0, stream>>>(
+            nrow, ncol, diag_idx, work, dst->offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&work);
 
-        dim3 conv_blocks((nrow - 1) / blocksize + 1);
-        dim3 conv_threads(blocksize);
-
-        hipLaunchKernelGGL((kernel_dia_convert<ValueType, IndexType>),
-                           conv_blocks,
-                           conv_threads,
-                           0,
-                           0,
-                           nrow,
-                           *num_diag,
-                           src.row_offset,
-                           src.col,
-                           src.val,
-                           diag_idx,
-                           dst->val);
+        kernel_dia_convert<<<(nrow - 1) / blocksize + 1, blocksize, 0, stream>>>(
+            nrow, *num_diag, src.row_offset, src.col, src.val, diag_idx, dst->val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Clear
@@ -555,7 +544,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool csr_to_hyb_hip(int                                    blocksize,
+    bool csr_to_hyb_hip(const Rocalution_Backend_Descriptor*   backend,
                         IndexType                              nnz,
                         IndexType                              nrow,
                         IndexType                              ncol,
@@ -568,12 +557,18 @@ namespace rocalution
         assert(nnz > 0);
         assert(nrow > 0);
         assert(ncol > 0);
-        assert(blocksize > 0);
+        assert(backend != NULL);
 
         assert(dst != NULL);
         assert(nnz_hyb != NULL);
         assert(nnz_ell != NULL);
         assert(nnz_coo != NULL);
+
+        // Get blocksize
+        int blocksize = backend->HIP_block_size;
+
+        // Get stream
+        hipStream_t stream = HIPSTREAM(backend->HIP_stream_current);
 
         // Determine ELL width by average nnz per row
         if(dst->ELL.max_row == 0)
@@ -604,18 +599,8 @@ namespace rocalution
         }
         else
         {
-            dim3 blocks((nrow - 1) / blocksize + 1);
-            dim3 threads(blocksize);
-
-            hipLaunchKernelGGL((kernel_hyb_coo_nnz),
-                               blocks,
-                               threads,
-                               0,
-                               0,
-                               nrow,
-                               dst->ELL.max_row,
-                               src.row_offset,
-                               coo_row_nnz);
+            kernel_hyb_coo_nnz<<<(nrow - 1) / blocksize + 1, blocksize, 0, stream>>>(
+                nrow, dst->ELL.max_row, src.row_offset, coo_row_nnz);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Inclusive sum on coo_row_nnz
@@ -629,7 +614,8 @@ namespace rocalution
                                     coo_row_nnz,
                                     0,
                                     nrow + 1,
-                                    rocprim::plus<IndexType>());
+                                    rocprim::plus<IndexType>(),
+                                    stream);
 
             // Allocate rocprim buffer
             hipMalloc(&rocprim_buffer, rocprim_size);
@@ -641,7 +627,8 @@ namespace rocalution
                                     coo_row_nnz,
                                     0,
                                     nrow + 1,
-                                    rocprim::plus<IndexType>());
+                                    rocprim::plus<IndexType>(),
+                                    stream);
 
             // Clear rocprim buffer
             hipFree(rocprim_buffer);
@@ -663,25 +650,17 @@ namespace rocalution
         allocate_hip(*nnz_coo, &dst->COO.val);
 
         // Fill HYB structures
-        dim3 blocks((nrow - 1) / blocksize + 1);
-        dim3 threads(blocksize);
-
-        hipLaunchKernelGGL((kernel_hyb_csr2hyb<ValueType>),
-                           blocks,
-                           threads,
-                           0,
-                           0,
-                           nrow,
-                           src.val,
-                           src.row_offset,
-                           src.col,
-                           dst->ELL.max_row,
-                           dst->ELL.col,
-                           dst->ELL.val,
-                           dst->COO.row,
-                           dst->COO.col,
-                           dst->COO.val,
-                           coo_row_nnz);
+        kernel_hyb_csr2hyb<<<(nrow - 1) / blocksize + 1, blocksize, 0, stream>>>(nrow,
+                                                                                 src.val,
+                                                                                 src.row_offset,
+                                                                                 src.col,
+                                                                                 dst->ELL.max_row,
+                                                                                 dst->ELL.col,
+                                                                                 dst->ELL.val,
+                                                                                 dst->COO.row,
+                                                                                 dst->COO.col,
+                                                                                 dst->COO.val,
+                                                                                 coo_row_nnz);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&coo_row_nnz);
@@ -690,8 +669,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool csr_to_dense_hip(const rocsparse_handle                 sparse_handle,
-                          const rocblas_handle                   blas_handle,
+    bool csr_to_dense_hip(const Rocalution_Backend_Descriptor*   backend,
                           IndexType                              nrow,
                           IndexType                              ncol,
                           const MatrixCSR<ValueType, IndexType>& src,
@@ -702,23 +680,23 @@ namespace rocalution
         assert(ncol > 0);
 
         assert(dst != NULL);
-        assert(sparse_handle != NULL);
-        assert(blas_handle != NULL);
+        assert(backend != NULL);
         assert(src_descr != NULL);
 
         allocate_hip(nrow * ncol, &dst->val);
 
         if(DENSE_IND_BASE == 0)
         {
-            rocsparse_status status = rocsparseTcsr2dense(sparse_handle,
-                                                          nrow,
-                                                          ncol,
-                                                          src_descr,
-                                                          src.val,
-                                                          src.row_offset,
-                                                          src.col,
-                                                          dst->val,
-                                                          nrow);
+            rocsparse_status status
+                = rocsparseTcsr2dense(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
+                                      nrow,
+                                      ncol,
+                                      src_descr,
+                                      src.val,
+                                      src.row_offset,
+                                      src.col,
+                                      dst->val,
+                                      nrow);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
         }
         else
@@ -726,8 +704,16 @@ namespace rocalution
             ValueType* temp = NULL;
             allocate_hip(nrow * ncol, &temp);
 
-            rocsparse_status sparse_status = rocsparseTcsr2dense(
-                sparse_handle, nrow, ncol, src_descr, src.val, src.row_offset, src.col, temp, nrow);
+            rocsparse_status sparse_status
+                = rocsparseTcsr2dense(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
+                                      nrow,
+                                      ncol,
+                                      src_descr,
+                                      src.val,
+                                      src.row_offset,
+                                      src.col,
+                                      temp,
+                                      nrow);
             CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);
 
             ValueType alpha = static_cast<ValueType>(1);
@@ -737,7 +723,7 @@ namespace rocalution
             ValueType* B;
 
             // transpose matrix so that dst values are row major
-            rocblas_status blas_status = rocblasTgeam(blas_handle,
+            rocblas_status blas_status = rocblasTgeam(ROCBLAS_HANDLE(backend->ROC_blas_handle),
                                                       rocblas_operation_transpose,
                                                       rocblas_operation_none,
                                                       nrow,
@@ -762,21 +748,19 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    bool dense_to_csr_hip(const rocsparse_handle           sparse_handle,
-                          const rocblas_handle             blas_handle,
-                          IndexType                        nrow,
-                          IndexType                        ncol,
-                          const MatrixDENSE<ValueType>&    src,
-                          MatrixCSR<ValueType, IndexType>* dst,
-                          const rocsparse_mat_descr        dst_descr,
-                          IndexType*                       nnz_csr)
+    bool dense_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                          IndexType                            nrow,
+                          IndexType                            ncol,
+                          const MatrixDENSE<ValueType>&        src,
+                          MatrixCSR<ValueType, IndexType>*     dst,
+                          const rocsparse_mat_descr            dst_descr,
+                          IndexType*                           nnz_csr)
     {
         assert(nrow > 0);
         assert(ncol > 0);
 
         assert(dst != NULL);
-        assert(sparse_handle != NULL);
-        assert(blas_handle != NULL);
+        assert(backend != NULL);
         assert(dst_descr != NULL);
 
         IndexType  nnz_total;
@@ -788,7 +772,7 @@ namespace rocalution
 
             allocate_hip(nrow, &nnz_per_row);
 
-            status = rocsparseTnnz(sparse_handle,
+            status = rocsparseTnnz(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                    rocsparse_direction_row,
                                    nrow,
                                    ncol,
@@ -803,7 +787,7 @@ namespace rocalution
             allocate_hip(nnz_total, &dst->col);
             allocate_hip(nnz_total, &dst->val);
 
-            status = rocsparseTdense2csr(sparse_handle,
+            status = rocsparseTdense2csr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                          nrow,
                                          ncol,
                                          dst_descr,
@@ -829,7 +813,7 @@ namespace rocalution
             ValueType* B;
 
             // transpose matrix so that src values are column major
-            rocblas_status blas_status = rocblasTgeam(blas_handle,
+            rocblas_status blas_status = rocblasTgeam(ROCBLAS_HANDLE(backend->ROC_blas_handle),
                                                       rocblas_operation_transpose,
                                                       rocblas_operation_none,
                                                       nrow,
@@ -848,7 +832,7 @@ namespace rocalution
 
             rocsparse_status sparse_status;
 
-            sparse_status = rocsparseTnnz(sparse_handle,
+            sparse_status = rocsparseTnnz(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                           rocsparse_direction_row,
                                           nrow,
                                           ncol,
@@ -863,7 +847,7 @@ namespace rocalution
             allocate_hip(nnz_total, &dst->col);
             allocate_hip(nnz_total, &dst->val);
 
-            sparse_status = rocsparseTdense2csr(sparse_handle,
+            sparse_status = rocsparseTdense2csr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                                 nrow,
                                                 ncol,
                                                 dst_descr,
@@ -888,29 +872,29 @@ namespace rocalution
     }
 
     // csr_to_coo
-    template bool csr_to_coo_hip(const rocsparse_handle       handle,
-                                 int                          nnz,
-                                 int                          nrow,
-                                 int                          ncol,
-                                 const MatrixCSR<float, int>& src,
-                                 MatrixCOO<float, int>*       dst);
+    template bool csr_to_coo_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<float, int>&         src,
+                                 MatrixCOO<float, int>*               dst);
 
-    template bool csr_to_coo_hip(const rocsparse_handle        handle,
-                                 int                           nnz,
-                                 int                           nrow,
-                                 int                           ncol,
-                                 const MatrixCSR<double, int>& src,
-                                 MatrixCOO<double, int>*       dst);
+    template bool csr_to_coo_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<double, int>&        src,
+                                 MatrixCOO<double, int>*              dst);
 
 #ifdef SUPPORT_COMPLEX
-    template bool csr_to_coo_hip(const rocsparse_handle                     handle,
+    template bool csr_to_coo_hip(const Rocalution_Backend_Descriptor*       backend,
                                  int                                        nnz,
                                  int                                        nrow,
                                  int                                        ncol,
                                  const MatrixCSR<std::complex<float>, int>& src,
                                  MatrixCOO<std::complex<float>, int>*       dst);
 
-    template bool csr_to_coo_hip(const rocsparse_handle                      handle,
+    template bool csr_to_coo_hip(const Rocalution_Backend_Descriptor*        backend,
                                  int                                         nnz,
                                  int                                         nrow,
                                  int                                         ncol,
@@ -919,29 +903,29 @@ namespace rocalution
 #endif
 
     // coo_to_csr
-    template bool coo_to_csr_hip(const rocsparse_handle       handle,
-                                 int                          nnz,
-                                 int                          nrow,
-                                 int                          ncol,
-                                 const MatrixCOO<float, int>& src,
-                                 MatrixCSR<float, int>*       dst);
+    template bool coo_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCOO<float, int>&         src,
+                                 MatrixCSR<float, int>*               dst);
 
-    template bool coo_to_csr_hip(const rocsparse_handle        handle,
-                                 int                           nnz,
-                                 int                           nrow,
-                                 int                           ncol,
-                                 const MatrixCOO<double, int>& src,
-                                 MatrixCSR<double, int>*       dst);
+    template bool coo_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCOO<double, int>&        src,
+                                 MatrixCSR<double, int>*              dst);
 
 #ifdef SUPPORT_COMPLEX
-    template bool coo_to_csr_hip(const rocsparse_handle                     handle,
+    template bool coo_to_csr_hip(const Rocalution_Backend_Descriptor*       backend,
                                  int                                        nnz,
                                  int                                        nrow,
                                  int                                        ncol,
                                  const MatrixCOO<std::complex<float>, int>& src,
                                  MatrixCSR<std::complex<float>, int>*       dst);
 
-    template bool coo_to_csr_hip(const rocsparse_handle                      handle,
+    template bool coo_to_csr_hip(const Rocalution_Backend_Descriptor*        backend,
                                  int                                         nnz,
                                  int                                         nrow,
                                  int                                         ncol,
@@ -950,26 +934,26 @@ namespace rocalution
 #endif
 
     // csr_to_bcsr
-    template bool csr_to_bcsr_hip(const rocsparse_handle       handle,
-                                  int                          nnz,
-                                  int                          nrow,
-                                  int                          ncol,
-                                  const MatrixCSR<float, int>& src,
-                                  const rocsparse_mat_descr    src_descr,
-                                  MatrixBCSR<float, int>*      dst,
-                                  const rocsparse_mat_descr    dst_descr);
+    template bool csr_to_bcsr_hip(const Rocalution_Backend_Descriptor* backend,
+                                  int                                  nnz,
+                                  int                                  nrow,
+                                  int                                  ncol,
+                                  const MatrixCSR<float, int>&         src,
+                                  const rocsparse_mat_descr            src_descr,
+                                  MatrixBCSR<float, int>*              dst,
+                                  const rocsparse_mat_descr            dst_descr);
 
-    template bool csr_to_bcsr_hip(const rocsparse_handle        handle,
-                                  int                           nnz,
-                                  int                           nrow,
-                                  int                           ncol,
-                                  const MatrixCSR<double, int>& src,
-                                  const rocsparse_mat_descr     src_descr,
-                                  MatrixBCSR<double, int>*      dst,
-                                  const rocsparse_mat_descr     dst_descr);
+    template bool csr_to_bcsr_hip(const Rocalution_Backend_Descriptor* backend,
+                                  int                                  nnz,
+                                  int                                  nrow,
+                                  int                                  ncol,
+                                  const MatrixCSR<double, int>&        src,
+                                  const rocsparse_mat_descr            src_descr,
+                                  MatrixBCSR<double, int>*             dst,
+                                  const rocsparse_mat_descr            dst_descr);
 
 #ifdef SUPPORT_COMPLEX
-    template bool csr_to_bcsr_hip(const rocsparse_handle                     handle,
+    template bool csr_to_bcsr_hip(const Rocalution_Backend_Descriptor*       backend,
                                   int                                        nnz,
                                   int                                        nrow,
                                   int                                        ncol,
@@ -978,7 +962,7 @@ namespace rocalution
                                   MatrixBCSR<std::complex<float>, int>*      dst,
                                   const rocsparse_mat_descr                  dst_descr);
 
-    template bool csr_to_bcsr_hip(const rocsparse_handle                      handle,
+    template bool csr_to_bcsr_hip(const Rocalution_Backend_Descriptor*        backend,
                                   int                                         nnz,
                                   int                                         nrow,
                                   int                                         ncol,
@@ -989,26 +973,26 @@ namespace rocalution
 #endif
 
     // bcsr_to_csr
-    template bool bcsr_to_csr_hip(const rocsparse_handle        handle,
-                                  int                           nnz,
-                                  int                           nrow,
-                                  int                           ncol,
-                                  const MatrixBCSR<float, int>& src,
-                                  const rocsparse_mat_descr     src_descr,
-                                  MatrixCSR<float, int>*        dst,
-                                  rocsparse_mat_descr           dst_descr);
+    template bool bcsr_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                  int                                  nnz,
+                                  int                                  nrow,
+                                  int                                  ncol,
+                                  const MatrixBCSR<float, int>&        src,
+                                  const rocsparse_mat_descr            src_descr,
+                                  MatrixCSR<float, int>*               dst,
+                                  rocsparse_mat_descr                  dst_descr);
 
-    template bool bcsr_to_csr_hip(const rocsparse_handle         handle,
-                                  int                            nnz,
-                                  int                            nrow,
-                                  int                            ncol,
-                                  const MatrixBCSR<double, int>& src,
-                                  const rocsparse_mat_descr      src_descr,
-                                  MatrixCSR<double, int>*        dst,
-                                  rocsparse_mat_descr            dst_descr);
+    template bool bcsr_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                  int                                  nnz,
+                                  int                                  nrow,
+                                  int                                  ncol,
+                                  const MatrixBCSR<double, int>&       src,
+                                  const rocsparse_mat_descr            src_descr,
+                                  MatrixCSR<double, int>*              dst,
+                                  rocsparse_mat_descr                  dst_descr);
 
 #ifdef SUPPORT_COMPLEX
-    template bool bcsr_to_csr_hip(const rocsparse_handle                      handle,
+    template bool bcsr_to_csr_hip(const Rocalution_Backend_Descriptor*        backend,
                                   int                                         nnz,
                                   int                                         nrow,
                                   int                                         ncol,
@@ -1017,7 +1001,7 @@ namespace rocalution
                                   MatrixCSR<std::complex<float>, int>*        dst,
                                   rocsparse_mat_descr                         dst_descr);
 
-    template bool bcsr_to_csr_hip(const rocsparse_handle                       handle,
+    template bool bcsr_to_csr_hip(const Rocalution_Backend_Descriptor*         backend,
                                   int                                          nnz,
                                   int                                          nrow,
                                   int                                          ncol,
@@ -1028,28 +1012,28 @@ namespace rocalution
 #endif
 
     // csr_to_ell
-    template bool csr_to_ell_hip(const rocsparse_handle       handle,
-                                 int                          nnz,
-                                 int                          nrow,
-                                 int                          ncol,
-                                 const MatrixCSR<float, int>& src,
-                                 const rocsparse_mat_descr    src_descr,
-                                 MatrixELL<float, int>*       dst,
-                                 const rocsparse_mat_descr    dst_descr,
-                                 int*                         nnz_ell);
+    template bool csr_to_ell_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<float, int>&         src,
+                                 const rocsparse_mat_descr            src_descr,
+                                 MatrixELL<float, int>*               dst,
+                                 const rocsparse_mat_descr            dst_descr,
+                                 int*                                 nnz_ell);
 
-    template bool csr_to_ell_hip(const rocsparse_handle        handle,
-                                 int                           nnz,
-                                 int                           nrow,
-                                 int                           ncol,
-                                 const MatrixCSR<double, int>& src,
-                                 const rocsparse_mat_descr     src_descr,
-                                 MatrixELL<double, int>*       dst,
-                                 const rocsparse_mat_descr     dst_descr,
-                                 int*                          nnz_ell);
+    template bool csr_to_ell_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<double, int>&        src,
+                                 const rocsparse_mat_descr            src_descr,
+                                 MatrixELL<double, int>*              dst,
+                                 const rocsparse_mat_descr            dst_descr,
+                                 int*                                 nnz_ell);
 
 #ifdef SUPPORT_COMPLEX
-    template bool csr_to_ell_hip(const rocsparse_handle                     handle,
+    template bool csr_to_ell_hip(const Rocalution_Backend_Descriptor*       backend,
                                  int                                        nnz,
                                  int                                        nrow,
                                  int                                        ncol,
@@ -1059,7 +1043,7 @@ namespace rocalution
                                  const rocsparse_mat_descr                  dst_descr,
                                  int*                                       nnz_ell);
 
-    template bool csr_to_ell_hip(const rocsparse_handle                      handle,
+    template bool csr_to_ell_hip(const Rocalution_Backend_Descriptor*        backend,
                                  int                                         nnz,
                                  int                                         nrow,
                                  int                                         ncol,
@@ -1071,28 +1055,28 @@ namespace rocalution
 #endif
 
     // ell_to_csr
-    template bool ell_to_csr_hip(const rocsparse_handle       handle,
-                                 int                          nnz,
-                                 int                          nrow,
-                                 int                          ncol,
-                                 const MatrixELL<float, int>& src,
-                                 const rocsparse_mat_descr    src_descr,
-                                 MatrixCSR<float, int>*       dst,
-                                 const rocsparse_mat_descr    dst_descr,
-                                 int*                         nnz_csr);
+    template bool ell_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixELL<float, int>&         src,
+                                 const rocsparse_mat_descr            src_descr,
+                                 MatrixCSR<float, int>*               dst,
+                                 const rocsparse_mat_descr            dst_descr,
+                                 int*                                 nnz_csr);
 
-    template bool ell_to_csr_hip(const rocsparse_handle        handle,
-                                 int                           nnz,
-                                 int                           nrow,
-                                 int                           ncol,
-                                 const MatrixELL<double, int>& src,
-                                 const rocsparse_mat_descr     src_descr,
-                                 MatrixCSR<double, int>*       dst,
-                                 const rocsparse_mat_descr     dst_descr,
-                                 int*                          nnz_csr);
+    template bool ell_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixELL<double, int>&        src,
+                                 const rocsparse_mat_descr            src_descr,
+                                 MatrixCSR<double, int>*              dst,
+                                 const rocsparse_mat_descr            dst_descr,
+                                 int*                                 nnz_csr);
 
 #ifdef SUPPORT_COMPLEX
-    template bool ell_to_csr_hip(const rocsparse_handle                     handle,
+    template bool ell_to_csr_hip(const Rocalution_Backend_Descriptor*       backend,
                                  int                                        nnz,
                                  int                                        nrow,
                                  int                                        ncol,
@@ -1102,7 +1086,7 @@ namespace rocalution
                                  const rocsparse_mat_descr                  dst_descr,
                                  int*                                       nnz_csr);
 
-    template bool ell_to_csr_hip(const rocsparse_handle                      handle,
+    template bool ell_to_csr_hip(const Rocalution_Backend_Descriptor*        backend,
                                  int                                         nnz,
                                  int                                         nrow,
                                  int                                         ncol,
@@ -1114,26 +1098,26 @@ namespace rocalution
 #endif
 
     // csr_to_dia
-    template bool csr_to_dia_hip(int                          blocksize,
-                                 int                          nnz,
-                                 int                          nrow,
-                                 int                          ncol,
-                                 const MatrixCSR<float, int>& src,
-                                 MatrixDIA<float, int>*       dst,
-                                 int*                         nnz_dia,
-                                 int*                         num_diag);
+    template bool csr_to_dia_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<float, int>&         src,
+                                 MatrixDIA<float, int>*               dst,
+                                 int*                                 nnz_dia,
+                                 int*                                 num_diag);
 
-    template bool csr_to_dia_hip(int                           blocksize,
-                                 int                           nnz,
-                                 int                           nrow,
-                                 int                           ncol,
-                                 const MatrixCSR<double, int>& src,
-                                 MatrixDIA<double, int>*       dst,
-                                 int*                          nnz_dia,
-                                 int*                          num_diag);
+    template bool csr_to_dia_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<double, int>&        src,
+                                 MatrixDIA<double, int>*              dst,
+                                 int*                                 nnz_dia,
+                                 int*                                 num_diag);
 
 #ifdef SUPPORT_COMPLEX
-    template bool csr_to_dia_hip(int                                        blocksize,
+    template bool csr_to_dia_hip(const Rocalution_Backend_Descriptor*       backend,
                                  int                                        nnz,
                                  int                                        nrow,
                                  int                                        ncol,
@@ -1142,7 +1126,7 @@ namespace rocalution
                                  int*                                       nnz_dia,
                                  int*                                       num_diag);
 
-    template bool csr_to_dia_hip(int                                         blocksize,
+    template bool csr_to_dia_hip(const Rocalution_Backend_Descriptor*        backend,
                                  int                                         nnz,
                                  int                                         nrow,
                                  int                                         ncol,
@@ -1153,28 +1137,28 @@ namespace rocalution
 #endif
 
     // csr_to_hyb
-    template bool csr_to_hyb_hip(int                          blocksize,
-                                 int                          nnz,
-                                 int                          nrow,
-                                 int                          ncol,
-                                 const MatrixCSR<float, int>& src,
-                                 MatrixHYB<float, int>*       dst,
-                                 int*                         nnz_hyb,
-                                 int*                         nnz_ell,
-                                 int*                         nnz_coo);
+    template bool csr_to_hyb_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<float, int>&         src,
+                                 MatrixHYB<float, int>*               dst,
+                                 int*                                 nnz_hyb,
+                                 int*                                 nnz_ell,
+                                 int*                                 nnz_coo);
 
-    template bool csr_to_hyb_hip(int                           blocksize,
-                                 int                           nnz,
-                                 int                           nrow,
-                                 int                           ncol,
-                                 const MatrixCSR<double, int>& src,
-                                 MatrixHYB<double, int>*       dst,
-                                 int*                          nnz_hyb,
-                                 int*                          nnz_ell,
-                                 int*                          nnz_coo);
+    template bool csr_to_hyb_hip(const Rocalution_Backend_Descriptor* backend,
+                                 int                                  nnz,
+                                 int                                  nrow,
+                                 int                                  ncol,
+                                 const MatrixCSR<double, int>&        src,
+                                 MatrixHYB<double, int>*              dst,
+                                 int*                                 nnz_hyb,
+                                 int*                                 nnz_ell,
+                                 int*                                 nnz_coo);
 
 #ifdef SUPPORT_COMPLEX
-    template bool csr_to_hyb_hip(int                                        blocksize,
+    template bool csr_to_hyb_hip(const Rocalution_Backend_Descriptor*       backend,
                                  int                                        nnz,
                                  int                                        nrow,
                                  int                                        ncol,
@@ -1184,7 +1168,7 @@ namespace rocalution
                                  int*                                       nnz_ell,
                                  int*                                       nnz_coo);
 
-    template bool csr_to_hyb_hip(int                                         blocksize,
+    template bool csr_to_hyb_hip(const Rocalution_Backend_Descriptor*        backend,
                                  int                                         nnz,
                                  int                                         nrow,
                                  int                                         ncol,
@@ -1196,33 +1180,29 @@ namespace rocalution
 #endif
 
     // csr_to_dense
-    template bool csr_to_dense_hip(const rocsparse_handle       sparse_handle,
-                                   const rocblas_handle         blas_handle,
-                                   int                          nrow,
-                                   int                          ncol,
-                                   const MatrixCSR<float, int>& src,
-                                   const rocsparse_mat_descr    src_descr,
-                                   MatrixDENSE<float>*          dst);
+    template bool csr_to_dense_hip(const Rocalution_Backend_Descriptor* backend,
+                                   int                                  nrow,
+                                   int                                  ncol,
+                                   const MatrixCSR<float, int>&         src,
+                                   const rocsparse_mat_descr            src_descr,
+                                   MatrixDENSE<float>*                  dst);
 
-    template bool csr_to_dense_hip(const rocsparse_handle        sparse_handle,
-                                   const rocblas_handle          blas_handle,
-                                   int                           nrow,
-                                   int                           ncol,
-                                   const MatrixCSR<double, int>& src,
-                                   const rocsparse_mat_descr     src_descr,
-                                   MatrixDENSE<double>*          dst);
+    template bool csr_to_dense_hip(const Rocalution_Backend_Descriptor* backend,
+                                   int                                  nrow,
+                                   int                                  ncol,
+                                   const MatrixCSR<double, int>&        src,
+                                   const rocsparse_mat_descr            src_descr,
+                                   MatrixDENSE<double>*                 dst);
 
 #ifdef SUPPORT_COMPLEX
-    template bool csr_to_dense_hip(const rocsparse_handle                     sparse_handle,
-                                   const rocblas_handle                       blas_handle,
+    template bool csr_to_dense_hip(const Rocalution_Backend_Descriptor*       backend,
                                    int                                        nrow,
                                    int                                        ncol,
                                    const MatrixCSR<std::complex<float>, int>& src,
                                    const rocsparse_mat_descr                  src_descr,
                                    MatrixDENSE<std::complex<float>>*          dst);
 
-    template bool csr_to_dense_hip(const rocsparse_handle                      sparse_handle,
-                                   const rocblas_handle                        blas_handle,
+    template bool csr_to_dense_hip(const Rocalution_Backend_Descriptor*        backend,
                                    int                                         nrow,
                                    int                                         ncol,
                                    const MatrixCSR<std::complex<double>, int>& src,
@@ -1231,27 +1211,24 @@ namespace rocalution
 #endif
 
     // dense_to_csr
-    template bool dense_to_csr_hip(const rocsparse_handle    sparse_handle,
-                                   const rocblas_handle      blas_handle,
-                                   int                       nrow,
-                                   int                       ncol,
-                                   const MatrixDENSE<float>& src,
-                                   MatrixCSR<float, int>*    dst,
-                                   const rocsparse_mat_descr dst_descr,
-                                   int*                      nnz_csr);
+    template bool dense_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                   int                                  nrow,
+                                   int                                  ncol,
+                                   const MatrixDENSE<float>&            src,
+                                   MatrixCSR<float, int>*               dst,
+                                   const rocsparse_mat_descr            dst_descr,
+                                   int*                                 nnz_csr);
 
-    template bool dense_to_csr_hip(const rocsparse_handle     sparse_handle,
-                                   const rocblas_handle       blas_handle,
-                                   int                        nrow,
-                                   int                        ncol,
-                                   const MatrixDENSE<double>& src,
-                                   MatrixCSR<double, int>*    dst,
-                                   const rocsparse_mat_descr  dst_descr,
-                                   int*                       nnz_csr);
+    template bool dense_to_csr_hip(const Rocalution_Backend_Descriptor* backend,
+                                   int                                  nrow,
+                                   int                                  ncol,
+                                   const MatrixDENSE<double>&           src,
+                                   MatrixCSR<double, int>*              dst,
+                                   const rocsparse_mat_descr            dst_descr,
+                                   int*                                 nnz_csr);
 
 #ifdef SUPPORT_COMPLEX
-    template bool dense_to_csr_hip(const rocsparse_handle                  sparse_handle,
-                                   const rocblas_handle                    blas_handle,
+    template bool dense_to_csr_hip(const Rocalution_Backend_Descriptor*    backend,
                                    int                                     nrow,
                                    int                                     ncol,
                                    const MatrixDENSE<std::complex<float>>& src,
@@ -1259,8 +1236,7 @@ namespace rocalution
                                    const rocsparse_mat_descr               dst_descr,
                                    int*                                    nnz_csr);
 
-    template bool dense_to_csr_hip(const rocsparse_handle                   sparse_handle,
-                                   const rocblas_handle                     blas_handle,
+    template bool dense_to_csr_hip(const Rocalution_Backend_Descriptor*     backend,
                                    int                                      nrow,
                                    int                                      ncol,
                                    const MatrixDENSE<std::complex<double>>& src,

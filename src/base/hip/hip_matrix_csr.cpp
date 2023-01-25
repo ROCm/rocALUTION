@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -783,7 +783,7 @@ namespace rocalution
         {
             this->Clear();
 
-            if(coo_to_csr_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+            if(coo_to_csr_hip(&this->local_backend_,
                               cast_mat_coo->nnz_,
                               cast_mat_coo->nrow_,
                               cast_mat_coo->ncol_,
@@ -807,7 +807,7 @@ namespace rocalution
             this->Clear();
             int nnz;
 
-            if(ell_to_csr_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+            if(ell_to_csr_hip(&this->local_backend_,
                               cast_mat_ell->nnz_,
                               cast_mat_ell->nrow_,
                               cast_mat_ell->ncol_,
@@ -835,8 +835,7 @@ namespace rocalution
             this->Clear();
             int nnz = 0;
 
-            if(dense_to_csr_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+            if(dense_to_csr_hip(&this->local_backend_,
                                 cast_mat_dense->nrow_,
                                 cast_mat_dense->ncol_,
                                 cast_mat_dense->mat_,
@@ -863,7 +862,7 @@ namespace rocalution
             int nnz  = cast_mat_bcsr->mat_.nnzb * cast_mat_bcsr->mat_.blockdim
                       * cast_mat_bcsr->mat_.blockdim;
 
-            if(bcsr_to_csr_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+            if(bcsr_to_csr_hip(&this->local_backend_,
                                nnz,
                                nrow,
                                ncol,
@@ -1041,36 +1040,31 @@ namespace rocalution
     template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::Permute(const BaseVector<int>& permutation)
     {
-        assert(permutation.GetSize() == this->nrow_);
-        assert(permutation.GetSize() == this->ncol_);
-
         if(this->nnz_ > 0)
         {
+            const HIPAcceleratorVector<int>* cast_perm
+                = dynamic_cast<const HIPAcceleratorVector<int>*>(&permutation);
+
+            assert(cast_perm != NULL);
+            assert(cast_perm->size_ == this->nrow_);
+            assert(cast_perm->size_ == this->ncol_);
+
             int*       d_nnzPerm = NULL;
             int*       d_offset  = NULL;
             ValueType* d_data    = NULL;
 
-            allocate_hip<int>((this->nrow_ + 1), &d_nnzPerm);
-            allocate_hip<ValueType>(this->nnz_, &d_data);
-            allocate_hip<int>(this->nnz_, &d_offset);
+            allocate_hip((this->nrow_ + 1), &d_nnzPerm);
+            allocate_hip(this->nnz_, &d_data);
+            allocate_hip(this->nnz_, &d_offset);
 
-            const HIPAcceleratorVector<int>* cast_perm
-                = dynamic_cast<const HIPAcceleratorVector<int>*>(&permutation);
-            assert(cast_perm != NULL);
-
-            int  nrow = this->nrow_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_permute_row_nnz<int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->nrow_,
-                               this->mat_.row_offset,
-                               cast_perm->vec_,
-                               d_nnzPerm);
+            kernel_permute_row_nnz<<<GridSize,
+                                     BlockSize,
+                                     0,
+                                     HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_, this->mat_.row_offset, cast_perm->vec_, d_nnzPerm);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // rocprim buffer
@@ -1080,9 +1074,23 @@ namespace rocalution
             // Determine maximum
             int* d_max = NULL;
             allocate_hip(1, &d_max);
-            rocprim::reduce(buffer, size, d_nnzPerm, d_max, 0, nrow, rocprim::maximum<int>());
+            rocprim::reduce(buffer,
+                            size,
+                            d_nnzPerm,
+                            d_max,
+                            0,
+                            this->nrow_,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipMalloc(&buffer, size);
-            rocprim::reduce(buffer, size, d_nnzPerm, d_max, 0, nrow, rocprim::maximum<int>());
+            rocprim::reduce(buffer,
+                            size,
+                            d_nnzPerm,
+                            d_max,
+                            0,
+                            this->nrow_,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipFree(buffer);
             buffer = NULL;
 
@@ -1091,50 +1099,58 @@ namespace rocalution
             free_hip(&d_max);
 
             // Inclusive sum
-            rocprim::inclusive_scan(
-                buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow, rocprim::plus<int>());
+            rocprim::inclusive_scan(buffer,
+                                    size,
+                                    d_nnzPerm + 1,
+                                    d_nnzPerm + 1,
+                                    this->nrow_,
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipMalloc(&buffer, size);
-            rocprim::inclusive_scan(
-                buffer, size, d_nnzPerm + 1, d_nnzPerm + 1, nrow, rocprim::plus<int>());
+            rocprim::inclusive_scan(buffer,
+                                    size,
+                                    d_nnzPerm + 1,
+                                    d_nnzPerm + 1,
+                                    this->nrow_,
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipFree(buffer);
             buffer = NULL;
 
             BlockSize = dim3(this->local_backend_.HIP_block_size);
-            GridSize  = dim3((this->local_backend_.HIP_warp * nrow - 1)
+            GridSize  = dim3((this->local_backend_.HIP_warp * this->nrow_ - 1)
                                 / this->local_backend_.HIP_block_size
                             + 1);
 
             if(this->local_backend_.HIP_warp == 32)
             {
-                hipLaunchKernelGGL((kernel_permute_rows<ValueType, int, 32>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   d_nnzPerm,
-                                   this->mat_.col,
-                                   this->mat_.val,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data);
+                kernel_permute_rows<32>
+                    <<<GridSize,
+                       BlockSize,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             d_nnzPerm,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_perm->vec_,
+                                                                             d_offset,
+                                                                             d_data);
             }
             else if(this->local_backend_.HIP_warp == 64)
             {
-                hipLaunchKernelGGL((kernel_permute_rows<ValueType, int, 64>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   d_nnzPerm,
-                                   this->mat_.col,
-                                   this->mat_.val,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data);
+                kernel_permute_rows<64>
+                    <<<GridSize,
+                       BlockSize,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             d_nnzPerm,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_perm->vec_,
+                                                                             d_offset,
+                                                                             d_data);
             }
             else
             {
@@ -1150,98 +1166,92 @@ namespace rocalution
 
             if(maxnnzrow > 64)
             {
-                hipLaunchKernelGGL((kernel_permute_cols_fallback<ValueType, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data,
-                                   this->mat_.col,
-                                   this->mat_.val);
+                kernel_permute_cols_fallback<<<
+                    GridSize,
+                    BlockSize,
+                    0,
+                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                          this->mat_.row_offset,
+                                                                          cast_perm->vec_,
+                                                                          d_offset,
+                                                                          d_data,
+                                                                          this->mat_.col,
+                                                                          this->mat_.val);
             }
             else if(maxnnzrow > 32)
             {
-                hipLaunchKernelGGL((kernel_permute_cols<64, ValueType, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data,
-                                   this->mat_.col,
-                                   this->mat_.val);
+                kernel_permute_cols<64>
+                    <<<GridSize,
+                       BlockSize,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             cast_perm->vec_,
+                                                                             d_offset,
+                                                                             d_data,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val);
             }
             else if(maxnnzrow > 16)
             {
-                hipLaunchKernelGGL((kernel_permute_cols<32, ValueType, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data,
-                                   this->mat_.col,
-                                   this->mat_.val);
+                kernel_permute_cols<32>
+                    <<<GridSize,
+                       BlockSize,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             cast_perm->vec_,
+                                                                             d_offset,
+                                                                             d_data,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val);
             }
             else if(maxnnzrow > 8)
             {
-                hipLaunchKernelGGL((kernel_permute_cols<16, ValueType, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data,
-                                   this->mat_.col,
-                                   this->mat_.val);
+                kernel_permute_cols<16>
+                    <<<GridSize,
+                       BlockSize,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             cast_perm->vec_,
+                                                                             d_offset,
+                                                                             d_data,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val);
             }
             else if(maxnnzrow > 4)
             {
-                hipLaunchKernelGGL((kernel_permute_cols<8, ValueType, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data,
-                                   this->mat_.col,
-                                   this->mat_.val);
+                kernel_permute_cols<8>
+                    <<<GridSize,
+                       BlockSize,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             cast_perm->vec_,
+                                                                             d_offset,
+                                                                             d_data,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val);
             }
             else
             {
-                hipLaunchKernelGGL((kernel_permute_cols<4, ValueType, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   cast_perm->vec_,
-                                   d_offset,
-                                   d_data,
-                                   this->mat_.col,
-                                   this->mat_.val);
+                kernel_permute_cols<4>
+                    <<<GridSize,
+                       BlockSize,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             cast_perm->vec_,
+                                                                             d_offset,
+                                                                             d_data,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val);
             }
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            free_hip<int>(&d_offset);
-            free_hip<ValueType>(&d_data);
+            free_hip(&d_offset);
+            free_hip(&d_data);
         }
 
         this->ApplyAnalysis();
@@ -1255,7 +1265,6 @@ namespace rocalution
         if(this->nnz_ > 0)
         {
             rocsparse_status status;
-
             status
                 = rocsparseTcsrmv_analysis(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                                            rocsparse_operation_none,
@@ -1436,6 +1445,7 @@ namespace rocalution
                 this->mat_.col,
                 this->mat_info_,
                 &buffer_size);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
             // Buffer is shared with IC0 and other solve functions
             if(this->mat_buffer_ == NULL)
@@ -1497,6 +1507,7 @@ namespace rocalution
 
         assert(this->tmp_vec_ != NULL);
 
+        // Status
         rocsparse_status status;
 
         // L part
@@ -1533,6 +1544,7 @@ namespace rocalution
 
         // Create buffer, if not already available
         size_t buffer_size = 0;
+
         status
             = rocsparseTcsrsv_buffer_size(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                                           rocsparse_operation_none,
@@ -1544,6 +1556,7 @@ namespace rocalution
                                           this->mat_.col,
                                           this->mat_info_,
                                           &buffer_size);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // Buffer is shared with ILU0 and other solve functions
         if(this->mat_buffer_ == NULL)
@@ -1650,6 +1663,7 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
+            assert(out != NULL);
             assert(this->L_mat_descr_ != 0);
             assert(this->U_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
@@ -1867,6 +1881,7 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
+            assert(out != NULL);
             assert(this->L_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
 
@@ -2047,6 +2062,7 @@ namespace rocalution
                                           this->mat_.col,
                                           this->mat_info_,
                                           &buffer_size);
+        CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // Buffer is shared with ILU0 and other solve functions
         if(this->mat_buffer_ == NULL)
@@ -2145,6 +2161,7 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
+            assert(out != NULL);
             assert(this->L_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
 
@@ -2195,6 +2212,7 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
+            assert(out != NULL);
             assert(this->U_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
 
@@ -2256,101 +2274,87 @@ namespace rocalution
 
             if(avg_nnz_per_row <= 8)
             {
-                hipLaunchKernelGGL(
-                    (kernel_csr_extract_diag<1, ValueType, int>),
-                    dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
-                    dim3(this->local_backend_.HIP_block_size),
-                    0,
-                    0,
-                    nrow,
-                    this->mat_.row_offset,
-                    this->mat_.col,
-                    this->mat_.val,
-                    cast_vec_diag->vec_);
+                kernel_csr_extract_diag<1>
+                    <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
+                       dim3(this->local_backend_.HIP_block_size),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 16)
             {
-                hipLaunchKernelGGL(
-                    (kernel_csr_extract_diag<2, ValueType, int>),
-                    dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
-                    dim3(this->local_backend_.HIP_block_size),
-                    0,
-                    0,
-                    nrow,
-                    this->mat_.row_offset,
-                    this->mat_.col,
-                    this->mat_.val,
-                    cast_vec_diag->vec_);
+                kernel_csr_extract_diag<2>
+                    <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
+                       dim3(this->local_backend_.HIP_block_size),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 32)
             {
-                hipLaunchKernelGGL(
-                    (kernel_csr_extract_diag<4, ValueType, int>),
-                    dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
-                    dim3(this->local_backend_.HIP_block_size),
-                    0,
-                    0,
-                    nrow,
-                    this->mat_.row_offset,
-                    this->mat_.col,
-                    this->mat_.val,
-                    cast_vec_diag->vec_);
+                kernel_csr_extract_diag<4>
+                    <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
+                       dim3(this->local_backend_.HIP_block_size),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 64)
             {
-                hipLaunchKernelGGL(
-                    (kernel_csr_extract_diag<8, ValueType, int>),
-                    dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
-                    dim3(this->local_backend_.HIP_block_size),
-                    0,
-                    0,
-                    nrow,
-                    this->mat_.row_offset,
-                    this->mat_.col,
-                    this->mat_.val,
-                    cast_vec_diag->vec_);
+                kernel_csr_extract_diag<8>
+                    <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
+                       dim3(this->local_backend_.HIP_block_size),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 128)
             {
-                hipLaunchKernelGGL(
-                    (kernel_csr_extract_diag<16, ValueType, int>),
-                    dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
-                    dim3(this->local_backend_.HIP_block_size),
-                    0,
-                    0,
-                    nrow,
-                    this->mat_.row_offset,
-                    this->mat_.col,
-                    this->mat_.val,
-                    cast_vec_diag->vec_);
+                kernel_csr_extract_diag<16>
+                    <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
+                       dim3(this->local_backend_.HIP_block_size),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
             {
-                hipLaunchKernelGGL(
-                    (kernel_csr_extract_diag<32, ValueType, int>),
-                    dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
-                    dim3(this->local_backend_.HIP_block_size),
-                    0,
-                    0,
-                    nrow,
-                    this->mat_.row_offset,
-                    this->mat_.col,
-                    this->mat_.val,
-                    cast_vec_diag->vec_);
+                kernel_csr_extract_diag<32>
+                    <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
+                       dim3(this->local_backend_.HIP_block_size),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_vec_diag->vec_);
             }
             else
             {
-                hipLaunchKernelGGL(
-                    (kernel_csr_extract_diag<64, ValueType, int>),
-                    dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
-                    dim3(this->local_backend_.HIP_block_size),
-                    0,
-                    0,
-                    nrow,
-                    this->mat_.row_offset,
-                    this->mat_.col,
-                    this->mat_.val,
-                    cast_vec_diag->vec_);
+                kernel_csr_extract_diag<64>
+                    <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
+                       dim3(this->local_backend_.HIP_block_size),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             this->mat_.val,
+                                                                             cast_vec_diag->vec_);
             }
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -2378,17 +2382,16 @@ namespace rocalution
             allocate_hip(1, &d_detect_zero_diag);
             set_to_zero_hip(1, 1, d_detect_zero_diag);
 
-            hipLaunchKernelGGL((kernel_csr_extract_inv_diag<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val,
-                               cast_vec_inv_diag->vec_,
-                               d_detect_zero_diag);
+            kernel_csr_extract_inv_diag<<<GridSize,
+                                          BlockSize,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                cast_vec_inv_diag->vec_,
+                d_detect_zero_diag);
 
             int detect_zero_diag = 0;
             hipMemcpy(&detect_zero_diag, d_detect_zero_diag, sizeof(int), hipMemcpyDeviceToHost);
@@ -2436,19 +2439,18 @@ namespace rocalution
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize(row_size / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_csr_extract_submatrix_row_nnz<ValueType, int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           this->mat_.val,
-                           row_offset,
-                           col_offset,
-                           row_size,
-                           col_size,
-                           row_nnz);
+        kernel_csr_extract_submatrix_row_nnz<<<
+            GridSize,
+            BlockSize,
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                  this->mat_.col,
+                                                                  this->mat_.val,
+                                                                  row_offset,
+                                                                  col_offset,
+                                                                  row_size,
+                                                                  col_size,
+                                                                  row_nnz);
 
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -2456,11 +2458,23 @@ namespace rocalution
         size_t rocprim_size;
         void*  rocprim_buffer;
 
-        rocprim::exclusive_scan(
-            NULL, rocprim_size, row_nnz, row_nnz, 0, row_size + 1, rocprim::plus<int>());
+        rocprim::exclusive_scan(NULL,
+                                rocprim_size,
+                                row_nnz,
+                                row_nnz,
+                                0,
+                                row_size + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
-        rocprim::exclusive_scan(
-            rocprim_buffer, rocprim_size, row_nnz, row_nnz, 0, row_size + 1, rocprim::plus<int>());
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                row_nnz,
+                                row_nnz,
+                                0,
+                                row_size + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
         hipMemcpy(&mat_nnz, &row_nnz[row_size], sizeof(int), hipMemcpyDeviceToHost);
@@ -2474,21 +2488,20 @@ namespace rocalution
             cast_mat->mat_.row_offset = row_nnz;
             // copying the sub matrix
 
-            hipLaunchKernelGGL((kernel_csr_extract_submatrix_copy<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val,
-                               row_offset,
-                               col_offset,
-                               row_size,
-                               col_size,
-                               cast_mat->mat_.row_offset,
-                               cast_mat->mat_.col,
-                               cast_mat->mat_.val);
+            kernel_csr_extract_submatrix_copy<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                      this->mat_.col,
+                                                                      this->mat_.val,
+                                                                      row_offset,
+                                                                      col_offset,
+                                                                      row_size,
+                                                                      col_size,
+                                                                      cast_mat->mat_.row_offset,
+                                                                      cast_mat->mat_.col,
+                                                                      cast_mat->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
         else
@@ -2517,20 +2530,16 @@ namespace rocalution
         // compute nnz per row
         int nrow = this->nrow_;
 
-        allocate_hip<int>(nrow + 1, &cast_L->mat_.row_offset);
+        allocate_hip(nrow + 1, &cast_L->mat_.row_offset);
 
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_csr_slower_nnz_per_row<int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           cast_L->mat_.row_offset);
+        kernel_csr_slower_nnz_per_row<<<GridSize,
+                                        BlockSize,
+                                        0,
+                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow, this->mat_.row_offset, this->mat_.col, cast_L->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // partial sum row_nnz to obtain row_offset vector
@@ -2543,7 +2552,8 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -2551,29 +2561,29 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
         int nnz_L;
         hipMemcpy(&nnz_L, &cast_L->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
         // allocate lower triangular part structure
-        allocate_hip<int>(nnz_L, &cast_L->mat_.col);
-        allocate_hip<ValueType>(nnz_L, &cast_L->mat_.val);
+        allocate_hip(nnz_L, &cast_L->mat_.col);
+        allocate_hip(nnz_L, &cast_L->mat_.val);
 
         // fill lower triangular part
-        hipLaunchKernelGGL((kernel_csr_extract_l_triangular<ValueType, int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           this->mat_.val,
-                           cast_L->mat_.row_offset,
-                           cast_L->mat_.col,
-                           cast_L->mat_.val);
+        kernel_csr_extract_l_triangular<<<GridSize,
+                                          BlockSize,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow,
+            this->mat_.row_offset,
+            this->mat_.col,
+            this->mat_.val,
+            cast_L->mat_.row_offset,
+            cast_L->mat_.col,
+            cast_L->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_L->nrow_ = this->nrow_;
@@ -2603,20 +2613,16 @@ namespace rocalution
         // compute nnz per row
         int nrow = this->nrow_;
 
-        allocate_hip<int>(nrow + 1, &cast_L->mat_.row_offset);
+        allocate_hip(nrow + 1, &cast_L->mat_.row_offset);
 
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_csr_lower_nnz_per_row<int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           cast_L->mat_.row_offset);
+        kernel_csr_lower_nnz_per_row<<<GridSize,
+                                       BlockSize,
+                                       0,
+                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow, this->mat_.row_offset, this->mat_.col, cast_L->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // partial sum row_nnz to obtain row_offset vector
@@ -2629,7 +2635,8 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -2637,29 +2644,29 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
         int nnz_L;
         hipMemcpy(&nnz_L, &cast_L->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
         // allocate lower triangular part structure
-        allocate_hip<int>(nnz_L, &cast_L->mat_.col);
-        allocate_hip<ValueType>(nnz_L, &cast_L->mat_.val);
+        allocate_hip(nnz_L, &cast_L->mat_.col);
+        allocate_hip(nnz_L, &cast_L->mat_.val);
 
         // fill lower triangular part
-        hipLaunchKernelGGL((kernel_csr_extract_l_triangular<ValueType, int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           this->mat_.val,
-                           cast_L->mat_.row_offset,
-                           cast_L->mat_.col,
-                           cast_L->mat_.val);
+        kernel_csr_extract_l_triangular<<<GridSize,
+                                          BlockSize,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow,
+            this->mat_.row_offset,
+            this->mat_.col,
+            this->mat_.val,
+            cast_L->mat_.row_offset,
+            cast_L->mat_.col,
+            cast_L->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_L->nrow_ = this->nrow_;
@@ -2689,20 +2696,16 @@ namespace rocalution
         // compute nnz per row
         int nrow = this->nrow_;
 
-        allocate_hip<int>(nrow + 1, &cast_U->mat_.row_offset);
+        allocate_hip(nrow + 1, &cast_U->mat_.row_offset);
 
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_csr_supper_nnz_per_row<int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           cast_U->mat_.row_offset);
+        kernel_csr_supper_nnz_per_row<<<GridSize,
+                                        BlockSize,
+                                        0,
+                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow, this->mat_.row_offset, this->mat_.col, cast_U->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // partial sum row_nnz to obtain row_offset vector
@@ -2715,7 +2718,8 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -2723,29 +2727,29 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
         int nnz_U;
         hipMemcpy(&nnz_U, &cast_U->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
         // allocate lower triangular part structure
-        allocate_hip<int>(nnz_U, &cast_U->mat_.col);
-        allocate_hip<ValueType>(nnz_U, &cast_U->mat_.val);
+        allocate_hip(nnz_U, &cast_U->mat_.col);
+        allocate_hip(nnz_U, &cast_U->mat_.val);
 
         // fill upper triangular part
-        hipLaunchKernelGGL((kernel_csr_extract_u_triangular<ValueType, int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           this->mat_.val,
-                           cast_U->mat_.row_offset,
-                           cast_U->mat_.col,
-                           cast_U->mat_.val);
+        kernel_csr_extract_u_triangular<<<GridSize,
+                                          BlockSize,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow,
+            this->mat_.row_offset,
+            this->mat_.col,
+            this->mat_.val,
+            cast_U->mat_.row_offset,
+            cast_U->mat_.col,
+            cast_U->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_U->nrow_ = this->nrow_;
@@ -2775,20 +2779,16 @@ namespace rocalution
         // compute nnz per row
         int nrow = this->nrow_;
 
-        allocate_hip<int>(nrow + 1, &cast_U->mat_.row_offset);
+        allocate_hip(nrow + 1, &cast_U->mat_.row_offset);
 
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_csr_upper_nnz_per_row<int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           cast_U->mat_.row_offset);
+        kernel_csr_upper_nnz_per_row<<<GridSize,
+                                       BlockSize,
+                                       0,
+                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow, this->mat_.row_offset, this->mat_.col, cast_U->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // partial sum row_nnz to obtain row_offset vector
@@ -2801,7 +2801,8 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -2809,29 +2810,29 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
         int nnz_U;
         hipMemcpy(&nnz_U, &cast_U->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
 
         // allocate lower triangular part structure
-        allocate_hip<int>(nnz_U, &cast_U->mat_.col);
-        allocate_hip<ValueType>(nnz_U, &cast_U->mat_.val);
+        allocate_hip(nnz_U, &cast_U->mat_.col);
+        allocate_hip(nnz_U, &cast_U->mat_.val);
 
         // fill lower triangular part
-        hipLaunchKernelGGL((kernel_csr_extract_u_triangular<ValueType, int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           nrow,
-                           this->mat_.row_offset,
-                           this->mat_.col,
-                           this->mat_.val,
-                           cast_U->mat_.row_offset,
-                           cast_U->mat_.col,
-                           cast_U->mat_.val);
+        kernel_csr_extract_u_triangular<<<GridSize,
+                                          BlockSize,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nrow,
+            this->mat_.row_offset,
+            this->mat_.col,
+            this->mat_.val,
+            cast_U->mat_.row_offset,
+            cast_U->mat_.col,
+            cast_U->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_U->nrow_ = this->nrow_;
@@ -2945,9 +2946,8 @@ namespace rocalution
         int* color        = NULL;
         int* h_row_offset = NULL;
         int* h_col        = NULL;
-        int  size         = this->nrow_;
 
-        allocate_host(size, &color);
+        allocate_host(this->nrow_, &color);
         allocate_host(this->nrow_ + 1, &h_row_offset);
         allocate_host(this->nnz_, &h_col);
 
@@ -2957,7 +2957,7 @@ namespace rocalution
                   hipMemcpyDeviceToHost);
         hipMemcpy(h_col, this->mat_.col, this->nnz_ * sizeof(int), hipMemcpyDeviceToHost);
 
-        memset(color, 0, size * sizeof(int));
+        memset(color, 0, this->nrow_ * sizeof(int));
         num_colors = 0;
         std::vector<bool> row_col;
 
@@ -3058,16 +3058,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_scale_diagonal<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               alpha,
-                               this->mat_.val);
+            kernel_csr_scale_diagonal<<<GridSize,
+                                        BlockSize,
+                                        0,
+                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3083,16 +3078,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_scale_offdiagonal<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               alpha,
-                               this->mat_.val);
+            kernel_csr_scale_offdiagonal<<<GridSize,
+                                           BlockSize,
+                                           0,
+                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3108,16 +3098,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_add_diagonal<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               alpha,
-                               this->mat_.val);
+            kernel_csr_add_diagonal<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3133,16 +3118,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_add_offdiagonal<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               alpha,
-                               this->mat_.val);
+            kernel_csr_add_offdiagonal<<<GridSize,
+                                         BlockSize,
+                                         0,
+                                         HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3154,18 +3134,14 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
-            int  nnz = this->nnz_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(nnz / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->nnz_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_buffer_addscalar<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nnz,
-                               alpha,
-                               this->mat_.val);
+            kernel_buffer_addscalar<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nnz_, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3188,16 +3164,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_diagmatmult_r<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               cast_diag->vec_,
-                               this->mat_.val);
+            kernel_csr_diagmatmult_r<<<GridSize,
+                                       BlockSize,
+                                       0,
+                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow, this->mat_.row_offset, this->mat_.col, cast_diag->vec_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3220,15 +3191,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_diagmatmult_l<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               this->mat_.row_offset,
-                               cast_diag->vec_,
-                               this->mat_.val);
+            kernel_csr_diagmatmult_l<<<GridSize,
+                                       BlockSize,
+                                       0,
+                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow, this->mat_.row_offset, cast_diag->vec_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3373,118 +3340,113 @@ namespace rocalution
                                                        ValueType                    beta,
                                                        bool                         structure)
     {
-        return false;
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_mat
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&mat);
 
-        if(this->nnz_ > 0)
+        assert(cast_mat != NULL);
+        assert(cast_mat->nrow_ == this->nrow_);
+        assert(cast_mat->ncol_ == this->ncol_);
+        assert(this->nnz_ >= 0);
+        assert(cast_mat->nnz_ >= 0);
+
+        if(structure == false)
         {
-            const HIPAcceleratorMatrixCSR<ValueType>* cast_mat
-                = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&mat);
+            int  nrow = this->nrow_;
+            dim3 BlockSize(this->local_backend_.HIP_block_size);
+            dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            assert(cast_mat != NULL);
+            kernel_csr_add_csr_same_struct<<<GridSize,
+                                             BlockSize,
+                                             0,
+                                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow,
+                this->mat_.row_offset,
+                this->mat_.col,
+                cast_mat->mat_.row_offset,
+                cast_mat->mat_.col,
+                cast_mat->mat_.val,
+                alpha,
+                beta,
+                this->mat_.val);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+        else
+        {
+            int        m          = this->nrow_;
+            int        n          = this->ncol_;
+            int*       csrRowPtrC = NULL;
+            int*       csrColC    = NULL;
+            ValueType* csrValC    = NULL;
+            int        nnzC;
 
-            assert(cast_mat->nrow_ == this->nrow_);
-            assert(cast_mat->ncol_ == this->ncol_);
-            assert(this->nnz_ > 0);
-            assert(cast_mat->nnz_ > 0);
+            allocate_hip(m + 1, &csrRowPtrC);
 
-            if(structure == false)
-            {
-                int  nrow = this->nrow_;
-                dim3 BlockSize(this->local_backend_.HIP_block_size);
-                dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
+            rocsparse_status status;
 
-                hipLaunchKernelGGL((kernel_csr_add_csr_same_struct<ValueType, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   nrow,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_mat->mat_.row_offset,
-                                   cast_mat->mat_.col,
-                                   cast_mat->mat_.val,
-                                   alpha,
-                                   beta,
-                                   this->mat_.val);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
-            else
-            {
-                int        m          = this->nrow_;
-                int        n          = this->ncol_;
-                int*       csrRowPtrC = NULL;
-                int*       csrColC    = NULL;
-                ValueType* csrValC    = NULL;
-                int        nnzC;
-                /*
-                  allocate_hip(m+1, &csrRowPtrC);
+            rocsparse_mat_descr desc_mat_C;
 
-                  cusparseStatus_t status;
+            status = rocsparse_create_mat_descr(&desc_mat_C);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-                  cusparseMatDescr_t desc_mat_C = 0;
+            status = rocsparse_set_mat_index_base(desc_mat_C, rocsparse_index_base_zero);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-                  status = cusparseCreateMatDescr(&desc_mat_C);
-                  CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
+            status = rocsparse_set_mat_type(desc_mat_C, rocsparse_matrix_type_general);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-                  status = cusparseSetMatIndexBase(desc_mat_C, CUSPARSE_INDEX_BASE_ZERO);
-                  CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
+            status = rocsparse_set_pointer_mode(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                rocsparse_pointer_mode_host);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-                  status = cusparseSetMatType(desc_mat_C, CUSPARSE_MATRIX_TYPE_GENERAL);
-                  CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
+            status = rocsparse_csrgeam_nnz(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                           m,
+                                           n,
+                                           this->mat_descr_,
+                                           this->nnz_,
+                                           this->mat_.row_offset,
+                                           this->mat_.col,
+                                           cast_mat->mat_descr_,
+                                           cast_mat->nnz_,
+                                           cast_mat->mat_.row_offset,
+                                           cast_mat->mat_.col,
+                                           desc_mat_C,
+                                           csrRowPtrC,
+                                           &nnzC);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-                  status =
-               cusparseSetPointerMode(CUSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                                  CUSPARSE_POINTER_MODE_HOST);
-                  CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
+            allocate_hip(nnzC, &csrColC);
+            allocate_hip(nnzC, &csrValC);
 
-                  status =
-               cusparseXcsrgeamNnz(CUSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                               m, n,
-                                               this->mat_descr_, this->nnz_,
-                                               this->mat_.row_offset, this->mat_.col,
-                                               cast_mat->mat_descr_, cast_mat->nnz_,
-                                               cast_mat->mat_.row_offset, cast_mat->mat_.col,
-                                               desc_mat_C, csrRowPtrC,
-                                               &nnzC);
-                  CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
+            status = rocsparseTcsrgeam(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                                       m,
+                                       n,
+                                       // A
+                                       &alpha,
+                                       this->mat_descr_,
+                                       this->nnz_,
+                                       this->mat_.val,
+                                       this->mat_.row_offset,
+                                       this->mat_.col,
+                                       // B
+                                       &beta,
+                                       cast_mat->mat_descr_,
+                                       cast_mat->nnz_,
+                                       cast_mat->mat_.val,
+                                       cast_mat->mat_.row_offset,
+                                       cast_mat->mat_.col,
+                                       // C
+                                       desc_mat_C,
+                                       csrValC,
+                                       csrRowPtrC,
+                                       csrColC);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-                  allocate_hip(nnzC, &csrColC);
-                  allocate_hip(nnzC, &csrValC);
+            status = rocsparse_destroy_mat_descr(desc_mat_C);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-                  status =
-               __cusparseXcsrgeam__(CUSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                                m, n,
-                                                // A
-                                                &alpha,
-                                                this->mat_descr_, this->nnz_,
-                                                this->mat_.val,
-                                                this->mat_.row_offset, this->mat_.col,
-                                                // B
-                                                &beta,
-                                                cast_mat->mat_descr_, cast_mat->nnz_,
-                                                cast_mat->mat_.val,
-                                                cast_mat->mat_.row_offset, cast_mat->mat_.col,
-                                                // C
-                                                desc_mat_C,
-                                                csrValC,
-                                                csrRowPtrC, csrColC);
-
-                  CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
-
-                  status = cusparseDestroyMatDescr(desc_mat_C);
-                  CHECK_CUSPARSE_ERROR(status, __FILE__, __LINE__);
-            */
-                this->Clear();
-
-                this->mat_.row_offset = csrRowPtrC;
-                this->mat_.col        = csrColC;
-                this->mat_.val        = csrValC;
-
-                this->nrow_ = m;
-                this->ncol_ = n;
-                this->nnz_  = nnzC;
-            }
+            this->Clear();
+            this->SetDataPtrCSR(&csrRowPtrC, &csrColC, &csrValC, nnzC, m, n);
         }
 
         this->ApplyAnalysis();
@@ -3515,24 +3477,24 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_compress_count_nrow),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val,
-                               nrow,
-                               drop_off,
-                               row_offset);
+            kernel_csr_compress_count_nrow<<<GridSize,
+                                             BlockSize,
+                                             0,
+                                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->mat_.row_offset, this->mat_.col, this->mat_.val, nrow, drop_off, row_offset);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             size_t rocprim_size;
             void*  rocprim_buffer;
 
-            rocprim::exclusive_scan(
-                NULL, rocprim_size, row_offset, mat_row_offset, 0, nrow + 1, rocprim::plus<int>());
+            rocprim::exclusive_scan(NULL,
+                                    rocprim_size,
+                                    row_offset,
+                                    mat_row_offset,
+                                    0,
+                                    nrow + 1,
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipMalloc(&rocprim_buffer, rocprim_size);
             rocprim::exclusive_scan(rocprim_buffer,
                                     rocprim_size,
@@ -3540,7 +3502,8 @@ namespace rocalution
                                     mat_row_offset,
                                     0,
                                     nrow + 1,
-                                    rocprim::plus<int>());
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipFree(rocprim_buffer);
 
             // get the new mat nnz
@@ -3555,19 +3518,18 @@ namespace rocalution
                       hipMemcpyDeviceToDevice);
 
             // copy col and val
-            hipLaunchKernelGGL((kernel_csr_compress_copy),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               tmp.mat_.row_offset,
-                               tmp.mat_.col,
-                               tmp.mat_.val,
-                               tmp.nrow_,
-                               drop_off,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val);
+            kernel_csr_compress_copy<<<GridSize,
+                                       BlockSize,
+                                       0,
+                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                tmp.mat_.row_offset,
+                tmp.mat_.col,
+                tmp.mat_.val,
+                tmp.nrow_,
+                drop_off,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&row_offset);
@@ -3651,13 +3613,13 @@ namespace rocalution
     bool HIPAcceleratorMatrixCSR<ValueType>::ReplaceColumnVector(int                          idx,
                                                                  const BaseVector<ValueType>& vec)
     {
-        assert(vec.GetSize() == this->nrow_);
-
         if(this->nnz_ > 0)
         {
             const HIPAcceleratorVector<ValueType>* cast_vec
                 = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&vec);
+
             assert(cast_vec != NULL);
+            assert(cast_vec->size_ == this->nrow_);
 
             int*       row_offset = NULL;
             int*       col        = NULL;
@@ -3671,52 +3633,56 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_replace_column_vector_offset),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               nrow,
-                               idx,
-                               cast_vec->vec_,
-                               row_offset);
+            kernel_csr_replace_column_vector_offset<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->mat_.row_offset, this->mat_.col, nrow, idx, cast_vec->vec_, row_offset);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            // TODO on GPU when PR575 fixed
-            int* host_offset = NULL;
-            allocate_host(nrow + 1, &host_offset);
+            size_t rocprim_size;
+            void*  rocprim_buffer;
 
-            hipMemcpy(host_offset, row_offset, sizeof(int) * (nrow + 1), hipMemcpyDeviceToHost);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            rocprim::exclusive_scan(NULL,
+                                    rocprim_size,
+                                    row_offset,
+                                    row_offset,
+                                    0,
+                                    this->nrow_ + 1,
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            hipMalloc(&rocprim_buffer, rocprim_size);
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    row_offset,
+                                    row_offset,
+                                    0,
+                                    this->nrow_,
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            hipFree(rocprim_buffer);
 
-            host_offset[0] = 0;
-            for(int i = 0; i < nrow; ++i)
-                host_offset[i + 1] += host_offset[i];
-
-            int nnz = host_offset[nrow];
-
-            hipMemcpy(row_offset, host_offset, sizeof(int) * (nrow + 1), hipMemcpyHostToDevice);
+            int nnz;
+            hipMemcpy(&nnz, row_offset + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(nnz, &col);
             allocate_hip(nnz, &val);
 
-            hipLaunchKernelGGL((kernel_csr_replace_column_vector),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val,
-                               nrow,
-                               idx,
-                               cast_vec->vec_,
-                               row_offset,
-                               col,
-                               val);
+            kernel_csr_replace_column_vector<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                      this->mat_.col,
+                                                                      this->mat_.val,
+                                                                      nrow,
+                                                                      idx,
+                                                                      cast_vec->vec_,
+                                                                      row_offset,
+                                                                      col,
+                                                                      val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             this->Clear();
@@ -3742,17 +3708,16 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_extract_column_vector<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val,
-                               this->nrow_,
-                               idx,
-                               cast_vec->vec_);
+            kernel_csr_extract_column_vector<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                      this->mat_.col,
+                                                                      this->mat_.val,
+                                                                      this->nrow_,
+                                                                      idx,
+                                                                      cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3785,17 +3750,16 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(row_nnz / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_csr_extract_row_vector<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               this->mat_.val,
-                               row_nnz,
-                               idx,
-                               cast_vec->vec_);
+            kernel_csr_extract_row_vector<<<GridSize,
+                                            BlockSize,
+                                            0,
+                                            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                row_nnz,
+                idx,
+                cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -3826,115 +3790,101 @@ namespace rocalution
 
         if(avg_nnz_per_row <= 8)
         {
-            hipLaunchKernelGGL(
-                (kernel_csr_amg_connect<ValueType, int, 1>),
-                dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
-                dim3(this->local_backend_.HIP_block_size),
-                0,
-                0,
-                this->nrow_,
-                eps2,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                vec_diag.vec_,
-                cast_conn->vec_);
+            kernel_csr_amg_connect<1>
+                <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         eps2,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         vec_diag.vec_,
+                                                                         cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 16)
         {
-            hipLaunchKernelGGL(
-                (kernel_csr_amg_connect<ValueType, int, 2>),
-                dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
-                dim3(this->local_backend_.HIP_block_size),
-                0,
-                0,
-                this->nrow_,
-                eps2,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                vec_diag.vec_,
-                cast_conn->vec_);
+            kernel_csr_amg_connect<2>
+                <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         eps2,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         vec_diag.vec_,
+                                                                         cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 32)
         {
-            hipLaunchKernelGGL(
-                (kernel_csr_amg_connect<ValueType, int, 4>),
-                dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
-                dim3(this->local_backend_.HIP_block_size),
-                0,
-                0,
-                this->nrow_,
-                eps2,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                vec_diag.vec_,
-                cast_conn->vec_);
+            kernel_csr_amg_connect<4>
+                <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         eps2,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         vec_diag.vec_,
+                                                                         cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 64)
         {
-            hipLaunchKernelGGL(
-                (kernel_csr_amg_connect<ValueType, int, 8>),
-                dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
-                dim3(this->local_backend_.HIP_block_size),
-                0,
-                0,
-                this->nrow_,
-                eps2,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                vec_diag.vec_,
-                cast_conn->vec_);
+            kernel_csr_amg_connect<8>
+                <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         eps2,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         vec_diag.vec_,
+                                                                         cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 128)
         {
-            hipLaunchKernelGGL(
-                (kernel_csr_amg_connect<ValueType, int, 16>),
-                dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
-                dim3(this->local_backend_.HIP_block_size),
-                0,
-                0,
-                this->nrow_,
-                eps2,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                vec_diag.vec_,
-                cast_conn->vec_);
+            kernel_csr_amg_connect<16>
+                <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         eps2,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         vec_diag.vec_,
+                                                                         cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
         {
-            hipLaunchKernelGGL(
-                (kernel_csr_amg_connect<ValueType, int, 32>),
-                dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
-                dim3(this->local_backend_.HIP_block_size),
-                0,
-                0,
-                this->nrow_,
-                eps2,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                vec_diag.vec_,
-                cast_conn->vec_);
+            kernel_csr_amg_connect<32>
+                <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         eps2,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         vec_diag.vec_,
+                                                                         cast_conn->vec_);
         }
         else
         {
-            hipLaunchKernelGGL(
-                (kernel_csr_amg_connect<ValueType, int, 64>),
-                dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
-                dim3(this->local_backend_.HIP_block_size),
-                0,
-                0,
-                this->nrow_,
-                eps2,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                vec_diag.vec_,
-                cast_conn->vec_);
+            kernel_csr_amg_connect<64>
+                <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         eps2,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         vec_diag.vec_,
+                                                                         cast_conn->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3971,15 +3921,11 @@ namespace rocalution
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_csr_amg_init_mis_tuples<int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           this->nrow_,
-                           this->mat_.row_offset,
-                           cast_conn->vec_,
-                           tuples);
+        kernel_csr_amg_init_mis_tuples<<<GridSize,
+                                         BlockSize,
+                                         0,
+                                         HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            this->nrow_, this->mat_.row_offset, cast_conn->vec_, tuples);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         int iter = 0;
@@ -3989,121 +3935,110 @@ namespace rocalution
 
             if(avg_nnz_per_row <= 8)
             {
-                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 1, int>),
-                                   dim3((this->nrow_ * 1 - 1) / 256 + 1),
-                                   dim3(256),
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_conn->vec_,
-                                   tuples,
-                                   max_tuples,
-                                   ddone);
+                kernel_csr_amg_find_max_mis_tuples_shared<256, 1>
+                    <<<dim3((this->nrow_ * 1 - 1) / 256 + 1),
+                       dim3(256),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             cast_conn->vec_,
+                                                                             tuples,
+                                                                             max_tuples,
+                                                                             ddone);
             }
             else if(avg_nnz_per_row <= 16)
             {
-                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 2, int>),
-                                   dim3((this->nrow_ * 2 - 1) / 256 + 1),
-                                   dim3(256),
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_conn->vec_,
-                                   tuples,
-                                   max_tuples,
-                                   ddone);
+                kernel_csr_amg_find_max_mis_tuples_shared<256, 2>
+                    <<<dim3((this->nrow_ * 2 - 1) / 256 + 1),
+                       dim3(256),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             cast_conn->vec_,
+                                                                             tuples,
+                                                                             max_tuples,
+                                                                             ddone);
             }
             else if(avg_nnz_per_row <= 32)
             {
-                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 4, int>),
-                                   dim3((this->nrow_ * 4 - 1) / 256 + 1),
-                                   dim3(256),
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_conn->vec_,
-                                   tuples,
-                                   max_tuples,
-                                   ddone);
+                kernel_csr_amg_find_max_mis_tuples_shared<256, 4>
+                    <<<dim3((this->nrow_ * 4 - 1) / 256 + 1),
+                       dim3(256),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             cast_conn->vec_,
+                                                                             tuples,
+                                                                             max_tuples,
+                                                                             ddone);
             }
             else if(avg_nnz_per_row <= 64)
             {
-                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 8, int>),
-                                   dim3((this->nrow_ * 8 - 1) / 256 + 1),
-                                   dim3(256),
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_conn->vec_,
-                                   tuples,
-                                   max_tuples,
-                                   ddone);
+                kernel_csr_amg_find_max_mis_tuples_shared<256, 8>
+                    <<<dim3((this->nrow_ * 8 - 1) / 256 + 1),
+                       dim3(256),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             cast_conn->vec_,
+                                                                             tuples,
+                                                                             max_tuples,
+                                                                             ddone);
             }
             else if(avg_nnz_per_row <= 128)
             {
-                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 16, int>),
-                                   dim3((this->nrow_ * 16 - 1) / 256 + 1),
-                                   dim3(256),
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_conn->vec_,
-                                   tuples,
-                                   max_tuples,
-                                   ddone);
+                kernel_csr_amg_find_max_mis_tuples_shared<256, 16>
+                    <<<dim3((this->nrow_ * 16 - 1) / 256 + 1),
+                       dim3(256),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             cast_conn->vec_,
+                                                                             tuples,
+                                                                             max_tuples,
+                                                                             ddone);
             }
             else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
             {
-                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 32, int>),
-                                   dim3((this->nrow_ * 32 - 1) / 256 + 1),
-                                   dim3(256),
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_conn->vec_,
-                                   tuples,
-                                   max_tuples,
-                                   ddone);
+                kernel_csr_amg_find_max_mis_tuples_shared<256, 32>
+                    <<<dim3((this->nrow_ * 32 - 1) / 256 + 1),
+                       dim3(256),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             cast_conn->vec_,
+                                                                             tuples,
+                                                                             max_tuples,
+                                                                             ddone);
             }
             else
             {
-                hipLaunchKernelGGL((kernel_csr_amg_find_max_mis_tuples_shared<256, 64, int>),
-                                   dim3((this->nrow_ * 64 - 1) / 256 + 1),
-                                   dim3(256),
-                                   0,
-                                   0,
-                                   this->nrow_,
-                                   this->mat_.row_offset,
-                                   this->mat_.col,
-                                   cast_conn->vec_,
-                                   tuples,
-                                   max_tuples,
-                                   ddone);
+                kernel_csr_amg_find_max_mis_tuples_shared<256, 64>
+                    <<<dim3((this->nrow_ * 64 - 1) / 256 + 1),
+                       dim3(256),
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                             this->mat_.row_offset,
+                                                                             this->mat_.col,
+                                                                             cast_conn->vec_,
+                                                                             tuples,
+                                                                             max_tuples,
+                                                                             ddone);
             }
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipLaunchKernelGGL((kernel_csr_amg_update_mis_tuples<int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->nrow_,
-                               max_tuples,
-                               tuples,
-                               cast_agg->vec_,
-                               ddone);
+            kernel_csr_amg_update_mis_tuples<<<GridSize,
+                                               BlockSize,
+                                               0,
+                                               HIPSTREAM(
+                                                   this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_, max_tuples, tuples, cast_agg->vec_, ddone);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMemcpy(&hdone, ddone, sizeof(bool), hipMemcpyDeviceToHost);
@@ -4129,7 +4064,8 @@ namespace rocalution
                                 cast_agg->vec_,
                                 0,
                                 this->nrow_,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -4137,25 +4073,25 @@ namespace rocalution
                                 cast_agg->vec_,
                                 0,
                                 this->nrow_,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
         for(int k = 0; k < 2; k++)
         {
             hipMemcpy(max_tuples, tuples, sizeof(mis_tuple) * this->nrow_, hipMemcpyDeviceToDevice);
 
-            hipLaunchKernelGGL((kernel_csr_amg_update_aggregates<int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->nrow_,
-                               this->mat_.row_offset,
-                               this->mat_.col,
-                               cast_conn->vec_,
-                               max_tuples,
-                               tuples,
-                               cast_agg->vec_);
+            kernel_csr_amg_update_aggregates<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                      this->mat_.row_offset,
+                                                                      this->mat_.col,
+                                                                      cast_conn->vec_,
+                                                                      max_tuples,
+                                                                      tuples,
+                                                                      cast_agg->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -4205,7 +4141,8 @@ namespace rocalution
                         prolong_row_offset,
                         -2,
                         cast_agg->size_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -4216,7 +4153,8 @@ namespace rocalution
                         prolong_row_offset,
                         -2,
                         cast_agg->size_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -4229,7 +4167,10 @@ namespace rocalution
         ++prolong_ncol;
 
         // Get maximum non-zeros per row to decided on size of unordered set
-        kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1, 256>>>(
+        kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
+                              256,
+                              0,
+                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
             this->nrow_, this->mat_.row_offset, prolong_row_offset + 1);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -4239,7 +4180,8 @@ namespace rocalution
                         prolong_row_offset,
                         0,
                         this->nrow_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -4250,7 +4192,8 @@ namespace rocalution
                         prolong_row_offset,
                         0,
                         this->nrow_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -4263,122 +4206,158 @@ namespace rocalution
         if(max_row_nnz < 8)
         {
             kernel_csr_sa_prolong_nnz<256, 4, 8>
-                <<<(this->nrow_ - 1) / (256 / 4) + 1, 256>>>(this->nrow_,
-                                                             this->mat_.row_offset,
-                                                             this->mat_.col,
-                                                             cast_conn->vec_,
-                                                             cast_agg->vec_,
-                                                             prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 16)
         {
             kernel_csr_sa_prolong_nnz<256, 4, 16>
-                <<<(this->nrow_ - 1) / (256 / 4) + 1, 256>>>(this->nrow_,
-                                                             this->mat_.row_offset,
-                                                             this->mat_.col,
-                                                             cast_conn->vec_,
-                                                             cast_agg->vec_,
-                                                             prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 32)
         {
             kernel_csr_sa_prolong_nnz<256, 8, 32>
-                <<<(this->nrow_ - 1) / (256 / 8) + 1, 256>>>(this->nrow_,
-                                                             this->mat_.row_offset,
-                                                             this->mat_.col,
-                                                             cast_conn->vec_,
-                                                             cast_agg->vec_,
-                                                             prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 64)
         {
             kernel_csr_sa_prolong_nnz<256, 16, 64>
-                <<<(this->nrow_ - 1) / (256 / 16) + 1, 256>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 128)
         {
             kernel_csr_sa_prolong_nnz<256, 16, 128>
-                <<<(this->nrow_ - 1) / (256 / 16) + 1, 256>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 256)
         {
             kernel_csr_sa_prolong_nnz<256, 64, 256>
-                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 512)
         {
             kernel_csr_sa_prolong_nnz<256, 64, 512>
-                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 1024)
         {
             kernel_csr_sa_prolong_nnz<256, 64, 1024>
-                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 2048)
         {
             kernel_csr_sa_prolong_nnz<256, 64, 2048>
-                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 4096)
         {
             kernel_csr_sa_prolong_nnz<256, 64, 4096>
-                <<<(this->nrow_ - 1) / (256 / 64) + 1, 256>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 8192)
         {
             kernel_csr_sa_prolong_nnz<128, 64, 8192>
-                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              prolong_row_offset);
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else if(max_row_nnz < 16384)
         {
             kernel_csr_sa_prolong_nnz<64, 64, 16384>
-                <<<(this->nrow_ - 1) / (64 / 64) + 1, 64>>>(this->nrow_,
-                                                            this->mat_.row_offset,
-                                                            this->mat_.col,
-                                                            cast_conn->vec_,
-                                                            cast_agg->vec_,
-                                                            prolong_row_offset);
+                <<<(this->nrow_ - 1) / (64 / 64) + 1,
+                   64,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
         }
         else
         {
@@ -4396,7 +4375,8 @@ namespace rocalution
                         prolong_row_offset + this->nrow_,
                         0,
                         this->nrow_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -4407,7 +4387,8 @@ namespace rocalution
                         prolong_row_offset + this->nrow_,
                         0,
                         this->nrow_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -4423,7 +4404,8 @@ namespace rocalution
                                 prolong_row_offset,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -4434,7 +4416,8 @@ namespace rocalution
                                 prolong_row_offset,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -4460,137 +4443,173 @@ namespace rocalution
         if(max_row_nnz < 8)
         {
             kernel_csr_sa_prolong_fill<128, 4, 8>
-                <<<(this->nrow_ - 1) / (128 / 4) + 1, 128>>>(this->nrow_,
-                                                             relax,
-                                                             lumping_strat,
-                                                             this->mat_.row_offset,
-                                                             this->mat_.col,
-                                                             this->mat_.val,
-                                                             cast_conn->vec_,
-                                                             cast_agg->vec_,
-                                                             cast_prolong->mat_.row_offset,
-                                                             cast_prolong->mat_.col,
-                                                             cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 4) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 16)
         {
             kernel_csr_sa_prolong_fill<128, 8, 16>
-                <<<(this->nrow_ - 1) / (128 / 8) + 1, 128>>>(this->nrow_,
-                                                             relax,
-                                                             lumping_strat,
-                                                             this->mat_.row_offset,
-                                                             this->mat_.col,
-                                                             this->mat_.val,
-                                                             cast_conn->vec_,
-                                                             cast_agg->vec_,
-                                                             cast_prolong->mat_.row_offset,
-                                                             cast_prolong->mat_.col,
-                                                             cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 8) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 32)
         {
             kernel_csr_sa_prolong_fill<128, 16, 32>
-                <<<(this->nrow_ - 1) / (128 / 16) + 1, 128>>>(this->nrow_,
-                                                              relax,
-                                                              lumping_strat,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              this->mat_.val,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              cast_prolong->mat_.row_offset,
-                                                              cast_prolong->mat_.col,
-                                                              cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 16) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 64)
         {
             kernel_csr_sa_prolong_fill<128, 32, 64>
-                <<<(this->nrow_ - 1) / (128 / 32) + 1, 128>>>(this->nrow_,
-                                                              relax,
-                                                              lumping_strat,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              this->mat_.val,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              cast_prolong->mat_.row_offset,
-                                                              cast_prolong->mat_.col,
-                                                              cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 32) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 128)
         {
             kernel_csr_sa_prolong_fill<128, 64, 128>
-                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
-                                                              relax,
-                                                              lumping_strat,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              this->mat_.val,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              cast_prolong->mat_.row_offset,
-                                                              cast_prolong->mat_.col,
-                                                              cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 256)
         {
             kernel_csr_sa_prolong_fill<128, 64, 256>
-                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
-                                                              relax,
-                                                              lumping_strat,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              this->mat_.val,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              cast_prolong->mat_.row_offset,
-                                                              cast_prolong->mat_.col,
-                                                              cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 512)
         {
             kernel_csr_sa_prolong_fill<128, 64, 512>
-                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
-                                                              relax,
-                                                              lumping_strat,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              this->mat_.val,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              cast_prolong->mat_.row_offset,
-                                                              cast_prolong->mat_.col,
-                                                              cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 1024)
         {
             kernel_csr_sa_prolong_fill<128, 64, 1024>
-                <<<(this->nrow_ - 1) / (128 / 64) + 1, 128>>>(this->nrow_,
-                                                              relax,
-                                                              lumping_strat,
-                                                              this->mat_.row_offset,
-                                                              this->mat_.col,
-                                                              this->mat_.val,
-                                                              cast_conn->vec_,
-                                                              cast_agg->vec_,
-                                                              cast_prolong->mat_.row_offset,
-                                                              cast_prolong->mat_.col,
-                                                              cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else if(max_row_nnz < 2048)
         {
             kernel_csr_sa_prolong_fill<64, 64, 2048>
-                <<<(this->nrow_ - 1) / (64 / 64) + 1, 64>>>(this->nrow_,
-                                                            relax,
-                                                            lumping_strat,
-                                                            this->mat_.row_offset,
-                                                            this->mat_.col,
-                                                            this->mat_.val,
-                                                            cast_conn->vec_,
-                                                            cast_agg->vec_,
-                                                            cast_prolong->mat_.row_offset,
-                                                            cast_prolong->mat_.col,
-                                                            cast_prolong->mat_.val);
+                <<<(this->nrow_ - 1) / (64 / 64) + 1,
+                   64,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
         }
         else
         {
@@ -4628,23 +4647,14 @@ namespace rocalution
         int* workspace;
         hipMalloc((void**)&workspace, 256 * sizeof(int));
 
-        hipLaunchKernelGGL((kernel_find_maximum_blockreduce<256, int>),
-                           dim3(256),
-                           dim3(256),
-                           0,
-                           0,
-                           cast_agg->GetSize(),
-                           cast_agg->vec_,
-                           workspace);
+        kernel_find_maximum_blockreduce<256>
+            <<<dim3(256), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                cast_agg->size_, cast_agg->vec_, workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipLaunchKernelGGL((kernel_find_maximum_finalreduce<256, int>),
-                           dim3(1),
-                           dim3(256),
-                           0,
-                           0,
-                           cast_agg->GetSize(),
-                           workspace);
+        kernel_find_maximum_finalreduce<256>
+            <<<dim3(1), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         int prolong_ncol = 0;
@@ -4652,14 +4662,12 @@ namespace rocalution
         hipMemcpy(&prolong_ncol, workspace, sizeof(int), hipMemcpyDeviceToHost);
         hipFree(workspace);
 
-        hipLaunchKernelGGL((kernel_csr_unsmoothed_prolong_nnz_per_row<256, int>),
-                           dim3((this->nrow_ - 1) / 256 + 1),
-                           dim3(256),
-                           0,
-                           0,
-                           this->nrow_,
-                           cast_agg->vec_,
-                           prolong_row_offset);
+        kernel_csr_unsmoothed_prolong_nnz_per_row<256>
+            <<<dim3((this->nrow_ - 1) / 256 + 1),
+               dim3(256),
+               0,
+               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_, cast_agg->vec_, prolong_row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Perform inclusive scan on csr row pointer array
@@ -4670,7 +4678,8 @@ namespace rocalution
                                 prolong_row_offset,
                                 prolong_row_offset,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
 
         hipMalloc((void**)&rocprim_buffer, rocprim_size);
 
@@ -4679,7 +4688,8 @@ namespace rocalution
                                 prolong_row_offset,
                                 prolong_row_offset,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
 
         hipFree(rocprim_buffer);
 
@@ -4701,28 +4711,21 @@ namespace rocalution
 
         if(prolong_nrow == prolong_nnz)
         {
-            hipLaunchKernelGGL((kernel_csr_unsmoothed_prolong_fill_simple<256, ValueType, int>),
-                               dim3((this->nrow_ - 1) / 256 + 1),
-                               dim3(256),
-                               0,
-                               0,
-                               this->nrow_,
-                               cast_agg->vec_,
-                               prolong_cols,
-                               prolong_vals);
+            kernel_csr_unsmoothed_prolong_fill_simple<256>
+                <<<dim3((this->nrow_ - 1) / 256 + 1),
+                   dim3(256),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_, cast_agg->vec_, prolong_cols, prolong_vals);
         }
         else
         {
-            hipLaunchKernelGGL((kernel_csr_unsmoothed_prolong_fill<256, ValueType, int>),
-                               dim3((this->nrow_ - 1) / 256 + 1),
-                               dim3(256),
-                               0,
-                               0,
-                               this->nrow_,
-                               cast_agg->vec_,
-                               prolong_row_offset,
-                               prolong_cols,
-                               prolong_vals);
+            kernel_csr_unsmoothed_prolong_fill<256>
+                <<<dim3((this->nrow_ - 1) / 256 + 1),
+                   dim3(256),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_, cast_agg->vec_, prolong_row_offset, prolong_cols, prolong_vals);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -4774,13 +4777,15 @@ namespace rocalution
         dim3 GridSize((this->nrow_ * 8 - 1) / 256 + 1);
 
         // Determine strong influences in the matrix
-        kernel_csr_rs_pmis_strong_influences<256, 8><<<GridSize, BlockSize>>>(this->nrow_,
-                                                                              this->mat_.row_offset,
-                                                                              this->mat_.col,
-                                                                              this->mat_.val,
-                                                                              eps,
-                                                                              omega.vec_,
-                                                                              cast_S->vec_);
+        kernel_csr_rs_pmis_strong_influences<256, 8>
+            <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                eps,
+                omega.vec_,
+                cast_S->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Mark all vertices as undecided
@@ -4796,24 +4801,34 @@ namespace rocalution
         while(true)
         {
             // First, mark all vertices that have not been assigned yet, as coarse
-            kernel_csr_rs_pmis_unassigned_to_coarse<<<(this->nrow_ - 1) / 256 + 1, 256>>>(
+            kernel_csr_rs_pmis_unassigned_to_coarse<<<
+                (this->nrow_ - 1) / 256 + 1,
+                256,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                 this->nrow_, omega.vec_, cast_cf->vec_, workspace);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Now, correct previously marked vertices with respect to omega
             kernel_csr_rs_pmis_correct_coarse<256, 8>
-                <<<GridSize, BlockSize>>>(this->nrow_,
-                                          this->mat_.row_offset,
-                                          this->mat_.col,
-                                          omega.vec_,
-                                          cast_S->vec_,
-                                          cast_cf->vec_,
-                                          workspace);
+                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    omega.vec_,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    workspace);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Mark remaining edges of a coarse point to fine
-            kernel_csr_rs_pmis_coarse_edges_to_fine<256, 8><<<GridSize, BlockSize>>>(
-                this->nrow_, this->mat_.row_offset, this->mat_.col, cast_S->vec_, cast_cf->vec_);
+            kernel_csr_rs_pmis_coarse_edges_to_fine<256, 8>
+                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Now, we need to check whether we have vertices left that are marked
@@ -4822,7 +4837,11 @@ namespace rocalution
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             kernel_csr_rs_pmis_check_undecided<1024>
-                <<<(this->nrow_ - 1) / 1024 + 1, 1024>>>(this->nrow_, cast_cf->vec_, workspace);
+                <<<(this->nrow_ - 1) / 1024 + 1,
+                   1024,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_, cast_cf->vec_, workspace);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             int undecided;
@@ -4898,16 +4917,18 @@ namespace rocalution
         dim3 GridSize((this->nrow_ - 1) / 256 + 1);
 
         // Determine nnz per row of P
-        kernel_csr_rs_direct_interp_nnz<256><<<GridSize, BlockSize>>>(this->nrow_,
-                                                                      this->mat_.row_offset,
-                                                                      this->mat_.col,
-                                                                      this->mat_.val,
-                                                                      cast_S->vec_,
-                                                                      cast_cf->vec_,
-                                                                      Amin,
-                                                                      Amax,
-                                                                      cast_prolong->mat_.row_offset,
-                                                                      workspace);
+        kernel_csr_rs_direct_interp_nnz<256>
+            <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                cast_S->vec_,
+                cast_cf->vec_,
+                Amin,
+                Amax,
+                cast_prolong->mat_.row_offset,
+                workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         size_t rocprim_size;
@@ -4920,7 +4941,8 @@ namespace rocalution
                                 cast_prolong->mat_.row_offset,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         hipMalloc(&rocprim_buffer, rocprim_size);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -4930,7 +4952,8 @@ namespace rocalution
                                 cast_prolong->mat_.row_offset,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -4938,7 +4961,8 @@ namespace rocalution
                                 workspace,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         hipFree(rocprim_buffer);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -4959,18 +4983,19 @@ namespace rocalution
 
         // Fill column indices and values of P
         kernel_csr_rs_direct_interp_fill<256>
-            <<<GridSize, BlockSize>>>(this->nrow_,
-                                      this->mat_.row_offset,
-                                      this->mat_.col,
-                                      this->mat_.val,
-                                      cast_prolong->mat_.row_offset,
-                                      cast_prolong->mat_.col,
-                                      cast_prolong->mat_.val,
-                                      cast_S->vec_,
-                                      cast_cf->vec_,
-                                      Amin,
-                                      Amax,
-                                      workspace);
+            <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                cast_prolong->mat_.row_offset,
+                cast_prolong->mat_.col,
+                cast_prolong->mat_.val,
+                cast_S->vec_,
+                cast_cf->vec_,
+                Amin,
+                Amax,
+                workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Free temporary buffers
@@ -5030,13 +5055,16 @@ namespace rocalution
 #define HASHVAL 79
         // Obtain maximum row nnz
         kernel_csr_rs_extpi_interp_max<BLOCKSIZE, 16>
-            <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(this->nrow_,
-                                                                    FF1,
-                                                                    this->mat_.row_offset,
-                                                                    this->mat_.col,
-                                                                    cast_S->vec_,
-                                                                    cast_cf->vec_,
-                                                                    cast_prolong->mat_.row_offset);
+            <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1,
+               BLOCKSIZE,
+               0,
+               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                     FF1,
+                                                                     this->mat_.row_offset,
+                                                                     this->mat_.col,
+                                                                     cast_S->vec_,
+                                                                     cast_cf->vec_,
+                                                                     cast_prolong->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         size_t rocprim_size;
@@ -5049,7 +5077,8 @@ namespace rocalution
                         cast_prolong->mat_.row_offset + this->nrow_,
                         0,
                         this->nrow_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         hipMalloc(&rocprim_buffer, rocprim_size);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -5059,7 +5088,8 @@ namespace rocalution
                         cast_prolong->mat_.row_offset + this->nrow_,
                         0,
                         this->nrow_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         int max_nnz;
@@ -5073,7 +5103,10 @@ namespace rocalution
         if(max_nnz < 16)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 8, 16, HASHVAL>
-                <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5086,7 +5119,10 @@ namespace rocalution
         else if(max_nnz < 32)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 16, 32, HASHVAL>
-                <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5099,7 +5135,10 @@ namespace rocalution
         else if(max_nnz < 64)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 32, 64, HASHVAL>
-                <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5112,7 +5151,10 @@ namespace rocalution
         else if(max_nnz < 128)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 128, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5125,7 +5167,10 @@ namespace rocalution
         else if(max_nnz < 256)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 256, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5138,7 +5183,10 @@ namespace rocalution
         else if(max_nnz < 512)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 512, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5151,7 +5199,10 @@ namespace rocalution
         else if(max_nnz < 1024)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 1024, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5164,7 +5215,10 @@ namespace rocalution
         else if(max_nnz < 2048)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 2048, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5177,7 +5231,10 @@ namespace rocalution
         else if(max_nnz < 4096)
         {
             kernel_csr_rs_extpi_interp_nnz<BLOCKSIZE, 64, 4096, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5207,7 +5264,8 @@ namespace rocalution
                         cast_prolong->mat_.row_offset + this->nrow_,
                         0,
                         this->nrow_,
-                        rocprim::maximum<int>());
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         hipFree(rocprim_buffer);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -5226,7 +5284,8 @@ namespace rocalution
                                 cast_prolong->mat_.row_offset,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         hipMalloc(&rocprim_buffer, rocprim_size);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -5236,7 +5295,8 @@ namespace rocalution
                                 cast_prolong->mat_.row_offset,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -5244,7 +5304,8 @@ namespace rocalution
                                 workspace,
                                 0,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>());
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         hipFree(rocprim_buffer);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -5275,7 +5336,10 @@ namespace rocalution
         {
             size_t ssize = BLOCKSIZE / 8 * 16 * (sizeof(int) + sizeof(ValueType));
             kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 8, 16, HASHVAL>
-                <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   ssize,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5293,7 +5357,10 @@ namespace rocalution
         {
             size_t ssize = BLOCKSIZE / 16 * 32 * (sizeof(int) + sizeof(ValueType));
             kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 16, 32, HASHVAL>
-                <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   ssize,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5311,7 +5378,10 @@ namespace rocalution
         {
             size_t ssize = BLOCKSIZE / 32 * 64 * (sizeof(int) + sizeof(ValueType));
             kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 32, 64, HASHVAL>
-                <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   ssize,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5329,7 +5399,10 @@ namespace rocalution
         {
             size_t ssize = BLOCKSIZE / 64 * 128 * (sizeof(int) + sizeof(ValueType));
             kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 64, 128, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   ssize,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5347,7 +5420,10 @@ namespace rocalution
         {
             size_t ssize = BLOCKSIZE / 64 * 256 * (sizeof(int) + sizeof(ValueType));
             kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 64, 256, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   ssize,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5365,7 +5441,10 @@ namespace rocalution
         {
             size_t ssize = BLOCKSIZE / 64 * 512 * (sizeof(int) + sizeof(ValueType));
             kernel_csr_rs_extpi_interp_fill<BLOCKSIZE, 64, 512, HASHVAL>
-                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1, BLOCKSIZE, ssize>>>(
+                <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                   BLOCKSIZE,
+                   ssize,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                     this->nrow_,
                     FF1,
                     this->mat_.row_offset,
@@ -5410,12 +5489,16 @@ namespace rocalution
             allocate_hip(compressed_nrow + 1, &compressed_csr_row_ptr);
 
             kernel_csr_rs_extpi_interp_compress_nnz<256, 8>
-                <<<(cast_prolong->nrow_ * 8 - 1) / 256 + 1, 256>>>(cast_prolong->nrow_,
-                                                                   cast_prolong->mat_.row_offset,
-                                                                   cast_prolong->mat_.col,
-                                                                   cast_prolong->mat_.val,
-                                                                   trunc,
-                                                                   compressed_csr_row_ptr);
+                <<<(cast_prolong->nrow_ * 8 - 1) / 256 + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    cast_prolong->nrow_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val,
+                    trunc,
+                    compressed_csr_row_ptr);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             rocprim::exclusive_scan(NULL,
@@ -5424,7 +5507,8 @@ namespace rocalution
                                     compressed_csr_row_ptr,
                                     0,
                                     compressed_nrow + 1,
-                                    rocprim::plus<int>());
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
             hipMalloc(&rocprim_buffer, rocprim_size);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -5434,7 +5518,8 @@ namespace rocalution
                                     compressed_csr_row_ptr,
                                     0,
                                     compressed_nrow + 1,
-                                    rocprim::plus<int>());
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
             hipFree(rocprim_buffer);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -5452,15 +5537,18 @@ namespace rocalution
             allocate_hip(compressed_nnz, &compressed_csr_val);
 
             // Copy column and value entries
-            kernel_csr_rs_extpi_interp_compress_fill<<<(cast_prolong->nrow_ - 1) / 256 + 1, 256>>>(
-                cast_prolong->nrow_,
-                cast_prolong->mat_.row_offset,
-                cast_prolong->mat_.col,
-                cast_prolong->mat_.val,
-                trunc,
-                compressed_csr_row_ptr,
-                compressed_csr_col_ind,
-                compressed_csr_val);
+            kernel_csr_rs_extpi_interp_compress_fill<<<
+                (cast_prolong->nrow_ - 1) / 256 + 1,
+                256,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(cast_prolong->nrow_,
+                                                                      cast_prolong->mat_.row_offset,
+                                                                      cast_prolong->mat_.col,
+                                                                      cast_prolong->mat_.val,
+                                                                      trunc,
+                                                                      compressed_csr_row_ptr,
+                                                                      compressed_csr_col_ind,
+                                                                      compressed_csr_val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Update P

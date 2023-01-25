@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1282,6 +1282,175 @@ namespace rocalution
                                 (const rocsparse_double_complex*)x,
                                 (const rocsparse_double_complex*)beta,
                                 (rocsparse_double_complex*)y);
+    }
+
+    // rocsparse csrgeam
+    template <>
+    rocsparse_status rocsparseTcsrgeam(rocsparse_handle          handle,
+                                       int                       m,
+                                       int                       n,
+                                       const float*              alpha,
+                                       const rocsparse_mat_descr descr_A,
+                                       int                       nnz_A,
+                                       const float*              csr_val_A,
+                                       const int*                csr_row_ptr_A,
+                                       const int*                csr_col_ind_A,
+                                       const float*              beta,
+                                       const rocsparse_mat_descr descr_B,
+                                       int                       nnz_B,
+                                       const float*              csr_val_B,
+                                       const int*                csr_row_ptr_B,
+                                       const int*                csr_col_ind_B,
+                                       const rocsparse_mat_descr descr_C,
+                                       float*                    csr_val_C,
+                                       const int*                csr_row_ptr_C,
+                                       int*                      csr_col_ind_C)
+    {
+        return rocsparse_scsrgeam(handle,
+                                  m,
+                                  n,
+                                  alpha,
+                                  descr_A,
+                                  nnz_A,
+                                  csr_val_A,
+                                  csr_row_ptr_A,
+                                  csr_col_ind_A,
+                                  beta,
+                                  descr_B,
+                                  nnz_B,
+                                  csr_val_B,
+                                  csr_row_ptr_B,
+                                  csr_col_ind_B,
+                                  descr_C,
+                                  csr_val_C,
+                                  csr_row_ptr_C,
+                                  csr_col_ind_C);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsrgeam(rocsparse_handle          handle,
+                                       int                       m,
+                                       int                       n,
+                                       const double*             alpha,
+                                       const rocsparse_mat_descr descr_A,
+                                       int                       nnz_A,
+                                       const double*             csr_val_A,
+                                       const int*                csr_row_ptr_A,
+                                       const int*                csr_col_ind_A,
+                                       const double*             beta,
+                                       const rocsparse_mat_descr descr_B,
+                                       int                       nnz_B,
+                                       const double*             csr_val_B,
+                                       const int*                csr_row_ptr_B,
+                                       const int*                csr_col_ind_B,
+                                       const rocsparse_mat_descr descr_C,
+                                       double*                   csr_val_C,
+                                       const int*                csr_row_ptr_C,
+                                       int*                      csr_col_ind_C)
+    {
+        return rocsparse_dcsrgeam(handle,
+                                  m,
+                                  n,
+                                  alpha,
+                                  descr_A,
+                                  nnz_A,
+                                  csr_val_A,
+                                  csr_row_ptr_A,
+                                  csr_col_ind_A,
+                                  beta,
+                                  descr_B,
+                                  nnz_B,
+                                  csr_val_B,
+                                  csr_row_ptr_B,
+                                  csr_col_ind_B,
+                                  descr_C,
+                                  csr_val_C,
+                                  csr_row_ptr_C,
+                                  csr_col_ind_C);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsrgeam(rocsparse_handle           handle,
+                                       int                        m,
+                                       int                        n,
+                                       const std::complex<float>* alpha,
+                                       const rocsparse_mat_descr  descr_A,
+                                       int                        nnz_A,
+                                       const std::complex<float>* csr_val_A,
+                                       const int*                 csr_row_ptr_A,
+                                       const int*                 csr_col_ind_A,
+                                       const std::complex<float>* beta,
+                                       const rocsparse_mat_descr  descr_B,
+                                       int                        nnz_B,
+                                       const std::complex<float>* csr_val_B,
+                                       const int*                 csr_row_ptr_B,
+                                       const int*                 csr_col_ind_B,
+                                       const rocsparse_mat_descr  descr_C,
+                                       std::complex<float>*       csr_val_C,
+                                       const int*                 csr_row_ptr_C,
+                                       int*                       csr_col_ind_C)
+    {
+        return rocsparse_ccsrgeam(handle,
+                                  m,
+                                  n,
+                                  (const rocsparse_float_complex*)alpha,
+                                  descr_A,
+                                  nnz_A,
+                                  (const rocsparse_float_complex*)csr_val_A,
+                                  csr_row_ptr_A,
+                                  csr_col_ind_A,
+                                  (const rocsparse_float_complex*)beta,
+                                  descr_B,
+                                  nnz_B,
+                                  (const rocsparse_float_complex*)csr_val_B,
+                                  csr_row_ptr_B,
+                                  csr_col_ind_B,
+                                  descr_C,
+                                  (rocsparse_float_complex*)csr_val_C,
+                                  csr_row_ptr_C,
+                                  csr_col_ind_C);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsrgeam(rocsparse_handle            handle,
+                                       int                         m,
+                                       int                         n,
+                                       const std::complex<double>* alpha,
+                                       const rocsparse_mat_descr   descr_A,
+                                       int                         nnz_A,
+                                       const std::complex<double>* csr_val_A,
+                                       const int*                  csr_row_ptr_A,
+                                       const int*                  csr_col_ind_A,
+                                       const std::complex<double>* beta,
+                                       const rocsparse_mat_descr   descr_B,
+                                       int                         nnz_B,
+                                       const std::complex<double>* csr_val_B,
+                                       const int*                  csr_row_ptr_B,
+                                       const int*                  csr_col_ind_B,
+                                       const rocsparse_mat_descr   descr_C,
+                                       std::complex<double>*       csr_val_C,
+                                       const int*                  csr_row_ptr_C,
+                                       int*                        csr_col_ind_C)
+    {
+        return rocsparse_zcsrgeam(handle,
+                                  m,
+                                  n,
+                                  (const rocsparse_double_complex*)alpha,
+                                  descr_A,
+                                  nnz_A,
+                                  (const rocsparse_double_complex*)csr_val_A,
+                                  csr_row_ptr_A,
+                                  csr_col_ind_A,
+                                  (const rocsparse_double_complex*)beta,
+                                  descr_B,
+                                  nnz_B,
+                                  (const rocsparse_double_complex*)csr_val_B,
+                                  csr_row_ptr_B,
+                                  csr_col_ind_B,
+                                  descr_C,
+                                  (rocsparse_double_complex*)csr_val_C,
+                                  csr_row_ptr_C,
+                                  csr_col_ind_C);
     }
 
     // rocsparse csrgemm

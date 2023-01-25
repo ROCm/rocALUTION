@@ -631,7 +631,7 @@ namespace rocalution
 
             int ell_nnz;
 
-            if(csr_to_ell_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+            if(csr_to_ell_hip(&this->local_backend_,
                               cast_mat_csr->nnz_,
                               cast_mat_csr->nrow_,
                               cast_mat_csr->ncol_,

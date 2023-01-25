@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,8 +61,12 @@ namespace rocalution
 
     // rocprim reduction
     template <typename ValueType>
-    hipError_t rocprimTreduce(
-        void* buffer, size_t& buffer_size, ValueType* in, ValueType* out, size_t size);
+    hipError_t rocprimTreduce(void*       buffer,
+                              size_t&     buffer_size,
+                              ValueType*  in,
+                              ValueType*  out,
+                              size_t      size,
+                              hipStream_t stream);
 
     // rocblas nrm2
     template <typename ValueType>

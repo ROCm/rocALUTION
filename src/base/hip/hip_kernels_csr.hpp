@@ -351,7 +351,7 @@ namespace rocalution
     //           row_nnz:          number of non-zero elements per row
     // Outputs:  perm_col:         permuted column indices of elements
     //           perm_data:        permuted data vector
-    template <typename ValueType, typename IndexType, unsigned int WF_SIZE>
+    template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
     __global__ void kernel_permute_rows(IndexType nrow,
                                         const IndexType* __restrict__ row_offset,
                                         const IndexType* __restrict__ perm_row_offset,
@@ -910,7 +910,7 @@ namespace rocalution
     }
 
     // AMG Connect
-    template <typename ValueType, typename IndexType, unsigned int WF_SIZE>
+    template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
     __global__ void kernel_csr_amg_connect(IndexType nrow,
                                            ValueType eps2,
                                            const IndexType* __restrict__ row_offset,

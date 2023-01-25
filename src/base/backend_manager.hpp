@@ -72,6 +72,12 @@ namespace rocalution
         // rocsparse_handle casted in void **
         void* ROC_sparse_handle;
 
+        // HIP stream casted in void **
+        void* HIP_stream_default;
+        void* HIP_stream_interior;
+        void* HIP_stream_ghost;
+        void* HIP_stream_current;
+
         int HIP_dev;
         int HIP_warp;
         int HIP_block_size;
@@ -292,10 +298,58 @@ namespace rocalution
     /** \ingroup backend_module
   * \brief Sync rocALUTION
   * \details
-  * \p _rocalution_sync blocks the host until all active asynchronous transfers are completed.
+  * \p _rocalution_sync blocks the host until all active asynchronous transfers are completed (this is a global sync).
   */
     ROCALUTION_EXPORT
     void _rocalution_sync(void);
+
+    /** \ingroup backend_module
+  * \brief Sync rocALUTION default
+  * \details
+  * \p _rocalution_sync_default blocks the host until all active asynchronous transfers in default compute mode are completed.
+  */
+    ROCALUTION_EXPORT
+    void _rocalution_sync_default(void);
+
+    /** \ingroup backend_module
+  * \brief Sync rocALUTION interior
+  * \details
+  * \p _rocalution_sync_interior blocks the host until all active asynchronous transfers in interior compute mode are completed.
+  */
+    ROCALUTION_EXPORT
+    void _rocalution_sync_interior(void);
+
+    /** \ingroup backend_module
+  * \brief Sync rocALUTION ghost
+  * \details
+  * \p _rocalution_sync_ghost blocks the host until all active asynchronous transfers in ghost compute mode are completed.
+  */
+    ROCALUTION_EXPORT
+    void _rocalution_sync_ghost(void);
+
+    /** \ingroup backend_module
+  * \brief Set compute mode to interior
+  * \details
+  * \p _rocalution_compute_interior sets sync compute mode to interior.
+  */
+    ROCALUTION_EXPORT
+    void _rocalution_compute_interior(void);
+
+    /** \ingroup backend_module
+  * \brief Set compute mode to ghost
+  * \details
+  * \p _rocalution_compute_ghost sets sync compute mode to ghost.
+  */
+    ROCALUTION_EXPORT
+    void _rocalution_compute_ghost(void);
+
+    /** \ingroup backend_module
+  * \brief Set compute mode to default
+  * \details
+  * \p _rocalution_compute_default sets sync compute mode to default.
+  */
+    ROCALUTION_EXPORT
+    void _rocalution_compute_default(void);
 
     /** \ingroup backend_module
   * \brief get rocALUTION backend architecture

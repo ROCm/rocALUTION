@@ -50,17 +50,17 @@ namespace rocalution
         value_type                                         m_a, m_b;
         rocrand_cpp::mtgp32_engine<0UL>                    m_engine;
         rocrand_cpp::uniform_real_distribution<value_type> m_distribution;
-        int                                                m_hip_block_size;
+        const Rocalution_Backend_Descriptor*               m_backend;
 
     public:
-        inline HIPRandUniform_rocRAND(unsigned long long seed,
-                                      value_type         a,
-                                      value_type         b,
-                                      int                hip_block_size)
+        inline HIPRandUniform_rocRAND(unsigned long long                   seed,
+                                      value_type                           a,
+                                      value_type                           b,
+                                      const Rocalution_Backend_Descriptor* backend)
             : m_a(a)
             , m_b(b)
             , m_engine(seed)
-            , m_hip_block_size(hip_block_size){};
+            , m_backend(backend){};
 
         inline void Generate(T* data, size_t size)
         {
@@ -80,18 +80,14 @@ namespace rocalution
                 if((this->m_a != static_cast<value_type>(0))
                    || (this->m_b != static_cast<value_type>(1)))
                 {
-                    dim3 BlockSize(m_hip_block_size);
-                    dim3 GridSize((size * n) / m_hip_block_size + 1);
+                    dim3 BlockSize(m_backend->HIP_block_size);
+                    dim3 GridSize((size * n) / m_backend->HIP_block_size + 1);
 
-                    hipLaunchKernelGGL((kernel_affine_transform),
-                                       GridSize,
-                                       BlockSize,
-                                       0,
-                                       0,
-                                       size * n,
-                                       this->m_a,
-                                       this->m_b,
-                                       (value_type*)data);
+                    kernel_affine_transform<<<GridSize,
+                                              BlockSize,
+                                              0,
+                                              HIPSTREAM(m_backend->HIP_stream_current)>>>(
+                        size * n, this->m_a, this->m_b, (value_type*)data);
 
                     CHECK_HIP_ERROR(__FILE__, __LINE__);
                 }

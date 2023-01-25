@@ -535,8 +535,7 @@ namespace rocalution
         {
             this->Clear();
 
-            if(csr_to_dense_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
-                                ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
+            if(csr_to_dense_hip(&this->local_backend_,
                                 cast_mat_csr->nrow_,
                                 cast_mat_csr->ncol_,
                                 cast_mat_csr->mat_,
@@ -748,16 +747,12 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_dense_replace_column_vector<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               cast_vec->vec_,
-                               idx,
-                               this->nrow_,
-                               this->ncol_,
-                               this->mat_.val);
+            kernel_dense_replace_column_vector<<<GridSize,
+                                                 BlockSize,
+                                                 0,
+                                                 HIPSTREAM(
+                                                     this->local_backend_.HIP_stream_current)>>>(
+                cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -779,16 +774,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->ncol_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_dense_replace_row_vector<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               cast_vec->vec_,
-                               idx,
-                               this->nrow_,
-                               this->ncol_,
-                               this->mat_.val);
+            kernel_dense_replace_row_vector<<<GridSize,
+                                              BlockSize,
+                                              0,
+                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -811,16 +801,12 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_dense_extract_column_vector<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               cast_vec->vec_,
-                               idx,
-                               this->nrow_,
-                               this->ncol_,
-                               this->mat_.val);
+            kernel_dense_extract_column_vector<<<GridSize,
+                                                 BlockSize,
+                                                 0,
+                                                 HIPSTREAM(
+                                                     this->local_backend_.HIP_stream_current)>>>(
+                cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -843,16 +829,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->ncol_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_dense_extract_row_vector<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               cast_vec->vec_,
-                               idx,
-                               this->nrow_,
-                               this->ncol_,
-                               this->mat_.val);
+            kernel_dense_extract_row_vector<<<GridSize,
+                                              BlockSize,
+                                              0,
+                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 

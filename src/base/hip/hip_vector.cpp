@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -164,8 +164,8 @@ namespace rocalution
                 if(cast_vec->index_size_ > 0)
                 {
                     this->index_size_ = cast_vec->index_size_;
-                    allocate_hip<int>(this->index_size_, &this->index_array_);
-                    allocate_hip<ValueType>(this->index_size_, &this->index_buffer_);
+                    allocate_hip(this->index_size_, &this->index_array_);
+                    allocate_hip(this->index_size_, &this->index_buffer_);
                 }
             }
 
@@ -267,8 +267,8 @@ namespace rocalution
                 if(cast_vec->index_size_ > 0)
                 {
                     this->index_size_ = cast_vec->index_size_;
-                    allocate_hip<int>(this->index_size_, &this->index_array_);
-                    allocate_hip<ValueType>(this->index_size_, &this->index_buffer_);
+                    allocate_hip(this->index_size_, &this->index_array_);
+                    allocate_hip(this->index_size_, &this->index_buffer_);
                 }
             }
 
@@ -372,8 +372,8 @@ namespace rocalution
                 if(hip_cast_vec->index_size_ > 0)
                 {
                     this->index_size_ = hip_cast_vec->index_size_;
-                    allocate_hip<int>(this->index_size_, &this->index_array_);
-                    allocate_hip<ValueType>(this->index_size_, &this->index_buffer_);
+                    allocate_hip(this->index_size_, &this->index_array_);
+                    allocate_hip(this->index_size_, &this->index_buffer_);
                 }
             }
 
@@ -437,8 +437,8 @@ namespace rocalution
                 if(hip_cast_vec->index_size_ > 0)
                 {
                     this->index_size_ = hip_cast_vec->index_size_;
-                    allocate_hip<int>(this->index_size_, &this->index_array_);
-                    allocate_hip<ValueType>(this->index_size_, &this->index_buffer_);
+                    allocate_hip(this->index_size_, &this->index_array_);
+                    allocate_hip(this->index_size_, &this->index_buffer_);
                 }
             }
 
@@ -503,16 +503,11 @@ namespace rocalution
         dim3 BlockSize(this->local_backend_.HIP_block_size);
         dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-        hipLaunchKernelGGL((kernel_copy_offset_from<ValueType, int>),
-                           GridSize,
-                           BlockSize,
-                           0,
-                           0,
-                           size,
-                           src_offset,
-                           dst_offset,
-                           cast_src->vec_,
-                           this->vec_);
+        kernel_copy_offset_from<<<GridSize,
+                                  BlockSize,
+                                  0,
+                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            size, src_offset, dst_offset, cast_src->vec_, this->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
@@ -535,8 +530,8 @@ namespace rocalution
                 if(this->index_size_ > 0)
                 {
                     hip_cast_vec->index_size_ = this->index_size_;
-                    allocate_hip<int>(this->index_size_, &hip_cast_vec->index_array_);
-                    allocate_hip<ValueType>(this->index_size_, &hip_cast_vec->index_buffer_);
+                    allocate_hip(this->index_size_, &hip_cast_vec->index_array_);
+                    allocate_hip(this->index_size_, &hip_cast_vec->index_buffer_);
                 }
             }
 
@@ -600,8 +595,8 @@ namespace rocalution
                 if(this->index_size_ > 0)
                 {
                     hip_cast_vec->index_size_ = this->index_size_;
-                    allocate_hip<int>(this->index_size_, &hip_cast_vec->index_array_);
-                    allocate_hip<ValueType>(this->index_size_, &hip_cast_vec->index_buffer_);
+                    allocate_hip(this->index_size_, &hip_cast_vec->index_array_);
+                    allocate_hip(this->index_size_, &hip_cast_vec->index_buffer_);
                 }
             }
 
@@ -673,14 +668,11 @@ namespace rocalution
                 dim3 BlockSize(this->local_backend_.HIP_block_size);
                 dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-                hipLaunchKernelGGL((kernel_copy_from_float<double, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->size_,
-                                   hip_cast_vec->vec_,
-                                   this->vec_);
+                kernel_copy_from_float<<<GridSize,
+                                         BlockSize,
+                                         0,
+                                         HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->size_, hip_cast_vec->vec_, this->vec_);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
             }
         }
@@ -718,14 +710,11 @@ namespace rocalution
                 dim3 BlockSize(this->local_backend_.HIP_block_size);
                 dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-                hipLaunchKernelGGL((kernel_copy_from_double<float, int>),
-                                   GridSize,
-                                   BlockSize,
-                                   0,
-                                   0,
-                                   this->size_,
-                                   hip_cast_vec->vec_,
-                                   this->vec_);
+                kernel_copy_from_double<<<GridSize,
+                                          BlockSize,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->size_, hip_cast_vec->vec_, this->vec_);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
             }
         }
@@ -829,19 +818,14 @@ namespace rocalution
             assert(cast_x != NULL);
             assert(this->size_ == cast_x->size_);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_scaleadd),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               alpha,
-                               cast_x->vec_,
-                               this->vec_);
+            kernel_scaleadd<<<GridSize,
+                              BlockSize,
+                              0,
+                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, alpha, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -859,20 +843,14 @@ namespace rocalution
             assert(cast_x != NULL);
             assert(this->size_ == cast_x->size_);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_scaleaddscale<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               alpha,
-                               beta,
-                               cast_x->vec_,
-                               this->vec_);
+            kernel_scaleaddscale<<<GridSize,
+                                   BlockSize,
+                                   0,
+                                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, alpha, beta, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -901,18 +879,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_scaleaddscale_offset<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               src_offset,
-                               dst_offset,
-                               alpha,
-                               beta,
-                               cast_x->vec_,
-                               this->vec_);
+            kernel_scaleaddscale_offset<<<GridSize,
+                                          BlockSize,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                size, src_offset, dst_offset, alpha, beta, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -936,22 +907,14 @@ namespace rocalution
             assert(this->size_ == cast_x->size_);
             assert(this->size_ == cast_y->size_);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_scaleadd2<ValueType, int>),
-                               GridSize,
+            kernel_scaleadd2<<<GridSize,
                                BlockSize,
                                0,
-                               0,
-                               size,
-                               alpha,
-                               beta,
-                               gamma,
-                               cast_x->vec_,
-                               cast_y->vec_,
-                               this->vec_);
+                               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, alpha, beta, gamma, cast_x->vec_, cast_y->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1007,7 +970,9 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
-            hipStreamSynchronize(0);
+
+            // Synchronize stream to make sure, result is available on the host
+            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -1050,7 +1015,9 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
-            hipStreamSynchronize(0);
+
+            // Synchronize stream to make sure, result is available on the host
+            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -1085,7 +1052,9 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
-            hipStreamSynchronize(0);
+
+            // Synchronize stream to make sure, result is available on the host
+            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -1119,12 +1088,22 @@ namespace rocalution
             ValueType* dres = NULL;
             allocate_hip(1, &dres);
 
-            rocprimTreduce(buffer, size, this->vec_, dres, this->size_);
+            rocprimTreduce(buffer,
+                           size,
+                           this->vec_,
+                           dres,
+                           this->size_,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMalloc(&buffer, size);
 
-            rocprimTreduce(buffer, size, this->vec_, dres, this->size_);
+            rocprimTreduce(buffer,
+                           size,
+                           this->vec_,
+                           dres,
+                           this->size_,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipFree(buffer);
@@ -1158,7 +1137,9 @@ namespace rocalution
                                   1,
                                   &res);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
-            hipStreamSynchronize(0);
+
+            // Synchronize stream to make sure, result is available on the host
+            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -1228,18 +1209,14 @@ namespace rocalution
             assert(cast_x != NULL);
             assert(this->size_ == cast_x->size_);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_pointwisemult<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               cast_x->vec_,
-                               this->vec_);
+            kernel_pointwisemult<<<GridSize,
+                                   BlockSize,
+                                   0,
+                                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1260,19 +1237,14 @@ namespace rocalution
             assert(this->size_ == cast_x->size_);
             assert(this->size_ == cast_y->size_);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_pointwisemult2<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               cast_x->vec_,
-                               cast_y->vec_,
-                               this->vec_);
+            kernel_pointwisemult2<<<GridSize,
+                                    BlockSize,
+                                    0,
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, cast_x->vec_, cast_y->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1292,20 +1264,15 @@ namespace rocalution
             vec_tmp.Allocate(this->size_);
             vec_tmp.CopyFrom(*this);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
             // this->vec_[ cast_perm->vec_[i] ] = vec_tmp.vec_[i];
-            hipLaunchKernelGGL((kernel_permute<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               cast_perm->vec_,
-                               vec_tmp.vec_,
-                               this->vec_);
+            kernel_permute<<<GridSize,
+                             BlockSize,
+                             0,
+                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, cast_perm->vec_, vec_tmp.vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1325,20 +1292,15 @@ namespace rocalution
             vec_tmp.Allocate(this->size_);
             vec_tmp.CopyFrom(*this);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
             //    this->vec_[i] = vec_tmp.vec_[ cast_perm->vec_[i] ];
-            hipLaunchKernelGGL((kernel_permute_backward<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               cast_perm->vec_,
-                               vec_tmp.vec_,
-                               this->vec_);
+            kernel_permute_backward<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, cast_perm->vec_, vec_tmp.vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1359,20 +1321,15 @@ namespace rocalution
             assert(cast_vec->size_ == this->size_);
             assert(cast_perm->size_ == this->size_);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
             //    this->vec_[ cast_perm->vec_[i] ] = cast_vec->vec_[i];
-            hipLaunchKernelGGL((kernel_permute<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               cast_perm->vec_,
-                               cast_vec->vec_,
-                               this->vec_);
+            kernel_permute<<<GridSize,
+                             BlockSize,
+                             0,
+                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, cast_perm->vec_, cast_vec->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1394,20 +1351,15 @@ namespace rocalution
             assert(cast_vec->size_ == this->size_);
             assert(cast_perm->size_ == this->size_);
 
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
             //    this->vec_[i] = cast_vec->vec_[ cast_perm->vec_[i] ];
-            hipLaunchKernelGGL((kernel_permute_backward<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               size,
-                               cast_perm->vec_,
-                               cast_vec->vec_,
-                               this->vec_);
+            kernel_permute_backward<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, cast_perm->vec_, cast_vec->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1422,8 +1374,8 @@ namespace rocalution
 
         if(this->index_size_ > 0)
         {
-            allocate_hip<int>(this->index_size_, &this->index_array_);
-            allocate_hip<ValueType>(this->index_size_, &this->index_buffer_);
+            allocate_hip(this->index_size_, &this->index_array_);
+            allocate_hip(this->index_size_, &this->index_buffer_);
 
             hipMemcpy(
                 this->index_array_, index, this->index_size_ * sizeof(int), hipMemcpyHostToDevice);
@@ -1451,7 +1403,10 @@ namespace rocalution
             dim3 GridSize(cast_idx->size_ / this->local_backend_.HIP_block_size + 1);
 
             // Prepare send buffer
-            kernel_get_index_values<<<GridSize, BlockSize, 0, 0>>>(
+            kernel_get_index_values<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                 cast_idx->size_, cast_idx->vec_, this->vec_, cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1475,7 +1430,10 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(cast_idx->size_ / this->local_backend_.HIP_block_size + 1);
 
-            kernel_set_index_values<<<GridSize, BlockSize, 0, 0>>>(
+            kernel_set_index_values<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                 cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1491,15 +1449,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->index_size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_get_index_values<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->index_size_,
-                               this->index_array_,
-                               this->vec_,
-                               this->index_buffer_);
+            kernel_get_index_values<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->index_size_, this->index_array_, this->vec_, this->index_buffer_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMemcpy(values,
@@ -1526,15 +1480,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->index_size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_set_index_values<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               this->index_size_,
-                               this->index_array_,
-                               this->index_buffer_,
-                               this->vec_);
+            kernel_set_index_values<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->index_size_, this->index_array_, this->index_buffer_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1595,12 +1545,14 @@ namespace rocalution
     {
         if(this->size_ > 0)
         {
-            int  size = this->size_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(size / this->local_backend_.HIP_block_size + 1);
+            dim3 GridSize(this->size_ / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL(
-                (kernel_power<ValueType, int>), GridSize, BlockSize, 0, 0, size, power, this->vec_);
+            kernel_power<<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, power, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1616,7 +1568,7 @@ namespace rocalution
             // Create the random calculator.
             //
             HIPRandUniform_rocRAND<ValueType> rand_engine_uniform(
-                seed, std::real(a), std::real(b), this->local_backend_.HIP_block_size);
+                seed, std::real(a), std::real(b), &this->local_backend_);
 
             //
             // Apply the random calculator.

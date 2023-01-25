@@ -47,8 +47,26 @@ namespace rocalution
     /// Sync the device (for async transfers)
     void rocalution_hip_sync(void);
 
+    /// Sync the default stream
+    void rocalution_hip_sync_default(void);
+
+    /// Sync the interior stream
+    void rocalution_hip_sync_interior(void);
+
+    /// Sync the ghost stream
+    void rocalution_hip_sync_ghost(void);
+
     /// Returns name of device architecture
     std::string rocalution_get_arch_hip(void);
+
+    /// Set the rocsparse stream to 'interior'
+    void rocalution_hip_compute_interior(void);
+
+    /// Set the rocsparse stream to 'ghost'
+    void rocalution_hip_compute_ghost(void);
+
+    /// Set the rocsparse stream to default
+    void rocalution_hip_compute_default(void);
 
     /// Build (and return) a vector on HIP
     template <typename ValueType>

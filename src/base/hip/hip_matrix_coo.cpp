@@ -710,7 +710,7 @@ namespace rocalution
         {
             this->Clear();
 
-            if(csr_to_coo_hip(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+            if(csr_to_coo_hip(&this->local_backend_,
                               cast_mat_csr->nnz_,
                               cast_mat_csr->nrow_,
                               cast_mat_csr->ncol_,
@@ -839,17 +839,14 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(s / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_coo_permute<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nnz,
-                               src.mat_.row,
-                               src.mat_.col,
-                               cast_perm->vec_,
-                               this->mat_.row,
-                               this->mat_.col);
+            kernel_coo_permute<ValueType, int>
+                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    nnz,
+                    src.mat_.row,
+                    src.mat_.col,
+                    cast_perm->vec_,
+                    this->mat_.row,
+                    this->mat_.col);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -877,8 +874,11 @@ namespace rocalution
             dim3 BlockSize1(this->local_backend_.HIP_block_size);
             dim3 GridSize1(n / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL(
-                (kernel_reverse_index<int>), GridSize1, BlockSize1, 0, 0, n, cast_perm->vec_, pb);
+            kernel_reverse_index<<<GridSize1,
+                                   BlockSize1,
+                                   0,
+                                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                n, cast_perm->vec_, pb);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             HIPAcceleratorMatrixCOO<ValueType> src(this->local_backend_);
@@ -898,17 +898,9 @@ namespace rocalution
             dim3 BlockSize2(this->local_backend_.HIP_block_size);
             dim3 GridSize2(s / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_coo_permute<ValueType, int>),
-                               GridSize2,
-                               BlockSize2,
-                               0,
-                               0,
-                               nnz,
-                               src.mat_.row,
-                               src.mat_.col,
-                               pb,
-                               this->mat_.row,
-                               this->mat_.col);
+            kernel_coo_permute<ValueType, int>
+                <<<GridSize2, BlockSize2, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    nnz, src.mat_.row, src.mat_.col, pb, this->mat_.row, this->mat_.col);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&pb);

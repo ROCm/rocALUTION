@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -219,16 +219,19 @@ namespace rocalution
 
     // rocprim reduce
     template <>
-    hipError_t rocprimTreduce(void* buffer, size_t& buffer_size, float* in, float* out, size_t size)
+    hipError_t rocprimTreduce(
+        void* buffer, size_t& buffer_size, float* in, float* out, size_t size, hipStream_t stream)
     {
-        return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<float>());
+        return rocprim::reduce(
+            buffer, buffer_size, in, out, 0, size, rocprim::plus<float>(), stream);
     }
 
     template <>
-    hipError_t
-        rocprimTreduce(void* buffer, size_t& buffer_size, double* in, double* out, size_t size)
+    hipError_t rocprimTreduce(
+        void* buffer, size_t& buffer_size, double* in, double* out, size_t size, hipStream_t stream)
     {
-        return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<double>());
+        return rocprim::reduce(
+            buffer, buffer_size, in, out, 0, size, rocprim::plus<double>(), stream);
     }
 
     template <>
@@ -236,7 +239,8 @@ namespace rocalution
                               size_t&              buffer_size,
                               std::complex<float>* in,
                               std::complex<float>* out,
-                              size_t               size)
+                              size_t               size,
+                              hipStream_t          stream)
     {
         return rocprim::reduce(buffer,
                                buffer_size,
@@ -244,7 +248,8 @@ namespace rocalution
                                (hipComplex*)out,
                                0,
                                size,
-                               rocprim::plus<hipComplex>());
+                               rocprim::plus<hipComplex>(),
+                               stream);
     }
 
     template <>
@@ -252,7 +257,8 @@ namespace rocalution
                               size_t&               buffer_size,
                               std::complex<double>* in,
                               std::complex<double>* out,
-                              size_t                size)
+                              size_t                size,
+                              hipStream_t           stream)
     {
         return rocprim::reduce(buffer,
                                buffer_size,
@@ -260,13 +266,15 @@ namespace rocalution
                                (hipDoubleComplex*)out,
                                0,
                                size,
-                               rocprim::plus<hipDoubleComplex>());
+                               rocprim::plus<hipDoubleComplex>(),
+                               stream);
     }
 
     template <>
-    hipError_t rocprimTreduce(void* buffer, size_t& buffer_size, int* in, int* out, size_t size)
+    hipError_t rocprimTreduce(
+        void* buffer, size_t& buffer_size, int* in, int* out, size_t size, hipStream_t stream)
     {
-        return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<int>());
+        return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<int>(), stream);
     }
 
     // rocblas nrm2

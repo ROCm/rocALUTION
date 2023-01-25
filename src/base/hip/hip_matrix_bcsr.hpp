@@ -42,12 +42,6 @@ namespace rocalution
                                           int                                  blockdim);
         virtual ~HIPAcceleratorMatrixBCSR();
 
-        [[deprecated("Method will be removed in a future release")]] virtual void
-            set_block_dimension(int blockdim)
-        {
-            this->mat_.blockdim = blockdim;
-        }
-
         virtual void         Info(void) const;
         virtual unsigned int GetMatFormat(void) const
         {

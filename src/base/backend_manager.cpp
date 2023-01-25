@@ -79,6 +79,10 @@ namespace rocalution
         // HIP section
         NULL, // *HIP_blas_handle
         NULL, // *HIP_sparse_handle
+        NULL, // *HIP_stream_default
+        NULL, // *HIP_stream_interior
+        NULL, // *HIP_stream_ghost
+        NULL, // *HIP_stream_current
         -1, // HIP_dev;
         32, // HIP_warp;
         256, // HIP_blocksize;
@@ -518,6 +522,66 @@ namespace rocalution
         {
 #ifdef SUPPORT_HIP
             rocalution_hip_sync();
+#endif
+        }
+    }
+
+    void _rocalution_sync_default(void)
+    {
+        if(_rocalution_available_accelerator() == true)
+        {
+#ifdef SUPPORT_HIP
+            rocalution_hip_sync_default();
+#endif
+        }
+    }
+
+    void _rocalution_sync_interior(void)
+    {
+        if(_rocalution_available_accelerator() == true)
+        {
+#ifdef SUPPORT_HIP
+            rocalution_hip_sync_interior();
+#endif
+        }
+    }
+
+    void _rocalution_sync_ghost(void)
+    {
+        if(_rocalution_available_accelerator() == true)
+        {
+#ifdef SUPPORT_HIP
+            rocalution_hip_sync_ghost();
+#endif
+        }
+    }
+
+    void _rocalution_compute_interior(void)
+    {
+        if(_rocalution_available_accelerator() == true)
+        {
+#ifdef SUPPORT_HIP
+            rocalution_hip_compute_interior();
+#endif
+        }
+    }
+
+    void _rocalution_compute_ghost(void)
+    {
+        if(_rocalution_available_accelerator() == true)
+        {
+#ifdef SUPPORT_HIP
+            rocalution_hip_compute_ghost();
+#endif
+        }
+    }
+
+    void _rocalution_compute_default(void)
+    {
+        if(_rocalution_available_accelerator() == true)
+        {
+#ifdef SUPPORT_HIP
+            rocalution_hip_compute_default();
 #endif
         }
     }

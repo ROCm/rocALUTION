@@ -51,6 +51,7 @@
 
 #define ROCBLAS_HANDLE(handle) *static_cast<rocblas_handle*>(handle)
 #define ROCSPARSE_HANDLE(handle) *static_cast<rocsparse_handle*>(handle)
+#define HIPSTREAM(handle) *static_cast<hipStream_t*>(handle)
 
 #define CHECK_HIP_ERROR(file, line)                              \
     {                                                            \
@@ -408,7 +409,6 @@ namespace rocalution
     static __device__ __forceinline__ void wf_reduce_min(std::complex<ValueType>* val)
     {
         ValueType real = std::real(*val);
-        ValueType imag = std::imag(*val);
 
         wf_reduce_min<WF_SIZE>(&real);
 
@@ -430,7 +430,6 @@ namespace rocalution
     static __device__ __forceinline__ void wf_reduce_max(std::complex<ValueType>* val)
     {
         ValueType real = std::real(*val);
-        ValueType imag = std::imag(*val);
 
         wf_reduce_max<WF_SIZE>(&real);
 
@@ -655,8 +654,8 @@ namespace rocalution
                                              const IndexType* __restrict__ array,
                                              IndexType* __restrict__ workspace)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
+        unsigned int tid = hipThreadIdx_x;
+        IndexType    gid = hipBlockIdx_x * BLOCKSIZE + tid;
 
         __shared__ IndexType smax[BLOCKSIZE];
 
@@ -681,9 +680,9 @@ namespace rocalution
 
     template <unsigned int BLOCKSIZE, typename IndexType>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_find_maximum_finalreduce(IndexType m, IndexType* __restrict__ workspace)
+        void kernel_find_maximum_finalreduce(IndexType* __restrict__ workspace)
     {
-        IndexType tid = hipThreadIdx_x;
+        unsigned int tid = hipThreadIdx_x;
 
         __shared__ IndexType sdata[BLOCKSIZE];
 

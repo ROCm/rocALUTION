@@ -850,7 +850,7 @@ namespace rocalution
             int nnz_ell;
             int nnz_coo;
 
-            if(csr_to_hyb_hip(this->local_backend_.HIP_block_size,
+            if(csr_to_hyb_hip(&this->local_backend_,
                               cast_mat_csr->nnz_,
                               cast_mat_csr->nrow_,
                               cast_mat_csr->ncol_,

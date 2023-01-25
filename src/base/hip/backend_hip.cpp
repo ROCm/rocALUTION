@@ -62,6 +62,25 @@ namespace rocalution
         // get last error (if any)
         hipGetLastError();
 
+        // HIP streams
+        assert(_get_backend_descriptor()->HIP_stream_default == NULL);
+        assert(_get_backend_descriptor()->HIP_stream_interior == NULL);
+        assert(_get_backend_descriptor()->HIP_stream_ghost == NULL);
+        assert(_get_backend_descriptor()->HIP_stream_current == NULL);
+
+        // create streams
+        _get_backend_descriptor()->HIP_stream_default = new hipStream_t;
+#ifdef SUPPORT_MULTINODE
+        _get_backend_descriptor()->HIP_stream_interior = new hipStream_t;
+        _get_backend_descriptor()->HIP_stream_ghost    = new hipStream_t;
+#endif
+
+        // default stream is null stream
+        *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_default)) = NULL;
+
+        _get_backend_descriptor()->HIP_stream_current
+            = _get_backend_descriptor()->HIP_stream_default;
+
         hipError_t hip_status_t;
         int        num_dev;
         hipGetDeviceCount(&num_dev);
@@ -118,15 +137,25 @@ namespace rocalution
                         == rocblas_status_success)
                        && (rocsparse_create_handle(static_cast<rocsparse_handle*>(
                                _get_backend_descriptor()->ROC_sparse_handle))
-                           == rocsparse_status_success))
+                           == rocsparse_status_success)
+#ifdef SUPPORT_MULTINODE
+                       && (hipStreamCreate(static_cast<hipStream_t*>(
+                               _get_backend_descriptor()->HIP_stream_interior))
+                           == hipSuccess)
+                       && (hipStreamCreate(static_cast<hipStream_t*>(
+                               _get_backend_descriptor()->HIP_stream_ghost))
+                           == hipSuccess)
+#endif
+                    )
                     {
                         _get_backend_descriptor()->HIP_dev = dev;
                         break;
                     }
                     else
                     {
-                        LOG_INFO("HIP device " << dev
-                                               << " cannot create rocBLAS/rocSPARSE context");
+                        LOG_INFO("HIP device "
+                                 << dev
+                                 << " cannot create rocBLAS/rocSPARSE context and HIP streams");
                     }
                 }
             }
@@ -179,6 +208,22 @@ namespace rocalution
             {
                 LOG_INFO("Error in rocsparse_destroy_handle");
             }
+
+#ifdef SUPPORT_MULTINODE
+            if(hipStreamDestroy(
+                   *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_interior)))
+               != hipSuccess)
+            {
+                LOG_INFO("Error in hipStreamDestroy");
+            }
+
+            if(hipStreamDestroy(
+                   *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_ghost)))
+               != hipSuccess)
+            {
+                LOG_INFO("Error in hipStreamDestroy");
+            }
+#endif
         }
 
         delete(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle));
@@ -186,6 +231,17 @@ namespace rocalution
 
         _get_backend_descriptor()->ROC_blas_handle   = NULL;
         _get_backend_descriptor()->ROC_sparse_handle = NULL;
+
+        delete(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_default));
+#ifdef SUPPORT_MULTINODE
+        delete(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_interior));
+        delete(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_ghost));
+#endif
+
+        _get_backend_descriptor()->HIP_stream_default  = NULL;
+        _get_backend_descriptor()->HIP_stream_interior = NULL;
+        _get_backend_descriptor()->HIP_stream_ghost    = NULL;
+        _get_backend_descriptor()->HIP_stream_current  = NULL;
 
         _get_backend_descriptor()->HIP_dev = -1;
 
@@ -218,82 +274,77 @@ namespace rocalution
         hipGetLastError();
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        //    LOG_INFO("Number of HIP devices in the sytem: " << num_dev);
-
         if(_get_backend_descriptor()->HIP_dev >= 0)
         {
+            // clang-format off
+            LOG_INFO("------------------------------------------------");
             LOG_INFO("Selected HIP device: " << backend_descriptor.HIP_dev);
+
+            struct hipDeviceProp_t dev_prop;
+            hipGetDeviceProperties(&dev_prop, backend_descriptor.HIP_dev);
+
+            // LOG_INFO("Device number: " << backend_descriptor.HIP_dev);
+            LOG_INFO("Device name: " << dev_prop.name);                                        // char name[256];
+            LOG_INFO("totalGlobalMem: " << (dev_prop.totalGlobalMem >> 20) << " MByte");       // size_t totalGlobalMem;
+            /*
+            LOG_INFO("sharedMemPerBlock: "           << dev_prop.sharedMemPerBlock);           // size_t sharedMemPerBlock;
+            LOG_INFO("regsPerBlock: "                << dev_prop.regsPerBlock);                // int regsPerBlock;
+            LOG_INFO("warpSize: "                    << dev_prop.warpSize);                    // int warpSize;
+            LOG_INFO("memPitch: "                    << dev_prop.memPitch);                    // size_t memPitch;
+            LOG_INFO("maxThreadsPerBlock: "          << dev_prop.maxThreadsPerBlock);          // int maxThreadsPerBlock;
+            LOG_INFO("maxThreadsDim[0]: "            << dev_prop.maxThreadsDim[0]);            // int maxThreadsDim[0];
+            LOG_INFO("maxThreadsDim[1]: "            << dev_prop.maxThreadsDim[1]);            // int maxThreadsDim[1];
+            LOG_INFO("maxThreadsDim[2]: "            << dev_prop.maxThreadsDim[2]);            // int maxThreadsDim[2];
+            LOG_INFO("maxGridSize[0]: "              << dev_prop.maxGridSize[0]);              // int maxGridSize[0];
+            LOG_INFO("maxGridSize[1]: "              << dev_prop.maxGridSize[1]);              // int maxGridSize[1];
+            LOG_INFO("maxGridSize[2]: "              << dev_prop.maxGridSize[2]);              // int maxGridSize[2];
+            */
+            LOG_INFO("clockRate: " << dev_prop.clockRate);                                     // int clockRate;
+            /*
+            LOG_INFO("totalConstMem: "               << dev_prop.totalConstMem);               // size_t totalConstMem;
+            LOG_INFO("major: "                       << dev_prop.major);                       // int major;
+            LOG_INFO("minor: "                       << dev_prop.minor);                       // int minor;
+            */
+            LOG_INFO("compute capability: " << dev_prop.major << "." << dev_prop.minor);
+            /*
+            LOG_INFO("textureAlignment: "            << dev_prop.textureAlignment);            // size_t textureAlignment;
+            LOG_INFO("deviceOverlap: "               << dev_prop.deviceOverlap);               // int deviceOverlap;
+            LOG_INFO("multiProcessorCount: "         << dev_prop.multiProcessorCount);         // int multiProcessorCount;
+            LOG_INFO("kernelExecTimeoutEnabled: "    << dev_prop.kernelExecTimeoutEnabled);    // int kernelExecTimeoutEnabled;
+            LOG_INFO("integrated: "                  << dev_prop.integrated);                  // int integrated;
+            LOG_INFO("canMapHostMemory: "            << dev_prop.canMapHostMemory);            // int canMapHostMemory;
+            LOG_INFO("computeMode: "                 << dev_prop.computeMode);                 // int computeMode;
+            LOG_INFO("maxTexture1D: "                << dev_prop.maxTexture1D);                // int maxTexture1D;
+            LOG_INFO("maxTexture2D[0]: "             << dev_prop.maxTexture2D[0]);             // int maxTexture2D[0];
+            LOG_INFO("maxTexture2D[1]: "             << dev_prop.maxTexture2D[1]);             // int maxTexture2D[1];
+            LOG_INFO("maxTexture3D[0]: "             << dev_prop.maxTexture3D[0]);             // int maxTexture3D[0];
+            LOG_INFO("maxTexture3D[1]: "             << dev_prop.maxTexture3D[1]);             // int maxTexture3D[1];
+            LOG_INFO("maxTexture3D[2]: "             << dev_prop.maxTexture3D[2]);             // int maxTexture3D[2];
+            LOG_INFO("maxTexture1DLayered[0]: "      << dev_prop.maxTexture1DLayered[0]);      // int maxTexture1DLayered[0];
+            LOG_INFO("maxTexture1DLayered[1]: "      << dev_prop.maxTexture1DLayered[1]);      // int maxTexture1DLayered[1];
+            LOG_INFO("maxTexture2DLayered[0]: "      << dev_prop.maxTexture2DLayered[0]);      // int maxTexture2DLayered[0];
+            LOG_INFO("maxTexture2DLayered[1]: "      << dev_prop.maxTexture2DLayered[1]);      // int maxTexture2DLayered[1];
+            LOG_INFO("maxTexture2DLayered[2]: "      << dev_prop.maxTexture2DLayered[2]);      // int maxTexture2DLayered[2];
+            LOG_INFO("surfaceAlignment: "            << dev_prop.surfaceAlignment);            // size_t surfaceAlignment;
+            LOG_INFO("concurrentKernels: "           << dev_prop.concurrentKernels);           // int concurrentKernels;
+            LOG_INFO("ECCEnabled: "                  << dev_prop.ECCEnabled);                  // int ECCEnabled;
+            LOG_INFO("pciBusID: "                    << dev_prop.pciBusID);                    // int pciBusID;
+            LOG_INFO("pciDeviceID: "                 << dev_prop.pciDeviceID);                 // int pciDeviceID;
+            LOG_INFO("pciDomainID: "                 << dev_prop.pciDomainID);                 // int pciDomainID;
+            LOG_INFO("tccDriver: "                   << dev_prop.tccDriver);                   // int tccDriver;
+            LOG_INFO("asyncEngineCount: "            << dev_prop.asyncEngineCount);            // int asyncEngineCount;
+            LOG_INFO("unifiedAddressing: "           << dev_prop.unifiedAddressing);           // int unifiedAddressing;
+            LOG_INFO("memoryClockRate: "             << dev_prop.memoryClockRate);             // int memoryClockRate;
+            LOG_INFO("memoryBusWidth: "              << dev_prop.memoryBusWidth);              // int memoryBusWidth;
+            LOG_INFO("l2CacheSize: "                 << dev_prop.l2CacheSize);                 // int l2CacheSize;
+            LOG_INFO("maxThreadsPerMultiProcessor: " << dev_prop.maxThreadsPerMultiProcessor); // int maxThreadsPerMultiProcessor;
+            */
+            LOG_INFO("------------------------------------------------");
+            // clang-format on
         }
         else
         {
             LOG_INFO("No HIP device is selected!");
-        }
-
-        for(int dev = 0; dev < num_dev; dev++)
-        {
-            struct hipDeviceProp_t dev_prop;
-            hipGetDeviceProperties(&dev_prop, dev);
-
-            // clang-format off
-        LOG_INFO("------------------------------------------------");
-        LOG_INFO("Device number: " << dev);
-        LOG_INFO("Device name: " << dev_prop.name);                                        // char name[256];
-        LOG_INFO("totalGlobalMem: " << (dev_prop.totalGlobalMem >> 20) << " MByte");       // size_t totalGlobalMem;
-        /*
-        LOG_INFO("sharedMemPerBlock: "           << dev_prop.sharedMemPerBlock);           // size_t sharedMemPerBlock;
-        LOG_INFO("regsPerBlock: "                << dev_prop.regsPerBlock);                // int regsPerBlock;
-        LOG_INFO("warpSize: "                    << dev_prop.warpSize);                    // int warpSize;
-        LOG_INFO("memPitch: "                    << dev_prop.memPitch);                    // size_t memPitch;
-        LOG_INFO("maxThreadsPerBlock: "          << dev_prop.maxThreadsPerBlock);          // int maxThreadsPerBlock;
-        LOG_INFO("maxThreadsDim[0]: "            << dev_prop.maxThreadsDim[0]);            // int maxThreadsDim[0];
-        LOG_INFO("maxThreadsDim[1]: "            << dev_prop.maxThreadsDim[1]);            // int maxThreadsDim[1];
-        LOG_INFO("maxThreadsDim[2]: "            << dev_prop.maxThreadsDim[2]);            // int maxThreadsDim[2];
-        LOG_INFO("maxGridSize[0]: "              << dev_prop.maxGridSize[0]);              // int maxGridSize[0];
-        LOG_INFO("maxGridSize[1]: "              << dev_prop.maxGridSize[1]);              // int maxGridSize[1];
-        LOG_INFO("maxGridSize[2]: "              << dev_prop.maxGridSize[2]);              // int maxGridSize[2];
-        */
-        LOG_INFO("clockRate: " << dev_prop.clockRate);                                     // int clockRate;
-        /*
-        LOG_INFO("totalConstMem: "               << dev_prop.totalConstMem);               // size_t totalConstMem;
-        LOG_INFO("major: "                       << dev_prop.major);                       // int major;
-        LOG_INFO("minor: "                       << dev_prop.minor);                       // int minor;
-        */
-        LOG_INFO("compute capability: " << dev_prop.major << "." << dev_prop.minor);
-        /*
-        LOG_INFO("textureAlignment: "            << dev_prop.textureAlignment);            // size_t textureAlignment;
-        LOG_INFO("deviceOverlap: "               << dev_prop.deviceOverlap);               // int deviceOverlap;
-        LOG_INFO("multiProcessorCount: "         << dev_prop.multiProcessorCount);         // int multiProcessorCount;
-        LOG_INFO("kernelExecTimeoutEnabled: "    << dev_prop.kernelExecTimeoutEnabled);    // int kernelExecTimeoutEnabled;
-        LOG_INFO("integrated: "                  << dev_prop.integrated);                  // int integrated;
-        LOG_INFO("canMapHostMemory: "            << dev_prop.canMapHostMemory);            // int canMapHostMemory;
-        LOG_INFO("computeMode: "                 << dev_prop.computeMode);                 // int computeMode;
-        LOG_INFO("maxTexture1D: "                << dev_prop.maxTexture1D);                // int maxTexture1D;
-        LOG_INFO("maxTexture2D[0]: "             << dev_prop.maxTexture2D[0]);             // int maxTexture2D[0];
-        LOG_INFO("maxTexture2D[1]: "             << dev_prop.maxTexture2D[1]);             // int maxTexture2D[1];
-        LOG_INFO("maxTexture3D[0]: "             << dev_prop.maxTexture3D[0]);             // int maxTexture3D[0];
-        LOG_INFO("maxTexture3D[1]: "             << dev_prop.maxTexture3D[1]);             // int maxTexture3D[1];
-        LOG_INFO("maxTexture3D[2]: "             << dev_prop.maxTexture3D[2]);             // int maxTexture3D[2];
-        LOG_INFO("maxTexture1DLayered[0]: "      << dev_prop.maxTexture1DLayered[0]);      // int maxTexture1DLayered[0];
-        LOG_INFO("maxTexture1DLayered[1]: "      << dev_prop.maxTexture1DLayered[1]);      // int maxTexture1DLayered[1];
-        LOG_INFO("maxTexture2DLayered[0]: "      << dev_prop.maxTexture2DLayered[0]);      // int maxTexture2DLayered[0];
-        LOG_INFO("maxTexture2DLayered[1]: "      << dev_prop.maxTexture2DLayered[1]);      // int maxTexture2DLayered[1];
-        LOG_INFO("maxTexture2DLayered[2]: "      << dev_prop.maxTexture2DLayered[2]);      // int maxTexture2DLayered[2];
-        LOG_INFO("surfaceAlignment: "            << dev_prop.surfaceAlignment);            // size_t surfaceAlignment;
-        LOG_INFO("concurrentKernels: "           << dev_prop.concurrentKernels);           // int concurrentKernels;
-        LOG_INFO("ECCEnabled: "                  << dev_prop.ECCEnabled);                  // int ECCEnabled;
-        LOG_INFO("pciBusID: "                    << dev_prop.pciBusID);                    // int pciBusID;
-        LOG_INFO("pciDeviceID: "                 << dev_prop.pciDeviceID);                 // int pciDeviceID;
-        LOG_INFO("pciDomainID: "                 << dev_prop.pciDomainID);                 // int pciDomainID;
-        LOG_INFO("tccDriver: "                   << dev_prop.tccDriver);                   // int tccDriver;
-        LOG_INFO("asyncEngineCount: "            << dev_prop.asyncEngineCount);            // int asyncEngineCount;
-        LOG_INFO("unifiedAddressing: "           << dev_prop.unifiedAddressing);           // int unifiedAddressing;
-        LOG_INFO("memoryClockRate: "             << dev_prop.memoryClockRate);             // int memoryClockRate;
-        LOG_INFO("memoryBusWidth: "              << dev_prop.memoryBusWidth);              // int memoryBusWidth;
-        LOG_INFO("l2CacheSize: "                 << dev_prop.l2CacheSize);                 // int l2CacheSize;
-        LOG_INFO("maxThreadsPerMultiProcessor: " << dev_prop.maxThreadsPerMultiProcessor); // int maxThreadsPerMultiProcessor;
-        */
-        LOG_INFO("------------------------------------------------");
-            // clang-format on
         }
     }
 
@@ -302,6 +353,60 @@ namespace rocalution
         struct hipDeviceProp_t dev_prop;
         hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
         return dev_prop.gcnArchName;
+    }
+
+    void rocalution_hip_compute_interior(void)
+    {
+#ifdef SUPPORT_MULTINODE
+        _get_backend_descriptor()->HIP_stream_current
+            = _get_backend_descriptor()->HIP_stream_interior;
+
+        rocsparse_status status_sparse = rocsparse_set_stream(
+            *(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle)),
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_current)));
+        CHECK_ROCSPARSE_ERROR(status_sparse, __FILE__, __LINE__);
+
+        rocblas_status status_blas = rocblas_set_stream(
+            *(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle)),
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_current)));
+        CHECK_ROCBLAS_ERROR(status_blas, __FILE__, __LINE__);
+#endif
+    }
+
+    void rocalution_hip_compute_ghost(void)
+    {
+#ifdef SUPPORT_MULTINODE
+        _get_backend_descriptor()->HIP_stream_current = _get_backend_descriptor()->HIP_stream_ghost;
+
+        rocsparse_status status_sparse = rocsparse_set_stream(
+            *(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle)),
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_current)));
+        CHECK_ROCSPARSE_ERROR(status_sparse, __FILE__, __LINE__);
+
+        rocblas_status status_blas = rocblas_set_stream(
+            *(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle)),
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_current)));
+        CHECK_ROCBLAS_ERROR(status_blas, __FILE__, __LINE__);
+#endif
+    }
+
+    void rocalution_hip_compute_default(void)
+    {
+#ifdef SUPPORT_MULTINODE
+        // Default stream is NULL
+        _get_backend_descriptor()->HIP_stream_current
+            = _get_backend_descriptor()->HIP_stream_default;
+
+        rocsparse_status status_sparse = rocsparse_set_stream(
+            *(static_cast<rocsparse_handle*>(_get_backend_descriptor()->ROC_sparse_handle)),
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_current)));
+        CHECK_ROCSPARSE_ERROR(status_sparse, __FILE__, __LINE__);
+
+        rocblas_status status_blas = rocblas_set_stream(
+            *(static_cast<rocblas_handle*>(_get_backend_descriptor()->ROC_blas_handle)),
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_current)));
+        CHECK_ROCBLAS_ERROR(status_blas, __FILE__, __LINE__);
+#endif
     }
 
     template <typename ValueType>
@@ -354,6 +459,31 @@ namespace rocalution
     {
         hipDeviceSynchronize();
         CHECK_HIP_ERROR(__FILE__, __LINE__);
+    }
+
+    void rocalution_hip_sync_default(void)
+    {
+        hipStreamSynchronize(
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_default)));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+    }
+
+    void rocalution_hip_sync_interior(void)
+    {
+#ifdef SUPPORT_MULTINODE
+        hipStreamSynchronize(
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_interior)));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+#endif
+    }
+
+    void rocalution_hip_sync_ghost(void)
+    {
+#ifdef SUPPORT_MULTINODE
+        hipStreamSynchronize(
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_ghost)));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+#endif
     }
 
     template AcceleratorVector<float>* _rocalution_init_base_hip_vector(

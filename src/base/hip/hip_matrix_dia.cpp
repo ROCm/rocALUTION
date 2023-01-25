@@ -634,7 +634,7 @@ namespace rocalution
             int nnz_dia;
             int num_diag;
 
-            if(csr_to_dia_hip(this->local_backend_.HIP_block_size,
+            if(csr_to_dia_hip(&this->local_backend_,
                               cast_mat_csr->nnz_,
                               cast_mat_csr->nrow_,
                               cast_mat_csr->ncol_,
@@ -681,18 +681,17 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_dia_spmv<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               ncol,
-                               num_diag,
-                               this->mat_.offset,
-                               this->mat_.val,
-                               cast_in->vec_,
-                               cast_out->vec_);
+            kernel_dia_spmv<<<GridSize,
+                              BlockSize,
+                              0,
+                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow,
+                ncol,
+                num_diag,
+                this->mat_.offset,
+                this->mat_.val,
+                cast_in->vec_,
+                cast_out->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -723,19 +722,18 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(nrow / this->local_backend_.HIP_block_size + 1);
 
-            hipLaunchKernelGGL((kernel_dia_add_spmv<ValueType, int>),
-                               GridSize,
-                               BlockSize,
-                               0,
-                               0,
-                               nrow,
-                               ncol,
-                               num_diag,
-                               this->mat_.offset,
-                               this->mat_.val,
-                               scalar,
-                               cast_in->vec_,
-                               cast_out->vec_);
+            kernel_dia_add_spmv<<<GridSize,
+                                  BlockSize,
+                                  0,
+                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                nrow,
+                ncol,
+                num_diag,
+                this->mat_.offset,
+                this->mat_.val,
+                scalar,
+                cast_in->vec_,
+                cast_out->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
