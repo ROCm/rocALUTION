@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -182,7 +182,7 @@ namespace rocalution
         return this->current_res_;
     }
 
-    int IterationControl::GetAmaxResidualIndex(void) const
+    int64_t IterationControl::GetAmaxResidualIndex(void) const
     {
         return this->current_index_;
     }
@@ -247,7 +247,7 @@ namespace rocalution
         return false;
     }
 
-    bool IterationControl::CheckResidual(double res, int index)
+    bool IterationControl::CheckResidual(double res, int64_t index)
     {
         this->current_index_ = index;
         return this->CheckResidual(res);

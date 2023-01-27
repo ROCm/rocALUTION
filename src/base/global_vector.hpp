@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_GLOBAL_VECTOR_HPP_
 #define ROCALUTION_GLOBAL_VECTOR_HPP_
 
-#include "../utils/types.hpp"
 #include "parallel_manager.hpp"
 #include "vector.hpp"
 
@@ -64,13 +63,8 @@ namespace rocalution
         virtual void Info(void) const;
         virtual bool Check(void) const;
 
-        virtual IndexType2 GetSize(void) const;
-        virtual int        GetLocalSize(void) const;
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release.")]]
-#endif
-        virtual int GetGhostSize(void) const;
+        virtual int64_t GetSize(void) const;
+        virtual int64_t GetLocalSize(void) const;
 
         /** \private */
         const LocalVector<ValueType>& GetInterior() const;
@@ -78,7 +72,7 @@ namespace rocalution
         LocalVector<ValueType>& GetInterior();
 
         /** \brief Allocate a global vector with name and size */
-        virtual void Allocate(std::string name, IndexType2 size);
+        virtual void Allocate(std::string name, int64_t size);
         virtual void Clear(void);
 
         /** \brief Set the parallel manager of a global vector */
@@ -96,14 +90,14 @@ namespace rocalution
         void         CloneFrom(const GlobalVector<ValueType>& src);
 
         /** \brief Access operator (only for host data) */
-        ValueType& operator[](int i);
+        ValueType& operator[](int64_t i);
         /** \brief Access operator (only for host data) */
-        const ValueType& operator[](int i) const;
+        const ValueType& operator[](int64_t i) const;
 
         /** \brief Initialize the local part of a global vector with externally allocated
       * data
       */
-        void SetDataPtr(ValueType** ptr, std::string name, IndexType2 size);
+        void SetDataPtr(ValueType** ptr, std::string name, int64_t size);
         /** \brief Get a pointer to the data from the local part of a global vector and free
       * the global vector object
       */
@@ -130,7 +124,7 @@ namespace rocalution
         virtual ValueType Norm(void) const;
         virtual ValueType Reduce(void) const;
         virtual ValueType Asum(void) const;
-        virtual int       Amax(ValueType& value) const;
+        virtual int64_t   Amax(ValueType& value) const;
         virtual void      PointWiseMult(const GlobalVector<ValueType>& x);
         virtual void      PointWiseMult(const GlobalVector<ValueType>& x,
                                         const GlobalVector<ValueType>& y);

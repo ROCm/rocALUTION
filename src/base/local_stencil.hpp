@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_LOCAL_STENCIL_HPP_
 #define ROCALUTION_LOCAL_STENCIL_HPP_
 
-#include "../utils/types.hpp"
 #include "local_vector.hpp"
 #include "operator.hpp"
 #include "rocalution/export.hpp"
@@ -75,11 +74,11 @@ namespace rocalution
         ROCALUTION_EXPORT
         int GetNDim(void) const;
         ROCALUTION_EXPORT
-        virtual IndexType2 GetM(void) const;
+        virtual int64_t GetM(void) const;
         ROCALUTION_EXPORT
-        virtual IndexType2 GetN(void) const;
+        virtual int64_t GetN(void) const;
         ROCALUTION_EXPORT
-        virtual IndexType2 GetNnz(void) const;
+        virtual int64_t GetNnz(void) const;
 
         /** \brief Set the stencil grid size */
         ROCALUTION_EXPORT

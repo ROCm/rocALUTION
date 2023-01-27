@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -95,11 +95,11 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    IndexType2 GlobalVector<ValueType>::GetSize(void) const
+    int64_t GlobalVector<ValueType>::GetSize(void) const
     {
-        int local_size = this->GetLocalSize();
+        int64_t local_size = this->GetLocalSize();
 
-        int global_size = 0;
+        int64_t global_size = 0;
 
         if(local_size == this->pm_->GetLocalNrow())
         {
@@ -114,15 +114,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int GlobalVector<ValueType>::GetLocalSize(void) const
+    int64_t GlobalVector<ValueType>::GetLocalSize(void) const
     {
         return this->vector_interior_.GetLocalSize();
-    }
-
-    template <typename ValueType>
-    int GlobalVector<ValueType>::GetGhostSize(void) const
-    {
-        return this->pm_->GetNumReceivers();
     }
 
     template <typename ValueType>
@@ -142,20 +136,19 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalVector<ValueType>::Allocate(std::string name, IndexType2 size)
+    void GlobalVector<ValueType>::Allocate(std::string name, int64_t size)
     {
         log_debug(this, "GlobalVector::Allocate()", name, size);
 
         assert(this->pm_ != NULL);
         assert(this->pm_->global_nrow_ == size || this->pm_->global_ncol_ == size);
-        assert(size <= std::numeric_limits<IndexType2>::max());
 
         std::string interior_name = "Interior of " + name;
         std::string ghost_name    = "Ghost of " + name;
 
         this->object_name_ = name;
 
-        int local_size = -1;
+        int64_t local_size = -1;
 
         if(this->pm_->GetGlobalNrow() == size)
         {
@@ -199,7 +192,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, IndexType2 size)
+    void GlobalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, int64_t size)
     {
         log_debug(this, "GlobalVector::SetDataPtr()", ptr, name, size);
 
@@ -207,7 +200,6 @@ namespace rocalution
         assert(*ptr != NULL);
         assert(this->pm_ != NULL);
         assert(this->pm_->global_nrow_ == size || this->pm_->global_ncol_ == size);
-        assert(size <= std::numeric_limits<IndexType2>::max());
 
         this->Clear();
 
@@ -216,7 +208,7 @@ namespace rocalution
 
         this->object_name_ = name;
 
-        int local_size = -1;
+        int64_t local_size = -1;
 
         if(this->pm_->GetGlobalNrow() == size)
         {
@@ -301,7 +293,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    ValueType& GlobalVector<ValueType>::operator[](int i)
+    ValueType& GlobalVector<ValueType>::operator[](int64_t i)
     {
         log_debug(this, "GlobalVector::operator[]()", i);
 
@@ -311,7 +303,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    const ValueType& GlobalVector<ValueType>::operator[](int i) const
+    const ValueType& GlobalVector<ValueType>::operator[](int64_t i) const
     {
         log_debug(this, "GlobalVector::operator[]() const", i);
 
@@ -570,7 +562,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(&local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif
@@ -587,7 +579,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(&local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif
@@ -601,7 +593,7 @@ namespace rocalution
         log_debug(this, "GlobalVector::Norm()");
 
         ValueType result = this->Dot(*this);
-        return sqrt(result);
+        return std::sqrt(result);
     }
 
     template <typename ValueType>
@@ -613,7 +605,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(&local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif
@@ -630,7 +622,7 @@ namespace rocalution
         ValueType global;
 
 #ifdef SUPPORT_MULTINODE
-        communication_sync_allreduce_single_sum(local, &global, this->pm_->comm_);
+        communication_sync_allreduce_single_sum(&local, &global, this->pm_->comm_);
 #else
         global = local;
 #endif
@@ -639,7 +631,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int GlobalVector<ValueType>::Amax(ValueType& value) const
+    int64_t GlobalVector<ValueType>::Amax(ValueType& value) const
     {
         log_debug(this, "GlobalVector::Amax()", value);
         FATAL_ERROR(__FILE__, __LINE__);

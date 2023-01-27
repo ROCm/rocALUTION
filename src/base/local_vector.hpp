@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_LOCAL_VECTOR_HPP_
 #define ROCALUTION_LOCAL_VECTOR_HPP_
 
-#include "../utils/types.hpp"
 #include "rocalution/export.hpp"
 #include "vector.hpp"
 
@@ -78,7 +77,7 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual void Info(void) const;
         ROCALUTION_EXPORT
-        virtual IndexType2 GetSize(void) const;
+        virtual int64_t GetSize(void) const;
 
         /** \private */
         ROCALUTION_EXPORT
@@ -109,7 +108,7 @@ namespace rocalution
       * \endcode
       */
         ROCALUTION_EXPORT
-        void Allocate(std::string name, IndexType2 size);
+        void Allocate(std::string name, int64_t size);
 
         /** \brief Initialize a LocalVector on the host with externally allocated data
       * \details
@@ -135,7 +134,7 @@ namespace rocalution
       * \endcode
       */
         ROCALUTION_EXPORT
-        void SetDataPtr(ValueType** ptr, std::string name, int size);
+        void SetDataPtr(ValueType** ptr, std::string name, int64_t size);
 
         /** \brief Leave a LocalVector to host pointers
       * \details
@@ -202,7 +201,7 @@ namespace rocalution
       *   vec.Ones();
       *
       *   // Set even elements to -1
-      *   for(int i = 0; i < vec.GetSize(); i += 2)
+      *   for(int64_t i = 0; i < vec.GetSize(); i += 2)
       *   {
       *     vec[i] = -1;
       *   }
@@ -210,9 +209,9 @@ namespace rocalution
       */
         /**@{*/
         ROCALUTION_EXPORT
-        ValueType& operator[](int i);
+        ValueType& operator[](int64_t i);
         ROCALUTION_EXPORT
-        const ValueType& operator[](int i) const;
+        const ValueType& operator[](int64_t i) const;
         /**@}*/
 
         ROCALUTION_EXPORT
@@ -234,8 +233,10 @@ namespace rocalution
         virtual void CopyFromDouble(const LocalVector<double>& src);
 
         ROCALUTION_EXPORT
-        virtual void
-            CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
+        virtual void CopyFrom(const LocalVector<ValueType>& src,
+                              int64_t                       src_offset,
+                              int64_t                       dst_offset,
+                              int64_t                       size);
 
         /** \brief Copy a vector under permutation (forward permutation) */
         ROCALUTION_EXPORT
@@ -301,9 +302,9 @@ namespace rocalution
         virtual void ScaleAddScale(ValueType                     alpha,
                                    const LocalVector<ValueType>& x,
                                    ValueType                     beta,
-                                   int                           src_offset,
-                                   int                           dst_offset,
-                                   int                           size);
+                                   int64_t                       src_offset,
+                                   int64_t                       dst_offset,
+                                   int64_t                       size);
         ROCALUTION_EXPORT
         virtual void ScaleAdd2(ValueType                     alpha,
                                const LocalVector<ValueType>& x,
@@ -323,7 +324,7 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual ValueType Asum(void) const;
         ROCALUTION_EXPORT
-        virtual int Amax(ValueType& value) const;
+        virtual int64_t Amax(ValueType& value) const;
         ROCALUTION_EXPORT
         virtual void PointWiseMult(const LocalVector<ValueType>& x);
         ROCALUTION_EXPORT
@@ -361,18 +362,18 @@ namespace rocalution
         void SetIndexValues(const LocalVector<int>& index, const LocalVector<ValueType>& values);
         /** \brief Get continuous indexed values */
         ROCALUTION_EXPORT
-        void GetContinuousValues(int start, int end, ValueType* values) const;
+        void GetContinuousValues(int64_t start, int64_t end, ValueType* values) const;
         /** \brief Set continuous indexed values */
         ROCALUTION_EXPORT
-        void SetContinuousValues(int start, int end, const ValueType* values);
+        void SetContinuousValues(int64_t start, int64_t end, const ValueType* values);
         /** \brief Extract coarse boundary mapping */
         ROCALUTION_EXPORT
         void ExtractCoarseMapping(
-            int start, int end, const int* index, int nc, int* size, int* map) const;
+            int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const;
         /** \brief Extract coarse boundary index */
         ROCALUTION_EXPORT
         void ExtractCoarseBoundary(
-            int start, int end, const int* index, int nc, int* size, int* boundary) const;
+            int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const;
 
     protected:
         virtual bool is_host_(void) const;

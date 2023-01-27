@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,30 +28,47 @@
 
 namespace rocalution
 {
-
     struct MRequest
     {
         MPI_Request req;
     };
 
     template <typename ValueType>
-    void communication_sync_allreduce_single_sum(ValueType   local,
+    void communication_sync_allreduce_single_sum(ValueType*  local,
                                                  ValueType*  global,
                                                  const void* comm);
 
     template <typename ValueType>
-    void communication_sync_allreduce_single_max(ValueType   local,
+    void communication_async_allreduce_single_sum(ValueType*  local,
+                                                  ValueType*  global,
+                                                  const void* comm,
+                                                  MRequest*   request);
+
+    template <typename ValueType>
+    void communication_sync_allreduce_single_max(ValueType*  local,
                                                  ValueType*  global,
                                                  const void* comm);
+
+    template <typename ValueType>
+    void communication_async_allreduce_single_max(ValueType*  local,
+                                                  ValueType*  global,
+                                                  const void* comm,
+                                                  MRequest*   request);
 
     template <typename ValueType>
     void communication_sync_alltoall_single(ValueType* send, ValueType* recv, const void* comm);
 
     template <typename ValueType>
-    void communication_sync_allgather_single(ValueType send, ValueType* recv, const void* comm);
+    void communication_async_alltoall_single(ValueType*  send,
+                                             ValueType*  recv,
+                                             const void* comm,
+                                             MRequest*   request);
 
     template <typename ValueType>
-    void communication_async_allgather_single(ValueType   send,
+    void communication_sync_allgather_single(ValueType* send, ValueType* recv, const void* comm);
+
+    template <typename ValueType>
+    void communication_async_allgather_single(ValueType*  send,
                                               ValueType*  recv,
                                               MRequest*   request,
                                               const void* comm);

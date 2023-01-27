@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+# Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -69,6 +69,9 @@ option(BUILD_VERBOSE "Output additional build information" OFF)
 option(BUILD_CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(BUILD_ADDRESS_SANITIZER "Build with address sanitizer enabled" OFF)
 option(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY "Build with file/folder reorg with backward compatibility enabled" ON)
+option(BUILD_GLOBALTYPE_64 "Support global number of rows / columns exceeding 32 bits" OFF)
+option(BUILD_LOCALTYPE_64 "Support local number of rows / columns exceeding 32 bits" OFF)
+option(BUILD_PTRTYPE_64 "Support local number of non-zeros exceeding 32 bits" OFF)
 
 # Dependencies
 include(cmake/Dependencies.cmake)
@@ -112,7 +115,7 @@ endif()
 
 
 # Setup version
-set(VERSION_STRING "2.1.8")
+set(VERSION_STRING "3.0.0")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 

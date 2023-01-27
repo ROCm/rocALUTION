@@ -72,23 +72,11 @@ void testing_local_vector_bad_args(void)
         ASSERT_DEATH(vec.CopyToData(null_ptr), ".*Assertion.*data != (NULL|__null)*");
     }
 
-    // SetIndexArray
-    {
-        int* null_int = nullptr;
-        ASSERT_DEATH(vec.SetIndexArray(safe_size, null_int),
-                     ".*Assertion.*index != (NULL|__null)*");
-    }
-
-    // SetIndexValues
-    {
-        T* null_T = nullptr;
-        ASSERT_DEATH(vec.SetIndexValues(null_T), ".*Assertion.*values != (NULL|__null)*");
-    }
-
     // GetContinuousValues
     {
+        vec.Allocate("", safe_size);
         T* null_T = nullptr;
-        ASSERT_DEATH(vec.GetContinuousValues(0, 0, null_T),
+        ASSERT_DEATH(vec.GetContinuousValues(0, safe_size, null_T),
                      ".*Assertion.*values != (NULL|__null)*");
     }
 

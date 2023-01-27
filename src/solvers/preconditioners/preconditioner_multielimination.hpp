@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,9 +122,9 @@ namespace rocalution
         OperatorType AA_;
 
         /** \brief The sizes of the AA_ matrix */
-        int AA_nrow_;
+        int64_t AA_nrow_;
         /** \brief The sizes of the AA_ matrix */
-        int AA_nnz_;
+        int64_t AA_nnz_;
 
         /** \brief Keep the precond matrix in CSR or not */
         bool op_mat_format_;

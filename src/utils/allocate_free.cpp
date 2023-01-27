@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,20 +27,19 @@
 
 #include <complex>
 #include <cstddef>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 namespace rocalution
 {
-
     //#define MEM_ALIGNMENT 64
     //#define LONG_PTR size_t
     //#define LONG_PTR long
 
     template <typename DataType>
-    void allocate_host(int size, DataType** ptr)
+    void allocate_host(int64_t size, DataType** ptr)
     {
-        log_debug(0, "allocate_host()", "* begin", size, ptr);
+        log_debug(0, "allocate_host()", "* begin", size, *ptr);
 
         if(size > 0)
         {
@@ -101,7 +100,11 @@ namespace rocalution
     {
         log_debug(0, "free_host()", *ptr);
 
-        assert(*ptr != NULL);
+        if(*ptr == NULL)
+        {
+            // Do nothing
+            return;
+        }
 
         // *********************************************************
         // C++ style
@@ -122,7 +125,7 @@ namespace rocalution
     }
 
     template <typename DataType>
-    void set_to_zero_host(int size, DataType* ptr)
+    void set_to_zero_host(int64_t size, DataType* ptr)
     {
         log_debug(0, "set_to_zero_host()", size, ptr);
 
@@ -132,42 +135,45 @@ namespace rocalution
 
             memset(ptr, 0, size * sizeof(DataType));
 
-            // for (int i=0; i<size; ++i)
+            // for (int64_t i=0; i<size; ++i)
             //   ptr[i] = DataType(0);
         }
     }
 
-    template void allocate_host<float>(int size, float** ptr);
-    template void allocate_host<double>(int size, double** ptr);
+    template void allocate_host<float>(int64_t, float**);
+    template void allocate_host<double>(int64_t, double**);
 #ifdef SUPPORT_COMPLEX
-    template void allocate_host<std::complex<float>>(int size, std::complex<float>** ptr);
-    template void allocate_host<std::complex<double>>(int size, std::complex<double>** ptr);
+    template void allocate_host<std::complex<float>>(int64_t, std::complex<float>**);
+    template void allocate_host<std::complex<double>>(int64_t, std::complex<double>**);
 #endif
-    template void allocate_host<bool>(int size, bool** ptr);
-    template void allocate_host<int>(int size, int** ptr);
-    template void allocate_host<unsigned int>(int size, unsigned int** ptr);
-    template void allocate_host<char>(int size, char** ptr);
+    template void allocate_host<bool>(int64_t, bool**);
+    template void allocate_host<int>(int64_t, int**);
+    template void allocate_host<unsigned int>(int64_t, unsigned int**);
+    template void allocate_host<int64_t>(int64_t, int64_t**);
+    template void allocate_host<char>(int64_t, char**);
 
-    template void free_host<float>(float** ptr);
-    template void free_host<double>(double** ptr);
+    template void free_host<float>(float**);
+    template void free_host<double>(double**);
 #ifdef SUPPORT_COMPLEX
-    template void free_host<std::complex<float>>(std::complex<float>** ptr);
-    template void free_host<std::complex<double>>(std::complex<double>** ptr);
+    template void free_host<std::complex<float>>(std::complex<float>**);
+    template void free_host<std::complex<double>>(std::complex<double>**);
 #endif
-    template void free_host<bool>(bool** ptr);
-    template void free_host<int>(int** ptr);
-    template void free_host<unsigned int>(unsigned int** ptr);
-    template void free_host<char>(char** ptr);
+    template void free_host<bool>(bool**);
+    template void free_host<int>(int**);
+    template void free_host<unsigned int>(unsigned int**);
+    template void free_host<int64_t>(int64_t**);
+    template void free_host<char>(char**);
 
-    template void set_to_zero_host<float>(int size, float* ptr);
-    template void set_to_zero_host<double>(int size, double* ptr);
+    template void set_to_zero_host<float>(int64_t, float*);
+    template void set_to_zero_host<double>(int64_t, double*);
 #ifdef SUPPORT_COMPLEX
-    template void set_to_zero_host<std::complex<float>>(int size, std::complex<float>* ptr);
-    template void set_to_zero_host<std::complex<double>>(int size, std::complex<double>* ptr);
+    template void set_to_zero_host<std::complex<float>>(int64_t, std::complex<float>*);
+    template void set_to_zero_host<std::complex<double>>(int64_t, std::complex<double>*);
 #endif
-    template void set_to_zero_host<bool>(int size, bool* ptr);
-    template void set_to_zero_host<int>(int size, int* ptr);
-    template void set_to_zero_host<unsigned int>(int size, unsigned int* ptr);
-    template void set_to_zero_host<char>(int size, char* ptr);
+    template void set_to_zero_host<bool>(int64_t, bool*);
+    template void set_to_zero_host<int>(int64_t, int*);
+    template void set_to_zero_host<unsigned int>(int64_t, unsigned int*);
+    template void set_to_zero_host<int64_t>(int64_t, int64_t*);
+    template void set_to_zero_host<char>(int64_t, char*);
 
 } // namespace rocalution

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,9 +64,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    IndexType2 LocalVector<ValueType>::GetSize(void) const
+    int64_t LocalVector<ValueType>::GetSize(void) const
     {
-        return (IndexType2)this->vector_->GetSize();
+        return this->vector_->GetSize();
     }
 
     template <typename ValueType>
@@ -82,11 +82,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::Allocate(std::string name, IndexType2 size)
+    void LocalVector<ValueType>::Allocate(std::string name, int64_t size)
     {
         log_debug(this, "LocalVector::Allocate()", name, size);
 
-        assert(size <= std::numeric_limits<int>::max());
         assert(size >= 0);
 
         this->object_name_ = name;
@@ -102,7 +101,7 @@ namespace rocalution
 
                 this->vector_host_ = new HostVector<ValueType>(backend);
                 assert(this->vector_host_ != NULL);
-                this->vector_host_->Allocate(IndexTypeToInt(size));
+                this->vector_host_->Allocate(size);
                 this->vector_ = this->vector_host_;
             }
             else
@@ -114,7 +113,7 @@ namespace rocalution
 
                 this->vector_accel_ = _rocalution_init_base_backend_vector<ValueType>(backend);
                 assert(this->vector_accel_ != NULL);
-                this->vector_accel_->Allocate(IndexTypeToInt(size));
+                this->vector_accel_->Allocate(size);
                 this->vector_ = this->vector_accel_;
             }
         }
@@ -145,13 +144,22 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, int size)
+    void LocalVector<ValueType>::SetDataPtr(ValueType** ptr, std::string name, int64_t size)
     {
         log_debug(this, "LocalVector::SetDataPtr()", ptr, name, size);
 
         assert(ptr != NULL);
-        assert(*ptr != NULL);
-        assert(size > 0);
+        assert(size >= 0);
+
+        if(size > 0)
+        {
+            assert(*ptr != NULL);
+        }
+
+        if(*ptr == NULL)
+        {
+            assert(size == 0);
+        }
 
         this->Clear();
 
@@ -168,7 +176,7 @@ namespace rocalution
         log_debug(this, "LocalVector::LeaveDataPtr()", ptr);
 
         assert(*ptr == NULL);
-        assert(this->GetSize() > 0);
+        assert(this->GetSize() >= 0);
 
         this->vector_->LeaveDataPtr(ptr);
     }
@@ -463,7 +471,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    ValueType& LocalVector<ValueType>::operator[](int i)
+    ValueType& LocalVector<ValueType>::operator[](int64_t i)
     {
         log_debug(this, "LocalVector::operator[]()", i);
 
@@ -474,7 +482,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    const ValueType& LocalVector<ValueType>::operator[](int i) const
+    const ValueType& LocalVector<ValueType>::operator[](int64_t i) const
     {
         log_debug(this, "LocalVector::operator[]()", i);
 
@@ -648,9 +656,9 @@ namespace rocalution
     void LocalVector<ValueType>::ScaleAddScale(ValueType                     alpha,
                                                const LocalVector<ValueType>& x,
                                                ValueType                     beta,
-                                               int                           src_offset,
-                                               int                           dst_offset,
-                                               int                           size)
+                                               int64_t                       src_offset,
+                                               int64_t                       dst_offset,
+                                               int64_t                       size)
     {
         log_debug(this,
                   "LocalVector::ScaleAddScale()",
@@ -661,8 +669,8 @@ namespace rocalution
                   dst_offset,
                   size);
 
-        assert((IndexType2)src_offset < x.GetSize());
-        assert((IndexType2)dst_offset < this->GetSize());
+        assert(src_offset < x.GetSize());
+        assert(dst_offset < this->GetSize());
         assert(((this->vector_ == this->vector_host_) && (x.vector_ == x.vector_host_))
                || ((this->vector_ == this->vector_accel_) && (x.vector_ == x.vector_accel_)));
 
@@ -790,7 +798,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int LocalVector<ValueType>::Amax(ValueType& value) const
+    int64_t LocalVector<ValueType>::Amax(ValueType& value) const
     {
         log_debug(this, "LocalVector::Amax()", value);
 
@@ -841,15 +849,15 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalVector<ValueType>::CopyFrom(const LocalVector<ValueType>& src,
-                                          int                           src_offset,
-                                          int                           dst_offset,
-                                          int                           size)
+                                          int64_t                       src_offset,
+                                          int64_t                       dst_offset,
+                                          int64_t                       size)
     {
         log_debug(this, "LocalVector::CopyFrom()", (const void*&)src, src_offset, dst_offset, size);
 
         assert(&src != this);
-        assert((IndexType2)src_offset < src.GetSize());
-        assert((IndexType2)dst_offset < this->GetSize());
+        assert(src_offset < src.GetSize());
+        assert(dst_offset < this->GetSize());
 
         assert(((this->vector_ == this->vector_host_) && (src.vector_ == src.vector_host_))
                || ((this->vector_ == this->vector_accel_) && (src.vector_ == src.vector_accel_)));
@@ -1113,20 +1121,28 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::GetContinuousValues(int start, int end, ValueType* values) const
+    void LocalVector<ValueType>::GetContinuousValues(int64_t    start,
+                                                     int64_t    end,
+                                                     ValueType* values) const
     {
         log_debug(this, "LocalVector::GetContinuousValues()", start, end, values);
 
-        assert(values != NULL);
         assert(start >= 0);
         assert(end >= start);
         assert(end <= this->GetSize());
 
-        this->vector_->GetContinuousValues(start, end, values);
+        if(end - start > 0)
+        {
+            assert(values != NULL);
+
+            this->vector_->GetContinuousValues(start, end, values);
+        }
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::SetContinuousValues(int start, int end, const ValueType* values)
+    void LocalVector<ValueType>::SetContinuousValues(int64_t          start,
+                                                     int64_t          end,
+                                                     const ValueType* values)
     {
         log_debug(this, "LocalVector::SetContinuousValues()", start, end, values);
 
@@ -1140,7 +1156,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalVector<ValueType>::ExtractCoarseMapping(
-        int start, int end, const int* index, int nc, int* size, int* map) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const
     {
         log_debug(this, "LocalVector::ExtractCoarseMapping()", start, end, index, nc, size, map);
 
@@ -1172,7 +1188,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalVector<ValueType>::ExtractCoarseBoundary(
-        int start, int end, const int* index, int nc, int* size, int* boundary) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const
     {
         log_debug(
             this, "LocalVector::ExtractCoarseBoundary()", start, end, index, nc, size, boundary);
@@ -1221,7 +1237,6 @@ namespace rocalution
     template class LocalVector<std::complex<double>>;
     template class LocalVector<std::complex<float>>;
 #endif
-
     template class LocalVector<int>;
 
 } // namespace rocalution

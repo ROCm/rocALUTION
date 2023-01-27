@@ -26,7 +26,6 @@
 #include "../../utils/def.hpp"
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
-#include "../../utils/types.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
 #include "host_io.hpp"
@@ -38,6 +37,7 @@
 #include "host_matrix_hyb.hpp"
 #include "host_matrix_mcsr.hpp"
 #include "host_vector.hpp"
+#include "rocalution/utils/types.hpp"
 
 #include <algorithm>
 #include <complex>
@@ -92,7 +92,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixCSR<ValueType>::Clear()
+    void HostMatrixCSR<ValueType>::Clear(void)
     {
         if(this->nnz_ > 0)
         {

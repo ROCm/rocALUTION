@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@
 
 #include "mixed_precision.hpp"
 #include "../utils/def.hpp"
-#include "../utils/types.hpp"
 #include "iter_ctrl.hpp"
 
 #include "../base/local_matrix.hpp"
@@ -211,7 +210,7 @@ namespace rocalution
 
         this->op_h_->CopyToCSR(row_offset, col, val_h);
 
-        for(IndexType2 i = 0; i < this->op_h_->GetNnz(); ++i)
+        for(int64_t i = 0; i < this->op_h_->GetNnz(); ++i)
         {
             val_l[i] = static_cast<ValueTypeL>(val_h[i]);
         }

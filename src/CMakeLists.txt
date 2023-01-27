@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+# Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,30 @@ endif()
 # Configure a header file to pass the rocALUTION version
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/base/version.hpp.in"
                "${PROJECT_BINARY_DIR}/include/rocalution/version.hpp"
+)
+
+# Default integer types
+if(BUILD_GLOBALTYPE_64)
+  set(rocalution_GLOBAL_TYPE "int64_t")
+else()
+  set(rocalution_GLOBAL_TYPE "int32_t")
+endif()
+
+if(BUILD_LOCALTYPE_64)
+  set(rocalution_LOCAL_TYPE "int64_t")
+else()
+  set(rocalution_LOCAL_TYPE "int32_t")
+endif()
+
+if(BUILD_PTRTYPE_64)
+  set(rocalution_PTR_TYPE "int64_t")
+else()
+  set(rocalution_PTR_TYPE "int32_t")
+endif()
+
+# Configure a header file to specify rocALUTION indexing types
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/utils/types.hpp.in"
+               "${PROJECT_BINARY_DIR}/include/rocalution/utils/types.hpp"
 )
 
 # Include sub-directories
@@ -120,7 +144,7 @@ if(SUPPORT_HIP)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
-  list(APPEND HIP_HIPCC_FLAGS "-O3 -march=native -Wno-unused-command-line-argument -fPIC -std=c++14")
+  list(APPEND HIP_HIPCC_FLAGS "-O3 -march=native -fPIC -std=c++14")
   foreach(target ${AMDGPU_TARGETS})
     list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
   endforeach()
@@ -130,6 +154,11 @@ if(SUPPORT_HIP)
     add_library(rocalution_hip OBJECT ${HIP_SOURCES})
   else()
     hip_add_library(rocalution_hip ${HIP_SOURCES})
+  endif()
+
+  if(SUPPORT_MPI)
+    target_compile_definitions(rocalution_hip PRIVATE SUPPORT_MULTINODE)
+    target_link_libraries(rocalution_hip PUBLIC MPI::MPI_CXX)
   endif()
 
   rocm_set_soversion(rocalution_hip ${rocalution_SOVERSION})

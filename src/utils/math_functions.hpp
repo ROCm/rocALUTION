@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,8 @@ namespace rocalution
 {
     /// Return double value
     double rocalution_double(const int& val);
+    /// Return double value
+    double rocalution_double(const int64_t& val);
     /// Return double value
     double rocalution_double(const float& val);
     /// Return double value

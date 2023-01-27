@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <complex>
+#include <limits>
 #include <sstream>
 #include <string.h>
 
@@ -71,21 +72,21 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    IndexType2 LocalMatrix<ValueType>::GetM(void) const
+    int64_t LocalMatrix<ValueType>::GetM(void) const
     {
-        return static_cast<IndexType2>(this->matrix_->GetM());
+        return static_cast<int64_t>(this->matrix_->GetM());
     }
 
     template <typename ValueType>
-    IndexType2 LocalMatrix<ValueType>::GetN(void) const
+    int64_t LocalMatrix<ValueType>::GetN(void) const
     {
-        return static_cast<IndexType2>(this->matrix_->GetN());
+        return static_cast<int64_t>(this->matrix_->GetN());
     }
 
     template <typename ValueType>
-    IndexType2 LocalMatrix<ValueType>::GetNnz(void) const
+    int64_t LocalMatrix<ValueType>::GetNnz(void) const
     {
-        return static_cast<IndexType2>(this->matrix_->GetNnz());
+        return this->matrix_->GetNnz();
     }
 
     template <typename ValueType>
@@ -166,7 +167,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateCSR(const std::string& name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateCSR(const std::string& name,
+                                             int64_t            nnz,
+                                             int64_t            nrow,
+                                             int64_t            ncol)
     {
         log_debug(this, "LocalMatrix::AllocateCSR()", name, nnz, nrow, ncol);
 
@@ -182,31 +186,35 @@ namespace rocalution
         {
             assert(nrow > 0);
             assert(ncol > 0);
-
-            Rocalution_Backend_Descriptor backend       = this->local_backend_;
-            unsigned int                  matrix_format = this->GetFormat();
-
-            // init host matrix
-            if(this->matrix_ == this->matrix_host_)
-            {
-                delete this->matrix_host_;
-                this->matrix_host_
-                    = _rocalution_init_base_host_matrix<ValueType>(backend, matrix_format);
-                this->matrix_ = this->matrix_host_;
-            }
-            else
-            {
-                // init accel matrix
-                assert(this->matrix_ == this->matrix_accel_);
-
-                delete this->matrix_accel_;
-                this->matrix_accel_
-                    = _rocalution_init_base_backend_matrix<ValueType>(backend, matrix_format);
-                this->matrix_ = this->matrix_accel_;
-            }
-
-            this->matrix_->AllocateCSR(nnz, nrow, ncol);
         }
+
+        Rocalution_Backend_Descriptor backend       = this->local_backend_;
+        unsigned int                  matrix_format = this->GetFormat();
+
+        // init host matrix
+        if(this->matrix_ == this->matrix_host_)
+        {
+            delete this->matrix_host_;
+            this->matrix_host_
+                = _rocalution_init_base_host_matrix<ValueType>(backend, matrix_format);
+            this->matrix_ = this->matrix_host_;
+        }
+        else
+        {
+            // init accel matrix
+            assert(this->matrix_ == this->matrix_accel_);
+
+            delete this->matrix_accel_;
+            this->matrix_accel_
+                = _rocalution_init_base_backend_matrix<ValueType>(backend, matrix_format);
+            this->matrix_ = this->matrix_accel_;
+        }
+
+        // Internally, we use 32 bits for now
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->AllocateCSR(nnz, static_cast<int>(nrow), static_cast<int>(ncol));
 
 #ifdef DEBUG_MODE
         this->Check();
@@ -215,7 +223,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateBCSR(
-        const std::string& name, int nnzb, int nrowb, int ncolb, int blockdim)
+        const std::string& name, int64_t nnzb, int64_t nrowb, int64_t ncolb, int blockdim)
     {
         log_debug(this, "LocalMatrix::AllocateBCSR()", name, nnzb, nrowb, ncolb, blockdim);
 
@@ -256,7 +264,11 @@ namespace rocalution
                 this->matrix_ = this->matrix_accel_;
             }
 
-            this->matrix_->AllocateBCSR(nnzb, nrowb, ncolb, blockdim);
+            assert(nrowb <= std::numeric_limits<int>::max());
+            assert(ncolb <= std::numeric_limits<int>::max());
+
+            this->matrix_->AllocateBCSR(
+                nnzb, static_cast<int>(nrowb), static_cast<int>(ncolb), blockdim);
         }
 
 #ifdef DEBUG_MODE
@@ -265,7 +277,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateCOO(const std::string& name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateCOO(const std::string& name,
+                                             int64_t            nnz,
+                                             int64_t            nrow,
+                                             int64_t            ncol)
     {
         log_debug(this, "LocalMatrix::AllocateCOO()", name, nnz, nrow, ncol);
 
@@ -304,7 +319,10 @@ namespace rocalution
                 this->matrix_ = this->matrix_accel_;
             }
 
-            this->matrix_->AllocateCOO(nnz, nrow, ncol);
+            assert(nrow <= std::numeric_limits<int>::max());
+            assert(ncol <= std::numeric_limits<int>::max());
+
+            this->matrix_->AllocateCOO(nnz, static_cast<int>(nrow), static_cast<int>(ncol));
         }
 
 #ifdef DEBUG_MODE
@@ -314,7 +332,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateDIA(
-        const std::string& name, int nnz, int nrow, int ncol, int ndiag)
+        const std::string& name, int64_t nnz, int64_t nrow, int64_t ncol, int ndiag)
     {
         log_debug(this, "LocalMatrix::AllocateDIA()", name, nnz, nrow, ncol, ndiag);
 
@@ -353,7 +371,10 @@ namespace rocalution
                 this->matrix_ = this->matrix_accel_;
             }
 
-            this->matrix_->AllocateDIA(nnz, nrow, ncol, ndiag);
+            assert(nrow <= std::numeric_limits<int>::max());
+            assert(ncol <= std::numeric_limits<int>::max());
+
+            this->matrix_->AllocateDIA(nnz, static_cast<int>(nrow), static_cast<int>(ncol), ndiag);
         }
 
 #ifdef DEBUG_MODE
@@ -362,7 +383,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateMCSR(const std::string& name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateMCSR(const std::string& name,
+                                              int64_t            nnz,
+                                              int64_t            nrow,
+                                              int64_t            ncol)
     {
         log_debug(this, "LocalMatrix::AllocateMCSR()", name, nnz, nrow, ncol);
 
@@ -401,7 +425,10 @@ namespace rocalution
                 this->matrix_ = this->matrix_accel_;
             }
 
-            this->matrix_->AllocateMCSR(nnz, nrow, ncol);
+            assert(nrow <= std::numeric_limits<int>::max());
+            assert(ncol <= std::numeric_limits<int>::max());
+
+            this->matrix_->AllocateMCSR(nnz, static_cast<int>(nrow), static_cast<int>(ncol));
         }
 
 #ifdef DEBUG_MODE
@@ -411,7 +438,7 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::AllocateELL(
-        const std::string& name, int nnz, int nrow, int ncol, int max_row)
+        const std::string& name, int64_t nnz, int64_t nrow, int64_t ncol, int max_row)
     {
         log_debug(this, "LocalMatrix::AllocateELL()", name, nnz, nrow, ncol, max_row);
 
@@ -450,7 +477,11 @@ namespace rocalution
                 this->matrix_ = this->matrix_accel_;
             }
 
-            this->matrix_->AllocateELL(nnz, nrow, ncol, max_row);
+            assert(nrow <= std::numeric_limits<int>::max());
+            assert(ncol <= std::numeric_limits<int>::max());
+
+            this->matrix_->AllocateELL(
+                nnz, static_cast<int>(nrow), static_cast<int>(ncol), max_row);
         }
 
 #ifdef DEBUG_MODE
@@ -459,8 +490,12 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateHYB(
-        const std::string& name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateHYB(const std::string& name,
+                                             int64_t            ell_nnz,
+                                             int64_t            coo_nnz,
+                                             int                ell_max_row,
+                                             int64_t            nrow,
+                                             int64_t            ncol)
     {
         log_debug(
             this, "LocalMatrix::AllocateHYB()", name, ell_nnz, coo_nnz, ell_max_row, nrow, ncol);
@@ -501,7 +536,11 @@ namespace rocalution
                 this->matrix_ = this->matrix_accel_;
             }
 
-            this->matrix_->AllocateHYB(ell_nnz, coo_nnz, ell_max_row, nrow, ncol);
+            assert(nrow <= std::numeric_limits<int>::max());
+            assert(ncol <= std::numeric_limits<int>::max());
+
+            this->matrix_->AllocateHYB(
+                ell_nnz, coo_nnz, ell_max_row, static_cast<int>(nrow), static_cast<int>(ncol));
         }
 
 #ifdef DEBUG_MODE
@@ -510,7 +549,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::AllocateDENSE(const std::string& name, int nrow, int ncol)
+    void LocalMatrix<ValueType>::AllocateDENSE(const std::string& name, int64_t nrow, int64_t ncol)
     {
         log_debug(this, "LocalMatrix::AllocateDENSE()", name, nrow, ncol);
 
@@ -545,7 +584,10 @@ namespace rocalution
                 this->matrix_ = this->matrix_accel_;
             }
 
-            this->matrix_->AllocateDENSE(nrow, ncol);
+            assert(nrow <= std::numeric_limits<int>::max());
+            assert(ncol <= std::numeric_limits<int>::max());
+
+            this->matrix_->AllocateDENSE(static_cast<int>(nrow), static_cast<int>(ncol));
         }
 
 #ifdef DEBUG_MODE
@@ -603,8 +645,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::SetDataPtrCOO(
-        int** row, int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::SetDataPtrCOO(int**       row,
+                                               int**       col,
+                                               ValueType** val,
+                                               std::string name,
+                                               int64_t     nnz,
+                                               int64_t     nrow,
+                                               int64_t     ncol)
     {
         log_debug(this, "LocalMatrix::SetDataPtrCOO()", row, col, val, name, nnz, nrow, ncol);
 
@@ -625,7 +672,11 @@ namespace rocalution
         //  this->MoveToHost();
         this->ConvertToCOO();
 
-        this->matrix_->SetDataPtrCOO(row, col, val, nnz, nrow, ncol);
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->SetDataPtrCOO(
+            row, col, val, nnz, static_cast<int>(nrow), static_cast<int>(ncol));
 
         *row = NULL;
         *col = NULL;
@@ -659,21 +710,30 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::SetDataPtrCSR(
-        int** row_offset, int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::SetDataPtrCSR(int**       row_offset,
+                                               int**       col,
+                                               ValueType** val,
+                                               std::string name,
+                                               int64_t     nnz,
+                                               int64_t     nrow,
+                                               int64_t     ncol)
     {
         log_debug(
             this, "LocalMatrix::SetDataPtrCSR()", row_offset, col, val, name, nnz, nrow, ncol);
 
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
         assert(row_offset != NULL);
-        assert(col != NULL);
-        assert(val != NULL);
         assert(*row_offset != NULL);
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
+
+        if(nnz > 0)
+        {
+            assert(col != NULL);
+            assert(val != NULL);
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -682,7 +742,11 @@ namespace rocalution
         //  this->MoveToHost();
         this->ConvertToCSR();
 
-        this->matrix_->SetDataPtrCSR(row_offset, col, val, nnz, nrow, ncol);
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->SetDataPtrCSR(
+            row_offset, col, val, nnz, static_cast<int>(nrow), static_cast<int>(ncol));
 
         *row_offset = NULL;
         *col        = NULL;
@@ -701,9 +765,9 @@ namespace rocalution
         assert(*row_offset == NULL);
         assert(*col == NULL);
         assert(*val == NULL);
-        assert(this->GetM() > 0);
-        assert(this->GetN() > 0);
-        assert(this->GetNnz() > 0);
+        assert(this->GetM() >= 0);
+        assert(this->GetN() >= 0);
+        assert(this->GetNnz() >= 0);
 
 #ifdef DEBUG_MODE
         this->Check();
@@ -720,9 +784,9 @@ namespace rocalution
                                                 int**       col,
                                                 ValueType** val,
                                                 std::string name,
-                                                int         nnzb,
-                                                int         nrowb,
-                                                int         ncolb,
+                                                int64_t     nnzb,
+                                                int64_t     nrowb,
+                                                int64_t     ncolb,
                                                 int         blockdim)
     {
         log_debug(this,
@@ -754,7 +818,11 @@ namespace rocalution
         //  this->MoveToHost();
         this->ConvertToBCSR(blockdim);
 
-        this->matrix_->SetDataPtrBCSR(row_offset, col, val, nnzb, nrowb, ncolb, blockdim);
+        assert(nrowb <= std::numeric_limits<int>::max());
+        assert(ncolb <= std::numeric_limits<int>::max());
+
+        this->matrix_->SetDataPtrBCSR(
+            row_offset, col, val, nnzb, static_cast<int>(nrowb), static_cast<int>(ncolb), blockdim);
 
         *row_offset = NULL;
         *col        = NULL;
@@ -771,7 +839,7 @@ namespace rocalution
                                                   ValueType** val,
                                                   int&        blockdim)
     {
-        log_debug(this, "LocalMatrix::LeaveDataPtrCSR()", row_offset, col, val, blockdim);
+        log_debug(this, "LocalMatrix::LeaveDataPtrBCSR()", row_offset, col, val, blockdim);
 
         assert(*row_offset == NULL);
         assert(*col == NULL);
@@ -796,8 +864,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::SetDataPtrMCSR(
-        int** row_offset, int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol)
+    void LocalMatrix<ValueType>::SetDataPtrMCSR(int**       row_offset,
+                                                int**       col,
+                                                ValueType** val,
+                                                std::string name,
+                                                int64_t     nnz,
+                                                int64_t     nrow,
+                                                int64_t     ncol)
     {
         log_debug(
             this, "LocalMatrix::SetDataPtrMCSR()", row_offset, col, val, name, nnz, nrow, ncol);
@@ -819,7 +892,11 @@ namespace rocalution
         //  this->MoveToHost();
         this->ConvertToMCSR();
 
-        this->matrix_->SetDataPtrMCSR(row_offset, col, val, nnz, nrow, ncol);
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->SetDataPtrMCSR(
+            row_offset, col, val, nnz, static_cast<int>(nrow), static_cast<int>(ncol));
 
         *row_offset = NULL;
         *col        = NULL;
@@ -853,8 +930,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::SetDataPtrELL(
-        int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol, int max_row)
+    void LocalMatrix<ValueType>::SetDataPtrELL(int**       col,
+                                               ValueType** val,
+                                               std::string name,
+                                               int64_t     nnz,
+                                               int64_t     nrow,
+                                               int64_t     ncol,
+                                               int         max_row)
     {
         log_debug(this, "LocalMatrix::SetDataPtrELL()", col, val, name, nnz, nrow, ncol, max_row);
 
@@ -874,7 +956,11 @@ namespace rocalution
         //  this->MoveToHost();
         this->ConvertToELL();
 
-        this->matrix_->SetDataPtrELL(col, val, nnz, nrow, ncol, max_row);
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->SetDataPtrELL(
+            col, val, nnz, static_cast<int>(nrow), static_cast<int>(ncol), max_row);
 
         *col = NULL;
         *val = NULL;
@@ -906,8 +992,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::SetDataPtrDIA(
-        int** offset, ValueType** val, std::string name, int nnz, int nrow, int ncol, int num_diag)
+    void LocalMatrix<ValueType>::SetDataPtrDIA(int**       offset,
+                                               ValueType** val,
+                                               std::string name,
+                                               int64_t     nnz,
+                                               int64_t     nrow,
+                                               int64_t     ncol,
+                                               int         num_diag)
     {
         log_debug(
             this, "LocalMatrix::SetDataPtrDIA()", offset, val, name, nnz, nrow, ncol, num_diag);
@@ -936,7 +1027,11 @@ namespace rocalution
         //  this->MoveToHost();
         this->ConvertToDIA();
 
-        this->matrix_->SetDataPtrDIA(offset, val, nnz, nrow, ncol, num_diag);
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->SetDataPtrDIA(
+            offset, val, nnz, static_cast<int>(nrow), static_cast<int>(ncol), num_diag);
 
         *offset = NULL;
         *val    = NULL;
@@ -970,8 +1065,8 @@ namespace rocalution
     template <typename ValueType>
     void LocalMatrix<ValueType>::SetDataPtrDENSE(ValueType** val,
                                                  std::string name,
-                                                 int         nrow,
-                                                 int         ncol)
+                                                 int64_t     nrow,
+                                                 int64_t     ncol)
     {
         log_debug(this, "LocalMatrix::SetDataPtrDENSE()", val, name, nrow, ncol);
 
@@ -987,7 +1082,10 @@ namespace rocalution
         //  this->MoveToHost();
         this->ConvertToDENSE();
 
-        this->matrix_->SetDataPtrDENSE(val, nrow, ncol);
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->SetDataPtrDENSE(val, static_cast<int>(nrow), static_cast<int>(ncol));
 
         *val = NULL;
 
@@ -1024,12 +1122,13 @@ namespace rocalution
         log_debug(this, "LocalMatrix::CopyFromCSR()", row_offsets, col, val);
 
         assert(row_offsets != NULL);
-        assert(col != NULL);
-        assert(val != NULL);
         assert(this->GetFormat() == CSR);
 
         if(this->GetNnz() > 0)
         {
+            assert(col != NULL);
+            assert(val != NULL);
+
             this->matrix_->CopyFromCSR(row_offsets, col, val);
         }
 
@@ -1046,8 +1145,6 @@ namespace rocalution
         log_debug(this, "LocalMatrix::CopyToCSR()", row_offsets, col, val);
 
         assert(row_offsets != NULL);
-        assert(col != NULL);
-        assert(val != NULL);
         assert(this->GetFormat() == CSR);
 
 #ifdef DEBUG_MODE
@@ -1056,6 +1153,9 @@ namespace rocalution
 
         if(this->GetNnz() > 0)
         {
+            assert(col != NULL);
+            assert(val != NULL);
+
             this->matrix_->CopyToCSR(row_offsets, col, val);
         }
     }
@@ -1107,9 +1207,9 @@ namespace rocalution
                                                  const int*         col,
                                                  const ValueType*   val,
                                                  const std::string& name,
-                                                 int                nnz,
-                                                 int                nrow,
-                                                 int                ncol)
+                                                 int64_t            nnz,
+                                                 int64_t            nrow,
+                                                 int64_t            ncol)
     {
         log_debug(
             this, "LocalMatrix::CopyFromHostCSR()", row_offset, col, val, name, nnz, nrow, ncol);
@@ -1118,8 +1218,6 @@ namespace rocalution
         assert(nrow >= 0);
         assert(ncol >= 0);
         assert(row_offset != NULL);
-        assert(col != NULL);
-        assert(val != NULL);
 
         this->Clear();
         this->object_name_ = name;
@@ -1129,31 +1227,37 @@ namespace rocalution
         {
             assert(nrow > 0);
             assert(ncol > 0);
-
-            Rocalution_Backend_Descriptor backend       = this->local_backend_;
-            unsigned int                  matrix_format = this->GetFormat();
-
-            // init host matrix
-            if(this->matrix_ == this->matrix_host_)
-            {
-                delete this->matrix_host_;
-                this->matrix_host_
-                    = _rocalution_init_base_host_matrix<ValueType>(backend, matrix_format);
-                this->matrix_ = this->matrix_host_;
-            }
-            else
-            {
-                // init accel matrix
-                assert(this->matrix_ == this->matrix_accel_);
-
-                delete this->matrix_accel_;
-                this->matrix_accel_
-                    = _rocalution_init_base_backend_matrix<ValueType>(backend, matrix_format);
-                this->matrix_ = this->matrix_accel_;
-            }
-
-            this->matrix_->CopyFromHostCSR(row_offset, col, val, nnz, nrow, ncol);
+            assert(col != NULL);
+            assert(val != NULL);
         }
+
+        Rocalution_Backend_Descriptor backend       = this->local_backend_;
+        unsigned int                  matrix_format = this->GetFormat();
+
+        // init host matrix
+        if(this->matrix_ == this->matrix_host_)
+        {
+            delete this->matrix_host_;
+            this->matrix_host_
+                = _rocalution_init_base_host_matrix<ValueType>(backend, matrix_format);
+            this->matrix_ = this->matrix_host_;
+        }
+        else
+        {
+            // init accel matrix
+            assert(this->matrix_ == this->matrix_accel_);
+
+            delete this->matrix_accel_;
+            this->matrix_accel_
+                = _rocalution_init_base_backend_matrix<ValueType>(backend, matrix_format);
+            this->matrix_ = this->matrix_accel_;
+        }
+
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->matrix_->CopyFromHostCSR(
+            row_offset, col, val, nnz, static_cast<int>(nrow), static_cast<int>(ncol));
 
 #ifdef DEBUG_MODE
         this->Check();
@@ -1451,9 +1555,9 @@ namespace rocalution
         int*       mat_col        = NULL;
         ValueType* mat_val        = NULL;
 
-        int nrow = this->GetLocalM();
-        int ncol = this->GetLocalN();
-        int nnz  = this->GetLocalNnz();
+        int64_t nrow = this->GetLocalM();
+        int64_t ncol = this->GetLocalN();
+        int64_t nnz  = this->GetLocalNnz();
 
         // Extract matrix pointers
         this->matrix_->LeaveDataPtrCSR(&mat_row_offset, &mat_col, &mat_val);
@@ -1472,8 +1576,16 @@ namespace rocalution
 
         vec2.LeaveDataPtr(&mat_val);
 
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
         // Set matrix pointers
-        this->matrix_->SetDataPtrCSR(&mat_row_offset, &mat_col, &mat_val, nnz, nrow, ncol);
+        this->matrix_->SetDataPtrCSR(&mat_row_offset,
+                                     &mat_col,
+                                     &mat_val,
+                                     nnz,
+                                     static_cast<int>(nrow),
+                                     static_cast<int>(ncol));
 
         if(is_accel)
         {
@@ -1514,13 +1626,22 @@ namespace rocalution
             current_backend_name = _rocalution_backend_name[this->local_backend_.backend];
         }
 
+        std::string format = _matrix_format_names[this->GetFormat()];
+
+        if(this->GetFormat() == CSR)
+        {
+            std::stringstream sstr;
+            sstr << "(" << 8 * sizeof(int) << "," << 8 * sizeof(int) << ")";
+            format += sstr.str();
+        }
+
         LOG_INFO("LocalMatrix"
                  << " name=" << this->object_name_ << ";"
                  << " rows=" << this->GetM() << ";"
                  << " cols=" << this->GetN() << ";"
                  << " nnz=" << this->GetNnz() << ";"
                  << " prec=" << 8 * sizeof(ValueType) << "bit;"
-                 << " format=" << _matrix_format_names[this->GetFormat()] << ";"
+                 << " format=" << format << ";"
                  << " host backend={" << _rocalution_host_name[0] << "};"
                  << " accelerator backend={"
                  << _rocalution_backend_name[this->local_backend_.backend] << "};"
@@ -1855,6 +1976,11 @@ namespace rocalution
 
             this->matrix_->Apply(*in.vector_, out->vector_);
         }
+        else
+        {
+            // If matrix is empty, but not a 0x0 matrix, output vector need to be set to zero
+            out->vector_->Zeros();
+        }
     }
 
     template <typename ValueType>
@@ -2018,10 +2144,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::ExtractSubMatrix(int                     row_offset,
-                                                  int                     col_offset,
-                                                  int                     row_size,
-                                                  int                     col_size,
+    void LocalMatrix<ValueType>::ExtractSubMatrix(int64_t                 row_offset,
+                                                  int64_t                 col_offset,
+                                                  int64_t                 row_size,
+                                                  int64_t                 col_size,
                                                   LocalMatrix<ValueType>* mat) const
     {
         log_debug(this,
@@ -2034,123 +2160,130 @@ namespace rocalution
 
         assert(this != mat);
         assert(mat != NULL);
-        assert(row_size > 0);
-        assert(col_size > 0);
-        assert(static_cast<IndexType2>(row_offset) <= this->GetM());
-        assert(static_cast<IndexType2>(col_offset) <= this->GetN());
-
-        assert(((this->matrix_ == this->matrix_host_) && (mat->matrix_ == mat->matrix_host_))
-               || ((this->matrix_ == this->matrix_accel_) && (mat->matrix_ == mat->matrix_accel_)));
+        assert(row_size >= 0);
+        assert(col_size >= 0);
+        assert(static_cast<int64_t>(row_offset) <= this->GetM());
+        assert(static_cast<int64_t>(col_offset) <= this->GetN());
+        assert(this->is_host_() == mat->is_host_());
 
 #ifdef DEBUG_MODE
         this->Check();
 #endif
 
+        // offsets and sizes are expected to be within 32 bits
+        assert(row_offset <= std::numeric_limits<int>::max());
+        assert(col_offset <= std::numeric_limits<int>::max());
+        assert(row_size <= std::numeric_limits<int>::max());
+        assert(col_size <= std::numeric_limits<int>::max());
+
         mat->Clear();
 
-        if(this->GetNnz() > 0)
+        // Submatrix should be same format as full matrix
+        mat->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+
+        bool err = false;
+
+        // if the sub matrix has only 1 row
+        // it is computed on the host
+        if((this->is_host_() == true) || (row_size > 1))
         {
-            // Submatrix should be same format as full matrix
-            mat->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+            err = this->matrix_->ExtractSubMatrix(static_cast<int>(row_offset),
+                                                  static_cast<int>(col_offset),
+                                                  static_cast<int>(row_size),
+                                                  static_cast<int>(col_size),
+                                                  mat->matrix_);
+        }
 
-            bool err = false;
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+        {
+            LOG_INFO("Computation of LocalMatrix::ExtractSubMatrix() failed");
+            this->Info();
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
 
-            // if the sub matrix has only 1 row
-            // it is computed on the host
-            if((this->is_host_() == true) || (row_size > 1))
-            {
-                err = this->matrix_->ExtractSubMatrix(
-                    row_offset, col_offset, row_size, col_size, mat->matrix_);
-            }
+        if(err == false)
+        {
+            LocalMatrix<ValueType> mat_host;
+            mat_host.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+            mat_host.CopyFrom(*this);
 
-            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            mat->MoveToHost();
+
+            mat_host.ConvertToCSR();
+            mat->ConvertToCSR();
+
+            if(mat_host.matrix_->ExtractSubMatrix(static_cast<int>(row_offset),
+                                                  static_cast<int>(col_offset),
+                                                  static_cast<int>(row_size),
+                                                  static_cast<int>(col_size),
+                                                  mat->matrix_)
+               == false)
             {
                 LOG_INFO("Computation of LocalMatrix::ExtractSubMatrix() failed");
-                this->Info();
+                mat_host.Info();
                 FATAL_ERROR(__FILE__, __LINE__);
             }
 
-            if(err == false)
+            if(this->GetFormat() != CSR)
             {
-                LocalMatrix<ValueType> mat_host;
-                mat_host.ConvertTo(this->GetFormat(), this->GetBlockDimension());
-                mat_host.CopyFrom(*this);
-
-                mat->MoveToHost();
-
-                mat_host.ConvertToCSR();
-                mat->ConvertToCSR();
-
-                if(mat_host.matrix_->ExtractSubMatrix(
-                       row_offset, col_offset, row_size, col_size, mat->matrix_)
-                   == false)
-                {
-                    LOG_INFO("Computation of LocalMatrix::ExtractSubMatrix() failed");
-                    mat_host.Info();
-                    FATAL_ERROR(__FILE__, __LINE__);
-                }
-
-                if(this->GetFormat() != CSR)
-                {
-                    if(row_size > 1)
-                    {
-                        LOG_VERBOSE_INFO(2,
-                                         "*** warning: LocalMatrix::ExtractSubMatrix() is "
-                                         "performed in CSR format");
-                    }
-
-                    mat->ConvertTo(this->GetFormat(), this->GetBlockDimension());
-                }
-
-                if(this->is_accel_() == true)
-                {
-                    if(row_size > 1)
-                    {
-                        LOG_VERBOSE_INFO(2,
-                                         "*** warning: LocalMatrix::ExtractSubMatrix() is "
-                                         "performed on the host");
-                    }
-
-                    mat->MoveToAccelerator();
-                }
-
-                if(row_size <= 1)
+                if(row_size > 1)
                 {
                     LOG_VERBOSE_INFO(2,
-                                     "*** warning: LocalMatrix::ExtractSubMatrix() is performed on "
-                                     "the host due to size = 1");
+                                     "*** warning: LocalMatrix::ExtractSubMatrix() is "
+                                     "performed in CSR format");
                 }
+
+                mat->ConvertTo(this->GetFormat(), this->GetBlockDimension());
             }
 
-            std::ostringstream row_begin;
-            std::ostringstream row_end;
-            std::ostringstream col_begin;
-            std::ostringstream col_end;
+            if(this->is_accel_() == true)
+            {
+                if(row_size > 1)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::ExtractSubMatrix() is "
+                                     "performed on the host");
+                }
 
-            row_begin << row_offset;
-            row_end << row_offset + row_size - 1;
-            col_begin << col_offset;
-            col_end << col_offset + row_size - 1;
+                mat->MoveToAccelerator();
+            }
 
-            std::string mat_name
-                = "Submatrix of " + this->object_name_ + " " + "["
-                  + row_begin
-                        .str() //static_cast<std::ostringstream*>(&(std::ostringstream() << row_offset))->str()
-                  + ","
-                  + col_begin
-                        .str() //static_cast<std::ostringstream*>(&(std::ostringstream() << col_offset))->str()
-                  + "]-" + "["
-                  + row_end.str() //static_cast<std::ostringstream*>(
-                  //    &(std::ostringstream() << row_offset + row_size - 1))
-                  //    ->str()
-                  + ","
-                  + col_end.str() //static_cast<std::ostringstream*>(
-                  //&(std::ostringstream() << col_offset + row_size - 1))
-                  //->str()
-                  + "]";
-
-            mat->object_name_ = mat_name;
+            if(row_size <= 1)
+            {
+                LOG_VERBOSE_INFO(2,
+                                 "*** warning: LocalMatrix::ExtractSubMatrix() is performed on "
+                                 "the host due to size = 1");
+            }
         }
+
+        std::ostringstream row_begin;
+        std::ostringstream row_end;
+        std::ostringstream col_begin;
+        std::ostringstream col_end;
+
+        row_begin << row_offset;
+        row_end << row_offset + row_size - 1;
+        col_begin << col_offset;
+        col_end << col_offset + row_size - 1;
+
+        std::string mat_name
+            = "Submatrix of " + this->object_name_ + " " + "["
+              + row_begin
+                    .str() //static_cast<std::ostringstream*>(&(std::ostringstream() << row_offset))->str()
+              + ","
+              + col_begin
+                    .str() //static_cast<std::ostringstream*>(&(std::ostringstream() << col_offset))->str()
+              + "]-" + "["
+              + row_end.str() //static_cast<std::ostringstream*>(
+              //    &(std::ostringstream() << row_offset + row_size - 1))
+              //    ->str()
+              + ","
+              + col_end.str() //static_cast<std::ostringstream*>(
+              //&(std::ostringstream() << col_offset + row_size - 1))
+              //->str()
+              + "]";
+
+        mat->object_name_ = mat_name;
 
 #ifdef DEBUG_MODE
         mat->Check();
@@ -4453,7 +4586,7 @@ namespace rocalution
     void LocalMatrix<ValueType>::MatrixMult(const LocalMatrix<ValueType>& A,
                                             const LocalMatrix<ValueType>& B)
     {
-        log_debug(this, "LocalMatrix::AddScalarDiagonal()", (const void*&)A, (const void*&)B);
+        log_debug(this, "LocalMatrix::MatrixMult()", (const void*&)A, (const void*&)B);
 
         assert(&A != this);
         assert(&B != this);
@@ -5629,12 +5762,8 @@ namespace rocalution
         assert(eps > 0.0f);
         assert(CFmap != NULL);
         assert(S != NULL);
-
-        assert(((this->matrix_ == this->matrix_host_) && (CFmap->vector_ == CFmap->vector_host_)
-                && (S->vector_ == S->vector_host_))
-               || ((this->matrix_ == this->matrix_accel_)
-                   && (CFmap->vector_ == CFmap->vector_accel_)
-                   && (S->vector_ == S->vector_accel_)));
+        assert(this->is_host_() == CFmap->is_host_());
+        assert(this->is_host_() == S->is_host_());
 
 #ifdef DEBUG_MODE
         this->Check();
@@ -5709,12 +5838,9 @@ namespace rocalution
 
         assert(prolong != NULL);
         assert(this != prolong);
-
-        assert(((this->matrix_ == this->matrix_host_) && (prolong->matrix_ == prolong->matrix_host_)
-                && (CFmap.vector_ == CFmap.vector_host_) && (S.vector_ == S.vector_host_))
-               || ((this->matrix_ == this->matrix_accel_)
-                   && (prolong->matrix_ == prolong->matrix_accel_)
-                   && (CFmap.vector_ == CFmap.vector_accel_) && (S.vector_ == S.vector_accel_)));
+        assert(this->is_host_() == CFmap.is_host_());
+        assert(this->is_host_() == S.is_host_());
+        assert(this->is_host_() == prolong->is_host_());
 
 #ifdef DEBUG_MODE
         this->Check();
@@ -6631,12 +6757,14 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map, int n, int m)
+    void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map, int64_t n, int64_t m)
     {
         log_debug(this, "LocalMatrix::CreateFromMap()", (const void*&)map, n, m);
 
-        assert(map.GetSize() == static_cast<IndexType2>(n));
+        assert(map.GetSize() == n);
         assert(m > 0);
+        assert(m <= std::numeric_limits<int>::max());
+        assert(n <= std::numeric_limits<int>::max());
 
         assert(((this->matrix_ == this->matrix_host_) && (map.vector_ == map.vector_host_))
                || ((this->matrix_ == this->matrix_accel_) && (map.vector_ == map.vector_accel_)));
@@ -6647,7 +6775,8 @@ namespace rocalution
 
         if(this->GetNnz() > 0)
         {
-            bool err = this->matrix_->CreateFromMap(*map.vector_, n, m);
+            bool err = this->matrix_->CreateFromMap(
+                *map.vector_, static_cast<int>(n), static_cast<int>(m));
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -6669,7 +6798,9 @@ namespace rocalution
                 int          blockdim = this->GetBlockDimension();
                 this->ConvertToCSR();
 
-                if(this->matrix_->CreateFromMap(*map_host.vector_, n, m) == false)
+                if(this->matrix_->CreateFromMap(
+                       *map_host.vector_, static_cast<int>(n), static_cast<int>(m))
+                   == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
                     this->Info();
@@ -6701,16 +6832,18 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::CreateFromMap(const LocalVector<int>& map,
-                                               int                     n,
-                                               int                     m,
+                                               int64_t                 n,
+                                               int64_t                 m,
                                                LocalMatrix<ValueType>* pro)
     {
         log_debug(this, "LocalMatrix::CreateFromMap()", (const void*&)map, n, m, pro);
 
         assert(pro != NULL);
         assert(this != pro);
-        assert(map.GetSize() == static_cast<IndexType2>(n));
+        assert(map.GetSize() == n);
         assert(m > 0);
+        assert(m <= std::numeric_limits<int>::max());
+        assert(n <= std::numeric_limits<int>::max());
 
         assert(((this->matrix_ == this->matrix_host_) && (map.vector_ == map.vector_host_)
                 && (pro->matrix_ == pro->matrix_host_))
@@ -6720,7 +6853,8 @@ namespace rocalution
         this->Clear();
         pro->Clear();
 
-        bool err = this->matrix_->CreateFromMap(*map.vector_, n, m, pro->matrix_);
+        bool err = this->matrix_->CreateFromMap(
+            *map.vector_, static_cast<int>(n), static_cast<int>(m), pro->matrix_);
 
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
@@ -6743,7 +6877,9 @@ namespace rocalution
             int          blockdim = this->GetBlockDimension();
             this->ConvertToCSR();
 
-            if(this->matrix_->CreateFromMap(*map_host.vector_, n, m, pro->matrix_) == false)
+            if(this->matrix_->CreateFromMap(
+                   *map_host.vector_, static_cast<int>(n), static_cast<int>(m), pro->matrix_)
+               == false)
             {
                 LOG_INFO("Computation of LocalMatrix::CreateFromMap() failed");
                 this->Info();

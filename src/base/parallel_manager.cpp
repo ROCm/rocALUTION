@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -128,90 +128,60 @@ namespace rocalution
         return this->num_procs_;
     }
 
-    void ParallelManager::SetGlobalSize(IndexType2 size)
+    void ParallelManager::SetGlobalNrow(int64_t nrow)
     {
-        this->SetGlobalNrow(size);
-        this->SetGlobalNcol(size);
-    }
-
-    void ParallelManager::SetGlobalNrow(IndexType2 nrow)
-    {
-        assert(nrow <= std::numeric_limits<IndexType2>::max());
-        assert(nrow > 0);
-        assert(nrow >= (IndexType2)this->local_nrow_);
+        assert(nrow >= 0);
+        assert(nrow >= this->local_nrow_);
 
         this->global_nrow_ = nrow;
     }
 
-    void ParallelManager::SetGlobalNcol(IndexType2 ncol)
+    void ParallelManager::SetGlobalNcol(int64_t ncol)
     {
-        assert(ncol <= std::numeric_limits<IndexType2>::max());
-        assert(ncol > 0);
-        assert(ncol >= (IndexType2)this->local_ncol_);
+        assert(ncol >= 0);
+        assert(ncol >= this->local_ncol_);
 
         this->global_ncol_ = ncol;
     }
 
-    void ParallelManager::SetLocalSize(int size)
+    void ParallelManager::SetLocalNrow(int64_t nrow)
     {
-        this->SetLocalNrow(size);
-        this->SetLocalNcol(size);
-    }
-
-    void ParallelManager::SetLocalNrow(int nrow)
-    {
-        assert(nrow > 0);
-        assert((IndexType2)nrow <= this->global_nrow_);
+        assert(nrow >= 0);
+        assert(nrow <= this->global_nrow_);
 
         this->local_nrow_ = nrow;
     }
 
-    void ParallelManager::SetLocalNcol(int ncol)
+    void ParallelManager::SetLocalNcol(int64_t ncol)
     {
-        assert(ncol > 0);
-        assert((IndexType2)ncol <= this->global_ncol_);
+        assert(ncol >= 0);
+        assert(ncol <= this->global_ncol_);
 
         this->local_ncol_ = ncol;
     }
 
-    IndexType2 ParallelManager::GetGlobalSize(void) const
-    {
-        assert(this->Status());
-        assert(this->global_nrow_ == this->global_ncol_);
-
-        return this->global_nrow_;
-    }
-
-    IndexType2 ParallelManager::GetGlobalNrow(void) const
+    int64_t ParallelManager::GetGlobalNrow(void) const
     {
         assert(this->Status());
 
         return this->global_nrow_;
     }
 
-    IndexType2 ParallelManager::GetGlobalNcol(void) const
+    int64_t ParallelManager::GetGlobalNcol(void) const
     {
         assert(this->Status());
 
         return this->global_ncol_;
     }
 
-    int ParallelManager::GetLocalSize(void) const
-    {
-        assert(this->Status());
-        assert(this->local_nrow_ == this->local_ncol_);
-
-        return this->local_nrow_;
-    }
-
-    int ParallelManager::GetLocalNrow(void) const
+    int64_t ParallelManager::GetLocalNrow(void) const
     {
         assert(this->Status());
 
         return this->local_nrow_;
     }
 
-    int ParallelManager::GetLocalNcol(void) const
+    int64_t ParallelManager::GetLocalNcol(void) const
     {
         assert(this->Status());
 
@@ -235,7 +205,11 @@ namespace rocalution
     void ParallelManager::SetBoundaryIndex(int size, const int* index)
     {
         assert(size >= 0);
-        assert(index != NULL);
+
+        if(size > 0)
+        {
+            assert(index != NULL);
+        }
 
         if(this->send_index_size_ != 0)
         {
@@ -256,9 +230,13 @@ namespace rocalution
 
     void ParallelManager::SetReceivers(int nrecv, const int* recvs, const int* recv_offset)
     {
-        assert(nrecv > 0);
-        assert(recvs != NULL);
+        assert(nrecv >= 0);
         assert(recv_offset != NULL);
+
+        if(nrecv > 0)
+        {
+            assert(recvs != NULL);
+        }
 
         this->nrecv_ = nrecv;
 
@@ -278,9 +256,13 @@ namespace rocalution
 
     void ParallelManager::SetSenders(int nsend, const int* sends, const int* send_offset)
     {
-        assert(nsend > 0);
-        assert(sends != NULL);
+        assert(nsend >= 0);
         assert(send_offset != NULL);
+
+        if(nsend > 0)
+        {
+            assert(sends != NULL);
+        }
 
         this->nsend_ = nsend;
 
@@ -308,21 +290,21 @@ namespace rocalution
     bool ParallelManager::Status(void) const
     {
         // clang-format off
-    if(this->comm_ == NULL) return false;
-    if(this->rank_ < 0) return false;
-    if(this->global_nrow_ == 0) return false;
-    if(this->global_ncol_ == 0) return false;
-    if(this->local_nrow_ < 0) return false;
-    if(this->local_ncol_ < 0) return false;
-    if(this->nrecv_ < 0) return false;
-    if(this->nsend_ < 0) return false;
-    if(this->nrecv_ > 0 && this->recvs_ == NULL) return false;
-    if(this->nsend_ > 0 && this->sends_ == NULL) return false;
-    if(this->nrecv_ > 0 && this->recv_offset_index_ == NULL) return false;
-    if(this->nsend_ > 0 && this->send_offset_index_ == NULL) return false;
-    if(this->recv_index_size_ < 0) return false;
-    if(this->send_index_size_ < 0) return false;
-    if(this->recv_index_size_ > 0 && this->boundary_index_ == NULL) return false;
+        if(this->comm_ == NULL) return false;
+        if(this->rank_ < 0) return false;
+        if(this->global_nrow_ < 0) return false;
+        if(this->global_ncol_ < 0) return false;
+        if(this->local_nrow_ < 0) return false;
+        if(this->local_ncol_ < 0) return false;
+        if(this->nrecv_ < 0) return false;
+        if(this->nsend_ < 0) return false;
+        if(this->nrecv_ > 0 && this->recvs_ == NULL) return false;
+        if(this->nsend_ > 0 && this->sends_ == NULL) return false;
+        if(this->nrecv_ > 0 && this->recv_offset_index_ == NULL) return false;
+        if(this->nsend_ > 0 && this->send_offset_index_ == NULL) return false;
+        if(this->recv_index_size_ < 0) return false;
+        if(this->send_index_size_ < 0) return false;
+        if(this->send_index_size_ > 0 && this->boundary_index_ == NULL) return false;
         // clang-format on
 
         return true;

@@ -109,7 +109,7 @@ The `src/utils/` directory
 --------------------------
 In the `src/utils` directory, all commonly used host (de)allocation, timing, math, communication and logging functionality is gathered.
 
-Furthermore, the rocALUTION `IndexType2`, which is the indexing type for global, distributed structures, can be adjusted in `src/utils/types.hpp`.
+Furthermore, the rocALUTION `GlobalType`, which is the indexing type for global, distributed structures, can be adjusted in `src/utils/types.hpp`.
 By default, rocALUTION uses 64-bit wide global indexing.
 
 .. note:: It is not recommended to switch to 32-bit global indexing.

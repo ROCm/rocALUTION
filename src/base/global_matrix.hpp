@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_GLOBAL_MATRIX_HPP_
 #define ROCALUTION_GLOBAL_MATRIX_HPP_
 
-#include "../utils/types.hpp"
 #include "operator.hpp"
 #include "parallel_manager.hpp"
 
@@ -64,15 +63,17 @@ namespace rocalution
         explicit GlobalMatrix(const ParallelManager& pm);
         virtual ~GlobalMatrix();
 
-        virtual IndexType2 GetM(void) const;
-        virtual IndexType2 GetN(void) const;
-        virtual IndexType2 GetNnz(void) const;
-        virtual int        GetLocalM(void) const;
-        virtual int        GetLocalN(void) const;
-        virtual int        GetLocalNnz(void) const;
-        virtual int        GetGhostM(void) const;
-        virtual int        GetGhostN(void) const;
-        virtual int        GetGhostNnz(void) const;
+        virtual int64_t GetM(void) const;
+        virtual int64_t GetN(void) const;
+        virtual int64_t GetNnz(void) const;
+        virtual int64_t GetLocalM(void) const;
+        virtual int64_t GetLocalN(void) const;
+        virtual int64_t GetLocalNnz(void) const;
+        virtual int64_t GetGhostM(void) const;
+        virtual int64_t GetGhostN(void) const;
+        virtual int64_t GetGhostNnz(void) const;
+
+        unsigned int GetFormat(void) const;
 
         /** \private */
         const LocalMatrix<ValueType>& GetInterior() const;
@@ -96,13 +97,13 @@ namespace rocalution
         virtual bool Check(void) const;
 
         /** \brief Allocate CSR Matrix */
-        void AllocateCSR(const std::string& name, int local_nnz, int ghost_nnz);
+        void AllocateCSR(const std::string& name, int64_t local_nnz, int64_t ghost_nnz);
         /** \brief Allocate COO Matrix */
-        void AllocateCOO(const std::string& name, int local_nnz, int ghost_nnz);
+        void AllocateCOO(const std::string& name, int64_t local_nnz, int64_t ghost_nnz);
 
         virtual void Clear(void);
 
-        /** \brief Set the parallel manager of a global vector */
+        /** \brief Set the parallel manager of a global matrix */
         void SetParallelManager(const ParallelManager& pm);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated data */
@@ -113,8 +114,8 @@ namespace rocalution
                            int**       ghost_col,
                            ValueType** ghost_val,
                            std::string name,
-                           int         local_nnz,
-                           int         ghost_nnz);
+                           int64_t     local_nnz,
+                           int64_t     ghost_nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated data */
         void SetDataPtrCOO(int**       local_row,
                            int**       local_col,
@@ -123,20 +124,22 @@ namespace rocalution
                            int**       ghost_col,
                            ValueType** ghost_val,
                            std::string name,
-                           int         local_nnz,
-                           int         ghost_nnz);
+                           int64_t     local_nnz,
+                           int64_t     ghost_nnz);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated local data */
         void SetLocalDataPtrCSR(
-            int** row_offset, int** col, ValueType** val, std::string name, int nnz);
+            int** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated local data */
-        void SetLocalDataPtrCOO(int** row, int** col, ValueType** val, std::string name, int nnz);
+        void SetLocalDataPtrCOO(
+            int** row, int** col, ValueType** val, std::string name, int64_t nnz);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated ghost data */
         void SetGhostDataPtrCSR(
-            int** row_offset, int** col, ValueType** val, std::string name, int nnz);
+            int** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated ghost data */
-        void SetGhostDataPtrCOO(int** row, int** col, ValueType** val, std::string name, int nnz);
+        void SetGhostDataPtrCOO(
+            int** row, int** col, ValueType** val, std::string name, int64_t nnz);
 
         /** \brief Leave a CSR matrix to host pointers */
         void LeaveDataPtrCSR(int**       local_row_offset,
@@ -253,6 +256,8 @@ namespace rocalution
         void UpdateGhostValuesSync_(void) const;
 
     private:
+        void InitCommPattern_(void);
+
         MRequest* recv_event_;
         MRequest* send_event_;
 
@@ -261,7 +266,7 @@ namespace rocalution
 
         mutable LocalVector<ValueType> halo_;
 
-        IndexType2 nnz_;
+        int64_t nnz_;
 
         LocalMatrix<ValueType> matrix_interior_;
         LocalMatrix<ValueType> matrix_ghost_;

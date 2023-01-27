@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_LOCAL_MATRIX_HPP_
 #define ROCALUTION_LOCAL_MATRIX_HPP_
 
-#include "../utils/types.hpp"
 #include "backend_manager.hpp"
 #include "matrix_formats.hpp"
 #include "operator.hpp"
@@ -81,11 +80,11 @@ namespace rocalution
         int GetBlockDimension(void) const;
 
         ROCALUTION_EXPORT
-        virtual IndexType2 GetM(void) const;
+        virtual int64_t GetM(void) const;
         ROCALUTION_EXPORT
-        virtual IndexType2 GetN(void) const;
+        virtual int64_t GetN(void) const;
         ROCALUTION_EXPORT
-        virtual IndexType2 GetNnz(void) const;
+        virtual int64_t GetNnz(void) const;
 
         /** \brief Perform a sanity check of the matrix
       * \details
@@ -119,22 +118,29 @@ namespace rocalution
       */
         /**@{*/
         ROCALUTION_EXPORT
-        void AllocateCSR(const std::string& name, int nnz, int nrow, int ncol);
+        void AllocateCSR(const std::string& name, int64_t nnz, int64_t nrow, int64_t ncol);
         ROCALUTION_EXPORT
-        void AllocateBCSR(const std::string& name, int nnzb, int nrowb, int ncolb, int blockdim);
+        void AllocateBCSR(
+            const std::string& name, int64_t nnzb, int64_t nrowb, int64_t ncolb, int blockdim);
         ROCALUTION_EXPORT
-        void AllocateMCSR(const std::string& name, int nnz, int nrow, int ncol);
+        void AllocateMCSR(const std::string& name, int64_t nnz, int64_t nrow, int64_t ncol);
         ROCALUTION_EXPORT
-        void AllocateCOO(const std::string& name, int nnz, int nrow, int ncol);
+        void AllocateCOO(const std::string& name, int64_t nnz, int64_t nrow, int64_t ncol);
         ROCALUTION_EXPORT
-        void AllocateDIA(const std::string& name, int nnz, int nrow, int ncol, int ndiag);
+        void AllocateDIA(
+            const std::string& name, int64_t nnz, int64_t nrow, int64_t ncol, int ndiag);
         ROCALUTION_EXPORT
-        void AllocateELL(const std::string& name, int nnz, int nrow, int ncol, int max_row);
+        void AllocateELL(
+            const std::string& name, int64_t nnz, int64_t nrow, int64_t ncol, int max_row);
         ROCALUTION_EXPORT
-        void AllocateHYB(
-            const std::string& name, int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
+        void AllocateHYB(const std::string& name,
+                         int64_t            ell_nnz,
+                         int64_t            coo_nnz,
+                         int                ell_max_row,
+                         int64_t            nrow,
+                         int64_t            ncol);
         ROCALUTION_EXPORT
-        void AllocateDENSE(const std::string& name, int nrow, int ncol);
+        void AllocateDENSE(const std::string& name, int64_t nrow, int64_t ncol);
         /**@}*/
 
         /** \brief Initialize a LocalMatrix on the host with externally allocated data
@@ -165,46 +171,56 @@ namespace rocalution
       */
         /**@{*/
         ROCALUTION_EXPORT
-        void SetDataPtrCOO(
-            int** row, int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol);
+        void SetDataPtrCOO(int**       row,
+                           int**       col,
+                           ValueType** val,
+                           std::string name,
+                           int64_t     nnz,
+                           int64_t     nrow,
+                           int64_t     ncol);
         ROCALUTION_EXPORT
         void SetDataPtrCSR(int**       row_offset,
                            int**       col,
                            ValueType** val,
                            std::string name,
-                           int         nnz,
-                           int         nrow,
-                           int         ncol);
+                           int64_t     nnz,
+                           int64_t     nrow,
+                           int64_t     ncol);
         ROCALUTION_EXPORT
         void SetDataPtrBCSR(int**       row_offset,
                             int**       col,
                             ValueType** val,
                             std::string name,
-                            int         nnzb,
-                            int         nrowb,
-                            int         ncolb,
+                            int64_t     nnzb,
+                            int64_t     nrowb,
+                            int64_t     ncolb,
                             int         blockdim);
         ROCALUTION_EXPORT
         void SetDataPtrMCSR(int**       row_offset,
                             int**       col,
                             ValueType** val,
                             std::string name,
-                            int         nnz,
-                            int         nrow,
-                            int         ncol);
+                            int64_t     nnz,
+                            int64_t     nrow,
+                            int64_t     ncol);
         ROCALUTION_EXPORT
-        void SetDataPtrELL(
-            int** col, ValueType** val, std::string name, int nnz, int nrow, int ncol, int max_row);
+        void SetDataPtrELL(int**       col,
+                           ValueType** val,
+                           std::string name,
+                           int64_t     nnz,
+                           int64_t     nrow,
+                           int64_t     ncol,
+                           int         max_row);
         ROCALUTION_EXPORT
         void SetDataPtrDIA(int**       offset,
                            ValueType** val,
                            std::string name,
-                           int         nnz,
-                           int         nrow,
-                           int         ncol,
+                           int64_t     nnz,
+                           int64_t     nrow,
+                           int64_t     ncol,
                            int         num_diag);
         ROCALUTION_EXPORT
-        void SetDataPtrDENSE(ValueType** val, std::string name, int nrow, int ncol);
+        void SetDataPtrDENSE(ValueType** val, std::string name, int64_t nrow, int64_t ncol);
         /**@}*/
 
         /** \brief Leave a LocalMatrix to host pointers
@@ -286,10 +302,10 @@ namespace rocalution
 
         /** \brief Extract a sub-matrix with row/col_offset and row/col_size */
         ROCALUTION_EXPORT
-        void ExtractSubMatrix(int                     row_offset,
-                              int                     col_offset,
-                              int                     row_size,
-                              int                     col_size,
+        void ExtractSubMatrix(int64_t                 row_offset,
+                              int64_t                 col_offset,
+                              int64_t                 row_size,
+                              int64_t                 col_size,
                               LocalMatrix<ValueType>* mat) const;
 
         /** \brief Extract array of non-overlapping sub-matrices (row/col_num_blocks define
@@ -619,7 +635,7 @@ namespace rocalution
       *   // CSR matrix data
       *   out.write((char*)&m, sizeof(int));
       *   out.write((char*)&n, sizeof(int));
-      *   out.write((char*)&nnz, sizeof(int));
+      *   out.write((char*)&nnz, sizeof(int64_t));
       *   out.write((char*)csr_row_ptr, (m + 1) * sizeof(int));
       *   out.write((char*)csr_col_ind, nnz * sizeof(int));
       *   out.write((char*)csr_val, nnz * sizeof(double));
@@ -773,18 +789,21 @@ namespace rocalution
                              const int*         col,
                              const ValueType*   val,
                              const std::string& name,
-                             int                nnz,
-                             int                nrow,
-                             int                ncol);
+                             int64_t            nnz,
+                             int64_t            nrow,
+                             int64_t            ncol);
 
         /** \brief Create a restriction matrix operator based on an int vector map */
         ROCALUTION_EXPORT
-        void CreateFromMap(const LocalVector<int>& map, int n, int m);
+        void CreateFromMap(const LocalVector<int>& map, int64_t n, int64_t m);
         /** \brief Create a restriction and prolongation matrix operator based on an int
       * vector map
       */
         ROCALUTION_EXPORT
-        void CreateFromMap(const LocalVector<int>& map, int n, int m, LocalMatrix<ValueType>* pro);
+        void CreateFromMap(const LocalVector<int>& map,
+                           int64_t                 n,
+                           int64_t                 m,
+                           LocalMatrix<ValueType>* pro);
 
         /** \brief Convert the matrix to CSR structure */
         ROCALUTION_EXPORT
@@ -869,7 +888,7 @@ namespace rocalution
 
         /** \brief Transpose the matrix */
         ROCALUTION_EXPORT
-        void Transpose(void);
+        virtual void Transpose(void);
 
         /** \brief Transpose the matrix */
         ROCALUTION_EXPORT

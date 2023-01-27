@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@
 
 #include "idr.hpp"
 #include "../../utils/def.hpp"
-#include "../../utils/types.hpp"
 #include "../iter_ctrl.hpp"
 
 #include "../../base/local_matrix.hpp"
@@ -39,6 +38,7 @@
 #include "../../utils/log.hpp"
 #include "../../utils/math_functions.hpp"
 
+#include <limits>
 #include <math.h>
 #include <time.h>
 
@@ -53,7 +53,7 @@ namespace rocalution
         this->s_    = 4;
         this->seed_ = time(NULL);
 
-        this->kappa_ = static_cast<ValueType>(0.7);
+        this->kappa_ = static_cast<ValueType>(0.7f);
 
         this->c_ = NULL;
         this->f_ = NULL;
@@ -127,7 +127,7 @@ namespace rocalution
         assert(this->op_ != NULL);
         assert(this->op_->GetM() == this->op_->GetN());
         assert(this->op_->GetM() > 0);
-        assert((IndexType2)this->s_ <= this->op_->GetM());
+        assert(static_cast<int64_t>(this->s_) <= this->op_->GetM());
 
         this->r_.CloneBackend(*this->op_);
         this->v_.CloneBackend(*this->op_);
@@ -268,7 +268,7 @@ namespace rocalution
         assert(this->build_ == false);
         assert(s > 0);
         assert(this->op_ != NULL);
-        assert((IndexType2)s <= this->op_->GetM());
+        assert(static_cast<int64_t>(s) <= this->op_->GetM());
 
         this->s_ = s;
     }

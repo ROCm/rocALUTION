@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,15 +47,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int Vector<ValueType>::GetLocalSize(void) const
+    int64_t Vector<ValueType>::GetLocalSize(void) const
     {
-        return IndexTypeToInt(this->GetSize());
-    }
-
-    template <typename ValueType>
-    int Vector<ValueType>::GetGhostSize(void) const
-    {
-        return 0;
+        return this->GetSize();
     }
 
     template <typename ValueType>
@@ -110,14 +104,14 @@ namespace rocalution
 
     template <typename ValueType>
     void Vector<ValueType>::CopyFrom(const LocalVector<ValueType>& src,
-                                     int                           src_offset,
-                                     int                           dst_offset,
-                                     int                           size)
+                                     int64_t                       src_offset,
+                                     int64_t                       dst_offset,
+                                     int64_t                       size)
     {
         LOG_INFO("Vector<ValueType>::CopyFrom(const LocalVector<ValueType>& src,"
-                 "int src_offset,"
-                 "int dst_offset,"
-                 "int size");
+                 "int64_t src_offset,"
+                 "int64_t dst_offset,"
+                 "int64_t size");
         LOG_INFO("Mismatched types:");
         this->Info();
         src.Info();
@@ -188,16 +182,16 @@ namespace rocalution
     void Vector<ValueType>::ScaleAddScale(ValueType                     alpha,
                                           const LocalVector<ValueType>& x,
                                           ValueType                     beta,
-                                          int                           src_offset,
-                                          int                           dst_offset,
-                                          int                           size)
+                                          int64_t                       src_offset,
+                                          int64_t                       dst_offset,
+                                          int64_t                       size)
     {
         LOG_INFO("Vector<ValueType>::ScaleAddScale(ValueType alpha,"
                  "const LocalVector<ValueType>& x,"
                  "ValueType beta,"
-                 "int src_offset,"
-                 "int dst_offset,"
-                 "int size)");
+                 "int64_t src_offset,"
+                 "int64_t dst_offset,"
+                 "int64_t size)");
         LOG_INFO("Mismatched types:");
         this->Info();
         x.Info();
@@ -208,16 +202,16 @@ namespace rocalution
     void Vector<ValueType>::ScaleAddScale(ValueType                      alpha,
                                           const GlobalVector<ValueType>& x,
                                           ValueType                      beta,
-                                          int                            src_offset,
-                                          int                            dst_offset,
-                                          int                            size)
+                                          int64_t                        src_offset,
+                                          int64_t                        dst_offset,
+                                          int64_t                        size)
     {
         LOG_INFO("Vector<ValueType>::ScaleAddScale(ValueType alpha,"
                  "const GlobalVector<ValueType>& x,"
                  "ValueType beta,"
-                 "int src_offset,"
-                 "int dst_offset,"
-                 "int size)");
+                 "int64_t src_offset,"
+                 "int64_t dst_offset,"
+                 "int64_t size)");
         LOG_INFO("Mismatched types:");
         this->Info();
         x.Info();

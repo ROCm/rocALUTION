@@ -23,7 +23,6 @@
 
 #include "base_amg.hpp"
 #include "../../utils/def.hpp"
-#include "../../utils/types.hpp"
 
 #include "../../base/global_matrix.hpp"
 #include "../../base/global_vector.hpp"
@@ -81,6 +80,7 @@ namespace rocalution
 
         assert(this->build_ == false);
         assert(this->hierarchy_ == false);
+        assert(coarse_size > 1);
 
         this->coarse_size_ = coarse_size;
     }
@@ -211,7 +211,7 @@ namespace rocalution
             assert(this->op_ != NULL);
             assert(this->coarse_size_ > 0);
 
-            if(this->op_->GetM() <= (IndexType2)this->coarse_size_)
+            if(this->op_->GetM() <= static_cast<int64_t>(this->coarse_size_))
             {
                 LOG_INFO("Problem size too small for AMG, use Krylov solver instead");
                 FATAL_ERROR(__FILE__, __LINE__);
@@ -248,7 +248,7 @@ namespace rocalution
 
             ++this->levels_;
 
-            while(op_list_.back()->GetM() > (IndexType2)this->coarse_size_)
+            while(op_list_.back()->GetM() > static_cast<int64_t>(this->coarse_size_))
             {
                 // Add new list elements
                 restrict_list_.push_back(new LocalMatrix<ValueType>);
@@ -332,7 +332,7 @@ namespace rocalution
             Jacobi<OperatorType, VectorType, ValueType>* jac
                 = new Jacobi<OperatorType, VectorType, ValueType>;
 
-            sm->SetRelaxation(static_cast<ValueType>(2.0 / 3.0));
+            sm->SetRelaxation(static_cast<ValueType>(2.f / 3.f));
             sm->SetPreconditioner(*jac);
             sm->Verbose(0);
             this->smoother_level_[i] = sm;

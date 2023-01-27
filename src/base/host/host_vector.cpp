@@ -1370,7 +1370,7 @@ namespace rocalution
         assert(cast_vec->size_ == cast_idx->size_);
 
 #ifdef _OPENMP
-#pragma parallel for schuedule(dynamic, 1024)
+#pragma omp parallel for schedule(dynamic, 1024)
 #endif
         for(int i = 0; i < cast_idx->size_; ++i)
         {
@@ -1390,7 +1390,7 @@ namespace rocalution
         assert(cast_vec->size_ == cast_idx->size_);
 
 #ifdef _OPENMP
-#pragma parallel for schuedule(dynamic, 1024)
+#pragma omp parallel for schedule(dynamic, 1024)
 #endif
         for(int i = 0; i < cast_idx->size_; ++i)
         {

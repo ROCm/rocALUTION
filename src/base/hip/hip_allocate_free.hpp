@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,23 +24,24 @@
 #ifndef ROCALUTION_HIP_ALLOCATE_FREE_HPP_
 #define ROCALUTION_HIP_ALLOCATE_FREE_HPP_
 
+#include <hip/hip_runtime_api.h>
 #include <iostream>
 
 namespace rocalution
 {
-
     template <typename DataType>
-    void allocate_hip(int size, DataType** ptr);
+    void allocate_hip(int64_t size, DataType** ptr);
 
     template <typename DataType>
     void free_hip(DataType** ptr);
 
     template <typename DataType>
-    void set_to_zero_hip(int blocksize, int size, DataType* ptr);
+    void set_to_zero_hip(
+        int blocksize, int64_t size, DataType* ptr, bool async = false, hipStream_t stream = 0);
 
     template <typename DataType>
-    void set_to_one_hip(int blocksize, int size, DataType* ptr);
-
+    void set_to_one_hip(
+        int blocksize, int64_t size, DataType* ptr, bool async = false, hipStream_t stream = 0);
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_ALLOCATE_FREE_HPP_

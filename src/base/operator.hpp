@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_OPERATOR_HPP_
 #define ROCALUTION_OPERATOR_HPP_
 
-#include "../utils/types.hpp"
 #include "base_rocalution.hpp"
 #include "rocalution/export.hpp"
 
@@ -60,31 +59,31 @@ namespace rocalution
         virtual ~Operator();
 
         /** \brief Return the number of rows in the matrix/stencil */
-        virtual IndexType2 GetM(void) const = 0;
+        virtual int64_t GetM(void) const = 0;
         /** \brief Return the number of columns in the matrix/stencil */
-        virtual IndexType2 GetN(void) const = 0;
+        virtual int64_t GetN(void) const = 0;
         /** \brief Return the number of non-zeros in the matrix/stencil */
-        virtual IndexType2 GetNnz(void) const = 0;
+        virtual int64_t GetNnz(void) const = 0;
 
         /** \brief Return the number of rows in the local matrix/stencil */
         ROCALUTION_EXPORT
-        virtual int GetLocalM(void) const;
+        virtual int64_t GetLocalM(void) const;
         /** \brief Return the number of columns in the local matrix/stencil */
         ROCALUTION_EXPORT
-        virtual int GetLocalN(void) const;
+        virtual int64_t GetLocalN(void) const;
         /** \brief Return the number of non-zeros in the local matrix/stencil */
         ROCALUTION_EXPORT
-        virtual int GetLocalNnz(void) const;
+        virtual int64_t GetLocalNnz(void) const;
 
         /** \brief Return the number of rows in the ghost matrix/stencil */
         ROCALUTION_EXPORT
-        virtual int GetGhostM(void) const;
+        virtual int64_t GetGhostM(void) const;
         /** \brief Return the number of columns in the ghost matrix/stencil */
         ROCALUTION_EXPORT
-        virtual int GetGhostN(void) const;
+        virtual int64_t GetGhostN(void) const;
         /** \brief Return the number of non-zeros in the ghost matrix/stencil */
         ROCALUTION_EXPORT
-        virtual int GetGhostNnz(void) const;
+        virtual int64_t GetGhostNnz(void) const;
 
         /** \brief Apply the operator, out = Operator(in), where in and out are local
       * vectors

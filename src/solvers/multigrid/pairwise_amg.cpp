@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@
 
 #include "pairwise_amg.hpp"
 #include "../../utils/def.hpp"
-#include "../../utils/types.hpp"
 
 #include "../../base/global_matrix.hpp"
 #include "../../base/global_vector.hpp"
@@ -82,7 +81,7 @@ namespace rocalution
         LOG_INFO("AMG number of levels " << this->levels_);
         LOG_INFO("AMG using pairwise aggregation");
         LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
-        int global_nnz = this->op_level_[this->levels_ - 2]->GetNnz();
+        int64_t global_nnz = this->op_level_[this->levels_ - 2]->GetNnz();
         LOG_INFO("AMG coarsest level nnz = " << global_nnz);
         LOG_INFO("AMG with smoother:");
         this->smoother_level_[0]->Print();
@@ -97,7 +96,7 @@ namespace rocalution
         LOG_INFO("AMG number of levels " << this->levels_);
         LOG_INFO("AMG using pairwise aggregation");
         LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
-        int global_nnz = this->op_level_[this->levels_ - 2]->GetNnz();
+        int64_t global_nnz = this->op_level_[this->levels_ - 2]->GetNnz();
         LOG_INFO("AMG coarsest level nnz = " << global_nnz);
         LOG_INFO("AMG with smoother:");
         this->smoother_level_[0]->Print();

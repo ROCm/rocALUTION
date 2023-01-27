@@ -57,6 +57,10 @@ void testing_local_matrix_bad_args(void)
     allocate_host(safe_size, &vint);
     allocate_host(safe_size, &vdata);
 
+    // Valid matrices
+    LocalMatrix<T> mat3;
+    mat3.AllocateCSR("valid", safe_size, safe_size, safe_size);
+
     // ExtractSubMatrix, ExtractSubMatrices, Extract(Inverse)Diagonal, ExtractL/U
     {
         LocalMatrix<T>*   mat_null  = nullptr;
@@ -127,12 +131,12 @@ void testing_local_matrix_bad_args(void)
         ASSERT_DEATH(mat1.UpdateValuesCSR(null_data), ".*Assertion.*val != (NULL|__null)*");
         ASSERT_DEATH(mat1.CopyFromCSR(null_int, vint, vdata),
                      ".*Assertion.*row_offsets != (NULL|__null)*");
-        ASSERT_DEATH(mat1.CopyFromCSR(vint, null_int, vdata), ".*Assertion.*col != (NULL|__null)*");
-        ASSERT_DEATH(mat1.CopyFromCSR(vint, vint, null_data), ".*Assertion.*val != (NULL|__null)*");
+        ASSERT_DEATH(mat3.CopyFromCSR(vint, null_int, vdata), ".*Assertion.*col != (NULL|__null)*");
+        ASSERT_DEATH(mat3.CopyFromCSR(vint, vint, null_data), ".*Assertion.*val != (NULL|__null)*");
         ASSERT_DEATH(mat1.CopyToCSR(null_int, vint, vdata),
                      ".*Assertion.*row_offsets != (NULL|__null)*");
-        ASSERT_DEATH(mat1.CopyToCSR(vint, null_int, vdata), ".*Assertion.*col != (NULL|__null)*");
-        ASSERT_DEATH(mat1.CopyToCSR(vint, vint, null_data), ".*Assertion.*val != (NULL|__null)*");
+        ASSERT_DEATH(mat3.CopyToCSR(vint, null_int, vdata), ".*Assertion.*col != (NULL|__null)*");
+        ASSERT_DEATH(mat3.CopyToCSR(vint, vint, null_data), ".*Assertion.*val != (NULL|__null)*");
         ASSERT_DEATH(mat1.CopyFromCOO(null_int, vint, vdata), ".*Assertion.*row != (NULL|__null)*");
         ASSERT_DEATH(mat1.CopyFromCOO(vint, null_int, vdata), ".*Assertion.*col != (NULL|__null)*");
         ASSERT_DEATH(mat1.CopyFromCOO(vint, vint, null_data), ".*Assertion.*val != (NULL|__null)*");

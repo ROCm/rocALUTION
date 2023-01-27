@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,8 +41,8 @@ namespace rocalution
         log_debug(this, "UAAMG::UAAMG()", "default constructor");
 
         // parameter for strong couplings in smoothed aggregation
-        this->eps_         = static_cast<ValueType>(0.01);
-        this->over_interp_ = static_cast<ValueType>(1.5);
+        this->eps_         = static_cast<ValueType>(0.01f);
+        this->over_interp_ = static_cast<ValueType>(1.5f);
         this->strat_       = CoarseningStrategy::Greedy;
     }
 

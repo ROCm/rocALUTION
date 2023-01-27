@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,37 +48,37 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int Operator<ValueType>::GetLocalM(void) const
+    int64_t Operator<ValueType>::GetLocalM(void) const
     {
-        return IndexTypeToInt(this->GetM());
+        return this->GetM();
     }
 
     template <typename ValueType>
-    int Operator<ValueType>::GetLocalN(void) const
+    int64_t Operator<ValueType>::GetLocalN(void) const
     {
-        return IndexTypeToInt(this->GetN());
+        return this->GetN();
     }
 
     template <typename ValueType>
-    int Operator<ValueType>::GetLocalNnz(void) const
+    int64_t Operator<ValueType>::GetLocalNnz(void) const
     {
-        return IndexTypeToInt(this->GetNnz());
+        return this->GetNnz();
     }
 
     template <typename ValueType>
-    int Operator<ValueType>::GetGhostM(void) const
-    {
-        return 0;
-    }
-
-    template <typename ValueType>
-    int Operator<ValueType>::GetGhostN(void) const
+    int64_t Operator<ValueType>::GetGhostM(void) const
     {
         return 0;
     }
 
     template <typename ValueType>
-    int Operator<ValueType>::GetGhostNnz(void) const
+    int64_t Operator<ValueType>::GetGhostN(void) const
+    {
+        return 0;
+    }
+
+    template <typename ValueType>
+    int64_t Operator<ValueType>::GetGhostNnz(void) const
     {
         return 0;
     }

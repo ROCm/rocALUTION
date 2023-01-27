@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +24,9 @@
 #include "hip_allocate_free.hpp"
 #include "../../utils/allocate_free.hpp"
 #include "../../utils/def.hpp"
-#include "../../utils/types.hpp"
 #include "hip_kernels_general.hpp"
 #include "hip_utils.hpp"
+#include "rocalution/utils/types.hpp"
 
 #include <hip/hip_runtime.h>
 
@@ -35,10 +35,9 @@
 
 namespace rocalution
 {
-
 #ifdef ROCALUTION_HIP_PINNED_MEMORY
     template <typename DataType>
-    void allocate_host(int size, DataType** ptr)
+    void allocate_host(int64_t size, DataType** ptr)
     {
         log_debug(0, "allocate_host()", size, ptr);
 
@@ -71,7 +70,7 @@ namespace rocalution
 #endif
 
     template <typename DataType>
-    void allocate_hip(int size, DataType** ptr)
+    void allocate_hip(int64_t size, DataType** ptr)
     {
         log_debug(0, "allocate_hip()", size, ptr);
 
@@ -91,32 +90,41 @@ namespace rocalution
     {
         log_debug(0, "free_hip()", *ptr);
 
-        assert(*ptr != NULL);
+        if(*ptr != NULL)
+        {
+            hipFree(*ptr);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        hipFree(*ptr);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        *ptr = NULL;
+            *ptr = NULL;
+        }
     }
 
     template <typename DataType>
-    void set_to_zero_hip(int blocksize, int size, DataType* ptr)
+    void set_to_zero_hip(int blocksize, int64_t size, DataType* ptr, bool async, hipStream_t stream)
     {
-        log_debug(0, "set_to_zero_hip()", blocksize, size, ptr);
+        log_debug(0, "set_to_zero_hip()", blocksize, size, ptr, async, stream);
 
         if(size > 0)
         {
             assert(ptr != NULL);
 
-            hipMemset(ptr, 0, size * sizeof(DataType));
+            if(async == false)
+            {
+                hipMemset(ptr, 0, size * sizeof(DataType));
+            }
+            else
+            {
+                hipMemsetAsync(ptr, 0, size * sizeof(DataType), stream);
+            }
+
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
 
     template <typename DataType>
-    void set_to_one_hip(int blocksize, int size, DataType* ptr)
+    void set_to_one_hip(int blocksize, int64_t size, DataType* ptr, bool async, hipStream_t stream)
     {
-        log_debug(0, "set_to_one_hip()", blocksize, size, ptr);
+        log_debug(0, "set_to_one_hip()", blocksize, size, ptr, async, stream);
 
         if(size > 0)
         {
@@ -126,79 +134,93 @@ namespace rocalution
             dim3 BlockSize(blocksize);
             dim3 GridSize(size / blocksize + 1);
 
-            hipLaunchKernelGGL((kernel_set_to_ones), GridSize, BlockSize, 0, 0, size, ptr);
+            if(async == false)
+            {
+                kernel_set_to_ones<<<GridSize, BlockSize>>>(size, ptr);
+            }
+            else
+            {
+                kernel_set_to_ones<<<GridSize, BlockSize, 0, stream>>>(size, ptr);
+            }
+
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
 
 #ifdef ROCALUTION_HIP_PINNED_MEMORY
-    template void allocate_host<float>(int size, float** ptr);
-    template void allocate_host<double>(int size, double** ptr);
+    template void allocate_host<float>(int64_t, float**);
+    template void allocate_host<double>(int64_t, double**);
 #ifdef SUPPORT_COMPLEX
-    template void allocate_host<std::complex<float>>(int size, std::complex<float>** ptr);
-    template void allocate_host<std::complex<double>>(int size, std::complex<double>** ptr);
+    template void allocate_host<std::complex<float>>(int64_t, std::complex<float>**);
+    template void allocate_host<std::complex<double>>(int64_t, std::complex<double>**);
 #endif
-    template void allocate_host<bool>(int size, bool** ptr);
-    template void allocate_host<int>(int size, int** ptr);
-    template void allocate_host<unsigned int>(int size, unsigned int** ptr);
-    template void allocate_host<char>(int size, char** ptr);
+    template void allocate_host<bool>(int64_t, bool**);
+    template void allocate_host<int>(int64_t, int**);
+    template void allocate_host<unsigned int>(int64_t, unsigned int**);
+    template void allocate_host<int64_t>(int64_t, int64_t**);
+    template void allocate_host<char>(int64_t, char**);
 
-    template void free_host<float>(float** ptr);
-    template void free_host<double>(double** ptr);
+    template void free_host<float>(float**);
+    template void free_host<double>(double**);
 #ifdef SUPPORT_COMPLEX
-    template void free_host<std::complex<float>>(std::complex<float>** ptr);
-    template void free_host<std::complex<double>>(std::complex<double>** ptr);
+    template void free_host<std::complex<float>>(std::complex<float>**);
+    template void free_host<std::complex<double>>(std::complex<double>**);
 #endif
-    template void free_host<bool>(bool** ptr);
-    template void free_host<int>(int** ptr);
-    template void free_host<unsigned int>(unsigned int** ptr);
-    template void free_host<char>(char** ptr);
+    template void free_host<bool>(bool**);
+    template void free_host<int>(int**);
+    template void free_host<unsigned int>(unsigned int**);
+    template void free_host<int64_t>(int64_t**);
+    template void free_host<char>(char**);
 #endif
 
-    template void allocate_hip<float>(int size, float** ptr);
-    template void allocate_hip<double>(int size, double** ptr);
+    template void allocate_hip<float>(int64_t, float**);
+    template void allocate_hip<double>(int64_t, double**);
 #ifdef SUPPORT_COMPLEX
-    template void allocate_hip<std::complex<float>>(int size, std::complex<float>** ptr);
-    template void allocate_hip<std::complex<double>>(int size, std::complex<double>** ptr);
+    template void allocate_hip<std::complex<float>>(int64_t, std::complex<float>**);
+    template void allocate_hip<std::complex<double>>(int64_t, std::complex<double>**);
 #endif
-    template void allocate_hip<bool>(int size, bool** ptr);
-    template void allocate_hip<int>(int size, int** ptr);
-    template void allocate_hip<unsigned int>(int size, unsigned int** ptr);
-    template void allocate_hip<char>(int size, char** ptr);
-    template void allocate_hip<mis_tuple>(int size, mis_tuple** ptr);
+    template void allocate_hip<bool>(int64_t, bool**);
+    template void allocate_hip<int>(int64_t, int**);
+    template void allocate_hip<unsigned int>(int64_t, unsigned int**);
+    template void allocate_hip<int64_t>(int64_t, int64_t**);
+    template void allocate_hip<char>(int64_t, char**);
+    template void allocate_hip<mis_tuple>(int64_t, mis_tuple**);
 
-    template void free_hip<float>(float** ptr);
-    template void free_hip<double>(double** ptr);
+    template void free_hip<float>(float**);
+    template void free_hip<double>(double**);
 #ifdef SUPPORT_COMPLEX
-    template void free_hip<std::complex<float>>(std::complex<float>** ptr);
-    template void free_hip<std::complex<double>>(std::complex<double>** ptr);
+    template void free_hip<std::complex<float>>(std::complex<float>**);
+    template void free_hip<std::complex<double>>(std::complex<double>**);
 #endif
-    template void free_hip<bool>(bool** ptr);
-    template void free_hip<int>(int** ptr);
-    template void free_hip<unsigned int>(unsigned int** ptr);
-    template void free_hip<char>(char** ptr);
-    template void free_hip<mis_tuple>(mis_tuple** ptr);
+    template void free_hip<bool>(bool**);
+    template void free_hip<int>(int**);
+    template void free_hip<unsigned int>(unsigned int**);
+    template void free_hip<int64_t>(int64_t**);
+    template void free_hip<char>(char**);
+    template void free_hip<mis_tuple>(mis_tuple**);
 
-    template void set_to_zero_hip<float>(int blocksize, int size, float* ptr);
-    template void set_to_zero_hip<double>(int blocksize, int size, double* ptr);
+    template void set_to_zero_hip<float>(int, int64_t, float*, bool, hipStream_t);
+    template void set_to_zero_hip<double>(int, int64_t, double*, bool, hipStream_t);
 #ifdef SUPPORT_COMPLEX
     template void
-        set_to_zero_hip<std::complex<float>>(int blocksize, int size, std::complex<float>* ptr);
-    template void
-        set_to_zero_hip<std::complex<double>>(int blocksize, int size, std::complex<double>* ptr);
+        set_to_zero_hip<std::complex<float>>(int, int64_t, std::complex<float>*, bool, hipStream_t);
+    template void set_to_zero_hip<std::complex<double>>(
+        int, int64_t, std::complex<double>*, bool, hipStream_t);
 #endif
-    template void set_to_zero_hip<bool>(int blocksize, int size, bool* ptr);
-    template void set_to_zero_hip<int>(int blocksize, int size, int* ptr);
+    template void set_to_zero_hip<bool>(int, int64_t, bool*, bool, hipStream_t);
+    template void set_to_zero_hip<int>(int, int64_t, int*, bool, hipStream_t);
+    template void set_to_zero_hip<int64_t>(int, int64_t, int64_t*, bool, hipStream_t);
 
-    template void set_to_one_hip<float>(int blocksize, int size, float* ptr);
-    template void set_to_one_hip<double>(int blocksize, int size, double* ptr);
+    template void set_to_one_hip<float>(int, int64_t, float*, bool, hipStream_t);
+    template void set_to_one_hip<double>(int, int64_t, double*, bool, hipStream_t);
 #ifdef SUPPORT_COMPLEX
     template void
-        set_to_one_hip<std::complex<float>>(int blocksize, int size, std::complex<float>* ptr);
-    template void
-        set_to_one_hip<std::complex<double>>(int blocksize, int size, std::complex<double>* ptr);
+        set_to_one_hip<std::complex<float>>(int, int64_t, std::complex<float>*, bool, hipStream_t);
+    template void set_to_one_hip<std::complex<double>>(
+        int, int64_t, std::complex<double>*, bool, hipStream_t);
 #endif
-    template void set_to_one_hip<bool>(int blocksize, int size, bool* ptr);
-    template void set_to_one_hip<int>(int blocksize, int size, int* ptr);
+    template void set_to_one_hip<bool>(int, int64_t, bool*, bool, hipStream_t);
+    template void set_to_one_hip<int>(int, int64_t, int*, bool, hipStream_t);
+    template void set_to_one_hip<int64_t>(int, int64_t, int64_t*, bool, hipStream_t);
 
 } // namespace rocalution

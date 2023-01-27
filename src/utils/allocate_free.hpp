@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,10 @@
 
 #include "rocalution/export.hpp"
 
+#include <cstdint>
+
 namespace rocalution
 {
-
     /** \ingroup backend_module
   * \brief Allocate buffer on the host
   * \details
@@ -44,7 +45,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    ROCALUTION_EXPORT void allocate_host(int size, DataType** ptr);
+    ROCALUTION_EXPORT void allocate_host(int64_t size, DataType** ptr);
 
     /** \ingroup backend_module
   * \brief Free buffer on the host
@@ -76,7 +77,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    ROCALUTION_EXPORT void set_to_zero_host(int size, DataType* ptr);
+    ROCALUTION_EXPORT void set_to_zero_host(int64_t size, DataType* ptr);
 
 } // namespace rocalution
 

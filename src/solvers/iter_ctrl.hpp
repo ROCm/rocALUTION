@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,7 +73,7 @@ namespace rocalution
 
         // Check the residual and index value for the inf norm
         // (this count also the number of iterations)
-        bool CheckResidual(double res, int index);
+        bool CheckResidual(double res, int64_t index);
 
         // Check the residual (without counting the number of iterations)
         bool CheckResidualNoCount(double res);
@@ -106,7 +106,7 @@ namespace rocalution
         int GetSolverStatus(void) const;
 
         // Return absolute maximum index of residual vector when using Linf norm
-        int GetAmaxResidualIndex(void) const;
+        int64_t GetAmaxResidualIndex(void) const;
 
     private:
         // Verbose flag
@@ -150,7 +150,7 @@ namespace rocalution
         double current_res_;
 
         // Current residual, index for the inf norm (obtained via CheckResidual())
-        int current_index_;
+        int64_t current_index_;
 
         // Flag == true then the residual is recorded in the residual_history_ vector
         bool rec_;

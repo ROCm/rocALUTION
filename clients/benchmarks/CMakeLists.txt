@@ -40,7 +40,7 @@ set(ROCALUTION_BENCHMARK_SOURCES
 add_executable(rocalution-bench ${ROCALUTION_BENCHMARK_SOURCES} ${ROCALUTION_CLIENTS_COMMON})
 
 # Target compile options
-target_compile_options(rocalution-bench PRIVATE -Wno-unused-command-line-argument -Wall)
+target_compile_options(rocalution-bench PRIVATE -Wall)
 
 # Internal common header
 target_include_directories(rocalution-bench PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)

@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+# Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,6 @@ set(UTILS_PUBLIC_HEADERS
   utils/def.hpp
   utils/allocate_free.hpp
   utils/time_functions.hpp
-  utils/types.hpp
 )
 
 set(UTILS_MPI_SOURCES

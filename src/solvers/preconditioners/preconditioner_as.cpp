@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,7 @@
 #include "preconditioner.hpp"
 
 #include <complex>
+#include <limits>
 
 namespace rocalution
 {
@@ -111,8 +112,9 @@ namespace rocalution
         assert(this->num_blocks_ > 0);
         assert(this->overlap_ >= 0);
         assert(this->local_precond_ != NULL);
+        assert(this->op_->GetLocalM() / this->num_blocks_ <= std::numeric_limits<int>::max());
 
-        int size   = this->op_->GetLocalM() / this->num_blocks_;
+        int size   = static_cast<int>(this->op_->GetLocalM() / this->num_blocks_);
         int offset = 0;
 
         for(int i = 0; i < this->num_blocks_; ++i)
@@ -344,6 +346,7 @@ namespace rocalution
         assert(this->build_ == true);
         assert(x != NULL);
         assert(x != &rhs);
+        assert(this->op_->GetLocalM() / this->num_blocks_ <= std::numeric_limits<int>::max());
 
         for(int i = 0; i < this->num_blocks_; ++i)
         {
@@ -357,7 +360,7 @@ namespace rocalution
                                                   this->z_[i]); // x
         }
 
-        int size     = this->op_->GetLocalM() / this->num_blocks_;
+        int size     = static_cast<int>(this->op_->GetLocalM() / this->num_blocks_);
         int z_offset = 0;
         for(int i = 0; i < this->num_blocks_; ++i)
         {

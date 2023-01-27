@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,19 +75,19 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    IndexType2 LocalStencil<ValueType>::GetNnz(void) const
+    int64_t LocalStencil<ValueType>::GetNnz(void) const
     {
         return this->stencil_->GetNnz();
     }
 
     template <typename ValueType>
-    IndexType2 LocalStencil<ValueType>::GetM(void) const
+    int64_t LocalStencil<ValueType>::GetM(void) const
     {
         return this->stencil_->GetM();
     }
 
     template <typename ValueType>
-    IndexType2 LocalStencil<ValueType>::GetN(void) const
+    int64_t LocalStencil<ValueType>::GetN(void) const
     {
         return this->stencil_->GetN();
     }

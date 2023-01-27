@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_PARALLEL_MANAGER_HPP_
 #define ROCALUTION_PARALLEL_MANAGER_HPP_
 
-#include "../utils/types.hpp"
 #include "base_rocalution.hpp"
 #include "rocalution/export.hpp"
 
@@ -33,7 +32,6 @@
 
 namespace rocalution
 {
-
     template <typename ValueType>
     class GlobalMatrix;
     template <typename ValueType>
@@ -63,6 +61,13 @@ namespace rocalution
         ROCALUTION_EXPORT
         void Clear(void);
 
+        /** \brief Return communicator */
+        ROCALUTION_EXPORT
+        const void* GetComm(void) const
+        {
+            return this->comm_;
+        }
+
         /** \brief Return rank */
         ROCALUTION_EXPORT
         int GetRank(void) const
@@ -70,34 +75,18 @@ namespace rocalution
             return this->rank_;
         }
 
-        /** \brief Return the global size */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release. Use "
-                     "GetGlobalNrow() or GetGlobalNcol() instead")]]
-#endif
-        ROCALUTION_EXPORT
-        IndexType2 GetGlobalSize(void) const;
         /** \brief Return the global number of rows */
         ROCALUTION_EXPORT
-        IndexType2 GetGlobalNrow(void) const;
+        int64_t GetGlobalNrow(void) const;
         /** \brief Return the global number of columns */
         ROCALUTION_EXPORT
-        IndexType2 GetGlobalNcol(void) const;
-        /** \brief Return the local size */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release. Use "
-                     "GetLocalNrow() or GetLocalNcol() instead")]]
-#endif
-        ROCALUTION_EXPORT
-        int GetLocalSize(void) const;
+        int64_t GetGlobalNcol(void) const;
         /** \brief Return the local number of rows */
         ROCALUTION_EXPORT
-        int GetLocalNrow(void) const;
+        int64_t GetLocalNrow(void) const;
         /** \brief Return the local number of columns */
         ROCALUTION_EXPORT
-        int GetLocalNcol(void) const;
+        int64_t GetLocalNcol(void) const;
 
         /** \brief Return the number of receivers */
         ROCALUTION_EXPORT
@@ -109,34 +98,18 @@ namespace rocalution
         ROCALUTION_EXPORT
         int GetNumProcs(void) const;
 
-        /** \brief Initialize the global size */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release. Use "
-                     "SetGlobalNrow() or SetGlobalNcol() instead")]]
-#endif
-        ROCALUTION_EXPORT
-        void SetGlobalSize(IndexType2 size);
         /** \brief Initialize the global number of rows */
         ROCALUTION_EXPORT
-        void SetGlobalNrow(IndexType2 nrow);
+        void SetGlobalNrow(int64_t nrow);
         /** \brief Initialize the global number of columns */
         ROCALUTION_EXPORT
-        void SetGlobalNcol(IndexType2 ncol);
-        /** \brief Initialize the local size */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release. Use "
-                     "SetLocalNrow() or SetLocalNcol() instead")]]
-#endif
-        ROCALUTION_EXPORT
-        void SetLocalSize(int size);
+        void SetGlobalNcol(int64_t ncol);
         /** \brief Initialize the local number of rows */
         ROCALUTION_EXPORT
-        void SetLocalNrow(int nrow);
+        void SetLocalNrow(int64_t nrow);
         /** \brief Initialize the local number of columns */
         ROCALUTION_EXPORT
-        void SetLocalNcol(int ncol);
+        void SetLocalNcol(int64_t ncol);
 
         /** \brief Set all boundary indices of this ranks process */
         ROCALUTION_EXPORT
@@ -175,14 +148,22 @@ namespace rocalution
         void WriteFileASCII(const std::string& filename) const;
 
     private:
+        // Communicator
         const void* comm_;
-        int         rank_;
-        int         num_procs_;
 
-        IndexType2 global_nrow_;
-        IndexType2 global_ncol_;
-        int        local_nrow_;
-        int        local_ncol_;
+        // Current process rank
+        int rank_;
+
+        // Total number of processes
+        int num_procs_;
+
+        // Global sizes
+        int64_t global_nrow_;
+        int64_t global_ncol_;
+
+        // Local sizes
+        int64_t local_nrow_;
+        int64_t local_ncol_;
 
         // Number of total ids, the current process is receiving
         int recv_index_size_;

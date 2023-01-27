@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #ifndef ROCALUTION_VECTOR_HPP_
 #define ROCALUTION_VECTOR_HPP_
 
-#include "../utils/types.hpp"
 #include "base_rocalution.hpp"
 #include "rocalution/export.hpp"
 
@@ -59,17 +58,10 @@ namespace rocalution
         virtual ~Vector();
 
         /** \brief Return the size of the vector */
-        virtual IndexType2 GetSize(void) const = 0;
+        virtual int64_t GetSize(void) const = 0;
         /** \brief Return the size of the local vector */
         ROCALUTION_EXPORT
-        virtual int GetLocalSize(void) const;
-        /** \brief Return the size of the ghost vector */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release.")]]
-#endif
-        ROCALUTION_EXPORT
-        virtual int GetGhostSize(void) const;
+        virtual int64_t GetLocalSize(void) const;
 
         /** \brief Perform a sanity check of the vector
       * \details
@@ -257,8 +249,10 @@ namespace rocalution
       * size        number of entries to be copied.
       */
         ROCALUTION_EXPORT
-        virtual void
-            CopyFrom(const LocalVector<ValueType>& src, int src_offset, int dst_offset, int size);
+        virtual void CopyFrom(const LocalVector<ValueType>& src,
+                              int64_t                       src_offset,
+                              int64_t                       dst_offset,
+                              int64_t                       size);
 
         /** \brief Clone the vector
       * \details
@@ -316,17 +310,17 @@ namespace rocalution
         virtual void ScaleAddScale(ValueType                     alpha,
                                    const LocalVector<ValueType>& x,
                                    ValueType                     beta,
-                                   int                           src_offset,
-                                   int                           dst_offset,
-                                   int                           size);
+                                   int64_t                       src_offset,
+                                   int64_t                       dst_offset,
+                                   int64_t                       size);
         /** \brief Perform vector update of type this = alpha * this + x * beta with offsets */
         ROCALUTION_EXPORT
         virtual void ScaleAddScale(ValueType                      alpha,
                                    const GlobalVector<ValueType>& x,
                                    ValueType                      beta,
-                                   int                            src_offset,
-                                   int                            dst_offset,
-                                   int                            size);
+                                   int64_t                        src_offset,
+                                   int64_t                        dst_offset,
+                                   int64_t                        size);
 
         /** \brief Perform vector update of type this = alpha * this + x * beta + y * gamma */
         ROCALUTION_EXPORT
@@ -370,7 +364,7 @@ namespace rocalution
         virtual ValueType Asum(void) const = 0;
 
         /** \brief Compute the absolute max of the vector, return = index(max(|this|)) */
-        virtual int Amax(ValueType& value) const = 0;
+        virtual int64_t Amax(ValueType& value) const = 0;
 
         /** \brief Perform point-wise multiplication (element-wise) of this = this * x */
         ROCALUTION_EXPORT
