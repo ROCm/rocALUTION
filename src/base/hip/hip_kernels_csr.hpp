@@ -34,21 +34,21 @@
 
 namespace rocalution
 {
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_scale_diagonal(IndexType nrow,
-                                              const IndexType* __restrict__ row_offset,
-                                              const IndexType* __restrict__ col,
-                                              ValueType alpha,
-                                              ValueType* __restrict__ val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_scale_diagonal(I nrow,
+                                              const J* __restrict__ row_offset,
+                                              const I* __restrict__ col,
+                                              T alpha,
+                                              T* __restrict__ val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if(ai == col[aj])
             {
@@ -57,21 +57,21 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_scale_offdiagonal(IndexType nrow,
-                                                 const IndexType* __restrict__ row_offset,
-                                                 const IndexType* __restrict__ col,
-                                                 ValueType alpha,
-                                                 ValueType* __restrict__ val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_scale_offdiagonal(I nrow,
+                                                 const J* __restrict__ row_offset,
+                                                 const I* __restrict__ col,
+                                                 T alpha,
+                                                 T* __restrict__ val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if(ai != col[aj])
             {
@@ -80,21 +80,21 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_add_diagonal(IndexType nrow,
-                                            const IndexType* __restrict__ row_offset,
-                                            const IndexType* __restrict__ col,
-                                            ValueType alpha,
-                                            ValueType* __restrict__ val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_add_diagonal(I nrow,
+                                            const J* __restrict__ row_offset,
+                                            const I* __restrict__ col,
+                                            T alpha,
+                                            T* __restrict__ val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if(ai == col[aj])
             {
@@ -103,21 +103,21 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_add_offdiagonal(IndexType nrow,
-                                               const IndexType* __restrict__ row_offset,
-                                               const IndexType* __restrict__ col,
-                                               ValueType alpha,
-                                               ValueType* __restrict__ val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_add_offdiagonal(I nrow,
+                                               const J* __restrict__ row_offset,
+                                               const I* __restrict__ col,
+                                               T alpha,
+                                               T* __restrict__ val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if(ai != col[aj])
             {
@@ -126,27 +126,27 @@ namespace rocalution
         }
     }
 
-    template <unsigned int WFSIZE, typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_diag(IndexType nrow,
-                                            const IndexType* __restrict__ row_offset,
-                                            const IndexType* __restrict__ col,
-                                            const ValueType* __restrict__ val,
-                                            ValueType* __restrict__ vec)
+    template <unsigned int WFSIZE, typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_diag(I nrow,
+                                            const J* __restrict__ row_offset,
+                                            const I* __restrict__ col,
+                                            const T* __restrict__ val,
+                                            T* __restrict__ vec)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType gid = hipBlockIdx_x * hipBlockDim_x + tid;
-        IndexType lid = tid & (WFSIZE - 1);
-        IndexType row = gid / WFSIZE;
+        I tid = threadIdx.x;
+        I gid = blockIdx.x * blockDim.x + tid;
+        I lid = tid & (WFSIZE - 1);
+        I row = gid / WFSIZE;
 
         if(row >= nrow)
         {
             return;
         }
 
-        IndexType start = row_offset[row];
-        IndexType end   = row_offset[row + 1];
+        J start = row_offset[row];
+        J end   = row_offset[row + 1];
 
-        for(IndexType aj = start + lid; aj < end; aj += WFSIZE)
+        for(J aj = start + lid; aj < end; aj += WFSIZE)
         {
             if(row == col[aj])
             {
@@ -155,32 +155,32 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_inv_diag(IndexType nrow,
-                                                const IndexType* __restrict__ row_offset,
-                                                const IndexType* __restrict__ col,
-                                                const ValueType* __restrict__ val,
-                                                ValueType* __restrict__ vec,
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_inv_diag(I nrow,
+                                                const J* __restrict__ row_offset,
+                                                const I* __restrict__ col,
+                                                const T* __restrict__ val,
+                                                T* __restrict__ vec,
                                                 int* __restrict__ detect_zero)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if(ai == col[aj])
             {
-                if(val[aj] != static_cast<ValueType>(0))
+                if(val[aj] != static_cast<T>(0))
                 {
-                    vec[ai] = static_cast<ValueType>(1) / val[aj];
+                    vec[ai] = static_cast<T>(1) / val[aj];
                 }
                 else
                 {
-                    vec[ai] = static_cast<ValueType>(1);
+                    vec[ai] = static_cast<T>(1);
 
                     *detect_zero = 1;
                 }
@@ -188,29 +188,29 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_submatrix_row_nnz(const IndexType* __restrict__ row_offset,
-                                                         const IndexType* __restrict__ col,
-                                                         const ValueType* __restrict__ val,
-                                                         IndexType smrow_offset,
-                                                         IndexType smcol_offset,
-                                                         IndexType smrow_size,
-                                                         IndexType smcol_size,
-                                                         IndexType* __restrict__ row_nnz)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_submatrix_row_nnz(const J* __restrict__ row_offset,
+                                                         const I* __restrict__ col,
+                                                         const T* __restrict__ val,
+                                                         I smrow_offset,
+                                                         I smcol_offset,
+                                                         I smrow_size,
+                                                         I smcol_size,
+                                                         J* __restrict__ row_nnz)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= smrow_size)
         {
             return;
         }
 
-        IndexType nnz = 0;
-        IndexType ind = ai + smrow_offset;
+        I nnz = 0;
+        I ind = ai + smrow_offset;
 
-        for(IndexType aj = row_offset[ind]; aj < row_offset[ind + 1]; ++aj)
+        for(J aj = row_offset[ind]; aj < row_offset[ind + 1]; ++aj)
         {
-            IndexType c = col[aj];
+            I c = col[aj];
 
             if((c >= smcol_offset) && (c < smcol_offset + smcol_size))
             {
@@ -221,31 +221,31 @@ namespace rocalution
         row_nnz[ai] = nnz;
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_submatrix_copy(const IndexType* __restrict__ row_offset,
-                                                      const IndexType* __restrict__ col,
-                                                      const ValueType* __restrict__ val,
-                                                      IndexType smrow_offset,
-                                                      IndexType smcol_offset,
-                                                      IndexType smrow_size,
-                                                      IndexType smcol_size,
-                                                      const IndexType* __restrict__ sm_row_offset,
-                                                      IndexType* __restrict__ sm_col,
-                                                      ValueType* __restrict__ sm_val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_submatrix_copy(const J* __restrict__ row_offset,
+                                                      const I* __restrict__ col,
+                                                      const T* __restrict__ val,
+                                                      I smrow_offset,
+                                                      I smcol_offset,
+                                                      I smrow_size,
+                                                      I smcol_size,
+                                                      const J* __restrict__ sm_row_offset,
+                                                      I* __restrict__ sm_col,
+                                                      T* __restrict__ sm_val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= smrow_size)
         {
             return;
         }
 
-        IndexType row_nnz = sm_row_offset[ai];
-        IndexType ind     = ai + smrow_offset;
+        J row_nnz = sm_row_offset[ai];
+        I ind     = ai + smrow_offset;
 
-        for(IndexType aj = row_offset[ind]; aj < row_offset[ind + 1]; ++aj)
+        for(J aj = row_offset[ind]; aj < row_offset[ind + 1]; ++aj)
         {
-            IndexType c = col[aj];
+            I c = col[aj];
 
             if((c >= smcol_offset) && (c < smcol_offset + smcol_size))
             {
@@ -256,52 +256,51 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_diagmatmult_r(IndexType nrow,
-                                             const IndexType* __restrict__ row_offset,
-                                             const IndexType* __restrict__ col,
-                                             const ValueType* __restrict__ diag,
-                                             ValueType* __restrict__ val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_diagmatmult_r(I nrow,
+                                             const J* __restrict__ row_offset,
+                                             const I* __restrict__ col,
+                                             const T* __restrict__ diag,
+                                             T* __restrict__ val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             val[aj] = val[aj] * diag[col[aj]];
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_diagmatmult_l(IndexType nrow,
-                                             const IndexType* __restrict__ row_offset,
-                                             const ValueType* __restrict__ diag,
-                                             ValueType* __restrict__ val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_diagmatmult_l(I nrow,
+                                             const J* __restrict__ row_offset,
+                                             const T* __restrict__ diag,
+                                             T* __restrict__ val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             val[aj] = val[aj] * diag[ai];
         }
     }
 
     // Calculates the number of non-zero elements per row
-    template <typename IndexType>
-    __global__ void kernel_calc_row_nnz(IndexType nrow,
-                                        const IndexType* __restrict__ row_offset,
-                                        IndexType* __restrict__ row_nnz)
+    template <typename I, typename J>
+    __global__ void
+        kernel_calc_row_nnz(I nrow, const J* __restrict__ row_offset, I* __restrict__ row_nnz)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
@@ -317,13 +316,13 @@ namespace rocalution
     //           row_nnz_src:  original number of non-zero elements per row
     //           perm_vec:     permutation vector
     // Outputs:  row_nnz_dst   permuted number of non-zero elements per row
-    template <typename IndexType>
-    __global__ void kernel_permute_row_nnz(IndexType nrow,
-                                           const IndexType* __restrict__ row_offset,
-                                           const IndexType* __restrict__ perm_vec,
-                                           IndexType* __restrict__ row_nnz_dst)
+    template <typename I, typename J>
+    __global__ void kernel_permute_row_nnz(I nrow,
+                                           const J* __restrict__ row_offset,
+                                           const I* __restrict__ perm_vec,
+                                           J* __restrict__ row_nnz_dst)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
@@ -349,31 +348,31 @@ namespace rocalution
     //           row_nnz:          number of non-zero elements per row
     // Outputs:  perm_col:         permuted column indices of elements
     //           perm_data:        permuted data vector
-    template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
-    __global__ void kernel_permute_rows(IndexType nrow,
-                                        const IndexType* __restrict__ row_offset,
-                                        const IndexType* __restrict__ perm_row_offset,
-                                        const IndexType* __restrict__ col,
-                                        const ValueType* __restrict__ data,
-                                        const IndexType* __restrict__ perm_vec,
-                                        IndexType* __restrict__ perm_col,
-                                        ValueType* __restrict__ perm_data)
+    template <unsigned int WF_SIZE, typename T, typename I, typename J>
+    __global__ void kernel_permute_rows(I nrow,
+                                        const J* __restrict__ row_offset,
+                                        const J* __restrict__ perm_row_offset,
+                                        const I* __restrict__ col,
+                                        const T* __restrict__ data,
+                                        const I* __restrict__ perm_vec,
+                                        I* __restrict__ perm_col,
+                                        T* __restrict__ perm_data)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType gid = hipBlockIdx_x * hipBlockDim_x + tid;
-        IndexType lid = tid & (WF_SIZE - 1);
-        IndexType row = gid / WF_SIZE;
+        I tid = threadIdx.x;
+        I gid = blockIdx.x * blockDim.x + tid;
+        I lid = tid & (WF_SIZE - 1);
+        I row = gid / WF_SIZE;
 
         if(row >= nrow)
         {
             return;
         }
 
-        IndexType perm_index = perm_row_offset[perm_vec[row]];
-        IndexType prev_index = row_offset[row];
-        IndexType num_elems  = row_offset[row + 1] - prev_index;
+        J perm_index = perm_row_offset[perm_vec[row]];
+        J prev_index = row_offset[row];
+        I num_elems  = row_offset[row + 1] - prev_index;
 
-        for(IndexType i = lid; i < num_elems; i += WF_SIZE)
+        for(I i = lid; i < num_elems; i += WF_SIZE)
         {
             perm_data[perm_index + i] = data[prev_index + i];
             perm_col[perm_index + i]  = col[prev_index + i];
@@ -389,48 +388,47 @@ namespace rocalution
     //           perm_data:        row-permuted data
     // Outputs:  col:              fully permuted column indices of elements
     //           data:             fully permuted data
-    template <unsigned int size, typename ValueType, typename IndexType>
-    __launch_bounds__(256) __global__
-        void kernel_permute_cols(IndexType nrow,
-                                 const IndexType* __restrict__ row_offset,
-                                 const IndexType* __restrict__ perm_vec,
-                                 const IndexType* __restrict__ perm_col,
-                                 const ValueType* __restrict__ perm_data,
-                                 IndexType* __restrict__ col,
-                                 ValueType* __restrict__ data)
+    template <unsigned int size, typename T, typename I, typename J>
+    __launch_bounds__(256) __global__ void kernel_permute_cols(I nrow,
+                                                               const J* __restrict__ row_offset,
+                                                               const I* __restrict__ perm_vec,
+                                                               const I* __restrict__ perm_col,
+                                                               const T* __restrict__ perm_data,
+                                                               I* __restrict__ col,
+                                                               T* __restrict__ data)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        IndexType elem_index = row_offset[ai];
-        IndexType num_elems  = row_offset[ai + 1] - elem_index;
+        J elem_index = row_offset[ai];
+        I num_elems  = row_offset[ai + 1] - elem_index;
 
-        IndexType ccol[size];
-        ValueType cval[size];
+        I ccol[size];
+        T cval[size];
 
         col += elem_index;
         data += elem_index;
         perm_col += elem_index;
         perm_data += elem_index;
 
-        for(IndexType i = 0; i < num_elems; ++i)
+        for(I i = 0; i < num_elems; ++i)
         {
             ccol[i] = col[i];
             cval[i] = data[i];
         }
 
-        for(IndexType i = 0; i < num_elems; ++i)
+        for(I i = 0; i < num_elems; ++i)
         {
-            IndexType comp = perm_vec[perm_col[i]];
+            I comp = perm_vec[perm_col[i]];
 
-            IndexType j;
+            I j;
             for(j = i - 1; j >= 0; --j)
             {
-                IndexType c = ccol[j];
+                I c = ccol[j];
                 if(c > comp)
                 {
                     cval[j + 1] = cval[j];
@@ -446,7 +444,7 @@ namespace rocalution
             ccol[j + 1] = comp;
         }
 
-        for(IndexType i = 0; i < num_elems; ++i)
+        for(I i = 0; i < num_elems; ++i)
         {
             col[i]  = ccol[i];
             data[i] = cval[i];
@@ -462,38 +460,38 @@ namespace rocalution
     //           perm_data:        row-permuted data
     // Outputs:  col:              fully permuted column indices of elements
     //           data:             fully permuted data
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_permute_cols_fallback(IndexType nrow,
-                                                 const IndexType* __restrict__ row_offset,
-                                                 const IndexType* __restrict__ perm_vec,
-                                                 const IndexType* __restrict__ perm_col,
-                                                 const ValueType* __restrict__ perm_data,
-                                                 IndexType* __restrict__ col,
-                                                 ValueType* __restrict__ data)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_permute_cols_fallback(I nrow,
+                                                 const J* __restrict__ row_offset,
+                                                 const I* __restrict__ perm_vec,
+                                                 const I* __restrict__ perm_col,
+                                                 const T* __restrict__ perm_data,
+                                                 I* __restrict__ col,
+                                                 T* __restrict__ data)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        IndexType elem_index = row_offset[ai];
-        IndexType num_elems  = row_offset[ai + 1] - elem_index;
+        J elem_index = row_offset[ai];
+        I num_elems  = row_offset[ai + 1] - elem_index;
 
         col += elem_index;
         data += elem_index;
         perm_col += elem_index;
         perm_data += elem_index;
 
-        for(IndexType i = 0; i < num_elems; ++i)
+        for(I i = 0; i < num_elems; ++i)
         {
-            IndexType comp = perm_vec[perm_col[i]];
+            I comp = perm_vec[perm_col[i]];
 
-            IndexType j;
+            I j;
             for(j = i - 1; j >= 0; --j)
             {
-                IndexType c = col[j];
+                I c = col[j];
                 if(c > comp)
                 {
                     data[j + 1] = data[j];
@@ -512,29 +510,29 @@ namespace rocalution
 
     // TODO
     // kind of ugly and inefficient ... but works
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_add_csr_same_struct(IndexType nrow,
-                                                   const IndexType* __restrict__ out_row_offset,
-                                                   const IndexType* __restrict__ out_col,
-                                                   const IndexType* __restrict__ in_row_offset,
-                                                   const IndexType* __restrict__ in_col,
-                                                   const ValueType* __restrict__ in_val,
-                                                   ValueType alpha,
-                                                   ValueType beta,
-                                                   ValueType* __restrict__ out_val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_add_csr_same_struct(I nrow,
+                                                   const J* __restrict__ out_row_offset,
+                                                   const I* __restrict__ out_col,
+                                                   const J* __restrict__ in_row_offset,
+                                                   const I* __restrict__ in_col,
+                                                   const T* __restrict__ in_val,
+                                                   T alpha,
+                                                   T beta,
+                                                   T* __restrict__ out_val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        IndexType first_col = in_row_offset[ai];
+        J first_col = in_row_offset[ai];
 
-        for(IndexType ajj = out_row_offset[ai]; ajj < out_row_offset[ai + 1]; ++ajj)
+        for(J ajj = out_row_offset[ai]; ajj < out_row_offset[ai + 1]; ++ajj)
         {
-            for(IndexType aj = first_col; aj < in_row_offset[ai + 1]; ++aj)
+            for(J aj = first_col; aj < in_row_offset[ai + 1]; ++aj)
             {
                 if(in_col[aj] == out_col[ajj])
                 {
@@ -547,13 +545,13 @@ namespace rocalution
     }
 
     // Computes the lower triangular part nnz per row
-    template <typename IndexType>
-    __global__ void kernel_csr_lower_nnz_per_row(IndexType nrow,
-                                                 const IndexType* __restrict__ src_row_offset,
-                                                 const IndexType* __restrict__ src_col,
-                                                 IndexType* __restrict__ nnz_per_row)
+    template <typename I, typename J>
+    __global__ void kernel_csr_lower_nnz_per_row(I nrow,
+                                                 const J* __restrict__ src_row_offset,
+                                                 const I* __restrict__ src_col,
+                                                 J* __restrict__ nnz_per_row)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
@@ -562,7 +560,7 @@ namespace rocalution
 
         nnz_per_row[ai] = 0;
 
-        for(IndexType aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
+        for(J aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
         {
             if(src_col[aj] <= ai)
             {
@@ -572,13 +570,13 @@ namespace rocalution
     }
 
     // Computes the upper triangular part nnz per row
-    template <typename IndexType>
-    __global__ void kernel_csr_upper_nnz_per_row(IndexType nrow,
-                                                 const IndexType* __restrict__ src_row_offset,
-                                                 const IndexType* __restrict__ src_col,
-                                                 IndexType* __restrict__ nnz_per_row)
+    template <typename I, typename J>
+    __global__ void kernel_csr_upper_nnz_per_row(I nrow,
+                                                 const J* __restrict__ src_row_offset,
+                                                 const I* __restrict__ src_col,
+                                                 J* __restrict__ nnz_per_row)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
@@ -587,7 +585,7 @@ namespace rocalution
 
         nnz_per_row[ai] = 0;
 
-        for(IndexType aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
+        for(J aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
         {
             if(src_col[aj] >= ai)
             {
@@ -597,13 +595,13 @@ namespace rocalution
     }
 
     // Computes the stricktly lower triangular part nnz per row
-    template <typename IndexType>
-    __global__ void kernel_csr_slower_nnz_per_row(IndexType nrow,
-                                                  const IndexType* __restrict__ src_row_offset,
-                                                  const IndexType* __restrict__ src_col,
-                                                  IndexType* __restrict__ nnz_per_row)
+    template <typename I, typename J>
+    __global__ void kernel_csr_slower_nnz_per_row(I nrow,
+                                                  const J* __restrict__ src_row_offset,
+                                                  const I* __restrict__ src_col,
+                                                  J* __restrict__ nnz_per_row)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
@@ -612,7 +610,7 @@ namespace rocalution
 
         nnz_per_row[ai] = 0;
 
-        for(IndexType aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
+        for(J aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
         {
             if(src_col[aj] < ai)
             {
@@ -622,13 +620,13 @@ namespace rocalution
     }
 
     // Computes the stricktly upper triangular part nnz per row
-    template <typename IndexType>
-    __global__ void kernel_csr_supper_nnz_per_row(IndexType nrow,
-                                                  const IndexType* __restrict__ src_row_offset,
-                                                  const IndexType* __restrict__ src_col,
-                                                  IndexType* __restrict__ nnz_per_row)
+    template <typename I, typename J>
+    __global__ void kernel_csr_supper_nnz_per_row(I nrow,
+                                                  const J* __restrict__ src_row_offset,
+                                                  const I* __restrict__ src_col,
+                                                  J* __restrict__ nnz_per_row)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
@@ -637,7 +635,7 @@ namespace rocalution
 
         nnz_per_row[ai] = 0;
 
-        for(IndexType aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
+        for(J aj = src_row_offset[ai]; aj < src_row_offset[ai + 1]; ++aj)
         {
             if(src_col[aj] > ai)
             {
@@ -647,26 +645,26 @@ namespace rocalution
     }
 
     // Extracts lower triangular part for given nnz per row array (partial sums nnz)
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_l_triangular(IndexType nrow,
-                                                    const IndexType* __restrict__ src_row_offset,
-                                                    const IndexType* __restrict__ src_col,
-                                                    const ValueType* __restrict__ src_val,
-                                                    IndexType* __restrict__ nnz_per_row,
-                                                    IndexType* __restrict__ dst_col,
-                                                    ValueType* __restrict__ dst_val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_l_triangular(I nrow,
+                                                    const J* __restrict__ src_row_offset,
+                                                    const I* __restrict__ src_col,
+                                                    const T* __restrict__ src_val,
+                                                    J* __restrict__ nnz_per_row,
+                                                    I* __restrict__ dst_col,
+                                                    T* __restrict__ dst_val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        IndexType dst_index = nnz_per_row[ai];
-        IndexType src_index = src_row_offset[ai];
+        J dst_index = nnz_per_row[ai];
+        J src_index = src_row_offset[ai];
 
-        for(IndexType aj = 0; aj < nnz_per_row[ai + 1] - nnz_per_row[ai]; ++aj)
+        for(J aj = 0; aj < nnz_per_row[ai + 1] - nnz_per_row[ai]; ++aj)
         {
             dst_col[dst_index] = src_col[src_index];
             dst_val[dst_index] = src_val[src_index];
@@ -677,27 +675,27 @@ namespace rocalution
     }
 
     // Extracts upper triangular part for given nnz per row array (partial sums nnz)
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_u_triangular(IndexType nrow,
-                                                    const IndexType* __restrict__ src_row_offset,
-                                                    const IndexType* __restrict__ src_col,
-                                                    const ValueType* __restrict__ src_val,
-                                                    IndexType* __restrict__ nnz_per_row,
-                                                    IndexType* __restrict__ dst_col,
-                                                    ValueType* __restrict__ dst_val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_u_triangular(I nrow,
+                                                    const J* __restrict__ src_row_offset,
+                                                    const I* __restrict__ src_col,
+                                                    const T* __restrict__ src_val,
+                                                    J* __restrict__ nnz_per_row,
+                                                    I* __restrict__ dst_col,
+                                                    T* __restrict__ dst_val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        IndexType num_elements = nnz_per_row[ai + 1] - nnz_per_row[ai];
-        IndexType src_index    = src_row_offset[ai + 1] - num_elements;
-        IndexType dst_index    = nnz_per_row[ai];
+        I num_elements = nnz_per_row[ai + 1] - nnz_per_row[ai];
+        J src_index    = src_row_offset[ai + 1] - num_elements;
+        J dst_index    = nnz_per_row[ai];
 
-        for(IndexType aj = 0; aj < num_elements; ++aj)
+        for(I aj = 0; aj < num_elements; ++aj)
         {
             dst_col[dst_index] = src_col[src_index];
             dst_val[dst_index] = src_val[src_index];
@@ -708,22 +706,22 @@ namespace rocalution
     }
 
     // Compress
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_compress_count_nrow(const IndexType* __restrict__ row_offset,
-                                                   const IndexType* __restrict__ col,
-                                                   const ValueType* __restrict__ val,
-                                                   IndexType nrow,
-                                                   double    drop_off,
-                                                   IndexType* __restrict__ row_offset_new)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_compress_count_nrow(const J* __restrict__ row_offset,
+                                                   const I* __restrict__ col,
+                                                   const T* __restrict__ val,
+                                                   I      nrow,
+                                                   double drop_off,
+                                                   I* __restrict__ row_offset_new)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if((hip_abs(val[aj]) > drop_off) || (col[aj] == ai))
             {
@@ -733,26 +731,26 @@ namespace rocalution
     }
 
     // Compress
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_compress_copy(const IndexType* __restrict__ row_offset,
-                                             const IndexType* __restrict__ col,
-                                             const ValueType* __restrict__ val,
-                                             IndexType nrow,
-                                             double    drop_off,
-                                             const IndexType* __restrict__ row_offset_new,
-                                             IndexType* __restrict__ col_new,
-                                             ValueType* __restrict__ val_new)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_compress_copy(const J* __restrict__ row_offset,
+                                             const I* __restrict__ col,
+                                             const T* __restrict__ val,
+                                             I      nrow,
+                                             double drop_off,
+                                             const J* __restrict__ row_offset_new,
+                                             I* __restrict__ col_new,
+                                             T* __restrict__ val_new)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        IndexType ajj = row_offset_new[ai];
+        J ajj = row_offset_new[ai];
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if((hip_abs(val[aj]) > drop_off) || (col[aj] == ai))
             {
@@ -764,24 +762,24 @@ namespace rocalution
     }
 
     // Extract column vector
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_column_vector(const IndexType* __restrict__ row_offset,
-                                                     const IndexType* __restrict__ col,
-                                                     const ValueType* __restrict__ val,
-                                                     IndexType nrow,
-                                                     IndexType idx,
-                                                     ValueType* __restrict__ vec)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_column_vector(const J* __restrict__ row_offset,
+                                                     const I* __restrict__ col,
+                                                     const T* __restrict__ val,
+                                                     I nrow,
+                                                     I idx,
+                                                     T* __restrict__ vec)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        vec[ai] = static_cast<ValueType>(0);
+        vec[ai] = static_cast<T>(0);
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if(idx == col[aj])
             {
@@ -791,26 +789,25 @@ namespace rocalution
     }
 
     // Replace column vector - compute new offset
-    template <typename ValueType, typename IndexType>
-    __global__ void
-        kernel_csr_replace_column_vector_offset(const IndexType* __restrict__ row_offset,
-                                                const IndexType* __restrict__ col,
-                                                IndexType nrow,
-                                                IndexType idx,
-                                                const ValueType* __restrict__ vec,
-                                                IndexType* __restrict__ offset)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_replace_column_vector_offset(const J* __restrict__ row_offset,
+                                                            const I* __restrict__ col,
+                                                            I nrow,
+                                                            I idx,
+                                                            const T* __restrict__ vec,
+                                                            J* __restrict__ offset)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        bool      add = true;
-        IndexType val = row_offset[ai + 1] - row_offset[ai];
+        bool add = true;
+        I    val = row_offset[ai + 1] - row_offset[ai];
 
-        for(IndexType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+        for(J aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
         {
             if(col[aj] == idx)
             {
@@ -829,30 +826,30 @@ namespace rocalution
             --val;
         }
 
-        offset[ai + 1] = val;
+        offset[ai] = val;
     }
 
     // Replace column vector - compute new offset
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_replace_column_vector(const IndexType* __restrict__ row_offset,
-                                                     const IndexType* __restrict__ col,
-                                                     const ValueType* __restrict__ val,
-                                                     IndexType nrow,
-                                                     IndexType idx,
-                                                     const ValueType* __restrict__ vec,
-                                                     const IndexType* __restrict__ offset,
-                                                     IndexType* __restrict__ new_col,
-                                                     ValueType* __restrict__ new_val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_replace_column_vector(const J* __restrict__ row_offset,
+                                                     const I* __restrict__ col,
+                                                     const T* __restrict__ val,
+                                                     I nrow,
+                                                     I idx,
+                                                     const T* __restrict__ vec,
+                                                     const J* __restrict__ offset,
+                                                     I* __restrict__ new_col,
+                                                     T* __restrict__ new_val)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= nrow)
         {
             return;
         }
 
-        IndexType aj = row_offset[ai];
-        IndexType k  = offset[ai];
+        J aj = row_offset[ai];
+        J k  = offset[ai];
 
         for(; aj < row_offset[ai + 1]; ++aj)
         {
@@ -888,54 +885,54 @@ namespace rocalution
     }
 
     // Extract row vector
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_csr_extract_row_vector(const IndexType* __restrict__ row_offset,
-                                                  const IndexType* __restrict__ col,
-                                                  const ValueType* __restrict__ val,
-                                                  IndexType row_nnz,
-                                                  IndexType idx,
-                                                  ValueType* __restrict__ vec)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_extract_row_vector(const J* __restrict__ row_offset,
+                                                  const I* __restrict__ col,
+                                                  const T* __restrict__ val,
+                                                  I row_nnz,
+                                                  I idx,
+                                                  T* __restrict__ vec)
     {
-        IndexType ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(ai >= row_nnz)
         {
             return;
         }
 
-        IndexType aj = row_offset[idx] + ai;
+        J aj         = row_offset[idx] + ai;
         vec[col[aj]] = val[aj];
     }
 
     // AMG Connect
-    template <unsigned int WF_SIZE, typename ValueType, typename IndexType>
-    __global__ void kernel_csr_amg_connect(IndexType nrow,
-                                           ValueType eps2,
-                                           const IndexType* __restrict__ row_offset,
-                                           const IndexType* __restrict__ col,
-                                           const ValueType* __restrict__ val,
-                                           const ValueType* __restrict__ diag,
-                                           IndexType* __restrict__ connections)
+    template <unsigned int WF_SIZE, typename T, typename I, typename J>
+    __global__ void kernel_csr_amg_connect(I nrow,
+                                           T eps2,
+                                           const J* __restrict__ row_offset,
+                                           const I* __restrict__ col,
+                                           const T* __restrict__ val,
+                                           const T* __restrict__ diag,
+                                           I* __restrict__ connections)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType gid = hipBlockIdx_x * hipBlockDim_x + tid;
-        IndexType lid = tid & (WF_SIZE - 1);
-        IndexType row = gid / WF_SIZE;
+        I tid = threadIdx.x;
+        I gid = blockIdx.x * blockDim.x + tid;
+        I lid = tid & (WF_SIZE - 1);
+        I row = gid / WF_SIZE;
 
         if(row >= nrow)
         {
             return;
         }
 
-        ValueType eps_diag_r = eps2 * diag[row];
+        T eps_diag_r = eps2 * diag[row];
 
-        IndexType start = row_offset[row];
-        IndexType end   = row_offset[row + 1];
+        J start = row_offset[row];
+        J end   = row_offset[row + 1];
 
-        for(IndexType i = start + lid; i < end; i += WF_SIZE)
+        for(J i = start + lid; i < end; i += WF_SIZE)
         {
-            IndexType c = col[i];
-            ValueType v = val[i];
+            I c = col[i];
+            T v = val[i];
 
             connections[i] = (c != row) && (hip_real(v * v) > hip_real(eps_diag_r * diag[c]));
         }
@@ -950,25 +947,25 @@ namespace rocalution
         return x;
     }
 
-    template <typename IndexType>
-    __global__ void kernel_csr_amg_init_mis_tuples(IndexType nrow,
-                                                   const IndexType* __restrict__ row_offset,
-                                                   const IndexType* __restrict__ connections,
+    template <typename I, typename J>
+    __global__ void kernel_csr_amg_init_mis_tuples(I nrow,
+                                                   const J* __restrict__ row_offset,
+                                                   const I* __restrict__ connections,
                                                    mis_tuple* __restrict__ tuples)
     {
-        IndexType row = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(row >= nrow)
         {
             return;
         }
 
-        IndexType state = -2;
+        I state = -2;
 
-        IndexType row_start = row_offset[row];
-        IndexType row_end   = row_offset[row + 1];
+        J row_start = row_offset[row];
+        J row_end   = row_offset[row + 1];
 
-        for(IndexType j = row_start; j < row_end; j++)
+        for(J j = row_start; j < row_end; j++)
         {
             if(connections[j] == 1)
             {
@@ -997,21 +994,21 @@ namespace rocalution
         return *ti;
     }
 
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_amg_find_max_mis_tuples_shared(IndexType nrow,
-                                                       const IndexType* __restrict__ row_offset,
-                                                       const IndexType* __restrict__ cols,
-                                                       const IndexType* __restrict__ connections,
+        void kernel_csr_amg_find_max_mis_tuples_shared(I nrow,
+                                                       const J* __restrict__ row_offset,
+                                                       const I* __restrict__ cols,
+                                                       const I* __restrict__ connections,
                                                        const mis_tuple* __restrict__ tuples,
                                                        mis_tuple* __restrict__ max_tuples,
                                                        bool* done)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType gid = hipBlockIdx_x * BLOCKSIZE + tid;
-        IndexType lid = tid & (WFSIZE - 1);
-        IndexType wid = tid / WFSIZE;
-        IndexType row = gid / WFSIZE;
+        I tid = threadIdx.x;
+        I gid = blockIdx.x * BLOCKSIZE + tid;
+        I lid = tid & (WFSIZE - 1);
+        I wid = tid / WFSIZE;
+        I row = gid / WFSIZE;
 
         __shared__ mis_tuple smax_tuple[BLOCKSIZE];
 
@@ -1024,18 +1021,18 @@ namespace rocalution
 
         __syncthreads();
 
-        for(IndexType k = 0; k < 2; k++)
+        for(I k = 0; k < 2; k++)
         {
             mis_tuple t_max = smax_tuple[WFSIZE * wid];
 
-            IndexType row_start = row_offset[t_max.i];
-            IndexType row_end   = row_offset[t_max.i + 1];
+            J row_start = row_offset[t_max.i];
+            J row_end   = row_offset[t_max.i + 1];
 
-            for(IndexType j = row_start + lid; j < row_end; j += WFSIZE)
+            for(J j = row_start + lid; j < row_end; j += WFSIZE)
             {
                 if(connections[j] == 1)
                 {
-                    IndexType col = cols[j];
+                    I         col = cols[j];
                     mis_tuple tj  = tuples[col];
 
                     t_max = lexographical_max(&tj, &t_max);
@@ -1104,14 +1101,14 @@ namespace rocalution
         }
     }
 
-    template <typename IndexType>
-    __global__ void kernel_csr_amg_update_mis_tuples(IndexType nrow,
+    template <typename I>
+    __global__ void kernel_csr_amg_update_mis_tuples(I nrow,
                                                      const mis_tuple* __restrict__ max_tuples,
                                                      mis_tuple* __restrict__ tuples,
-                                                     IndexType* __restrict__ aggregates,
+                                                     I* __restrict__ aggregates,
                                                      bool* done)
     {
-        IndexType row = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(row >= nrow)
         {
@@ -1139,16 +1136,16 @@ namespace rocalution
         }
     }
 
-    template <typename IndexType>
-    __global__ void kernel_csr_amg_update_aggregates(IndexType nrow,
-                                                     const IndexType* __restrict__ row_offset,
-                                                     const IndexType* __restrict__ cols,
-                                                     const IndexType* __restrict__ connections,
+    template <typename I, typename J>
+    __global__ void kernel_csr_amg_update_aggregates(I nrow,
+                                                     const J* __restrict__ row_offset,
+                                                     const I* __restrict__ cols,
+                                                     const I* __restrict__ connections,
                                                      const mis_tuple* __restrict__ max_tuples,
                                                      mis_tuple* __restrict__ tuples,
-                                                     IndexType* __restrict__ aggregates)
+                                                     I* __restrict__ aggregates)
     {
-        IndexType row = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(row >= nrow)
         {
@@ -1159,14 +1156,14 @@ namespace rocalution
 
         if(t.s == -1)
         {
-            IndexType row_start = row_offset[row];
-            IndexType row_end   = row_offset[row + 1];
+            J row_start = row_offset[row];
+            J row_end   = row_offset[row + 1];
 
-            for(IndexType j = row_start; j < row_end; j++)
+            for(J j = row_start; j < row_end; j++)
             {
                 if(connections[j] == 1)
                 {
-                    IndexType col = cols[j];
+                    I col = cols[j];
 
                     if(max_tuples[col].s == 1)
                     {
@@ -1187,14 +1184,15 @@ namespace rocalution
     template <unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
-              typename IndexType>
+              typename I,
+              typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_sa_prolong_nnz(IndexType nrow,
-                                       const IndexType* __restrict__ csr_row_ptr,
-                                       const IndexType* __restrict__ csr_col_ind,
-                                       const IndexType* __restrict__ connections,
-                                       const IndexType* __restrict__ aggregates,
-                                       IndexType* __restrict__ row_nnz)
+        void kernel_csr_sa_prolong_nnz(I nrow,
+                                       const J* __restrict__ csr_row_ptr,
+                                       const I* __restrict__ csr_col_ind,
+                                       const I* __restrict__ connections,
+                                       const I* __restrict__ aggregates,
+                                       J* __restrict__ row_nnz)
     {
         unsigned int lid = threadIdx.x & (WFSIZE - 1);
         unsigned int wid = threadIdx.x / WFSIZE;
@@ -1205,7 +1203,7 @@ namespace rocalution
         }
 
         // The row this thread operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1214,29 +1212,29 @@ namespace rocalution
         }
 
         // Shared memory for the unordered set
-        __shared__ IndexType stable[BLOCKSIZE / WFSIZE * HASHSIZE];
+        __shared__ I stable[BLOCKSIZE / WFSIZE * HASHSIZE];
 
         // Each wavefront operates on its own set
-        unordered_set<IndexType, HASHSIZE, WFSIZE> set(&stable[wid * HASHSIZE]);
+        unordered_set<I, HASHSIZE, WFSIZE> set(&stable[wid * HASHSIZE]);
 
         // Row nnz counter
-        IndexType nnz = 0;
+        I nnz = 0;
 
         // Row entry and exit points
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        I row_begin = csr_row_ptr[row];
+        I row_end   = csr_row_ptr[row + 1];
 
         // Loop over all columns of the i-th row, whereas each lane processes a column
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(I j = row_begin + lid; j < row_end; j += WFSIZE)
         {
             // Get the column index
-            IndexType col = csr_col_ind[j];
+            I col = csr_col_ind[j];
 
             // Get connection state
-            IndexType con = connections[j];
+            I con = connections[j];
 
             // Get aggregation state for this column
-            IndexType agg = aggregates[col];
+            I agg = aggregates[col];
 
             // When aggregate is defined, diagonal entries and connected columns will
             // generate a fill in
@@ -1260,20 +1258,21 @@ namespace rocalution
     template <unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
-              typename ValueType,
-              typename IndexType>
+              typename T,
+              typename I,
+              typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_sa_prolong_fill(IndexType nrow,
-                                        ValueType relax,
-                                        int       lumping_strat,
-                                        const IndexType* __restrict__ csr_row_ptr,
-                                        const IndexType* __restrict__ csr_col_ind,
-                                        const ValueType* __restrict__ csr_val,
-                                        const IndexType* __restrict__ connections,
-                                        const IndexType* __restrict__ aggregates,
-                                        const IndexType* __restrict__ csr_row_ptr_P,
-                                        IndexType* __restrict__ csr_col_ind_P,
-                                        ValueType* __restrict__ csr_val_P)
+        void kernel_csr_sa_prolong_fill(I   nrow,
+                                        T   relax,
+                                        int lumping_strat,
+                                        const J* __restrict__ csr_row_ptr,
+                                        const I* __restrict__ csr_col_ind,
+                                        const T* __restrict__ csr_val,
+                                        const I* __restrict__ connections,
+                                        const I* __restrict__ aggregates,
+                                        const J* __restrict__ csr_row_ptr_P,
+                                        I* __restrict__ csr_col_ind_P,
+                                        T* __restrict__ csr_val_P)
     {
         unsigned int lid = threadIdx.x & (WFSIZE - 1);
         unsigned int wid = threadIdx.x / WFSIZE;
@@ -1284,7 +1283,7 @@ namespace rocalution
         }
 
         // The row this thread operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1293,30 +1292,29 @@ namespace rocalution
         }
 
         // Shared memory for the unordered map
-        __shared__ IndexType stable[(BLOCKSIZE / WFSIZE) * HASHSIZE];
-        __shared__ char      smem[(BLOCKSIZE / WFSIZE) * HASHSIZE * sizeof(ValueType)];
+        __shared__ I    stable[(BLOCKSIZE / WFSIZE) * HASHSIZE];
+        __shared__ char smem[(BLOCKSIZE / WFSIZE) * HASHSIZE * sizeof(T)];
 
-        ValueType* sdata = reinterpret_cast<ValueType*>(smem);
+        T* sdata = reinterpret_cast<T*>(smem);
 
         // Each wavefront operates on its own map
-        unordered_map<IndexType, ValueType, HASHSIZE, WFSIZE> map(&stable[wid * HASHSIZE],
-                                                                  &sdata[wid * HASHSIZE]);
+        unordered_map<I, T, HASHSIZE, WFSIZE> map(&stable[wid * HASHSIZE], &sdata[wid * HASHSIZE]);
 
         // Row entry and exit points
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
         // Accumulator
-        ValueType dia = static_cast<ValueType>(0);
+        T dia = static_cast<T>(0);
 
         // Loop over all columns of the i-th row, whereas each lane processes a column
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
             // Get the column index
-            IndexType col_j = csr_col_ind[j];
+            I col_j = csr_col_ind[j];
 
             // Get the value
-            ValueType val_j = csr_val[j];
+            T val_j = csr_val[j];
 
             // Add the diagonal
             if(col_j == row)
@@ -1335,50 +1333,49 @@ namespace rocalution
             dia += hip_shfl_xor(dia, i);
         }
 
-        dia = static_cast<ValueType>(1) / dia;
+        dia = static_cast<T>(1) / dia;
 
         // Loop over all columns of the i-th row, whereas each lane processes a column
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
             // Get the column index
-            IndexType col_j = csr_col_ind[j];
+            I col_j = csr_col_ind[j];
 
             // Get the value
-            ValueType val_j = csr_val[j];
+            T val_j = csr_val[j];
 
             // Get connection state
-            IndexType con = connections[j];
+            I con = connections[j];
 
             // Get aggregation state for this column
-            IndexType agg = aggregates[col_j];
+            I agg = aggregates[col_j];
 
             // When aggregate is defined, diagonal entries and connected columns will
             // generate a fill in
             if((row == col_j || con) && agg >= 0)
             {
                 // Insert or add if already present into unordered map
-                ValueType val
-                    = (col_j == row) ? static_cast<ValueType>(1) - relax : -relax * dia * val_j;
+                T val = (col_j == row) ? static_cast<T>(1) - relax : -relax * dia * val_j;
 
                 map.insert_or_add(agg, val);
             }
         }
 
         // Access into P
-        IndexType aj = csr_row_ptr_P[row];
+        J aj = csr_row_ptr_P[row];
 
         // Store key val pairs from map into P
         map.store_sorted(&csr_col_ind_P[aj], &csr_val_P[aj]);
     }
 
-    template <unsigned int BLOCKSIZE, typename IndexType>
+    template <unsigned int BLOCKSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_unsmoothed_prolong_nnz_per_row(IndexType nrow,
-                                                       const IndexType* __restrict__ aggregates,
-                                                       IndexType* __restrict__ prolong_row_offset)
+        void kernel_csr_unsmoothed_prolong_nnz_per_row(I nrow,
+                                                       const I* __restrict__ aggregates,
+                                                       J* __restrict__ prolong_row_offset)
     {
-        IndexType tid = hipThreadIdx_x;
-        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
 
         if(row >= nrow)
         {
@@ -1400,16 +1397,16 @@ namespace rocalution
         }
     }
 
-    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    template <unsigned int BLOCKSIZE, typename T, typename I>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_unsmoothed_prolong_fill_simple(IndexType nrow,
-                                                       const IndexType* __restrict__ aggregates,
-                                                       IndexType* __restrict__ prolong_cols,
-                                                       ValueType* __restrict__ prolong_vals)
+        void kernel_csr_unsmoothed_prolong_fill_simple(I nrow,
+                                                       const I* __restrict__ aggregates,
+                                                       I* __restrict__ prolong_cols,
+                                                       T* __restrict__ prolong_vals)
     {
 
-        IndexType tid = hipThreadIdx_x;
-        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
 
         if(row >= nrow)
         {
@@ -1417,44 +1414,44 @@ namespace rocalution
         }
 
         prolong_cols[row] = aggregates[row];
-        prolong_vals[row] = static_cast<ValueType>(1);
+        prolong_vals[row] = static_cast<T>(1);
     }
 
-    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    template <unsigned int BLOCKSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_unsmoothed_prolong_fill(IndexType nrow,
-                                                const IndexType* __restrict__ aggregates,
-                                                const IndexType* __restrict__ prolong_row_offset,
-                                                IndexType* __restrict__ prolong_cols,
-                                                ValueType* __restrict__ prolong_vals)
+        void kernel_csr_unsmoothed_prolong_fill(I nrow,
+                                                const I* __restrict__ aggregates,
+                                                const J* __restrict__ prolong_row_offset,
+                                                I* __restrict__ prolong_cols,
+                                                T* __restrict__ prolong_vals)
     {
 
-        IndexType tid = hipThreadIdx_x;
-        IndexType row = hipBlockIdx_x * BLOCKSIZE + tid;
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
 
         if(row >= nrow)
         {
             return;
         }
 
-        IndexType agg = aggregates[row];
+        I agg = aggregates[row];
 
         if(agg >= 0)
         {
-            IndexType j = prolong_row_offset[row];
+            J j = prolong_row_offset[row];
 
             prolong_cols[j] = agg;
-            prolong_vals[j] = static_cast<ValueType>(1);
+            prolong_vals[j] = static_cast<T>(1);
         }
     }
 
     // Determine strong influences
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename ValueType, typename IndexType>
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_pmis_strong_influences(IndexType nrow,
-                                                  const IndexType* __restrict__ csr_row_ptr,
-                                                  const IndexType* __restrict__ csr_col_ind,
-                                                  const ValueType* __restrict__ csr_val,
+        void kernel_csr_rs_pmis_strong_influences(I nrow,
+                                                  const J* __restrict__ csr_row_ptr,
+                                                  const I* __restrict__ csr_col_ind,
+                                                  const T* __restrict__ csr_val,
                                                   float eps,
                                                   float* __restrict__ omega,
                                                   bool* __restrict__ S)
@@ -1463,7 +1460,7 @@ namespace rocalution
         unsigned int wid = threadIdx.x / WFSIZE;
 
         // The row this wavefront operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1472,26 +1469,26 @@ namespace rocalution
         }
 
         // Determine minimum and maximum off-diagonal of the current row
-        ValueType min_a_ik = static_cast<ValueType>(0);
-        ValueType max_a_ik = static_cast<ValueType>(0);
+        T min_a_ik = static_cast<T>(0);
+        T max_a_ik = static_cast<T>(0);
 
         // Shared boolean that holds diagonal sign for each wavefront
         // where true means, the diagonal element is negative
         __shared__ bool sign[BLOCKSIZE / WFSIZE];
 
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
         // Determine diagonal sign and min/max
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
-            IndexType col = csr_col_ind[j];
-            ValueType val = csr_val[j];
+            I col = csr_col_ind[j];
+            T val = csr_val[j];
 
             if(col == row)
             {
                 // Get diagonal entry sign
-                sign[wid] = val < static_cast<ValueType>(0);
+                sign[wid] = val < static_cast<T>(0);
             }
             else
             {
@@ -1504,7 +1501,7 @@ namespace rocalution
         __threadfence_block();
 
         // Maximum or minimum, depending on the diagonal sign
-        ValueType cond = sign[wid] ? max_a_ik : min_a_ik;
+        T cond = sign[wid] ? max_a_ik : min_a_ik;
 
         // Obtain extrema on all threads of the wavefront
         if(sign[wid])
@@ -1520,10 +1517,10 @@ namespace rocalution
         cond *= eps;
 
         // Fill S
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
-            IndexType col = csr_col_ind[j];
-            ValueType val = csr_val[j];
+            I col = csr_col_ind[j];
+            T val = csr_val[j];
 
             if(col != row && val < cond)
             {
@@ -1541,14 +1538,14 @@ namespace rocalution
     }
 
     // Mark all vertices that have not been assigned yet, as coarse
-    template <typename IndexType>
-    __global__ void kernel_csr_rs_pmis_unassigned_to_coarse(IndexType nrow,
+    template <typename I>
+    __global__ void kernel_csr_rs_pmis_unassigned_to_coarse(I nrow,
                                                             const float* __restrict__ omega,
                                                             int* __restrict__ cf,
-                                                            IndexType* __restrict__ workspace)
+                                                            I* __restrict__ workspace)
     {
         // Each thread processes a row
-        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1584,21 +1581,21 @@ namespace rocalution
     }
 
     // Correct previously marked vertices with respect to omega
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_pmis_correct_coarse(IndexType nrow,
-                                               const IndexType* __restrict__ csr_row_ptr,
-                                               const IndexType* __restrict__ csr_col_ind,
+        void kernel_csr_rs_pmis_correct_coarse(I nrow,
+                                               const J* __restrict__ csr_row_ptr,
+                                               const I* __restrict__ csr_col_ind,
                                                const float* __restrict__ omega,
                                                const bool* __restrict__ S,
                                                int* __restrict__ cf,
-                                               IndexType* __restrict__ workspace)
+                                               I* __restrict__ workspace)
     {
         unsigned int lid = threadIdx.x & (WFSIZE - 1);
         unsigned int wid = threadIdx.x / WFSIZE;
 
         // The row this wavefront operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1610,20 +1607,20 @@ namespace rocalution
         // process it for further checks
         if(workspace[row])
         {
-            IndexType row_begin = csr_row_ptr[row];
-            IndexType row_end   = csr_row_ptr[row + 1];
+            J row_begin = csr_row_ptr[row];
+            J row_end   = csr_row_ptr[row + 1];
 
             // Get the weight of the current row for comparison
             float omega_row = omega[row];
 
             // Loop over the full row to compare weights of other vertices that
             // have been marked coarse in the current iteration
-            for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+            for(J j = row_begin + lid; j < row_end; j += WFSIZE)
             {
                 // Process only vertices that are strongly connected
                 if(S[j])
                 {
-                    IndexType col = csr_col_ind[j];
+                    I col = csr_col_ind[j];
 
                     // If this vertex has been marked coarse in the current iteration,
                     // we need to check whether it is accepted as a coarse vertex or not.
@@ -1654,11 +1651,11 @@ namespace rocalution
     }
 
     // Mark remaining edges of a coarse point to fine
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_pmis_coarse_edges_to_fine(IndexType nrow,
-                                                     const IndexType* __restrict__ csr_row_ptr,
-                                                     const IndexType* __restrict__ csr_col_ind,
+        void kernel_csr_rs_pmis_coarse_edges_to_fine(I nrow,
+                                                     const J* __restrict__ csr_row_ptr,
+                                                     const I* __restrict__ csr_col_ind,
                                                      const bool* __restrict__ S,
                                                      int* __restrict__ cf)
     {
@@ -1666,7 +1663,7 @@ namespace rocalution
         unsigned int wid = threadIdx.x / WFSIZE;
 
         // The row this wavefront operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1677,17 +1674,17 @@ namespace rocalution
         // Process only undecided vertices
         if(cf[row] == 0)
         {
-            IndexType row_begin = csr_row_ptr[row];
-            IndexType row_end   = csr_row_ptr[row + 1];
+            J row_begin = csr_row_ptr[row];
+            J row_end   = csr_row_ptr[row + 1];
 
             // Loop over all edges of this undecided vertex
             // and check, if there is a coarse point connected
-            for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+            for(J j = row_begin + lid; j < row_end; j += WFSIZE)
             {
                 // Check, whether this edge is strongly connected to the vertex
                 if(S[j])
                 {
-                    IndexType col = csr_col_ind[j];
+                    I col = csr_col_ind[j];
 
                     // If this edge is coarse, our vertex must be fine
                     if(cf[col] == 1)
@@ -1701,13 +1698,13 @@ namespace rocalution
     }
 
     // Check for undecided vertices
-    template <unsigned int BLOCKSIZE, typename IndexType>
+    template <unsigned int BLOCKSIZE, typename I>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_pmis_check_undecided(IndexType nrow,
+        void kernel_csr_rs_pmis_check_undecided(I nrow,
                                                 const int* __restrict__ cf,
-                                                IndexType* __restrict__ undecided)
+                                                I* __restrict__ undecided)
     {
-        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         if(row >= nrow)
         {
@@ -1721,21 +1718,21 @@ namespace rocalution
         }
     }
 
-    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    template <unsigned int BLOCKSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_direct_interp_nnz(IndexType nrow,
-                                             const IndexType* __restrict__ csr_row_ptr,
-                                             const IndexType* __restrict__ csr_col_ind,
-                                             const ValueType* __restrict__ csr_val,
+        void kernel_csr_rs_direct_interp_nnz(I nrow,
+                                             const J* __restrict__ csr_row_ptr,
+                                             const I* __restrict__ csr_col_ind,
+                                             const T* __restrict__ csr_val,
                                              const bool* __restrict__ S,
                                              const int* __restrict__ cf,
-                                             ValueType* __restrict__ Amin,
-                                             ValueType* __restrict__ Amax,
-                                             IndexType* __restrict__ row_nnz,
-                                             IndexType* __restrict__ coarse_idx)
+                                             T* __restrict__ Amin,
+                                             T* __restrict__ Amax,
+                                             J* __restrict__ row_nnz,
+                                             I* __restrict__ coarse_idx)
     {
         // The row this thread operates on
-        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1744,7 +1741,7 @@ namespace rocalution
         }
 
         // Counter
-        IndexType nnz = 0;
+        I nnz = 0;
 
         // Coarse points generate a single entry
         if(cf[row] == 1)
@@ -1757,24 +1754,24 @@ namespace rocalution
             // Set non-coarse flag
             coarse_idx[row] = 0;
 
-            ValueType amin = static_cast<ValueType>(0);
-            ValueType amax = static_cast<ValueType>(0);
+            T amin = static_cast<T>(0);
+            T amax = static_cast<T>(0);
 
-            IndexType row_begin = csr_row_ptr[row];
-            IndexType row_end   = csr_row_ptr[row + 1];
+            J row_begin = csr_row_ptr[row];
+            J row_end   = csr_row_ptr[row + 1];
 
             // Loop over the full row and determine minimum and maximum
-            for(IndexType j = row_begin; j < row_end; ++j)
+            for(J j = row_begin; j < row_end; ++j)
             {
                 // Process only vertices that are strongly connected
                 if(S[j])
                 {
-                    IndexType col = csr_col_ind[j];
+                    I col = csr_col_ind[j];
 
                     // Process only coarse points
                     if(cf[col] == 1)
                     {
-                        ValueType val = csr_val[j];
+                        T val = csr_val[j];
 
                         amin = (amin < val) ? amin : val;
                         amax = (amax > val) ? amax : val;
@@ -1782,21 +1779,21 @@ namespace rocalution
                 }
             }
 
-            Amin[row] = amin = amin * static_cast<ValueType>(0.2);
-            Amax[row] = amax = amax * static_cast<ValueType>(0.2);
+            Amin[row] = amin = amin * static_cast<T>(0.2);
+            Amax[row] = amax = amax * static_cast<T>(0.2);
 
             // Loop over the full row to count eligible entries
-            for(IndexType j = row_begin; j < row_end; ++j)
+            for(J j = row_begin; j < row_end; ++j)
             {
                 // Process only vertices that are strongly connected
                 if(S[j])
                 {
-                    IndexType col = csr_col_ind[j];
+                    I col = csr_col_ind[j];
 
                     // Process only coarse points
                     if(cf[col] == 1)
                     {
-                        ValueType val = csr_val[j];
+                        T val = csr_val[j];
 
                         // If conditions are fulfilled, count up row nnz
                         if(val <= amin || val >= amax)
@@ -1812,23 +1809,23 @@ namespace rocalution
         row_nnz[row] = nnz;
     }
 
-    template <unsigned int BLOCKSIZE, typename ValueType, typename IndexType>
+    template <unsigned int BLOCKSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_direct_interp_fill(IndexType nrow,
-                                              const IndexType* __restrict__ csr_row_ptr,
-                                              const IndexType* __restrict__ csr_col_ind,
-                                              const ValueType* __restrict__ csr_val,
-                                              const IndexType* __restrict__ prolong_csr_row_ptr,
-                                              IndexType* __restrict__ prolong_csr_col_ind,
-                                              ValueType* __restrict__ prolong_csr_val,
+        void kernel_csr_rs_direct_interp_fill(I nrow,
+                                              const J* __restrict__ csr_row_ptr,
+                                              const I* __restrict__ csr_col_ind,
+                                              const T* __restrict__ csr_val,
+                                              const J* __restrict__ prolong_csr_row_ptr,
+                                              I* __restrict__ prolong_csr_col_ind,
+                                              T* __restrict__ prolong_csr_val,
                                               const bool* __restrict__ S,
                                               const int* __restrict__ cf,
-                                              const ValueType* __restrict__ Amin,
-                                              const ValueType* __restrict__ Amax,
-                                              const IndexType* __restrict__ coarse_idx)
+                                              const T* __restrict__ Amin,
+                                              const T* __restrict__ Amax,
+                                              const I* __restrict__ coarse_idx)
     {
         // The row this thread operates on
-        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1837,30 +1834,30 @@ namespace rocalution
         }
 
         // The row of P this thread operates on
-        IndexType row_P = prolong_csr_row_ptr[row];
+        I row_P = prolong_csr_row_ptr[row];
 
         // If this is a coarse point, we can fill P and return
         if(cf[row] == 1)
         {
             prolong_csr_col_ind[row_P] = coarse_idx[row];
-            prolong_csr_val[row_P]     = static_cast<ValueType>(1);
+            prolong_csr_val[row_P]     = static_cast<T>(1);
 
             return;
         }
 
-        ValueType diag  = static_cast<ValueType>(0);
-        ValueType a_num = static_cast<ValueType>(0), a_den = static_cast<ValueType>(0);
-        ValueType b_num = static_cast<ValueType>(0), b_den = static_cast<ValueType>(0);
-        ValueType d_neg = static_cast<ValueType>(0), d_pos = static_cast<ValueType>(0);
+        T diag  = static_cast<T>(0);
+        T a_num = static_cast<T>(0), a_den = static_cast<T>(0);
+        T b_num = static_cast<T>(0), b_den = static_cast<T>(0);
+        T d_neg = static_cast<T>(0), d_pos = static_cast<T>(0);
 
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
         // Loop over the full row
-        for(IndexType j = row_begin; j < row_end; ++j)
+        for(J j = row_begin; j < row_end; ++j)
         {
-            IndexType col = csr_col_ind[j];
-            ValueType val = csr_val[j];
+            I col = csr_col_ind[j];
+            T val = csr_val[j];
 
             // Do not process the vertex itself
             if(col == row)
@@ -1869,7 +1866,7 @@ namespace rocalution
                 continue;
             }
 
-            if(val < static_cast<ValueType>(0))
+            if(val < static_cast<T>(0))
             {
                 a_num += val;
 
@@ -1901,8 +1898,8 @@ namespace rocalution
             }
         }
 
-        ValueType cf_neg = static_cast<ValueType>(1);
-        ValueType cf_pos = static_cast<ValueType>(1);
+        T cf_neg = static_cast<T>(1);
+        T cf_pos = static_cast<T>(1);
 
         if(abs(a_den - d_neg) > 1e-32)
         {
@@ -1914,24 +1911,22 @@ namespace rocalution
             cf_pos = b_den / (b_den - d_pos);
         }
 
-        if(b_num > static_cast<ValueType>(0) && abs(b_den) < 1e-32)
+        if(b_num > static_cast<T>(0) && abs(b_den) < 1e-32)
         {
             diag += b_num;
         }
 
-        ValueType alpha
-            = abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : static_cast<ValueType>(0);
-        ValueType beta
-            = abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : static_cast<ValueType>(0);
+        T alpha = abs(a_den) > 1e-32 ? -cf_neg * a_num / (diag * a_den) : static_cast<T>(0);
+        T beta  = abs(b_den) > 1e-32 ? -cf_pos * b_num / (diag * b_den) : static_cast<T>(0);
 
         // Loop over the full row to fill eligible entries
-        for(IndexType j = row_begin; j < row_end; ++j)
+        for(J j = row_begin; j < row_end; ++j)
         {
             // Process only vertices that are strongly connected
             if(S[j])
             {
-                IndexType col = csr_col_ind[j];
-                ValueType val = csr_val[j];
+                I col = csr_col_ind[j];
+                T val = csr_val[j];
 
                 // Process only coarse points
                 if(cf[col] == 1)
@@ -1943,28 +1938,28 @@ namespace rocalution
 
                     // Fill P
                     prolong_csr_col_ind[row_P] = coarse_idx[col];
-                    prolong_csr_val[row_P] = (val < static_cast<ValueType>(0) ? alpha : beta) * val;
+                    prolong_csr_val[row_P]     = (val < static_cast<T>(0) ? alpha : beta) * val;
                     ++row_P;
                 }
             }
         }
     }
 
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename IndexType>
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_extpi_interp_max(IndexType nrow,
-                                            bool      FF1,
-                                            const IndexType* __restrict__ csr_row_ptr,
-                                            const IndexType* __restrict__ csr_col_ind,
+        void kernel_csr_rs_extpi_interp_max(I    nrow,
+                                            bool FF1,
+                                            const J* __restrict__ csr_row_ptr,
+                                            const I* __restrict__ csr_col_ind,
                                             const bool* __restrict__ S,
                                             const int* __restrict__ cf,
-                                            IndexType* __restrict__ row_max)
+                                            J* __restrict__ row_max)
     {
         int lid = threadIdx.x & (WFSIZE - 1);
         int wid = threadIdx.x / WFSIZE;
 
         // The row this thread operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -1988,14 +1983,14 @@ namespace rocalution
         }
 
         // Counter
-        IndexType nnz = 0;
+        I nnz = 0;
 
         // Row entry and exit points
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
         // Loop over all columns of the i-th row, whereas each lane processes a column
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
             // Skip points that do not influence the current point
             if(S[j] == false)
@@ -2004,7 +1999,7 @@ namespace rocalution
             }
 
             // Get the column index
-            IndexType col_j = csr_col_ind[j];
+            I col_j = csr_col_ind[j];
 
             // Skip diagonal entries (i does not influence itself)
             if(col_j == row)
@@ -2023,11 +2018,11 @@ namespace rocalution
                 // This is a fine point, check for strongly connected coarse points
 
                 // Row entry and exit of this fine point
-                IndexType row_begin_j = csr_row_ptr[col_j];
-                IndexType row_end_j   = csr_row_ptr[col_j + 1];
+                J row_begin_j = csr_row_ptr[col_j];
+                J row_end_j   = csr_row_ptr[col_j + 1];
 
                 // Loop over all columns of the fine point
-                for(IndexType k = row_begin_j; k < row_end_j; ++k)
+                for(J k = row_begin_j; k < row_end_j; ++k)
                 {
                     // Skip points that do not influence the fine point
                     if(S[k] == false)
@@ -2036,7 +2031,7 @@ namespace rocalution
                     }
 
                     // Get the column index
-                    IndexType col_k = csr_col_ind[k];
+                    I col_k = csr_col_ind[k];
 
                     // Skip diagonal entries (the fine point does not influence itself)
                     if(col_k == col_j)
@@ -2074,22 +2069,23 @@ namespace rocalution
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
               unsigned int HASHVAL,
-              typename IndexType>
+              typename I,
+              typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_extpi_interp_nnz(IndexType nrow,
-                                            bool      FF1,
-                                            const IndexType* __restrict__ csr_row_ptr,
-                                            const IndexType* __restrict__ csr_col_ind,
+        void kernel_csr_rs_extpi_interp_nnz(I    nrow,
+                                            bool FF1,
+                                            const J* __restrict__ csr_row_ptr,
+                                            const I* __restrict__ csr_col_ind,
                                             const bool* __restrict__ S,
                                             const int* __restrict__ cf,
-                                            IndexType* __restrict__ row_nnz,
-                                            IndexType* __restrict__ state)
+                                            J* __restrict__ row_nnz,
+                                            I* __restrict__ state)
     {
         int lid = threadIdx.x & (WFSIZE - 1);
         int wid = threadIdx.x / WFSIZE;
 
         // The row this thread operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -2116,13 +2112,13 @@ namespace rocalution
         }
 
         // Counter
-        IndexType nnz = 0;
+        I nnz = 0;
 
         // Shared memory for the unordered set
-        __shared__ IndexType suset[BLOCKSIZE / WFSIZE * HASHSIZE];
+        __shared__ I suset[BLOCKSIZE / WFSIZE * HASHSIZE];
 
         // Each wavefront operates on its own set
-        IndexType* uset = suset + wid * HASHSIZE;
+        I* uset = suset + wid * HASHSIZE;
 
         // Initialize the set
         for(unsigned int i = lid; i < HASHSIZE; i += WFSIZE)
@@ -2134,11 +2130,11 @@ namespace rocalution
         __threadfence_block();
 
         // Row entry and exit points
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
         // Loop over all columns of the i-th row, whereas each lane processes a column
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
             // Skip points that do not influence the current point
             if(S[j] == false)
@@ -2147,7 +2143,7 @@ namespace rocalution
             }
 
             // Get the column index
-            IndexType col_j = csr_col_ind[j];
+            I col_j = csr_col_ind[j];
 
             // Skip diagonal entries (i does not influence itself)
             if(col_j == row)
@@ -2167,11 +2163,11 @@ namespace rocalution
                 // This is a fine point, check for strongly connected coarse points
 
                 // Row entry and exit of this fine point
-                IndexType row_begin_j = csr_row_ptr[col_j];
-                IndexType row_end_j   = csr_row_ptr[col_j + 1];
+                J row_begin_j = csr_row_ptr[col_j];
+                J row_end_j   = csr_row_ptr[col_j + 1];
 
                 // Loop over all columns of the fine point
-                for(IndexType k = row_begin_j; k < row_end_j; ++k)
+                for(J k = row_begin_j; k < row_end_j; ++k)
                 {
                     // Skip points that do not influence the fine point
                     if(S[k] == false)
@@ -2180,7 +2176,7 @@ namespace rocalution
                     }
 
                     // Get the column index
-                    IndexType col_k = csr_col_ind[k];
+                    I col_k = csr_col_ind[k];
 
                     // Skip diagonal entries (the fine point does not influence itself)
                     if(col_k == col_j)
@@ -2222,27 +2218,28 @@ namespace rocalution
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
               unsigned int HASHVAL,
-              typename ValueType,
-              typename IndexType>
+              typename T,
+              typename I,
+              typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_extpi_interp_fill(IndexType nrow,
-                                             bool      FF1,
-                                             const IndexType* __restrict__ csr_row_ptr,
-                                             const IndexType* __restrict__ csr_col_ind,
-                                             const ValueType* __restrict__ csr_val,
-                                             const ValueType* __restrict__ diag,
-                                             const IndexType* __restrict__ prolong_csr_row_ptr,
-                                             IndexType* __restrict__ prolong_csr_col_ind,
-                                             ValueType* __restrict__ prolong_csr_val,
+        void kernel_csr_rs_extpi_interp_fill(I    nrow,
+                                             bool FF1,
+                                             const J* __restrict__ csr_row_ptr,
+                                             const I* __restrict__ csr_col_ind,
+                                             const T* __restrict__ csr_val,
+                                             const T* __restrict__ diag,
+                                             const J* __restrict__ prolong_csr_row_ptr,
+                                             I* __restrict__ prolong_csr_col_ind,
+                                             T* __restrict__ prolong_csr_val,
                                              const bool* __restrict__ S,
                                              const int* __restrict__ cf,
-                                             const IndexType* __restrict__ coarse_idx)
+                                             const I* __restrict__ coarse_idx)
     {
         unsigned int lid = threadIdx.x & (WFSIZE - 1);
         unsigned int wid = threadIdx.x / WFSIZE;
 
         // The row this thread operates on
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -2251,7 +2248,7 @@ namespace rocalution
         }
 
         // Some helpers for readability
-        constexpr ValueType zero = static_cast<ValueType>(0);
+        constexpr T zero = static_cast<T>(0);
 
         constexpr int COARSE = 1;
         constexpr int FINE   = 2;
@@ -2262,11 +2259,11 @@ namespace rocalution
             if(lid == 0)
             {
                 // Get index into P
-                IndexType idx = prolong_csr_row_ptr[row];
+                J idx = prolong_csr_row_ptr[row];
 
                 // Single entry in this row (coarse point)
                 prolong_csr_col_ind[idx] = coarse_idx[row];
-                prolong_csr_val[idx]     = static_cast<ValueType>(1);
+                prolong_csr_val[idx]     = static_cast<T>(1);
             }
 
             return;
@@ -2275,12 +2272,12 @@ namespace rocalution
         // Shared memory for the hash table
         extern __shared__ char smem[];
 
-        IndexType* stable = reinterpret_cast<IndexType*>(smem);
-        ValueType* sdata  = reinterpret_cast<ValueType*>(stable + BLOCKSIZE / WFSIZE * HASHSIZE);
+        I* stable = reinterpret_cast<I*>(smem);
+        T* sdata  = reinterpret_cast<T*>(stable + BLOCKSIZE / WFSIZE * HASHSIZE);
 
         // Each wavefront operates on its own hash table
-        IndexType* table = stable + wid * HASHSIZE;
-        ValueType* data  = sdata + wid * HASHSIZE;
+        I* table = stable + wid * HASHSIZE;
+        T* data  = sdata + wid * HASHSIZE;
 
         // Initialize the hash table
         for(unsigned int i = lid; i < HASHSIZE; i += WFSIZE)
@@ -2296,11 +2293,11 @@ namespace rocalution
         // This is identical to the nnz per row kernel
 
         // Row entry and exit points
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
         // Loop over all columns of the i-th row, whereas each lane processes a column
-        for(IndexType k = row_begin + lid; k < row_end; k += WFSIZE)
+        for(J k = row_begin + lid; k < row_end; k += WFSIZE)
         {
             // Skip points that do not influence the current point
             if(S[k] == false)
@@ -2309,7 +2306,7 @@ namespace rocalution
             }
 
             // Get the column index
-            IndexType col_ik = csr_col_ind[k];
+            I col_ik = csr_col_ind[k];
 
             // Skip diagonal entries (i does not influence itself)
             if(col_ik == row)
@@ -2328,11 +2325,11 @@ namespace rocalution
                 // This is a fine point, check for strongly connected coarse points
 
                 // Row entry and exit of this fine point
-                IndexType row_begin_k = csr_row_ptr[col_ik];
-                IndexType row_end_k   = csr_row_ptr[col_ik + 1];
+                J row_begin_k = csr_row_ptr[col_ik];
+                J row_end_k   = csr_row_ptr[col_ik + 1];
 
                 // Loop over all columns of the fine point
-                for(IndexType l = row_begin_k; l < row_end_k; ++l)
+                for(J l = row_begin_k; l < row_end_k; ++l)
                 {
                     // Skip points that do not influence the fine point
                     if(S[l] == false)
@@ -2341,7 +2338,7 @@ namespace rocalution
                     }
 
                     // Get the column index
-                    IndexType col_kl = csr_col_ind[l];
+                    I col_kl = csr_col_ind[l];
 
                     // Skip diagonal entries (the fine point does not influence itself)
                     if(col_kl == col_ik)
@@ -2368,20 +2365,20 @@ namespace rocalution
         // Now, we need to do the numerical part
 
         // Diagonal entry of i-th row
-        ValueType val_ii = diag[row];
+        T val_ii = diag[row];
 
         // Sign of diagonal entry of i-th row
         bool pos_ii = val_ii >= zero;
 
         // Accumulators
-        ValueType sum_k = zero;
-        ValueType sum_n = zero;
+        T sum_k = zero;
+        T sum_n = zero;
 
         // Loop over all columns of the i-th row, whereas each lane processes a column
-        for(IndexType k = row_begin + lid; k < row_end; k += WFSIZE)
+        for(J k = row_begin + lid; k < row_end; k += WFSIZE)
         {
             // Get the column index
-            IndexType col_ik = csr_col_ind[k];
+            I col_ik = csr_col_ind[k];
 
             // Skip diagonal entries (i does not influence itself)
             if(col_ik == row)
@@ -2390,33 +2387,33 @@ namespace rocalution
             }
 
             // Get the column value
-            ValueType val_ik = csr_val[k];
+            T val_ik = csr_val[k];
 
             // Check, whether the k-th entry of the row is a fine point and strongly
             // connected to the i-th point (e.g. k \in F^S_i)
             if(S[k] == true && cf[col_ik] == FINE)
             {
                 // Accumulator for the sum over l
-                ValueType sum_l = zero;
+                T sum_l = zero;
 
                 // Diagonal entry of k-th row
-                ValueType val_kk = diag[col_ik];
+                T val_kk = diag[col_ik];
 
                 // Store a_ki, if present
-                ValueType val_ki = zero;
+                T val_ki = zero;
 
                 // Row entry and exit of this fine point
-                IndexType row_begin_k = csr_row_ptr[col_ik];
-                IndexType row_end_k   = csr_row_ptr[col_ik + 1];
+                J row_begin_k = csr_row_ptr[col_ik];
+                J row_end_k   = csr_row_ptr[col_ik + 1];
 
                 // Loop over all columns of the fine point
-                for(IndexType l = row_begin_k; l < row_end_k; ++l)
+                for(J l = row_begin_k; l < row_end_k; ++l)
                 {
                     // Get the column index
-                    IndexType col_kl = csr_col_ind[l];
+                    I col_kl = csr_col_ind[l];
 
                     // Get the column value
-                    ValueType val_kl = csr_val[l];
+                    T val_kl = csr_val[l];
 
                     // Sign of a_kl
                     bool pos_kl = val_kl >= zero;
@@ -2461,10 +2458,10 @@ namespace rocalution
 
                 // Additionally, for eq19 we need to add all coarse points in row k,
                 // if they have different sign than the diagonal a_kk
-                for(IndexType l = row_begin_k; l < row_end_k; ++l)
+                for(J l = row_begin_k; l < row_end_k; ++l)
                 {
                     // Get the column index
-                    IndexType col_kl = csr_col_ind[l];
+                    I col_kl = csr_col_ind[l];
 
                     // Only coarse points contribute
                     if(cf[col_kl] != COARSE)
@@ -2473,7 +2470,7 @@ namespace rocalution
                     }
 
                     // Get the column value
-                    ValueType val_kl = csr_val[l];
+                    T val_kl = csr_val[l];
 
                     // Compute the sign of a_kl
                     bool pos_kl = val_kl >= zero;
@@ -2514,7 +2511,7 @@ namespace rocalution
         }
 
         // Each lane accumulates the sums (over n and l)
-        ValueType a_ii_tilde = sum_n + sum_k;
+        T a_ii_tilde = sum_n + sum_k;
 
         // Now, each lane of the wavefront should hold the global row sum
         for(unsigned int i = WFSIZE >> 1; i > 0; i >>= 1)
@@ -2523,14 +2520,14 @@ namespace rocalution
         }
 
         // Precompute -1 / (a_ii_tilde + a_ii)
-        a_ii_tilde = static_cast<ValueType>(-1) / (a_ii_tilde + val_ii);
+        a_ii_tilde = static_cast<T>(-1) / (a_ii_tilde + val_ii);
 
         // Finally, extract the numerical values from the hash table and fill P such
         // that the resulting matrix is sorted by columns
         for(unsigned int i = lid; i < HASHSIZE; i += WFSIZE)
         {
             // Get column from hash table to fill into C hat
-            IndexType col = table[i];
+            I col = table[i];
 
             // Skip, if table is empty
             if(col == INT32_MAX)
@@ -2539,7 +2536,7 @@ namespace rocalution
             }
 
             // Get index into P
-            IndexType idx = prolong_csr_row_ptr[row];
+            J idx = prolong_csr_row_ptr[row];
 
             // Hash table index counter
             unsigned int cnt = 0;
@@ -2567,20 +2564,20 @@ namespace rocalution
     }
 
     // Compress prolongation matrix
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename ValueType, typename IndexType>
+    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_extpi_interp_compress_nnz(IndexType nrow,
-                                                     const IndexType* __restrict__ csr_row_ptr,
-                                                     const IndexType* __restrict__ csr_col_ind,
-                                                     const ValueType* __restrict__ csr_val,
+        void kernel_csr_rs_extpi_interp_compress_nnz(I nrow,
+                                                     const J* __restrict__ csr_row_ptr,
+                                                     const I* __restrict__ csr_col_ind,
+                                                     const T* __restrict__ csr_val,
                                                      float trunc,
-                                                     IndexType* __restrict__ row_nnz)
+                                                     J* __restrict__ row_nnz)
     {
         unsigned int lid = threadIdx.x & (WFSIZE - 1);
         unsigned int wid = threadIdx.x / WFSIZE;
 
         // Current row
-        IndexType row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -2589,15 +2586,15 @@ namespace rocalution
         }
 
         // Row nnz counter
-        IndexType nnz = 0;
+        I nnz = 0;
 
         double row_max = 0.0;
 
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
         // Obtain numbers for processing the row
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
             // Compute absolute row maximum
             row_max = max(row_max, hip_abs(csr_val[j]));
@@ -2610,7 +2607,7 @@ namespace rocalution
         double threshold = row_max * trunc;
 
         // Count the row nnz
-        for(IndexType j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
             // Check whether we keep this entry or not
             if(hip_abs(csr_val[j]) >= threshold)
@@ -2634,19 +2631,18 @@ namespace rocalution
     }
 
     // Compress
-    template <typename ValueType, typename IndexType>
-    __global__ void
-        kernel_csr_rs_extpi_interp_compress_fill(IndexType nrow,
-                                                 const IndexType* __restrict__ csr_row_ptr,
-                                                 const IndexType* __restrict__ csr_col_ind,
-                                                 const ValueType* __restrict__ csr_val,
-                                                 float trunc,
-                                                 const IndexType* __restrict__ comp_csr_row_ptr,
-                                                 IndexType* __restrict__ comp_csr_col_ind,
-                                                 ValueType* __restrict__ comp_csr_val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_rs_extpi_interp_compress_fill(I nrow,
+                                                             const J* __restrict__ csr_row_ptr,
+                                                             const I* __restrict__ csr_col_ind,
+                                                             const T* __restrict__ csr_val,
+                                                             float trunc,
+                                                             const J* __restrict__ comp_csr_row_ptr,
+                                                             I* __restrict__ comp_csr_col_ind,
+                                                             T* __restrict__ comp_csr_val)
     {
         // Current row
-        IndexType row = blockIdx.x * blockDim.x + threadIdx.x;
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
 
         // Do not run out of bounds
         if(row >= nrow)
@@ -2655,17 +2651,17 @@ namespace rocalution
         }
 
         // Row entry and exit point
-        IndexType row_begin = csr_row_ptr[row];
-        IndexType row_end   = csr_row_ptr[row + 1];
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
 
-        double    row_max = 0.0;
-        ValueType row_sum = static_cast<ValueType>(0);
+        double row_max = 0.0;
+        T      row_sum = static_cast<T>(0);
 
         // Obtain numbers for processing the row
-        for(IndexType j = row_begin; j < row_end; ++j)
+        for(J j = row_begin; j < row_end; ++j)
         {
             // Get column value
-            ValueType val = csr_val[j];
+            T val = csr_val[j];
 
             // Compute absolute row maximum
             row_max = max(row_max, hip_abs(val));
@@ -2678,19 +2674,19 @@ namespace rocalution
         double threshold = row_max * trunc;
 
         // Row entry point for the compressed matrix
-        IndexType comp_row_begin = comp_csr_row_ptr[row];
-        IndexType comp_row_end   = comp_csr_row_ptr[row + 1];
+        J comp_row_begin = comp_csr_row_ptr[row];
+        J comp_row_end   = comp_csr_row_ptr[row + 1];
 
         // Row nnz counter
-        IndexType nnz = 0;
+        I nnz = 0;
 
         // Row sum of not-dropped entries
-        ValueType comp_row_sum = static_cast<ValueType>(0);
+        T comp_row_sum = static_cast<T>(0);
 
-        for(IndexType j = row_begin; j < row_end; ++j)
+        for(J j = row_begin; j < row_end; ++j)
         {
             // Get column value
-            ValueType val = csr_val[j];
+            T val = csr_val[j];
 
             // Check whether we keep this entry or not
             if(hip_abs(val) >= threshold)
@@ -2707,13 +2703,14 @@ namespace rocalution
         }
 
         // Row scaling factor
-        ValueType scale = row_sum / comp_row_sum;
+        T scale = row_sum / comp_row_sum;
 
         // Scale row entries
-        for(IndexType j = comp_row_begin; j < comp_row_end; ++j)
+        for(J j = comp_row_begin; j < comp_row_end; ++j)
         {
             comp_csr_val[j] *= scale;
         }
     }
 } // namespace rocalution
+
 #endif // ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_

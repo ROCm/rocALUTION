@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,56 +32,57 @@ namespace rocalution
 {
 
     // Compute non-zero entries per row
-    __global__ void kernel_hyb_coo_nnz(int m,
-                                       int ell_width,
-                                       const int* __restrict__ csr_row_ptr,
-                                       int* __restrict__ coo_row_nnz)
+    template <typename I, typename J>
+    __global__ void kernel_hyb_coo_nnz(I m,
+                                       I ell_width,
+                                       const J* __restrict__ csr_row_ptr,
+                                       J* __restrict__ coo_row_nnz)
     {
-        int gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
         if(gid >= m)
         {
             return;
         }
 
-        int row_nnz      = csr_row_ptr[gid + 1] - csr_row_ptr[gid] - ell_width;
+        I row_nnz        = csr_row_ptr[gid + 1] - csr_row_ptr[gid] - ell_width;
         coo_row_nnz[gid] = row_nnz > 0 ? row_nnz : 0;
     }
 
     // CSR to HYB format conversion kernel
-    template <typename ValueType>
-    __global__ void kernel_hyb_csr2hyb(int m,
-                                       const ValueType* __restrict__ csr_val,
-                                       const int* __restrict__ csr_row_ptr,
-                                       const int* __restrict__ csr_col_ind,
-                                       int ell_width,
-                                       int* __restrict__ ell_col_ind,
-                                       ValueType* __restrict__ ell_val,
-                                       int* __restrict__ coo_row_ind,
-                                       int* __restrict__ coo_col_ind,
-                                       ValueType* __restrict__ coo_val,
-                                       int* __restrict__ workspace)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_hyb_csr2hyb(I m,
+                                       const T* __restrict__ csr_val,
+                                       const J* __restrict__ csr_row_ptr,
+                                       const I* __restrict__ csr_col_ind,
+                                       I ell_width,
+                                       I* __restrict__ ell_col_ind,
+                                       T* __restrict__ ell_val,
+                                       I* __restrict__ coo_row_ind,
+                                       I* __restrict__ coo_col_ind,
+                                       T* __restrict__ coo_val,
+                                       J* __restrict__ workspace)
     {
-        int ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        I ai = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
         if(ai >= m)
         {
             return;
         }
 
-        int p = 0;
+        I p = 0;
 
-        int row_begin = csr_row_ptr[ai];
-        int row_end   = csr_row_ptr[ai + 1];
-        int coo_idx   = coo_row_ind ? workspace[ai] : 0;
+        J row_begin = csr_row_ptr[ai];
+        J row_end   = csr_row_ptr[ai + 1];
+        J coo_idx   = coo_row_ind ? workspace[ai] : 0;
 
         // Fill HYB matrix
-        for(int aj = row_begin; aj < row_end; ++aj)
+        for(J aj = row_begin; aj < row_end; ++aj)
         {
             if(p < ell_width)
             {
                 // Fill ELL part
-                int idx          = ELL_IND(ai, p++, m, ell_width);
+                I idx            = ELL_IND(ai, p++, m, ell_width);
                 ell_col_ind[idx] = csr_col_ind[aj];
                 ell_val[idx]     = csr_val[aj];
             }
@@ -96,42 +97,42 @@ namespace rocalution
         }
 
         // Pad remaining ELL structure
-        for(int aj = row_end - row_begin; aj < ell_width; ++aj)
+        for(I aj = row_end - row_begin; aj < ell_width; ++aj)
         {
-            int idx          = ELL_IND(ai, aj, m, ell_width);
+            I idx            = ELL_IND(ai, aj, m, ell_width);
             ell_col_ind[idx] = -1;
-            ell_val[idx]     = static_cast<ValueType>(0);
+            ell_val[idx]     = static_cast<T>(0);
         }
     }
 
-    template <typename IndexType>
-    __global__ void kernel_dia_diag_idx(IndexType nrow,
-                                        IndexType* __restrict__ row_offset,
-                                        IndexType* __restrict__ col,
-                                        IndexType* __restrict__ diag_idx)
+    template <typename I, typename J>
+    __global__ void kernel_dia_diag_idx(I nrow,
+                                        J* __restrict__ row_offset,
+                                        I* __restrict__ col,
+                                        I* __restrict__ diag_idx)
     {
-        IndexType row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+        I row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
         if(row >= nrow)
         {
             return;
         }
 
-        for(IndexType j = row_offset[row]; j < row_offset[row + 1]; ++j)
+        for(J j = row_offset[row]; j < row_offset[row + 1]; ++j)
         {
-            IndexType idx = col[j] - row + nrow;
+            I idx         = col[j] - row + nrow;
             diag_idx[idx] = 1;
         }
     }
 
-    template <typename IndexType>
-    __global__ void kernel_dia_fill_offset(IndexType nrow,
-                                           IndexType ncol,
-                                           IndexType* __restrict__ diag_idx,
-                                           const IndexType* __restrict__ offset_map,
-                                           IndexType* __restrict__ offset)
+    template <typename I>
+    __global__ void kernel_dia_fill_offset(I nrow,
+                                           I ncol,
+                                           I* __restrict__ diag_idx,
+                                           const I* __restrict__ offset_map,
+                                           I* __restrict__ offset)
     {
-        IndexType i = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+        I i = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
         if(i >= nrow + ncol)
         {
@@ -145,25 +146,25 @@ namespace rocalution
         }
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_dia_convert(IndexType nrow,
-                                       IndexType ndiag,
-                                       const IndexType* __restrict__ row_offset,
-                                       const IndexType* __restrict__ col,
-                                       const ValueType* __restrict__ val,
-                                       const IndexType* __restrict__ diag_idx,
-                                       ValueType* __restrict__ dia_val)
+    template <typename T, typename I, typename J>
+    __global__ void kernel_dia_convert(I nrow,
+                                       I ndiag,
+                                       const J* __restrict__ row_offset,
+                                       const I* __restrict__ col,
+                                       const T* __restrict__ val,
+                                       const I* __restrict__ diag_idx,
+                                       T* __restrict__ dia_val)
     {
-        IndexType row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+        I row = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
         if(row >= nrow)
         {
             return;
         }
 
-        for(IndexType j = row_offset[row]; j < row_offset[row + 1]; ++j)
+        for(J j = row_offset[row]; j < row_offset[row + 1]; ++j)
         {
-            IndexType idx = col[j] - row + nrow;
+            I idx = col[j] - row + nrow;
 
             dia_val[DIA_IND(row, diag_idx[idx], nrow, ndiag)] = val[j];
         }

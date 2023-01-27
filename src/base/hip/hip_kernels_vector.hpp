@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -164,7 +164,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    __global__ void kernel_permute(IndexType n,
+    __global__ void kernel_permute(int64_t n,
                                    const IndexType* __restrict__ permute,
                                    const ValueType* __restrict__ in,
                                    ValueType* __restrict__ out)
@@ -180,7 +180,7 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    __global__ void kernel_permute_backward(IndexType n,
+    __global__ void kernel_permute_backward(int64_t n,
                                             const IndexType* __restrict__ permute,
                                             const ValueType* __restrict__ in,
                                             ValueType* __restrict__ out)
@@ -196,12 +196,12 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    __global__ void kernel_get_index_values(IndexType size,
+    __global__ void kernel_get_index_values(int64_t size,
                                             const IndexType* __restrict__ index,
                                             const ValueType* __restrict__ in,
                                             ValueType* __restrict__ out)
     {
-        IndexType i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        int64_t i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
         if(i >= size)
         {
@@ -212,12 +212,12 @@ namespace rocalution
     }
 
     template <typename ValueType, typename IndexType>
-    __global__ void kernel_set_index_values(IndexType size,
+    __global__ void kernel_set_index_values(int64_t size,
                                             const IndexType* __restrict__ index,
                                             const ValueType* __restrict__ in,
                                             ValueType* __restrict__ out)
     {
-        IndexType i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        int64_t i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
         if(i >= size)
         {
@@ -240,12 +240,11 @@ namespace rocalution
         out[ind] = pow(out[ind], power);
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_copy_from_float(IndexType n,
-                                           const float* __restrict__ in,
-                                           ValueType* __restrict__ out)
+    template <typename ValueType>
+    __global__ void
+        kernel_copy_from_float(int64_t n, const float* __restrict__ in, ValueType* __restrict__ out)
     {
-        IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        int64_t ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
         if(ind >= n)
         {
@@ -255,12 +254,12 @@ namespace rocalution
         out[ind] = static_cast<ValueType>(in[ind]);
     }
 
-    template <typename ValueType, typename IndexType>
-    __global__ void kernel_copy_from_double(IndexType n,
+    template <typename ValueType>
+    __global__ void kernel_copy_from_double(int64_t n,
                                             const double* __restrict__ in,
                                             ValueType* __restrict__ out)
     {
-        IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+        int64_t ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
         if(ind >= n)
         {
