@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,8 @@
 
 #include <algorithm>
 #include <complex>
-#include <stdio.h>
+#include <cstdio>
+#include <numeric>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -175,31 +176,9 @@ namespace rocalution
             assert(this->nrow_ > 0);
             assert(this->ncol_ > 0);
 
-            _set_omp_backend_threads(this->local_backend_, this->nnz_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nnz_; ++i)
-            {
-                this->mat_.row[i] = row[i];
-            }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int j = 0; j < this->nnz_; ++j)
-            {
-                this->mat_.col[j] = col[j];
-            }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int j = 0; j < this->nnz_; ++j)
-            {
-                this->mat_.val[j] = val[j];
-            }
+            copy_h2h(this->nnz_, row, this->mat_.row);
+            copy_h2h(this->nnz_, col, this->mat_.col);
+            copy_h2h(this->nnz_, val, this->mat_.val);
         }
     }
 
@@ -211,31 +190,9 @@ namespace rocalution
             assert(this->nrow_ > 0);
             assert(this->ncol_ > 0);
 
-            _set_omp_backend_threads(this->local_backend_, this->nnz_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nnz_; ++i)
-            {
-                row[i] = this->mat_.row[i];
-            }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int j = 0; j < this->nnz_; ++j)
-            {
-                col[j] = this->mat_.col[j];
-            }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int j = 0; j < this->nnz_; ++j)
-            {
-                val[j] = this->mat_.val[j];
-            }
+            copy_h2h(this->nnz_, this->mat_.row, row);
+            copy_h2h(this->nnz_, this->mat_.col, col);
+            copy_h2h(this->nnz_, this->mat_.val, val);
         }
     }
 
@@ -259,31 +216,9 @@ namespace rocalution
 
             if(this->nnz_ > 0)
             {
-                _set_omp_backend_threads(this->local_backend_, this->nnz_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int j = 0; j < this->nnz_; ++j)
-                {
-                    this->mat_.row[j] = cast_mat->mat_.row[j];
-                }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int j = 0; j < this->nnz_; ++j)
-                {
-                    this->mat_.col[j] = cast_mat->mat_.col[j];
-                }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int j = 0; j < this->nnz_; ++j)
-                {
-                    this->mat_.val[j] = cast_mat->mat_.val[j];
-                }
+                copy_h2h(this->nnz_, cast_mat->mat_.row, this->mat_.row);
+                copy_h2h(this->nnz_, cast_mat->mat_.col, this->mat_.col);
+                copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
             }
         }
         else
@@ -399,13 +334,7 @@ namespace rocalution
 
         _set_omp_backend_threads(this->local_backend_, this->nnz_);
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(int i = 0; i < this->nrow_; ++i)
-        {
-            cast_out->vec_[i] = static_cast<ValueType>(0);
-        }
+        set_to_zero_host(this->nrow_, cast_out->vec_);
 
         for(int i = 0; i < this->nnz_; ++i)
         {
@@ -447,13 +376,9 @@ namespace rocalution
         {
             // Sort by row and column index
             std::vector<int> perm(this->nnz_);
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nnz_; ++i)
-            {
-                perm[i] = i;
-            }
+
+            // Create identity permutation
+            std::iota(perm.begin(), perm.end(), 0);
 
             int*       row = this->mat_.row;
             int*       col = this->mat_.col;

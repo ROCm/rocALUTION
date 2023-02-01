@@ -60,11 +60,8 @@ namespace rocalution
         allocate_hip(nnz, &dst->col);
         allocate_hip(nnz, &dst->val);
 
-        hipMemcpyAsync(dst->col, src.col, sizeof(IndexType) * nnz, hipMemcpyDeviceToDevice);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        hipMemcpyAsync(dst->val, src.val, sizeof(ValueType) * nnz, hipMemcpyDeviceToDevice);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2d(nnz, src.col, dst->col, true, HIPSTREAM(backend->HIP_stream_current));
+        copy_d2d(nnz, src.val, dst->val, true, HIPSTREAM(backend->HIP_stream_current));
 
         rocsparse_status status = rocsparse_csr2coo(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                                     src.row_offset,
@@ -99,11 +96,8 @@ namespace rocalution
         allocate_hip(nnz, &dst->col);
         allocate_hip(nnz, &dst->val);
 
-        hipMemcpyAsync(dst->col, src.col, sizeof(IndexType) * nnz, hipMemcpyDeviceToDevice);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-        hipMemcpyAsync(dst->val, src.val, sizeof(ValueType) * nnz, hipMemcpyDeviceToDevice);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2d(nnz, src.col, dst->col, true, HIPSTREAM(backend->HIP_stream_current));
+        copy_d2d(nnz, src.val, dst->val, true, HIPSTREAM(backend->HIP_stream_current));
 
         rocsparse_status status = rocsparse_coo2csr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                                     src.row,
@@ -471,7 +465,7 @@ namespace rocalution
         hipFree(rocprim_buffer);
 
         // Copy result to host
-        hipMemcpy(num_diag, d_num_diag, sizeof(IndexType), hipMemcpyDeviceToHost);
+        copy_d2h(1, d_num_diag, num_diag);
 
         // Free device memory
         free_hip(&d_num_diag);
@@ -592,10 +586,11 @@ namespace rocalution
         if(*nnz_ell == 0)
         {
             *nnz_coo = nnz;
-            hipMemcpy(coo_row_nnz,
-                      src.row_offset,
-                      sizeof(IndexType) * (nrow + 1),
-                      hipMemcpyDeviceToDevice);
+            copy_d2d(nrow + 1,
+                     src.row_offset,
+                     coo_row_nnz,
+                     true,
+                     HIPSTREAM(backend->HIP_stream_current));
         }
         else
         {
@@ -634,7 +629,7 @@ namespace rocalution
             hipFree(rocprim_buffer);
 
             // Copy result to host
-            hipMemcpy(nnz_coo, coo_row_nnz + nrow, sizeof(IndexType), hipMemcpyDeviceToHost);
+            copy_d2h(1, coo_row_nnz + nrow, nnz_coo);
         }
 
         *nnz_hyb = *nnz_coo + *nnz_ell;

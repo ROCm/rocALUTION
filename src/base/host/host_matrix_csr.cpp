@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@
 #include <limits>
 #include <map>
 #include <math.h>
+#include <numeric>
 #include <string.h>
 #include <unordered_set>
 #include <vector>
@@ -94,25 +95,19 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixCSR<ValueType>::Clear(void)
     {
-        if(this->nnz_ > 0)
-        {
-            free_host(&this->mat_.row_offset);
-            free_host(&this->mat_.col);
-            free_host(&this->mat_.val);
+        free_host(&this->mat_.row_offset);
+        free_host(&this->mat_.col);
+        free_host(&this->mat_.val);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::Zeros(void)
     {
-        if(this->nnz_ > 0)
-        {
-            set_to_zero_host(this->nnz_, mat_.val);
-        }
+        set_to_zero_host(this->nnz_, mat_.val);
 
         return true;
     }
@@ -131,6 +126,9 @@ namespace rocalution
 
         if(this->nnz_ > 0)
         {
+            assert(this->nrow_ > 0);
+            assert(this->ncol_ > 0);
+
             assert(this->mat_.row_offset != NULL);
             assert(this->mat_.val != NULL);
             assert(this->mat_.col != NULL);
@@ -206,12 +204,14 @@ namespace rocalution
         else
         {
             assert(this->nnz_ == 0);
-            assert(this->nrow_ == 0);
-            assert(this->ncol_ == 0);
+            assert(this->nrow_ >= 0);
+            assert(this->ncol_ >= 0);
 
-            assert(this->mat_.row_offset == NULL);
-            assert(this->mat_.val == NULL);
-            assert(this->mat_.col == NULL);
+            if(this->nrow_ == 0 && this->ncol_ == 0)
+            {
+                assert(this->mat_.val == NULL);
+                assert(this->mat_.col == NULL);
+            }
         }
 
         if(sorted == false)
@@ -230,37 +230,35 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnz > 0)
-        {
-            allocate_host(nrow + 1, &this->mat_.row_offset);
-            allocate_host(nnz, &this->mat_.col);
-            allocate_host(nnz, &this->mat_.val);
+        allocate_host(nrow + 1, &this->mat_.row_offset);
+        allocate_host(nnz, &this->mat_.col);
+        allocate_host(nnz, &this->mat_.val);
 
-            set_to_zero_host(nrow + 1, mat_.row_offset);
-            set_to_zero_host(nnz, mat_.col);
-            set_to_zero_host(nnz, mat_.val);
+        set_to_zero_host(nrow + 1, mat_.row_offset);
+        set_to_zero_host(nnz, mat_.col);
+        set_to_zero_host(nnz, mat_.val);
 
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nnz;
-        }
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nnz;
     }
 
     template <typename ValueType>
     void HostMatrixCSR<ValueType>::SetDataPtrCSR(
         int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
     {
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
         assert(*row_offset != NULL);
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
+
+        if(nnz > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -276,11 +274,10 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixCSR<ValueType>::LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
 
-        // see free_host function for details
         *row_offset = this->mat_.row_offset;
         *col        = this->mat_.col;
         *val        = this->mat_.val;
@@ -299,58 +296,38 @@ namespace rocalution
                                                const int*       col,
                                                const ValueType* val)
     {
+        assert(row_offsets != NULL);
+
+        copy_h2h(this->nrow_ + 1, row_offsets, this->mat_.row_offset);
+
         if(this->nnz_ > 0)
         {
             assert(this->nrow_ > 0);
             assert(this->ncol_ > 0);
+            assert(col != NULL);
+            assert(val != NULL);
 
-            _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nrow_ + 1; ++i)
-            {
-                this->mat_.row_offset[i] = row_offsets[i];
-            }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int j = 0; j < this->nnz_; ++j)
-            {
-                this->mat_.col[j] = col[j];
-                this->mat_.val[j] = val[j];
-            }
+            copy_h2h(this->nnz_, col, this->mat_.col);
+            copy_h2h(this->nnz_, val, this->mat_.val);
         }
     }
 
     template <typename ValueType>
     void HostMatrixCSR<ValueType>::CopyToCSR(int* row_offsets, int* col, ValueType* val) const
     {
+        assert(row_offsets != NULL);
+
+        copy_h2h(this->nrow_ + 1, this->mat_.row_offset, row_offsets);
+
         if(this->nnz_ > 0)
         {
             assert(this->nrow_ > 0);
             assert(this->ncol_ > 0);
+            assert(col != NULL);
+            assert(val != NULL);
 
-            _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nrow_ + 1; ++i)
-            {
-                row_offsets[i] = this->mat_.row_offset[i];
-            }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int j = 0; j < this->nnz_; ++j)
-            {
-                col[j] = this->mat_.col[j];
-                val[j] = this->mat_.val[j];
-            }
+            copy_h2h(this->nnz_, this->mat_.col, col);
+            copy_h2h(this->nnz_, this->mat_.val, val);
         }
     }
 
@@ -369,30 +346,18 @@ namespace rocalution
                 this->AllocateCSR(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_);
             }
 
-            assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_)
-                   && (this->ncol_ == cast_mat->ncol_));
+            assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
+            assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            // Copy only if initialized
+            if(cast_mat->mat_.row_offset != NULL)
             {
-                _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int i = 0; i < this->nrow_ + 1; ++i)
-                {
-                    this->mat_.row_offset[i] = cast_mat->mat_.row_offset[i];
-                }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int j = 0; j < this->nnz_; ++j)
-                {
-                    this->mat_.col[j] = cast_mat->mat_.col[j];
-                    this->mat_.val[j] = cast_mat->mat_.val[j];
-                }
+                copy_h2h(this->nrow_ + 1, cast_mat->mat_.row_offset, this->mat_.row_offset);
             }
+
+            copy_h2h(this->nnz_, cast_mat->mat_.col, this->mat_.col);
+            copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
         }
         else
         {
@@ -438,44 +403,29 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
         assert(row_offset != NULL);
-        assert(col != NULL);
-        assert(val != NULL);
 
         // Allocate matrix
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
+
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nnz;
+
+        allocate_host(nrow + 1, &this->mat_.row_offset);
+
+        copy_h2h(this->nrow_ + 1, row_offset, this->mat_.row_offset);
 
         if(nnz > 0)
         {
-            allocate_host(nrow + 1, &this->mat_.row_offset);
-            allocate_host(nnz, &this->mat_.col);
-            allocate_host(nnz, &this->mat_.val);
-
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nnz;
-
-            _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nrow_ + 1; ++i)
-            {
-                this->mat_.row_offset[i] = row_offset[i];
-            }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int j = 0; j < this->nnz_; ++j)
-            {
-                this->mat_.col[j] = col[j];
-                this->mat_.val[j] = val[j];
-            }
+            assert(col != NULL);
+            assert(val != NULL);
         }
+
+        allocate_host(nnz, &this->mat_.col);
+        allocate_host(nnz, &this->mat_.val);
+
+        copy_h2h(this->nnz_, col, this->mat_.col);
+        copy_h2h(this->nnz_, val, this->mat_.val);
     }
 
     template <typename ValueType>
@@ -504,6 +454,8 @@ namespace rocalution
         // empty matrix is empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateCSR(mat.GetNnz(), mat.GetM(), mat.GetN());
+
             return true;
         }
 
@@ -834,8 +786,8 @@ namespace rocalution
         assert(row_offset >= 0);
         assert(col_offset >= 0);
 
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
 
         HostMatrixCSR<ValueType>* cast_mat = dynamic_cast<HostMatrixCSR<ValueType>*>(mat);
         assert(cast_mat != NULL);
@@ -860,6 +812,8 @@ namespace rocalution
                 }
             }
         }
+
+        cast_mat->AllocateCSR(mat_nnz, row_size, col_size);
 
         // not empty submatrix
         if(mat_nnz > 0)
@@ -1457,10 +1411,7 @@ namespace rocalution
         allocate_host(this->nrow_, &diag_offset);
         allocate_host(this->nrow_, &nnz_entries);
 
-        for(int i = 0; i < this->nrow_; ++i)
-        {
-            nnz_entries[i] = 0;
-        }
+        set_to_zero_host(this->nrow_, nnz_entries);
 
         // ai = 0 to N loop over all rows
         for(int ai = 0; ai < this->nrow_; ++ai)
@@ -1555,8 +1506,8 @@ namespace rocalution
         }
 
         // pre-allocate 1.5x nnz arrays for preconditioner matrix
-        int        nnzA       = this->nnz_;
-        int        alloc_size = int(nnzA * 1.5);
+        float      nnzA       = static_cast<float>(this->nnz_);
+        size_t     alloc_size = static_cast<size_t>(nnzA * 1.5f);
         int*       col        = (int*)malloc(alloc_size * sizeof(int));
         ValueType* val        = (ValueType*)malloc(alloc_size * sizeof(ValueType));
 
@@ -1717,9 +1668,9 @@ namespace rocalution
             }
 
             // resize preconditioner matrix if needed
-            if(alloc_size < nnz + 2 * maxrow + 1)
+            if(alloc_size < static_cast<size_t>(nnz + 2 * maxrow + 1))
             {
-                alloc_size += int(nnzA * 1.5);
+                alloc_size += static_cast<size_t>(nnzA * 1.5f);
                 int*       col_tmp = (int*)realloc(col, alloc_size * sizeof(int));
                 ValueType* val_tmp = (ValueType*)realloc(val, alloc_size * sizeof(ValueType));
 
@@ -1751,11 +1702,8 @@ namespace rocalution
         allocate_host(nnz, &p_col);
         allocate_host(nnz, &p_val);
 
-        for(int i = 0; i < nnz; ++i)
-        {
-            p_col[i] = col[i];
-            p_val[i] = val[i];
-        }
+        copy_h2h(nnz, col, p_col);
+        copy_h2h(nnz, val, p_val);
 
         free(col);
         free(val);
@@ -1784,10 +1732,7 @@ namespace rocalution
         allocate_host(this->nrow_, &diag_offset);
         allocate_host(this->nrow_, &nnz_entries);
 
-        for(int i = 0; i < this->nrow_; ++i)
-        {
-            nnz_entries[i] = 0;
-        }
+        set_to_zero_host(this->nrow_, nnz_entries);
 
         // i=0,..n
         for(int i = 0; i < this->nrow_; ++i)
@@ -2139,13 +2084,7 @@ namespace rocalution
 
         this->AllocateCSR(row_offset[this->nrow_], this->nrow_, this->ncol_);
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(int i = 0; i < this->nrow_ + 1; ++i)
-        {
-            this->mat_.row_offset[i] = row_offset[i];
-        }
+        copy_h2h(this->nrow_ + 1, row_offset.data(), this->mat_.row_offset);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -2210,10 +2149,7 @@ namespace rocalution
         int*       col = NULL;
         ValueType* val = NULL;
 
-        for(int i = 0; i < n + 1; ++i)
-        {
-            row_offset[i] = 0;
-        }
+        set_to_zero_host(n + 1, row_offset);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -2316,32 +2252,7 @@ namespace rocalution
             &row_offset, &col, &val, row_offset[n], cast_mat_A->nrow_, cast_mat_B->ncol_);
 
         // Sorting the col (per row)
-        // Bubble sort algorithm
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(int i = 0; i < this->nrow_; ++i)
-        {
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
-            {
-                for(int jj = this->mat_.row_offset[i]; jj < this->mat_.row_offset[i + 1] - 1; ++jj)
-                {
-                    if(this->mat_.col[jj] > this->mat_.col[jj + 1])
-                    {
-                        // swap elements
-                        int       ind = this->mat_.col[jj];
-                        ValueType val = this->mat_.val[jj];
-
-                        this->mat_.col[jj] = this->mat_.col[jj + 1];
-                        this->mat_.val[jj] = this->mat_.val[jj + 1];
-
-                        this->mat_.col[jj + 1] = ind;
-                        this->mat_.val[jj + 1] = val;
-                    }
-                }
-            }
-        }
+        this->Sort();
 
         return true;
     }
@@ -2403,13 +2314,7 @@ namespace rocalution
 
         this->AllocateCSR(row_offset[cast_mat_A->nrow_], cast_mat_A->nrow_, cast_mat_B->ncol_);
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(int i = 0; i < cast_mat_A->nrow_ + 1; ++i)
-        {
-            this->mat_.row_offset[i] = row_offset[i];
-        }
+        copy_h2h(cast_mat_A->nrow_ + 1, row_offset.data(), this->mat_.row_offset);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -2585,10 +2490,10 @@ namespace rocalution
 
         _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
-// find diagonals
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
+        // find diagonals
         for(int ai = 0; ai < cast_mat->nrow_; ++ai)
         {
             for(int aj = cast_mat->mat_.row_offset[ai]; aj < cast_mat->mat_.row_offset[ai + 1];
@@ -2602,36 +2507,24 @@ namespace rocalution
             }
         }
 
-// init row_offset
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(int i = 0; i < cast_mat->nrow_ + 1; ++i)
-        {
-            row_offset[i] = 0;
-        }
+        // init row_offset
+        set_to_zero_host(cast_mat->nrow_ + 1, row_offset);
 
-// init inf levels
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
+        // init inf levels
         for(int i = 0; i < cast_mat->nnz_; ++i)
         {
             levels[i] = inf_level;
         }
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(int i = 0; i < cast_mat->nnz_; ++i)
-        {
-            val[i] = static_cast<ValueType>(0);
-        }
+        set_to_zero_host(cast_mat->nnz_, val);
 
-// fill levels and values
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
+        // fill levels and values
         for(int ai = 0; ai < cast_mat->nrow_; ++ai)
         {
             for(int aj = cast_mat->mat_.row_offset[ai]; aj < cast_mat->mat_.row_offset[ai + 1];
@@ -2734,13 +2627,7 @@ namespace rocalution
 
         assert(jj == nnz);
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(int i = 0; i < this->nrow_ + 1; ++i)
-        {
-            this->mat_.row_offset[i] = row_offset[i];
-        }
+        copy_h2h(this->nrow_ + 1, row_offset, this->mat_.row_offset);
 
         free_host(&row_offset);
         free_host(&ind_diag);
@@ -2762,18 +2649,18 @@ namespace rocalution
         assert(cast_mat != NULL);
         assert(cast_mat->nrow_ == this->nrow_);
         assert(cast_mat->ncol_ == this->ncol_);
-        assert(this->nnz_ > 0);
-        assert(cast_mat->nnz_ > 0);
+        assert(this->nnz_ >= 0);
+        assert(cast_mat->nnz_ >= 0);
 
         _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
         // the structure is sub-set
         if(structure == false)
         {
-// CSR should be sorted
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
+            // CSR should be sorted
             for(int ai = 0; ai < cast_mat->nrow_; ++ai)
             {
                 int first_col = cast_mat->mat_.row_offset[ai];
@@ -2835,14 +2722,8 @@ namespace rocalution
 
             this->AllocateCSR(row_offset[this->nrow_], this->nrow_, this->ncol_);
 
-// copy structure
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nrow_ + 1; ++i)
-            {
-                this->mat_.row_offset[i] = row_offset[i];
-            }
+            // copy structure
+            copy_h2h(this->nrow_ + 1, row_offset.data(), this->mat_.row_offset);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -2857,10 +2738,10 @@ namespace rocalution
                 }
             }
 
-// add values
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
+            // add values
             for(int i = 0; i < this->nrow_; ++i)
             {
                 int Aj = tmp.mat_.row_offset[i];
@@ -3149,13 +3030,7 @@ namespace rocalution
 
             this->AllocateCSR(row_offset[this->nrow_], this->nrow_, this->ncol_);
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->nrow_ + 1; ++i)
-            {
-                this->mat_.row_offset[i] = row_offset[i];
-            }
+            copy_h2h(this->nrow_ + 1, row_offset.data(), this->mat_.row_offset);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -3296,7 +3171,7 @@ namespace rocalution
 
             // Calculate nnz per row
             int* row_nnz = NULL;
-            allocate_host<int>(this->nrow_, &row_nnz);
+            allocate_host(this->nrow_, &row_nnz);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -3308,7 +3183,7 @@ namespace rocalution
 
             // Permute vector of nnz per row
             int* perm_row_nnz = NULL;
-            allocate_host<int>(this->nrow_, &perm_row_nnz);
+            allocate_host(this->nrow_, &perm_row_nnz);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -3334,8 +3209,8 @@ namespace rocalution
             // Permute rows
             int*       col = NULL;
             ValueType* val = NULL;
-            allocate_host<int>(this->nnz_, &col);
-            allocate_host<ValueType>(this->nnz_, &val);
+            allocate_host(this->nnz_, &col);
+            allocate_host(this->nnz_, &val);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -3383,12 +3258,12 @@ namespace rocalution
                 }
             }
 
-            free_host<int>(&this->mat_.row_offset);
+            free_host(&this->mat_.row_offset);
             this->mat_.row_offset = perm_nnz;
-            free_host<int>(&col);
-            free_host<ValueType>(&val);
-            free_host<int>(&row_nnz);
-            free_host<int>(&perm_row_nnz);
+            free_host(&col);
+            free_host(&val);
+            free_host(&row_nnz);
+            free_host(&perm_row_nnz);
         }
 
         return true;
@@ -3417,10 +3292,10 @@ namespace rocalution
         int* levset     = NULL;
         int* nextlevset = NULL;
 
-        allocate_host<int>(this->nrow_, &nd);
-        allocate_host<int>(this->nrow_, &marker);
-        allocate_host<int>(this->nrow_, &levset);
-        allocate_host<int>(this->nrow_, &nextlevset);
+        allocate_host(this->nrow_, &nd);
+        allocate_host(this->nrow_, &marker);
+        allocate_host(this->nrow_, &levset);
+        allocate_host(this->nrow_, &nextlevset);
 
         int qlength = 1;
 
@@ -3570,8 +3445,8 @@ namespace rocalution
 
         int* row_nnz    = NULL;
         int* row_buffer = NULL;
-        allocate_host<int>(m, &row_nnz);
-        allocate_host<int>(m + 1, &row_buffer);
+        allocate_host(m, &row_nnz);
+        allocate_host(m + 1, &row_buffer);
 
         set_to_zero_host(m, row_nnz);
 
@@ -3616,8 +3491,8 @@ namespace rocalution
 
         assert(this->mat_.row_offset[m] == nnz);
 
-        free_host<int>(&row_nnz);
-        free_host<int>(&row_buffer);
+        free_host(&row_nnz);
+        free_host(&row_buffer);
 
         return true;
     }
@@ -3640,11 +3515,9 @@ namespace rocalution
         // Build restriction operator
         this->CreateFromMap(map, n, m);
 
-        int nnz = this->GetNnz();
-
         // Build prolongation operator
         cast_pro->Clear();
-        cast_pro->AllocateCSR(nnz, n, m);
+        cast_pro->AllocateCSR(this->nnz_, n, m);
 
         int k = 0;
 
@@ -4303,7 +4176,7 @@ namespace rocalution
         L.LeaveDataPtrCSR(&row_offset, &col, &val);
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic, 1024)
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
@@ -4800,6 +4673,10 @@ namespace rocalution
                 assert(ptr[lam - 1] == ptr[lam] - cnt[lam - 1]);
             }
         }
+
+        // Clean up
+        free_host(&S_row_offset);
+        free_host(&S_col);
 
         return true;
     }
@@ -5581,7 +5458,7 @@ namespace rocalution
             ValueType sum_k = zero;
             ValueType sum_n = zero;
 
-            // Loop over all columns of the i-th row, whereas each lane processes a column
+            // Loop over all columns of the i-th row
             for(int k = row_begin; k < row_end; ++k)
             {
                 // Get the column index
@@ -6778,11 +6655,8 @@ namespace rocalution
         allocate_host(nnz, &val_resized);
 
         // Resize
-        for(int i = 0; i < nnz; ++i)
-        {
-            col_resized[i] = col[i];
-            val_resized[i] = val[i];
-        }
+        copy_h2h(nnz, col, col_resized);
+        copy_h2h(nnz, val, val_resized);
 
         free_host(&col);
         free_host(&val);
@@ -6979,7 +6853,7 @@ namespace rocalution
         assert(vec != NULL);
         assert(vec->GetSize() == this->nrow_);
 
-        if(this->GetNnz() > 0)
+        if(this->nnz_ > 0)
         {
             HostVector<ValueType>* cast_vec = dynamic_cast<HostVector<ValueType>*>(vec);
             assert(cast_vec != NULL);
@@ -7013,7 +6887,7 @@ namespace rocalution
     {
         assert(vec.GetSize() == this->ncol_);
 
-        if(this->GetNnz() > 0)
+        if(this->nnz_ > 0)
         {
             const HostVector<ValueType>* cast_vec
                 = dynamic_cast<const HostVector<ValueType>*>(&vec);
@@ -7122,7 +6996,7 @@ namespace rocalution
         assert(vec != NULL);
         assert(vec->GetSize() == this->ncol_);
 
-        if(this->GetNnz() > 0)
+        if(this->nnz_ > 0)
         {
             HostVector<ValueType>* cast_vec = dynamic_cast<HostVector<ValueType>*>(vec);
             assert(cast_vec != NULL);

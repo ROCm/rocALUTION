@@ -146,37 +146,36 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnz > 0)
-        {
-            allocate_hip(nrow + 1, &this->mat_.row_offset);
-            allocate_hip(nnz, &this->mat_.col);
-            allocate_hip(nnz, &this->mat_.val);
+        allocate_hip(nrow + 1, &this->mat_.row_offset);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, mat_.row_offset);
 
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, mat_.row_offset);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.col);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.val);
+        allocate_hip(nnz, &this->mat_.col);
+        allocate_hip(nnz, &this->mat_.val);
 
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nnz;
-        }
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.col);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.val);
+
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nnz;
     }
 
     template <typename ValueType>
     void HIPAcceleratorMatrixCSR<ValueType>::SetDataPtrCSR(
         int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
     {
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
         assert(*row_offset != NULL);
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
+
+        if(nnz > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -198,9 +197,9 @@ namespace rocalution
                                                              int**       col,
                                                              ValueType** val)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
 
         hipDeviceSynchronize();
 
@@ -221,21 +220,18 @@ namespace rocalution
     template <typename ValueType>
     void HIPAcceleratorMatrixCSR<ValueType>::Clear(void)
     {
-        if(this->nnz_ > 0)
-        {
-            free_hip(&this->mat_.row_offset);
-            free_hip(&this->mat_.col);
-            free_hip(&this->mat_.val);
+        free_hip(&this->mat_.row_offset);
+        free_hip(&this->mat_.col);
+        free_hip(&this->mat_.val);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
 
-            this->LAnalyseClear();
-            this->UAnalyseClear();
-            this->LUAnalyseClear();
-            this->LLAnalyseClear();
-        }
+        this->LAnalyseClear();
+        this->UAnalyseClear();
+        this->LUAnalyseClear();
+        this->LLAnalyseClear();
     }
 
     template <typename ValueType>
@@ -270,26 +266,13 @@ namespace rocalution
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(cast_mat->mat_.row_offset != NULL)
             {
-                hipMemcpy(this->mat_.row_offset,
-                          cast_mat->mat_.row_offset,
-                          (this->nrow_ + 1) * sizeof(int),
-                          hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.col,
-                          cast_mat->mat_.col,
-                          this->nnz_ * sizeof(int),
-                          hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.val,
-                          cast_mat->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_h2d(this->nrow_ + 1, cast_mat->mat_.row_offset, this->mat_.row_offset);
             }
+
+            copy_h2d(this->nnz_, cast_mat->mat_.col, this->mat_.col);
+            copy_h2d(this->nnz_, cast_mat->mat_.val, this->mat_.val);
         }
         else
         {
@@ -323,26 +306,25 @@ namespace rocalution
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(cast_mat->mat_.row_offset != NULL)
             {
-                hipMemcpyAsync(this->mat_.row_offset,
-                               cast_mat->mat_.row_offset,
-                               (this->nrow_ + 1) * sizeof(int),
-                               hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpyAsync(this->mat_.col,
-                               cast_mat->mat_.col,
-                               this->nnz_ * sizeof(int),
-                               hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpyAsync(this->mat_.val,
-                               cast_mat->mat_.val,
-                               this->nnz_ * sizeof(ValueType),
-                               hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_h2d(this->nrow_ + 1,
+                         cast_mat->mat_.row_offset,
+                         this->mat_.row_offset,
+                         true,
+                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_h2d(this->nnz_,
+                     cast_mat->mat_.col,
+                     this->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_h2d(this->nnz_,
+                     cast_mat->mat_.val,
+                     this->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -376,26 +358,13 @@ namespace rocalution
             assert(this->nnz_ == cast_mat->nnz_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(this->mat_.row_offset != NULL)
             {
-                hipMemcpy(cast_mat->mat_.row_offset,
-                          this->mat_.row_offset,
-                          (this->nrow_ + 1) * sizeof(int),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(cast_mat->mat_.col,
-                          this->mat_.col,
-                          this->nnz_ * sizeof(int),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(cast_mat->mat_.val,
-                          this->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_d2h(this->nrow_ + 1, this->mat_.row_offset, cast_mat->mat_.row_offset);
             }
+
+            copy_d2h(this->nnz_, this->mat_.col, cast_mat->mat_.col);
+            copy_d2h(this->nnz_, this->mat_.val, cast_mat->mat_.val);
         }
         else
         {
@@ -427,26 +396,25 @@ namespace rocalution
             assert(this->nnz_ == cast_mat->nnz_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(this->mat_.row_offset != NULL)
             {
-                hipMemcpyAsync(cast_mat->mat_.row_offset,
-                               this->mat_.row_offset,
-                               (this->nrow_ + 1) * sizeof(int),
-                               hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpyAsync(cast_mat->mat_.col,
-                               this->mat_.col,
-                               this->nnz_ * sizeof(int),
-                               hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpyAsync(cast_mat->mat_.val,
-                               this->mat_.val,
-                               this->nnz_ * sizeof(ValueType),
-                               hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_d2h(this->nrow_ + 1,
+                         this->mat_.row_offset,
+                         cast_mat->mat_.row_offset,
+                         true,
+                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_d2h(this->nnz_,
+                     this->mat_.col,
+                     cast_mat->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2h(this->nnz_,
+                     this->mat_.val,
+                     cast_mat->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -479,26 +447,13 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(hip_cast_mat->mat_.row_offset)
             {
-                hipMemcpy(this->mat_.row_offset,
-                          hip_cast_mat->mat_.row_offset,
-                          (this->nrow_ + 1) * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.col,
-                          hip_cast_mat->mat_.col,
-                          this->nnz_ * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.val,
-                          hip_cast_mat->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_d2d(this->nrow_ + 1, hip_cast_mat->mat_.row_offset, this->mat_.row_offset);
             }
+
+            copy_d2d(this->nnz_, hip_cast_mat->mat_.col, this->mat_.col);
+            copy_d2d(this->nnz_, hip_cast_mat->mat_.val, this->mat_.val);
         }
         else
         {
@@ -541,26 +496,25 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(hip_cast_mat->mat_.row_offset)
             {
-                hipMemcpy(this->mat_.row_offset,
-                          hip_cast_mat->mat_.row_offset,
-                          (this->nrow_ + 1) * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.col,
-                          hip_cast_mat->mat_.col,
-                          this->nnz_ * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.val,
-                          hip_cast_mat->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_d2d(this->nrow_ + 1,
+                         hip_cast_mat->mat_.row_offset,
+                         this->mat_.row_offset,
+                         true,
+                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_d2d(this->nnz_,
+                     hip_cast_mat->mat_.col,
+                     this->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2d(this->nnz_,
+                     hip_cast_mat->mat_.val,
+                     this->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -604,26 +558,13 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(this->mat_.row_offset != NULL)
             {
-                hipMemcpy(hip_cast_mat->mat_.row_offset,
-                          this->mat_.row_offset,
-                          (this->nrow_ + 1) * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(hip_cast_mat->mat_.col,
-                          this->mat_.col,
-                          this->nnz_ * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(hip_cast_mat->mat_.val,
-                          this->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_d2d(this->nrow_ + 1, this->mat_.row_offset, hip_cast_mat->mat_.row_offset);
             }
+
+            copy_d2d(this->nnz_, this->mat_.col, hip_cast_mat->mat_.col);
+            copy_d2d(this->nnz_, this->mat_.val, hip_cast_mat->mat_.val);
         }
         else
         {
@@ -665,26 +606,25 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            if(this->mat_.row_offset != NULL)
             {
-                hipMemcpy(hip_cast_mat->mat_.row_offset,
-                          this->mat_.row_offset,
-                          (this->nrow_ + 1) * sizeof(int),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(hip_cast_mat->mat_.col,
-                          this->mat_.col,
-                          this->nnz_ * sizeof(int),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(hip_cast_mat->mat_.val,
-                          this->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
+                copy_d2h(this->nrow_ + 1,
+                         this->mat_.row_offset,
+                         hip_cast_mat->mat_.row_offset,
+                         true,
+                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_d2h(this->nnz_,
+                     this->mat_.col,
+                     hip_cast_mat->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2h(this->nnz_,
+                     this->mat_.val,
+                     hip_cast_mat->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -708,26 +648,16 @@ namespace rocalution
                                                          const int*       col,
                                                          const ValueType* val)
     {
-        // assert CSR format
-        assert(this->GetMatFormat() == CSR);
+        copy_d2d(this->nrow_ + 1, row_offsets, this->mat_.row_offset);
 
         if(this->nnz_ > 0)
         {
             assert(this->nrow_ > 0);
             assert(this->ncol_ > 0);
-
-            hipMemcpy(this->mat_.row_offset,
-                      row_offsets,
-                      (this->nrow_ + 1) * sizeof(int),
-                      hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            hipMemcpy(this->mat_.col, col, this->nnz_ * sizeof(int), hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            hipMemcpy(this->mat_.val, val, this->nnz_ * sizeof(ValueType), hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
+
+        copy_d2d(this->nnz_, col, this->mat_.col);
+        copy_d2d(this->nnz_, val, this->mat_.val);
 
         this->ApplyAnalysis();
     }
@@ -737,26 +667,16 @@ namespace rocalution
                                                        int*       col,
                                                        ValueType* val) const
     {
-        // assert CSR format
-        assert(this->GetMatFormat() == CSR);
+        copy_d2d(this->nrow_ + 1, this->mat_.row_offset, row_offsets);
 
         if(this->nnz_ > 0)
         {
             assert(this->nrow_ > 0);
             assert(this->ncol_ > 0);
-
-            hipMemcpy(row_offsets,
-                      this->mat_.row_offset,
-                      (this->nrow_ + 1) * sizeof(int),
-                      hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            hipMemcpy(col, this->mat_.col, this->nnz_ * sizeof(int), hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            hipMemcpy(val, this->mat_.val, this->nnz_ * sizeof(ValueType), hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
+
+        copy_d2d(this->nnz_, this->mat_.col, col);
+        copy_d2d(this->nnz_, this->mat_.val, val);
     }
 
     template <typename ValueType>
@@ -941,37 +861,20 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
         assert(row_offset != NULL);
-        assert(col != NULL);
-        assert(val != NULL);
-
-        // Allocate matrix
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
 
         if(nnz > 0)
         {
-            allocate_hip(nrow + 1, &this->mat_.row_offset);
-            allocate_hip(nnz, &this->mat_.col);
-            allocate_hip(nnz, &this->mat_.val);
-
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nnz;
-
-            hipMemcpy(this->mat_.row_offset,
-                      row_offset,
-                      (this->nrow_ + 1) * sizeof(int),
-                      hipMemcpyHostToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            hipMemcpy(this->mat_.col, col, this->nnz_ * sizeof(int), hipMemcpyHostToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            hipMemcpy(this->mat_.val, val, this->nnz_ * sizeof(ValueType), hipMemcpyHostToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            assert(col != NULL);
+            assert(val != NULL);
         }
+
+        // Allocate matrix
+        this->Clear();
+        this->AllocateCSR(nnz, nrow, ncol);
+
+        copy_h2d(this->nrow_ + 1, row_offset, this->mat_.row_offset);
+        copy_h2d(this->nnz_, col, this->mat_.col);
+        copy_h2d(this->nnz_, val, this->mat_.val);
 
         this->ApplyAnalysis();
     }
@@ -1095,7 +998,7 @@ namespace rocalution
             buffer = NULL;
 
             int maxnnzrow;
-            hipMemcpy(&maxnnzrow, d_max, sizeof(int), hipMemcpyDeviceToHost);
+            copy_d2h(1, d_max, &maxnnzrow);
             free_hip(&d_max);
 
             // Inclusive sum
@@ -1286,10 +1189,7 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
-            assert(in.GetSize() >= 0);
-            assert(out->GetSize() >= 0);
-            assert(in.GetSize() == this->ncol_);
-            assert(out->GetSize() == this->nrow_);
+            assert(out != NULL);
 
             const HIPAcceleratorVector<ValueType>* cast_in
                 = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&in);
@@ -1298,6 +1198,8 @@ namespace rocalution
 
             assert(cast_in != NULL);
             assert(cast_out != NULL);
+            assert(cast_in->size_ == this->ncol_);
+            assert(cast_out->size_ == this->nrow_);
 
             ValueType alpha = static_cast<ValueType>(1);
             ValueType beta  = static_cast<ValueType>(0);
@@ -1328,10 +1230,7 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
-            assert(in.GetSize() >= 0);
-            assert(out->GetSize() >= 0);
-            assert(in.GetSize() == this->ncol_);
-            assert(out->GetSize() == this->nrow_);
+            assert(out != NULL);
 
             const HIPAcceleratorVector<ValueType>* cast_in
                 = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&in);
@@ -1340,6 +1239,8 @@ namespace rocalution
 
             assert(cast_in != NULL);
             assert(cast_out != NULL);
+            assert(cast_in->size_ == this->ncol_);
+            assert(cast_out->size_ == this->nrow_);
 
             ValueType beta = static_cast<ValueType>(1);
 
@@ -1667,13 +1568,7 @@ namespace rocalution
             assert(this->L_mat_descr_ != 0);
             assert(this->U_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
-
-            assert(in.GetSize() >= 0);
-            assert(out->GetSize() >= 0);
-            assert(in.GetSize() == this->ncol_);
-            assert(out->GetSize() == this->nrow_);
             assert(this->ncol_ == this->nrow_);
-
             assert(this->tmp_vec_ != NULL);
 
             const HIPAcceleratorVector<ValueType>* cast_in
@@ -1683,6 +1578,8 @@ namespace rocalution
 
             assert(cast_in != NULL);
             assert(cast_out != NULL);
+            assert(cast_in->size_ == this->ncol_);
+            assert(cast_out->size_ == this->nrow_);
 
             rocsparse_status status;
 
@@ -1884,13 +1781,7 @@ namespace rocalution
             assert(out != NULL);
             assert(this->L_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
-
-            assert(in.GetSize() >= 0);
-            assert(out->GetSize() >= 0);
-            assert(in.GetSize() == this->ncol_);
-            assert(out->GetSize() == this->nrow_);
             assert(this->ncol_ == this->nrow_);
-
             assert(this->tmp_vec_ != NULL);
             assert(this->mat_buffer_ != NULL);
 
@@ -1901,6 +1792,8 @@ namespace rocalution
 
             assert(cast_in != NULL);
             assert(cast_out != NULL);
+            assert(cast_in->size_ == this->ncol_);
+            assert(cast_out->size_ == this->nrow_);
 
             rocsparse_status status;
 
@@ -2164,11 +2057,6 @@ namespace rocalution
             assert(out != NULL);
             assert(this->L_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
-
-            assert(in.GetSize() >= 0);
-            assert(out->GetSize() >= 0);
-            assert(in.GetSize() == this->ncol_);
-            assert(out->GetSize() == this->nrow_);
             assert(this->ncol_ == this->nrow_);
             assert(this->mat_buffer_size_ > 0);
             assert(this->mat_buffer_ != NULL);
@@ -2180,6 +2068,8 @@ namespace rocalution
 
             assert(cast_in != NULL);
             assert(cast_out != NULL);
+            assert(cast_in->size_ == this->ncol_);
+            assert(cast_out->size_ == this->nrow_);
 
             rocsparse_status status;
 
@@ -2215,11 +2105,6 @@ namespace rocalution
             assert(out != NULL);
             assert(this->U_mat_descr_ != 0);
             assert(this->mat_info_ != 0);
-
-            assert(in.GetSize() >= 0);
-            assert(out->GetSize() >= 0);
-            assert(in.GetSize() == this->ncol_);
-            assert(out->GetSize() == this->nrow_);
             assert(this->ncol_ == this->nrow_);
             assert(this->mat_buffer_size_ > 0);
             assert(this->mat_buffer_ != NULL);
@@ -2231,6 +2116,8 @@ namespace rocalution
 
             assert(cast_in != NULL);
             assert(cast_out != NULL);
+            assert(cast_in->size_ == this->ncol_);
+            assert(cast_out->size_ == this->nrow_);
 
             rocsparse_status status;
 
@@ -2263,14 +2150,15 @@ namespace rocalution
         if(this->nnz_ > 0)
         {
             assert(vec_diag != NULL);
-            assert(vec_diag->GetSize() == this->nrow_);
 
             HIPAcceleratorVector<ValueType>* cast_vec_diag
                 = dynamic_cast<HIPAcceleratorVector<ValueType>*>(vec_diag);
 
+            assert(cast_vec_diag != NULL);
+            assert(cast_vec_diag->size_ == this->nrow_);
+
             int nrow            = this->nrow_;
-            int nnz             = this->nnz_;
-            int avg_nnz_per_row = nnz / nrow;
+            int avg_nnz_per_row = this->nnz_ / nrow;
 
             if(avg_nnz_per_row <= 8)
             {
@@ -2369,10 +2257,12 @@ namespace rocalution
         if(this->nnz_ > 0)
         {
             assert(vec_inv_diag != NULL);
-            assert(vec_inv_diag->GetSize() == this->nrow_);
 
             HIPAcceleratorVector<ValueType>* cast_vec_inv_diag
                 = dynamic_cast<HIPAcceleratorVector<ValueType>*>(vec_inv_diag);
+
+            assert(cast_vec_inv_diag != NULL);
+            assert(cast_vec_inv_diag->size_ == this->nrow_);
 
             int  nrow = this->nrow_;
             dim3 BlockSize(this->local_backend_.HIP_block_size);
@@ -2394,7 +2284,7 @@ namespace rocalution
                 d_detect_zero_diag);
 
             int detect_zero_diag = 0;
-            hipMemcpy(&detect_zero_diag, d_detect_zero_diag, sizeof(int), hipMemcpyDeviceToHost);
+            copy_d2h(1, d_detect_zero_diag, &detect_zero_diag);
 
             if(detect_zero_diag == 1)
             {
@@ -2477,14 +2367,14 @@ namespace rocalution
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
-        hipMemcpy(&mat_nnz, &row_nnz[row_size], sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(1, row_nnz + row_size, &mat_nnz);
+
+        cast_mat->AllocateCSR(mat_nnz, row_size, col_size);
 
         // not empty submatrix
         if(mat_nnz > 0)
         {
-            cast_mat->AllocateCSR(mat_nnz, row_size, col_size);
-
-            free_hip<int>(&cast_mat->mat_.row_offset);
+            free_hip(&cast_mat->mat_.row_offset);
             cast_mat->mat_.row_offset = row_nnz;
             // copying the sub matrix
 
@@ -2566,7 +2456,7 @@ namespace rocalution
         hipFree(rocprim_buffer);
 
         int nnz_L;
-        hipMemcpy(&nnz_L, &cast_L->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(1, cast_L->mat_.row_offset + nrow, &nnz_L);
 
         // allocate lower triangular part structure
         allocate_hip(nnz_L, &cast_L->mat_.col);
@@ -2649,7 +2539,7 @@ namespace rocalution
         hipFree(rocprim_buffer);
 
         int nnz_L;
-        hipMemcpy(&nnz_L, &cast_L->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(1, cast_L->mat_.row_offset + nrow, &nnz_L);
 
         // allocate lower triangular part structure
         allocate_hip(nnz_L, &cast_L->mat_.col);
@@ -2732,7 +2622,7 @@ namespace rocalution
         hipFree(rocprim_buffer);
 
         int nnz_U;
-        hipMemcpy(&nnz_U, &cast_U->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(1, cast_U->mat_.row_offset + nrow, &nnz_U);
 
         // allocate lower triangular part structure
         allocate_hip(nnz_U, &cast_U->mat_.col);
@@ -2815,7 +2705,7 @@ namespace rocalution
         hipFree(rocprim_buffer);
 
         int nnz_U;
-        hipMemcpy(&nnz_U, &cast_U->mat_.row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(1, cast_U->mat_.row_offset + nrow, &nnz_U);
 
         // allocate lower triangular part structure
         allocate_hip(nnz_U, &cast_U->mat_.col);
@@ -2862,11 +2752,8 @@ namespace rocalution
         allocate_host(this->nrow_ + 1, &h_row_offset);
         allocate_host(this->nnz_, &h_col);
 
-        hipMemcpy(h_row_offset,
-                  this->mat_.row_offset,
-                  (this->nrow_ + 1) * sizeof(int),
-                  hipMemcpyDeviceToHost);
-        hipMemcpy(h_col, this->mat_.col, this->nnz_ * sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(this->nrow_ + 1, this->mat_.row_offset, h_row_offset);
+        copy_d2h(this->nnz_, this->mat_.col, h_col);
 
         int* mis = NULL;
         allocate_host(this->nrow_, &mis);
@@ -2918,8 +2805,7 @@ namespace rocalution
         //  }
 
         cast_perm->Allocate(this->nrow_);
-        hipMemcpy(
-            cast_perm->vec_, h_perm, permutation->GetSize() * sizeof(int), hipMemcpyHostToDevice);
+        copy_h2d(cast_perm->size_, h_perm, cast_perm->vec_);
 
         free_host(&h_row_offset);
         free_host(&h_col);
@@ -2951,11 +2837,8 @@ namespace rocalution
         allocate_host(this->nrow_ + 1, &h_row_offset);
         allocate_host(this->nnz_, &h_col);
 
-        hipMemcpy(h_row_offset,
-                  this->mat_.row_offset,
-                  (this->nrow_ + 1) * sizeof(int),
-                  hipMemcpyDeviceToHost);
-        hipMemcpy(h_col, this->mat_.col, this->nnz_ * sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(this->nrow_ + 1, this->mat_.row_offset, h_row_offset);
+        copy_d2h(this->nnz_, this->mat_.col, h_col);
 
         memset(color, 0, this->nrow_ * sizeof(int));
         num_colors = 0;
@@ -3022,8 +2905,7 @@ namespace rocalution
         }
 
         cast_perm->Allocate(this->nrow_);
-        hipMemcpy(
-            cast_perm->vec_, h_perm, permutation->GetSize() * sizeof(int), hipMemcpyHostToDevice);
+        copy_h2d(cast_perm->size_, h_perm, cast_perm->vec_);
 
         free_host(&h_perm);
         free_host(&color);
@@ -3151,12 +3033,11 @@ namespace rocalution
     template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultR(const BaseVector<ValueType>& diag)
     {
-        assert(diag.GetSize() == this->ncol_);
-
         const HIPAcceleratorVector<ValueType>* cast_diag
             = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&diag);
 
         assert(cast_diag != NULL);
+        assert(cast_diag->size_ == this->ncol_);
 
         if(this->nnz_ > 0)
         {
@@ -3178,12 +3059,11 @@ namespace rocalution
     template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::DiagonalMatrixMultL(const BaseVector<ValueType>& diag)
     {
-        assert(diag.GetSize() == this->ncol_);
-
         const HIPAcceleratorVector<ValueType>* cast_diag
             = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&diag);
 
         assert(cast_diag != NULL);
+        assert(cast_diag->size_ == this->ncol_);
 
         if(this->nnz_ > 0)
         {
@@ -3206,11 +3086,6 @@ namespace rocalution
     bool HIPAcceleratorMatrixCSR<ValueType>::MatMatMult(const BaseMatrix<ValueType>& A,
                                                         const BaseMatrix<ValueType>& B)
     {
-        assert(A.GetN() == B.GetM());
-        assert(A.GetM() > 0);
-        assert(B.GetN() > 0);
-        assert(B.GetM() > 0);
-
         const HIPAcceleratorMatrixCSR<ValueType>* cast_mat_A
             = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&A);
         const HIPAcceleratorMatrixCSR<ValueType>* cast_mat_B
@@ -3218,6 +3093,10 @@ namespace rocalution
 
         assert(cast_mat_A != NULL);
         assert(cast_mat_B != NULL);
+        assert(cast_mat_A->ncol_ == cast_mat_B->nrow_);
+        assert(cast_mat_A->nrow_ >= 0);
+        assert(cast_mat_B->ncol_ >= 0);
+        assert(cast_mat_B->nrow_ >= 0);
 
         this->Clear();
 
@@ -3507,15 +3386,12 @@ namespace rocalution
             hipFree(rocprim_buffer);
 
             // get the new mat nnz
-            hipMemcpy(&mat_nnz, &mat_row_offset[nrow], sizeof(int), hipMemcpyDeviceToHost);
+            copy_d2h(1, mat_row_offset + nrow, &mat_nnz);
 
             this->AllocateCSR(mat_nnz, nrow, this->ncol_);
 
             // copy row_offset
-            hipMemcpy(this->mat_.row_offset,
-                      mat_row_offset,
-                      (nrow + 1) * sizeof(int),
-                      hipMemcpyDeviceToDevice);
+            copy_d2d(nrow + 1, mat_row_offset, this->mat_.row_offset);
 
             // copy col and val
             kernel_csr_compress_copy<<<GridSize,
@@ -3664,8 +3540,7 @@ namespace rocalution
             hipFree(rocprim_buffer);
 
             int nnz;
-            hipMemcpy(&nnz, row_offset + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            copy_d2h(1, row_offset + this->nrow_, &nnz);
 
             allocate_hip(nnz, &col);
             allocate_hip(nnz, &val);
@@ -3696,14 +3571,15 @@ namespace rocalution
     bool HIPAcceleratorMatrixCSR<ValueType>::ExtractColumnVector(int                    idx,
                                                                  BaseVector<ValueType>* vec) const
     {
-        assert(vec != NULL);
-        assert(vec->GetSize() == this->nrow_);
-
         if(this->nnz_ > 0)
         {
+            assert(vec != NULL);
+
             HIPAcceleratorVector<ValueType>* cast_vec
                 = dynamic_cast<HIPAcceleratorVector<ValueType>*>(vec);
+
             assert(cast_vec != NULL);
+            assert(cast_vec->size_ == this->nrow_);
 
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
@@ -3728,22 +3604,22 @@ namespace rocalution
     bool HIPAcceleratorMatrixCSR<ValueType>::ExtractRowVector(int                    idx,
                                                               BaseVector<ValueType>* vec) const
     {
-        assert(vec != NULL);
-        assert(vec->GetSize() == this->ncol_);
-
         if(this->nnz_ > 0)
         {
+            assert(vec != NULL);
+
             HIPAcceleratorVector<ValueType>* cast_vec
                 = dynamic_cast<HIPAcceleratorVector<ValueType>*>(vec);
+
             assert(cast_vec != NULL);
+            assert(cast_vec->size_ == this->ncol_);
 
             cast_vec->Zeros();
 
             // Get nnz of row idx
             int nnz[2];
 
-            hipMemcpy(nnz, this->mat_.row_offset + idx, 2 * sizeof(int), hipMemcpyDeviceToHost);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            copy_d2h(2, this->mat_.row_offset + idx, nnz);
 
             int row_nnz = nnz[1] - nnz[0];
 
@@ -4041,7 +3917,7 @@ namespace rocalution
                 this->nrow_, max_tuples, tuples, cast_agg->vec_, ddone);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipMemcpy(&hdone, ddone, sizeof(bool), hipMemcpyDeviceToHost);
+            copy_d2h(1, ddone, &hdone);
 
             iter++;
 
@@ -4162,8 +4038,7 @@ namespace rocalution
         // Obtain sizes of P
         int prolong_ncol;
         int prolong_nrow = this->nrow_;
-        hipMemcpy(&prolong_ncol, prolong_row_offset, sizeof(int), hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, prolong_row_offset, &prolong_ncol);
         ++prolong_ncol;
 
         // Get maximum non-zeros per row to decided on size of unordered set
@@ -4199,8 +4074,7 @@ namespace rocalution
         free_hip(&rocprim_buffer);
 
         int max_row_nnz;
-        hipMemcpy(&max_row_nnz, prolong_row_offset, sizeof(int), hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, prolong_row_offset, &max_row_nnz);
 
         // Call corresponding kernel to compute non-zero entries per row of P
         if(max_row_nnz < 8)
@@ -4393,9 +4267,7 @@ namespace rocalution
 
         free_hip(&rocprim_buffer);
 
-        hipMemcpy(
-            &max_row_nnz, prolong_row_offset + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, prolong_row_offset + this->nrow_, &max_row_nnz);
 
         // Perform exclusive scan on csr row pointer array
         rocprim::exclusive_scan(NULL,
@@ -4423,9 +4295,7 @@ namespace rocalution
         free_hip(&rocprim_buffer);
 
         int prolong_nnz = 0;
-        hipMemcpy(
-            &prolong_nnz, &prolong_row_offset[this->nrow_], sizeof(int), hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, prolong_row_offset + this->nrow_, &prolong_nnz);
 
         // Allocate prolongation matrix col indices and values arrays
         allocate_hip(prolong_nnz, &prolong_cols);
@@ -4659,7 +4529,7 @@ namespace rocalution
 
         int prolong_ncol = 0;
         int prolong_nrow = this->nrow_;
-        hipMemcpy(&prolong_ncol, workspace, sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(1, workspace, &prolong_ncol);
         hipFree(workspace);
 
         kernel_csr_unsmoothed_prolong_nnz_per_row<256>
@@ -4694,8 +4564,7 @@ namespace rocalution
         hipFree(rocprim_buffer);
 
         int prolong_nnz = 0;
-        hipMemcpy(
-            &prolong_nnz, &prolong_row_offset[this->nrow_], sizeof(int), hipMemcpyDeviceToHost);
+        copy_d2h(1, prolong_row_offset + this->nrow_, &prolong_nnz);
 
         // Allocate prolongation matrix col indices and values arrays
         allocate_hip(prolong_nnz, &prolong_cols);
@@ -4833,7 +4702,8 @@ namespace rocalution
 
             // Now, we need to check whether we have vertices left that are marked
             // undecided, in order to restart the loop
-            hipMemsetAsync(workspace, 0, sizeof(int));
+            hipMemsetAsync(
+                workspace, 0, sizeof(int), HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             kernel_csr_rs_pmis_check_undecided<1024>
@@ -4846,8 +4716,7 @@ namespace rocalution
 
             int undecided;
 
-            hipMemcpy(&undecided, workspace, sizeof(int), hipMemcpyDeviceToHost);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            copy_d2h(1, workspace, &undecided);
 
             // If no more undecided vertices are left, we are done
             if(undecided == false)
@@ -4968,14 +4837,8 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Copy ncol and nnz back to host
-        hipMemcpy(&cast_prolong->nnz_,
-                  cast_prolong->mat_.row_offset + this->nrow_,
-                  sizeof(int),
-                  hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-        hipMemcpy(
-            &cast_prolong->ncol_, workspace + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &cast_prolong->nnz_);
+        copy_d2h(1, workspace + this->nrow_, &cast_prolong->ncol_);
 
         // Allocate column and value arrays
         allocate_hip(cast_prolong->nnz_, &cast_prolong->mat_.col);
@@ -5093,11 +4956,7 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         int max_nnz;
-        hipMemcpy(&max_nnz,
-                  cast_prolong->mat_.row_offset + this->nrow_,
-                  sizeof(int),
-                  hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &max_nnz);
 
         // Determine nnz per row of P
         if(max_nnz < 16)
@@ -5271,11 +5130,7 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         int max_hash_fill;
-        hipMemcpy(&max_hash_fill,
-                  cast_prolong->mat_.row_offset + this->nrow_,
-                  sizeof(int),
-                  hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &max_hash_fill);
 
         // Exclusive sum to obtain row offset pointers of P
         rocprim::exclusive_scan(NULL,
@@ -5311,14 +5166,8 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Copy number of columns of P and nnz of P back to host
-        hipMemcpy(&cast_prolong->nnz_,
-                  cast_prolong->mat_.row_offset + this->nrow_,
-                  sizeof(int),
-                  hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
-        hipMemcpy(
-            &cast_prolong->ncol_, workspace + this->nrow_, sizeof(int), hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &cast_prolong->nnz_);
+        copy_d2h(1, workspace + this->nrow_, &cast_prolong->ncol_);
 
         // Allocate column and value arrays
         allocate_hip(cast_prolong->nnz_, &cast_prolong->mat_.col);
@@ -5526,11 +5375,7 @@ namespace rocalution
 
             // Get the new compressed nnz
             int compressed_nnz;
-            hipMemcpy(&compressed_nnz,
-                      compressed_csr_row_ptr + compressed_nrow,
-                      sizeof(int),
-                      hipMemcpyDeviceToHost);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            copy_d2h(1, compressed_csr_row_ptr + compressed_nrow, &compressed_nnz);
 
             // Allocate structures for "compressed" P
             allocate_hip(compressed_nnz, &compressed_csr_col_ind);

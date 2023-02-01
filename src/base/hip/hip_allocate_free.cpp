@@ -86,6 +86,29 @@ namespace rocalution
     }
 
     template <typename DataType>
+    void allocate_pinned(int64_t size, DataType** ptr)
+    {
+        log_debug(0, "allocate_pinned()", size, ptr);
+
+        if(size > 0)
+        {
+            assert(*ptr == NULL);
+
+            if(_rocalution_available_accelerator() == true)
+            {
+                hipHostMalloc((void**)ptr, size * sizeof(DataType));
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+            }
+            else
+            {
+                allocate_host(size, ptr);
+            }
+
+            assert(*ptr != NULL);
+        }
+    }
+
+    template <typename DataType>
     void free_hip(DataType** ptr)
     {
         log_debug(0, "free_hip()", *ptr);
@@ -94,6 +117,27 @@ namespace rocalution
         {
             hipFree(*ptr);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            *ptr = NULL;
+        }
+    }
+
+    template <typename DataType>
+    void free_pinned(DataType** ptr)
+    {
+        log_debug(0, "free_pinned()", *ptr);
+
+        if(*ptr != NULL)
+        {
+            if(_rocalution_available_accelerator() == true)
+            {
+                hipHostFree(*ptr);
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+            }
+            else
+            {
+                free_host(ptr);
+            }
 
             *ptr = NULL;
         }
@@ -147,6 +191,75 @@ namespace rocalution
         }
     }
 
+    template <typename DataType>
+    void copy_d2h(int64_t size, const DataType* src, DataType* dst, bool async, hipStream_t stream)
+    {
+        log_debug(0, "copy_d2h()", size, src, dst);
+
+        if(size > 0)
+        {
+            assert(src != NULL);
+            assert(dst != NULL);
+
+            if(async == false)
+            {
+                hipMemcpy(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToHost);
+            }
+            else
+            {
+                hipMemcpyAsync(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToHost, stream);
+            }
+
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <typename DataType>
+    void copy_h2d(int64_t size, const DataType* src, DataType* dst, bool async, hipStream_t stream)
+    {
+        log_debug(0, "copy_h2d()", size, src, dst);
+
+        if(size > 0)
+        {
+            assert(src != NULL);
+            assert(dst != NULL);
+
+            if(async == false)
+            {
+                hipMemcpy(dst, src, sizeof(DataType) * size, hipMemcpyHostToDevice);
+            }
+            else
+            {
+                hipMemcpyAsync(dst, src, sizeof(DataType) * size, hipMemcpyHostToDevice, stream);
+            }
+
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <typename DataType>
+    void copy_d2d(int64_t size, const DataType* src, DataType* dst, bool async, hipStream_t stream)
+    {
+        log_debug(0, "copy_d2d()", size, src, dst);
+
+        if(size > 0)
+        {
+            assert(src != NULL);
+            assert(dst != NULL);
+
+            if(async == false)
+            {
+                hipMemcpy(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToDevice);
+            }
+            else
+            {
+                hipMemcpyAsync(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToDevice, stream);
+            }
+
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
 #ifdef ROCALUTION_HIP_PINNED_MEMORY
     template void allocate_host<float>(int64_t, float**);
     template void allocate_host<double>(int64_t, double**);
@@ -186,6 +299,13 @@ namespace rocalution
     template void allocate_hip<char>(int64_t, char**);
     template void allocate_hip<mis_tuple>(int64_t, mis_tuple**);
 
+    template void allocate_pinned<float>(int64_t, float**);
+    template void allocate_pinned<double>(int64_t, double**);
+#ifdef SUPPORT_COMPLEX
+    template void allocate_pinned<std::complex<float>>(int64_t, std::complex<float>**);
+    template void allocate_pinned<std::complex<double>>(int64_t, std::complex<double>**);
+#endif
+
     template void free_hip<float>(float**);
     template void free_hip<double>(double**);
 #ifdef SUPPORT_COMPLEX
@@ -198,6 +318,13 @@ namespace rocalution
     template void free_hip<int64_t>(int64_t**);
     template void free_hip<char>(char**);
     template void free_hip<mis_tuple>(mis_tuple**);
+
+    template void free_pinned<float>(float**);
+    template void free_pinned<double>(double**);
+#ifdef SUPPORT_COMPLEX
+    template void free_pinned<std::complex<float>>(std::complex<float>**);
+    template void free_pinned<std::complex<double>>(std::complex<double>**);
+#endif
 
     template void set_to_zero_hip<float>(int, int64_t, float*, bool, hipStream_t);
     template void set_to_zero_hip<double>(int, int64_t, double*, bool, hipStream_t);
@@ -223,4 +350,39 @@ namespace rocalution
     template void set_to_one_hip<int>(int, int64_t, int*, bool, hipStream_t);
     template void set_to_one_hip<int64_t>(int, int64_t, int64_t*, bool, hipStream_t);
 
+    template void copy_d2h<float>(int64_t, const float*, float*, bool, hipStream_t);
+    template void copy_d2h<double>(int64_t, const double*, double*, bool, hipStream_t);
+#ifdef SUPPORT_COMPLEX
+    template void copy_d2h<std::complex<float>>(
+        int64_t, const std::complex<float>*, std::complex<float>*, bool, hipStream_t);
+    template void copy_d2h<std::complex<double>>(
+        int64_t, const std::complex<double>*, std::complex<double>*, bool, hipStream_t);
+#endif
+    template void copy_d2h<int>(int64_t, const int*, int*, bool, hipStream_t);
+    template void copy_d2h<int64_t>(int64_t, const int64_t*, int64_t*, bool, hipStream_t);
+    template void copy_d2h<bool>(int64_t, const bool*, bool*, bool, hipStream_t);
+
+    template void copy_h2d<float>(int64_t, const float*, float*, bool, hipStream_t);
+    template void copy_h2d<double>(int64_t, const double*, double*, bool, hipStream_t);
+#ifdef SUPPORT_COMPLEX
+    template void copy_h2d<std::complex<float>>(
+        int64_t, const std::complex<float>*, std::complex<float>*, bool, hipStream_t);
+    template void copy_h2d<std::complex<double>>(
+        int64_t, const std::complex<double>*, std::complex<double>*, bool, hipStream_t);
+#endif
+    template void copy_h2d<int>(int64_t, const int*, int*, bool, hipStream_t);
+    template void copy_h2d<int64_t>(int64_t, const int64_t*, int64_t*, bool, hipStream_t);
+    template void copy_h2d<bool>(int64_t, const bool*, bool*, bool, hipStream_t);
+
+    template void copy_d2d<float>(int64_t, const float*, float*, bool, hipStream_t);
+    template void copy_d2d<double>(int64_t, const double*, double*, bool, hipStream_t);
+#ifdef SUPPORT_COMPLEX
+    template void copy_d2d<std::complex<float>>(
+        int64_t, const std::complex<float>*, std::complex<float>*, bool, hipStream_t);
+    template void copy_d2d<std::complex<double>>(
+        int64_t, const std::complex<double>*, std::complex<double>*, bool, hipStream_t);
+#endif
+    template void copy_d2d<int>(int64_t, const int*, int*, bool, hipStream_t);
+    template void copy_d2d<int64_t>(int64_t, const int64_t*, int64_t*, bool, hipStream_t);
+    template void copy_d2d<bool>(int64_t, const bool*, bool*, bool, hipStream_t);
 } // namespace rocalution

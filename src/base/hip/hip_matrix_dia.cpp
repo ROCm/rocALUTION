@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -219,20 +219,8 @@ namespace rocalution
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpy(this->mat_.offset,
-                          cast_mat->mat_.offset,
-                          this->mat_.num_diag * sizeof(int),
-                          hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.val,
-                          cast_mat->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_h2d(this->mat_.num_diag, cast_mat->mat_.offset, this->mat_.offset);
+            copy_h2d(this->nnz_, cast_mat->mat_.val, this->mat_.val);
         }
         else
         {
@@ -265,20 +253,8 @@ namespace rocalution
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpy(cast_mat->mat_.offset,
-                          this->mat_.offset,
-                          this->mat_.num_diag * sizeof(int),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(cast_mat->mat_.val,
-                          this->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2h(this->mat_.num_diag, this->mat_.offset, cast_mat->mat_.offset);
+            copy_d2h(this->nnz_, this->mat_.val, cast_mat->mat_.val);
         }
         else
         {
@@ -314,20 +290,8 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpy(this->mat_.offset,
-                          hip_cast_mat->mat_.offset,
-                          this->mat_.num_diag * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.val,
-                          hip_cast_mat->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2d(this->mat_.num_diag, hip_cast_mat->mat_.offset, this->mat_.offset);
+            copy_d2d(this->nnz_, hip_cast_mat->mat_.val, this->mat_.val);
         }
         else
         {
@@ -370,20 +334,8 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpy(hip_cast_mat->mat_.offset,
-                          this->mat_.offset,
-                          this->mat_.num_diag * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(hip_cast_mat->mat_.val,
-                          this->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2d(this->mat_.num_diag, this->mat_.offset, hip_cast_mat->mat_.offset);
+            copy_d2d(this->nnz_, this->mat_.val, hip_cast_mat->mat_.val);
         }
         else
         {
@@ -424,20 +376,16 @@ namespace rocalution
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpyAsync(this->mat_.offset,
-                               cast_mat->mat_.offset,
-                               this->mat_.num_diag * sizeof(int),
-                               hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpyAsync(this->mat_.val,
-                               cast_mat->mat_.val,
-                               this->nnz_ * sizeof(ValueType),
-                               hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_h2d(this->mat_.num_diag,
+                     cast_mat->mat_.offset,
+                     this->mat_.offset,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_h2d(this->nnz_,
+                     cast_mat->mat_.val,
+                     this->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -470,20 +418,16 @@ namespace rocalution
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpyAsync(cast_mat->mat_.offset,
-                               this->mat_.offset,
-                               this->mat_.num_diag * sizeof(int),
-                               hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpyAsync(cast_mat->mat_.val,
-                               this->mat_.val,
-                               this->nnz_ * sizeof(ValueType),
-                               hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2h(this->mat_.num_diag,
+                     this->mat_.offset,
+                     cast_mat->mat_.offset,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2h(this->nnz_,
+                     this->mat_.val,
+                     cast_mat->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -519,20 +463,16 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpy(this->mat_.offset,
-                          hip_cast_mat->mat_.offset,
-                          this->mat_.num_diag * sizeof(int),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(this->mat_.val,
-                          hip_cast_mat->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2d(this->mat_.num_diag,
+                     hip_cast_mat->mat_.offset,
+                     this->mat_.offset,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2d(this->nnz_,
+                     hip_cast_mat->mat_.val,
+                     this->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -575,20 +515,16 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
-            {
-                hipMemcpy(hip_cast_mat->mat_.offset,
-                          this->mat_.offset,
-                          this->mat_.num_diag * sizeof(int),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                hipMemcpy(hip_cast_mat->mat_.val,
-                          this->mat_.val,
-                          this->nnz_ * sizeof(ValueType),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2h(this->mat_.num_diag,
+                     this->mat_.offset,
+                     hip_cast_mat->mat_.offset,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2h(this->nnz_,
+                     this->mat_.val,
+                     hip_cast_mat->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {

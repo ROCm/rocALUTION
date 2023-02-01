@@ -48,6 +48,23 @@ namespace rocalution
     ROCALUTION_EXPORT void allocate_host(int64_t size, DataType** ptr);
 
     /** \ingroup backend_module
+  * \brief Allocate page-locked buffer on the host
+  * \details
+  * \p allocate_pinned allocates a page-locked buffer on the host.
+  *
+  * @param[in]
+  * size    number of elements the buffer need to be allocated for
+  * @param[out]
+  * ptr     pointer to the position in memory where the buffer should be allocated,
+  *         it is expected that \p *ptr == \p NULL
+  *
+  * \tparam DataType can be float, double, std::complex<float>
+  *         or std::complex<double>.
+  */
+    template <typename DataType>
+    ROCALUTION_EXPORT void allocate_pinned(int64_t size, DataType** ptr);
+
+    /** \ingroup backend_module
   * \brief Free buffer on the host
   * \details
   * \p free_host deallocates a buffer on the host. \p *ptr will be set to NULL after
@@ -62,6 +79,22 @@ namespace rocalution
   */
     template <typename DataType>
     ROCALUTION_EXPORT void free_host(DataType** ptr);
+
+    /** \ingroup backend_module
+  * \brief Free page-locked buffer on the host
+  * \details
+  * \p free_host deallocates a page-locked buffer on the host. \p *ptr will be set to NULL after
+  * successful deallocation.
+  *
+  * @param[inout]
+  * ptr     pointer to the position in memory where the buffer should be deallocated,
+  *         it is expected that \p *ptr != \p NULL
+  *
+  * \tparam DataType can be float, double, std::complex<float>
+  *         or std::complex<double>.
+  */
+    template <typename DataType>
+    ROCALUTION_EXPORT void free_pinned(DataType** ptr);
 
     /** \ingroup backend_module
   * \brief Set a host buffer to zero
@@ -79,6 +112,23 @@ namespace rocalution
     template <typename DataType>
     ROCALUTION_EXPORT void set_to_zero_host(int64_t size, DataType* ptr);
 
+    /** \ingroup backend_module
+  * \brief Copy a host buffer to another host buffer
+  * \details
+  * \p copy_h2h copies a host buffer to another host buffer.
+  *
+  * @param[in]
+  * size    number of elements
+  * @param[in]
+  * src     pointer to the source host buffer
+  * @param[out]
+  * dst     pointer to the destination host buffer
+  *
+  * \tparam DataType can be bool, char, int, unsigned int, float, double,
+  *         std::complex<float> or std::complex<double>
+  */
+    template <typename DataType>
+    ROCALUTION_EXPORT void copy_h2h(int64_t size, const DataType* src, DataType* dst);
 } // namespace rocalution
 
 #endif // ROCALUTION_UTILS_ALLOCATE_FREE_HPP_

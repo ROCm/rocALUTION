@@ -186,38 +186,11 @@ namespace rocalution
                    && (this->coo_nnz_ == cast_mat->coo_nnz_) && (this->nrow_ == cast_mat->nrow_)
                    && (this->ncol_ == cast_mat->ncol_));
 
-            if(this->ell_nnz_ > 0)
-            {
-                // ELL
-                for(int i = 0; i < this->ell_nnz_; ++i)
-                {
-                    this->mat_.ELL.col[i] = cast_mat->mat_.ELL.col[i];
-                }
-
-                for(int i = 0; i < this->ell_nnz_; ++i)
-                {
-                    this->mat_.ELL.val[i] = cast_mat->mat_.ELL.val[i];
-                }
-            }
-
-            if(this->coo_nnz_ > 0)
-            {
-                // COO
-                for(int i = 0; i < this->coo_nnz_; ++i)
-                {
-                    this->mat_.COO.row[i] = cast_mat->mat_.COO.row[i];
-                }
-
-                for(int i = 0; i < this->coo_nnz_; ++i)
-                {
-                    this->mat_.COO.col[i] = cast_mat->mat_.COO.col[i];
-                }
-
-                for(int i = 0; i < this->coo_nnz_; ++i)
-                {
-                    this->mat_.COO.val[i] = cast_mat->mat_.COO.val[i];
-                }
-            }
+            copy_h2h(this->ell_nnz_, cast_mat->mat_.ELL.col, this->mat_.ELL.col);
+            copy_h2h(this->ell_nnz_, cast_mat->mat_.ELL.val, this->mat_.ELL.val);
+            copy_h2h(this->coo_nnz_, cast_mat->mat_.COO.row, this->mat_.COO.row);
+            copy_h2h(this->coo_nnz_, cast_mat->mat_.COO.col, this->mat_.COO.col);
+            copy_h2h(this->coo_nnz_, cast_mat->mat_.COO.val, this->mat_.COO.val);
         }
         else
         {

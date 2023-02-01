@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
 #include "../matrix_formats_ind.hpp"
 
 #include <complex>
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -605,21 +605,8 @@ namespace rocalution
             }
         }
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(IndexType i = 0; i < nnz; ++i)
-        {
-            dst->col[i] = src.col[i];
-        }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(IndexType i = 0; i < nnz; ++i)
-        {
-            dst->val[i] = src.val[i];
-        }
+        copy_h2h(nnz, src.col, dst->col);
+        copy_h2h(nnz, src.val, dst->val);
 
         return true;
     }
@@ -924,14 +911,8 @@ namespace rocalution
 
         assert(dst->row_offset[nrow] == nnz);
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for(IndexType i = 0; i < nnz; ++i)
-        {
-            dst->col[i] = src.col[i];
-            dst->val[i] = src.val[i];
-        }
+        copy_h2h(nnz, src.col, dst->col);
+        copy_h2h(nnz, src.val, dst->val);
 
 // Sorting the col (per row)
 // Bubble sort algorithm

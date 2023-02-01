@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -200,20 +200,8 @@ namespace rocalution
 
             if(this->nnz_ > 0)
             {
-                _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int j = 0; j < this->nnz_; ++j)
-                {
-                    this->mat_.val[j] = cast_mat->mat_.val[j];
-                }
-
-                for(int j = 0; j < this->mat_.num_diag; ++j)
-                {
-                    this->mat_.offset[j] = cast_mat->mat_.offset[j];
-                }
+                copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
+                copy_h2h(this->mat_.num_diag, cast_mat->mat_.offset, this->mat_.offset);
             }
         }
         else

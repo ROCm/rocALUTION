@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -178,31 +178,9 @@ namespace rocalution
 
             if(this->nnz_ > 0)
             {
-                _set_omp_backend_threads(this->local_backend_, this->nrow_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int i = 0; i < this->nrow_ + 1; ++i)
-                {
-                    this->mat_.row_offset[i] = cast_mat->mat_.row_offset[i];
-                }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int j = 0; j < this->nnz_; ++j)
-                {
-                    this->mat_.col[j] = cast_mat->mat_.col[j];
-                }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int j = 0; j < this->nnz_; ++j)
-                {
-                    this->mat_.val[j] = cast_mat->mat_.val[j];
-                }
+                copy_h2h(this->nrow_ + 1, cast_mat->mat_.row_offset, this->mat_.row_offset);
+                copy_h2h(this->nnz_, cast_mat->mat_.col, this->mat_.col);
+                copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
             }
         }
         else
@@ -273,10 +251,7 @@ namespace rocalution
         allocate_host(this->nrow_, &diag_offset);
         allocate_host(this->nrow_, &nnz_entries);
 
-        for(int i = 0; i < this->nrow_; ++i)
-        {
-            nnz_entries[i] = 0;
-        }
+        set_to_zero_host(this->nrow_, nnz_entries);
 
         // ai = 0 to N loop over all rows
         for(int ai = 0; ai < this->nrow_; ++ai)

@@ -42,6 +42,27 @@ namespace rocalution
     template <typename DataType>
     void set_to_one_hip(
         int blocksize, int64_t size, DataType* ptr, bool async = false, hipStream_t stream = 0);
+
+    template <typename DataType>
+    void copy_d2h(int64_t         size,
+                  const DataType* src,
+                  DataType*       dst,
+                  bool            async  = false,
+                  hipStream_t     stream = 0);
+
+    template <typename DataType>
+    void copy_h2d(int64_t         size,
+                  const DataType* src,
+                  DataType*       dst,
+                  bool            async  = false,
+                  hipStream_t     stream = 0);
+
+    template <typename DataType>
+    void copy_d2d(int64_t         size,
+                  const DataType* src,
+                  DataType*       dst,
+                  bool            async  = false,
+                  hipStream_t     stream = 0);
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_ALLOCATE_FREE_HPP_
