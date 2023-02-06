@@ -153,14 +153,7 @@ namespace rocalution
 
             assert(cast_vec->size_ == this->size_);
 
-            if(this->size_ > 0)
-            {
-                hipMemcpy(this->vec_,
-                          cast_vec->vec_,
-                          this->size_ * sizeof(ValueType),
-                          hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_h2d(this->size_, cast_vec->vec_, this->vec_);
         }
         else
         {
@@ -186,14 +179,7 @@ namespace rocalution
 
             assert(cast_vec->size_ == this->size_);
 
-            if(this->size_ > 0)
-            {
-                hipMemcpy(cast_vec->vec_,
-                          this->vec_,
-                          this->size_ * sizeof(ValueType),
-                          hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2h(this->size_, this->vec_, cast_vec->vec_);
         }
         else
         {
@@ -219,14 +205,7 @@ namespace rocalution
 
             assert(cast_vec->size_ == this->size_);
 
-            if(this->size_ > 0)
-            {
-                hipMemcpyAsync(this->vec_,
-                               cast_vec->vec_,
-                               this->size_ * sizeof(ValueType),
-                               hipMemcpyHostToDevice);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_h2d(this->size_, cast_vec->vec_, this->vec_, true, HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -252,14 +231,7 @@ namespace rocalution
 
             assert(cast_vec->size_ == this->size_);
 
-            if(this->size_ > 0)
-            {
-                hipMemcpyAsync(cast_vec->vec_,
-                               this->vec_,
-                               this->size_ * sizeof(ValueType),
-                               hipMemcpyDeviceToHost);
-                CHECK_HIP_ERROR(__FILE__, __LINE__);
-            }
+            copy_d2h(this->size_, this->vec_, cast_vec->vec_, true, HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -289,14 +261,7 @@ namespace rocalution
 
             if(this != hip_cast_vec)
             {
-                if(this->size_ > 0)
-                {
-                    hipMemcpy(this->vec_,
-                              hip_cast_vec->vec_,
-                              this->size_ * sizeof(ValueType),
-                              hipMemcpyDeviceToDevice);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
+                copy_d2d(this->size_, hip_cast_vec->vec_, this->vec_);
             }
         }
         else
@@ -335,14 +300,7 @@ namespace rocalution
 
             if(this != hip_cast_vec)
             {
-                if(this->size_ > 0)
-                {
-                    hipMemcpy(this->vec_,
-                              hip_cast_vec->vec_,
-                              this->size_ * sizeof(ValueType),
-                              hipMemcpyDeviceToDevice);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
+                copy_d2d(this->size_, hip_cast_vec->vec_, this->vec_, true, HIP_STREAM(this->local_backend_.HIP_stream_current));
             }
         }
         else
@@ -409,14 +367,7 @@ namespace rocalution
 
             if(this != hip_cast_vec)
             {
-                if(this->size_ > 0)
-                {
-                    hipMemcpy(hip_cast_vec->vec_,
-                              this->vec_,
-                              this->size_ * sizeof(ValueType),
-                              hipMemcpyDeviceToDevice);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
+                copy_d2d(this->size_, this->vec_, hip_cast_vec->vec_);
             }
         }
         else
@@ -455,14 +406,7 @@ namespace rocalution
 
             if(this != hip_cast_vec)
             {
-                if(this->size_ > 0)
-                {
-                    hipMemcpy(hip_cast_vec->vec_,
-                              this->vec_,
-                              this->size_ * sizeof(ValueType),
-                              hipMemcpyDeviceToDevice);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
+                copy_d2d(this->size_, this->vec_, hip_cast_vec->vec_, true);
             }
         }
         else
@@ -569,49 +513,31 @@ namespace rocalution
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::CopyFromData(const ValueType* data)
     {
-        if(this->size_ > 0)
-        {
-            hipMemcpy(this->vec_, data, this->size_ * sizeof(ValueType), hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-        }
+        copy_d2d(this->size_, data, this->vec_);
     }
 
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::CopyFromHostData(const ValueType* data)
     {
-        if(this->size_ > 0)
-        {
-            hipMemcpy(this->vec_, data, sizeof(ValueType) * this->size_, hipMemcpyHostToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-        }
+        copy_h2d(this->size_, data, this->vec_);
     }
 
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::CopyToData(ValueType* data) const
     {
-        if(this->size_ > 0)
-        {
-            hipMemcpy(data, this->vec_, this->size_ * sizeof(ValueType), hipMemcpyDeviceToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-        }
+        copy_d2d(this->size_, this->vec_, data);
     }
 
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::Zeros(void)
     {
-        if(this->size_ > 0)
-        {
-            set_to_zero_hip(this->local_backend_.HIP_block_size, this->size_, this->vec_);
-        }
+        set_to_zero_hip(this->local_backend_.HIP_block_size, this->size_, this->vec_);
     }
 
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::Ones(void)
     {
-        if(this->size_ > 0)
-        {
-            set_to_one_hip(this->local_backend_.HIP_block_size, this->size_, this->vec_);
-        }
+        set_to_one_hip(this->local_backend_.HIP_block_size, this->size_, this->vec_);
     }
 
     template <typename ValueType>
@@ -959,7 +885,7 @@ namespace rocalution
 
             hipFree(buffer);
 
-            hipMemcpy(&res, dres, sizeof(ValueType), hipMemcpyDeviceToHost);
+            copy_d2h(1, dres, &res);
 
             free_hip(&dres);
         }
@@ -1027,8 +953,7 @@ namespace rocalution
                                   &index);
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
-            hipMemcpy(&value, this->vec_ + index, sizeof(ValueType), hipMemcpyDeviceToHost);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
+            copy_d2h(1, this->vec_ + index, &value);
         }
 
         value = std::abs(value);
@@ -1282,9 +1207,12 @@ namespace rocalution
         assert(end <= this->size_);
         assert(values != NULL);
 
-        hipMemcpy(
-            values, this->vec_ + start, (end - start) * sizeof(ValueType), hipMemcpyDeviceToHost);
-        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        // Asynchronous memcpy
+        copy_d2h(end - start,
+                 this->vec_ + start,
+                 values,
+                 true,
+                 HIPSTREAM(this->local_backend_.HIP_stream_current));
     }
 
     template <typename ValueType>
@@ -1296,15 +1224,12 @@ namespace rocalution
         assert(end >= start);
         assert(end <= this->size_);
 
-        int size = end - start;
-
-        if(size > 0)
-        {
-            assert(values != NULL);
-
-            hipMemcpy(this->vec_ + start, values, size * sizeof(ValueType), hipMemcpyHostToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-        }
+        // Asynchronous memcpy
+        copy_h2d(end - start,
+                 values,
+                 this->vec_ + start,
+                 true,
+                 HIPSTREAM(this->local_backend_.HIP_stream_current));
     }
 
     template <typename ValueType>
