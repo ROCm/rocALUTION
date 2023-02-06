@@ -312,7 +312,7 @@ namespace rocalution
                          hip_cast_vec->vec_,
                          this->vec_,
                          true,
-                         HIP_STREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
         }
         else
