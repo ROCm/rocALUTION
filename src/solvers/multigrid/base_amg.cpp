@@ -117,15 +117,6 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void BaseAMG<OperatorType, VectorType, ValueType>::SetOperatorFormat(unsigned int op_format)
-    {
-        log_debug(this, "BaseAMG::SetOperatorFormat()", op_format);
-
-        this->op_format_   = op_format;
-        this->op_blockdim_ = 1;
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
     void BaseAMG<OperatorType, VectorType, ValueType>::SetOperatorFormat(unsigned int op_format,
                                                                          int          op_blockdim)
     {

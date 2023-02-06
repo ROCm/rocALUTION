@@ -101,9 +101,6 @@ namespace rocalution
         /** \brief Set the smoother operator format */
         ROCALUTION_EXPORT
         void SetDefaultSmootherFormat(unsigned int op_format);
-        /** \brief Set the operator format */
-        [[deprecated("Method will be removed in a future release")]] ROCALUTION_EXPORT void
-            SetOperatorFormat(unsigned int op_format);
         ROCALUTION_EXPORT
         void SetOperatorFormat(unsigned int op_format, int op_blockdim);
 

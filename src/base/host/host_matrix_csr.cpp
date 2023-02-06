@@ -5631,23 +5631,6 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool HostMatrixCSR<ValueType>::RugeStueben(float                  eps,
-                                               BaseMatrix<ValueType>* prolong,
-                                               BaseMatrix<ValueType>* restrict) const
-    {
-        HostVector<int>  CFmap(this->local_backend_);
-        HostVector<bool> S(this->local_backend_);
-
-        this->RSCoarsening(eps, &CFmap, &S);
-        this->RSDirectInterpolation(CFmap, S, prolong, restrict);
-
-        CFmap.Clear();
-        S.Clear();
-
-        return true;
-    }
-
-    template <typename ValueType>
     bool HostMatrixCSR<ValueType>::InitialPairwiseAggregation(ValueType        beta,
                                                               int&             nc,
                                                               BaseVector<int>* G,

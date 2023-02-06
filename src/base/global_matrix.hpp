@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_GLOBAL_MATRIX_HPP_
 #define ROCALUTION_GLOBAL_MATRIX_HPP_
 
+#include "local_vector.hpp"
 #include "operator.hpp"
 #include "parallel_manager.hpp"
 
@@ -33,10 +34,7 @@ namespace rocalution
     template <typename ValueType>
     class GlobalVector;
     template <typename ValueType>
-    class LocalVector;
-    template <typename ValueType>
     class LocalMatrix;
-    struct MRequest;
 
     /** \ingroup op_vec_module
   * \class GlobalMatrix
@@ -250,21 +248,16 @@ namespace rocalution
         virtual bool is_host_(void) const;
         virtual bool is_accel_(void) const;
 
-        /** \brief Update ghost values asynchronously */
-        void UpdateGhostValuesAsync_(const GlobalVector<ValueType>& x) const;
-        /** \brief Update ghost values synchronously */
-        void UpdateGhostValuesSync_(void) const;
-
     private:
         void InitCommPattern_(void);
-
-        MRequest* recv_event_;
-        MRequest* send_event_;
 
         ValueType* recv_boundary_;
         ValueType* send_boundary_;
 
-        mutable LocalVector<ValueType> halo_;
+        mutable LocalVector<ValueType> recv_buffer_;
+        mutable LocalVector<ValueType> send_buffer_;
+
+        LocalVector<int> halo_;
 
         int64_t nnz_;
 

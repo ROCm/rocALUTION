@@ -94,9 +94,6 @@ namespace rocalution
         virtual int GetMatBlockDimension(void) const;
         /// Copy the backend descriptor information
         virtual void set_backend(const Rocalution_Backend_Descriptor& local_backend);
-        /// Set matrix value block dimension
-        [[deprecated("Method will be removed in a future release")]] virtual void
-            set_block_dimension(int blockdim);
 
         virtual bool Check(void) const;
 
@@ -444,11 +441,6 @@ namespace rocalution
                                           float                   trunc,
                                           BaseMatrix<ValueType>*  prolong,
                                           BaseMatrix<ValueType>* restrict) const;
-
-        /// Ruge Stueben operator generation
-        virtual bool RugeStueben(float                  eps,
-                                 BaseMatrix<ValueType>* prolong,
-                                 BaseMatrix<ValueType>* restrict) const;
 
         /// Factorized Sparse Approximate Inverse assembly for given system
         /// matrix power pattern or external sparsity pattern

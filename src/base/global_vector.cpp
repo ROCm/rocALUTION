@@ -163,8 +163,6 @@ namespace rocalution
         assert(local_size != -1);
 
         this->vector_interior_.Allocate(interior_name, local_size);
-        this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
-                                             this->pm_->boundary_index_);
     }
 
     template <typename ValueType>
@@ -223,8 +221,6 @@ namespace rocalution
         assert(local_size != -1);
 
         this->vector_interior_.SetDataPtr(ptr, interior_name, local_size);
-        this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
-                                             this->pm_->boundary_index_);
     }
 
     template <typename ValueType>
@@ -382,9 +378,6 @@ namespace rocalution
         this->vector_interior_.ReadFileASCII(path + name);
 
         this->object_name_ = filename;
-
-        this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
-                                             this->pm_->boundary_index_);
     }
 
     template <typename ValueType>
@@ -459,9 +452,6 @@ namespace rocalution
         this->vector_interior_.ReadFileBinary(path + name);
 
         this->object_name_ = filename;
-
-        this->vector_interior_.SetIndexArray(this->pm_->GetNumSenders(),
-                                             this->pm_->boundary_index_);
     }
 
     template <typename ValueType>

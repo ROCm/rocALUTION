@@ -196,7 +196,7 @@ bool testing_saamg(Arguments argus)
     p.SetSolver(cgs);
     p.SetSmootherPreIter(pre_iter);
     p.SetSmootherPostIter(post_iter);
-    p.SetOperatorFormat(format);
+    p.SetOperatorFormat(format, format == BCSR ? argus.blockdim : 1);
     p.InitMaxIter(1);
     p.Verbose(0);
 
@@ -225,7 +225,7 @@ bool testing_saamg(Arguments argus)
     }
 
     // Matrix format
-    A.ConvertTo(format, format == BCSR ? 3 : 1);
+    A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
     // Stop building time measurement
     tack = rocalution_time();

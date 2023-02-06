@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,9 +42,6 @@ namespace rocalution
 
         // Parameter for strong couplings, for 3D problems 0.5 might work better
         this->eps_ = 0.25f;
-
-        // Truncation coefficient
-        this->trunc_ = 0.0f;
 
         // FF interpolation limiter
         this->FF1_ = false;
@@ -100,7 +97,8 @@ namespace rocalution
             LOG_INFO("AMG Ruge-Stuben using " << coarsening << " coarsening with " << interpolation
                                               << " interpolation");
             LOG_INFO("AMG coarsest operator size = " << this->op_level_[this->levels_ - 2]->GetM());
-            LOG_INFO("AMG coarsest level nnz = " << this->op_level_[this->levels_ - 2]->GetNnz());
+            int64_t global_nnz = this->op_level_[this->levels_ - 2]->GetNnz();
+            LOG_INFO("AMG coarsest level nnz = " << global_nnz);
             LOG_INFO("AMG with smoother:");
 
             this->smoother_level_[0]->Print();
@@ -151,14 +149,6 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetCouplingStrength(ValueType eps)
-    {
-        log_debug(this, "RugeStuebenAMG::SetCouplingStrength()", eps);
-
-        this->eps_ = static_cast<float>(std::real(eps));
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
     void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetStrengthThreshold(float eps)
     {
         log_debug(this, "RugeStuebenAMG::SetStrengthThreshold()", eps);
@@ -185,18 +175,6 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void
-        RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetInterpolationTruncation(float trunc)
-    {
-        log_debug(this, "RugeStuebenAMG::SetInterpolationTruncation()", trunc);
-
-        assert(this->build_ == false);
-        assert(this->trunc_ >= 0.0f);
-
-        this->trunc_ = trunc;
-    }
-
-    template <class OperatorType, class VectorType, typename ValueType>
     void RugeStuebenAMG<OperatorType, VectorType, ValueType>::SetInterpolationFF1Limit(bool FF1)
     {
         log_debug(this, "RugeStuebenAMG::SetInterpolationFF1Limit()", FF1);
@@ -215,8 +193,10 @@ namespace rocalution
         assert(this->build_);
         assert(this->op_ != NULL);
 
+        // Create coarse operator
         this->op_level_[0]->Clear();
         this->op_level_[0]->ConvertToCSR();
+        this->op_level_[0]->CloneBackend(*this->op_);
 
         if(this->op_->GetFormat() != CSR)
         {
@@ -227,7 +207,6 @@ namespace rocalution
             // Create coarse operator
             OperatorType tmp;
             tmp.CloneBackend(*this->op_);
-            this->op_level_[0]->CloneBackend(*this->op_);
 
             OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[0]);
             OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[0]);
@@ -242,7 +221,6 @@ namespace rocalution
             // Create coarse operator
             OperatorType tmp;
             tmp.CloneBackend(*this->op_);
-            this->op_level_[0]->CloneBackend(*this->op_);
 
             OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[0]);
             OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[0]);
@@ -321,7 +299,7 @@ namespace rocalution
                                                                          ParallelManager*  pm,
                                                                          LocalVector<int>* trans)
     {
-        log_debug(this, "RugeStuebenAMG::Aggregate_()", (const void*&)op, pro, res, coarse);
+        log_debug(this, "RugeStuebenAMG::Aggregate_()", (const void*&)op, pro, res, coarse, trans);
 
         assert(pro != NULL);
         assert(res != NULL);
@@ -354,16 +332,19 @@ namespace rocalution
         switch(this->interpolation_)
         {
         case Direct:
-            op.RSDirectInterpolation(CFmap, S, cast_pro, cast_res);
+            op.RSDirectInterpolation(CFmap, S, cast_pro);
             break;
         case ExtPI:
-            op.RSExtPIInterpolation(CFmap, S, this->FF1_, this->trunc_, cast_pro, cast_res);
+            op.RSExtPIInterpolation(CFmap, S, this->FF1_, cast_pro);
             break;
         }
 
         // Clean up
         CFmap.Clear();
         S.Clear();
+
+        // Transpose P to obtain R
+        cast_pro->Transpose(cast_res);
 
         // Create coarse operator
         OperatorType tmp;

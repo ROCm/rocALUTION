@@ -35,6 +35,7 @@
 #include <vector>
 
 #ifdef SUPPORT_MULTINODE
+#include "../utils/communicator.hpp"
 #include <mpi.h>
 #endif
 
@@ -66,6 +67,12 @@ namespace rocalution
 
         this->boundary_index_ = NULL;
 
+        this->async_send_ = 0;
+        this->async_recv_ = 0;
+
+        this->recv_event_ = NULL;
+        this->send_event_ = NULL;
+
         // if new values are added, also put check into status function
     }
 
@@ -92,33 +99,24 @@ namespace rocalution
         this->local_nrow_  = 0;
         this->local_ncol_  = 0;
 
-        if(this->nrecv_ > 0)
-        {
-            free_host(&this->recvs_);
-            free_host(&this->recv_offset_index_);
+        free_host(&this->recvs_);
+        free_host(&this->recv_offset_index_);
 
-            this->nrecv_ = 0;
-        }
+        free_host(&this->sends_);
+        free_host(&this->send_offset_index_);
 
-        if(this->nsend_ > 0)
-        {
-            free_host(&this->sends_);
-            free_host(&this->send_offset_index_);
+#ifdef SUPPORT_MULTINODE
+        free_host(&this->recv_event_);
+        free_host(&this->send_event_);
+#endif
 
-            this->nsend_ = 0;
-        }
+        this->nrecv_ = 0;
+        this->nsend_ = 0;
 
-        if(this->recv_index_size_ > 0)
-        {
-            free_host(&this->boundary_index_);
+        free_host(&this->boundary_index_);
 
-            this->recv_index_size_ = 0;
-        }
-
-        if(this->send_index_size_ > 0)
-        {
-            this->send_index_size_ = 0;
-        }
+        this->recv_index_size_ = 0;
+        this->send_index_size_ = 0;
     }
 
     int ParallelManager::GetNumProcs(void) const
@@ -228,6 +226,13 @@ namespace rocalution
         }
     }
 
+    const int* ParallelManager::GetBoundaryIndex(void) const
+    {
+        assert(this->Status());
+
+        return this->boundary_index_;
+    }
+
     void ParallelManager::SetReceivers(int nrecv, const int* recvs, const int* recv_offset)
     {
         assert(nrecv >= 0);
@@ -252,6 +257,10 @@ namespace rocalution
         }
 
         this->recv_index_size_ = recv_offset[nrecv];
+
+#ifdef SUPPORT_MULTINODE
+        allocate_host(2 * nrecv + 1, &this->recv_event_);
+#endif
     }
 
     void ParallelManager::SetSenders(int nsend, const int* sends, const int* send_offset)
@@ -285,6 +294,10 @@ namespace rocalution
         {
             this->send_index_size_ = send_offset[nsend];
         }
+
+#ifdef SUPPORT_MULTINODE
+        allocate_host(2 * nsend + 1, &this->send_event_);
+#endif
     }
 
     bool ParallelManager::Status(void) const
@@ -500,10 +513,16 @@ namespace rocalution
             if(line.find("#NUMBER_OF_RECEIVERS") != std::string::npos)
             {
                 file >> this->nrecv_;
+#ifdef SUPPORT_MULTINODE
+                allocate_host(2 * this->nrecv_ + 1, &this->recv_event_);
+#endif
             }
             if(line.find("#NUMBER_OF_SENDERS") != std::string::npos)
             {
                 file >> this->nsend_;
+#ifdef SUPPORT_MULTINODE
+                allocate_host(2 * this->nsend_ + 1, &this->send_event_);
+#endif
             }
             if(line.find("#RECEIVERS_RANK") != std::string::npos)
             {
@@ -568,5 +587,92 @@ namespace rocalution
 
         LOG_INFO("ReadFileASCII: filename=" << filename << "; done");
     }
+
+    void ParallelManager::Synchronize_(void) const
+    {
+#ifdef SUPPORT_MULTINODE
+        // Sync all events
+        communication_syncall(this->async_recv_, this->recv_event_);
+        communication_syncall(this->async_send_, this->send_event_);
+
+        // Reset guard
+        this->async_recv_ = 0;
+        this->async_send_ = 0;
+#endif
+    }
+
+    template <typename ValueType>
+    void ParallelManager::CommunicateAsync_(ValueType* send_buffer, ValueType* recv_buffer) const
+    {
+        log_debug(
+            this, "ParallelManager::CommunicateAsync_()", "#*# begin", send_buffer, recv_buffer);
+
+        assert(this->async_send_ == 0);
+        assert(this->async_recv_ == 0);
+        assert(this->Status());
+
+        int tag = 0;
+
+        // async recv boundary from neighbors
+        for(int n = 0; n < this->nrecv_; ++n)
+        {
+            // nnz that we receive from process n
+            int nnz = this->recv_offset_index_[n + 1] - this->recv_offset_index_[n];
+
+            // if this has ghost values that belong to process i
+            if(nnz > 0)
+            {
+                assert(recv_buffer != NULL);
+
+#ifdef SUPPORT_MULTINODE
+                communication_async_recv(recv_buffer + this->recv_offset_index_[n],
+                                         nnz,
+                                         this->recvs_[n],
+                                         tag,
+                                         &this->recv_event_[this->async_recv_++],
+                                         this->comm_);
+#endif
+            }
+        }
+
+        // async send boundary to neighbors
+        for(int n = 0; n < this->nsend_; ++n)
+        {
+            // nnz that we send to process i
+            int nnz = this->send_offset_index_[n + 1] - this->send_offset_index_[n];
+
+            // if process i has ghost values that belong to this
+            if(nnz > 0)
+            {
+                assert(send_buffer != NULL);
+
+#ifdef SUPPORT_MULTINODE
+                communication_async_send(send_buffer + this->send_offset_index_[n],
+                                         nnz,
+                                         this->sends_[n],
+                                         tag,
+                                         &this->send_event_[this->async_send_++],
+                                         this->comm_);
+#endif
+            }
+        }
+
+        log_debug(this, "ParallelManager::CommunicateAsync_()", "#*# end");
+    }
+
+    void ParallelManager::CommunicateSync_(void) const
+    {
+        this->Synchronize_();
+    }
+
+    template void ParallelManager::CommunicateAsync_<int>(int*, int*) const;
+    template void ParallelManager::CommunicateAsync_<float>(float*, float*) const;
+    template void ParallelManager::CommunicateAsync_<double>(double*, double*) const;
+    template void
+        ParallelManager::CommunicateAsync_<std::complex<float>>(std::complex<float>*,
+                                                                std::complex<float>*) const;
+    template void
+        ParallelManager::CommunicateAsync_<std::complex<double>>(std::complex<double>*,
+                                                                 std::complex<double>*) const;
 
 } // namespace rocalution

@@ -39,12 +39,6 @@ namespace rocalution
         explicit HostMatrixBCSR(const Rocalution_Backend_Descriptor& local_backend, int blockdim);
         virtual ~HostMatrixBCSR();
 
-        [[deprecated("Method will be removed in a future release")]] virtual void
-            set_block_dimension(int blockdim)
-        {
-            this->mat_.blockdim = blockdim;
-        }
-
         virtual void         Info(void) const;
         virtual unsigned int GetMatFormat(void) const
         {

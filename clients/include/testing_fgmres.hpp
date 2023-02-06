@@ -143,7 +143,7 @@ bool testing_fgmres(Arguments argus)
     ls.Build();
 
     // Matrix format
-    A.ConvertTo(format, format == BCSR ? 3 : 1);
+    A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
     ls.Solve(b, &x);
 

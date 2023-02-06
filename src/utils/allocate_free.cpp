@@ -25,6 +25,10 @@
 #include "def.hpp"
 #include "log.hpp"
 
+#ifdef SUPPORT_MULTINODE
+#include "communicator.hpp"
+#endif
+
 #include <complex>
 #include <cstddef>
 #include <cstdlib>
@@ -197,6 +201,9 @@ namespace rocalution
     template void allocate_host<unsigned int>(int64_t, unsigned int**);
     template void allocate_host<int64_t>(int64_t, int64_t**);
     template void allocate_host<char>(int64_t, char**);
+#ifdef SUPPORT_MULTINODE
+    template void allocate_host<MRequest>(int64_t, MRequest**);
+#endif
 
 #ifndef SUPPORT_HIP
     template void allocate_pinned<float>(int64_t, float**);
@@ -218,6 +225,9 @@ namespace rocalution
     template void free_host<unsigned int>(unsigned int**);
     template void free_host<int64_t>(int64_t**);
     template void free_host<char>(char**);
+#ifdef SUPPORT_MULTINODE
+    template void free_host<MRequest>(MRequest**);
+#endif
 
 #ifndef SUPPORT_HIP
     template void free_pinned<float>(float**);

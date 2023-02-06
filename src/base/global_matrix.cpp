@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,11 +60,6 @@ namespace rocalution
 
         this->recv_boundary_ = NULL;
         this->send_boundary_ = NULL;
-
-#ifdef SUPPORT_MULTINODE
-        this->recv_event_ = NULL;
-        this->send_event_ = NULL;
-#endif
     }
 
     template <typename ValueType>
@@ -82,11 +77,6 @@ namespace rocalution
 
         this->recv_boundary_ = NULL;
         this->send_boundary_ = NULL;
-
-#ifdef SUPPORT_MULTINODE
-        this->recv_event_ = new MRequest[pm.nrecv_];
-        this->send_event_ = new MRequest[pm.nsend_];
-#endif
     }
 
     template <typename ValueType>
@@ -95,20 +85,6 @@ namespace rocalution
         log_debug(this, "GlobalMatrix::~GlobalMatrix()");
 
         this->Clear();
-
-#ifdef SUPPORT_MULTINODE
-        if(this->recv_event_ != NULL)
-        {
-            delete[] this->recv_event_;
-            this->recv_event_ = NULL;
-        }
-
-        if(this->send_event_ != NULL)
-        {
-            delete[] this->send_event_;
-            this->send_event_ = NULL;
-        }
-#endif
     }
 
     template <typename ValueType>
@@ -119,18 +95,13 @@ namespace rocalution
         this->matrix_interior_.Clear();
         this->matrix_ghost_.Clear();
         this->halo_.Clear();
+        this->recv_buffer_.Clear();
+        this->send_buffer_.Clear();
 
         this->nnz_ = 0;
 
-        if(this->recv_boundary_ != NULL)
-        {
-            free_host(&this->recv_boundary_);
-        }
-
-        if(this->send_boundary_ != NULL)
-        {
-            free_host(&this->send_boundary_);
-        }
+        free_pinned(&this->recv_boundary_);
+        free_pinned(&this->send_boundary_);
     }
 
     template <typename ValueType>
@@ -755,6 +726,8 @@ namespace rocalution
         this->matrix_interior_.MoveToAccelerator();
         this->matrix_ghost_.MoveToAccelerator();
         this->halo_.MoveToAccelerator();
+        this->recv_buffer_.MoveToAccelerator();
+        this->send_buffer_.MoveToAccelerator();
     }
 
     template <typename ValueType>
@@ -765,6 +738,8 @@ namespace rocalution
         this->matrix_interior_.MoveToHost();
         this->matrix_ghost_.MoveToHost();
         this->halo_.MoveToHost();
+        this->recv_buffer_.MoveToHost();
+        this->send_buffer_.MoveToHost();
     }
 
     template <typename ValueType>
@@ -772,6 +747,8 @@ namespace rocalution
     {
         assert(this->matrix_interior_.is_host_() == this->matrix_ghost_.is_host_());
         assert(this->matrix_interior_.is_host_() == this->halo_.is_host_());
+        assert(this->matrix_interior_.is_host_() == this->recv_buffer_.is_host_());
+        assert(this->matrix_interior_.is_host_() == this->send_buffer_.is_host_());
         return this->matrix_interior_.is_host_();
     }
 
@@ -780,6 +757,8 @@ namespace rocalution
     {
         assert(this->matrix_interior_.is_accel_() == this->matrix_ghost_.is_accel_());
         assert(this->matrix_interior_.is_accel_() == this->halo_.is_accel_());
+        assert(this->matrix_interior_.is_accel_() == this->recv_buffer_.is_accel_());
+        assert(this->matrix_interior_.is_accel_() == this->send_buffer_.is_accel_());
         return this->matrix_interior_.is_accel_();
     }
 
@@ -946,86 +925,67 @@ namespace rocalution
         assert(this->GetN() == in.GetSize());
         assert(this->is_host_() == in.is_host_());
         assert(this->is_host_() == out->is_host_());
+        assert(this->is_host_() == this->halo_.is_host_());
+        assert(this->is_host_() == this->recv_buffer_.is_host_());
+        assert(this->is_host_() == this->send_buffer_.is_host_());
 
         // Prepare send buffer
-        this->UpdateGhostValuesAsync_(in);
+        in.vector_interior_.GetIndexValues(this->halo_, &this->send_buffer_);
+
+        // Change to compute mode ghost
+        _rocalution_compute_ghost();
+
+        // Make send buffer available for communication
+        ValueType* send_buffer = NULL;
+        if(this->is_host_() == true)
+        {
+            // On host, we can directly use the host pointer
+            this->send_buffer_.LeaveDataPtr(&send_buffer);
+        }
+        else
+        {
+            // On the accelerator, we need to (asynchronously) make the data
+            // available on the host
+            this->send_buffer_.GetContinuousValues(
+                0, this->pm_->GetNumSenders(), this->send_boundary_);
+
+            send_buffer = this->send_boundary_;
+        }
+
+        // Change to compute mode interior
+        _rocalution_compute_interior();
 
         // Interior
         this->matrix_interior_.Apply(in.vector_interior_, &out->vector_interior_);
 
+        // Synchronize compute mode ghost
+        _rocalution_sync_ghost();
+
+        // Initiate communication
+        this->pm_->CommunicateAsync_(send_buffer, this->recv_boundary_);
+
+        // Sync communication
+        this->pm_->CommunicateSync_();
+
+        if(this->is_host_() == true)
+        {
+            // On host, we need to set back the pointer into its structure
+            this->send_buffer_.SetDataPtr(&send_buffer, "send buffer", this->pm_->GetNumSenders());
+        }
+
+        // Change to compute mode ghost
+        _rocalution_compute_ghost();
+
         // Process receive buffer
-        this->UpdateGhostValuesSync_();
+        this->recv_buffer_.SetContinuousValues(
+            0, this->pm_->GetNumReceivers(), this->recv_boundary_);
+
+        // Change to compute mode default
+        _rocalution_compute_default();
 
         // Ghost
         this->matrix_ghost_.ApplyAdd(
-            this->halo_, static_cast<ValueType>(1), &out->vector_interior_);
-    }
-
-    template <typename ValueType>
-    void GlobalMatrix<ValueType>::UpdateGhostValuesAsync_(const GlobalVector<ValueType>& x) const
-    {
-        log_debug(this, "GlobalMatrix::UpdateGhostValuesAsync_()", "#*# begin", (const void*&)x);
-
-#ifdef SUPPORT_MULTINODE
-        int tag = 0;
-
-        // async recv boundary from neighbors
-        for(int n = 0; n < this->pm_->nrecv_; ++n)
-        {
-            // nnz that we receive from process n
-            int nnz = this->pm_->recv_offset_index_[n + 1] - this->pm_->recv_offset_index_[n];
-
-            // if this has ghost values that belong to process i
-            if(nnz > 0)
-            {
-                communication_async_recv(this->recv_boundary_ + this->pm_->recv_offset_index_[n],
-                                         nnz,
-                                         this->pm_->recvs_[n],
-                                         tag,
-                                         &this->recv_event_[n],
-                                         this->pm_->comm_);
-            }
-        }
-
-        // prepare send buffer
-        x.vector_interior_.GetIndexValues(this->send_boundary_);
-
-        // async send boundary to neighbors
-        for(int n = 0; n < this->pm_->nsend_; ++n)
-        {
-            // nnz that we send to process i
-            int nnz = this->pm_->send_offset_index_[n + 1] - this->pm_->send_offset_index_[n];
-
-            // if process i has ghost values that belong to this
-            if(nnz > 0)
-            {
-                communication_async_send(this->send_boundary_ + this->pm_->send_offset_index_[n],
-                                         nnz,
-                                         this->pm_->sends_[n],
-                                         tag,
-                                         &this->send_event_[n],
-                                         this->pm_->comm_);
-            }
-        }
-#endif
-
-        log_debug(this, "GlobalMatrix::UpdateGhostValuesAsync_()", "#*# end");
-    }
-
-    template <typename ValueType>
-    void GlobalMatrix<ValueType>::UpdateGhostValuesSync_(void) const
-    {
-        log_debug(this, "GlobalMatrix::UpdateGhostValuesSync_()", "#*# begin");
-
-#ifdef SUPPORT_MULTINODE
-        // Sync before updating ghost values
-        communication_syncall(this->pm_->nrecv_, this->recv_event_);
-        communication_syncall(this->pm_->nsend_, this->send_event_);
-
-        this->halo_.SetContinuousValues(0, this->pm_->GetNumReceivers(), this->recv_boundary_);
-#endif
-
-        log_debug(this, "GlobalMatrix::UpdateGhostValuesSync_()", "#*# end");
+            this->recv_buffer_, static_cast<ValueType>(1), &out->vector_interior_);
     }
 
     template <typename ValueType>
@@ -1659,38 +1619,41 @@ namespace rocalution
 #ifdef SUPPORT_MULTINODE
         int64_t global_nnz_int;
         int64_t global_nnz_gst;
-        int64_t local_nnz_int = this->matrix_interior_.GetNnz();
-        int64_t local_nnz_gst = this->matrix_ghost_.GetNnz();
+        int64_t local_nnz_int = this->GetLocalNnz();
+        int64_t local_nnz_gst = this->GetGhostNnz();
 
-        communication_sync_allreduce_single_sum(&local_nnz_int, &global_nnz_int, this->pm_->comm_);
-        communication_sync_allreduce_single_sum(&local_nnz_gst, &global_nnz_gst, this->pm_->comm_);
+        MRequest req_int;
+        MRequest req_gst;
 
-        if(this->recv_event_ == NULL)
-        {
-            this->recv_event_ = new MRequest[this->pm_->nrecv_];
-        }
-
-        if(this->send_event_ == NULL)
-        {
-            this->send_event_ = new MRequest[this->pm_->nsend_];
-        }
+        communication_async_allreduce_single_sum(
+            &local_nnz_int, &global_nnz_int, this->pm_->comm_, &req_int);
+        communication_async_allreduce_single_sum(
+            &local_nnz_gst, &global_nnz_gst, this->pm_->comm_, &req_gst);
 #endif
 
         // Allocate send and receive buffer
         std::string halo_name = "Buffer of " + this->object_name_;
-        this->halo_.Allocate(halo_name, this->pm_->GetNumReceivers());
+        this->halo_.Allocate(halo_name, this->pm_->GetNumSenders());
+        this->halo_.CopyFromHostData(this->pm_->GetBoundaryIndex());
+
+        this->recv_buffer_.Allocate("receive buffer", this->pm_->GetNumReceivers());
+        this->send_buffer_.Allocate("send buffer", this->pm_->GetNumSenders());
 
         if(this->recv_boundary_ == NULL)
         {
-            allocate_host(this->pm_->GetNumReceivers(), &this->recv_boundary_);
+            allocate_pinned(this->pm_->GetNumReceivers(), &this->recv_boundary_);
         }
 
         if(this->send_boundary_ == NULL)
         {
-            allocate_host(this->pm_->GetNumSenders(), &this->send_boundary_);
+            allocate_pinned(this->pm_->GetNumSenders(), &this->send_boundary_);
         }
 
 #ifdef SUPPORT_MULTINODE
+        // Synchronize
+        communication_sync(&req_int);
+        communication_sync(&req_gst);
+
         this->nnz_ = global_nnz_int + global_nnz_gst;
 #endif
     }

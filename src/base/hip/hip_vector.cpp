@@ -65,9 +65,6 @@ namespace rocalution
         this->vec_ = NULL;
         this->set_backend(local_backend);
 
-        this->index_array_  = NULL;
-        this->index_buffer_ = NULL;
-
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
@@ -90,18 +87,15 @@ namespace rocalution
     {
         assert(n >= 0);
 
-        if(this->size_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
         if(n > 0)
         {
             allocate_hip(n, &this->vec_);
             set_to_zero_hip(this->local_backend_.HIP_block_size, n, this->vec_);
-
-            this->size_ = n;
         }
+
+        this->size_ = n;
 
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -109,8 +103,12 @@ namespace rocalution
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType** ptr, int size)
     {
-        assert(*ptr != NULL);
-        assert(size > 0);
+        assert(size >= 0);
+
+        if(size > 0)
+        {
+            assert(*ptr != NULL);
+        }
 
         hipDeviceSynchronize();
 
@@ -121,7 +119,7 @@ namespace rocalution
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::LeaveDataPtr(ValueType** ptr)
     {
-        assert(this->size_ > 0);
+        assert(this->size_ >= 0);
 
         hipDeviceSynchronize();
         *ptr       = this->vec_;
@@ -138,13 +136,6 @@ namespace rocalution
             free_hip(&this->vec_);
             this->size_ = 0;
         }
-
-        if(this->index_size_ > 0)
-        {
-            free_hip(&this->index_buffer_);
-            free_hip(&this->index_array_);
-            this->index_size_ = 0;
-        }
     }
 
     template <typename ValueType>
@@ -158,19 +149,9 @@ namespace rocalution
             {
                 // Allocate local structure
                 this->Allocate(cast_vec->size_);
-
-                // Check for boundary
-                assert(this->index_size_ == 0);
-                if(cast_vec->index_size_ > 0)
-                {
-                    this->index_size_ = cast_vec->index_size_;
-                    allocate_hip(this->index_size_, &this->index_array_);
-                    allocate_hip(this->index_size_, &this->index_buffer_);
-                }
             }
 
             assert(cast_vec->size_ == this->size_);
-            assert(cast_vec->index_size_ == this->index_size_);
 
             if(this->size_ > 0)
             {
@@ -179,15 +160,6 @@ namespace rocalution
                           this->size_ * sizeof(ValueType),
                           hipMemcpyHostToDevice);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                if(this->index_size_ > 0)
-                {
-                    hipMemcpy(this->index_array_,
-                              cast_vec->index_array_,
-                              this->index_size_ * sizeof(int),
-                              hipMemcpyHostToDevice);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
             }
         }
         else
@@ -210,18 +182,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 cast_vec->Allocate(this->size_);
-
-                // Check for boundary
-                assert(cast_vec->index_size_ == 0);
-                if(this->index_size_ > 0)
-                {
-                    cast_vec->index_size_ = this->index_size_;
-                    allocate_host(this->index_size_, &cast_vec->index_array_);
-                }
             }
 
             assert(cast_vec->size_ == this->size_);
-            assert(cast_vec->index_size_ == this->index_size_);
 
             if(this->size_ > 0)
             {
@@ -230,15 +193,6 @@ namespace rocalution
                           this->size_ * sizeof(ValueType),
                           hipMemcpyDeviceToHost);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                if(this->index_size_ > 0)
-                {
-                    hipMemcpy(cast_vec->index_array_,
-                              this->index_array_,
-                              this->index_size_ * sizeof(int),
-                              hipMemcpyDeviceToHost);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
             }
         }
         else
@@ -261,19 +215,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 this->Allocate(cast_vec->size_);
-
-                // Check for boundary
-                assert(this->index_size_ == 0);
-                if(cast_vec->index_size_ > 0)
-                {
-                    this->index_size_ = cast_vec->index_size_;
-                    allocate_hip(this->index_size_, &this->index_array_);
-                    allocate_hip(this->index_size_, &this->index_buffer_);
-                }
             }
 
             assert(cast_vec->size_ == this->size_);
-            assert(cast_vec->index_size_ == this->index_size_);
 
             if(this->size_ > 0)
             {
@@ -282,15 +226,6 @@ namespace rocalution
                                this->size_ * sizeof(ValueType),
                                hipMemcpyHostToDevice);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                if(this->index_size_ > 0)
-                {
-                    hipMemcpyAsync(this->index_array_,
-                                   cast_vec->index_array_,
-                                   this->index_size_ * sizeof(int),
-                                   hipMemcpyHostToDevice);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
             }
         }
         else
@@ -313,18 +248,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 cast_vec->Allocate(this->size_);
-
-                // Check for boundary
-                assert(cast_vec->index_size_ == 0);
-                if(this->index_size_ > 0)
-                {
-                    cast_vec->index_size_ = this->index_size_;
-                    allocate_host(this->index_size_, &cast_vec->index_array_);
-                }
             }
 
             assert(cast_vec->size_ == this->size_);
-            assert(cast_vec->index_size_ == this->index_size_);
 
             if(this->size_ > 0)
             {
@@ -333,15 +259,6 @@ namespace rocalution
                                this->size_ * sizeof(ValueType),
                                hipMemcpyDeviceToHost);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                if(this->index_size_ > 0)
-                {
-                    hipMemcpyAsync(cast_vec->index_array_,
-                                   this->index_array_,
-                                   this->index_size_ * sizeof(int),
-                                   hipMemcpyDeviceToHost);
-                    CHECK_HIP_ERROR(__FILE__, __LINE__);
-                }
             }
         }
         else
@@ -366,19 +283,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 this->Allocate(hip_cast_vec->size_);
-
-                // Check for boundary
-                assert(this->index_size_ == 0);
-                if(hip_cast_vec->index_size_ > 0)
-                {
-                    this->index_size_ = hip_cast_vec->index_size_;
-                    allocate_hip(this->index_size_, &this->index_array_);
-                    allocate_hip(this->index_size_, &this->index_buffer_);
-                }
             }
 
             assert(hip_cast_vec->size_ == this->size_);
-            assert(hip_cast_vec->index_size_ == this->index_size_);
 
             if(this != hip_cast_vec)
             {
@@ -389,15 +296,6 @@ namespace rocalution
                               this->size_ * sizeof(ValueType),
                               hipMemcpyDeviceToDevice);
                     CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                    if(this->index_size_ > 0)
-                    {
-                        hipMemcpy(this->index_array_,
-                                  hip_cast_vec->index_array_,
-                                  this->index_size_ * sizeof(int),
-                                  hipMemcpyDeviceToDevice);
-                        CHECK_HIP_ERROR(__FILE__, __LINE__);
-                    }
                 }
             }
         }
@@ -431,19 +329,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 this->Allocate(hip_cast_vec->size_);
-
-                // Check for boundary
-                assert(this->index_size_ == 0);
-                if(hip_cast_vec->index_size_ > 0)
-                {
-                    this->index_size_ = hip_cast_vec->index_size_;
-                    allocate_hip(this->index_size_, &this->index_array_);
-                    allocate_hip(this->index_size_, &this->index_buffer_);
-                }
             }
 
             assert(hip_cast_vec->size_ == this->size_);
-            assert(hip_cast_vec->index_size_ == this->index_size_);
 
             if(this != hip_cast_vec)
             {
@@ -454,15 +342,6 @@ namespace rocalution
                               this->size_ * sizeof(ValueType),
                               hipMemcpyDeviceToDevice);
                     CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                    if(this->index_size_ > 0)
-                    {
-                        hipMemcpy(this->index_array_,
-                                  hip_cast_vec->index_array_,
-                                  this->index_size_ * sizeof(int),
-                                  hipMemcpyDeviceToDevice);
-                        CHECK_HIP_ERROR(__FILE__, __LINE__);
-                    }
                 }
             }
         }
@@ -524,19 +403,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 hip_cast_vec->Allocate(this->size_);
-
-                // Check for boundary
-                assert(hip_cast_vec->index_size_ == 0);
-                if(this->index_size_ > 0)
-                {
-                    hip_cast_vec->index_size_ = this->index_size_;
-                    allocate_hip(this->index_size_, &hip_cast_vec->index_array_);
-                    allocate_hip(this->index_size_, &hip_cast_vec->index_buffer_);
-                }
             }
 
             assert(hip_cast_vec->size_ == this->size_);
-            assert(hip_cast_vec->index_size_ == this->index_size_);
 
             if(this != hip_cast_vec)
             {
@@ -547,15 +416,6 @@ namespace rocalution
                               this->size_ * sizeof(ValueType),
                               hipMemcpyDeviceToDevice);
                     CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                    if(this->index_size_ > 0)
-                    {
-                        hipMemcpy(hip_cast_vec->index_array_,
-                                  this->index_array_,
-                                  this->index_size_ * sizeof(int),
-                                  hipMemcpyDeviceToDevice);
-                        CHECK_HIP_ERROR(__FILE__, __LINE__);
-                    }
                 }
             }
         }
@@ -589,19 +449,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 hip_cast_vec->Allocate(this->size_);
-
-                // Check for boundary
-                assert(hip_cast_vec->index_size_ == 0);
-                if(this->index_size_ > 0)
-                {
-                    hip_cast_vec->index_size_ = this->index_size_;
-                    allocate_hip(this->index_size_, &hip_cast_vec->index_array_);
-                    allocate_hip(this->index_size_, &hip_cast_vec->index_buffer_);
-                }
             }
 
             assert(hip_cast_vec->size_ == this->size_);
-            assert(hip_cast_vec->index_size_ == this->index_size_);
 
             if(this != hip_cast_vec)
             {
@@ -612,15 +462,6 @@ namespace rocalution
                               this->size_ * sizeof(ValueType),
                               hipMemcpyDeviceToDevice);
                     CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-                    if(this->index_size_ > 0)
-                    {
-                        hipMemcpy(hip_cast_vec->index_array_,
-                                  this->index_array_,
-                                  this->index_size_ * sizeof(int),
-                                  hipMemcpyDeviceToDevice);
-                        CHECK_HIP_ERROR(__FILE__, __LINE__);
-                    }
                 }
             }
         }
@@ -731,6 +572,16 @@ namespace rocalution
         if(this->size_ > 0)
         {
             hipMemcpy(this->vec_, data, this->size_ * sizeof(ValueType), hipMemcpyDeviceToDevice);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::CopyFromHostData(const ValueType* data)
+    {
+        if(this->size_ > 0)
+        {
+            hipMemcpy(this->vec_, data, sizeof(ValueType) * this->size_, hipMemcpyHostToDevice);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }
@@ -1365,24 +1216,6 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorVector<ValueType>::SetIndexArray(int size, const int* index)
-    {
-        assert(size >= 0);
-        assert(this->size_ >= size);
-
-        this->index_size_ = size;
-
-        if(this->index_size_ > 0)
-        {
-            allocate_hip(this->index_size_, &this->index_array_);
-            allocate_hip(this->index_size_, &this->index_buffer_);
-
-            hipMemcpy(
-                this->index_array_, index, this->index_size_ * sizeof(int), hipMemcpyHostToDevice);
-        }
-    }
-
-    template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::GetIndexValues(const BaseVector<int>& index,
                                                          BaseVector<ValueType>* values) const
     {
@@ -1435,56 +1268,6 @@ namespace rocalution
                                       0,
                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                 cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-        }
-    }
-
-    template <typename ValueType>
-    void HIPAcceleratorVector<ValueType>::GetIndexValues(ValueType* values) const
-    {
-        if(this->index_size_ > 0)
-        {
-            assert(values != NULL);
-
-            dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(this->index_size_ / this->local_backend_.HIP_block_size + 1);
-
-            kernel_get_index_values<<<GridSize,
-                                      BlockSize,
-                                      0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                this->index_size_, this->index_array_, this->vec_, this->index_buffer_);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            hipMemcpy(values,
-                      this->index_buffer_,
-                      this->index_size_ * sizeof(ValueType),
-                      hipMemcpyDeviceToHost);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-        }
-    }
-
-    template <typename ValueType>
-    void HIPAcceleratorVector<ValueType>::SetIndexValues(const ValueType* values)
-    {
-        if(this->index_size_ > 0)
-        {
-            assert(values != NULL);
-
-            hipMemcpy(this->index_buffer_,
-                      values,
-                      this->index_size_ * sizeof(ValueType),
-                      hipMemcpyHostToDevice);
-            CHECK_HIP_ERROR(__FILE__, __LINE__);
-
-            dim3 BlockSize(this->local_backend_.HIP_block_size);
-            dim3 GridSize(this->index_size_ / this->local_backend_.HIP_block_size + 1);
-
-            kernel_set_index_values<<<GridSize,
-                                      BlockSize,
-                                      0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                this->index_size_, this->index_array_, this->index_buffer_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
     }

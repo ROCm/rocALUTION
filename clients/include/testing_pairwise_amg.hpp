@@ -165,7 +165,7 @@ bool testing_pairwise_amg(Arguments argus)
     p.SetSolver(cgs);
     p.SetSmootherPreIter(pre_iter);
     p.SetSmootherPostIter(post_iter);
-    p.SetOperatorFormat(format);
+    p.SetOperatorFormat(format, (format == BCSR ? argus.blockdim : 1));
     p.InitMaxIter(1);
     p.Verbose(0);
 
@@ -188,7 +188,7 @@ bool testing_pairwise_amg(Arguments argus)
     }
 
     // Matrix format
-    A.ConvertTo(format, format == BCSR ? 3 : 1);
+    A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
     ls.Solve(rebuildnumeric ? b2 : b, &x);
 

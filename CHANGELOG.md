@@ -2,6 +2,16 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## rocALUTION 3.0.0
+### Improved
+- Added multiple streams to the HIP backend
+- Matrix dimensions and number of non-zeros are now stored using 64bit integers
+- Fixed typos in the documentation
+- Unit tests do not ignore BCSR block dimension anymore
+- GlobalMatrix::Apply() now runs on multiple streams
+### Changed
+- Deprecated functions have been removed
+
 ## rocALUTION 2.1.8
 ### Added
 - Added build support for Navi32

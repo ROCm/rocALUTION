@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -109,6 +109,7 @@ namespace rocalution
             = 0;
 
         virtual void CopyFromData(const ValueType* data);
+        virtual void CopyFromHostData(const ValueType* data);
         virtual void CopyToData(ValueType* data) const;
 
         /// Restriction operator based on restriction mapping vector
@@ -162,15 +163,9 @@ namespace rocalution
             = 0;
         virtual void Power(double power) = 0;
 
-        /// Sets index array
-        virtual void SetIndexArray(int size, const int* index) = 0;
-        /// Gets index values
-        virtual void GetIndexValues(ValueType* values) const = 0;
         /// Gets index values
         virtual void GetIndexValues(const BaseVector<int>& index,
                                     BaseVector<ValueType>* values) const = 0;
-        /// Sets index values
-        virtual void SetIndexValues(const ValueType* values) = 0;
         /// Sets index values
         virtual void SetIndexValues(const BaseVector<int>&       index,
                                     const BaseVector<ValueType>& values)
@@ -192,8 +187,6 @@ namespace rocalution
     protected:
         /// The size of the vector
         int size_;
-        /// The size of the boundary index
-        int index_size_;
 
         /// Backend descriptor (local copy)
         Rocalution_Backend_Descriptor local_backend_;

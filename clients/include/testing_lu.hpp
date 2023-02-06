@@ -111,7 +111,7 @@ bool testing_lu(Arguments argus)
     dls.Print();
 
     // Matrix format
-    A.ConvertTo(format, format == BCSR ? 3 : 1);
+    A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
     dls.Solve(b, &x);
 

@@ -197,10 +197,6 @@ namespace rocalution
                                           BaseMatrix<ValueType>*  prolong,
                                           BaseMatrix<ValueType>* restrict) const;
 
-        virtual bool RugeStueben(float                  eps,
-                                 BaseMatrix<ValueType>* prolong,
-                                 BaseMatrix<ValueType>* restrict) const;
-
         virtual bool FSAI(int power, const BaseMatrix<ValueType>* pattern);
         virtual bool SPAI(void);
 

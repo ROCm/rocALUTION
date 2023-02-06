@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,8 +38,7 @@ namespace rocalution
     {
         log_debug(this, "BaseVector::BaseVector()");
 
-        this->size_       = 0;
-        this->index_size_ = 0;
+        this->size_ = 0;
     }
 
     template <typename ValueType>
@@ -73,6 +72,15 @@ namespace rocalution
     void BaseVector<ValueType>::CopyFromData(const ValueType* data)
     {
         LOG_INFO("CopyFromData(const ValueType* data)");
+        this->Info();
+        LOG_INFO("This function is not available for this backend");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseVector<ValueType>::CopyFromHostData(const ValueType* data)
+    {
+        LOG_INFO("CopyFromHostData(const ValueType* data)");
         this->Info();
         LOG_INFO("This function is not available for this backend");
         FATAL_ERROR(__FILE__, __LINE__);

@@ -881,6 +881,20 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalVector<ValueType>::CopyFromHostData(const ValueType* data)
+    {
+        log_debug(this, "LocalVector::CopyFromHostData()", data);
+
+        if(this->GetSize() > 0)
+        {
+            assert(data != NULL);
+            this->vector_->CopyFromHostData(data);
+        }
+
+        this->object_name_ = "Imported from vector";
+    }
+
+    template <typename ValueType>
     void LocalVector<ValueType>::CopyToData(ValueType* data) const
     {
         log_debug(this, "LocalVector::CopyToData()", data);
@@ -1072,25 +1086,6 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalVector<ValueType>::SetIndexArray(int size, const int* index)
-    {
-        log_debug(this, "LocalVector::SetIndexArray()", size, index);
-
-        assert(size >= 0);
-        assert(index != NULL || size == 0);
-
-        this->vector_->SetIndexArray(size, index);
-    }
-
-    template <typename ValueType>
-    void LocalVector<ValueType>::GetIndexValues(ValueType* values) const
-    {
-        log_debug(this, "LocalVector::GetIndexValues()", values);
-
-        this->vector_->GetIndexValues(values);
-    }
-
-    template <typename ValueType>
     void LocalVector<ValueType>::GetIndexValues(const LocalVector<int>& index,
                                                 LocalVector<ValueType>* values) const
     {
@@ -1108,16 +1103,6 @@ namespace rocalution
         log_debug(this, "LocalVector::SetIndexValues()", (const void*&)index, (const void*&)values);
 
         this->vector_->SetIndexValues(*index.vector_, *values.vector_);
-    }
-
-    template <typename ValueType>
-    void LocalVector<ValueType>::SetIndexValues(const ValueType* values)
-    {
-        log_debug(this, "LocalVector::SetIndexValues()", values);
-
-        assert(values != NULL);
-
-        this->vector_->SetIndexValues(values);
     }
 
     template <typename ValueType>

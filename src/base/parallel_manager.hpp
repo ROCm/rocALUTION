@@ -36,6 +36,7 @@ namespace rocalution
     class GlobalMatrix;
     template <typename ValueType>
     class GlobalVector;
+    struct MRequest;
 
     /** \ingroup backend_module
   * \brief Parallel Manager class
@@ -114,6 +115,9 @@ namespace rocalution
         /** \brief Set all boundary indices of this ranks process */
         ROCALUTION_EXPORT
         void SetBoundaryIndex(int size, const int* index);
+        /** \brief Get all boundary indices of this ranks process */
+        ROCALUTION_EXPORT
+        const int* GetBoundaryIndex(void) const;
 
         /** \brief Number of processes, the current process is receiving data from, array of
       * the processes, the current process is receiving data from and offsets, where the
@@ -147,7 +151,17 @@ namespace rocalution
         ROCALUTION_EXPORT
         void WriteFileASCII(const std::string& filename) const;
 
+    protected:
+        // Communicate boundary data (async)
+        template <typename ValueType>
+        void CommunicateAsync_(ValueType* send_buffer, ValueType* recv_buffer) const;
+        // Synchronize communication
+        void CommunicateSync_(void) const;
+
     private:
+        // Synchronize all events within this PM
+        void Synchronize_(void) const;
+
         // Communicator
         const void* comm_;
 
@@ -187,6 +201,14 @@ namespace rocalution
 
         // Boundary index ids
         int* boundary_index_;
+
+        // Track ongoing asynchronous communication
+        mutable int async_send_;
+        mutable int async_recv_;
+
+        // Send/receive events for asynchronous communication
+        MRequest* recv_event_;
+        MRequest* send_event_;
 
         friend class GlobalMatrix<double>;
         friend class GlobalMatrix<float>;

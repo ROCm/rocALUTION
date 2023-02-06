@@ -73,16 +73,6 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::set_block_dimension(int blockdim)
-    {
-        LOG_INFO("BaseMatrix<ValueType>::set_block_dimension()");
-        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
-        this->Info();
-        LOG_INFO("The function can only be called on matrices with BCSR format!");
-        FATAL_ERROR(__FILE__, __LINE__);
-    }
-
-    template <typename ValueType>
     int BaseMatrix<ValueType>::GetMatBlockDimension(void) const
     {
         return 1;
@@ -642,14 +632,6 @@ namespace rocalution
                                                      float                   trunc,
                                                      BaseMatrix<ValueType>*  prolong,
                                                      BaseMatrix<ValueType>* restrict) const
-    {
-        return false;
-    }
-
-    template <typename ValueType>
-    bool BaseMatrix<ValueType>::RugeStueben(float                  eps,
-                                            BaseMatrix<ValueType>* prolong,
-                                            BaseMatrix<ValueType>* restrict) const
     {
         return false;
     }

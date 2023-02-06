@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,8 +67,6 @@ namespace rocalution
 
         this->vec_ = NULL;
         this->set_backend(local_backend);
-
-        this->index_array_ = NULL;
     }
 
     template <typename ValueType>
@@ -114,6 +112,7 @@ namespace rocalution
             assert(this->size_ == 0);
             assert(this->vec_ == NULL);
         }
+
         return check;
     }
 
@@ -179,6 +178,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void HostVector<ValueType>::CopyFromHostData(const ValueType* data)
+    {
+        // We are already on host, just copy
+        this->CopyFromData(data);
+    }
+
+    template <typename ValueType>
     void HostVector<ValueType>::CopyToData(ValueType* data) const
     {
         if(this->size_ > 0)
@@ -203,12 +209,6 @@ namespace rocalution
             free_host(&this->vec_);
             this->size_ = 0;
         }
-
-        if(this->index_size_ > 0)
-        {
-            free_host(&this->index_array_);
-            this->index_size_ = 0;
-        }
     }
 
     template <typename ValueType>
@@ -223,18 +223,9 @@ namespace rocalution
                 {
                     // Allocate local vector
                     this->Allocate(cast_vec->size_);
-
-                    // Check for boundary
-                    assert(this->index_size_ == 0);
-                    if(cast_vec->index_size_ > 0)
-                    {
-                        this->index_size_ = cast_vec->index_size_;
-                        allocate_host(this->index_size_, &this->index_array_);
-                    }
                 }
 
                 assert(cast_vec->size_ == this->size_);
-                assert(cast_vec->index_size_ == this->index_size_);
 
                 _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -244,14 +235,6 @@ namespace rocalution
                 for(int i = 0; i < this->size_; ++i)
                 {
                     this->vec_[i] = cast_vec->vec_[i];
-                }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int i = 0; i < this->index_size_; ++i)
-                {
-                    this->index_array_[i] = cast_vec->index_array_[i];
                 }
             }
             else
@@ -284,18 +267,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 this->Allocate(cast_vec->size_);
-
-                // Check for boundary
-                assert(this->index_size_ == 0);
-                if(cast_vec->index_size_ > 0)
-                {
-                    this->index_size_ = cast_vec->index_size_;
-                    allocate_host(this->index_size_, &this->index_array_);
-                }
             }
 
             assert(cast_vec->size_ == this->size_);
-            assert(cast_vec->index_size_ == this->index_size_);
 
             _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -330,18 +304,9 @@ namespace rocalution
             {
                 // Allocate local vector
                 this->Allocate(cast_vec->size_);
-
-                // Check for boundary
-                assert(this->index_size_ == 0);
-                if(cast_vec->index_size_ > 0)
-                {
-                    this->index_size_ = cast_vec->index_size_;
-                    allocate_host(this->index_size_, &this->index_array_);
-                }
             }
 
             assert(cast_vec->size_ == this->size_);
-            assert(cast_vec->index_size_ == this->index_size_);
 
             _set_omp_backend_threads(this->local_backend_, this->size_);
 
@@ -1022,7 +987,7 @@ namespace rocalution
             norm2 += this->vec_[i] * this->vec_[i];
         }
 
-        return sqrt(norm2);
+        return std::sqrt(norm2);
     }
 
     template <>
@@ -1395,51 +1360,6 @@ namespace rocalution
         for(int i = 0; i < cast_idx->size_; ++i)
         {
             this->vec_[cast_idx->vec_[i]] = cast_vec->vec_[i];
-        }
-    }
-
-    template <typename ValueType>
-    void HostVector<ValueType>::SetIndexArray(int size, const int* index)
-    {
-        assert(size >= 0);
-
-        this->index_size_ = size;
-
-        if(this->index_size_ > 0)
-        {
-            assert(index != NULL);
-
-            allocate_host(this->index_size_, &this->index_array_);
-
-            for(int i = 0; i < this->index_size_; ++i)
-            {
-                this->index_array_[i] = index[i];
-            }
-        }
-    }
-
-    template <typename ValueType>
-    void HostVector<ValueType>::GetIndexValues(ValueType* values) const
-    {
-        if(this->index_size_ > 0)
-        {
-            assert(values != NULL);
-
-            for(int i = 0; i < this->index_size_; ++i)
-            {
-                values[i] = this->vec_[this->index_array_[i]];
-            }
-        }
-    }
-
-    template <typename ValueType>
-    void HostVector<ValueType>::SetIndexValues(const ValueType* values)
-    {
-        assert(values != NULL);
-
-        for(int i = 0; i < this->index_size_; ++i)
-        {
-            this->vec_[this->index_array_[i]] = values[i];
         }
     }
 

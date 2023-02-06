@@ -183,18 +183,9 @@ void testing_local_matrix_bad_args(void)
         ASSERT_DEATH(mat1.AMGConnect(0.1, null_vec), ".*Assertion.*connections != (NULL|__null)*");
         ASSERT_DEATH(mat1.AMGAggregate(int1, null_vec),
                      ".*Assertion.*aggregates != (NULL|__null)*");
-        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, null_mat, &mat2),
+        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, null_mat),
                      ".*Assertion.*prolong != (NULL|__null)*");
-        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, &mat2, null_mat),
-                     ".*Assertion.*restrict != (NULL|__null)*");
-        ASSERT_DEATH(mat1.AMGAggregation(int1, null_mat, &mat2),
-                     ".*Assertion.*prolong != (NULL|__null)*");
-        ASSERT_DEATH(mat1.AMGAggregation(int1, &mat2, null_mat),
-                     ".*Assertion.*restrict != (NULL|__null)*");
-        ASSERT_DEATH(mat1.RugeStueben(0.1, null_mat, &mat2),
-                     ".*Assertion.*prolong != (NULL|__null)*");
-        ASSERT_DEATH(mat1.RugeStueben(0.1, &mat2, null_mat),
-                     ".*Assertion.*restrict != (NULL|__null)*");
+        ASSERT_DEATH(mat1.AMGAggregation(int1, null_mat), ".*Assertion.*prolong != (NULL|__null)*");
         ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, null_vec, val, &null_int, val, 0),
                      ".*Assertion.*G != (NULL|__null)*");
         ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, &int1, val, &vint, val, 0),

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,15 +58,6 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual void Print(void) const;
 
-        /** \brief Set coupling strength */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release. Use "
-                     "SetStrengthThreshold() instead")]]
-#endif
-        ROCALUTION_EXPORT
-        void SetCouplingStrength(ValueType eps);
-
         /** \brief Set strength threshold */
         ROCALUTION_EXPORT
         void SetStrengthThreshold(float eps);
@@ -78,14 +69,6 @@ namespace rocalution
         /** \brief Set Interpolation type */
         ROCALUTION_EXPORT
         void SetInterpolationType(InterpolationType type);
-
-        /** \brief Set interpolation truncation coefficient */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#else
-        [[deprecated("This function will be removed in a future release.")]]
-#endif
-        ROCALUTION_EXPORT
-        void SetInterpolationTruncation(float trunc);
 
         /** \brief Enable FF1 interpolation limitation */
         ROCALUTION_EXPORT
@@ -108,9 +91,6 @@ namespace rocalution
     private:
         /** \brief Coupling strength */
         float eps_;
-
-        /** \brief Truncation coefficient */
-        float trunc_;
 
         /** \brief Flag to limit FF interpolation */
         bool FF1_;
