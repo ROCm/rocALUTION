@@ -36,6 +36,7 @@
 #include <fstream>
 #include <limits>
 #include <math.h>
+#include <numeric>
 #include <typeindex>
 #include <typeinfo>
 
@@ -90,7 +91,7 @@ namespace rocalution
 
         if(this->size_ > 0)
         {
-            for(int i = 0; i < this->size_; ++i)
+            for(int64_t i = 0; i < this->size_; ++i)
             {
                 if((std::abs(this->vec_[i]) == std::numeric_limits<ValueType>::infinity()) || // inf
                    (this->vec_[i] != this->vec_[i]))
@@ -100,7 +101,7 @@ namespace rocalution
                 }
             }
 
-            if((std::abs(this->size_) == std::numeric_limits<int>::infinity()) || // inf
+            if((std::abs(this->size_) == std::numeric_limits<int64_t>::infinity()) || // inf
                (this->size_ != this->size_))
             { // NaN
                 LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector size");
@@ -117,14 +118,11 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::Allocate(int n)
+    void HostVector<ValueType>::Allocate(int64_t n)
     {
         assert(n >= 0);
 
-        if(this->size_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
         if(n > 0)
         {
@@ -137,12 +135,16 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::SetDataPtr(ValueType** ptr, int size)
+    void HostVector<ValueType>::SetDataPtr(ValueType** ptr, int64_t size)
     {
-        assert(*ptr != NULL);
-        assert(size > 0);
+        assert(size >= 0);
 
         this->Clear();
+
+        if(size > 0)
+        {
+            assert(*ptr != NULL);
+        }
 
         this->vec_  = *ptr;
         this->size_ = size;
@@ -151,7 +153,7 @@ namespace rocalution
     template <typename ValueType>
     void HostVector<ValueType>::LeaveDataPtr(ValueType** ptr)
     {
-        assert(this->size_ > 0);
+        assert(this->size_ >= 0);
 
         // see free_host function for details
         *ptr       = this->vec_;
@@ -163,18 +165,7 @@ namespace rocalution
     template <typename ValueType>
     void HostVector<ValueType>::CopyFromData(const ValueType* data)
     {
-        if(this->size_ > 0)
-        {
-            _set_omp_backend_threads(this->local_backend_, this->size_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->size_; ++i)
-            {
-                this->vec_[i] = data[i];
-            }
-        }
+        copy_h2h(this->size_, data, this->vec_);
     }
 
     template <typename ValueType>
@@ -187,18 +178,7 @@ namespace rocalution
     template <typename ValueType>
     void HostVector<ValueType>::CopyToData(ValueType* data) const
     {
-        if(this->size_ > 0)
-        {
-            _set_omp_backend_threads(this->local_backend_, this->size_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-            for(int i = 0; i < this->size_; ++i)
-            {
-                data[i] = this->vec_[i];
-            }
-        }
+        copy_h2h(this->size_, this->vec_, data);
     }
 
     template <typename ValueType>
@@ -227,15 +207,7 @@ namespace rocalution
 
                 assert(cast_vec->size_ == this->size_);
 
-                _set_omp_backend_threads(this->local_backend_, this->size_);
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-                for(int i = 0; i < this->size_; ++i)
-                {
-                    this->vec_[i] = cast_vec->vec_[i];
-                }
+                copy_h2h(this->size_, cast_vec->vec_, this->vec_);
             }
             else
             {
@@ -276,7 +248,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-            for(int i = 0; i < this->size_; ++i)
+            for(int64_t i = 0; i < this->size_; ++i)
             {
                 this->vec_[i] = static_cast<double>(cast_vec->vec_[i]);
             }
@@ -313,7 +285,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-            for(int i = 0; i < this->size_; ++i)
+            for(int64_t i = 0; i < this->size_; ++i)
             {
                 this->vec_[i] = static_cast<float>(cast_vec->vec_[i]);
             }
@@ -333,7 +305,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = static_cast<ValueType>(0);
         }
@@ -347,7 +319,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = static_cast<ValueType>(1);
         }
@@ -361,7 +333,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = val;
         }
@@ -374,7 +346,7 @@ namespace rocalution
 
         // Fill this with random data from interval [a,b]
         srand(seed);
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i]
                 = a + static_cast<ValueType>(rand()) / static_cast<ValueType>(RAND_MAX) * (b - a);
@@ -387,7 +359,7 @@ namespace rocalution
                                                 ValueType          var)
     {
         srand(seed);
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             // Box-Muller
             ValueType u1 = static_cast<ValueType>(rand()) / static_cast<ValueType>(RAND_MAX);
@@ -406,7 +378,7 @@ namespace rocalution
     {
         std::ifstream file;
         std::string   line;
-        int           n = 0;
+        int64_t       n = 0;
 
         LOG_INFO("ReadFileASCII: filename=" << filename << "; reading...");
 
@@ -431,7 +403,7 @@ namespace rocalution
         file.clear();
         file.seekg(0, std::ios_base::beg);
 
-        for(int i = 0; i < n; ++i)
+        for(int64_t i = 0; i < n; ++i)
         {
             file >> this->vec_[i];
         }
@@ -459,7 +431,7 @@ namespace rocalution
 
         file.setf(std::ios::scientific);
 
-        for(int n = 0; n < this->size_; n++)
+        for(int64_t n = 0; n < this->size_; n++)
         {
             file << this->vec_[n] << std::endl;
         }
@@ -496,19 +468,30 @@ namespace rocalution
         int version;
         in.read((char*)&version, sizeof(int));
 
-        /* TODO might need this in the future
-      if(version != __ROCALUTION_VER)
-      {
-          LOG_INFO("ReadFileBinary: filename=" << filename << "; file version mismatch");
-          FATAL_ERROR(__FILE__, __LINE__);
-      }
-    */
+        // Read size
+        int64_t n;
+
+        // We need backward compatibility, v3.0.0 and later will store sizes with 64 bits
+        if(version < 30000)
+        {
+            int size32;
+
+            in.read((char*)&size32, sizeof(int));
+
+            n = size32;
+        }
+        else
+        {
+            in.read((char*)&n, sizeof(int64_t));
+        }
+
+        //        if(version != __ROCALUTION_VER)
+        //        {
+        //            LOG_INFO("ReadFileBinary: file version mismatch");
+        //            return false;
+        //        }
 
         this->Clear();
-
-        int n;
-        in.read((char*)&n, sizeof(int));
-
         this->Allocate(n);
 
         // We read always in double precision
@@ -522,7 +505,7 @@ namespace rocalution
 
             in.read((char*)tmp.data(), sizeof(double) * n);
 
-            for(int i = 0; i < n; ++i)
+            for(int64_t i = 0; i < n; ++i)
             {
                 this->vec_[i] = static_cast<ValueType>(tmp[i]);
             }
@@ -570,7 +553,7 @@ namespace rocalution
         out.write((char*)&version, sizeof(int));
 
         // Data
-        out.write((char*)&this->size_, sizeof(int));
+        out.write((char*)&this->size_, sizeof(int64_t));
 
         // We write always in double precision
         if(typeid(ValueType) == typeid(double))
@@ -581,7 +564,7 @@ namespace rocalution
         {
             std::vector<double> tmp(this->size_);
 
-            for(int i = 0; i < this->size_; ++i)
+            for(int64_t i = 0; i < this->size_; ++i)
             {
                 tmp[i] = rocalution_double(this->vec_[i]);
             }
@@ -623,7 +606,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = this->vec_[i] + alpha * cast_x->vec_[i];
         }
@@ -642,7 +625,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = alpha * this->vec_[i] + cast_x->vec_[i];
         }
@@ -663,7 +646,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = alpha * this->vec_[i] + beta * cast_x->vec_[i];
         }
@@ -673,9 +656,9 @@ namespace rocalution
     void HostVector<ValueType>::ScaleAddScale(ValueType                    alpha,
                                               const BaseVector<ValueType>& x,
                                               ValueType                    beta,
-                                              int                          src_offset,
-                                              int                          dst_offset,
-                                              int                          size)
+                                              int64_t                      src_offset,
+                                              int64_t                      dst_offset,
+                                              int64_t                      size)
     {
         const HostVector<ValueType>* cast_x = dynamic_cast<const HostVector<ValueType>*>(&x);
 
@@ -691,7 +674,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < size; ++i)
+        for(int64_t i = 0; i < size; ++i)
         {
             this->vec_[i + dst_offset]
                 = alpha * this->vec_[i + dst_offset] + beta * cast_x->vec_[i + src_offset];
@@ -718,7 +701,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i]
                 = alpha * this->vec_[i] + beta * cast_x->vec_[i] + gamma * cast_y->vec_[i];
@@ -733,7 +716,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] *= alpha;
         }
@@ -754,7 +737,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : dot)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             dot += this->vec_[i] * cast_x->vec_[i];
         }
@@ -780,7 +763,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : dot_real, dot_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             dot_real += this->vec_[i].real() * cast_x->vec_[i].real()
                         + this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -809,7 +792,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : dot_real, dot_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             dot_real += this->vec_[i].real() * cast_x->vec_[i].real()
                         + this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -844,7 +827,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : dot_real, dot_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             dot_real += this->vec_[i].real() * cast_x->vec_[i].real()
                         - this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -873,7 +856,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : dot_real, dot_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             dot_real += this->vec_[i].real() * cast_x->vec_[i].real()
                         - this->vec_[i].imag() * cast_x->vec_[i].imag();
@@ -894,7 +877,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : asum)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             asum += std::abs(this->vec_[i]);
         }
@@ -913,7 +896,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : asum_real, asum_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             asum_real += std::abs(this->vec_[i].real());
             asum_imag += std::abs(this->vec_[i].imag());
@@ -933,7 +916,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : asum_real, asum_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             asum_real += std::abs(this->vec_[i].real());
             asum_imag += std::abs(this->vec_[i].imag());
@@ -943,17 +926,18 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int HostVector<ValueType>::Amax(ValueType& value) const
+    int64_t HostVector<ValueType>::Amax(ValueType& value) const
     {
-        int index = 0;
-        value     = static_cast<ValueType>(0);
+        int64_t index = 0;
+
+        value = static_cast<ValueType>(0);
 
         _set_omp_backend_threads(this->local_backend_, this->size_);
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             ValueType val = std::abs(this->vec_[i]);
             if(val > value)
@@ -982,7 +966,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : norm2)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             norm2 += this->vec_[i] * this->vec_[i];
         }
@@ -1000,7 +984,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : norm2)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             norm2 += this->vec_[i].real() * this->vec_[i].real()
                      + this->vec_[i].imag() * this->vec_[i].imag();
@@ -1021,7 +1005,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : norm2)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             norm2 += this->vec_[i].real() * this->vec_[i].real()
                      + this->vec_[i].imag() * this->vec_[i].imag();
@@ -1049,7 +1033,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : reduce)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             reduce += this->vec_[i];
         }
@@ -1068,7 +1052,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : reduce_real, reduce_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             reduce_real += this->vec_[i].real();
             reduce_imag += this->vec_[i].imag();
@@ -1088,7 +1072,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : reduce_real, reduce_imag)
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             reduce_real += this->vec_[i].real();
             reduce_imag += this->vec_[i].imag();
@@ -1110,7 +1094,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = this->vec_[i] * cast_x->vec_[i];
         }
@@ -1133,7 +1117,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = cast_y->vec_[i] * cast_x->vec_[i];
         }
@@ -1141,9 +1125,9 @@ namespace rocalution
 
     template <typename ValueType>
     void HostVector<ValueType>::CopyFrom(const BaseVector<ValueType>& src,
-                                         int                          src_offset,
-                                         int                          dst_offset,
-                                         int                          size)
+                                         int64_t                      src_offset,
+                                         int64_t                      dst_offset,
+                                         int64_t                      size)
     {
         const HostVector<ValueType>* cast_src = dynamic_cast<const HostVector<ValueType>*>(&src);
 
@@ -1161,7 +1145,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < size; ++i)
+        for(int64_t i = 0; i < size; ++i)
         {
             this->vec_[i + dst_offset] = cast_src->vec_[i + src_offset];
         }
@@ -1184,7 +1168,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             assert_dbg(cast_perm->vec_[i] >= 0);
             assert_dbg(cast_perm->vec_[i] < this->size_);
@@ -1209,7 +1193,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             assert_dbg(cast_perm->vec_[i] >= 0);
             assert_dbg(cast_perm->vec_[i] < this->size_);
@@ -1236,7 +1220,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[cast_perm->vec_[i]] = cast_vec->vec_[i];
         }
@@ -1261,7 +1245,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = cast_vec->vec_[cast_perm->vec_[i]];
         }
@@ -1282,7 +1266,7 @@ namespace rocalution
 
         this->Zeros();
 
-        for(int i = 0; i < cast_vec->size_; ++i)
+        for(int64_t i = 0; i < cast_vec->size_; ++i)
         {
             if(cast_map->vec_[i] != -1)
             {
@@ -1306,7 +1290,7 @@ namespace rocalution
         assert(cast_vec != NULL);
         assert(cast_map->size_ == this->size_);
 
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             if(cast_map->vec_[i] != -1)
             {
@@ -1364,40 +1348,32 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::GetContinuousValues(int start, int end, ValueType* values) const
+    void HostVector<ValueType>::GetContinuousValues(int64_t    start,
+                                                    int64_t    end,
+                                                    ValueType* values) const
     {
         assert(start >= 0);
         assert(end >= start);
         assert(end <= this->GetSize());
-        assert(values != NULL);
 
-        for(int i = start, j = 0; i < end; ++i, ++j)
-        {
-            values[j] = this->vec_[i];
-        }
+        copy_h2h(end - start, this->vec_ + start, values);
     }
 
     template <typename ValueType>
-    void HostVector<ValueType>::SetContinuousValues(int start, int end, const ValueType* values)
+    void HostVector<ValueType>::SetContinuousValues(int64_t          start,
+                                                    int64_t          end,
+                                                    const ValueType* values)
     {
         assert(start >= 0);
         assert(end >= start);
-        assert(end <= this->GetSize());
+        assert(end <= this->size_);
 
-        if(end - start > 0)
-        {
-            assert(values != NULL);
-
-            for(int i = start, j = 0; i < end; ++i, ++j)
-            {
-                this->vec_[i] = values[j];
-            }
-        }
+        copy_h2h(end - start, values, this->vec_ + start);
     }
 
     template <typename ValueType>
     void HostVector<ValueType>::ExtractCoarseMapping(
-        int start, int end, const int* index, int nc, int* size, int* map) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const
     {
         LOG_INFO("double/float HostVector<ValueType>::ExtractCoarseMapping() not available");
         FATAL_ERROR(__FILE__, __LINE__);
@@ -1405,7 +1381,7 @@ namespace rocalution
 
     template <>
     void HostVector<int>::ExtractCoarseMapping(
-        int start, int end, const int* index, int nc, int* size, int* map) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const
     {
         assert(index != NULL);
         assert(size != NULL);
@@ -1424,7 +1400,7 @@ namespace rocalution
         }
 
         // Loop over fine boundary points
-        for(int i = start; i < end; ++i)
+        for(int64_t i = start; i < end; ++i)
         {
             int coarse_index = this->vec_[index[i]];
 
@@ -1446,7 +1422,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HostVector<ValueType>::ExtractCoarseBoundary(
-        int start, int end, const int* index, int nc, int* size, int* boundary) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const
     {
         LOG_INFO("double/float HostVector<ValueType>::ExtractCoarseBoundary() not available");
         FATAL_ERROR(__FILE__, __LINE__);
@@ -1454,7 +1430,7 @@ namespace rocalution
 
     template <>
     void HostVector<int>::ExtractCoarseBoundary(
-        int start, int end, const int* index, int nc, int* size, int* boundary) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const
     {
         assert(index != NULL);
         assert(size != NULL);
@@ -1468,7 +1444,7 @@ namespace rocalution
         set_to_zero_host(nc, check);
 
         // Loop over fine boundary points
-        for(int i = start; i < end; ++i)
+        for(int64_t i = start; i < end; ++i)
         {
             int coarse_index = this->vec_[index[i]];
 
@@ -1497,7 +1473,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = pow(this->vec_[i], static_cast<ValueType>(power));
         }
@@ -1511,7 +1487,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             this->vec_[i] = pow(this->vec_[i], std::complex<float>(static_cast<float>(power)));
         }
@@ -1525,7 +1501,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->size_; ++i)
+        for(int64_t i = 0; i < this->size_; ++i)
         {
             int value = 1;
             for(int j = 0; j < power; ++j)

@@ -93,7 +93,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixBCSR<ValueType>::AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim)
+    void HostMatrixBCSR<ValueType>::AllocateBCSR(int64_t nnzb, int nrowb, int ncolb, int blockdim)
     {
         assert(nnzb >= 0);
         assert(ncolb >= 0);
@@ -128,8 +128,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixBCSR<ValueType>::SetDataPtrBCSR(
-        int** row_offset, int** col, ValueType** val, int nnzb, int nrowb, int ncolb, int blockdim)
+    void HostMatrixBCSR<ValueType>::SetDataPtrBCSR(int**       row_offset,
+                                                   int**       col,
+                                                   ValueType** val,
+                                                   int64_t     nnzb,
+                                                   int         nrowb,
+                                                   int         ncolb,
+                                                   int         blockdim)
     {
         assert(*row_offset != NULL);
         assert(*col != NULL);

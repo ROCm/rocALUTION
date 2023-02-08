@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,11 +45,11 @@ namespace rocalution
         {
             return this->mat_.ELL.max_row;
         }
-        inline int GetELLNnz(void) const
+        inline int64_t GetELLNnz(void) const
         {
             return this->ell_nnz_;
         }
-        inline int GetCOONnz(void) const
+        inline int64_t GetCOONnz(void) const
         {
             return this->coo_nnz_;
         }
@@ -61,7 +61,8 @@ namespace rocalution
         }
 
         virtual void Clear(void);
-        virtual void AllocateHYB(int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
+        virtual void
+            AllocateHYB(int64_t ell_nnz, int64_t coo_nnz, int ell_max_row, int nrow, int ncol);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);
 
@@ -83,8 +84,8 @@ namespace rocalution
     private:
         MatrixHYB<ValueType, int> mat_;
 
-        int ell_nnz_;
-        int coo_nnz_;
+        int64_t ell_nnz_;
+        int64_t coo_nnz_;
 
         rocsparse_mat_descr ell_mat_descr_;
         rocsparse_mat_descr coo_mat_descr_;

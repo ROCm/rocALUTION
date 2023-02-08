@@ -140,7 +140,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixCSR<ValueType>::AllocateCSR(int nnz, int nrow, int ncol)
+    void HIPAcceleratorMatrixCSR<ValueType>::AllocateCSR(int64_t nnz, int nrow, int ncol)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -164,7 +164,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorMatrixCSR<ValueType>::SetDataPtrCSR(
-        int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        PtrType** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         assert(nnz >= 0);
         assert(nrow >= 0);
@@ -193,7 +193,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixCSR<ValueType>::LeaveDataPtrCSR(int**       row_offset,
+    void HIPAcceleratorMatrixCSR<ValueType>::LeaveDataPtrCSR(PtrType**   row_offset,
                                                              int**       col,
                                                              ValueType** val)
     {
@@ -496,7 +496,7 @@ namespace rocalution
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
-            if(hip_cast_mat->mat_.row_offset)
+            if(hip_cast_mat->mat_.row_offset != NULL)
             {
                 copy_d2d(this->nrow_ + 1,
                          hip_cast_mat->mat_.row_offset,
@@ -644,7 +644,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixCSR<ValueType>::CopyFromCSR(const int*       row_offsets,
+    void HIPAcceleratorMatrixCSR<ValueType>::CopyFromCSR(const PtrType*   row_offsets,
                                                          const int*       col,
                                                          const ValueType* val)
     {
@@ -663,7 +663,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixCSR<ValueType>::CopyToCSR(int*       row_offsets,
+    void HIPAcceleratorMatrixCSR<ValueType>::CopyToCSR(PtrType*   row_offsets,
                                                        int*       col,
                                                        ValueType* val) const
     {
@@ -725,7 +725,7 @@ namespace rocalution
         if((cast_mat_ell = dynamic_cast<const HIPAcceleratorMatrixELL<ValueType>*>(&mat)) != NULL)
         {
             this->Clear();
-            int nnz;
+            int64_t nnz;
 
             if(ell_to_csr_hip(&this->local_backend_,
                               cast_mat_ell->nnz_,
@@ -753,7 +753,7 @@ namespace rocalution
            != NULL)
         {
             this->Clear();
-            int nnz = 0;
+            int64_t nnz = 0;
 
             if(dense_to_csr_hip(&this->local_backend_,
                                 cast_mat_dense->nrow_,
@@ -777,10 +777,10 @@ namespace rocalution
         {
             this->Clear();
 
-            int nrow = cast_mat_bcsr->mat_.nrowb * cast_mat_bcsr->mat_.blockdim;
-            int ncol = cast_mat_bcsr->mat_.ncolb * cast_mat_bcsr->mat_.blockdim;
-            int nnz  = cast_mat_bcsr->mat_.nnzb * cast_mat_bcsr->mat_.blockdim
-                      * cast_mat_bcsr->mat_.blockdim;
+            int     nrow = cast_mat_bcsr->mat_.nrowb * cast_mat_bcsr->mat_.blockdim;
+            int     ncol = cast_mat_bcsr->mat_.ncolb * cast_mat_bcsr->mat_.blockdim;
+            int64_t nnz  = cast_mat_bcsr->mat_.nnzb * cast_mat_bcsr->mat_.blockdim
+                          * cast_mat_bcsr->mat_.blockdim;
 
             if(bcsr_to_csr_hip(&this->local_backend_,
                                nnz,
@@ -804,7 +804,7 @@ namespace rocalution
     const HIPAcceleratorMatrixDIA<ValueType>   *cast_mat_dia;
     if ((cast_mat_dia = dynamic_cast<const HIPAcceleratorMatrixDIA<ValueType>*> (&mat)) != NULL) {
       this->Clear();
-      int nnz = 0;
+      int64_t nnz = 0;
 
       FATAL_ERROR(__FILE__, __LINE__);
 
@@ -839,7 +839,7 @@ namespace rocalution
       this->Clear();
 
       FATAL_ERROR(__FILE__, __LINE__);
-      int nnz = 0;
+      int64_t nnz = 0;
 
       this->nrow_ = cast_mat_hyb->nrow_;
       this->ncol_ = cast_mat_hyb->ncol_;
@@ -854,8 +854,12 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostCSR(
-        const int* row_offset, const int* col, const ValueType* val, int nnz, int nrow, int ncol)
+    void HIPAcceleratorMatrixCSR<ValueType>::CopyFromHostCSR(const PtrType*   row_offset,
+                                                             const int*       col,
+                                                             const ValueType* val,
+                                                             int64_t          nnz,
+                                                             int              nrow,
+                                                             int              ncol)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -885,6 +889,8 @@ namespace rocalution
         if(this->nnz_ > 0)
         {
             rocsparse_status status;
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
 
             size_t buffer_size = 0;
             status             = rocsparse_csrsort_buffer_size(
@@ -952,7 +958,7 @@ namespace rocalution
             assert(cast_perm->size_ == this->nrow_);
             assert(cast_perm->size_ == this->ncol_);
 
-            int*       d_nnzPerm = NULL;
+            PtrType*   d_nnzPerm = NULL;
             int*       d_offset  = NULL;
             ValueType* d_data    = NULL;
 
@@ -975,7 +981,7 @@ namespace rocalution
             void*  buffer = NULL;
 
             // Determine maximum
-            int* d_max = NULL;
+            PtrType* d_max = NULL;
             allocate_hip(1, &d_max);
             rocprim::reduce(buffer,
                             size,
@@ -983,7 +989,7 @@ namespace rocalution
                             d_max,
                             0,
                             this->nrow_,
-                            rocprim::maximum<int>(),
+                            rocprim::maximum<PtrType>(),
                             HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipMalloc(&buffer, size);
             rocprim::reduce(buffer,
@@ -992,12 +998,12 @@ namespace rocalution
                             d_max,
                             0,
                             this->nrow_,
-                            rocprim::maximum<int>(),
+                            rocprim::maximum<PtrType>(),
                             HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipFree(buffer);
             buffer = NULL;
 
-            int maxnnzrow;
+            PtrType maxnnzrow;
             copy_d2h(1, d_max, &maxnnzrow);
             free_hip(&d_max);
 
@@ -1007,7 +1013,7 @@ namespace rocalution
                                     d_nnzPerm + 1,
                                     d_nnzPerm + 1,
                                     this->nrow_,
-                                    rocprim::plus<int>(),
+                                    rocprim::plus<PtrType>(),
                                     HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipMalloc(&buffer, size);
             rocprim::inclusive_scan(buffer,
@@ -1015,7 +1021,7 @@ namespace rocalution
                                     d_nnzPerm + 1,
                                     d_nnzPerm + 1,
                                     this->nrow_,
-                                    rocprim::plus<int>(),
+                                    rocprim::plus<PtrType>(),
                                     HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipFree(buffer);
             buffer = NULL;
@@ -1270,6 +1276,8 @@ namespace rocalution
         {
             rocsparse_status status;
 
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
             // Create buffer, if not already available
             size_t buffer_size = 0;
             status             = rocsparseTcsrilu0_buffer_size(
@@ -1333,6 +1341,8 @@ namespace rocalution
         if(this->nnz_ > 0)
         {
             rocsparse_status status;
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
 
             // Create buffer, if not already available
             size_t buffer_size = 0;
@@ -1442,6 +1452,8 @@ namespace rocalution
 
         status = rocsparse_set_mat_diag_type(this->U_mat_descr_, rocsparse_diag_type_non_unit);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
 
         // Create buffer, if not already available
         size_t buffer_size = 0;
@@ -1585,6 +1597,8 @@ namespace rocalution
 
             ValueType alpha = static_cast<ValueType>(1);
 
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
             // Solve L
             status = rocsparseTcsrsv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                                      rocsparse_operation_none,
@@ -1649,6 +1663,8 @@ namespace rocalution
 
         status = rocsparse_set_mat_diag_type(this->L_mat_descr_, rocsparse_diag_type_non_unit);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
 
         // Create buffer, if not already available
         size_t buffer_size_L  = 0;
@@ -1798,6 +1814,8 @@ namespace rocalution
             rocsparse_status status;
 
             ValueType alpha = static_cast<ValueType>(1);
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
 
             // Solve L
             status = rocsparseTcsrsv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -2157,8 +2175,8 @@ namespace rocalution
             assert(cast_vec_diag != NULL);
             assert(cast_vec_diag->size_ == this->nrow_);
 
-            int nrow            = this->nrow_;
-            int avg_nnz_per_row = this->nnz_ / nrow;
+            int     nrow            = this->nrow_;
+            int64_t avg_nnz_per_row = this->nnz_ / nrow;
 
             if(avg_nnz_per_row <= 8)
             {
@@ -2319,9 +2337,9 @@ namespace rocalution
             = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(mat);
         assert(cast_mat != NULL);
 
-        int mat_nnz = 0;
+        PtrType mat_nnz = 0;
 
-        int* row_nnz = NULL;
+        PtrType* row_nnz = NULL;
         allocate_hip(row_size + 1, &row_nnz);
 
         // compute the nnz per row in the new matrix
@@ -2354,7 +2372,7 @@ namespace rocalution
                                 row_nnz,
                                 0,
                                 row_size + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
@@ -2363,7 +2381,7 @@ namespace rocalution
                                 row_nnz,
                                 0,
                                 row_size + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
@@ -2442,7 +2460,7 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
@@ -2451,11 +2469,11 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
-        int nnz_L;
+        PtrType nnz_L;
         copy_d2h(1, cast_L->mat_.row_offset + nrow, &nnz_L);
 
         // allocate lower triangular part structure
@@ -2525,7 +2543,7 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
@@ -2534,11 +2552,11 @@ namespace rocalution
                                 cast_L->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
-        int nnz_L;
+        PtrType nnz_L;
         copy_d2h(1, cast_L->mat_.row_offset + nrow, &nnz_L);
 
         // allocate lower triangular part structure
@@ -2608,7 +2626,7 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
@@ -2617,11 +2635,11 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
-        int nnz_U;
+        PtrType nnz_U;
         copy_d2h(1, cast_U->mat_.row_offset + nrow, &nnz_U);
 
         // allocate lower triangular part structure
@@ -2691,7 +2709,7 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
@@ -2700,11 +2718,11 @@ namespace rocalution
                                 cast_U->mat_.row_offset,
                                 0,
                                 nrow + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         hipFree(rocprim_buffer);
 
-        int nnz_U;
+        PtrType nnz_U;
         copy_d2h(1, cast_U->mat_.row_offset + nrow, &nnz_U);
 
         // allocate lower triangular part structure
@@ -2746,8 +2764,8 @@ namespace rocalution
         assert(cast_perm != NULL);
         assert(this->nrow_ == this->ncol_);
 
-        int* h_row_offset = NULL;
-        int* h_col        = NULL;
+        PtrType* h_row_offset = NULL;
+        int*     h_col        = NULL;
 
         allocate_host(this->nrow_ + 1, &h_row_offset);
         allocate_host(this->nnz_, &h_col);
@@ -2770,7 +2788,7 @@ namespace rocalution
                 ++size;
 
                 // remove all nbh nodes (without diagonal)
-                for(int aj = h_row_offset[ai]; aj < h_row_offset[ai + 1]; ++aj)
+                for(PtrType aj = h_row_offset[ai]; aj < h_row_offset[ai + 1]; ++aj)
                 {
                     if(ai != h_col[aj])
                     {
@@ -2829,9 +2847,9 @@ namespace rocalution
         assert(cast_perm != NULL);
 
         // node colors (init value = 0 i.e. no color)
-        int* color        = NULL;
-        int* h_row_offset = NULL;
-        int* h_col        = NULL;
+        int*     color        = NULL;
+        PtrType* h_row_offset = NULL;
+        int*     h_col        = NULL;
 
         allocate_host(this->nrow_, &color);
         allocate_host(this->nrow_ + 1, &h_row_offset);
@@ -2850,7 +2868,7 @@ namespace rocalution
             row_col.clear();
             row_col.assign(num_colors + 2, false);
 
-            for(int aj = h_row_offset[ai]; aj < h_row_offset[ai + 1]; ++aj)
+            for(PtrType aj = h_row_offset[ai]; aj < h_row_offset[ai + 1]; ++aj)
             {
                 if(ai != h_col[aj])
                 {
@@ -2858,7 +2876,7 @@ namespace rocalution
                 }
             }
 
-            for(int aj = h_row_offset[ai]; aj < h_row_offset[ai + 1]; ++aj)
+            for(PtrType aj = h_row_offset[ai]; aj < h_row_offset[ai + 1]; ++aj)
             {
                 if(row_col[color[ai]] == true)
                 {
@@ -2919,6 +2937,8 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
             rocblas_status status;
             status = rocblasTscal(ROCBLAS_HANDLE(this->local_backend_.ROC_blas_handle),
                                   this->nnz_,
@@ -3016,6 +3036,8 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->nnz_ / this->local_backend_.HIP_block_size + 1);
 
@@ -3111,6 +3133,9 @@ namespace rocalution
         rocsparse_status status;
 
         size_t buffer_size = 0;
+
+        assert(cast_mat_A->nnz_ <= std::numeric_limits<int>::max());
+        assert(cast_mat_B->nnz_ <= std::numeric_limits<int>::max());
 
         status = rocsparseTcsrgemm_buffer_size(
             ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -3253,10 +3278,10 @@ namespace rocalution
         {
             int        m          = this->nrow_;
             int        n          = this->ncol_;
-            int*       csrRowPtrC = NULL;
+            PtrType*   csrRowPtrC = NULL;
             int*       csrColC    = NULL;
             ValueType* csrValC    = NULL;
-            int        nnzC;
+            PtrType    nnzC;
 
             allocate_hip(m + 1, &csrRowPtrC);
 
@@ -3342,13 +3367,13 @@ namespace rocalution
 
             tmp.CopyFrom(*this);
 
-            int nrow    = this->nrow_;
-            int mat_nnz = 0;
+            int     nrow    = this->nrow_;
+            PtrType mat_nnz = 0;
 
             int* row_offset = NULL;
             allocate_hip(nrow + 1, &row_offset);
 
-            int* mat_row_offset = NULL;
+            PtrType* mat_row_offset = NULL;
             allocate_hip(nrow + 1, &mat_row_offset);
 
             set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, row_offset);
@@ -3372,7 +3397,7 @@ namespace rocalution
                                     mat_row_offset,
                                     0,
                                     nrow + 1,
-                                    rocprim::plus<int>(),
+                                    rocprim::plus<PtrType>(),
                                     HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipMalloc(&rocprim_buffer, rocprim_size);
             rocprim::exclusive_scan(rocprim_buffer,
@@ -3381,7 +3406,7 @@ namespace rocalution
                                     mat_row_offset,
                                     0,
                                     nrow + 1,
-                                    rocprim::plus<int>(),
+                                    rocprim::plus<PtrType>(),
                                     HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipFree(rocprim_buffer);
 
@@ -3448,6 +3473,8 @@ namespace rocalution
 
             size_t buffer_size;
 
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
             rocsparse_status status = rocsparse_csr2csc_buffer_size(
                 ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
                 this->nrow_,
@@ -3497,7 +3524,7 @@ namespace rocalution
             assert(cast_vec != NULL);
             assert(cast_vec->size_ == this->nrow_);
 
-            int*       row_offset = NULL;
+            PtrType*   row_offset = NULL;
             int*       col        = NULL;
             ValueType* val        = NULL;
 
@@ -3526,7 +3553,7 @@ namespace rocalution
                                     row_offset,
                                     0,
                                     this->nrow_ + 1,
-                                    rocprim::plus<int>(),
+                                    rocprim::plus<PtrType>(),
                                     HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipMalloc(&rocprim_buffer, rocprim_size);
             rocprim::exclusive_scan(rocprim_buffer,
@@ -3535,11 +3562,11 @@ namespace rocalution
                                     row_offset,
                                     0,
                                     this->nrow_,
-                                    rocprim::plus<int>(),
+                                    rocprim::plus<PtrType>(),
                                     HIPSTREAM(this->local_backend_.HIP_stream_current));
             hipFree(rocprim_buffer);
 
-            int nnz;
+            PtrType nnz;
             copy_d2h(1, row_offset + this->nrow_, &nnz);
 
             allocate_hip(nnz, &col);
@@ -3617,7 +3644,7 @@ namespace rocalution
             cast_vec->Zeros();
 
             // Get nnz of row idx
-            int nnz[2];
+            PtrType nnz[2];
 
             copy_d2h(2, this->mat_.row_offset + idx, nnz);
 
@@ -3771,7 +3798,7 @@ namespace rocalution
     bool HIPAcceleratorMatrixCSR<ValueType>::AMGPMISAggregate(const BaseVector<int>& connections,
                                                               BaseVector<int>* aggregates) const
     {
-        int avg_nnz_per_row = this->nnz_ / this->nrow_;
+        int64_t avg_nnz_per_row = this->nnz_ / this->nrow_;
 
         assert(aggregates != NULL);
 
@@ -3999,7 +4026,7 @@ namespace rocalution
         assert(cast_conn != NULL);
         assert(cast_prolong != NULL);
 
-        int*       prolong_row_offset = nullptr;
+        PtrType*   prolong_row_offset = nullptr;
         int*       prolong_cols       = nullptr;
         ValueType* prolong_vals       = nullptr;
 
@@ -4294,7 +4321,7 @@ namespace rocalution
 
         free_hip(&rocprim_buffer);
 
-        int prolong_nnz = 0;
+        PtrType prolong_nnz;
         copy_d2h(1, prolong_row_offset + this->nrow_, &prolong_nnz);
 
         // Allocate prolongation matrix col indices and values arrays
@@ -4507,7 +4534,7 @@ namespace rocalution
         assert(cast_agg != NULL);
         assert(cast_prolong != NULL);
 
-        int*       prolong_row_offset = nullptr;
+        PtrType*   prolong_row_offset = nullptr;
         int*       prolong_cols       = nullptr;
         ValueType* prolong_vals       = nullptr;
 
@@ -4548,7 +4575,7 @@ namespace rocalution
                                 prolong_row_offset,
                                 prolong_row_offset,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
 
         hipMalloc((void**)&rocprim_buffer, rocprim_size);
@@ -4558,12 +4585,12 @@ namespace rocalution
                                 prolong_row_offset,
                                 prolong_row_offset,
                                 this->nrow_ + 1,
-                                rocprim::plus<int>(),
+                                rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
 
         hipFree(rocprim_buffer);
 
-        int prolong_nnz = 0;
+        PtrType prolong_nnz = 0;
         copy_d2h(1, prolong_row_offset + this->nrow_, &prolong_nnz);
 
         // Allocate prolongation matrix col indices and values arrays

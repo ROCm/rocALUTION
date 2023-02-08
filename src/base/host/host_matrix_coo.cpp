@@ -98,7 +98,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixCOO<ValueType>::AllocateCOO(int nnz, int nrow, int ncol)
+    void HostMatrixCOO<ValueType>::AllocateCOO(int64_t nnz, int nrow, int ncol)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -127,7 +127,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HostMatrixCOO<ValueType>::SetDataPtrCOO(
-        int** row, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        int** row, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         assert(*row != NULL);
         assert(*col != NULL);
@@ -280,9 +280,9 @@ namespace rocalution
     template <typename ValueType>
     bool HostMatrixCOO<ValueType>::ReadFileMTX(const std::string& filename)
     {
-        int nrow;
-        int ncol;
-        int nnz;
+        int     nrow;
+        int     ncol;
+        int64_t nnz;
 
         int*       row = NULL;
         int*       col = NULL;
@@ -336,7 +336,7 @@ namespace rocalution
 
         set_to_zero_host(this->nrow_, cast_out->vec_);
 
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             cast_out->vec_[this->mat_.row[i]]
                 += this->mat_.val[i] * cast_in->vec_[this->mat_.col[i]];
@@ -361,7 +361,7 @@ namespace rocalution
             assert(cast_in != NULL);
             assert(cast_out != NULL);
 
-            for(int i = 0; i < this->nnz_; ++i)
+            for(int64_t i = 0; i < this->nnz_; ++i)
             {
                 cast_out->vec_[this->mat_.row[i]]
                     += scalar * this->mat_.val[i] * cast_in->vec_[this->mat_.col[i]];
@@ -375,7 +375,7 @@ namespace rocalution
         if(this->nnz_ > 0)
         {
             // Sort by row and column index
-            std::vector<int> perm(this->nnz_);
+            std::vector<int64_t> perm(this->nnz_);
 
             // Create identity permutation
             std::iota(perm.begin(), perm.end(), 0);
@@ -404,7 +404,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-            for(int i = 0; i < this->nnz_; ++i)
+            for(int64_t i = 0; i < this->nnz_; ++i)
             {
                 this->mat_.row[i] = row[perm[i]];
                 this->mat_.col[i] = col[perm[i]];
@@ -437,7 +437,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             this->mat_.row[i] = cast_perm->vec_[src.mat_.row[i]];
             this->mat_.col[i] = cast_perm->vec_[src.mat_.col[i]];
@@ -477,7 +477,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             this->mat_.row[i] = pb[src.mat_.row[i]];
             this->mat_.col[i] = pb[src.mat_.col[i]];
@@ -496,7 +496,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             this->mat_.val[i] *= alpha;
         }
@@ -512,7 +512,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             if(this->mat_.row[i] == this->mat_.col[i])
             {
@@ -531,7 +531,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             if(this->mat_.row[i] != this->mat_.col[i])
             {
@@ -550,7 +550,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             this->mat_.val[i] += alpha;
         }
@@ -566,7 +566,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             if(this->mat_.row[i] == this->mat_.col[i])
             {
@@ -585,7 +585,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             if(this->mat_.row[i] != this->mat_.col[i])
             {

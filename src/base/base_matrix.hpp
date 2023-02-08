@@ -85,7 +85,7 @@ namespace rocalution
         /// Return the number of columns in the matrix
         int GetN(void) const;
         /// Return the non-zeros of the matrix
-        int GetNnz(void) const;
+        int64_t GetNnz(void) const;
         /// Shows simple info about the object
         virtual void Info(void) const = 0;
         /// Return the matrix format id (see matrix_formats.hpp)
@@ -98,39 +98,40 @@ namespace rocalution
         virtual bool Check(void) const;
 
         /// Allocate CSR Matrix
-        virtual void AllocateCSR(int nnz, int nrow, int ncol);
+        virtual void AllocateCSR(int64_t nnz, int nrow, int ncol);
         /// Allocate BCSR Matrix
-        virtual void AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim);
+        virtual void AllocateBCSR(int64_t nnzb, int nrowb, int ncolb, int blockdim);
         /// Allocate MCSR Matrix
-        virtual void AllocateMCSR(int nnz, int nrow, int ncol);
+        virtual void AllocateMCSR(int64_t nnz, int nrow, int ncol);
         /// Allocate COO Matrix
-        virtual void AllocateCOO(int nnz, int nrow, int ncol);
+        virtual void AllocateCOO(int64_t nnz, int nrow, int ncol);
         /// Allocate DIA Matrix
-        virtual void AllocateDIA(int nnz, int nrow, int ncol, int ndiag);
+        virtual void AllocateDIA(int64_t nnz, int nrow, int ncol, int ndiag);
         /// Allocate ELL Matrix
-        virtual void AllocateELL(int nnz, int nrow, int ncol, int max_row);
+        virtual void AllocateELL(int64_t nnz, int nrow, int ncol, int max_row);
         /// Allocate HYB Matrix
-        virtual void AllocateHYB(int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol);
+        virtual void
+            AllocateHYB(int64_t ell_nnz, int64_t coo_nnz, int ell_max_row, int nrow, int ncol);
         /// Allocate DENSE Matrix
         virtual void AllocateDENSE(int nrow, int ncol);
 
         /// Initialize a COO matrix on the Host with externally allocated data
         virtual void
-            SetDataPtrCOO(int** row, int** col, ValueType** val, int nnz, int nrow, int ncol);
+            SetDataPtrCOO(int** row, int** col, ValueType** val, int64_t nnz, int nrow, int ncol);
         /// Leave a COO matrix to Host pointers
         virtual void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
 
         /// Initialize a CSR matrix on the Host with externally allocated data
         virtual void SetDataPtrCSR(
-            int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol);
+            PtrType** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol);
         /// Leave a CSR matrix to Host pointers
-        virtual void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
+        virtual void LeaveDataPtrCSR(PtrType** row_offset, int** col, ValueType** val);
 
         /// Initialize a BCSR matrix on the Host with externally allocated data
         virtual void SetDataPtrBCSR(int**       row_offset,
                                     int**       col,
                                     ValueType** val,
-                                    int         nnzb,
+                                    int64_t     nnzb,
                                     int         nrowb,
                                     int         ncolb,
                                     int         blockdim);
@@ -139,19 +140,19 @@ namespace rocalution
 
         /// Initialize a MCSR matrix on the Host with externally allocated data
         virtual void SetDataPtrMCSR(
-            int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol);
+            int** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol);
         /// Leave a MCSR matrix to Host pointers
         virtual void LeaveDataPtrMCSR(int** row_offset, int** col, ValueType** val);
 
         /// Initialize an ELL matrix on the Host with externally allocated data
         virtual void
-            SetDataPtrELL(int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row);
+            SetDataPtrELL(int** col, ValueType** val, int64_t nnz, int nrow, int ncol, int max_row);
         /// Leave an ELL matrix to Host pointers
         virtual void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
 
         /// Initialize a DIA matrix on the Host with externally allocated data
-        virtual void
-            SetDataPtrDIA(int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag);
+        virtual void SetDataPtrDIA(
+            int** offset, ValueType** val, int64_t nnz, int nrow, int ncol, int num_diag);
         /// Leave a DIA matrix to Host pointers
         virtual void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
 
@@ -243,10 +244,10 @@ namespace rocalution
         virtual void CopyToAsync(BaseMatrix<ValueType>* mat) const;
 
         /// Copy from CSR array (the matrix has to be allocated)
-        virtual void CopyFromCSR(const int* row_offsets, const int* col, const ValueType* val);
+        virtual void CopyFromCSR(const PtrType* row_offsets, const int* col, const ValueType* val);
 
         /// Copy to CSR array (the arrays have to be allocated)
-        virtual void CopyToCSR(int* row_offsets, int* col, ValueType* val) const;
+        virtual void CopyToCSR(PtrType* row_offsets, int* col, ValueType* val) const;
 
         /// Copy from COO array (the matrix has to be allocated)
         virtual void CopyFromCOO(const int* row, const int* col, const ValueType* val);
@@ -255,10 +256,10 @@ namespace rocalution
         virtual void CopyToCOO(int* row, int* col, ValueType* val) const;
 
         /// Allocates and copies a host CSR matrix
-        virtual void CopyFromHostCSR(const int*       row_offset,
+        virtual void CopyFromHostCSR(const PtrType*   row_offset,
                                      const int*       col,
                                      const ValueType* val,
-                                     int              nnz,
+                                     int64_t          nnz,
                                      int              nrow,
                                      int              ncol);
 
@@ -425,6 +426,7 @@ namespace rocalution
 
         /// Ruge Stueben coarsening
         virtual bool RSCoarsening(float eps, BaseVector<int>* CFmap, BaseVector<bool>* S) const;
+
         /// Parallel maximal independent set coarsening
         virtual bool RSPMISCoarsening(float eps, BaseVector<int>* CFmap, BaseVector<bool>* S) const;
 
@@ -498,7 +500,7 @@ namespace rocalution
         /// Number of columns
         int ncol_;
         /// Number of non-zero elements
-        int nnz_;
+        int64_t nnz_;
 
         /// Backend descriptor (local copy)
         Rocalution_Backend_Descriptor local_backend_;

@@ -220,10 +220,7 @@ namespace rocalution
 
         allocate_host(size, &this->boundary_index_);
 
-        for(int i = 0; i < size; ++i)
-        {
-            this->boundary_index_[i] = index[i];
-        }
+        copy_h2h(size, index, this->boundary_index_);
     }
 
     const int* ParallelManager::GetBoundaryIndex(void) const
@@ -250,11 +247,8 @@ namespace rocalution
 
         this->recv_offset_index_[0] = 0;
 
-        for(int i = 0; i < nrecv; ++i)
-        {
-            this->recvs_[i]                 = recvs[i];
-            this->recv_offset_index_[i + 1] = recv_offset[i + 1];
-        }
+        copy_h2h(nrecv, recvs, this->recvs_);
+        copy_h2h(nrecv, recv_offset + 1, this->recv_offset_index_ + 1);
 
         this->recv_index_size_ = recv_offset[nrecv];
 
@@ -280,11 +274,8 @@ namespace rocalution
 
         this->send_offset_index_[0] = 0;
 
-        for(int i = 0; i < nsend; ++i)
-        {
-            this->sends_[i]                 = sends[i];
-            this->send_offset_index_[i + 1] = send_offset[i + 1];
-        }
+        copy_h2h(nsend, sends, this->sends_);
+        copy_h2h(nsend, send_offset + 1, this->send_offset_index_ + 1);
 
         if(this->send_index_size_ != 0)
         {

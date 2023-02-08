@@ -99,7 +99,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixELL<ValueType>::AllocateELL(int nnz, int nrow, int ncol, int max_row)
+    void HIPAcceleratorMatrixELL<ValueType>::AllocateELL(int64_t nnz,
+                                                         int     nrow,
+                                                         int     ncol,
+                                                         int     max_row)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -144,7 +147,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorMatrixELL<ValueType>::SetDataPtrELL(
-        int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row)
+        int** col, ValueType** val, int64_t nnz, int nrow, int ncol, int max_row)
     {
         assert(*col != NULL);
         assert(*val != NULL);
@@ -565,7 +568,7 @@ namespace rocalution
         {
             this->Clear();
 
-            int ell_nnz;
+            int64_t ell_nnz;
 
             if(csr_to_ell_hip(&this->local_backend_,
                               cast_mat_csr->nnz_,

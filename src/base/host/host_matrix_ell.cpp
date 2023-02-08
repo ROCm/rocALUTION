@@ -90,7 +90,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixELL<ValueType>::AllocateELL(int nnz, int nrow, int ncol, int max_row)
+    void HostMatrixELL<ValueType>::AllocateELL(int64_t nnz, int nrow, int ncol, int max_row)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -121,7 +121,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HostMatrixELL<ValueType>::SetDataPtrELL(
-        int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row)
+        int** col, ValueType** val, int64_t nnz, int nrow, int ncol, int max_row)
     {
         assert(*col != NULL);
         assert(*val != NULL);
@@ -221,7 +221,7 @@ namespace rocalution
            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
         {
             this->Clear();
-            int nnz = 0;
+            int64_t nnz = 0;
 
             if(csr_to_ell(this->local_backend_.OpenMP_threads,
                           cast_mat->nnz_,

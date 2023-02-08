@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,10 +48,10 @@ namespace rocalution
         }
 
         virtual void Clear(void);
-        virtual void AllocateCOO(int nnz, int nrow, int ncol);
+        virtual void AllocateCOO(int64_t nnz, int nrow, int ncol);
 
         virtual void
-            SetDataPtrCOO(int** row, int** col, ValueType** val, int nnz, int nrow, int ncol);
+            SetDataPtrCOO(int** row, int** col, ValueType** val, int64_t nnz, int nrow, int ncol);
         virtual void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);

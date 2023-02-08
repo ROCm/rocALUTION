@@ -84,7 +84,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(int nnz, int nrow, int ncol, int ndiag)
+    void HIPAcceleratorMatrixDIA<ValueType>::AllocateDIA(int64_t nnz, int nrow, int ncol, int ndiag)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -115,7 +115,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorMatrixDIA<ValueType>::SetDataPtrDIA(
-        int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag)
+        int** offset, ValueType** val, int64_t nnz, int nrow, int ncol, int num_diag)
     {
         assert(*offset != NULL);
         assert(*val != NULL);
@@ -567,8 +567,8 @@ namespace rocalution
         {
             this->Clear();
 
-            int nnz_dia;
-            int num_diag;
+            int64_t nnz_dia;
+            int     num_diag;
 
             if(csr_to_dia_hip(&this->local_backend_,
                               cast_mat_csr->nnz_,

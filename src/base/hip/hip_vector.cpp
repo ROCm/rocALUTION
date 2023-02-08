@@ -83,7 +83,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorVector<ValueType>::Allocate(int n)
+    void HIPAcceleratorVector<ValueType>::Allocate(int64_t n)
     {
         assert(n >= 0);
 
@@ -101,7 +101,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType** ptr, int size)
+    void HIPAcceleratorVector<ValueType>::SetDataPtr(ValueType** ptr, int64_t size)
     {
         assert(size >= 0);
 
@@ -334,9 +334,9 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::CopyFrom(const BaseVector<ValueType>& src,
-                                                   int                          src_offset,
-                                                   int                          dst_offset,
-                                                   int                          size)
+                                                   int64_t                      src_offset,
+                                                   int64_t                      dst_offset,
+                                                   int64_t                      size)
     {
         assert(this->size_ > 0);
         assert(size > 0);
@@ -648,9 +648,9 @@ namespace rocalution
     void HIPAcceleratorVector<ValueType>::ScaleAddScale(ValueType                    alpha,
                                                         const BaseVector<ValueType>& x,
                                                         ValueType                    beta,
-                                                        int                          src_offset,
-                                                        int                          dst_offset,
-                                                        int                          size)
+                                                        int64_t                      src_offset,
+                                                        int64_t                      dst_offset,
+                                                        int64_t                      size)
     {
         if(this->size_ > 0)
         {
@@ -950,7 +950,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int HIPAcceleratorVector<ValueType>::Amax(ValueType& value) const
+    int64_t HIPAcceleratorVector<ValueType>::Amax(ValueType& value) const
     {
         int index = 0;
         value     = static_cast<ValueType>(0.0);
@@ -973,14 +973,14 @@ namespace rocalution
     }
 
     template <>
-    int HIPAcceleratorVector<bool>::Amax(bool& value) const
+    int64_t HIPAcceleratorVector<bool>::Amax(bool& value) const
     {
         LOG_INFO("Amax<bool> not implemented");
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <>
-    int HIPAcceleratorVector<int>::Amax(int& value) const
+    int64_t HIPAcceleratorVector<int>::Amax(int& value) const
     {
         LOG_INFO("Amax<int> not implemented");
         FATAL_ERROR(__FILE__, __LINE__);
@@ -1210,8 +1210,8 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorVector<ValueType>::GetContinuousValues(int        start,
-                                                              int        end,
+    void HIPAcceleratorVector<ValueType>::GetContinuousValues(int64_t    start,
+                                                              int64_t    end,
                                                               ValueType* values) const
     {
         assert(start >= 0);
@@ -1228,8 +1228,8 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorVector<ValueType>::SetContinuousValues(int              start,
-                                                              int              end,
+    void HIPAcceleratorVector<ValueType>::SetContinuousValues(int64_t          start,
+                                                              int64_t          end,
                                                               const ValueType* values)
     {
         assert(start >= 0);
@@ -1246,7 +1246,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::ExtractCoarseMapping(
-        int start, int end, const int* index, int nc, int* size, int* map) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const
     {
         LOG_INFO("ExtractCoarseMapping() NYI for HIP");
         FATAL_ERROR(__FILE__, __LINE__);
@@ -1254,7 +1254,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::ExtractCoarseBoundary(
-        int start, int end, const int* index, int nc, int* size, int* boundary) const
+        int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const
     {
         LOG_INFO("ExtractCoarseBoundary() NYI for HIP");
         FATAL_ERROR(__FILE__, __LINE__);

@@ -48,7 +48,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    inline int BaseVector<ValueType>::GetSize(void) const
+    inline int64_t BaseVector<ValueType>::GetSize(void) const
     {
         return this->size_;
     }

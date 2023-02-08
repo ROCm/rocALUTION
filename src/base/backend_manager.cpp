@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -157,10 +157,18 @@ namespace rocalution
 #ifdef _OPENMP
         _get_backend_descriptor()->OpenMP_def_threads = omp_get_max_threads();
         _get_backend_descriptor()->OpenMP_threads     = omp_get_max_threads();
-        _get_backend_descriptor()->OpenMP_def_nested  = omp_get_nested();
+#if _OPENMP >= 201811
+        _get_backend_descriptor()->OpenMP_def_nested = omp_get_max_active_levels();
+#else
+        _get_backend_descriptor()->OpenMP_def_nested = omp_get_nested();
+#endif
 
         // the default in rocALUTION is 0
+#if _OPENMP >= 201811
+        omp_set_max_active_levels(0);
+#else
         omp_set_nested(0);
+#endif
 
         rocalution_set_omp_affinity(_get_backend_descriptor()->OpenMP_affinity);
 #else
@@ -226,8 +234,11 @@ namespace rocalution
 
         assert((_get_backend_descriptor()->OpenMP_def_nested == 0)
                || (_get_backend_descriptor()->OpenMP_def_nested == 1));
-
+#if _OPENMP >= 201811
+        omp_set_max_active_levels(_get_backend_descriptor()->OpenMP_def_nested);
+#else
         omp_set_nested(_get_backend_descriptor()->OpenMP_def_nested);
+#endif
 #endif
 
         _get_backend_descriptor()->init = false;
@@ -346,7 +357,7 @@ namespace rocalution
 #endif
 
 #ifdef SUPPORT_MULTINODE
-        LOG_INFO("MPI rank:" << backend_descriptor.rank);
+        LOG_INFO("MPI rank: " << backend_descriptor.rank);
 
         MPI_Comm comm = MPI_COMM_WORLD;
         int      num_procs;
@@ -360,7 +371,7 @@ namespace rocalution
 
             if(status == MPI_SUCCESS)
             {
-                LOG_INFO("MPI size:" << num_procs);
+                LOG_INFO("MPI size: " << num_procs);
             }
             else
             {
@@ -587,7 +598,7 @@ namespace rocalution
     }
 
     void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor& backend_descriptor,
-                                  int                                         size)
+                                  int64_t                                     size)
     {
         // if the threshold is disabled or if the size is not in the threshold limit
         if((backend_descriptor.OpenMP_threshold > 0)

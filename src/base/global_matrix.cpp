@@ -262,10 +262,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::SetDataPtrCSR(int**       local_row_offset,
+    void GlobalMatrix<ValueType>::SetDataPtrCSR(PtrType**   local_row_offset,
                                                 int**       local_col,
                                                 ValueType** local_val,
-                                                int**       ghost_row_offset,
+                                                PtrType**   ghost_row_offset,
                                                 int**       ghost_col,
                                                 ValueType** ghost_val,
                                                 std::string name,
@@ -433,7 +433,7 @@ namespace rocalution
 
     template <typename ValueType>
     void GlobalMatrix<ValueType>::SetLocalDataPtrCSR(
-        int** row_offset, int** col, ValueType** val, std::string name, int64_t nnz)
+        PtrType** row_offset, int** col, ValueType** val, std::string name, int64_t nnz)
     {
         log_debug(this, "GlobalMatrix::SetLocalDataPtrCSR()", row_offset, col, val, name, nnz);
 
@@ -499,7 +499,7 @@ namespace rocalution
 
     template <typename ValueType>
     void GlobalMatrix<ValueType>::SetGhostDataPtrCSR(
-        int** row_offset, int** col, ValueType** val, std::string name, int64_t nnz)
+        PtrType** row_offset, int** col, ValueType** val, std::string name, int64_t nnz)
     {
         log_debug(this, "GlobalMatrix::SetGhostDataPtrCSR()", row_offset, col, val, name, nnz);
 
@@ -569,10 +569,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::LeaveDataPtrCSR(int**       local_row_offset,
+    void GlobalMatrix<ValueType>::LeaveDataPtrCSR(PtrType**   local_row_offset,
                                                   int**       local_col,
                                                   ValueType** local_val,
-                                                  int**       ghost_row_offset,
+                                                  PtrType**   ghost_row_offset,
                                                   int**       ghost_col,
                                                   ValueType** ghost_val)
     {
@@ -647,7 +647,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::LeaveLocalDataPtrCSR(int** row_offset, int** col, ValueType** val)
+    void GlobalMatrix<ValueType>::LeaveLocalDataPtrCSR(PtrType**   row_offset,
+                                                       int**       col,
+                                                       ValueType** val)
     {
         log_debug(this, "GlobalMatrix::LeaveLocalDataPtrCSR()", row_offset, col, val);
 
@@ -683,7 +685,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void GlobalMatrix<ValueType>::LeaveGhostDataPtrCSR(int** row_offset, int** col, ValueType** val)
+    void GlobalMatrix<ValueType>::LeaveGhostDataPtrCSR(PtrType**   row_offset,
+                                                       int**       col,
+                                                       ValueType** val)
     {
         log_debug(this, "GlobalMatrix::LeaveGhostDataPtrCSR()", row_offset, col, val);
 
@@ -782,7 +786,7 @@ namespace rocalution
         if(this->GetFormat() == CSR)
         {
             std::stringstream sstr;
-            sstr << "(" << 8 * sizeof(int) << "," << 8 * sizeof(int) << ")";
+            sstr << "(" << 8 * sizeof(PtrType) << "," << 8 * sizeof(int) << ")";
             format += sstr.str() + "/" + _matrix_format_names[this->matrix_ghost_.GetFormat()];
         }
 
@@ -1480,7 +1484,7 @@ namespace rocalution
             this->matrix_interior_.CoarsenOperator(&tmp, pm, nrow, nrow, G, Gsize, rG, rGsize);
         }
 
-        int*       Ac_interior_row_offset = NULL;
+        PtrType*   Ac_interior_row_offset = NULL;
         int*       Ac_interior_col        = NULL;
         ValueType* Ac_interior_val        = NULL;
 
@@ -1559,7 +1563,7 @@ namespace rocalution
 
         G_ghost.Clear();
 
-        int*       Ac_ghost_row_offset = NULL;
+        PtrType*   Ac_ghost_row_offset = NULL;
         int*       Ac_ghost_col        = NULL;
         ValueType* Ac_ghost_val        = NULL;
 

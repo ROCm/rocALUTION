@@ -27,6 +27,7 @@
 #include "local_vector.hpp"
 #include "operator.hpp"
 #include "parallel_manager.hpp"
+#include "rocalution/utils/types.hpp"
 
 namespace rocalution
 {
@@ -105,10 +106,10 @@ namespace rocalution
         void SetParallelManager(const ParallelManager& pm);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated data */
-        void SetDataPtrCSR(int**       local_row_offset,
+        void SetDataPtrCSR(PtrType**   local_row_offset,
                            int**       local_col,
                            ValueType** local_val,
-                           int**       ghost_row_offset,
+                           PtrType**   ghost_row_offset,
                            int**       ghost_col,
                            ValueType** ghost_val,
                            std::string name,
@@ -127,23 +128,23 @@ namespace rocalution
 
         /** \brief Initialize a CSR matrix on the host with externally allocated local data */
         void SetLocalDataPtrCSR(
-            int** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
+            PtrType** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated local data */
         void SetLocalDataPtrCOO(
             int** row, int** col, ValueType** val, std::string name, int64_t nnz);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated ghost data */
         void SetGhostDataPtrCSR(
-            int** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
+            PtrType** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated ghost data */
         void SetGhostDataPtrCOO(
             int** row, int** col, ValueType** val, std::string name, int64_t nnz);
 
         /** \brief Leave a CSR matrix to host pointers */
-        void LeaveDataPtrCSR(int**       local_row_offset,
+        void LeaveDataPtrCSR(PtrType**   local_row_offset,
                              int**       local_col,
                              ValueType** local_val,
-                             int**       ghost_row_offset,
+                             PtrType**   ghost_row_offset,
                              int**       ghost_col,
                              ValueType** ghost_val);
         /** \brief Leave a COO matrix to host pointers */
@@ -154,11 +155,11 @@ namespace rocalution
                              int**       ghost_col,
                              ValueType** ghost_val);
         /** \brief Leave a local CSR matrix to host pointers */
-        void LeaveLocalDataPtrCSR(int** row_offset, int** col, ValueType** val);
+        void LeaveLocalDataPtrCSR(PtrType** row_offset, int** col, ValueType** val);
         /** \brief Leave a local COO matrix to host pointers */
         void LeaveLocalDataPtrCOO(int** row, int** col, ValueType** val);
         /** \brief Leave a CSR ghost matrix to host pointers */
-        void LeaveGhostDataPtrCSR(int** row_offset, int** col, ValueType** val);
+        void LeaveGhostDataPtrCSR(PtrType** row_offset, int** col, ValueType** val);
         /** \brief Leave a COO ghost matrix to host pointers */
         void LeaveGhostDataPtrCOO(int** row, int** col, ValueType** val);
 

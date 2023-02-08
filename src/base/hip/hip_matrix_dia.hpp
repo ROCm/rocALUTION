@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,9 +51,9 @@ namespace rocalution
         }
 
         virtual void Clear(void);
-        virtual void AllocateDIA(int nnz, int nrow, int ncol, int ndiag);
-        virtual void
-            SetDataPtrDIA(int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag);
+        virtual void AllocateDIA(int64_t nnz, int nrow, int ncol, int ndiag);
+        virtual void SetDataPtrDIA(
+            int** offset, ValueType** val, int64_t nnz, int nrow, int ncol, int num_diag);
         virtual void LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);

@@ -47,8 +47,8 @@ namespace rocalution
 
         virtual void Info(void) const;
 
-        virtual void Allocate(int n);
-        virtual void SetDataPtr(ValueType** ptr, int size);
+        virtual void Allocate(int64_t n);
+        virtual void SetDataPtr(ValueType** ptr, int64_t size);
         virtual void LeaveDataPtr(ValueType** ptr);
         virtual void Clear(void);
         virtual void Zeros(void);
@@ -57,8 +57,10 @@ namespace rocalution
 
         virtual void CopyFrom(const BaseVector<ValueType>& src);
         virtual void CopyFromAsync(const BaseVector<ValueType>& src);
-        virtual void
-            CopyFrom(const BaseVector<ValueType>& src, int src_offset, int dst_offset, int size);
+        virtual void CopyFrom(const BaseVector<ValueType>& src,
+                              int64_t                      src_offset,
+                              int64_t                      dst_offset,
+                              int64_t                      size);
 
         virtual void CopyTo(BaseVector<ValueType>* dst) const;
         virtual void CopyToAsync(BaseVector<ValueType>* dst) const;
@@ -91,9 +93,9 @@ namespace rocalution
         virtual void ScaleAddScale(ValueType                    alpha,
                                    const BaseVector<ValueType>& x,
                                    ValueType                    beta,
-                                   int                          src_offset,
-                                   int                          dst_offset,
-                                   int                          size);
+                                   int64_t                      src_offset,
+                                   int64_t                      dst_offset,
+                                   int64_t                      size);
         // this = alpha*this + x*beta + y*gamma
         virtual void ScaleAdd2(ValueType                    alpha,
                                const BaseVector<ValueType>& x,
@@ -114,7 +116,7 @@ namespace rocalution
         // Compute sum of absolute values of this
         virtual ValueType Asum(void) const;
         // Compute absolute value of this
-        virtual int Amax(ValueType& value) const;
+        virtual int64_t Amax(ValueType& value) const;
         // point-wise multiplication
         virtual void PointWiseMult(const BaseVector<ValueType>& x);
         virtual void PointWiseMult(const BaseVector<ValueType>& x, const BaseVector<ValueType>& y);
@@ -127,16 +129,16 @@ namespace rocalution
         virtual void SetIndexValues(const BaseVector<int>&       index,
                                     const BaseVector<ValueType>& values);
         // get continuous index values
-        virtual void GetContinuousValues(int start, int end, ValueType* values) const;
+        virtual void GetContinuousValues(int64_t start, int64_t end, ValueType* values) const;
         // set continuous index values
-        virtual void SetContinuousValues(int start, int end, const ValueType* values);
+        virtual void SetContinuousValues(int64_t start, int64_t end, const ValueType* values);
 
         // get coarse boundary mapping
         virtual void ExtractCoarseMapping(
-            int start, int end, const int* index, int nc, int* size, int* map) const;
+            int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const;
         // get coarse boundary index
         virtual void ExtractCoarseBoundary(
-            int start, int end, const int* index, int nc, int* size, int* boundary) const;
+            int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const;
 
         // set random values from a uniform distribution.
         virtual void SetRandomUniform(unsigned long long seed, ValueType a, ValueType b);
@@ -155,9 +157,6 @@ namespace rocalution
 
     private:
         ValueType* vec_;
-
-        int*       index_array_;
-        ValueType* index_buffer_;
 
         friend class HIPAcceleratorVector<float>;
         friend class HIPAcceleratorVector<double>;

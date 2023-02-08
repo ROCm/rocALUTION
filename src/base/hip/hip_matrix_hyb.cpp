@@ -126,7 +126,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorMatrixHYB<ValueType>::AllocateHYB(
-        int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)
+        int64_t ell_nnz, int64_t coo_nnz, int ell_max_row, int nrow, int ncol)
     {
         assert(ell_nnz >= 0);
         assert(coo_nnz >= 0);
@@ -670,9 +670,9 @@ namespace rocalution
         {
             this->Clear();
 
-            int nnz_hyb;
-            int nnz_ell;
-            int nnz_coo;
+            int64_t nnz_hyb;
+            int64_t nnz_ell;
+            int64_t nnz_coo;
 
             if(csr_to_hyb_hip(&this->local_backend_,
                               cast_mat_csr->nnz_,

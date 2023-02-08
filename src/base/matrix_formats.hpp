@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,11 +47,11 @@ namespace rocalution
     };
 
     // Sparse Matrix - Sparse Compressed Row Format CSR
-    template <typename ValueType, typename IndexType>
+    template <typename ValueType, typename IndexType, typename PointerType>
     struct MatrixCSR
     {
         // Row offsets (row ptr)
-        IndexType* row_offset;
+        PointerType* row_offset;
 
         // Column index
         IndexType* col;
@@ -82,7 +82,7 @@ namespace rocalution
         // Number of block columns
         Index ncolb;
         // Number of block nnz
-        Index nnzb;
+        int64_t nnzb;
 
         // Block dimension
         Index blockdim;

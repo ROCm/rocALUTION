@@ -91,7 +91,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixDIA<ValueType>::AllocateDIA(int nnz, int nrow, int ncol, int ndiag)
+    void HostMatrixDIA<ValueType>::AllocateDIA(int64_t nnz, int nrow, int ncol, int ndiag)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -121,7 +121,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HostMatrixDIA<ValueType>::SetDataPtrDIA(
-        int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag)
+        int** offset, ValueType** val, int64_t nnz, int nrow, int ncol, int num_diag)
     {
         assert(*offset != NULL);
         assert(*val != NULL);
@@ -240,7 +240,7 @@ namespace rocalution
            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
         {
             this->Clear();
-            int nnz = 0;
+            int64_t nnz = 0;
 
             if(csr_to_dia(this->local_backend_.OpenMP_threads,
                           cast_mat->nnz_,

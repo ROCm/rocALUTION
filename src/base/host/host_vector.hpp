@@ -47,8 +47,8 @@ namespace rocalution
         virtual void Info(void) const;
 
         virtual bool Check(void) const;
-        virtual void Allocate(int n);
-        virtual void SetDataPtr(ValueType** ptr, int size);
+        virtual void Allocate(int64_t n);
+        virtual void SetDataPtr(ValueType** ptr, int64_t size);
         virtual void LeaveDataPtr(ValueType** ptr);
         virtual void Clear(void);
         virtual void Zeros(void);
@@ -61,8 +61,10 @@ namespace rocalution
         virtual void CopyFromFloat(const BaseVector<float>& vec);
         virtual void CopyFromDouble(const BaseVector<double>& vec);
         virtual void CopyTo(BaseVector<ValueType>* vec) const;
-        virtual void
-            CopyFrom(const BaseVector<ValueType>& src, int src_offset, int dst_offset, int size);
+        virtual void CopyFrom(const BaseVector<ValueType>& src,
+                              int64_t                      src_offset,
+                              int64_t                      dst_offset,
+                              int64_t                      size);
         virtual void CopyFromPermute(const BaseVector<ValueType>& src,
                                      const BaseVector<int>&       permutation);
         virtual void CopyFromPermuteBackward(const BaseVector<ValueType>& src,
@@ -97,9 +99,9 @@ namespace rocalution
         virtual void ScaleAddScale(ValueType                    alpha,
                                    const BaseVector<ValueType>& x,
                                    ValueType                    beta,
-                                   int                          src_offset,
-                                   int                          dst_offset,
-                                   int                          size);
+                                   int64_t                      src_offset,
+                                   int64_t                      dst_offset,
+                                   int64_t                      size);
         // this = alpha*this + x*beta + y*gamma
         virtual void ScaleAdd2(ValueType                    alpha,
                                const BaseVector<ValueType>& x,
@@ -120,7 +122,7 @@ namespace rocalution
         // Compute sum of absolute values of this
         virtual ValueType Asum(void) const;
         // Compute absolute value of this
-        virtual int Amax(ValueType& value) const;
+        virtual int64_t Amax(ValueType& value) const;
         // point-wise multiplication
         virtual void PointWiseMult(const BaseVector<ValueType>& x);
         virtual void PointWiseMult(const BaseVector<ValueType>& x, const BaseVector<ValueType>& y);
@@ -133,15 +135,15 @@ namespace rocalution
         virtual void SetIndexValues(const BaseVector<int>&       index,
                                     const BaseVector<ValueType>& values);
         // get continuous index values
-        virtual void GetContinuousValues(int start, int end, ValueType* values) const;
+        virtual void GetContinuousValues(int64_t start, int64_t end, ValueType* values) const;
         // set continuous index values
-        virtual void SetContinuousValues(int start, int end, const ValueType* values);
+        virtual void SetContinuousValues(int64_t start, int64_t end, const ValueType* values);
         // get coarse boundary mapping
         virtual void ExtractCoarseMapping(
-            int start, int end, const int* index, int nc, int* size, int* map) const;
+            int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const;
         // get coarse boundary index
         virtual void ExtractCoarseBoundary(
-            int start, int end, const int* index, int nc, int* size, int* boundary) const;
+            int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const;
 
     private:
         ValueType* vec_;

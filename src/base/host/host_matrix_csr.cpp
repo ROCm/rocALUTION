@@ -134,7 +134,7 @@ namespace rocalution
             assert(this->mat_.col != NULL);
 
             // check nnz
-            if((std::abs(this->nnz_) == std::numeric_limits<int>::infinity()) || // inf
+            if((std::abs(this->nnz_) == std::numeric_limits<int64_t>::infinity()) || // inf
                (this->nnz_ != this->nnz_))
             { // NaN
                 LOG_VERBOSE_INFO(2, "*** error: Matrix CSR:Check - problems with matrix nnz");
@@ -159,7 +159,7 @@ namespace rocalution
 
             for(int ai = 0; ai < this->nrow_ + 1; ++ai)
             {
-                int row = this->mat_.row_offset[ai];
+                PtrType row = this->mat_.row_offset[ai];
                 if((row < 0) || (row > this->nnz_))
                 {
                     LOG_VERBOSE_INFO(
@@ -173,7 +173,8 @@ namespace rocalution
             {
                 int s = this->mat_.col[this->mat_.row_offset[ai]];
 
-                for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+                for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1];
+                    ++aj)
                 {
                     int col = this->mat_.col[aj];
 
@@ -224,7 +225,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixCSR<ValueType>::AllocateCSR(int nnz, int nrow, int ncol)
+    void HostMatrixCSR<ValueType>::AllocateCSR(int64_t nnz, int nrow, int ncol)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -247,7 +248,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HostMatrixCSR<ValueType>::SetDataPtrCSR(
-        int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        PtrType** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         assert(nnz >= 0);
         assert(nrow >= 0);
@@ -272,7 +273,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixCSR<ValueType>::LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val)
+    void HostMatrixCSR<ValueType>::LeaveDataPtrCSR(PtrType** row_offset, int** col, ValueType** val)
     {
         assert(this->nrow_ >= 0);
         assert(this->ncol_ >= 0);
@@ -292,7 +293,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixCSR<ValueType>::CopyFromCSR(const int*       row_offsets,
+    void HostMatrixCSR<ValueType>::CopyFromCSR(const PtrType*   row_offsets,
                                                const int*       col,
                                                const ValueType* val)
     {
@@ -313,7 +314,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixCSR<ValueType>::CopyToCSR(int* row_offsets, int* col, ValueType* val) const
+    void HostMatrixCSR<ValueType>::CopyToCSR(PtrType* row_offsets, int* col, ValueType* val) const
     {
         assert(row_offsets != NULL);
 
@@ -376,11 +377,11 @@ namespace rocalution
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string& filename)
     {
-        int nrow;
-        int ncol;
-        int nnz;
+        int64_t nrow;
+        int64_t ncol;
+        int64_t nnz;
 
-        int*       ptr = NULL;
+        PtrType*   ptr = NULL;
         int*       col = NULL;
         ValueType* val = NULL;
 
@@ -389,15 +390,23 @@ namespace rocalution
             return false;
         }
 
+        // Number of rows and columns are expected to be within 32 bits locally
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
         this->Clear();
-        this->SetDataPtrCSR(&ptr, &col, &val, nnz, nrow, ncol);
+        this->SetDataPtrCSR(&ptr, &col, &val, nnz, static_cast<int>(nrow), static_cast<int>(ncol));
 
         return true;
     }
 
     template <typename ValueType>
-    void HostMatrixCSR<ValueType>::CopyFromHostCSR(
-        const int* row_offset, const int* col, const ValueType* val, int nnz, int nrow, int ncol)
+    void HostMatrixCSR<ValueType>::CopyFromHostCSR(const PtrType*   row_offset,
+                                                   const int*       col,
+                                                   const ValueType* val,
+                                                   int64_t          nnz,
+                                                   int              nrow,
+                                                   int              ncol)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -471,9 +480,9 @@ namespace rocalution
         {
             this->Clear();
 
-            int nrow = cast_mat->mat_.nrowb * cast_mat->mat_.blockdim;
-            int ncol = cast_mat->mat_.ncolb * cast_mat->mat_.blockdim;
-            int nnz  = cast_mat->mat_.nnzb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
+            int     nrow = cast_mat->mat_.nrowb * cast_mat->mat_.blockdim;
+            int     ncol = cast_mat->mat_.ncolb * cast_mat->mat_.blockdim;
+            int64_t nnz  = cast_mat->mat_.nnzb * cast_mat->mat_.blockdim * cast_mat->mat_.blockdim;
 
             if(bcsr_to_csr(this->local_backend_.OpenMP_threads,
                            nnz,
@@ -516,7 +525,7 @@ namespace rocalution
            = dynamic_cast<const HostMatrixDENSE<ValueType>*>(&mat))
         {
             this->Clear();
-            int nnz = 0;
+            int64_t nnz = 0;
 
             if(dense_to_csr(this->local_backend_.OpenMP_threads,
                             cast_mat->nrow_,
@@ -538,7 +547,7 @@ namespace rocalution
            = dynamic_cast<const HostMatrixDIA<ValueType>*>(&mat))
         {
             this->Clear();
-            int nnz;
+            int64_t nnz;
 
             if(dia_to_csr(this->local_backend_.OpenMP_threads,
                           cast_mat->nnz_,
@@ -561,7 +570,7 @@ namespace rocalution
            = dynamic_cast<const HostMatrixELL<ValueType>*>(&mat))
         {
             this->Clear();
-            int nnz;
+            int64_t nnz;
 
             if(ell_to_csr(this->local_backend_.OpenMP_threads,
                           cast_mat->nnz_,
@@ -605,7 +614,7 @@ namespace rocalution
            = dynamic_cast<const HostMatrixHYB<ValueType>*>(&mat))
         {
             this->Clear();
-            int nnz;
+            int64_t nnz;
 
             if(hyb_to_csr(this->local_backend_.OpenMP_threads,
                           cast_mat->nnz_,
@@ -652,10 +661,10 @@ namespace rocalution
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             ValueType sum     = static_cast<ValueType>(0);
-            int       row_beg = this->mat_.row_offset[ai];
-            int       row_end = this->mat_.row_offset[ai + 1];
+            PtrType   row_beg = this->mat_.row_offset[ai];
+            PtrType   row_end = this->mat_.row_offset[ai + 1];
 
-            for(int aj = row_beg; aj < row_end; ++aj)
+            for(PtrType aj = row_beg; aj < row_end; ++aj)
             {
                 sum += this->mat_.val[aj] * cast_in->vec_[this->mat_.col[aj]];
             }
@@ -689,7 +698,8 @@ namespace rocalution
 #endif
             for(int ai = 0; ai < this->nrow_; ++ai)
             {
-                for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+                for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1];
+                    ++aj)
                 {
                     cast_out->vec_[ai]
                         += scalar * this->mat_.val[aj] * cast_in->vec_[this->mat_.col[aj]];
@@ -713,7 +723,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai == this->mat_.col[aj])
                 {
@@ -744,7 +754,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai == this->mat_.col[aj])
                 {
@@ -792,7 +802,7 @@ namespace rocalution
         HostMatrixCSR<ValueType>* cast_mat = dynamic_cast<HostMatrixCSR<ValueType>*>(mat);
         assert(cast_mat != NULL);
 
-        int mat_nnz = 0;
+        int64_t mat_nnz = 0;
 
         // use omp in local_matrix (higher level)
 
@@ -803,7 +813,7 @@ namespace rocalution
         //#endif
         for(int ai = row_offset; ai < row_offset + row_size; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if((this->mat_.col[aj] >= col_offset)
                    && (this->mat_.col[aj] < col_offset + col_size))
@@ -820,12 +830,13 @@ namespace rocalution
         {
             cast_mat->AllocateCSR(mat_nnz, row_size, col_size);
 
-            int mat_row_offset           = 0;
+            PtrType mat_row_offset       = 0;
             cast_mat->mat_.row_offset[0] = mat_row_offset;
 
             for(int ai = row_offset; ai < row_offset + row_size; ++ai)
             {
-                for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+                for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1];
+                    ++aj)
                 {
                     if((this->mat_.col[aj] >= col_offset)
                        && (this->mat_.col[aj] < col_offset + col_size))
@@ -859,13 +870,13 @@ namespace rocalution
         assert(cast_U != NULL);
 
         // count nnz of upper triangular part
-        int nnz_U = 0;
+        int64_t nnz_U = 0;
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : nnz_U)
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] > ai)
                 {
@@ -875,7 +886,7 @@ namespace rocalution
         }
 
         // allocate upper triangular part structure
-        int*       row_offset = NULL;
+        PtrType*   row_offset = NULL;
         int*       col        = NULL;
         ValueType* val        = NULL;
 
@@ -884,11 +895,11 @@ namespace rocalution
         allocate_host(nnz_U, &val);
 
         // fill upper triangular part
-        int nnz       = 0;
+        PtrType nnz   = 0;
         row_offset[0] = 0;
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] > ai)
                 {
@@ -920,13 +931,13 @@ namespace rocalution
         assert(cast_U != NULL);
 
         // count nnz of upper triangular part
-        int nnz_U = 0;
+        int64_t nnz_U = 0;
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : nnz_U)
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] >= ai)
                 {
@@ -936,7 +947,7 @@ namespace rocalution
         }
 
         // allocate upper triangular part structure
-        int*       row_offset = NULL;
+        PtrType*   row_offset = NULL;
         int*       col        = NULL;
         ValueType* val        = NULL;
 
@@ -945,11 +956,11 @@ namespace rocalution
         allocate_host(nnz_U, &val);
 
         // fill upper triangular part
-        int nnz       = 0;
+        PtrType nnz   = 0;
         row_offset[0] = 0;
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] >= ai)
                 {
@@ -981,13 +992,13 @@ namespace rocalution
         assert(cast_L != NULL);
 
         // count nnz of lower triangular part
-        int nnz_L = 0;
+        int64_t nnz_L = 0;
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : nnz_L)
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] < ai)
                 {
@@ -997,7 +1008,7 @@ namespace rocalution
         }
 
         // allocate lower triangular part structure
-        int*       row_offset = NULL;
+        PtrType*   row_offset = NULL;
         int*       col        = NULL;
         ValueType* val        = NULL;
 
@@ -1006,11 +1017,11 @@ namespace rocalution
         allocate_host(nnz_L, &val);
 
         // fill lower triangular part
-        int nnz       = 0;
+        PtrType nnz   = 0;
         row_offset[0] = 0;
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] < ai)
                 {
@@ -1042,13 +1053,13 @@ namespace rocalution
         assert(cast_L != NULL);
 
         // count nnz of lower triangular part
-        int nnz_L = 0;
+        int64_t nnz_L = 0;
 #ifdef _OPENMP
 #pragma omp parallel for reduction(+ : nnz_L)
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] <= ai)
                 {
@@ -1058,7 +1069,7 @@ namespace rocalution
         }
 
         // allocate lower triangular part structure
-        int*       row_offset = NULL;
+        PtrType*   row_offset = NULL;
         int*       col        = NULL;
         ValueType* val        = NULL;
 
@@ -1067,11 +1078,11 @@ namespace rocalution
         allocate_host(nnz_L, &val);
 
         // fill lower triangular part
-        int nnz       = 0;
+        PtrType nnz   = 0;
         row_offset[0] = 0;
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] <= ai)
                 {
@@ -1110,7 +1121,7 @@ namespace rocalution
         {
             cast_out->vec_[ai] = cast_in->vec_[ai];
 
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] < ai)
                 {
@@ -1126,12 +1137,12 @@ namespace rocalution
         }
 
         // last elements should be the diagonal one (last)
-        int diag_aj = this->nnz_ - 1;
+        int64_t diag_aj = this->nnz_ - 1;
 
         // Solve U
         for(int ai = this->nrow_ - 1; ai >= 0; --ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] > ai)
                 {
@@ -1194,9 +1205,9 @@ namespace rocalution
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             ValueType value    = cast_in->vec_[ai];
-            int       diag_idx = this->mat_.row_offset[ai + 1] - 1;
+            PtrType   diag_idx = this->mat_.row_offset[ai + 1] - 1;
 
-            for(int aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
             {
                 value -= this->mat_.val[aj] * cast_out->vec_[this->mat_.col[aj]];
             }
@@ -1207,10 +1218,10 @@ namespace rocalution
         // Solve L^T
         for(int ai = this->nrow_ - 1; ai >= 0; --ai)
         {
-            int       diag_idx = this->mat_.row_offset[ai + 1] - 1;
+            PtrType   diag_idx = this->mat_.row_offset[ai + 1] - 1;
             ValueType value    = cast_out->vec_[ai] / this->mat_.val[diag_idx];
 
-            for(int aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
             {
                 cast_out->vec_[this->mat_.col[aj]] -= value * this->mat_.val[aj];
             }
@@ -1244,9 +1255,9 @@ namespace rocalution
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             ValueType value    = cast_in->vec_[ai];
-            int       diag_idx = this->mat_.row_offset[ai + 1] - 1;
+            PtrType   diag_idx = this->mat_.row_offset[ai + 1] - 1;
 
-            for(int aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
             {
                 value -= this->mat_.val[aj] * cast_out->vec_[this->mat_.col[aj]];
             }
@@ -1257,10 +1268,10 @@ namespace rocalution
         // Solve L^T
         for(int ai = this->nrow_ - 1; ai >= 0; --ai)
         {
-            int       diag_idx = this->mat_.row_offset[ai + 1] - 1;
+            PtrType   diag_idx = this->mat_.row_offset[ai + 1] - 1;
             ValueType value    = cast_out->vec_[ai] * cast_diag->vec_[ai];
 
-            for(int aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < diag_idx; ++aj)
             {
                 cast_out->vec_[this->mat_.col[aj]] -= value * this->mat_.val[aj];
             }
@@ -1299,14 +1310,14 @@ namespace rocalution
         assert(cast_in != NULL);
         assert(cast_out != NULL);
 
-        int diag_aj = 0;
+        PtrType diag_aj = 0;
 
         // Solve L
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             cast_out->vec_[ai] = cast_in->vec_[ai];
 
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] < ai)
                 {
@@ -1363,14 +1374,14 @@ namespace rocalution
         assert(cast_out != NULL);
 
         // last elements should the diagonal one (last)
-        int diag_aj = this->nnz_ - 1;
+        int64_t diag_aj = this->nnz_ - 1;
 
         // Solve U
         for(int ai = this->nrow_ - 1; ai >= 0; --ai)
         {
             cast_out->vec_[ai] = cast_in->vec_[ai];
 
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(this->mat_.col[aj] > ai)
                 {
@@ -1405,8 +1416,8 @@ namespace rocalution
         assert(this->nnz_ > 0);
 
         // pointer of upper part of each row
-        int* diag_offset = NULL;
-        int* nnz_entries = NULL;
+        PtrType* diag_offset = NULL;
+        PtrType* nnz_entries = NULL;
 
         allocate_host(this->nrow_, &diag_offset);
         allocate_host(this->nrow_, &nnz_entries);
@@ -1417,9 +1428,9 @@ namespace rocalution
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             // ai-th row entries
-            int row_start = this->mat_.row_offset[ai];
-            int row_end   = this->mat_.row_offset[ai + 1];
-            int j;
+            PtrType row_start = this->mat_.row_offset[ai];
+            PtrType row_end   = this->mat_.row_offset[ai + 1];
+            PtrType j;
 
             // nnz position of ai-th row in mat_.val array
             for(j = row_start; j < row_end; ++j)
@@ -1433,8 +1444,8 @@ namespace rocalution
                 // if nnz entry is in lower matrix
                 if(this->mat_.col[j] < ai)
                 {
-                    int col_j  = this->mat_.col[j];
-                    int diag_j = diag_offset[col_j];
+                    int     col_j  = this->mat_.col[j];
+                    PtrType diag_j = diag_offset[col_j];
 
                     if(this->mat_.val[diag_j] != static_cast<ValueType>(0))
                     {
@@ -1442,7 +1453,7 @@ namespace rocalution
                         this->mat_.val[j] = this->mat_.val[j] / this->mat_.val[diag_j];
 
                         // loop over upper offset pointer and do linear combination for nnz entry
-                        for(int k = diag_j + 1; k < this->mat_.row_offset[col_j + 1]; ++k)
+                        for(PtrType k = diag_j + 1; k < this->mat_.row_offset[col_j + 1]; ++k)
                         {
                             // if nnz at this position do linear combination
                             if(nnz_entries[this->mat_.col[k]] != 0)
@@ -1486,8 +1497,8 @@ namespace rocalution
         int nrow = this->nrow_;
         int ncol = this->ncol_;
 
-        int*       row_offset  = NULL;
-        int*       diag_offset = NULL;
+        PtrType*   row_offset  = NULL;
+        PtrType*   diag_offset = NULL;
         int*       nnz_entries = NULL;
         bool*      nnz_pos     = (bool*)malloc(nrow * sizeof(bool));
         ValueType* w           = NULL;
@@ -1513,20 +1524,20 @@ namespace rocalution
 
         // initialize row_offset
         row_offset[0] = 0;
-        int nnz       = 0;
+        int64_t nnz   = 0;
 
         // loop over all rows
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             row_offset[ai + 1] = row_offset[ai];
 
-            int    row_begin = this->mat_.row_offset[ai];
-            int    row_end   = this->mat_.row_offset[ai + 1];
-            double row_norm  = 0.0;
+            PtrType row_begin = this->mat_.row_offset[ai];
+            PtrType row_end   = this->mat_.row_offset[ai + 1];
+            double  row_norm  = 0.0;
 
             // fill working array with ai-th row
             int m = 0;
-            for(int aj = row_begin; aj < row_end; ++aj)
+            for(PtrType aj = row_begin; aj < row_end; ++aj)
             {
                 int idx        = this->mat_.col[aj];
                 w[idx]         = this->mat_.val[aj];
@@ -1538,7 +1549,7 @@ namespace rocalution
             }
 
             // threshold for dropping strategy
-            double threshold = t * row_norm / (row_end - row_begin);
+            double threshold = t * row_norm / static_cast<double>(row_end - row_begin);
 
             for(int k = 0; k < nrow; ++k)
             {
@@ -1588,7 +1599,7 @@ namespace rocalution
                     w[aj] /= val[diag_offset[aj]];
 
                     // do linear combination with previous row
-                    for(int l = diag_offset[aj] + 1; l < row_offset[aj + 1]; ++l)
+                    for(PtrType l = diag_offset[aj] + 1; l < row_offset[aj + 1]; ++l)
                     {
                         int       idx    = col[l];
                         ValueType fillin = w[aj] * val[l];
@@ -1726,8 +1737,8 @@ namespace rocalution
 
         cast_diag->Allocate(this->nrow_);
 
-        int* diag_offset = NULL;
-        int* nnz_entries = NULL;
+        PtrType* diag_offset = NULL;
+        PtrType* nnz_entries = NULL;
 
         allocate_host(this->nrow_, &diag_offset);
         allocate_host(this->nrow_, &nnz_entries);
@@ -1737,10 +1748,10 @@ namespace rocalution
         // i=0,..n
         for(int i = 0; i < this->nrow_; ++i)
         {
-            int row_begin = this->mat_.row_offset[i];
-            int row_end   = this->mat_.row_offset[i + 1];
+            PtrType row_begin = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
 
-            for(int j = row_begin; j < row_end; ++j)
+            for(PtrType j = row_begin; j < row_end; ++j)
             {
                 nnz_entries[this->mat_.col[j]] = j;
             }
@@ -1750,7 +1761,7 @@ namespace rocalution
             bool has_diag = false;
 
             // j=0,..i
-            int j;
+            PtrType j;
             for(j = row_begin; j < row_end; ++j)
             {
                 int       col_j = this->mat_.col[j];
@@ -1769,8 +1780,8 @@ namespace rocalution
                     break;
                 }
 
-                int row_begin_j = this->mat_.row_offset[col_j];
-                int row_diag_j  = diag_offset[col_j];
+                PtrType row_begin_j = this->mat_.row_offset[col_j];
+                PtrType row_diag_j  = diag_offset[col_j];
 
                 ValueType local_sum = static_cast<ValueType>(0);
                 ValueType inv_diag  = this->mat_.val[row_diag_j];
@@ -1784,13 +1795,13 @@ namespace rocalution
 
                 inv_diag = static_cast<ValueType>(1) / inv_diag;
 
-                for(int k = row_begin_j; k < row_diag_j; ++k)
+                for(PtrType k = row_begin_j; k < row_diag_j; ++k)
                 {
                     int col_k = this->mat_.col[k];
 
                     if(nnz_entries[col_k] != 0)
                     {
-                        int idx = nnz_entries[col_k];
+                        PtrType idx = nnz_entries[col_k];
                         local_sum += this->mat_.val[k] * this->mat_.val[idx];
                     }
                 }
@@ -1864,7 +1875,7 @@ namespace rocalution
             row_col.reserve(num_colors + 2);
             row_col.assign(num_colors + 2, false);
 
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai != this->mat_.col[aj])
                 {
@@ -1872,7 +1883,7 @@ namespace rocalution
                 }
             }
 
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(row_col[color[ai]] == true)
                 {
@@ -1945,7 +1956,8 @@ namespace rocalution
                 ++size;
 
                 // remove all nbh nodes (without diagonal)
-                for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+                for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1];
+                    ++aj)
                 {
                     if(ai != this->mat_.col[aj])
                     {
@@ -1998,7 +2010,7 @@ namespace rocalution
 
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai == this->mat_.col[aj])
                 {
@@ -2014,7 +2026,7 @@ namespace rocalution
         {
             bool hit = false;
 
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai == this->mat_.col[aj])
                 {
@@ -2044,8 +2056,8 @@ namespace rocalution
         assert(cast_mat != NULL);
         assert(this->ncol_ == cast_mat->nrow_);
 
-        std::vector<int>  row_offset;
-        std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+        std::vector<PtrType> row_offset;
+        std::vector<int>*    new_col = new std::vector<int>[this->nrow_];
 
         row_offset.resize(this->nrow_ + 1);
 
@@ -2059,12 +2071,13 @@ namespace rocalution
         for(int i = 0; i < this->nrow_; ++i)
         {
             // loop over the row
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 int ii = this->mat_.col[j];
 
                 // loop corresponding row
-                for(int k = cast_mat->mat_.row_offset[ii]; k < cast_mat->mat_.row_offset[ii + 1];
+                for(PtrType k = cast_mat->mat_.row_offset[ii];
+                    k < cast_mat->mat_.row_offset[ii + 1];
                     ++k)
                 {
                     new_col[i].push_back(cast_mat->mat_.col[k]);
@@ -2074,7 +2087,7 @@ namespace rocalution
             std::sort(new_col[i].begin(), new_col[i].end());
             new_col[i].erase(std::unique(new_col[i].begin(), new_col[i].end()), new_col[i].end());
 
-            row_offset[i + 1] = int(new_col[i].size());
+            row_offset[i + 1] = static_cast<PtrType>(new_col[i].size());
         }
 
         for(int i = 0; i < this->nrow_; ++i)
@@ -2091,8 +2104,8 @@ namespace rocalution
 #endif
         for(int i = 0; i < this->nrow_; ++i)
         {
-            int jj = 0;
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            PtrType jj = 0;
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 this->mat_.col[j] = new_col[i][jj];
                 ++jj;
@@ -2102,7 +2115,7 @@ namespace rocalution
         //#ifdef _OPENMP
         //#pragma omp parallel for
         //#endif
-        //  for (unsigned int i=0; i<this->nnz_; ++i)
+        //  for (int64_t i=0; i<this->nnz_; ++i)
         //    this->mat_.val[i] = static_cast<ValueType>(1);
 
         delete[] new_col;
@@ -2144,7 +2157,7 @@ namespace rocalution
         int n = cast_mat_A->nrow_;
         int m = cast_mat_B->ncol_;
 
-        int* row_offset = NULL;
+        PtrType* row_offset = NULL;
         allocate_host(n + 1, &row_offset);
         int*       col = NULL;
         ValueType* val = NULL;
@@ -2155,7 +2168,7 @@ namespace rocalution
 #pragma omp parallel
 #endif
         {
-            std::vector<int> marker(m, -1);
+            std::vector<PtrType> marker(m, -1);
 
 #ifdef _OPENMP
             int nt  = omp_get_num_threads();
@@ -2171,14 +2184,14 @@ namespace rocalution
 
             for(int ia = chunk_start; ia < chunk_end; ++ia)
             {
-                for(int ja = cast_mat_A->mat_.row_offset[ia],
-                        ea = cast_mat_A->mat_.row_offset[ia + 1];
+                for(PtrType ja = cast_mat_A->mat_.row_offset[ia],
+                            ea = cast_mat_A->mat_.row_offset[ia + 1];
                     ja < ea;
                     ++ja)
                 {
                     int ca = cast_mat_A->mat_.col[ja];
-                    for(int jb = cast_mat_B->mat_.row_offset[ca],
-                            eb = cast_mat_B->mat_.row_offset[ca + 1];
+                    for(PtrType jb = cast_mat_B->mat_.row_offset[ca],
+                                eb = cast_mat_B->mat_.row_offset[ca + 1];
                         jb < eb;
                         ++jb)
                     {
@@ -2213,19 +2226,19 @@ namespace rocalution
 
             for(int ia = chunk_start; ia < chunk_end; ++ia)
             {
-                int row_begin = row_offset[ia];
-                int row_end   = row_begin;
+                PtrType row_begin = row_offset[ia];
+                PtrType row_end   = row_begin;
 
-                for(int ja = cast_mat_A->mat_.row_offset[ia],
-                        ea = cast_mat_A->mat_.row_offset[ia + 1];
+                for(PtrType ja = cast_mat_A->mat_.row_offset[ia],
+                            ea = cast_mat_A->mat_.row_offset[ia + 1];
                     ja < ea;
                     ++ja)
                 {
                     int       ca = cast_mat_A->mat_.col[ja];
                     ValueType va = cast_mat_A->mat_.val[ja];
 
-                    for(int jb = cast_mat_B->mat_.row_offset[ca],
-                            eb = cast_mat_B->mat_.row_offset[ca + 1];
+                    for(PtrType jb = cast_mat_B->mat_.row_offset[ca],
+                                eb = cast_mat_B->mat_.row_offset[ca + 1];
                         jb < eb;
                         ++jb)
                     {
@@ -2272,8 +2285,8 @@ namespace rocalution
         assert(cast_mat_B != NULL);
         assert(cast_mat_A->ncol_ == cast_mat_B->nrow_);
 
-        std::vector<int>  row_offset;
-        std::vector<int>* new_col = new std::vector<int>[cast_mat_A->nrow_];
+        std::vector<PtrType> row_offset;
+        std::vector<int>*    new_col = new std::vector<int>[cast_mat_A->nrow_];
 
         row_offset.resize(cast_mat_A->nrow_ + 1);
 
@@ -2287,13 +2300,14 @@ namespace rocalution
         for(int i = 0; i < cast_mat_A->nrow_; ++i)
         {
             // loop over the row
-            for(int j = cast_mat_A->mat_.row_offset[i]; j < cast_mat_A->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = cast_mat_A->mat_.row_offset[i]; j < cast_mat_A->mat_.row_offset[i + 1];
+                ++j)
             {
                 int ii = cast_mat_A->mat_.col[j];
                 //      new_col[i].push_back(ii);
 
                 // loop corresponding row
-                for(int k = cast_mat_B->mat_.row_offset[ii];
+                for(PtrType k = cast_mat_B->mat_.row_offset[ii];
                     k < cast_mat_B->mat_.row_offset[ii + 1];
                     ++k)
                 {
@@ -2304,7 +2318,7 @@ namespace rocalution
             std::sort(new_col[i].begin(), new_col[i].end());
             new_col[i].erase(std::unique(new_col[i].begin(), new_col[i].end()), new_col[i].end());
 
-            row_offset[i + 1] = int(new_col[i].size());
+            row_offset[i + 1] = static_cast<PtrType>(new_col[i].size());
         }
 
         for(int i = 0; i < cast_mat_A->nrow_; ++i)
@@ -2321,8 +2335,8 @@ namespace rocalution
 #endif
         for(int i = 0; i < cast_mat_A->nrow_; ++i)
         {
-            int jj = 0;
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            PtrType jj = 0;
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 this->mat_.col[j] = new_col[i][jj];
                 ++jj;
@@ -2332,7 +2346,7 @@ namespace rocalution
         //#ifdef _OPENMP
         //#pragma omp parallel for
         //#endif
-        //      for (unsigned int i=0; i<this->nnz_; ++i)
+        //      for (int64_t i=0; i<this->nnz_; ++i)
         //      this->mat_.val[i] = static_cast<ValueType>(1);
 
         delete[] new_col;
@@ -2363,16 +2377,17 @@ namespace rocalution
         for(int i = 0; i < cast_mat_A->nrow_; ++i)
         {
             // loop over the row
-            for(int j = cast_mat_A->mat_.row_offset[i]; j < cast_mat_A->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = cast_mat_A->mat_.row_offset[i]; j < cast_mat_A->mat_.row_offset[i + 1];
+                ++j)
             {
                 int ii = cast_mat_A->mat_.col[j];
 
                 // loop corresponding row
-                for(int k = cast_mat_B->mat_.row_offset[ii];
+                for(PtrType k = cast_mat_B->mat_.row_offset[ii];
                     k < cast_mat_B->mat_.row_offset[ii + 1];
                     ++k)
                 {
-                    for(int p = this->mat_.row_offset[i]; p < this->mat_.row_offset[i + 1]; ++p)
+                    for(PtrType p = this->mat_.row_offset[i]; p < this->mat_.row_offset[i + 1]; ++p)
                     {
                         if(cast_mat_B->mat_.col[k] == this->mat_.col[p])
                         {
@@ -2475,8 +2490,8 @@ namespace rocalution
         assert(this->nnz_ > 0);
         assert(cast_mat->nnz_ > 0);
 
-        int*       row_offset = NULL;
-        int*       ind_diag   = NULL;
+        PtrType*   row_offset = NULL;
+        PtrType*   ind_diag   = NULL;
         int*       levels     = NULL;
         ValueType* val        = NULL;
 
@@ -2485,8 +2500,8 @@ namespace rocalution
         allocate_host(cast_mat->nnz_, &levels);
         allocate_host(cast_mat->nnz_, &val);
 
-        int inf_level = 99999;
-        int nnz       = 0;
+        int     inf_level = 99999;
+        int64_t nnz       = 0;
 
         _set_omp_backend_threads(this->local_backend_, this->nrow_);
 
@@ -2496,7 +2511,7 @@ namespace rocalution
         // find diagonals
         for(int ai = 0; ai < cast_mat->nrow_; ++ai)
         {
-            for(int aj = cast_mat->mat_.row_offset[ai]; aj < cast_mat->mat_.row_offset[ai + 1];
+            for(PtrType aj = cast_mat->mat_.row_offset[ai]; aj < cast_mat->mat_.row_offset[ai + 1];
                 ++aj)
             {
                 if(ai == cast_mat->mat_.col[aj])
@@ -2514,7 +2529,7 @@ namespace rocalution
 #pragma omp parallel for
 #endif
         // init inf levels
-        for(int i = 0; i < cast_mat->nnz_; ++i)
+        for(int64_t i = 0; i < cast_mat->nnz_; ++i)
         {
             levels[i] = inf_level;
         }
@@ -2527,10 +2542,11 @@ namespace rocalution
         // fill levels and values
         for(int ai = 0; ai < cast_mat->nrow_; ++ai)
         {
-            for(int aj = cast_mat->mat_.row_offset[ai]; aj < cast_mat->mat_.row_offset[ai + 1];
+            for(PtrType aj = cast_mat->mat_.row_offset[ai]; aj < cast_mat->mat_.row_offset[ai + 1];
                 ++aj)
             {
-                for(int ajj = this->mat_.row_offset[ai]; ajj < this->mat_.row_offset[ai + 1]; ++ajj)
+                for(PtrType ajj = this->mat_.row_offset[ai]; ajj < this->mat_.row_offset[ai + 1];
+                    ++ajj)
                 {
                     if(cast_mat->mat_.col[aj] == this->mat_.col[ajj])
                     {
@@ -2546,20 +2562,20 @@ namespace rocalution
         for(int ai = 1; ai < cast_mat->nrow_; ++ai)
         {
             // ak = 1 to ai-1
-            for(int ak = cast_mat->mat_.row_offset[ai]; ai > cast_mat->mat_.col[ak]; ++ak)
+            for(PtrType ak = cast_mat->mat_.row_offset[ai]; ai > cast_mat->mat_.col[ak]; ++ak)
             {
                 if(levels[ak] <= p)
                 {
                     val[ak] /= val[ind_diag[cast_mat->mat_.col[ak]]];
 
                     // aj = ak+1 to N
-                    for(int aj = ak + 1; aj < cast_mat->mat_.row_offset[ai + 1]; ++aj)
+                    for(PtrType aj = ak + 1; aj < cast_mat->mat_.row_offset[ai + 1]; ++aj)
                     {
                         ValueType val_kj   = static_cast<ValueType>(0);
                         int       level_kj = inf_level;
 
                         // find a_k,j
-                        for(int kj = cast_mat->mat_.row_offset[cast_mat->mat_.col[ak]];
+                        for(PtrType kj = cast_mat->mat_.row_offset[cast_mat->mat_.col[ak]];
                             kj < cast_mat->mat_.row_offset[cast_mat->mat_.col[ak] + 1];
                             ++kj)
                         {
@@ -2584,7 +2600,7 @@ namespace rocalution
                 }
             }
 
-            for(int ak = cast_mat->mat_.row_offset[ai]; ak < cast_mat->mat_.row_offset[ai + 1];
+            for(PtrType ak = cast_mat->mat_.row_offset[ai]; ak < cast_mat->mat_.row_offset[ai + 1];
                 ++ak)
             {
                 if(levels[ak] > p)
@@ -2611,10 +2627,10 @@ namespace rocalution
 
         this->AllocateCSR(nnz, cast_mat->nrow_, cast_mat->ncol_);
 
-        int jj = 0;
+        PtrType jj = 0;
         for(int i = 0; i < cast_mat->nrow_; ++i)
         {
-            for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
             {
                 if(levels[j] <= p)
                 {
@@ -2663,11 +2679,12 @@ namespace rocalution
             // CSR should be sorted
             for(int ai = 0; ai < cast_mat->nrow_; ++ai)
             {
-                int first_col = cast_mat->mat_.row_offset[ai];
+                PtrType first_col = cast_mat->mat_.row_offset[ai];
 
-                for(int ajj = this->mat_.row_offset[ai]; ajj < this->mat_.row_offset[ai + 1]; ++ajj)
+                for(PtrType ajj = this->mat_.row_offset[ai]; ajj < this->mat_.row_offset[ai + 1];
+                    ++ajj)
                 {
-                    for(int aj = first_col; aj < cast_mat->mat_.row_offset[ai + 1]; ++aj)
+                    for(PtrType aj = first_col; aj < cast_mat->mat_.row_offset[ai + 1]; ++aj)
                     {
                         if(cast_mat->mat_.col[aj] == this->mat_.col[ajj])
                         {
@@ -2682,8 +2699,8 @@ namespace rocalution
         }
         else
         {
-            std::vector<int>  row_offset;
-            std::vector<int>* new_col = new std::vector<int>[this->nrow_];
+            std::vector<PtrType> row_offset;
+            std::vector<int>*    new_col = new std::vector<int>[this->nrow_];
 
             HostMatrixCSR<ValueType> tmp(this->local_backend_);
 
@@ -2698,12 +2715,13 @@ namespace rocalution
 #endif
             for(int i = 0; i < this->nrow_; ++i)
             {
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
                     new_col[i].push_back(this->mat_.col[j]);
                 }
 
-                for(int k = cast_mat->mat_.row_offset[i]; k < cast_mat->mat_.row_offset[i + 1]; ++k)
+                for(PtrType k = cast_mat->mat_.row_offset[i]; k < cast_mat->mat_.row_offset[i + 1];
+                    ++k)
                 {
                     new_col[i].push_back(cast_mat->mat_.col[k]);
                 }
@@ -2712,7 +2730,7 @@ namespace rocalution
                 new_col[i].erase(std::unique(new_col[i].begin(), new_col[i].end()),
                                  new_col[i].end());
 
-                row_offset[i + 1] = int(new_col[i].size());
+                row_offset[i + 1] = static_cast<PtrType>(new_col[i].size());
             }
 
             for(int i = 0; i < this->nrow_; ++i)
@@ -2730,8 +2748,8 @@ namespace rocalution
 #endif
             for(int i = 0; i < this->nrow_; ++i)
             {
-                int jj = 0;
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                PtrType jj = 0;
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
                     this->mat_.col[j] = new_col[i][jj];
                     ++jj;
@@ -2744,12 +2762,12 @@ namespace rocalution
             // add values
             for(int i = 0; i < this->nrow_; ++i)
             {
-                int Aj = tmp.mat_.row_offset[i];
-                int Bj = cast_mat->mat_.row_offset[i];
+                PtrType Aj = tmp.mat_.row_offset[i];
+                PtrType Bj = cast_mat->mat_.row_offset[i];
 
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
-                    for(int jj = Aj; jj < tmp.mat_.row_offset[i + 1]; ++jj)
+                    for(PtrType jj = Aj; jj < tmp.mat_.row_offset[i + 1]; ++jj)
                     {
                         if(this->mat_.col[j] == tmp.mat_.col[jj])
                         {
@@ -2759,7 +2777,7 @@ namespace rocalution
                         }
                     }
 
-                    for(int jj = Bj; jj < cast_mat->mat_.row_offset[i + 1]; ++jj)
+                    for(PtrType jj = Bj; jj < cast_mat->mat_.row_offset[i + 1]; ++jj)
                     {
                         if(this->mat_.col[j] == cast_mat->mat_.col[jj])
                         {
@@ -2794,7 +2812,7 @@ namespace rocalution
             ValueType sum  = static_cast<ValueType>(0);
             ValueType diag = static_cast<ValueType>(0);
 
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai != this->mat_.col[aj])
                 {
@@ -2828,7 +2846,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int ai = 0; ai < this->nnz_; ++ai)
+        for(int64_t ai = 0; ai < this->nnz_; ++ai)
         {
             this->mat_.val[ai] *= alpha;
         }
@@ -2846,7 +2864,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai == this->mat_.col[aj])
                 {
@@ -2869,7 +2887,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai != this->mat_.col[aj])
                 {
@@ -2889,7 +2907,7 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for(int ai = 0; ai < this->nnz_; ++ai)
+        for(int64_t ai = 0; ai < this->nnz_; ++ai)
         {
             this->mat_.val[ai] += alpha;
         }
@@ -2907,7 +2925,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai == this->mat_.col[aj])
                 {
@@ -2930,7 +2948,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 if(ai != this->mat_.col[aj])
                 {
@@ -2957,7 +2975,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 this->mat_.val[aj] *= cast_diag->vec_[this->mat_.col[aj]];
             }
@@ -2981,7 +2999,7 @@ namespace rocalution
 #endif
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
-            for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
             {
                 this->mat_.val[aj] *= cast_diag->vec_[ai];
             }
@@ -2995,7 +3013,7 @@ namespace rocalution
     {
         if(this->nnz_ > 0)
         {
-            std::vector<int> row_offset;
+            std::vector<PtrType> row_offset;
 
             HostMatrixCSR<ValueType> tmp(this->local_backend_);
 
@@ -3014,7 +3032,7 @@ namespace rocalution
             {
                 row_offset[i + 1] = 0;
 
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
                     if((std::abs(this->mat_.val[j]) > drop_off) || (this->mat_.col[j] == i))
                     {
@@ -3037,9 +3055,9 @@ namespace rocalution
 #endif
             for(int i = 0; i < this->nrow_; ++i)
             {
-                int jj = this->mat_.row_offset[i];
+                PtrType jj = this->mat_.row_offset[i];
 
-                for(int j = tmp.mat_.row_offset[i]; j < tmp.mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = tmp.mat_.row_offset[i]; j < tmp.mat_.row_offset[i + 1]; ++j)
                 {
                     if((std::abs(tmp.mat_.val[j]) > drop_off) || (tmp.mat_.col[j] == i))
                     {
@@ -3082,7 +3100,7 @@ namespace rocalution
             cast_T->Clear();
             cast_T->AllocateCSR(this->nnz_, this->ncol_, this->nrow_);
 
-            for(int i = 0; i < cast_T->nnz_; ++i)
+            for(int64_t i = 0; i < cast_T->nnz_; ++i)
             {
                 cast_T->mat_.row_offset[this->mat_.col[i] + 1] += 1;
             }
@@ -3094,10 +3112,11 @@ namespace rocalution
 
             for(int ai = 0; ai < cast_T->ncol_; ++ai)
             {
-                for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+                for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1];
+                    ++aj)
                 {
-                    int ind_col = this->mat_.col[aj];
-                    int ind     = cast_T->mat_.row_offset[ind_col];
+                    int     ind_col = this->mat_.col[aj];
+                    PtrType ind     = cast_T->mat_.row_offset[ind_col];
 
                     cast_T->mat_.col[ind] = ai;
                     cast_T->mat_.val[ind] = this->mat_.val[aj];
@@ -3106,10 +3125,10 @@ namespace rocalution
                 }
             }
 
-            int shift = 0;
+            PtrType shift = 0;
             for(int i = 0; i < cast_T->nrow_; ++i)
             {
-                int tmp                    = cast_T->mat_.row_offset[i];
+                PtrType tmp                = cast_T->mat_.row_offset[i];
                 cast_T->mat_.row_offset[i] = shift;
                 shift                      = tmp;
             }
@@ -3132,9 +3151,10 @@ namespace rocalution
 #endif
             for(int i = 0; i < this->nrow_; ++i)
             {
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
-                    for(int jj = this->mat_.row_offset[i]; jj < this->mat_.row_offset[i + 1] - 1;
+                    for(PtrType jj = this->mat_.row_offset[i];
+                        jj < this->mat_.row_offset[i + 1] - 1;
                         ++jj)
                     {
                         if(this->mat_.col[jj] > this->mat_.col[jj + 1])
@@ -3178,7 +3198,8 @@ namespace rocalution
 #endif
             for(int i = 0; i < this->nrow_; ++i)
             {
-                row_nnz[i] = this->mat_.row_offset[i + 1] - this->mat_.row_offset[i];
+                row_nnz[i]
+                    = static_cast<int>(this->mat_.row_offset[i + 1] - this->mat_.row_offset[i]);
             }
 
             // Permute vector of nnz per row
@@ -3194,9 +3215,9 @@ namespace rocalution
             }
 
             // Calculate new nnz
-            int* perm_nnz = NULL;
-            allocate_host<int>(this->nrow_ + 1, &perm_nnz);
-            int sum = 0;
+            PtrType* perm_nnz = NULL;
+            allocate_host(this->nrow_ + 1, &perm_nnz);
+            PtrType sum = 0;
 
             for(int i = 0; i < this->nrow_; ++i)
             {
@@ -3217,8 +3238,8 @@ namespace rocalution
 #endif
             for(int i = 0; i < this->nrow_; ++i)
             {
-                int permIndex = perm_nnz[cast_perm->vec_[i]];
-                int prevIndex = this->mat_.row_offset[i];
+                PtrType permIndex = perm_nnz[cast_perm->vec_[i]];
+                PtrType prevIndex = this->mat_.row_offset[i];
 
                 for(int j = 0; j < row_nnz[i]; ++j)
                 {
@@ -3233,7 +3254,7 @@ namespace rocalution
 #endif
             for(int i = 0; i < this->nrow_; ++i)
             {
-                int row_index = perm_nnz[i];
+                PtrType row_index = perm_nnz[i];
 
                 for(int j = 0; j < perm_row_nnz[i]; ++j)
                 {
@@ -3302,7 +3323,7 @@ namespace rocalution
         for(int k = 0; k < this->nrow_; ++k)
         {
             marker[k] = 0;
-            nd[k]     = this->mat_.row_offset[k + 1] - this->mat_.row_offset[k] - 1;
+            nd[k] = static_cast<int>(this->mat_.row_offset[k + 1] - this->mat_.row_offset[k] - 1);
 
             if(nd[k] > maxdeg)
             {
@@ -3324,7 +3345,8 @@ namespace rocalution
             {
                 head = levset[h];
 
-                for(int k = this->mat_.row_offset[head]; k < this->mat_.row_offset[head + 1]; ++k)
+                for(PtrType k = this->mat_.row_offset[head]; k < this->mat_.row_offset[head + 1];
+                    ++k)
                 {
                     tmp = this->mat_.col[k];
 
@@ -3443,8 +3465,8 @@ namespace rocalution
 
         assert(cast_map != NULL);
 
-        int* row_nnz    = NULL;
-        int* row_buffer = NULL;
+        int*     row_nnz    = NULL;
+        PtrType* row_buffer = NULL;
         allocate_host(m, &row_nnz);
         allocate_host(m + 1, &row_buffer);
 
@@ -3577,7 +3599,7 @@ namespace rocalution
         {
             ValueType eps_dia_i = eps2 * vec_diag.vec_[i];
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 int       c = this->mat_.col[j];
                 ValueType v = this->mat_.val[j];
@@ -3622,10 +3644,10 @@ namespace rocalution
         int max_neib = 0;
         for(int i = 0; i < this->nrow_; ++i)
         {
-            int j = this->mat_.row_offset[i];
-            int e = this->mat_.row_offset[i + 1];
+            PtrType j = this->mat_.row_offset[i];
+            PtrType e = this->mat_.row_offset[i + 1];
 
-            max_neib = std::max(e - j, max_neib);
+            max_neib = std::max(static_cast<int>(e - j), max_neib);
 
             int state = removed;
             for(; j < e; ++j)
@@ -3660,7 +3682,7 @@ namespace rocalution
             neib.clear();
 
             // Include its neighbors as well.
-            for(int j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
+            for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
             {
                 int c = this->mat_.col[j];
                 if(cast_conn->vec_[j] && cast_agg->vec_[c] != removed)
@@ -3675,7 +3697,8 @@ namespace rocalution
             // stay here.
             for(typename std::vector<int>::const_iterator nb = neib.begin(); nb != neib.end(); ++nb)
             {
-                for(int j = this->mat_.row_offset[*nb], e = this->mat_.row_offset[*nb + 1]; j < e;
+                for(PtrType j = this->mat_.row_offset[*nb], e = this->mat_.row_offset[*nb + 1];
+                    j < e;
                     ++j)
                 {
                     if(cast_conn->vec_[j] && cast_agg->vec_[this->mat_.col[j]] == undefined)
@@ -3715,9 +3738,9 @@ namespace rocalution
         {
             int state = -2;
 
-            int row_start = this->mat_.row_offset[i];
-            int row_end   = this->mat_.row_offset[i + 1];
-            for(int j = row_start; j < row_end; j++)
+            PtrType row_start = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
+            for(PtrType j = row_start; j < row_end; j++)
             {
                 if(cast_conn->vec_[j] == 1)
                 {
@@ -3758,9 +3781,9 @@ namespace rocalution
                 {
                     mis_tuple t_max = max_tuples[i];
 
-                    int row_start = this->mat_.row_offset[t_max.i];
-                    int row_end   = this->mat_.row_offset[t_max.i + 1];
-                    for(int j = row_start; j < row_end; j++)
+                    PtrType row_start = this->mat_.row_offset[t_max.i];
+                    PtrType row_end   = this->mat_.row_offset[t_max.i + 1];
+                    for(PtrType j = row_start; j < row_end; j++)
                     {
                         if(cast_conn->vec_[j] == 1)
                         {
@@ -3853,10 +3876,10 @@ namespace rocalution
 
                 if(t.s == -1)
                 {
-                    int row_start = this->mat_.row_offset[i];
-                    int row_end   = this->mat_.row_offset[i + 1];
+                    PtrType row_start = this->mat_.row_offset[i];
+                    PtrType row_end   = this->mat_.row_offset[i + 1];
 
-                    for(int j = row_start; j < row_end; j++)
+                    for(PtrType j = row_start; j < row_end; j++)
                     {
                         if(cast_conn->vec_[j] == 1)
                         {
@@ -3929,7 +3952,7 @@ namespace rocalution
 #pragma omp parallel
 #endif
         {
-            std::vector<int> marker(ncol, -1);
+            std::vector<PtrType> marker(ncol, -1);
 
 #ifdef _OPENMP
             int nt  = omp_get_num_threads();
@@ -3946,7 +3969,8 @@ namespace rocalution
             // Count number of entries in prolong
             for(int i = chunk_start; i < chunk_end; ++i)
             {
-                for(int j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
+                for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e;
+                    ++j)
                 {
                     int c = this->mat_.col[j];
 
@@ -3972,14 +3996,14 @@ namespace rocalution
 #pragma omp single
 #endif
             {
-                int* row_offset = NULL;
+                PtrType* row_offset = NULL;
                 allocate_host(cast_prolong->nrow_ + 1, &row_offset);
 
                 int*       col = NULL;
                 ValueType* val = NULL;
 
-                int nnz  = 0;
-                int nrow = cast_prolong->nrow_;
+                int64_t nnz  = 0;
+                int     nrow = cast_prolong->nrow_;
 
                 row_offset[0] = 0;
                 for(int i = 1; i < nrow + 1; ++i)
@@ -4002,7 +4026,8 @@ namespace rocalution
                 // Diagonal of the filtered matrix is original matrix diagonal plus (lumping_strat = 0) or
                 // minus (lumping_strat = 1) its weak connections.
                 ValueType dia = static_cast<ValueType>(0);
-                for(int j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
+                for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e;
+                    ++j)
                 {
                     if(this->mat_.col[j] == i)
                     {
@@ -4023,10 +4048,11 @@ namespace rocalution
 
                 dia = static_cast<ValueType>(1) / dia;
 
-                int row_begin = cast_prolong->mat_.row_offset[i];
-                int row_end   = row_begin;
+                PtrType row_begin = cast_prolong->mat_.row_offset[i];
+                PtrType row_end   = row_begin;
 
-                for(int j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
+                for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e;
+                    ++j)
                 {
                     int c = this->mat_.col[j];
 
@@ -4101,7 +4127,7 @@ namespace rocalution
 
         ++ncol;
 
-        int* row_offset = NULL;
+        PtrType* row_offset = NULL;
         allocate_host(this->nrow_ + 1, &row_offset);
 
         int*       col = NULL;
@@ -4166,10 +4192,10 @@ namespace rocalution
             this->ExtractLDiagonal(&L);
         }
 
-        int        nnz        = L.nnz_;
+        int64_t    nnz        = L.nnz_;
         int        nrow       = L.nrow_;
         int        ncol       = L.ncol_;
-        int*       row_offset = NULL;
+        PtrType*   row_offset = NULL;
         int*       col        = NULL;
         ValueType* val        = NULL;
 
@@ -4181,11 +4207,11 @@ namespace rocalution
         for(int ai = 0; ai < this->nrow_; ++ai)
         {
             // entries of ai-th row
-            int nnz_row = row_offset[ai + 1] - row_offset[ai];
+            PtrType nnz_row = row_offset[ai + 1] - row_offset[ai];
 
             if(nnz_row == 1)
             {
-                int aj = this->mat_.row_offset[ai];
+                PtrType aj = this->mat_.row_offset[ai];
                 if(this->mat_.col[aj] == ai)
                 {
                     val[row_offset[ai]] = static_cast<ValueType>(1) / this->mat_.val[aj];
@@ -4196,14 +4222,14 @@ namespace rocalution
                 // create submatrix taking only the lower tridiagonal part into account
                 std::vector<ValueType> Asub(nnz_row * nnz_row, static_cast<ValueType>(0));
 
-                for(int k = 0; k < nnz_row; ++k)
+                for(PtrType k = 0; k < nnz_row; ++k)
                 {
-                    int row_begin = this->mat_.row_offset[col[row_offset[ai] + k]];
-                    int row_end   = this->mat_.row_offset[col[row_offset[ai] + k] + 1];
+                    PtrType row_begin = this->mat_.row_offset[col[row_offset[ai] + k]];
+                    PtrType row_end   = this->mat_.row_offset[col[row_offset[ai] + k] + 1];
 
-                    for(int aj = row_begin; aj < row_end; ++aj)
+                    for(PtrType aj = row_begin; aj < row_end; ++aj)
                     {
-                        for(int j = 0; j < nnz_row; ++j)
+                        for(PtrType j = 0; j < nnz_row; ++j)
                         {
                             int Asub_col = col[row_offset[ai] + j];
 
@@ -4230,13 +4256,13 @@ namespace rocalution
                 mk[nnz_row - 1] = static_cast<ValueType>(1);
 
                 // compute inplace LU factorization of Asub
-                for(int i = 0; i < nnz_row - 1; ++i)
+                for(PtrType i = 0; i < nnz_row - 1; ++i)
                 {
-                    for(int k = i + 1; k < nnz_row; ++k)
+                    for(PtrType k = i + 1; k < nnz_row; ++k)
                     {
                         Asub[i + k * nnz_row] /= Asub[i + i * nnz_row];
 
-                        for(int j = i + 1; j < nnz_row; ++j)
+                        for(PtrType j = i + 1; j < nnz_row; ++j)
                         {
                             Asub[j + k * nnz_row] -= Asub[i + k * nnz_row] * Asub[j + i * nnz_row];
                         }
@@ -4244,18 +4270,18 @@ namespace rocalution
                 }
 
                 // backward sweeps
-                for(int i = nnz_row - 1; i >= 0; --i)
+                for(PtrType i = nnz_row - 1; i >= 0; --i)
                 {
                     mk[i] /= Asub[i + i * nnz_row];
 
-                    for(int j = 0; j < i; ++j)
+                    for(PtrType j = 0; j < i; ++j)
                     {
                         mk[j] -= mk[i] * Asub[i + j * nnz_row];
                     }
                 }
 
                 // update the preconditioner matrix with mk
-                for(int aj = row_offset[ai], k = 0; aj < row_offset[ai + 1]; ++aj, ++k)
+                for(PtrType aj = row_offset[ai], k = 0; aj < row_offset[ai + 1]; ++aj, ++k)
                 {
                     val[aj] = mk[k];
                 }
@@ -4270,7 +4296,7 @@ namespace rocalution
         {
             ValueType fac = sqrt(static_cast<ValueType>(1) / std::abs(val[row_offset[ai + 1] - 1]));
 
-            for(int aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
+            for(PtrType aj = row_offset[ai]; aj < row_offset[ai + 1]; ++aj)
             {
                 val[aj] *= fac;
             }
@@ -4285,8 +4311,8 @@ namespace rocalution
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::SPAI(void)
     {
-        int nrow = this->nrow_;
-        int nnz  = this->nnz_;
+        int     nrow = this->nrow_;
+        int64_t nnz  = this->nnz_;
 
         ValueType* val = NULL;
         allocate_host(nnz, &val);
@@ -4302,12 +4328,12 @@ namespace rocalution
         for(int i = 0; i < nrow; ++i)
         {
             int* J     = NULL;
-            int  Jsize = this->mat_.row_offset[i + 1] - this->mat_.row_offset[i];
+            int  Jsize = static_cast<int>(this->mat_.row_offset[i + 1] - this->mat_.row_offset[i]);
             allocate_host(Jsize, &J);
             std::vector<int> I;
 
             // Setup J = {j | m(j) != 0}
-            for(int j = this->mat_.row_offset[i], idx = 0; j < this->mat_.row_offset[i + 1];
+            for(PtrType j = this->mat_.row_offset[i], idx = 0; j < this->mat_.row_offset[i + 1];
                 ++j, ++idx)
             {
                 J[idx] = this->mat_.col[j];
@@ -4316,7 +4342,8 @@ namespace rocalution
             // Setup I = {i | row A(i,J) != 0}
             for(int idx = 0; idx < Jsize; ++idx)
             {
-                for(int j = this->mat_.row_offset[J[idx]]; j < this->mat_.row_offset[J[idx] + 1];
+                for(PtrType j = this->mat_.row_offset[J[idx]];
+                    j < this->mat_.row_offset[J[idx] + 1];
                     ++j)
                 {
                     if(std::find(I.begin(), I.end(), this->mat_.col[j]) == I.end())
@@ -4332,7 +4359,7 @@ namespace rocalution
 
             for(int k = 0; k < Asub.nrow_; ++k)
             {
-                for(int aj = T.mat_.row_offset[I[k]]; aj < T.mat_.row_offset[I[k] + 1]; ++aj)
+                for(PtrType aj = T.mat_.row_offset[I[k]]; aj < T.mat_.row_offset[I[k] + 1]; ++aj)
                 {
                     for(int j = 0; j < Jsize; ++j)
                     {
@@ -4440,8 +4467,8 @@ namespace rocalution
         cast_S->Zeros();
 
         // Array of strong couplings S
-        int* S_row_offset = NULL;
-        int* S_col        = NULL;
+        PtrType* S_row_offset = NULL;
+        int*     S_col        = NULL;
 
         allocate_host(this->nrow_ + 1, &S_row_offset);
         set_to_zero_host(this->nrow_ + 1, S_row_offset);
@@ -4456,14 +4483,14 @@ namespace rocalution
             ValueType min_a_ik = static_cast<ValueType>(0);
             ValueType max_a_ik = static_cast<ValueType>(0);
 
-            int row_begin = this->mat_.row_offset[i];
-            int row_end   = this->mat_.row_offset[i + 1];
+            PtrType row_begin = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
 
             // True, if the diagonal element is negative
             bool sign = false;
 
             // Determine diagonal sign and min/max
-            for(int j = row_begin; j < row_end; ++j)
+            for(PtrType j = row_begin; j < row_end; ++j)
             {
                 int       col = this->mat_.col[j];
                 ValueType val = this->mat_.val[j];
@@ -4485,7 +4512,7 @@ namespace rocalution
             ValueType cond = (sign ? max_a_ik : min_a_ik) * static_cast<ValueType>(eps);
 
             // Fill S
-            for(int j = row_begin; j < row_end; ++j)
+            for(PtrType j = row_begin; j < row_end; ++j)
             {
                 int       col = this->mat_.col[j];
                 ValueType val = this->mat_.val[j];
@@ -4501,7 +4528,7 @@ namespace rocalution
         }
 
         // Transpose S
-        for(int i = 0; i < this->nnz_; ++i)
+        for(int64_t i = 0; i < this->nnz_; ++i)
         {
             if(cast_S->vec_[i])
             {
@@ -4518,7 +4545,7 @@ namespace rocalution
 
         for(int i = 0; i < this->nrow_; ++i)
         {
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 if(cast_S->vec_[j])
                 {
@@ -4540,7 +4567,7 @@ namespace rocalution
         for(int i = 0; i < this->nrow_; ++i)
         {
             int temp = 0;
-            for(int j = S_row_offset[i]; j < S_row_offset[i + 1]; ++j)
+            for(PtrType j = S_row_offset[i]; j < S_row_offset[i + 1]; ++j)
             {
                 temp += (cast_cf->vec_[S_col[j]] == 0 ? 1 : 2);
             }
@@ -4600,7 +4627,7 @@ namespace rocalution
 
             cast_cf->vec_[i] = 1;
 
-            for(int j = S_row_offset[i]; j < S_row_offset[i + 1]; ++j)
+            for(PtrType j = S_row_offset[i]; j < S_row_offset[i + 1]; ++j)
             {
                 int c = S_col[j];
 
@@ -4611,7 +4638,7 @@ namespace rocalution
 
                 cast_cf->vec_[c] = 2;
 
-                for(int jj = this->mat_.row_offset[c]; jj < this->mat_.row_offset[c + 1]; ++jj)
+                for(PtrType jj = this->mat_.row_offset[c]; jj < this->mat_.row_offset[c + 1]; ++jj)
                 {
                     if(!cast_S->vec_[jj])
                     {
@@ -4642,7 +4669,7 @@ namespace rocalution
                 }
             }
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 if(!cast_S->vec_[j])
                 {
@@ -5459,7 +5486,7 @@ namespace rocalution
             ValueType sum_n = zero;
 
             // Loop over all columns of the i-th row
-            for(int k = row_begin; k < row_end; ++k)
+            for(PtrType k = row_begin; k < row_end; ++k)
             {
                 // Get the column index
                 int col_ik = this->mat_.col[k];
@@ -5487,11 +5514,11 @@ namespace rocalution
                     ValueType val_ki = zero;
 
                     // Row entry and exit of this fine point
-                    int row_begin_k = this->mat_.row_offset[col_ik];
-                    int row_end_k   = this->mat_.row_offset[col_ik + 1];
+                    PtrType row_begin_k = this->mat_.row_offset[col_ik];
+                    PtrType row_end_k   = this->mat_.row_offset[col_ik + 1];
 
                     // Loop over all columns of the fine point
-                    for(int l = row_begin_k; l < row_end_k; ++l)
+                    for(PtrType l = row_begin_k; l < row_end_k; ++l)
                     {
                         // Get the column index
                         int col_kl = this->mat_.col[l];
@@ -5542,7 +5569,7 @@ namespace rocalution
 
                     // Additionally, for eq19 we need to add all coarse points in row k,
                     // if they have different sign than the diagonal a_kk
-                    for(int l = row_begin_k; l < row_end_k; ++l)
+                    for(PtrType l = row_begin_k; l < row_end_k; ++l)
                     {
                         // Get the column index
                         int col_kl = this->mat_.col[l];
@@ -5606,7 +5633,7 @@ namespace rocalution
             ValueType a_ii_tilde = -one / (val_ii + sum_n + sum_k);
 
             // Entry point into P
-            int idx = cast_prolong->mat_.row_offset[i];
+            PtrType idx = cast_prolong->mat_.row_offset[i];
 
             // Finally, extract the numerical values from the hash table and fill P such
             // that the resulting matrix is sorted by columns
@@ -5651,8 +5678,8 @@ namespace rocalution
             cast_G->vec_[i] = -2;
         }
 
-        int  Usize    = 0;
-        int* ind_diag = NULL;
+        int      Usize    = 0;
+        PtrType* ind_diag = NULL;
         allocate_host(this->nrow_, &ind_diag);
 
         // Build U
@@ -5660,7 +5687,7 @@ namespace rocalution
         {
             ValueType sum = static_cast<ValueType>(0);
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 if(i != this->mat_.col[j])
                 {
@@ -5756,14 +5783,14 @@ namespace rocalution
             // Determine minimum and maximum offdiagonal entry and j index
             ValueType min_a_ij = static_cast<ValueType>(0);
             ValueType max_a_ij = static_cast<ValueType>(0);
-            int       min_j    = -1;
+            PtrType   min_j    = -1;
             bool      neg      = false;
             if(this->mat_.val[ind_diag[i]] < static_cast<ValueType>(0))
             {
                 neg = true;
             }
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 int       col_j = this->mat_.col[j];
                 ValueType val_j = this->mat_.val[j];
@@ -5854,8 +5881,8 @@ namespace rocalution
             cast_G->vec_[i] = -2;
         }
 
-        int  Usize    = 0;
-        int* ind_diag = NULL;
+        int      Usize    = 0;
+        PtrType* ind_diag = NULL;
         allocate_host(this->nrow_, &ind_diag);
 
         // Build U
@@ -5863,7 +5890,7 @@ namespace rocalution
         {
             ValueType sum = static_cast<ValueType>(0);
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 if(i != this->mat_.col[j])
                 {
@@ -5877,7 +5904,8 @@ namespace rocalution
 
             if(cast_mat->nnz_ > 0)
             {
-                for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1];
+                    ++j)
                 {
                     sum += std::abs(cast_mat->mat_.val[j]);
                 }
@@ -5974,7 +6002,7 @@ namespace rocalution
                 neg = true;
             }
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 int       col_j = this->mat_.col[j];
                 ValueType val_j = this->mat_.val[j];
@@ -6013,7 +6041,8 @@ namespace rocalution
 
             if(cast_mat->nnz_ > 0)
             {
-                for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1];
+                    ++j)
                 {
                     ValueType val_j = cast_mat->mat_.val[j];
 
@@ -6034,7 +6063,7 @@ namespace rocalution
             {
                 max_a_ij *= betam;
 
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
                     int       col_j = this->mat_.col[j];
                     ValueType val_j = this->mat_.val[j];
@@ -6183,7 +6212,7 @@ namespace rocalution
 
             // Get sign
             bool neg = false;
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 if(i == this->mat_.col[j])
                 {
@@ -6199,9 +6228,9 @@ namespace rocalution
             // Determine minimum and maximum offdiagonal entry and j index
             ValueType min_a_ij = static_cast<ValueType>(0);
             ValueType max_a_ij = static_cast<ValueType>(0);
-            int       min_j    = -1;
+            PtrType   min_j    = -1;
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 int       col_j = this->mat_.col[j];
                 ValueType val_j = this->mat_.val[j];
@@ -6393,7 +6422,7 @@ namespace rocalution
 
             // Get sign
             bool neg = false;
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 if(i == this->mat_.col[j])
                 {
@@ -6411,7 +6440,7 @@ namespace rocalution
             ValueType max_a_ij = static_cast<ValueType>(0);
             int       min_j    = -1;
 
-            for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
             {
                 int       col_j = this->mat_.col[j];
                 ValueType val_j = this->mat_.val[j];
@@ -6450,7 +6479,8 @@ namespace rocalution
 
             if(cast_mat->nnz_ > 0)
             {
-                for(int j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = cast_mat->mat_.row_offset[i]; j < cast_mat->mat_.row_offset[i + 1];
+                    ++j)
                 {
                     ValueType val_j = cast_mat->mat_.val[j];
 
@@ -6471,7 +6501,7 @@ namespace rocalution
             {
                 max_a_ij *= betam;
 
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
                     int       col_j = this->mat_.col[j];
                     ValueType val_j = this->mat_.val[j];
@@ -6547,7 +6577,7 @@ namespace rocalution
         // Allocate
         cast_Ac->Clear();
 
-        int*       row_offset = NULL;
+        PtrType*   row_offset = NULL;
         int*       col        = NULL;
         ValueType* val        = NULL;
 
@@ -6558,9 +6588,9 @@ namespace rocalution
         // Create P_ij: if i in G_j -> 1, else 0
         // (Ac)_kl = sum i in G_k (sum j in G_l (a_ij))) with k,l=1,...,nrow
 
-        int* reverse_col = NULL;
-        int* Gl          = NULL;
-        int* erase       = NULL;
+        PtrType* reverse_col = NULL;
+        int*     Gl          = NULL;
+        int*     erase       = NULL;
 
         int size = (nrow > ncol) ? nrow : ncol;
 
@@ -6592,7 +6622,7 @@ namespace rocalution
                     continue;
                 }
 
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
                     int l = cast_G->vec_[this->mat_.col[j]];
 
@@ -6629,7 +6659,7 @@ namespace rocalution
         free_host(&Gl);
         free_host(&erase);
 
-        int nnz = row_offset[nrow];
+        PtrType nnz = row_offset[nrow];
 
         int*       col_resized = NULL;
         ValueType* val_resized = NULL;
@@ -6684,10 +6714,10 @@ namespace rocalution
             row_sign = sgn(row_tmp - (row_mask & this->mat_.row_offset[ai]));
             row_tmp  = row_mask & this->mat_.row_offset[ai];
 
-            int row_beg = this->mat_.row_offset[ai];
-            int row_end = this->mat_.row_offset[ai + 1];
+            PtrType row_beg = this->mat_.row_offset[ai];
+            PtrType row_end = this->mat_.row_offset[ai + 1];
 
-            for(int aj = row_beg; aj < row_end; ++aj)
+            for(PtrType aj = row_beg; aj < row_end; ++aj)
             {
                 col_key += col_sign * col_tmp * (col_mask | this->mat_.col[aj]);
                 col_key  = col_key ^ (col_key >> 16);
@@ -6726,13 +6756,13 @@ namespace rocalution
     {
         assert(vec.GetSize() == this->nrow_);
 
-        if(this->GetNnz() > 0)
+        if(this->nnz_ > 0)
         {
             const HostVector<ValueType>* cast_vec
                 = dynamic_cast<const HostVector<ValueType>*>(&vec);
             assert(cast_vec != NULL);
 
-            int*       row_offset = NULL;
+            PtrType*   row_offset = NULL;
             int*       col        = NULL;
             ValueType* val        = NULL;
 
@@ -6751,7 +6781,7 @@ namespace rocalution
 
                 row_offset[i + 1] = this->mat_.row_offset[i + 1] - this->mat_.row_offset[i];
 
-                for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                 {
                     if(this->mat_.col[j] == idx)
                     {
@@ -6776,7 +6806,7 @@ namespace rocalution
                 row_offset[i + 1] += row_offset[i];
             }
 
-            int nnz = row_offset[nrow];
+            PtrType nnz = row_offset[nrow];
 
             allocate_host(nnz, &col);
             allocate_host(nnz, &val);
@@ -6787,8 +6817,8 @@ namespace rocalution
 #endif
             for(int i = 0; i < nrow; ++i)
             {
-                int k = row_offset[i];
-                int j = this->mat_.row_offset[i];
+                PtrType k = row_offset[i];
+                PtrType j = this->mat_.row_offset[i];
 
                 for(; j < this->mat_.row_offset[i + 1]; ++j)
                 {
@@ -6851,7 +6881,8 @@ namespace rocalution
                 // Initialize with zero
                 cast_vec->vec_[ai] = static_cast<ValueType>(0);
 
-                for(int aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+                for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1];
+                    ++aj)
                 {
                     if(idx == this->mat_.col[aj])
                     {
@@ -6876,7 +6907,7 @@ namespace rocalution
                 = dynamic_cast<const HostVector<ValueType>*>(&vec);
             assert(cast_vec != NULL);
 
-            int*       row_offset = NULL;
+            PtrType*   row_offset = NULL;
             int*       col        = NULL;
             ValueType* val        = NULL;
 
@@ -6898,7 +6929,7 @@ namespace rocalution
             }
 
             // Fill row_offset
-            int shift = nnz_idx - this->mat_.row_offset[idx + 1] + this->mat_.row_offset[idx];
+            PtrType shift = nnz_idx - this->mat_.row_offset[idx + 1] + this->mat_.row_offset[idx];
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -6915,7 +6946,7 @@ namespace rocalution
                 }
             }
 
-            int nnz = row_offset[nrow];
+            PtrType nnz = row_offset[nrow];
 
             // Fill col and val
             allocate_host(nnz, &col);
@@ -6929,7 +6960,7 @@ namespace rocalution
                 // Rows before idx
                 if(i < idx)
                 {
-                    for(int j = row_offset[i]; j < row_offset[i + 1]; ++j)
+                    for(PtrType j = row_offset[i]; j < row_offset[i + 1]; ++j)
                     {
                         col[j] = this->mat_.col[j];
                         val[j] = this->mat_.val[j];
@@ -6939,7 +6970,7 @@ namespace rocalution
                 }
                 else if(i == idx)
                 {
-                    int k = row_offset[i];
+                    PtrType k = row_offset[i];
 
                     for(int j = 0; j < ncol; ++j)
                     {
@@ -6955,9 +6986,9 @@ namespace rocalution
                 }
                 else if(i > idx)
                 {
-                    int k = row_offset[i];
+                    PtrType k = row_offset[i];
 
-                    for(int j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+                    for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
                     {
                         col[k] = this->mat_.col[j];
                         val[k] = this->mat_.val[j];
@@ -6988,7 +7019,7 @@ namespace rocalution
 
             cast_vec->Zeros();
 
-            for(int aj = this->mat_.row_offset[idx]; aj < this->mat_.row_offset[idx + 1]; ++aj)
+            for(PtrType aj = this->mat_.row_offset[idx]; aj < this->mat_.row_offset[idx + 1]; ++aj)
             {
                 cast_vec->vec_[this->mat_.col[aj]] = this->mat_.val[aj];
             }

@@ -102,7 +102,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixCOO<ValueType>::AllocateCOO(int nnz, int nrow, int ncol)
+    void HIPAcceleratorMatrixCOO<ValueType>::AllocateCOO(int64_t nnz, int nrow, int ncol)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -131,7 +131,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HIPAcceleratorMatrixCOO<ValueType>::SetDataPtrCOO(
-        int** row, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        int** row, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         assert(*row != NULL);
         assert(*col != NULL);
@@ -710,9 +710,9 @@ namespace rocalution
             src.AllocateCOO(this->nnz_, this->nrow_, this->ncol_);
             src.CopyFrom(*this);
 
-            int nnz = this->nnz_;
-            int s   = nnz;
-            int k
+            int64_t nnz = this->nnz_;
+            int64_t s   = nnz;
+            int64_t k
                 = (nnz / this->local_backend_.HIP_block_size) / this->local_backend_.HIP_max_threads
                   + 1;
             if(k > 1)
@@ -769,9 +769,9 @@ namespace rocalution
             src.AllocateCOO(this->nnz_, this->nrow_, this->ncol_);
             src.CopyFrom(*this);
 
-            int nnz = this->nnz_;
-            int s   = nnz;
-            int k
+            int64_t nnz = this->nnz_;
+            int64_t s   = nnz;
+            int64_t k
                 = (nnz / this->local_backend_.HIP_block_size) / this->local_backend_.HIP_max_threads
                   + 1;
             if(k > 1)

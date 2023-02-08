@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ namespace rocalution
         // Host affinity (true-yes/false-no)
         bool OpenMP_affinity;
         // Host threshold size
-        int OpenMP_threshold;
+        int64_t OpenMP_threshold;
 
         // HIP section
         // handles
@@ -274,7 +274,7 @@ namespace rocalution
 
     // Set the OMP threads based on the size threshold
     void _set_omp_backend_threads(const struct Rocalution_Backend_Descriptor& backend_descriptor,
-                                  int                                         size);
+                                  int64_t                                     size);
 
     // Build (and return) a vector on the selected in the descriptor accelerator
     template <typename ValueType>

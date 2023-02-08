@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -650,18 +650,18 @@ namespace rocalution
 
     template <unsigned int BLOCKSIZE, typename IndexType>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_find_maximum_blockreduce(IndexType m,
+        void kernel_find_maximum_blockreduce(int64_t m,
                                              const IndexType* __restrict__ array,
                                              IndexType* __restrict__ workspace)
     {
         unsigned int tid = hipThreadIdx_x;
-        IndexType    gid = hipBlockIdx_x * BLOCKSIZE + tid;
+        int64_t      gid = hipBlockIdx_x * BLOCKSIZE + tid;
 
         __shared__ IndexType smax[BLOCKSIZE];
 
         IndexType t_max = -2;
 
-        for(IndexType idx = gid; idx < m; idx += hipGridDim_x * BLOCKSIZE)
+        for(int64_t idx = gid; idx < m; idx += hipGridDim_x * BLOCKSIZE)
         {
             t_max = max(t_max, array[idx]);
         }

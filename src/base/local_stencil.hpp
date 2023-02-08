@@ -72,7 +72,7 @@ namespace rocalution
 
         /** \brief Return the dimension of the stencil */
         ROCALUTION_EXPORT
-        int GetNDim(void) const;
+        int64_t GetNDim(void) const;
         ROCALUTION_EXPORT
         virtual int64_t GetM(void) const;
         ROCALUTION_EXPORT

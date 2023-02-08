@@ -710,7 +710,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::SetDataPtrCSR(int**       row_offset,
+    void LocalMatrix<ValueType>::SetDataPtrCSR(PtrType**   row_offset,
                                                int**       col,
                                                ValueType** val,
                                                std::string name,
@@ -758,7 +758,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val)
+    void LocalMatrix<ValueType>::LeaveDataPtrCSR(PtrType** row_offset, int** col, ValueType** val)
     {
         log_debug(this, "LocalMatrix::LeaveDataPtrCSR()", row_offset, col, val);
 
@@ -1115,7 +1115,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::CopyFromCSR(const int*       row_offsets,
+    void LocalMatrix<ValueType>::CopyFromCSR(const PtrType*   row_offsets,
                                              const int*       col,
                                              const ValueType* val)
     {
@@ -1140,7 +1140,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::CopyToCSR(int* row_offsets, int* col, ValueType* val) const
+    void LocalMatrix<ValueType>::CopyToCSR(PtrType* row_offsets, int* col, ValueType* val) const
     {
         log_debug(this, "LocalMatrix::CopyToCSR()", row_offsets, col, val);
 
@@ -1203,7 +1203,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void LocalMatrix<ValueType>::CopyFromHostCSR(const int*         row_offset,
+    void LocalMatrix<ValueType>::CopyFromHostCSR(const PtrType*     row_offset,
                                                  const int*         col,
                                                  const ValueType*   val,
                                                  const std::string& name,
@@ -1551,7 +1551,7 @@ namespace rocalution
         bool is_accel = this->is_accel_();
         this->MoveToHost();
 
-        int*       mat_row_offset = NULL;
+        PtrType*   mat_row_offset = NULL;
         int*       mat_col        = NULL;
         ValueType* mat_val        = NULL;
 
@@ -1631,7 +1631,7 @@ namespace rocalution
         if(this->GetFormat() == CSR)
         {
             std::stringstream sstr;
-            sstr << "(" << 8 * sizeof(int) << "," << 8 * sizeof(int) << ")";
+            sstr << "(" << 8 * sizeof(PtrType) << "," << 8 * sizeof(int) << ")";
             format += sstr.str();
         }
 

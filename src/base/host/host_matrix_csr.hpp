@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,10 +46,10 @@ namespace rocalution
         }
 
         virtual bool Check(void) const;
-        virtual void AllocateCSR(int nnz, int nrow, int ncol);
+        virtual void AllocateCSR(int64_t nnz, int nrow, int ncol);
         virtual void SetDataPtrCSR(
-            int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol);
-        virtual void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
+            PtrType** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol);
+        virtual void LeaveDataPtrCSR(PtrType** row_offset, int** col, ValueType** val);
 
         virtual void Clear(void);
         virtual bool Zeros(void);
@@ -108,15 +108,15 @@ namespace rocalution
 
         virtual void CopyFrom(const BaseMatrix<ValueType>& mat);
 
-        virtual void CopyFromCSR(const int* row_offsets, const int* col, const ValueType* val);
-        virtual void CopyToCSR(int* row_offsets, int* col, ValueType* val) const;
+        virtual void CopyFromCSR(const PtrType* row_offsets, const int* col, const ValueType* val);
+        virtual void CopyToCSR(PtrType* row_offsets, int* col, ValueType* val) const;
 
         virtual void CopyTo(BaseMatrix<ValueType>* mat) const;
 
-        virtual void CopyFromHostCSR(const int*       row_offset,
+        virtual void CopyFromHostCSR(const PtrType*   row_offset,
                                      const int*       col,
                                      const ValueType* val,
-                                     int              nnz,
+                                     int64_t          nnz,
                                      int              nrow,
                                      int              ncol);
 
@@ -239,7 +239,7 @@ namespace rocalution
                                      int                    rGsize) const;
 
     private:
-        MatrixCSR<ValueType, int> mat_;
+        MatrixCSR<ValueType, int, PtrType> mat_;
 
         friend class BaseVector<ValueType>;
         friend class HostVector<ValueType>;

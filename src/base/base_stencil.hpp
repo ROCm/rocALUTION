@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ namespace rocalution
         /// Return the dimension of the stencil
         int GetNDim(void) const;
         /// Return the nnz per row
-        virtual int GetNnz(void) const = 0;
+        virtual int64_t GetNnz(void) const = 0;
 
         /// Shows simple info about the object
         virtual void Info(void) const = 0;

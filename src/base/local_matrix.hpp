@@ -28,6 +28,7 @@
 #include "matrix_formats.hpp"
 #include "operator.hpp"
 #include "rocalution/export.hpp"
+#include "rocalution/utils/types.hpp"
 
 namespace rocalution
 {
@@ -179,7 +180,7 @@ namespace rocalution
                            int64_t     nrow,
                            int64_t     ncol);
         ROCALUTION_EXPORT
-        void SetDataPtrCSR(int**       row_offset,
+        void SetDataPtrCSR(PtrType**   row_offset,
                            int**       col,
                            ValueType** val,
                            std::string name,
@@ -253,7 +254,7 @@ namespace rocalution
         ROCALUTION_EXPORT
         void LeaveDataPtrCOO(int** row, int** col, ValueType** val);
         ROCALUTION_EXPORT
-        void LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val);
+        void LeaveDataPtrCSR(PtrType** row_offset, int** col, ValueType** val);
         ROCALUTION_EXPORT
         void LeaveDataPtrBCSR(int** row_offset, int** col, ValueType** val, int& blockdim);
         ROCALUTION_EXPORT
@@ -742,13 +743,13 @@ namespace rocalution
       * values). The object data has to be allocated (call AllocateCSR first)
       */
         ROCALUTION_EXPORT
-        void CopyFromCSR(const int* row_offsets, const int* col, const ValueType* val);
+        void CopyFromCSR(const PtrType* row_offsets, const int* col, const ValueType* val);
 
         /** \brief Copy (export) CSR matrix described in three arrays (offsets, columns,
       * values). The output arrays have to be allocated
       */
         ROCALUTION_EXPORT
-        void CopyToCSR(int* row_offsets, int* col, ValueType* val) const;
+        void CopyToCSR(PtrType* row_offsets, int* col, ValueType* val) const;
 
         /** \brief Copy (import) COO matrix described in three arrays (rows, columns,
       * values). The object data has to be allocated (call AllocateCOO first)
@@ -785,7 +786,7 @@ namespace rocalution
       * ncol        Number of columns.
       */
         ROCALUTION_EXPORT
-        void CopyFromHostCSR(const int*         row_offset,
+        void CopyFromHostCSR(const PtrType*     row_offset,
                              const int*         col,
                              const ValueType*   val,
                              const std::string& name,

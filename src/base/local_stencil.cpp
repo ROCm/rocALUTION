@@ -69,7 +69,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    int LocalStencil<ValueType>::GetNDim(void) const
+    int64_t LocalStencil<ValueType>::GetNDim(void) const
     {
         return this->stencil_->GetNDim();
     }

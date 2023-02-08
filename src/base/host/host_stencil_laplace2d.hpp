@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ namespace rocalution
         explicit HostStencilLaplace2D(const Rocalution_Backend_Descriptor& local_backend);
         virtual ~HostStencilLaplace2D();
 
-        virtual int          GetNnz(void) const;
+        virtual int64_t      GetNnz(void) const;
         virtual void         Info(void) const;
         virtual unsigned int GetStencilId(void) const
         {

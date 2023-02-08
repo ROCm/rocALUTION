@@ -268,7 +268,10 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Copy ncol and nnz back to host
-        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &cast_prolong->nnz_);
+        PtrType tmp;
+        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &tmp);
+        cast_prolong->nnz_ = tmp;
+
         copy_d2h(1, workspace + this->nrow_, &cast_prolong->ncol_);
 
         // Allocate column and value arrays
@@ -596,7 +599,10 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Copy number of columns of P and nnz of P back to host
-        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &cast_prolong->nnz_);
+        PtrType tmp;
+        copy_d2h(1, cast_prolong->mat_.row_offset + this->nrow_, &tmp);
+        cast_prolong->nnz_ = tmp;
+
         copy_d2h(1, workspace + this->nrow_, &cast_prolong->ncol_);
 
         // Allocate column and value arrays

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    inline int BaseMatrix<ValueType>::GetNnz(void) const
+    inline int64_t BaseMatrix<ValueType>::GetNnz(void) const
     {
         return this->nnz_;
     }
@@ -89,7 +89,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::CopyFromCSR(const int*       row_offsets,
+    void BaseMatrix<ValueType>::CopyFromCSR(const PtrType*   row_offsets,
                                             const int*       col,
                                             const ValueType* val)
     {
@@ -101,7 +101,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::CopyToCSR(int* row_offsets, int* col, ValueType* val) const
+    void BaseMatrix<ValueType>::CopyToCSR(PtrType* row_offsets, int* col, ValueType* val) const
     {
         LOG_INFO("CopyToCSR(int *row_offsets, int *col, ValueType *val) const");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
@@ -131,11 +131,15 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::CopyFromHostCSR(
-        const int* row_offset, const int* col, const ValueType* val, int nnz, int nrow, int ncol)
+    void BaseMatrix<ValueType>::CopyFromHostCSR(const PtrType*   row_offset,
+                                                const int*       col,
+                                                const ValueType* val,
+                                                int64_t          nnz,
+                                                int              nrow,
+                                                int              ncol)
     {
         LOG_INFO(
-            "CopyFromHostCSR(const int* row_offsets, const int* col, const ValueType* val, int "
+            "CopyFromHostCSR(const int* row_offsets, const int* col, const ValueType* val, int64_t "
             "nnz, int nrow, int ncol)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
@@ -144,9 +148,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::AllocateCSR(int nnz, int nrow, int ncol)
+    void BaseMatrix<ValueType>::AllocateCSR(int64_t nnz, int nrow, int ncol)
     {
-        LOG_INFO("AllocateCSR(int nnz, int nrow, int ncol)");
+        LOG_INFO("AllocateCSR(int64_t nnz, int nrow, int ncol)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a CSR matrix");
@@ -154,9 +158,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim)
+    void BaseMatrix<ValueType>::AllocateBCSR(int64_t nnzb, int nrowb, int ncolb, int blockdim)
     {
-        LOG_INFO("AllocateBCSR(int nnzb, int nrowb, int ncolb, int blockdim)");
+        LOG_INFO("AllocateBCSR(int64_t nnzb, int nrowb, int ncolb, int blockdim)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a BCSR matrix");
@@ -164,9 +168,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::AllocateCOO(int nnz, int nrow, int ncol)
+    void BaseMatrix<ValueType>::AllocateCOO(int64_t nnz, int nrow, int ncol)
     {
-        LOG_INFO("AllocateCOO(int nnz, int nrow, int ncol)");
+        LOG_INFO("AllocateCOO(int64_t nnz, int nrow, int ncol)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a COO matrix");
@@ -174,9 +178,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::AllocateDIA(int nnz, int nrow, int ncol, int ndiag)
+    void BaseMatrix<ValueType>::AllocateDIA(int64_t nnz, int nrow, int ncol, int ndiag)
     {
-        LOG_INFO("AllocateDIA(int nnz, int nrow, int ncol, int ndiag)");
+        LOG_INFO("AllocateDIA(int64_t nnz, int nrow, int ncol, int ndiag)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a DIA matrix");
@@ -184,9 +188,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::AllocateELL(int nnz, int nrow, int ncol, int max_row)
+    void BaseMatrix<ValueType>::AllocateELL(int64_t nnz, int nrow, int ncol, int max_row)
     {
-        LOG_INFO("AllocateELL(int nnz, int nrow, int ncol, int max_row)");
+        LOG_INFO("AllocateELL(int64_t nnz, int nrow, int ncol, int max_row)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a ELL matrix");
@@ -195,9 +199,10 @@ namespace rocalution
 
     template <typename ValueType>
     void BaseMatrix<ValueType>::AllocateHYB(
-        int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)
+        int64_t ell_nnz, int64_t coo_nnz, int ell_max_row, int nrow, int ncol)
     {
-        LOG_INFO("AllocateHYB(int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)");
+        LOG_INFO(
+            "AllocateHYB(int64_t ell_nnz, int64_t coo_nnz, int ell_max_row, int nrow, int ncol)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a HYB matrix");
@@ -215,9 +220,9 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::AllocateMCSR(int nnz, int nrow, int ncol)
+    void BaseMatrix<ValueType>::AllocateMCSR(int64_t nnz, int nrow, int ncol)
     {
-        LOG_INFO("AllocateMCSR(int nnz, int nrow, int ncol)");
+        LOG_INFO("AllocateMCSR(int64_t nnz, int nrow, int ncol)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("This is NOT a MCSR matrix");
@@ -806,7 +811,7 @@ namespace rocalution
 
     template <typename ValueType>
     void BaseMatrix<ValueType>::SetDataPtrCOO(
-        int** row, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        int** row, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         LOG_INFO("BaseMatrix<ValueType>::SetDataPtrCOO(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
@@ -827,7 +832,7 @@ namespace rocalution
 
     template <typename ValueType>
     void BaseMatrix<ValueType>::SetDataPtrCSR(
-        int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        PtrType** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         LOG_INFO("BaseMatrix<ValueType>::SetDataPtrCSR(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
@@ -837,7 +842,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::LeaveDataPtrCSR(int** row_offset, int** col, ValueType** val)
+    void BaseMatrix<ValueType>::LeaveDataPtrCSR(PtrType** row_offset, int** col, ValueType** val)
     {
         LOG_INFO("BaseMatrix<ValueType>::LeaveDataPtrCSR(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
@@ -847,8 +852,13 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void BaseMatrix<ValueType>::SetDataPtrBCSR(
-        int** row_offset, int** col, ValueType** val, int nnzb, int nrowb, int ncolb, int blockdim)
+    void BaseMatrix<ValueType>::SetDataPtrBCSR(int**       row_offset,
+                                               int**       col,
+                                               ValueType** val,
+                                               int64_t     nnzb,
+                                               int         nrowb,
+                                               int         ncolb,
+                                               int         blockdim)
     {
         LOG_INFO("BaseMatrix<ValueType>::SetDataPtrBCSR(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
@@ -872,7 +882,7 @@ namespace rocalution
 
     template <typename ValueType>
     void BaseMatrix<ValueType>::SetDataPtrMCSR(
-        int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        int** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         LOG_INFO("BaseMatrix<ValueType>::SetDataPtrMCSR(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
@@ -913,7 +923,7 @@ namespace rocalution
 
     template <typename ValueType>
     void BaseMatrix<ValueType>::SetDataPtrELL(
-        int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row)
+        int** col, ValueType** val, int64_t nnz, int nrow, int ncol, int max_row)
     {
         LOG_INFO("BaseMatrix<ValueType>::SetDataPtrELL(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
@@ -934,7 +944,7 @@ namespace rocalution
 
     template <typename ValueType>
     void BaseMatrix<ValueType>::SetDataPtrDIA(
-        int** offset, ValueType** val, int nnz, int nrow, int ncol, int num_diag)
+        int** offset, ValueType** val, int64_t nnz, int nrow, int ncol, int num_diag)
     {
         LOG_INFO("BaseMatrix<ValueType>::SetDataPtrDIA(...)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);

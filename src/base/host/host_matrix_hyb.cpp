@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -115,7 +115,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HostMatrixHYB<ValueType>::AllocateHYB(
-        int ell_nnz, int coo_nnz, int ell_max_row, int nrow, int ncol)
+        int64_t ell_nnz, int64_t coo_nnz, int ell_max_row, int nrow, int ncol)
     {
         assert(ell_nnz >= 0);
         assert(coo_nnz >= 0);
@@ -229,9 +229,9 @@ namespace rocalution
         {
             this->Clear();
 
-            int nnz     = 0;
-            int coo_nnz = 0;
-            int ell_nnz = 0;
+            int64_t nnz     = 0;
+            int64_t coo_nnz = 0;
+            int64_t ell_nnz = 0;
 
             if(csr_to_hyb(this->local_backend_.OpenMP_threads,
                           cast_mat->nnz_,
@@ -302,7 +302,7 @@ namespace rocalution
             // COO
             if(this->coo_nnz_ > 0)
             {
-                for(int i = 0; i < this->coo_nnz_; ++i)
+                for(int64_t i = 0; i < this->coo_nnz_; ++i)
                 {
                     cast_out->vec_[this->mat_.COO.row[i]]
                         += this->mat_.COO.val[i] * cast_in->vec_[this->mat_.COO.col[i]];
@@ -355,7 +355,7 @@ namespace rocalution
             // COO
             if(this->coo_nnz_ > 0)
             {
-                for(int i = 0; i < this->coo_nnz_; ++i)
+                for(int64_t i = 0; i < this->coo_nnz_; ++i)
                 {
                     cast_out->vec_[this->mat_.COO.row[i]]
                         += scalar * this->mat_.COO.val[i] * cast_in->vec_[this->mat_.COO.col[i]];

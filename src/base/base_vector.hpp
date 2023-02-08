@@ -51,7 +51,7 @@ namespace rocalution
         virtual void Info(void) const = 0;
 
         /// Returns the size of the vector
-        int GetSize(void) const;
+        int64_t GetSize(void) const;
 
         /// Copy the backend descriptor information
         void set_backend(const Rocalution_Backend_Descriptor& local_backend);
@@ -60,10 +60,10 @@ namespace rocalution
         virtual bool Check(void) const;
 
         /// Allocate a local vector with name and size
-        virtual void Allocate(int n) = 0;
+        virtual void Allocate(int64_t n) = 0;
 
         /// Initialize a vector with externally allocated data
-        virtual void SetDataPtr(ValueType** ptr, int size) = 0;
+        virtual void SetDataPtr(ValueType** ptr, int64_t size) = 0;
         /// Get a pointer from the vector data and free the vector object
         virtual void LeaveDataPtr(ValueType** ptr) = 0;
 
@@ -95,8 +95,10 @@ namespace rocalution
         virtual void CopyToAsync(BaseVector<ValueType>* vec) const;
         /// Copy data (not entire vector) from another vector with specified
         /// src/dst offsets and size
-        virtual void
-            CopyFrom(const BaseVector<ValueType>& src, int src_offset, int dst_offset, int size)
+        virtual void CopyFrom(const BaseVector<ValueType>& src,
+                              int64_t                      src_offset,
+                              int64_t                      dst_offset,
+                              int64_t                      size)
             = 0;
 
         /// Copy a vector under specified permutation (forward permutation)
@@ -130,9 +132,9 @@ namespace rocalution
         virtual void ScaleAddScale(ValueType                    alpha,
                                    const BaseVector<ValueType>& x,
                                    ValueType                    beta,
-                                   int                          src_offset,
-                                   int                          dst_offset,
-                                   int                          size)
+                                   int64_t                      src_offset,
+                                   int64_t                      dst_offset,
+                                   int64_t                      size)
             = 0;
 
         /// Perform vector update of type this = alpha*this + x*beta + y*gamma
@@ -155,7 +157,7 @@ namespace rocalution
         /// Compute sum of absolute values of the vector (L1 norm), return =  sum(|this|)
         virtual ValueType Asum(void) const = 0;
         /// Compute the absolute max value of the vector, return =  max(|this|)
-        virtual int Amax(ValueType& value) const = 0;
+        virtual int64_t Amax(ValueType& value) const = 0;
         /// Perform point-wise multiplication (element-wise) of type this = this * x
         virtual void PointWiseMult(const BaseVector<ValueType>& x) = 0;
         /// Perform point-wise multiplication (element-wise) of type this = x*y
@@ -171,22 +173,26 @@ namespace rocalution
                                     const BaseVector<ValueType>& values)
             = 0;
         /// Gets continuous index values
-        virtual void GetContinuousValues(int start, int end, ValueType* values) const = 0;
+        virtual void GetContinuousValues(int64_t start, int64_t end, ValueType* values) const = 0;
         /// Sets continuous index values
-        virtual void SetContinuousValues(int start, int end, const ValueType* values) = 0;
+        virtual void SetContinuousValues(int64_t start, int64_t end, const ValueType* values) = 0;
         /// Extract coarse boundary mapping
         virtual void ExtractCoarseMapping(
-            int start, int end, const int* index, int nc, int* size, int* map) const = 0;
+            int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const = 0;
         /// Extract coarse boundary index
-        virtual void ExtractCoarseBoundary(
-            int start, int end, const int* index, int nc, int* size, int* boundary) const = 0;
+        virtual void ExtractCoarseBoundary(int64_t    start,
+                                           int64_t    end,
+                                           const int* index,
+                                           int        nc,
+                                           int*       size,
+                                           int*       boundary) const = 0;
 
         virtual void SetRandomUniform(unsigned long long seed, ValueType a, ValueType b)     = 0;
         virtual void SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var) = 0;
 
     protected:
         /// The size of the vector
-        int size_;
+        int64_t size_;
 
         /// Backend descriptor (local copy)
         Rocalution_Backend_Descriptor local_backend_;

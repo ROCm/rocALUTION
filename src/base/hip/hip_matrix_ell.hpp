@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,9 +53,9 @@ namespace rocalution
         }
 
         virtual void Clear(void);
-        virtual void AllocateELL(int nnz, int nrow, int ncol, int max_row);
+        virtual void AllocateELL(int64_t nnz, int nrow, int ncol, int max_row);
         virtual void
-            SetDataPtrELL(int** col, ValueType** val, int nnz, int nrow, int ncol, int max_row);
+            SetDataPtrELL(int** col, ValueType** val, int64_t nnz, int nrow, int ncol, int max_row);
         virtual void LeaveDataPtrELL(int** col, ValueType** val, int& max_row);
 
         virtual bool ConvertFrom(const BaseMatrix<ValueType>& mat);

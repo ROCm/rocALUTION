@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ namespace rocalution
     template <typename ValueType>
     bool read_matrix_mtx(int&        nrow,
                          int&        ncol,
-                         int&        nnz,
+                         int64_t&    nnz,
                          int**       row,
                          int**       col,
                          ValueType** val,
@@ -41,29 +41,29 @@ namespace rocalution
     template <typename ValueType>
     bool write_matrix_mtx(int              nrow,
                           int              ncol,
-                          int              nnz,
+                          int64_t          nnz,
                           const int*       row,
                           const int*       col,
                           const ValueType* val,
                           const char*      filename);
 
-    template <typename ValueType>
-    bool read_matrix_csr(int&        nrow,
-                         int&        ncol,
-                         int&        nnz,
-                         int**       ptr,
-                         int**       col,
-                         ValueType** val,
-                         const char* filename);
+    template <typename ValueType, typename IndexType, typename PointerType>
+    bool read_matrix_csr(int64_t&      nrow,
+                         int64_t&      ncol,
+                         int64_t&      nnz,
+                         PointerType** ptr,
+                         IndexType**   col,
+                         ValueType**   val,
+                         const char*   filename);
 
-    template <typename ValueType>
-    bool write_matrix_csr(int              nrow,
-                          int              ncol,
-                          int              nnz,
-                          const int*       ptr,
-                          const int*       col,
-                          const ValueType* val,
-                          const char*      filename);
+    template <typename ValueType, typename IndexType, typename PointerType>
+    bool write_matrix_csr(int64_t            nrow,
+                          int64_t            ncol,
+                          int64_t            nnz,
+                          const PointerType* ptr,
+                          const IndexType*   col,
+                          const ValueType*   val,
+                          const char*        filename);
 
 } // namespace rocalution
 

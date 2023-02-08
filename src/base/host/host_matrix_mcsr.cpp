@@ -91,7 +91,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HostMatrixMCSR<ValueType>::AllocateMCSR(int nnz, int nrow, int ncol)
+    void HostMatrixMCSR<ValueType>::AllocateMCSR(int64_t nnz, int nrow, int ncol)
     {
         assert(nnz >= 0);
         assert(ncol >= 0);
@@ -120,7 +120,7 @@ namespace rocalution
 
     template <typename ValueType>
     void HostMatrixMCSR<ValueType>::SetDataPtrMCSR(
-        int** row_offset, int** col, ValueType** val, int nnz, int nrow, int ncol)
+        int** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
         assert(*row_offset != NULL);
         assert(*col != NULL);
