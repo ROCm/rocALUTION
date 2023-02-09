@@ -730,6 +730,8 @@ namespace rocalution
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
     template AcceleratorVector<int>* _rocalution_init_base_backend_vector(
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
+    template AcceleratorVector<int64_t>* _rocalution_init_base_backend_vector(
+        const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
     template AcceleratorMatrix<float>* _rocalution_init_base_backend_matrix(
         const struct Rocalution_Backend_Descriptor& backend_descriptor,

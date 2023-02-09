@@ -604,6 +604,38 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    ValueType GlobalVector<ValueType>::InclusiveSum(void)
+    {
+        log_debug(this, "GlobalVector::InclusiveSum()");
+
+        return this->vector_interior_.InclusiveSum();
+    }
+
+    template <typename ValueType>
+    ValueType GlobalVector<ValueType>::InclusiveSum(const GlobalVector<ValueType>& vec)
+    {
+        log_debug(this, "GlobalVector::InclusiveSum()", (const void*&)vec);
+
+        return this->vector_interior_.InclusiveSum(vec.vector_interior_);
+    }
+
+    template <typename ValueType>
+    ValueType GlobalVector<ValueType>::ExclusiveSum(void)
+    {
+        log_debug(this, "GlobalVector::ExclusiveSum()");
+
+        return this->vector_interior_.ExclusiveSum();
+    }
+
+    template <typename ValueType>
+    ValueType GlobalVector<ValueType>::ExclusiveSum(const GlobalVector<ValueType>& vec)
+    {
+        log_debug(this, "GlobalVector::ExclusiveSum()", (const void*&)vec);
+
+        return this->vector_interior_.ExclusiveSum(vec.vector_interior_);
+    }
+
+    template <typename ValueType>
     ValueType GlobalVector<ValueType>::Asum(void) const
     {
         log_debug(this, "GlobalVector::Asum()");

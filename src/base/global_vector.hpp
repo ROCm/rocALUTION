@@ -123,6 +123,10 @@ namespace rocalution
         virtual ValueType DotNonConj(const GlobalVector<ValueType>& x) const;
         virtual ValueType Norm(void) const;
         virtual ValueType Reduce(void) const;
+        virtual ValueType InclusiveSum(void);
+        virtual ValueType InclusiveSum(const GlobalVector<ValueType>& vec);
+        virtual ValueType ExclusiveSum(void);
+        virtual ValueType ExclusiveSum(const GlobalVector<ValueType>& vec);
         virtual ValueType Asum(void) const;
         virtual int64_t   Amax(ValueType& value) const;
         virtual void      PointWiseMult(const GlobalVector<ValueType>& x);

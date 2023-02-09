@@ -259,6 +259,46 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    ValueType Vector<ValueType>::InclusiveSum(const LocalVector<ValueType>& vec)
+    {
+        LOG_INFO("Vector<ValueType>::InclusiveSum(const LocalVector<ValueType>& vec)");
+        LOG_INFO("Mismatched types:");
+        this->Info();
+        vec.Info();
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    ValueType Vector<ValueType>::InclusiveSum(const GlobalVector<ValueType>& vec)
+    {
+        LOG_INFO("Vector<ValueType>::InclusiveSum(const GlobalVector<ValueType>& vec)");
+        LOG_INFO("Mismatched types:");
+        this->Info();
+        vec.Info();
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    ValueType Vector<ValueType>::ExclusiveSum(const LocalVector<ValueType>& vec)
+    {
+        LOG_INFO("Vector<ValueType>::ExclusiveSum(const LocalVector<ValueType>& vec)");
+        LOG_INFO("Mismatched types:");
+        this->Info();
+        vec.Info();
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    ValueType Vector<ValueType>::ExclusiveSum(const GlobalVector<ValueType>& vec)
+    {
+        LOG_INFO("Vector<ValueType>::ExclusiveSum(const GlobalVector<ValueType>& vec)");
+        LOG_INFO("Mismatched types:");
+        this->Info();
+        vec.Info();
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
     void Vector<ValueType>::PointWiseMult(const LocalVector<ValueType>& x)
     {
         LOG_INFO("Vector<ValueType>::PointWiseMult(const LocalVector<ValueType>& x)");
@@ -370,5 +410,6 @@ namespace rocalution
 #endif
     template class Vector<bool>;
     template class Vector<int>;
+    template class Vector<int64_t>;
 
 } // namespace rocalution

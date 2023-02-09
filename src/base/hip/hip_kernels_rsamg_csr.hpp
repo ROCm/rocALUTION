@@ -34,9 +34,15 @@
 namespace rocalution
 {
     // Determine strong influences
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename T, typename I, typename J>
+    template <bool         GLOBAL,
+              unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              typename T,
+              typename I,
+              typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_pmis_strong_influences(I nrow,
+        void kernel_csr_rs_pmis_strong_influences(I       nrow,
+                                                  int64_t nnz,
                                                   const J* __restrict__ csr_row_ptr,
                                                   const I* __restrict__ csr_col_ind,
                                                   const T* __restrict__ csr_val,
@@ -64,11 +70,11 @@ namespace rocalution
         // where true means, the diagonal element is negative
         __shared__ bool sign[BLOCKSIZE / WFSIZE];
 
-        J row_begin = csr_row_ptr[row];
-        J row_end   = csr_row_ptr[row + 1];
+        J int_row_begin = csr_row_ptr[row];
+        J int_row_end   = csr_row_ptr[row + 1];
 
-        // Determine diagonal sign and min/max
-        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+        // Determine diagonal sign and min/max for interior
+        for(J j = int_row_begin + lid; j < int_row_end; j += WFSIZE)
         {
             I col = csr_col_ind[j];
             T val = csr_val[j];
@@ -105,7 +111,7 @@ namespace rocalution
         cond *= eps;
 
         // Fill S
-        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+        for(J j = int_row_begin + lid; j < int_row_end; j += WFSIZE)
         {
             I col = csr_col_ind[j];
             T val = csr_val[j];
@@ -169,9 +175,10 @@ namespace rocalution
     }
 
     // Correct previously marked vertices with respect to omega
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
+    template <bool GLOBAL, unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_pmis_correct_coarse(I nrow,
+        void kernel_csr_rs_pmis_correct_coarse(I       nrow,
+                                               int64_t nnz,
                                                const J* __restrict__ csr_row_ptr,
                                                const I* __restrict__ csr_col_ind,
                                                const float* __restrict__ omega,
@@ -239,9 +246,10 @@ namespace rocalution
     }
 
     // Mark remaining edges of a coarse point to fine
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
+    template <bool GLOBAL, unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_pmis_coarse_edges_to_fine(I nrow,
+        void kernel_csr_rs_pmis_coarse_edges_to_fine(I       nrow,
+                                                     int64_t nnz,
                                                      const J* __restrict__ csr_row_ptr,
                                                      const I* __restrict__ csr_col_ind,
                                                      const bool* __restrict__ S,
@@ -306,17 +314,18 @@ namespace rocalution
         }
     }
 
-    template <unsigned int BLOCKSIZE, typename T, typename I, typename J>
+    template <bool GLOBAL, unsigned int BLOCKSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_direct_interp_nnz(I nrow,
-                                             const J* __restrict__ csr_row_ptr,
-                                             const I* __restrict__ csr_col_ind,
-                                             const T* __restrict__ csr_val,
+        void kernel_csr_rs_direct_interp_nnz(I       nrow,
+                                             int64_t nnz,
+                                             const J* __restrict__ int_csr_row_ptr,
+                                             const I* __restrict__ int_csr_col_ind,
+                                             const T* __restrict__ int_csr_val,
                                              const bool* __restrict__ S,
                                              const int* __restrict__ cf,
                                              T* __restrict__ Amin,
                                              T* __restrict__ Amax,
-                                             J* __restrict__ row_nnz,
+                                             J* __restrict__ int_row_nnz,
                                              I* __restrict__ f2c)
     {
         // The row this thread operates on
@@ -328,25 +337,24 @@ namespace rocalution
             return;
         }
 
-        // Counter
-        I nnz = 0;
-
         // Coarse points generate a single entry
         if(cf[row] == 1)
         {
             // Set coarse flag
-            f2c[row] = nnz = 1;
+            f2c[row] = int_row_nnz[row] = 1;
         }
         else
         {
             // Set non-coarse flag
             f2c[row] = 0;
 
+            I int_nnz = 0;
+
             T amin = static_cast<T>(0);
             T amax = static_cast<T>(0);
 
-            J row_begin = csr_row_ptr[row];
-            J row_end   = csr_row_ptr[row + 1];
+            J row_begin = int_csr_row_ptr[row];
+            J row_end   = int_csr_row_ptr[row + 1];
 
             // Loop over the full row and determine minimum and maximum
             for(J j = row_begin; j < row_end; ++j)
@@ -354,12 +362,12 @@ namespace rocalution
                 // Process only vertices that are strongly connected
                 if(S[j])
                 {
-                    I col = csr_col_ind[j];
+                    I col = int_csr_col_ind[j];
 
                     // Process only coarse points
                     if(cf[col] == 1)
                     {
-                        T val = csr_val[j];
+                        T val = int_csr_val[j];
 
                         amin = (amin < val) ? amin : val;
                         amax = (amax > val) ? amax : val;
@@ -376,30 +384,31 @@ namespace rocalution
                 // Process only vertices that are strongly connected
                 if(S[j] == true)
                 {
-                    I col = csr_col_ind[j];
+                    I col = int_csr_col_ind[j];
 
                     // Process only coarse points
                     if(cf[col] == 1)
                     {
-                        T val = csr_val[j];
+                        T val = int_csr_val[j];
 
                         // If conditions are fulfilled, count up row nnz
                         if(val <= amin || val >= amax)
                         {
-                            ++nnz;
+                            ++int_nnz;
                         }
                     }
                 }
             }
-        }
 
-        // Write row nnz back to global memory
-        row_nnz[row] = nnz;
+            // Write row nnz back to global memory
+            int_row_nnz[row] = int_nnz;
+        }
     }
 
-    template <unsigned int BLOCKSIZE, typename T, typename I, typename J>
+    template <bool GLOBAL, unsigned int BLOCKSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_direct_interp_fill(I nrow,
+        void kernel_csr_rs_direct_interp_fill(I       nrow,
+                                              int64_t nnz,
                                               const J* __restrict__ csr_row_ptr,
                                               const I* __restrict__ csr_col_ind,
                                               const T* __restrict__ csr_val,
@@ -533,10 +542,11 @@ namespace rocalution
         }
     }
 
-    template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
+    template <bool GLOBAL, unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_extpi_interp_max(I    nrow,
-                                            bool FF1,
+        void kernel_csr_rs_extpi_interp_max(I       nrow,
+                                            int64_t nnz,
+                                            bool    FF1,
                                             const J* __restrict__ csr_row_ptr,
                                             const I* __restrict__ csr_col_ind,
                                             const bool* __restrict__ S,
@@ -653,14 +663,16 @@ namespace rocalution
         }
     }
 
-    template <unsigned int BLOCKSIZE,
+    template <bool         GLOBAL,
+              unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
               typename I,
               typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_extpi_interp_nnz(I    nrow,
-                                            bool FF1,
+        void kernel_csr_rs_extpi_interp_nnz(I       nrow,
+                                            int64_t nnz,
+                                            bool    FF1,
                                             const J* __restrict__ csr_row_ptr,
                                             const I* __restrict__ csr_col_ind,
                                             const bool* __restrict__ S,
@@ -704,7 +716,7 @@ namespace rocalution
         }
 
         // Counter
-        I nnz = 0;
+        I int_nnz = 0;
 
         // Shared memory for the unordered set
         __shared__ I sdata[BLOCKSIZE / WFSIZE * HASHSIZE];
@@ -739,7 +751,7 @@ namespace rocalution
             {
                 // This is a coarse point and thus contributes, count it for the row nnz
                 // We need to use a set here, to discard duplicates.
-                nnz += set.insert(col_j);
+                int_nnz += set.insert(col_j);
             }
             else
             {
@@ -772,7 +784,7 @@ namespace rocalution
                     {
                         // This is a coarse point, it contributes, count it for the row nnz
                         // We need to use a set here, to discard duplicates.
-                        nnz += set.insert(col_k);
+                        int_nnz += set.insert(col_k);
 
                         // Stop if FF interpolation is limited
                         if(FF1 == true)
@@ -785,27 +797,30 @@ namespace rocalution
         }
 
         // Sum up the row nnz from all lanes
-        wf_reduce_sum<WFSIZE>(&nnz);
+        wf_reduce_sum<WFSIZE>(&int_nnz);
 
         if(lid == WFSIZE - 1)
         {
             // Write row nnz back to global memory
-            row_nnz[row] = nnz;
+            row_nnz[row] = int_nnz;
 
             // Set this points state to fine
             state[row] = 0;
         }
     }
 
-    template <unsigned int BLOCKSIZE,
+    template <bool         GLOBAL,
+              unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
               typename T,
               typename I,
               typename J>
     __launch_bounds__(BLOCKSIZE) __global__
-        void kernel_csr_rs_extpi_interp_fill(I    nrow,
-                                             bool FF1,
+        void kernel_csr_rs_extpi_interp_fill(I       nrow,
+                                             I       ncol,
+                                             int64_t nnz,
+                                             bool    FF1,
                                              const J* __restrict__ csr_row_ptr,
                                              const I* __restrict__ csr_col_ind,
                                              const T* __restrict__ csr_val,
@@ -1114,31 +1129,35 @@ namespace rocalution
                 continue;
             }
 
-            // Get index into P
-            J idx = 0;
-
-            // Hash table index counter
-            unsigned int cnt = 0;
-
-            // Go through the hash table, until we reach its end
-            while(cnt < HASHSIZE)
+            // Differentiate between local and ghost part
+            if(col < ncol || GLOBAL == false)
             {
-                // We are searching for the right place in P to
-                // insert the i-th hash table entry.
-                // If the i-th hash table column entry is greater then the current one,
-                // we need to leave a slot to its left.
-                if(col > map.get_key(cnt))
+                // Get index into P
+                J idx = 0;
+
+                // Hash table index counter
+                unsigned int cnt = 0;
+
+                // Go through the hash table, until we reach its end
+                while(cnt < HASHSIZE)
                 {
-                    ++idx;
+                    // We are searching for the right place in P to
+                    // insert the i-th hash table entry.
+                    // If the i-th hash table column entry is greater then the current one,
+                    // we need to leave a slot to its left.
+                    if(col > map.get_key(cnt))
+                    {
+                        ++idx;
+                    }
+
+                    // Process next hash table entry
+                    ++cnt;
                 }
 
-                // Process next hash table entry
-                ++cnt;
+                // Add hash table entry into P
+                csr_col_ind_P[aj + idx] = f2c[col];
+                csr_val_P[aj + idx]     = a_ii_tilde * map.get_val(i);
             }
-
-            // Add hash table entry into P
-            csr_col_ind_P[aj + idx] = f2c[col];
-            csr_val_P[aj + idx]     = a_ii_tilde * map.get_val(i);
         }
     }
 

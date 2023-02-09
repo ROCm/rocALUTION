@@ -3,6 +3,9 @@
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
 ## rocALUTION 3.0.0
+### Added
+- Added support for 64bit integer vectors
+- Added inclusive and exclusive sum functionality for Vector classes
 ### Improved
 - Added multiple streams to the HIP backend
 - Matrix dimensions and number of non-zeros are now stored using 64bit integers

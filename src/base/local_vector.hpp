@@ -333,6 +333,14 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual ValueType Reduce(void) const;
         ROCALUTION_EXPORT
+        virtual ValueType InclusiveSum(void);
+        ROCALUTION_EXPORT
+        virtual ValueType InclusiveSum(const LocalVector<ValueType>& vec);
+        ROCALUTION_EXPORT
+        virtual ValueType ExclusiveSum(void);
+        ROCALUTION_EXPORT
+        virtual ValueType ExclusiveSum(const LocalVector<ValueType>& vec);
+        ROCALUTION_EXPORT
         virtual ValueType Asum(void) const;
         ROCALUTION_EXPORT
         virtual int64_t Amax(ValueType& value) const;
@@ -385,6 +393,7 @@ namespace rocalution
         friend class LocalVector<std::complex<double>>;
         friend class LocalVector<std::complex<float>>;
         friend class LocalVector<int>;
+        friend class LocalVector<int64_t>;
 
         friend class LocalMatrix<double>;
         friend class LocalMatrix<float>;

@@ -614,29 +614,110 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::RSPMISCoarsening(float             eps,
-                                                 BaseVector<int>*  CFmap,
-                                                 BaseVector<bool>* S) const
+    bool BaseMatrix<ValueType>::RSPMISStrongInfluences(float                        eps,
+                                                       BaseVector<bool>*            S,
+                                                       BaseVector<float>*           omega,
+                                                       unsigned long long           seed,
+                                                       const BaseMatrix<ValueType>& ghost) const
     {
         return false;
     }
 
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::RSDirectInterpolation(const BaseVector<int>&  CFmap,
-                                                      const BaseVector<bool>& S,
-                                                      BaseMatrix<ValueType>*  prolong,
-                                                      BaseMatrix<ValueType>* restrict) const
+    bool BaseMatrix<ValueType>::RSPMISUnassignedToCoarse(BaseVector<int>*         CFmap,
+                                                         BaseVector<bool>*        marked,
+                                                         const BaseVector<float>& omega) const
     {
         return false;
     }
 
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::RSExtPIInterpolation(const BaseVector<int>&  CFmap,
-                                                     const BaseVector<bool>& S,
-                                                     bool                    FF1,
-                                                     float                   trunc,
-                                                     BaseMatrix<ValueType>*  prolong,
-                                                     BaseMatrix<ValueType>* restrict) const
+    bool BaseMatrix<ValueType>::RSPMISCorrectCoarse(BaseVector<int>*             CFmap,
+                                                    const BaseVector<bool>&      S,
+                                                    const BaseVector<bool>&      marked,
+                                                    const BaseVector<float>&     omega,
+                                                    const BaseMatrix<ValueType>& ghost) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSPMISCoarseEdgesToFine(BaseVector<int>*             CFmap,
+                                                        const BaseVector<bool>&      S,
+                                                        const BaseMatrix<ValueType>& ghost) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSPMISCheckUndecided(bool&                  undecided,
+                                                     const BaseVector<int>& CFmap) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSDirectProlongNnz(const BaseVector<int>&       CFmap,
+                                                   const BaseVector<bool>&      S,
+                                                   const BaseMatrix<ValueType>& ghost,
+                                                   BaseVector<ValueType>*       Amin,
+                                                   BaseVector<ValueType>*       Amax,
+                                                   BaseVector<int>*             f2c,
+                                                   BaseMatrix<ValueType>*       prolong_int,
+                                                   BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSDirectProlongFill(const BaseVector<int64_t>&   l2g,
+                                                    const BaseVector<int>&       f2c,
+                                                    const BaseVector<int>&       CFmap,
+                                                    const BaseVector<bool>&      S,
+                                                    const BaseMatrix<ValueType>& ghost,
+                                                    const BaseVector<ValueType>& Amin,
+                                                    const BaseVector<ValueType>& Amax,
+                                                    BaseMatrix<ValueType>*       prolong_int,
+                                                    BaseMatrix<ValueType>*       prolong_gst,
+                                                    BaseVector<int64_t>* global_ghost_col) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSExtPIProlongNnz(int64_t                      global_column_begin,
+                                                  int64_t                      global_column_end,
+                                                  bool                         FF1,
+                                                  const BaseVector<int64_t>&   l2g,
+                                                  const BaseVector<int>&       CFmap,
+                                                  const BaseVector<bool>&      S,
+                                                  const BaseMatrix<ValueType>& ghost,
+                                                  const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                                  const BaseVector<int64_t>&   bnd_csr_col_ind,
+                                                  BaseVector<int>*             f2c,
+                                                  BaseMatrix<ValueType>*       prolong_int,
+                                                  BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSExtPIProlongFill(int64_t                      global_column_begin,
+                                                   int64_t                      global_column_end,
+                                                   bool                         FF1,
+                                                   const BaseVector<int64_t>&   l2g,
+                                                   const BaseVector<int>&       f2c,
+                                                   const BaseVector<int>&       CFmap,
+                                                   const BaseVector<bool>&      S,
+                                                   const BaseMatrix<ValueType>& ghost,
+                                                   const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                                   const BaseVector<int64_t>&   bnd_csr_col_ind,
+                                                   const BaseVector<PtrType>&   ext_csr_row_ptr,
+                                                   const BaseVector<int64_t>&   ext_csr_col_ind,
+                                                   const BaseVector<ValueType>& ext_csr_val,
+                                                   BaseMatrix<ValueType>*       prolong_int,
+                                                   BaseMatrix<ValueType>*       prolong_gst,
+                                                   BaseVector<int64_t>* global_ghost_col) const
     {
         return false;
     }

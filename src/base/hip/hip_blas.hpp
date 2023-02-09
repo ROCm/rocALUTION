@@ -68,6 +68,24 @@ namespace rocalution
                               size_t      size,
                               hipStream_t stream);
 
+    // rocprim inclusive sum
+    template <typename ValueType>
+    hipError_t rocprimTinclusivesum(void*       buffer,
+                                    size_t&     buffer_size,
+                                    ValueType*  in,
+                                    ValueType*  out,
+                                    size_t      size,
+                                    hipStream_t stream);
+
+    // rocprim exclusive sum
+    template <typename ValueType>
+    hipError_t rocprimTexclusivesum(void*       buffer,
+                                    size_t&     buffer_size,
+                                    ValueType*  in,
+                                    ValueType*  out,
+                                    size_t      size,
+                                    hipStream_t stream);
+
     // rocblas nrm2
     template <typename ValueType>
     rocblas_status

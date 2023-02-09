@@ -36,6 +36,7 @@
 #include "hip_utils.hpp"
 
 #include <hip/hip_runtime.h>
+#include <rocprim/rocprim.hpp>
 
 #ifdef SUPPORT_COMPLEX
 #include <complex>
@@ -596,6 +597,13 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
+    template <>
+    void HIPAcceleratorVector<int64_t>::AddScale(const BaseVector<int64_t>& x, int64_t alpha)
+    {
+        LOG_INFO("No integral axpy function");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::ScaleAdd(ValueType alpha, const BaseVector<ValueType>& x)
     {
@@ -737,6 +745,13 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
+    template <>
+    void HIPAcceleratorVector<int64_t>::Scale(int64_t alpha)
+    {
+        LOG_INFO("No integral rocBLAS scale function");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     ValueType HIPAcceleratorVector<ValueType>::Dot(const BaseVector<ValueType>& x) const
     {
@@ -779,6 +794,13 @@ namespace rocalution
     int HIPAcceleratorVector<int>::Dot(const BaseVector<int>& x) const
     {
         LOG_INFO("No int dot function");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    int64_t HIPAcceleratorVector<int64_t>::Dot(const BaseVector<int64_t>& x) const
+    {
+        LOG_INFO("No integral dot function");
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -827,6 +849,13 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
+    template <>
+    int64_t HIPAcceleratorVector<int64_t>::DotNonConj(const BaseVector<int64_t>& x) const
+    {
+        LOG_INFO("No integral dotc function");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     ValueType HIPAcceleratorVector<ValueType>::Norm(void) const
     {
@@ -861,6 +890,13 @@ namespace rocalution
     int HIPAcceleratorVector<int>::Norm(void) const
     {
         LOG_INFO("What is int HIPAcceleratorVector<ValueType>::Norm(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    int64_t HIPAcceleratorVector<int64_t>::Norm(void) const
+    {
+        LOG_INFO("What is integral HIPAcceleratorVector<ValueType>::Norm(void) const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -913,6 +949,112 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    ValueType HIPAcceleratorVector<ValueType>::InclusiveSum(const BaseVector<ValueType>& vec)
+    {
+        if(this->size_ > 0)
+        {
+            const HIPAcceleratorVector<ValueType>* cast_vec
+                = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&vec);
+
+            assert(cast_vec != NULL);
+
+            void*  buffer = NULL;
+            size_t size   = 0;
+
+            rocprimTinclusivesum(buffer,
+                                 size,
+                                 cast_vec->vec_,
+                                 this->vec_,
+                                 this->size_,
+                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipMalloc(&buffer, size);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprimTinclusivesum(buffer,
+                                 size,
+                                 cast_vec->vec_,
+                                 this->vec_,
+                                 this->size_,
+                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipFree(buffer);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            ValueType ret;
+            copy_d2h(1, this->vec_ + this->size_ - 1, &ret);
+
+            return ret;
+        }
+
+        return 0;
+    }
+
+    template <>
+    bool HIPAcceleratorVector<bool>::InclusiveSum(const BaseVector<bool>& vec)
+    {
+        LOG_INFO("What is bool HIPAcceleratorVector::InclusiveSum()?");
+        FATAL_ERROR(__FILE__, __LINE__);
+
+        return false;
+    }
+
+    template <typename ValueType>
+    ValueType HIPAcceleratorVector<ValueType>::ExclusiveSum(const BaseVector<ValueType>& vec)
+    {
+        if(this->size_ > 0)
+        {
+            const HIPAcceleratorVector<ValueType>* cast_vec
+                = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&vec);
+
+            assert(cast_vec != NULL);
+
+            void*  buffer = NULL;
+            size_t size   = 0;
+
+            rocprimTexclusivesum(buffer,
+                                 size,
+                                 cast_vec->vec_,
+                                 this->vec_,
+                                 this->size_,
+                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipMalloc(&buffer, size);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprimTexclusivesum(buffer,
+                                 size,
+                                 cast_vec->vec_,
+                                 this->vec_,
+                                 this->size_,
+                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipFree(buffer);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            ValueType ret;
+            copy_d2h(1, this->vec_ + this->size_ - 1, &ret);
+
+            return ret;
+        }
+
+        return 0;
+    }
+
+    template <>
+    bool HIPAcceleratorVector<bool>::ExclusiveSum(const BaseVector<bool>& vec)
+    {
+        LOG_INFO("What is bool HIPAcceleratorVector::ExclusiveSum()?");
+        FATAL_ERROR(__FILE__, __LINE__);
+
+        return false;
+    }
+
+    template <typename ValueType>
     ValueType HIPAcceleratorVector<ValueType>::Asum(void) const
     {
         ValueType res = static_cast<ValueType>(0);
@@ -946,6 +1088,13 @@ namespace rocalution
     int HIPAcceleratorVector<int>::Asum(void) const
     {
         LOG_INFO("Asum<int> not implemented");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    int64_t HIPAcceleratorVector<int64_t>::Asum(void) const
+    {
+        LOG_INFO("Asum<int64_t> not implemented");
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -983,6 +1132,13 @@ namespace rocalution
     int64_t HIPAcceleratorVector<int>::Amax(int& value) const
     {
         LOG_INFO("Amax<int> not implemented");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    int64_t HIPAcceleratorVector<int64_t>::Amax(int64_t& value) const
+    {
+        LOG_INFO("Amax<int64_t> not implemented");
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
@@ -1319,6 +1475,19 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
+    //
+    // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
+    //
+    template <>
+    void HIPAcceleratorVector<int64_t>::SetRandomUniform(unsigned long long seed,
+                                                         int64_t            a,
+                                                         int64_t            b)
+    {
+        LOG_INFO("HIPAcceleratorVector::SetRandomUniform(), available implementation are for "
+                 "float, double, complex float and complex double only.");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::SetRandomNormal(unsigned long long seed,
                                                           ValueType          mean,
@@ -1351,6 +1520,19 @@ namespace rocalution
     //
     template <>
     void HIPAcceleratorVector<int>::SetRandomNormal(unsigned long long seed, int mean, int var)
+    {
+        LOG_INFO("HIPAcceleratorVector::SetRandomNormal(), available implementation are for float, "
+                 "double, complex float and complex double only.");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    //
+    // No internal usage for integral types, so let's skip the implementation rather than providing one we do not use.
+    //
+    template <>
+    void HIPAcceleratorVector<int64_t>::SetRandomNormal(unsigned long long seed,
+                                                        int64_t            mean,
+                                                        int64_t            var)
     {
         LOG_INFO("HIPAcceleratorVector::SetRandomNormal(), available implementation are for float, "
                  "double, complex float and complex double only.");
@@ -1395,5 +1577,6 @@ namespace rocalution
 #endif
     template class HIPAcceleratorVector<bool>;
     template class HIPAcceleratorVector<int>;
+    template class HIPAcceleratorVector<int64_t>;
 
 } // namespace rocalution

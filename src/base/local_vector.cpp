@@ -783,6 +783,44 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    ValueType LocalVector<ValueType>::InclusiveSum(void)
+    {
+        log_debug(this, "LocalVector::InclusiveSum()");
+
+        return this->vector_->InclusiveSum(*this->vector_);
+    }
+
+    template <typename ValueType>
+    ValueType LocalVector<ValueType>::InclusiveSum(const LocalVector<ValueType>& vec)
+    {
+        log_debug(this, "LocalVector::InclusiveSum()", (const void*&)vec);
+
+        assert(this->GetSize() <= vec.GetSize());
+        assert(this->is_host_() == vec.is_host_());
+
+        return this->vector_->InclusiveSum(*vec.vector_);
+    }
+
+    template <typename ValueType>
+    ValueType LocalVector<ValueType>::ExclusiveSum(void)
+    {
+        log_debug(this, "LocalVector::ExclusiveSum()");
+
+        return this->vector_->ExclusiveSum(*this->vector_);
+    }
+
+    template <typename ValueType>
+    ValueType LocalVector<ValueType>::ExclusiveSum(const LocalVector<ValueType>& vec)
+    {
+        log_debug(this, "LocalVector::ExclusiveSum()", (const void*&)vec);
+
+        assert(this->GetSize() <= vec.GetSize());
+        assert(this->is_host_() == vec.is_host_());
+
+        return this->vector_->ExclusiveSum(*vec.vector_);
+    }
+
+    template <typename ValueType>
     ValueType LocalVector<ValueType>::Asum(void) const
     {
         log_debug(this, "LocalVector::Asum()");
@@ -1223,5 +1261,6 @@ namespace rocalution
     template class LocalVector<std::complex<float>>;
 #endif
     template class LocalVector<int>;
+    template class LocalVector<int64_t>;
 
 } // namespace rocalution

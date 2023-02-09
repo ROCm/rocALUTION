@@ -277,6 +277,162 @@ namespace rocalution
         return rocprim::reduce(buffer, buffer_size, in, out, 0, size, rocprim::plus<int>(), stream);
     }
 
+    template <>
+    hipError_t rocprimTreduce(void*       buffer,
+                              size_t&     buffer_size,
+                              int64_t*    in,
+                              int64_t*    out,
+                              size_t      size,
+                              hipStream_t stream)
+    {
+        return rocprim::reduce(
+            buffer, buffer_size, in, out, 0, size, rocprim::plus<int64_t>(), stream);
+    }
+
+    // rocprim inclusive sum
+    template <>
+    hipError_t rocprimTinclusivesum(
+        void* buffer, size_t& buffer_size, float* in, float* out, size_t size, hipStream_t stream)
+    {
+        return rocprim::inclusive_scan(
+            buffer, buffer_size, in, out, size, rocprim::plus<float>(), stream);
+    }
+
+    template <>
+    hipError_t rocprimTinclusivesum(
+        void* buffer, size_t& buffer_size, double* in, double* out, size_t size, hipStream_t stream)
+    {
+        return rocprim::inclusive_scan(
+            buffer, buffer_size, in, out, size, rocprim::plus<double>(), stream);
+    }
+
+    template <>
+    hipError_t rocprimTinclusivesum(void*                buffer,
+                                    size_t&              buffer_size,
+                                    std::complex<float>* in,
+                                    std::complex<float>* out,
+                                    size_t               size,
+                                    hipStream_t          stream)
+    {
+        return rocprim::inclusive_scan(buffer,
+                                       buffer_size,
+                                       (hipComplex*)in,
+                                       (hipComplex*)out,
+                                       size,
+                                       rocprim::plus<hipComplex>(),
+                                       stream);
+    }
+
+    template <>
+    hipError_t rocprimTinclusivesum(void*                 buffer,
+                                    size_t&               buffer_size,
+                                    std::complex<double>* in,
+                                    std::complex<double>* out,
+                                    size_t                size,
+                                    hipStream_t           stream)
+    {
+        return rocprim::inclusive_scan(buffer,
+                                       buffer_size,
+                                       (hipDoubleComplex*)in,
+                                       (hipDoubleComplex*)out,
+                                       size,
+                                       rocprim::plus<hipDoubleComplex>(),
+                                       stream);
+    }
+
+    template <>
+    hipError_t rocprimTinclusivesum(
+        void* buffer, size_t& buffer_size, int* in, int* out, size_t size, hipStream_t stream)
+    {
+        return rocprim::inclusive_scan(
+            buffer, buffer_size, in, out, size, rocprim::plus<int>(), stream);
+    }
+
+    template <>
+    hipError_t rocprimTinclusivesum(void*       buffer,
+                                    size_t&     buffer_size,
+                                    int64_t*    in,
+                                    int64_t*    out,
+                                    size_t      size,
+                                    hipStream_t stream)
+    {
+        return rocprim::inclusive_scan(
+            buffer, buffer_size, in, out, size, rocprim::plus<int64_t>(), stream);
+    }
+
+    // rocprim exclusive sum
+    template <>
+    hipError_t rocprimTexclusivesum(
+        void* buffer, size_t& buffer_size, float* in, float* out, size_t size, hipStream_t stream)
+    {
+        return rocprim::exclusive_scan(
+            buffer, buffer_size, in, out, 0.0f, size, rocprim::plus<float>(), stream);
+    }
+
+    template <>
+    hipError_t rocprimTexclusivesum(
+        void* buffer, size_t& buffer_size, double* in, double* out, size_t size, hipStream_t stream)
+    {
+        return rocprim::exclusive_scan(
+            buffer, buffer_size, in, out, 0.0, size, rocprim::plus<double>(), stream);
+    }
+
+    template <>
+    hipError_t rocprimTexclusivesum(void*                buffer,
+                                    size_t&              buffer_size,
+                                    std::complex<float>* in,
+                                    std::complex<float>* out,
+                                    size_t               size,
+                                    hipStream_t          stream)
+    {
+        return rocprim::exclusive_scan(buffer,
+                                       buffer_size,
+                                       (hipComplex*)in,
+                                       (hipComplex*)out,
+                                       (hipComplex)0,
+                                       size,
+                                       rocprim::plus<hipComplex>(),
+                                       stream);
+    }
+
+    template <>
+    hipError_t rocprimTexclusivesum(void*                 buffer,
+                                    size_t&               buffer_size,
+                                    std::complex<double>* in,
+                                    std::complex<double>* out,
+                                    size_t                size,
+                                    hipStream_t           stream)
+    {
+        return rocprim::exclusive_scan(buffer,
+                                       buffer_size,
+                                       (hipDoubleComplex*)in,
+                                       (hipDoubleComplex*)out,
+                                       (hipDoubleComplex)0,
+                                       size,
+                                       rocprim::plus<hipDoubleComplex>(),
+                                       stream);
+    }
+
+    template <>
+    hipError_t rocprimTexclusivesum(
+        void* buffer, size_t& buffer_size, int* in, int* out, size_t size, hipStream_t stream)
+    {
+        return rocprim::exclusive_scan(
+            buffer, buffer_size, in, out, 0, size, rocprim::plus<int>(), stream);
+    }
+
+    template <>
+    hipError_t rocprimTexclusivesum(void*       buffer,
+                                    size_t&     buffer_size,
+                                    int64_t*    in,
+                                    int64_t*    out,
+                                    size_t      size,
+                                    hipStream_t stream)
+    {
+        return rocprim::exclusive_scan(
+            buffer, buffer_size, in, out, 0, size, rocprim::plus<int64_t>(), stream);
+    }
+
     // rocblas nrm2
     template <>
     rocblas_status

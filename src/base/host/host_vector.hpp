@@ -119,6 +119,10 @@ namespace rocalution
         virtual ValueType Norm(void) const;
         // reduce vector
         virtual ValueType Reduce(void) const;
+        // Compute out-of-place inclusive sum
+        virtual ValueType InclusiveSum(const BaseVector<ValueType>& vec);
+        // Compute out-of-place exclusive sum
+        virtual ValueType ExclusiveSum(const BaseVector<ValueType>& vec);
         // Compute sum of absolute values of this
         virtual ValueType Asum(void) const;
         // Compute absolute value of this
@@ -157,6 +161,7 @@ namespace rocalution
         friend class HostVector<std::complex<double>>;
         friend class HostVector<std::complex<float>>;
         friend class HostVector<int>;
+        friend class HostVector<int64_t>;
 
         friend class HostMatrix<ValueType>;
         friend class HostMatrixCSR<ValueType>;

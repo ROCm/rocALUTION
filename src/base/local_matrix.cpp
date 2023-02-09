@@ -5580,51 +5580,91 @@ namespace rocalution
         this->Check();
 #endif
 
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType>        csr_mat;
+        const LocalMatrix<ValueType>* csr_ptr = this;
+
+        if(csr_ptr->GetFormat() != CSR)
+        {
+            csr_mat.CloneFrom(*csr_ptr);
+            csr_mat.ConvertToCSR();
+            csr_ptr = &csr_mat;
+        }
+
         if(this->GetNnz() > 0)
         {
-            bool err = this->matrix_->RSPMISCoarsening(eps, CFmap->vector_, S->vector_);
+            // Zero structures
+            LocalMatrix<ValueType> zero;
+            zero.CloneBackend(*this);
 
-            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            // Allocate S
+            // S is the auxiliary strength matrix such that
+            //
+            // S_ij = { 1   if i != j and -a_ij > eps * max(-a_ik) for k != i }
+            //        { 0   otherwise                                         }
+            //
+            // This means, S_ij is 1, only if i strongly depends on j.
+            // S has been extended to also work with matrices that do not have
+            // fully non-positive off-diagonal entries.
+            S->Allocate("S", csr_ptr->GetNnz());
+
+            // Sample rng
+            LocalVector<float> omega;
+            omega.CloneBackend(*this);
+            omega.Allocate("omega", csr_ptr->GetM());
+
+            // Determine strong influences in the matrix
+            csr_ptr->matrix_->RSPMISStrongInfluences(
+                eps, S->vector_, omega.vector_, 0, *zero.matrix_);
+
+            // Allocate CF mapping
+            CFmap->Allocate("CF map", csr_ptr->GetM());
+
+            // Mark all vertices as undecided
+            CFmap->Zeros();
+
+            LocalVector<bool> marked;
+            marked.CloneBackend(*this);
+            marked.Allocate("marked coarse", csr_ptr->GetM());
+
+            // Iteratively find coarse and fine vertices until all undecided vertices have
+            // been marked (JPL approach)
+            int iter = 0;
+
+            while(true)
             {
-                LOG_INFO("Computation of LocalMatrix::RSPMISCoarsening() failed");
-                this->Info();
-                FATAL_ERROR(__FILE__, __LINE__);
-            }
+                // First, mark all vertices that have not been assigned yet, as coarse
+                csr_ptr->matrix_->RSPMISUnassignedToCoarse(
+                    CFmap->vector_, marked.vector_, *omega.vector_);
 
-            if(err == false)
-            {
-                LocalMatrix<ValueType> mat_host;
-                mat_host.ConvertTo(this->GetFormat());
-                mat_host.CopyFrom(*this);
+                // Now, correct previously marked vertices with respect to omega
+                csr_ptr->matrix_->RSPMISCorrectCoarse(
+                    CFmap->vector_, *S->vector_, *marked.vector_, *omega.vector_, *zero.matrix_);
 
-                // Move to host
-                CFmap->MoveToHost();
-                S->MoveToHost();
+                // Mark remaining edges of a coarse point to fine
+                csr_ptr->matrix_->RSPMISCoarseEdgesToFine(
+                    CFmap->vector_, *S->vector_, *zero.matrix_);
 
-                // Convert to CSR
-                mat_host.ConvertToCSR();
+                // Now, we need to check whether we have vertices left that are marked
+                // undecided, in order to restart the loop
+                bool undecided;
+                csr_ptr->matrix_->RSPMISCheckUndecided(undecided, *CFmap->vector_);
 
-                if(mat_host.matrix_->RSPMISCoarsening(eps, CFmap->vector_, S->vector_) == false)
+                // If no more undecided vertices are left, we are done
+                if(undecided == false)
                 {
-                    LOG_INFO("Computation of LocalMatrix::RSPMISCoarsening() failed");
-                    mat_host.Info();
-                    FATAL_ERROR(__FILE__, __LINE__);
+                    break;
                 }
 
-                if(this->GetFormat() != CSR)
-                {
-                    LOG_VERBOSE_INFO(
-                        2,
-                        "*** warning: LocalMatrix::RSPMISCoarsening() is performed in CSR format");
-                }
+                ++iter;
 
-                if(this->is_accel_() == true)
+                // Print some warning if number of iteration is getting huge
+                if(iter > 20)
                 {
-                    LOG_VERBOSE_INFO(
-                        2, "*** warning: LocalMatrix::RSPMISCoarsening() is performed on the host");
-
-                    CFmap->MoveToAccelerator();
-                    S->MoveToAccelerator();
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::RSPMISCoarsening() Current "
+                                     "number of iterations: "
+                                         << iter);
                 }
             }
         }
@@ -5634,6 +5674,12 @@ namespace rocalution
 
         CFmap->object_name_ = CFmap_name;
         S->object_name_     = S_name;
+
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: LocalMatrix::RSPMISCoarsening() is performed in CSR format");
+        }
     }
 
     template <typename ValueType>
@@ -5657,67 +5703,70 @@ namespace rocalution
         this->Check();
 #endif
 
-        if(this->GetNnz() > 0)
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType>        csr_mat;
+        const LocalMatrix<ValueType>* mat = this;
+
+        if(this->GetFormat() != CSR)
         {
-            bool err = this->matrix_->RSDirectInterpolation(
-                *CFmap.vector_, *S.vector_, prolong->matrix_, NULL);
+            csr_mat.CloneFrom(*this);
+            csr_mat.ConvertToCSR();
+            mat = &csr_mat;
 
-            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
-            {
-                LOG_INFO("Computation of LocalMatrix::RSDirectInterpolation() failed");
-                this->Info();
-                FATAL_ERROR(__FILE__, __LINE__);
-            }
-
-            if(err == false)
-            {
-                LocalMatrix<ValueType> mat_host;
-                LocalVector<int>       CFmap_host;
-                LocalVector<bool>      S_host;
-
-                mat_host.ConvertTo(this->GetFormat());
-                mat_host.CopyFrom(*this);
-                CFmap_host.CopyFrom(CFmap);
-                S_host.CopyFrom(S);
-
-                // Move to host
-                prolong->MoveToHost();
-
-                // Convert to CSR
-                mat_host.ConvertToCSR();
-
-                if(mat_host.matrix_->RSDirectInterpolation(
-                       *CFmap_host.vector_, *S_host.vector_, prolong->matrix_, NULL)
-                   == false)
-                {
-                    LOG_INFO("Computation of LocalMatrix::RSDirectInterpolation() failed");
-                    mat_host.Info();
-                    FATAL_ERROR(__FILE__, __LINE__);
-                }
-
-                if(this->GetFormat() != CSR)
-                {
-                    LOG_VERBOSE_INFO(2,
-                                     "*** warning: LocalMatrix::RSDirectInterpolation() is "
-                                     "performed in CSR format");
-
-                    prolong->ConvertTo(this->GetFormat());
-                }
-
-                if(this->is_accel_() == true)
-                {
-                    LOG_VERBOSE_INFO(2,
-                                     "*** warning: LocalMatrix::RSDirectInterpolation() is "
-                                     "performed on the host");
-
-                    prolong->MoveToAccelerator();
-                }
-            }
+            LOG_VERBOSE_INFO(
+                2, "*** warning: LocalMatrix::RSDirectInterpolation() is performed in CSR format");
         }
 
-        std::string prolong_name = "Prolongation Operator of " + this->object_name_;
+        // Zero vector
+        LocalVector<int64_t> zero;
+        zero.CloneBackend(*this);
 
-        prolong->object_name_ = prolong_name;
+        // Zero matrix
+        LocalMatrix<ValueType> zerom;
+        zerom.CloneBackend(*this);
+
+        // Fine to coarse map
+        LocalVector<int> f2c;
+        f2c.CloneBackend(*mat);
+        f2c.Allocate("fine to coarse map", mat->GetM() + 1);
+
+        // Amin/max
+        LocalVector<ValueType> Amin;
+        LocalVector<ValueType> Amax;
+
+        Amin.CloneBackend(*mat);
+        Amax.CloneBackend(*mat);
+
+        Amin.Allocate("A min", mat->GetM());
+        Amax.Allocate("A max", mat->GetM());
+
+        // Determine number of non-zeros of P
+        mat->matrix_->RSDirectProlongNnz(*CFmap.vector_,
+                                         *S.vector_,
+                                         *zerom.matrix_,
+                                         Amin.vector_,
+                                         Amax.vector_,
+                                         f2c.vector_,
+                                         prolong->matrix_,
+                                         NULL);
+
+        // Fill P
+        mat->matrix_->RSDirectProlongFill(*zero.vector_,
+                                          *f2c.vector_,
+                                          *CFmap.vector_,
+                                          *S.vector_,
+                                          *zerom.matrix_,
+                                          *Amin.vector_,
+                                          *Amax.vector_,
+                                          prolong->matrix_,
+                                          NULL,
+                                          NULL);
+
+        // Sort P
+        prolong->Sort();
+
+        std::string prolong_name = "Prolongation Operator of " + mat->object_name_;
+        prolong->object_name_    = prolong_name;
 
 #ifdef DEBUG_MODE
         prolong->Check();
@@ -5739,78 +5788,78 @@ namespace rocalution
 
         assert(prolong != NULL);
         assert(this != prolong);
-
-        assert(((this->matrix_ == this->matrix_host_) && (prolong->matrix_ == prolong->matrix_host_)
-                && (CFmap.vector_ == CFmap.vector_host_) && (S.vector_ == S.vector_host_))
-               || ((this->matrix_ == this->matrix_accel_)
-                   && (prolong->matrix_ == prolong->matrix_accel_)
-                   && (CFmap.vector_ == CFmap.vector_accel_) && (S.vector_ == S.vector_accel_)));
+        assert(this->is_host_() == CFmap.is_host_());
+        assert(this->is_host_() == S.is_host_());
+        assert(this->is_host_() == prolong->is_host_());
 
 #ifdef DEBUG_MODE
         this->Check();
 #endif
 
-        if(this->GetNnz() > 0)
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType>        csr_mat;
+        const LocalMatrix<ValueType>* mat = this;
+
+        if(this->GetFormat() != CSR)
         {
-            bool err = this->matrix_->RSExtPIInterpolation(
-                *CFmap.vector_, *S.vector_, FF1, 0.0, prolong->matrix_, NULL);
+            csr_mat.CloneFrom(*this);
+            csr_mat.ConvertToCSR();
+            mat = &csr_mat;
 
-            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
-            {
-                LOG_INFO("Computation of LocalMatrix::RSExtPIInterpolation() failed");
-                this->Info();
-                FATAL_ERROR(__FILE__, __LINE__);
-            }
-
-            if(err == false)
-            {
-                LocalMatrix<ValueType> mat_host;
-                LocalVector<int>       CFmap_host;
-                LocalVector<bool>      S_host;
-
-                mat_host.ConvertTo(this->GetFormat());
-                mat_host.CopyFrom(*this);
-                CFmap_host.CopyFrom(CFmap);
-                S_host.CopyFrom(S);
-
-                // Move to host
-                prolong->MoveToHost();
-
-                // Convert to CSR
-                mat_host.ConvertToCSR();
-
-                if(mat_host.matrix_->RSExtPIInterpolation(
-                       *CFmap_host.vector_, *S_host.vector_, FF1, 0.0, prolong->matrix_, NULL)
-                   == false)
-                {
-                    LOG_INFO("Computation of LocalMatrix::RSExtPIInterpolation() failed");
-                    mat_host.Info();
-                    FATAL_ERROR(__FILE__, __LINE__);
-                }
-
-                if(this->GetFormat() != CSR)
-                {
-                    LOG_VERBOSE_INFO(2,
-                                     "*** warning: LocalMatrix::RSExtPIInterpolation() is "
-                                     "performed in CSR format");
-
-                    prolong->ConvertTo(this->GetFormat());
-                }
-
-                if(this->is_accel_() == true)
-                {
-                    LOG_VERBOSE_INFO(2,
-                                     "*** warning: LocalMatrix::RSExtPIInterpolation() is "
-                                     "performed on the host");
-
-                    prolong->MoveToAccelerator();
-                }
-            }
+            LOG_VERBOSE_INFO(
+                2, "*** warning: LocalMatrix::RSExtPIInterpolation() is performed in CSR format");
         }
 
-        std::string prolong_name = "Prolongation Operator of " + this->object_name_;
+        // Zero vector
+        LocalVector<PtrType>   zero;
+        LocalVector<int64_t>   zerog;
+        LocalVector<ValueType> zerov;
+        LocalMatrix<ValueType> zerom;
 
-        prolong->object_name_ = prolong_name;
+        zero.CloneBackend(*this);
+        zerog.CloneBackend(*this);
+        zerov.CloneBackend(*this);
+        zerom.CloneBackend(*this);
+
+        // Fine to coarse map
+        LocalVector<int> f2c;
+        f2c.CloneBackend(*mat);
+        f2c.Allocate("f2c map", mat->GetM() + 1);
+
+        // Determine row nnz of P
+        mat->matrix_->RSExtPIProlongNnz(0,
+                                        mat->GetN(),
+                                        FF1,
+                                        *zerog.vector_,
+                                        *CFmap.vector_,
+                                        *S.vector_,
+                                        *zerom.matrix_,
+                                        *zero.vector_,
+                                        *zerog.vector_,
+                                        f2c.vector_,
+                                        prolong->matrix_,
+                                        NULL);
+
+        // Fill column indices and values of P
+        mat->matrix_->RSExtPIProlongFill(0,
+                                         mat->GetN(),
+                                         FF1,
+                                         *zerog.vector_,
+                                         *f2c.vector_,
+                                         *CFmap.vector_,
+                                         *S.vector_,
+                                         *zerom.matrix_,
+                                         *zero.vector_,
+                                         *zerog.vector_,
+                                         *zero.vector_,
+                                         *zerog.vector_,
+                                         *zerov.vector_,
+                                         prolong->matrix_,
+                                         NULL,
+                                         NULL);
+
+        std::string prolong_name = "Prolongation Operator of " + mat->object_name_;
+        prolong->object_name_    = prolong_name;
 
 #ifdef DEBUG_MODE
         prolong->Check();

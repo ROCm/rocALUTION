@@ -360,6 +360,16 @@ namespace rocalution
         /** \brief Reduce the vector */
         virtual ValueType Reduce(void) const = 0;
 
+        /** \brief Compute Inclusive sum */
+        virtual ValueType InclusiveSum(void) = 0;
+        virtual ValueType InclusiveSum(const LocalVector<ValueType>& vec);
+        virtual ValueType InclusiveSum(const GlobalVector<ValueType>& vec);
+
+        /** \brief Compute exclusive sum */
+        virtual ValueType ExclusiveSum(void) = 0;
+        virtual ValueType ExclusiveSum(const LocalVector<ValueType>& vec);
+        virtual ValueType ExclusiveSum(const GlobalVector<ValueType>& vec);
+
         /** \brief Compute the sum of absolute values of the vector, return = sum(|this|) */
         virtual ValueType Asum(void) const = 0;
 

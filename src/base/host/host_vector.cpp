@@ -117,6 +117,29 @@ namespace rocalution
         return check;
     }
 
+    template <>
+    bool HostVector<bool>::Check(void) const
+    {
+        bool check = true;
+
+        if(this->size_ > 0)
+        {
+            if(std::abs(this->size_) == std::numeric_limits<int64_t>::infinity())
+            {
+                // inf
+                LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector size");
+                return false;
+            }
+        }
+        else
+        {
+            assert(this->size_ == 0);
+            assert(this->vec_ == NULL);
+        }
+
+        return check;
+    }
+
     template <typename ValueType>
     void HostVector<ValueType>::Allocate(int64_t n)
     {
@@ -373,6 +396,13 @@ namespace rocalution
         }
     }
 
+    template <>
+    void HostVector<bool>::SetRandomNormal(unsigned long long seed, bool mean, bool var)
+    {
+        LOG_INFO("What is bool HostVector<ValueType>::SetRandomNormal(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     void HostVector<ValueType>::ReadFileASCII(const std::string& filename)
     {
@@ -510,7 +540,7 @@ namespace rocalution
                 this->vec_[i] = static_cast<ValueType>(tmp[i]);
             }
         }
-        else if(typeid(ValueType) == typeid(int))
+        else if(typeid(ValueType) == typeid(int) || typeid(ValueType) == typeid(int64_t))
         {
             in.read((char*)this->vec_, sizeof(ValueType) * n);
         }
@@ -571,7 +601,7 @@ namespace rocalution
 
             out.write((char*)tmp.data(), sizeof(double) * this->size_);
         }
-        else if(typeid(ValueType) == typeid(int))
+        else if(typeid(ValueType) == typeid(int) || typeid(ValueType) == typeid(int64_t))
         {
             out.write((char*)this->vec_, sizeof(ValueType) * this->size_);
         }
@@ -720,6 +750,13 @@ namespace rocalution
         {
             this->vec_[i] *= alpha;
         }
+    }
+
+    template <>
+    void HostVector<bool>::Scale(bool alpha)
+    {
+        LOG_INFO("What is bool HostVector<ValueType>::Scale(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <typename ValueType>
@@ -925,6 +962,13 @@ namespace rocalution
         return std::complex<double>(asum_real, asum_imag);
     }
 
+    template <>
+    bool HostVector<bool>::Asum(void) const
+    {
+        LOG_INFO("What is bool HostVector<ValueType>::Asum(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     int64_t HostVector<ValueType>::Amax(ValueType& value) const
     {
@@ -954,6 +998,13 @@ namespace rocalution
         }
 
         return index;
+    }
+
+    template <>
+    int64_t HostVector<bool>::Amax(bool& value) const
+    {
+        LOG_INFO("What is int64_t HostVector<ValueType>::Amax(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <typename ValueType>
@@ -1023,6 +1074,20 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
+    template <>
+    int64_t HostVector<int64_t>::Norm(void) const
+    {
+        LOG_INFO("What is int64_t HostVector<ValueType>::Norm(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    bool HostVector<bool>::Norm(void) const
+    {
+        LOG_INFO("What is bool HostVector<ValueType>::Norm(void) const?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
     template <typename ValueType>
     ValueType HostVector<ValueType>::Reduce(void) const
     {
@@ -1082,6 +1147,79 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    ValueType HostVector<ValueType>::InclusiveSum(const BaseVector<ValueType>& vec)
+    {
+        const HostVector<ValueType>* cast_vec = dynamic_cast<const HostVector<ValueType>*>(&vec);
+
+        assert(cast_vec != NULL);
+        assert(this->size_ == cast_vec->size_);
+
+        if(this->size_ == 0)
+        {
+            return 0;
+        }
+
+        if(this->vec_ == cast_vec->vec_)
+        {
+            for(int64_t i = 1; i < this->size_; ++i)
+            {
+                this->vec_[i] += this->vec_[i - 1];
+            }
+        }
+        else
+        {
+            this->vec_[0] = cast_vec->vec_[0];
+
+            for(int64_t i = 1; i < this->size_; ++i)
+            {
+                this->vec_[i] = this->vec_[i - 1] + cast_vec->vec_[i];
+            }
+        }
+
+        return this->vec_[this->size_ - 1];
+    }
+
+    template <typename ValueType>
+    ValueType HostVector<ValueType>::ExclusiveSum(const BaseVector<ValueType>& vec)
+    {
+        const HostVector<ValueType>* cast_vec = dynamic_cast<const HostVector<ValueType>*>(&vec);
+
+        assert(cast_vec != NULL);
+        assert(this->size_ == cast_vec->size_);
+
+        if(this->size_ == 0)
+        {
+            return 0;
+        }
+
+        if(this->vec_ == cast_vec->vec_)
+        {
+            for(int64_t i = this->size_ - 1; i > 0; --i)
+            {
+                this->vec_[i] = this->vec_[i - 1];
+            }
+
+            this->vec_[0] = 0;
+
+            for(int64_t i = 1; i < this->size_; ++i)
+            {
+                this->vec_[i] += this->vec_[i - 1];
+            }
+        }
+        else
+        {
+            this->vec_[0] = 0;
+
+            for(int64_t i = 0; i < this->size_ - 1; ++i)
+            {
+                this->vec_[i + 1] = this->vec_[i] + cast_vec->vec_[i];
+            }
+        }
+
+        return this->vec_[this->size_ - 1];
+    }
+
+    template <typename ValueType>
     void HostVector<ValueType>::PointWiseMult(const BaseVector<ValueType>& x)
     {
         const HostVector<ValueType>* cast_x = dynamic_cast<const HostVector<ValueType>*>(&x);
@@ -1098,6 +1236,13 @@ namespace rocalution
         {
             this->vec_[i] = this->vec_[i] * cast_x->vec_[i];
         }
+    }
+
+    template <>
+    void HostVector<bool>::PointWiseMult(const BaseVector<bool>& x)
+    {
+        LOG_INFO("What is bool HostVector<ValueType>::PointWiseMult() const?");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <typename ValueType>
@@ -1121,6 +1266,13 @@ namespace rocalution
         {
             this->vec_[i] = cast_y->vec_[i] * cast_x->vec_[i];
         }
+    }
+
+    template <>
+    void HostVector<bool>::PointWiseMult(const BaseVector<bool>& x, const BaseVector<bool>& y)
+    {
+        LOG_INFO("What is bool HostVector<ValueType>::PointWiseMult() const?");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template <typename ValueType>
@@ -1354,7 +1506,7 @@ namespace rocalution
     {
         assert(start >= 0);
         assert(end >= start);
-        assert(end <= this->GetSize());
+        assert(end <= this->size_);
 
         copy_h2h(end - start, this->vec_ + start, values);
     }
@@ -1513,6 +1665,26 @@ namespace rocalution
         }
     }
 
+    template <>
+    void HostVector<int64_t>::Power(double power)
+    {
+        _set_omp_backend_threads(this->local_backend_, this->size_);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for(int64_t i = 0; i < this->size_; ++i)
+        {
+            int64_t value = 1;
+            for(int j = 0; j < power; ++j)
+            {
+                value *= this->vec_[i];
+            }
+
+            this->vec_[i] = value;
+        }
+    }
+
     template class HostVector<bool>;
     template class HostVector<double>;
     template class HostVector<float>;
@@ -1522,5 +1694,6 @@ namespace rocalution
 #endif
 
     template class HostVector<int>;
+    template class HostVector<int64_t>;
 
 } // namespace rocalution

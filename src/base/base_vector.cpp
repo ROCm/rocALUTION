@@ -179,6 +179,7 @@ namespace rocalution
 #endif
     template class BaseVector<bool>;
     template class BaseVector<int>;
+    template class BaseVector<int64_t>;
 
     template class AcceleratorVector<double>;
     template class AcceleratorVector<float>;
@@ -188,5 +189,6 @@ namespace rocalution
 #endif
     template class AcceleratorVector<bool>;
     template class AcceleratorVector<int>;
+    template class AcceleratorVector<int64_t>;
 
 } // namespace rocalution

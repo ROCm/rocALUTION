@@ -60,6 +60,7 @@
 
 #include "hip_sparse.hpp"
 
+#include <limits>
 #include <vector>
 
 #include <rocprim/rocprim.hpp>
@@ -941,8 +942,6 @@ namespace rocalution
             hipFree(buffer);
         }
 
-        this->ApplyAnalysis();
-
         return true;
     }
 
@@ -1169,7 +1168,7 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    void HIPAcceleratorMatrixCSR<ValueType>::ApplyAnalysis(void)
+    void HIPAcceleratorMatrixCSR<ValueType>::ApplyAnalysis(void) const
     {
         if(this->nnz_ > 0)
         {
@@ -1295,7 +1294,7 @@ namespace rocalution
             if(this->mat_buffer_ == NULL)
             {
                 this->mat_buffer_size_ = buffer_size;
-                hipMalloc(&this->mat_buffer_, buffer_size);
+                allocate_hip(buffer_size, &this->mat_buffer_);
             }
 
             assert(this->mat_buffer_size_ >= buffer_size);
@@ -1362,13 +1361,13 @@ namespace rocalution
             if(this->mat_buffer_ == NULL)
             {
                 this->mat_buffer_size_ = buffer_size;
-                hipMalloc(&this->mat_buffer_, buffer_size);
+                allocate_hip(buffer_size, &this->mat_buffer_);
             }
             else if(this->mat_buffer_size_ < buffer_size)
             {
                 this->mat_buffer_size_ = buffer_size;
-                hipFree(this->mat_buffer_);
-                hipMalloc(&this->mat_buffer_, buffer_size);
+                free_hip(&this->mat_buffer_);
+                allocate_hip(buffer_size, &this->mat_buffer_);
             }
 
             assert(this->mat_buffer_size_ >= buffer_size);
@@ -1475,7 +1474,7 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -1556,7 +1555,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 
@@ -1702,13 +1701,13 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
         else if(this->mat_buffer_size_ < buffer_size)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipFree(this->mat_buffer_);
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            free_hip(&this->mat_buffer_);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -1774,7 +1773,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 
@@ -1892,6 +1891,8 @@ namespace rocalution
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
         }
 
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
+
         // Create buffer, if not already available
         size_t buffer_size = 0;
         status
@@ -1910,7 +1911,7 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -1960,6 +1961,8 @@ namespace rocalution
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
         }
 
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
+
         // Create buffer, if not already available
         size_t buffer_size = 0;
         status
@@ -1979,7 +1982,7 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -2017,7 +2020,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 
@@ -2050,7 +2053,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 
@@ -2092,6 +2095,8 @@ namespace rocalution
             rocsparse_status status;
 
             ValueType alpha = static_cast<ValueType>(1);
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
 
             // Solve L
             status = rocsparseTcsrsv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
@@ -2140,6 +2145,8 @@ namespace rocalution
             rocsparse_status status;
 
             ValueType alpha = static_cast<ValueType>(1);
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
 
             // Solve U
             status = rocsparseTcsrsv(ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,6 @@
 
 namespace rocalution
 {
-
     /// Global obj tracking structure
     Rocalution_Object_Data Rocalution_Object_Data_Tracking;
 
@@ -175,12 +174,16 @@ namespace rocalution
 #endif
     template class BaseRocalution<bool>;
     template class BaseRocalution<int>;
+    template class BaseRocalution<int64_t>;
 
     template void BaseRocalution<bool>::CloneBackend(const BaseRocalution<double>& src);
     template void BaseRocalution<bool>::CloneBackend(const BaseRocalution<float>& src);
 
     template void BaseRocalution<int>::CloneBackend(const BaseRocalution<double>& src);
     template void BaseRocalution<int>::CloneBackend(const BaseRocalution<float>& src);
+
+    template void BaseRocalution<int64_t>::CloneBackend(const BaseRocalution<double>& src);
+    template void BaseRocalution<int64_t>::CloneBackend(const BaseRocalution<float>& src);
 
     template void BaseRocalution<float>::CloneBackend(const BaseRocalution<double>& src);
     template void BaseRocalution<double>::CloneBackend(const BaseRocalution<float>& src);
@@ -191,10 +194,19 @@ namespace rocalution
     template void BaseRocalution<int>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
 
     template void
+        BaseRocalution<int64_t>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
+    template void
+        BaseRocalution<int64_t>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
+
+    template void
         BaseRocalution<bool>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
     template void
         BaseRocalution<bool>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
 
+    template void
+        BaseRocalution<float>::CloneBackend(const BaseRocalution<std::complex<double>>& src);
+    template void
+        BaseRocalution<float>::CloneBackend(const BaseRocalution<std::complex<float>>& src);
     template void BaseRocalution<std::complex<float>>::CloneBackend(
         const BaseRocalution<std::complex<double>>& src);
     template void BaseRocalution<std::complex<double>>::CloneBackend(

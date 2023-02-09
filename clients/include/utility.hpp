@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -244,37 +244,33 @@ int gen_random(int m, int n, int max_nnz_per_row, int** rowptr, int** col, T** v
         (*rowptr)[i] = (*rowptr)[i - 1] + nnz_per_row[i - 1];
     }
 
+    std::vector<int> candidates(n);
+    for(int i = 0; i < n; ++i)
+    {
+        candidates[i] = i;
+    }
+
+    std::random_shuffle(candidates.begin(), candidates.end());
+
     for(int i = 0; i < m; i++)
     {
         int row_start = (*rowptr)[i];
         int row_end   = (*rowptr)[i + 1];
 
+        // Randomly select candidate entry point
+        int idx = random_generator<int>(0, n - row_end + row_start);
+
         for(int j = row_start; j < row_end; j++)
         {
-            (*col)[j] = random_generator<int>(0, n);
+            (*col)[j] = candidates[idx++];
             (*val)[j] = random_generator<T>();
         }
     }
 
-    auto compare = [](const void* a, const void* b) {
-        int ai = *((int*)a);
-        int bi = *((int*)b);
-
-        if(ai == bi)
-        {
-            return 0;
-        }
-        else if(ai < bi)
-        {
-            return -1;
-        }
-        else
-        {
-            return 1;
-        }
-    };
-
-    qsort(*col, nnz, sizeof(int), compare);
+    for(int i = 0; i < m; ++i)
+    {
+        std::sort(&(*col)[(*rowptr)[i]], &(*col)[(*rowptr)[i + 1]]);
+    }
 
     delete[] nnz_per_row;
 

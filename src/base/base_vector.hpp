@@ -154,6 +154,10 @@ namespace rocalution
         virtual ValueType Norm(void) const = 0;
         /// Reduce vector
         virtual ValueType Reduce(void) const = 0;
+        /// Compute out-of-place inclusive sum
+        virtual ValueType InclusiveSum(const BaseVector<ValueType>& vec) = 0;
+        /// Compute out-of-place exclusive sum
+        virtual ValueType ExclusiveSum(const BaseVector<ValueType>& vec) = 0;
         /// Compute sum of absolute values of the vector (L1 norm), return =  sum(|this|)
         virtual ValueType Asum(void) const = 0;
         /// Compute the absolute max value of the vector, return =  max(|this|)
