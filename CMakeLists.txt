@@ -115,7 +115,7 @@ endif()
 
 
 # Setup version
-set(VERSION_STRING "3.0.0")
+set(VERSION_STRING "3.0.1")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ typedef std::
     tuple<int, int, int, std::string, std::string, std::string, unsigned int, int, int, int>
         uaamg_tuple;
 
-int          uaamg_size[]             = {22, 63, 134, 207};
+int          uaamg_size[]             = {22, 63, 134, 157};
 int          uaamg_pre_iter[]         = {2};
 int          uaamg_post_iter[]        = {2};
 std::string  uaamg_smoother[]         = {"FSAI" /*, "ILU"*/};
