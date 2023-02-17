@@ -72,6 +72,7 @@ option(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY "Build with file/folder reorg wit
 option(BUILD_GLOBALTYPE_64 "Support global number of rows / columns exceeding 32 bits" OFF)
 option(BUILD_LOCALTYPE_64 "Support local number of rows / columns exceeding 32 bits" OFF)
 option(BUILD_PTRTYPE_64 "Support local number of non-zeros exceeding 32 bits" OFF)
+option(BUILD_OPTCPU "Enable all instruction subsets supported by the local machine" OFF)
 
 # Dependencies
 include(cmake/Dependencies.cmake)

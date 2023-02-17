@@ -133,6 +133,12 @@ endif()
 include(GenerateExportHeader)
 generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/rocalution/export.hpp)
 
+# If CPU optimizations for local machine is actived
+if(BUILD_OPTCPU)
+  list(APPEND CMAKE_HOST_FLAGS "-march=native")
+endif()
+
+# Set compile options
 list(APPEND CMAKE_HOST_FLAGS "-O3")
 target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
 
@@ -144,6 +150,12 @@ if(SUPPORT_HIP)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
+
+  # If CPU optimizations for local machine is actived
+  if(BUILD_OPTCPU)
+    list(APPEND HIP_HIPCC_FLAGS "-march=native")
+  endif()
+
   list(APPEND HIP_HIPCC_FLAGS "-O3 -fPIC -std=c++14")
   foreach(target ${AMDGPU_TARGETS})
     list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
