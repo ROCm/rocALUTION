@@ -52,7 +52,8 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
 #endif
 
-        this->pm_ = NULL;
+        this->pm_      = NULL;
+        this->pm_self_ = NULL;
 
         this->object_name_ = "";
 
@@ -85,6 +86,16 @@ namespace rocalution
         log_debug(this, "GlobalMatrix::~GlobalMatrix()");
 
         this->Clear();
+
+        if(this->pm_self_)
+        {
+            this->pm_self_->Clear();
+
+            delete this->pm_self_;
+
+            this->pm_      = NULL;
+            this->pm_self_ = NULL;
+        }
     }
 
     template <typename ValueType>
@@ -1011,6 +1022,108 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void GlobalMatrix<ValueType>::Transpose(void)
+    {
+        log_debug(this, "GlobalMatrix::Transpose()");
+
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::Transpose(GlobalMatrix<ValueType>* T) const
+    {
+        log_debug(this, "GlobalMatrix::Transpose()", T);
+
+        assert(T != NULL);
+        assert(T != this);
+        assert(this->is_host_() == T->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        // Calling global routine with single process
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.Transpose(&T->matrix_interior_);
+
+            T->CreateParallelManager_();
+
+            T->pm_self_->SetMPICommunicator(this->pm_->comm_);
+
+            T->pm_self_->SetGlobalNrow(T->matrix_interior_.GetM());
+            T->pm_self_->SetGlobalNcol(T->matrix_interior_.GetN());
+
+            T->pm_self_->SetLocalNrow(T->matrix_interior_.GetM());
+            T->pm_self_->SetLocalNcol(T->matrix_interior_.GetN());
+
+            return;
+        }
+
+        if(this->GetNnz() > 0)
+        {
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+#ifdef DEBUG_MODE
+        T->Check();
+#endif
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::TripleMatrixProduct(const GlobalMatrix<ValueType>& R,
+                                                      const GlobalMatrix<ValueType>& A,
+                                                      const GlobalMatrix<ValueType>& P)
+    {
+        log_debug(this,
+                  "GlobalMatrix::TripleMatrixProduct()",
+                  (const void*&)R,
+                  (const void*&)A,
+                  (const void*&)P);
+
+        assert(&R != this);
+        assert(&A != this);
+        assert(&P != this);
+
+        assert(R.GetN() == A.GetM());
+        assert(A.GetN() == P.GetM());
+        assert(this->is_host_() == R.is_host_());
+        assert(this->is_host_() == A.is_host_());
+        assert(this->is_host_() == P.is_host_());
+
+#ifdef DEBUG_MODE
+        R.Check();
+        A.Check();
+        P.Check();
+#endif
+
+        // Calling global routine with single process
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.TripleMatrixProduct(
+                R.matrix_interior_, A.matrix_interior_, P.matrix_interior_);
+
+            this->CreateParallelManager_();
+
+            this->pm_self_->SetMPICommunicator(A.pm_->comm_);
+
+            this->pm_self_->SetGlobalNrow(this->matrix_interior_.GetM());
+            this->pm_self_->SetGlobalNcol(this->matrix_interior_.GetN());
+
+            this->pm_self_->SetLocalNrow(this->matrix_interior_.GetM());
+            this->pm_self_->SetLocalNcol(this->matrix_interior_.GetN());
+
+            return;
+        }
+
+        FATAL_ERROR(__FILE__, __LINE__);
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+    }
+
+    template <typename ValueType>
     void GlobalMatrix<ValueType>::ReadFileMTX(const std::string& filename)
     {
         log_debug(this, "GlobalMatrix::ReadFileMTX()", filename);
@@ -1304,7 +1417,6 @@ namespace rocalution
 
     template <typename ValueType>
     void GlobalMatrix<ValueType>::CoarsenOperator(GlobalMatrix<ValueType>* Ac,
-                                                  ParallelManager*         pm,
                                                   int                      nrow,
                                                   int                      ncol,
                                                   const LocalVector<int>&  G,
@@ -1315,7 +1427,6 @@ namespace rocalution
         log_debug(this,
                   "GlobalMatrix::CoarsenOperator()",
                   Ac,
-                  pm,
                   nrow,
                   ncol,
                   (const void*&)G,
@@ -1324,25 +1435,23 @@ namespace rocalution
                   rGsize);
 
         assert(Ac != NULL);
-        assert(pm != NULL);
         assert(rG != NULL);
 
         // Calling global routine with single process
         if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
         {
             this->matrix_interior_.CoarsenOperator(
-                &Ac->matrix_interior_, pm, nrow, ncol, G, Gsize, rG, rGsize);
+                &Ac->matrix_interior_, nrow, ncol, G, Gsize, rG, rGsize);
 
-            pm->Clear();
-            pm->SetMPICommunicator(this->pm_->comm_);
+            Ac->CreateParallelManager_();
 
-            pm->SetGlobalNrow(Ac->matrix_interior_.GetM());
-            pm->SetGlobalNcol(Ac->matrix_interior_.GetN());
+            Ac->pm_self_->SetMPICommunicator(this->pm_->comm_);
 
-            pm->SetLocalNrow(Ac->matrix_interior_.GetM());
-            pm->SetLocalNcol(Ac->matrix_interior_.GetN());
+            Ac->pm_self_->SetGlobalNrow(Ac->matrix_interior_.GetM());
+            Ac->pm_self_->SetGlobalNcol(Ac->matrix_interior_.GetN());
 
-            Ac->SetParallelManager(*pm);
+            Ac->pm_self_->SetLocalNrow(Ac->matrix_interior_.GetM());
+            Ac->pm_self_->SetLocalNcol(Ac->matrix_interior_.GetN());
 
             return;
         }
@@ -1477,11 +1586,11 @@ namespace rocalution
             LocalVector<int> host_G;
             host_G.CopyFrom(G);
 
-            host_interior.CoarsenOperator(&tmp, pm, nrow, nrow, host_G, Gsize, rG, rGsize);
+            host_interior.CoarsenOperator(&tmp, nrow, nrow, host_G, Gsize, rG, rGsize);
         }
         else
         {
-            this->matrix_interior_.CoarsenOperator(&tmp, pm, nrow, nrow, G, Gsize, rG, rGsize);
+            this->matrix_interior_.CoarsenOperator(&tmp, nrow, nrow, G, Gsize, rG, rGsize);
         }
 
         PtrType*   Ac_interior_row_offset = NULL;
@@ -1553,12 +1662,12 @@ namespace rocalution
             host_ghost.CopyFrom(this->GetGhost());
 
             host_ghost.CoarsenOperator(
-                &tmp_ghost, pm, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
+                &tmp_ghost, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
         }
         else
         {
             this->matrix_ghost_.CoarsenOperator(
-                &tmp_ghost, pm, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
+                &tmp_ghost, nrow, this->pm_->GetNumReceivers(), G_ghost, Gsize, rG, rGsize);
         }
 
         G_ghost.Clear();
@@ -1570,36 +1679,38 @@ namespace rocalution
         int64_t nnzg = tmp_ghost.GetNnz();
         tmp_ghost.LeaveDataPtrCSR(&Ac_ghost_row_offset, &Ac_ghost_col, &Ac_ghost_val);
 
+        // Clear old Ac
+        Ac->Clear();
+        bool isaccel = Ac->is_accel_();
+        Ac->MoveToHost();
+
         // Communicator
-        pm->Clear();
-        pm->SetMPICommunicator(this->pm_->comm_);
+        Ac->CreateParallelManager_();
+        Ac->pm_self_->SetMPICommunicator(this->pm_->comm_);
 
         // Get the global size
         int64_t local_size = nrow;
         int64_t global_size;
         communication_sync_allreduce_single_sum(&local_size, &global_size, this->pm_->comm_);
-        pm->SetGlobalNrow(global_size);
-        pm->SetGlobalNcol(global_size);
+        Ac->pm_self_->SetGlobalNrow(global_size);
+        Ac->pm_self_->SetGlobalNcol(global_size);
 
         // Local size
-        pm->SetLocalNrow(local_size);
-        pm->SetLocalNcol(local_size);
+        Ac->pm_self_->SetLocalNrow(local_size);
+        Ac->pm_self_->SetLocalNcol(local_size);
 
         // New boundary and boundary offsets
-        pm->SetBoundaryIndex(boundary_size, boundary_index);
+        Ac->pm_self_->SetBoundaryIndex(boundary_size, boundary_index);
         free_host(&boundary_index);
 
-        pm->SetReceivers(this->pm_->nrecv_, this->pm_->recvs_, recv_offset_index);
+        Ac->pm_self_->SetReceivers(this->pm_->nrecv_, this->pm_->recvs_, recv_offset_index);
         free_host(&recv_offset_index);
 
-        pm->SetSenders(this->pm_->nsend_, this->pm_->sends_, send_offset_index);
+        Ac->pm_self_->SetSenders(this->pm_->nsend_, this->pm_->sends_, send_offset_index);
         free_host(&send_offset_index);
 
-        // Allocate
-        Ac->Clear();
-        bool isaccel = Ac->is_accel_();
-        Ac->MoveToHost();
-        Ac->SetParallelManager(*pm);
+        Ac->SetParallelManager(*Ac->pm_self_);
+
         Ac->SetDataPtrCSR(&Ac_interior_row_offset,
                           &Ac_interior_col,
                           &Ac_interior_val,
@@ -1615,6 +1726,36 @@ namespace rocalution
             Ac->MoveToAccelerator();
         }
 #endif
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::CreateFromMap(const LocalVector<int>&  map,
+                                                int64_t                  n,
+                                                int64_t                  m,
+                                                GlobalMatrix<ValueType>* pro)
+    {
+        log_debug(this, "GlobalMatrix::CreateFromMap()", (const void*&)map, n, m, pro);
+
+        // P and R are local operators
+        this->pm_ = NULL;
+        pro->pm_  = NULL;
+
+        this->matrix_interior_.CreateFromMap(map, n, m, &pro->matrix_interior_);
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::CreateParallelManager_(void)
+    {
+        if(this->pm_self_)
+        {
+            this->pm_self_->Clear();
+        }
+        else
+        {
+            this->pm_self_ = new ParallelManager;
+        }
+
+        this->pm_ = this->pm_self_;
     }
 
     template <typename ValueType>

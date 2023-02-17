@@ -85,6 +85,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual int64_t GetGhostNnz(void) const;
 
+        /** \brief Transpose the operator */
+        ROCALUTION_EXPORT
+        virtual void Transpose(void);
+
         /** \brief Apply the operator, out = Operator(in), where in and out are local
       * vectors
       */

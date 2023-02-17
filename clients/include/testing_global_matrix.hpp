@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -355,17 +355,13 @@ void testing_global_matrix_bad_args(void)
         ParallelManager  pm;
         LocalVector<int> lvint;
         GlobalMatrix<T>* null_mat = nullptr;
-        ParallelManager* null_pm  = nullptr;
         int*             null_int = nullptr;
-        ASSERT_DEATH(mat.CoarsenOperator(
-                         null_mat, &pm, safe_size, safe_size, lvint, safe_size, idata, safe_size),
-                     ".*Assertion.*Ac != (NULL|__null)*");
-        ASSERT_DEATH(mat.CoarsenOperator(
-                         &Ac, null_pm, safe_size, safe_size, lvint, safe_size, idata, safe_size),
-                     ".*Assertion.*pm != (NULL|__null)*");
-        ASSERT_DEATH(mat.CoarsenOperator(
-                         &Ac, &pm, safe_size, safe_size, lvint, safe_size, null_int, safe_size),
-                     ".*Assertion.*rG != (NULL|__null)*");
+        ASSERT_DEATH(
+            mat.CoarsenOperator(null_mat, safe_size, safe_size, lvint, safe_size, idata, safe_size),
+            ".*Assertion.*Ac != (NULL|__null)*");
+        ASSERT_DEATH(
+            mat.CoarsenOperator(&Ac, safe_size, safe_size, lvint, safe_size, null_int, safe_size),
+            ".*Assertion.*rG != (NULL|__null)*");
     }
 
     free_host(&idata);

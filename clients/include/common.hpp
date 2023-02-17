@@ -27,6 +27,29 @@
 
 using namespace rocalution;
 
+static void my_irecv(int* buf, int count, int source, int tag, MPI_Comm comm, MPI_Request* request)
+{
+    MPI_Irecv(buf, count, MPI_INT, source, tag, comm, request);
+}
+
+static void
+    my_irecv(int64_t* buf, int count, int source, int tag, MPI_Comm comm, MPI_Request* request)
+{
+    MPI_Irecv(buf, count, MPI_INT64_T, source, tag, comm, request);
+}
+
+static void
+    my_isend(const int* buf, int count, int dest, int tag, MPI_Comm comm, MPI_Request* request)
+{
+    MPI_Isend(buf, count, MPI_INT, dest, tag, comm, request);
+}
+
+static void
+    my_isend(const int64_t* buf, int count, int dest, int tag, MPI_Comm comm, MPI_Request* request)
+{
+    MPI_Isend(buf, count, MPI_INT64_T, dest, tag, comm, request);
+}
+
 template <typename ValueType>
 void distribute_matrix(const MPI_Comm*          comm,
                        LocalMatrix<ValueType>*  lmat,
@@ -39,11 +62,11 @@ void distribute_matrix(const MPI_Comm*          comm,
     MPI_Comm_rank(*comm, &rank);
     MPI_Comm_size(*comm, &num_procs);
 
-    size_t global_nrow = lmat->GetM();
-    size_t global_ncol = lmat->GetN();
-    size_t global_nnz  = lmat->GetNnz();
+    int64_t global_nrow = lmat->GetM();
+    int64_t global_ncol = lmat->GetN();
+    int64_t global_nnz  = lmat->GetNnz();
 
-    int*       global_row_offset = NULL;
+    PtrType*   global_row_offset = NULL;
     int*       global_col        = NULL;
     ValueType* global_val        = NULL;
 
@@ -74,14 +97,14 @@ void distribute_matrix(const MPI_Comm*          comm,
 
     if(global_nrow % num_procs != 0)
     {
-        for(size_t i = 0; i < global_nrow % num_procs; ++i)
+        for(int i = 0; i < global_nrow % num_procs; ++i)
         {
             ++local_size[i];
         }
     }
 
     // Compute index offsets
-    std::vector<int> index_offset(num_procs + 1);
+    std::vector<PtrType> index_offset(num_procs + 1);
     index_offset[0] = 0;
     for(int i = 0; i < num_procs; ++i)
     {
@@ -89,10 +112,10 @@ void distribute_matrix(const MPI_Comm*          comm,
     }
 
     // Read sub matrix - row_offset
-    int              local_nrow = local_size[rank];
-    std::vector<int> local_row_offset(local_nrow + 1);
+    int                  local_nrow = local_size[rank];
+    std::vector<PtrType> local_row_offset(local_nrow + 1);
 
-    for(int i = index_offset[rank], k = 0; k < local_nrow + 1; ++i, ++k)
+    for(PtrType i = index_offset[rank], k = 0; k < local_nrow + 1; ++i, ++k)
     {
         local_row_offset[k] = global_row_offset[i];
     }
@@ -100,11 +123,11 @@ void distribute_matrix(const MPI_Comm*          comm,
     free_host(&global_row_offset);
 
     // Read sub matrix - col and val
-    int                    local_nnz = local_row_offset[local_nrow] - local_row_offset[0];
+    PtrType                local_nnz = local_row_offset[local_nrow] - local_row_offset[0];
     std::vector<int>       local_col(local_nnz);
     std::vector<ValueType> local_val(local_nnz);
 
-    for(int i = local_row_offset[0], k = 0; k < local_nnz; ++i, ++k)
+    for(PtrType i = local_row_offset[0], k = 0; k < local_nnz; ++i, ++k)
     {
         local_col[k] = global_col[i];
         local_val[k] = global_val[i];
@@ -120,18 +143,18 @@ void distribute_matrix(const MPI_Comm*          comm,
         local_row_offset[i] -= shift;
     }
 
-    int interior_nnz = 0;
-    int ghost_nnz    = 0;
-    int boundary_nnz = 0;
-    int neighbors    = 0;
+    PtrType interior_nnz = 0;
+    PtrType ghost_nnz    = 0;
+    int     boundary_nnz = 0;
+    int     neighbors    = 0;
 
-    std::vector<std::vector<int>>    boundary(num_procs, std::vector<int>());
-    std::vector<bool>                neighbor(num_procs, false);
-    std::vector<std::map<int, bool>> checked(num_procs, std::map<int, bool>());
+    std::vector<std::vector<PtrType>> boundary(num_procs, std::vector<PtrType>());
+    std::vector<bool>                 neighbor(num_procs, false);
+    std::vector<std::map<int, bool>>  checked(num_procs, std::map<int, bool>());
 
     for(int i = 0; i < local_nrow; ++i)
     {
-        for(int j = local_row_offset[i]; j < local_row_offset[i + 1]; ++j)
+        for(PtrType j = local_row_offset[i]; j < local_row_offset[i + 1]; ++j)
         {
 
             // Interior point
@@ -214,7 +237,7 @@ void distribute_matrix(const MPI_Comm*          comm,
         if(neighbor[i] == true)
         {
             // Receive size of boundary from rank i to current rank
-            MPI_Irecv(&(boundary_size[n]), 1, MPI_INT, i, 0, *comm, &mpi_req[n]);
+            my_irecv(&(boundary_size[n]), 1, i, 0, *comm, &mpi_req[n]);
             ++n;
         }
     }
@@ -227,7 +250,7 @@ void distribute_matrix(const MPI_Comm*          comm,
         {
             int size = boundary[i].size();
             // Send size of boundary from current rank to rank i
-            MPI_Isend(&size, 1, MPI_INT, i, 0, *comm, &mpi_req[n]);
+            my_isend(&size, 1, i, 0, *comm, &mpi_req[n]);
             ++n;
         }
     }
@@ -256,7 +279,7 @@ void distribute_matrix(const MPI_Comm*          comm,
     }
 
     // Array to hold boundary for each interface
-    std::vector<std::vector<int>> local_boundary(neighbors);
+    std::vector<std::vector<PtrType>> local_boundary(neighbors);
     for(int i = 0; i < neighbors; ++i)
     {
         local_boundary[i].resize(boundary_size[i]);
@@ -269,8 +292,7 @@ void distribute_matrix(const MPI_Comm*          comm,
         if(neighbor[i] == true)
         {
             // Receive boundary from rank i to current rank
-            MPI_Irecv(
-                local_boundary[n].data(), boundary_size[n], MPI_INT, i, 0, *comm, &mpi_req[n]);
+            my_irecv(local_boundary[n].data(), boundary_size[n], i, 0, *comm, &mpi_req[n]);
             ++n;
         }
     }
@@ -282,7 +304,7 @@ void distribute_matrix(const MPI_Comm*          comm,
         if(boundary[i].size() > 0)
         {
             // Send boundary from current rank to rank i
-            MPI_Isend(&(boundary[i][0]), boundary[i].size(), MPI_INT, i, 0, *comm, &mpi_req[n]);
+            my_isend(&(boundary[i][0]), boundary[i].size(), i, 0, *comm, &mpi_req[n]);
             ++n;
         }
     }
@@ -305,13 +327,13 @@ void distribute_matrix(const MPI_Comm*          comm,
     {
         for(unsigned int j = 0; j < boundary[i].size(); ++j)
         {
-            bnd[k] = boundary[i][j] - index_offset[rank];
+            bnd[k] = static_cast<int>(boundary[i][j] - index_offset[rank]);
             ++k;
         }
     }
 
     // Create boundary index array
-    std::vector<int> boundary_index(nnz_boundary);
+    std::vector<PtrType> boundary_index(nnz_boundary);
 
     k = 0;
     for(int i = 0; i < neighbors; ++i)
@@ -340,11 +362,11 @@ void distribute_matrix(const MPI_Comm*          comm,
     memset(ghost_col, 0, sizeof(int) * ghost_nnz);
     memset(ghost_val, 0, sizeof(ValueType) * ghost_nnz);
 
-    int*       row_offset = new int[local_nrow + 1];
+    PtrType*   row_offset = new PtrType[local_nrow + 1];
     int*       col        = new int[interior_nnz];
     ValueType* val        = new ValueType[interior_nnz];
 
-    memset(row_offset, 0, sizeof(int) * (local_nrow + 1));
+    memset(row_offset, 0, sizeof(PtrType) * (local_nrow + 1));
     memset(col, 0, sizeof(int) * interior_nnz);
     memset(val, 0, sizeof(ValueType) * interior_nnz);
 
@@ -353,7 +375,7 @@ void distribute_matrix(const MPI_Comm*          comm,
     int l         = 0;
     for(int i = 0; i < local_nrow; ++i)
     {
-        for(int j = local_row_offset[i]; j < local_row_offset[i + 1]; ++j)
+        for(PtrType j = local_row_offset[i]; j < local_row_offset[i + 1]; ++j)
         {
 
             // Boundary point -- create ghost part
@@ -403,4 +425,5 @@ void distribute_matrix(const MPI_Comm*          comm,
     gmat->SetParallelManager(*pm);
     gmat->SetLocalDataPtrCSR(&row_offset, &col, &val, "mat", interior_nnz);
     gmat->SetGhostDataPtrCOO(&ghost_row, &ghost_col, &ghost_val, "ghost", ghost_nnz);
+    gmat->Sort();
 }

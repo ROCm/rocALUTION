@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -203,12 +203,11 @@ void testing_local_matrix_bad_args(void)
                      ".*Assertion.*G != (NULL|__null)*");
         ASSERT_DEATH(mat1.FurtherPairwiseAggregation(mat2, 0.1, val, &int1, val, &null_int, val, 0),
                      ".*Assertion.*rG != (NULL|__null)*");
-        ASSERT_DEATH(mat1.CoarsenOperator(
-                         null_mat, nullptr, safe_size, safe_size, int1, safe_size, vint, safe_size),
-                     ".*Assertion.*Ac != (NULL|__null)*");
         ASSERT_DEATH(
-            mat1.CoarsenOperator(
-                &mat2, nullptr, safe_size, safe_size, int1, safe_size, null_int, safe_size),
+            mat1.CoarsenOperator(null_mat, safe_size, safe_size, int1, safe_size, vint, safe_size),
+            ".*Assertion.*Ac != (NULL|__null)*");
+        ASSERT_DEATH(
+            mat1.CoarsenOperator(&mat2, safe_size, safe_size, int1, safe_size, null_int, safe_size),
             ".*Assertion.*rG != (NULL|__null)*");
     }
 

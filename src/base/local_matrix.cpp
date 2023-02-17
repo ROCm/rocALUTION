@@ -4675,6 +4675,88 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::TripleMatrixProduct(const LocalMatrix<ValueType>& R,
+                                                     const LocalMatrix<ValueType>& A,
+                                                     const LocalMatrix<ValueType>& P)
+    {
+        log_debug(this,
+                  "LocalMatrix::TripleMatrixProduct()",
+                  (const void*&)R,
+                  (const void*&)A,
+                  (const void*&)P);
+
+        assert(&R != this);
+        assert(&A != this);
+        assert(&P != this);
+
+        assert(R.GetN() == A.GetM());
+        assert(A.GetN() == P.GetM());
+        assert(this->is_host_() == R.is_host_());
+        assert(this->is_host_() == A.is_host_());
+        assert(this->is_host_() == P.is_host_());
+
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType> csr_R;
+        LocalMatrix<ValueType> csr_A;
+        LocalMatrix<ValueType> csr_P;
+
+        const LocalMatrix<ValueType>* R_ptr = &R;
+        const LocalMatrix<ValueType>* A_ptr = &A;
+        const LocalMatrix<ValueType>* P_ptr = &P;
+
+        // Check R
+        if(R.GetFormat() != CSR)
+        {
+            csr_R.CloneFrom(R);
+            csr_R.ConvertToCSR();
+            R_ptr = &csr_R;
+        }
+
+        // Check A
+        if(A.GetFormat() != CSR)
+        {
+            csr_A.CloneFrom(A);
+            csr_A.ConvertToCSR();
+            A_ptr = &csr_A;
+        }
+
+        // Check P
+        if(P.GetFormat() != CSR)
+        {
+            csr_P.CloneFrom(P);
+            csr_P.ConvertToCSR();
+            P_ptr = &csr_P;
+        }
+
+        // Convert this to CSR
+        unsigned int format   = this->GetFormat();
+        int          blockdim = this->GetBlockDimension();
+
+        this->ConvertToCSR();
+
+        LocalMatrix<ValueType> tmp;
+        tmp.CloneBackend(*this);
+
+        tmp.MatrixMult(*R_ptr, *A_ptr);
+        this->MatrixMult(tmp, *P_ptr);
+
+        if(format != CSR || R.GetFormat() != CSR || A.GetFormat() != CSR || P.GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: LocalMatrix::TripleMatrixProduct() is performed in CSR format");
+
+            if(format != CSR)
+            {
+                this->ConvertTo(format, blockdim);
+            }
+        }
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::DiagonalMatrixMultR(const LocalVector<ValueType>& diag)
     {
         log_debug(this, "LocalMatrix::DiagonalMatrixMultR()", (const void*&)diag);
@@ -6215,7 +6297,6 @@ namespace rocalution
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::CoarsenOperator(LocalMatrix<ValueType>* Ac,
-                                                 ParallelManager*        pm,
                                                  int                     nrow,
                                                  int                     ncol,
                                                  const LocalVector<int>& G,

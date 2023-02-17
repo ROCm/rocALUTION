@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -209,19 +209,17 @@ namespace rocalution
             }
 
             // Lists for the building procedure
-            std::list<OperatorType*>           op_list_;
-            std::list<ParallelManager*>        pm_list_;
-            std::list<LocalMatrix<ValueType>*> restrict_list_;
-            std::list<LocalMatrix<ValueType>*> prolong_list_;
-            std::list<LocalVector<int>*>       trans_list_;
+            std::list<OperatorType*>     op_list_;
+            std::list<OperatorType*>     restrict_list_;
+            std::list<OperatorType*>     prolong_list_;
+            std::list<LocalVector<int>*> trans_list_;
 
             this->levels_ = 1;
 
             // Build finest hierarchy
             op_list_.push_back(new OperatorType);
-            pm_list_.push_back(new ParallelManager);
-            restrict_list_.push_back(new LocalMatrix<ValueType>);
-            prolong_list_.push_back(new LocalMatrix<ValueType>);
+            restrict_list_.push_back(new OperatorType);
+            prolong_list_.push_back(new OperatorType);
             trans_list_.push_back(new LocalVector<int>);
 
             op_list_.back()->CloneBackend(*this->op_);
@@ -234,7 +232,6 @@ namespace rocalution
                              prolong_list_.back(),
                              restrict_list_.back(),
                              op_list_.back(),
-                             pm_list_.back(),
                              trans_list_.back());
 
             ++this->levels_;
@@ -242,11 +239,10 @@ namespace rocalution
             while(op_list_.back()->GetM() > static_cast<int64_t>(this->coarse_size_))
             {
                 // Add new list elements
-                restrict_list_.push_back(new LocalMatrix<ValueType>);
-                prolong_list_.push_back(new LocalMatrix<ValueType>);
+                restrict_list_.push_back(new OperatorType);
+                prolong_list_.push_back(new OperatorType);
                 OperatorType* prev_op_ = op_list_.back();
                 op_list_.push_back(new OperatorType);
-                pm_list_.push_back(new ParallelManager);
                 trans_list_.push_back(new LocalVector<int>);
 
                 op_list_.back()->CloneBackend(*this->op_);
@@ -258,7 +254,6 @@ namespace rocalution
                                  prolong_list_.back(),
                                  restrict_list_.back(),
                                  op_list_.back(),
-                                 pm_list_.back(),
                                  trans_list_.back());
 
                 ++this->levels_;
@@ -273,24 +268,19 @@ namespace rocalution
 
             // Allocate data structures
             this->op_level_          = new OperatorType*[this->levels_ - 1];
-            this->pm_level_          = new ParallelManager*[this->levels_ - 1];
-            this->restrict_op_level_ = new Operator<ValueType>*[this->levels_ - 1];
-            this->prolong_op_level_  = new Operator<ValueType>*[this->levels_ - 1];
+            this->restrict_op_level_ = new OperatorType*[this->levels_ - 1];
+            this->prolong_op_level_  = new OperatorType*[this->levels_ - 1];
             this->trans_level_       = new LocalVector<int>*[this->levels_ - 1];
 
-            typename std::list<OperatorType*>::iterator           op_it    = op_list_.begin();
-            typename std::list<ParallelManager*>::iterator        pm_it    = pm_list_.begin();
-            typename std::list<LocalMatrix<ValueType>*>::iterator pro_it   = prolong_list_.begin();
-            typename std::list<LocalMatrix<ValueType>*>::iterator res_it   = restrict_list_.begin();
-            typename std::list<LocalVector<int>*>::iterator       trans_it = trans_list_.begin();
+            typename std::list<OperatorType*>::iterator     op_it    = op_list_.begin();
+            typename std::list<OperatorType*>::iterator     pro_it   = prolong_list_.begin();
+            typename std::list<OperatorType*>::iterator     res_it   = restrict_list_.begin();
+            typename std::list<LocalVector<int>*>::iterator trans_it = trans_list_.begin();
 
             for(int i = 0; i < this->levels_ - 1; ++i)
             {
                 this->op_level_[i] = *op_it;
                 ++op_it;
-
-                this->pm_level_[i] = *pm_it;
-                ++pm_it;
 
                 this->restrict_op_level_[i] = *res_it;
                 ++res_it;

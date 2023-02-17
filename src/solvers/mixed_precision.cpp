@@ -24,6 +24,7 @@
 #include "mixed_precision.hpp"
 #include "../utils/def.hpp"
 #include "iter_ctrl.hpp"
+#include "rocalution/utils/types.hpp"
 
 #include "../base/local_matrix.hpp"
 
@@ -196,7 +197,7 @@ namespace rocalution
         // copy the matrix
 
         // CSR H
-        int*        row_offset = NULL;
+        PtrType*    row_offset = NULL;
         int*        col        = NULL;
         ValueTypeH* val_h      = NULL;
 

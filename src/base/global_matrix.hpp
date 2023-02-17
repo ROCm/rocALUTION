@@ -194,6 +194,17 @@ namespace rocalution
                               ValueType                      scalar,
                               GlobalVector<ValueType>*       out) const;
 
+        /** \brief Transpose the matrix */
+        virtual void Transpose(void);
+
+        /** \brief Transpose the matrix */
+        void Transpose(GlobalMatrix<ValueType>* T) const;
+
+        /** \brief Triple matrix product C=RAP */
+        void TripleMatrixProduct(const GlobalMatrix<ValueType>& R,
+                                 const GlobalMatrix<ValueType>& A,
+                                 const GlobalMatrix<ValueType>& P);
+
         /** \brief Read matrix from MTX (Matrix Market Format) file */
         void ReadFileMTX(const std::string& filename);
         /** \brief Write matrix to MTX (Matrix Market Format) file */
@@ -237,7 +248,6 @@ namespace rocalution
                                         int               ordering) const;
         /** \brief Build coarse operator for pairwise aggregation scheme */
         void CoarsenOperator(GlobalMatrix<ValueType>* Ac,
-                             ParallelManager*         pm,
                              int                      nrow,
                              int                      ncol,
                              const LocalVector<int>&  G,
@@ -245,12 +255,21 @@ namespace rocalution
                              const int*               rG,
                              int                      rGsize) const;
 
+        /** \brief Create a restriction and prolongation matrix operator based on an int vector map */
+        void CreateFromMap(const LocalVector<int>&  map,
+                           int64_t                  n,
+                           int64_t                  m,
+                           GlobalMatrix<ValueType>* pro);
+
     protected:
         virtual bool is_host_(void) const;
         virtual bool is_accel_(void) const;
 
     private:
+        void CreateParallelManager_(void);
         void InitCommPattern_(void);
+
+        ParallelManager* pm_self_;
 
         ValueType* recv_boundary_;
         ValueType* send_boundary_;

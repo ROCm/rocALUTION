@@ -78,12 +78,11 @@ namespace rocalution
         virtual void ReBuildNumeric(void);
 
     protected:
-        virtual void Aggregate_(const OperatorType&  op,
-                                Operator<ValueType>* pro,
-                                Operator<ValueType>* res,
-                                OperatorType*        coarse,
-                                ParallelManager*     pm,
-                                LocalVector<int>*    trans);
+        virtual void Aggregate_(const OperatorType& op,
+                                OperatorType*       pro,
+                                OperatorType*       res,
+                                OperatorType*       coarse,
+                                LocalVector<int>*   trans);
 
         virtual void PrintStart_(void) const;
         virtual void PrintEnd_(void) const;

@@ -119,8 +119,13 @@ namespace rocalution
         assert(this->build_);
         assert(this->op_ != NULL);
 
+        // Create coarse operator
         this->op_level_[0]->Clear();
         this->op_level_[0]->ConvertToCSR();
+        this->op_level_[0]->CloneBackend(*this->op_);
+
+        assert(this->restrict_op_level_[0] != NULL);
+        assert(this->prolong_op_level_[0] != NULL);
 
         if(this->op_->GetFormat() != CSR)
         {
@@ -128,33 +133,13 @@ namespace rocalution
             op_csr.CloneFrom(*this->op_);
             op_csr.ConvertToCSR();
 
-            // Create coarse operator
-            OperatorType tmp;
-            tmp.CloneBackend(*this->op_);
-            this->op_level_[0]->CloneBackend(*this->op_);
-
-            OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[0]);
-            OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[0]);
-            assert(cast_res != NULL);
-            assert(cast_pro != NULL);
-
-            tmp.MatrixMult(*cast_res, op_csr);
-            this->op_level_[0]->MatrixMult(tmp, *cast_pro);
+            this->op_level_[0]->TripleMatrixProduct(
+                *this->restrict_op_level_[0], op_csr, *this->prolong_op_level_[0]);
         }
         else
         {
-            // Create coarse operator
-            OperatorType tmp;
-            tmp.CloneBackend(*this->op_);
-            this->op_level_[0]->CloneBackend(*this->op_);
-
-            OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[0]);
-            OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[0]);
-            assert(cast_res != NULL);
-            assert(cast_pro != NULL);
-
-            tmp.MatrixMult(*cast_res, *this->op_);
-            this->op_level_[0]->MatrixMult(tmp, *cast_pro);
+            this->op_level_[0]->TripleMatrixProduct(
+                *this->restrict_op_level_[0], *this->op_, *this->prolong_op_level_[0]);
         }
 
         for(int i = 1; i < this->levels_ - 1; ++i)
@@ -167,18 +152,16 @@ namespace rocalution
             tmp.CloneBackend(*this->op_);
             this->op_level_[i]->CloneBackend(*this->op_);
 
-            OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[i]);
-            OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[i]);
-            assert(cast_res != NULL);
-            assert(cast_pro != NULL);
+            assert(this->restrict_op_level_[i] != NULL);
+            assert(this->prolong_op_level_[i] != NULL);
 
             if(i == this->levels_ - this->host_level_ - 1)
             {
                 this->op_level_[i - 1]->MoveToHost();
             }
 
-            tmp.MatrixMult(*cast_res, *this->op_level_[i - 1]);
-            this->op_level_[i]->MatrixMult(tmp, *cast_pro);
+            this->op_level_[i]->TripleMatrixProduct(
+                *this->restrict_op_level_[i], *this->op_level_[i - 1], *this->prolong_op_level_[i]);
 
             if(i == this->levels_ - this->host_level_ - 1)
             {
@@ -216,24 +199,17 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void UAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType&  op,
-                                                                Operator<ValueType>* pro,
-                                                                Operator<ValueType>* res,
-                                                                OperatorType*        coarse,
-                                                                ParallelManager*     pm,
-                                                                LocalVector<int>*    trans)
+    void UAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+                                                                OperatorType*       pro,
+                                                                OperatorType*       res,
+                                                                OperatorType*       coarse,
+                                                                LocalVector<int>*   trans)
     {
         log_debug(this, "UAAMG::Aggregate_()", this->build_);
 
         assert(pro != NULL);
         assert(res != NULL);
         assert(coarse != NULL);
-
-        OperatorType* cast_res = dynamic_cast<OperatorType*>(res);
-        OperatorType* cast_pro = dynamic_cast<OperatorType*>(pro);
-
-        assert(cast_res != NULL);
-        assert(cast_pro != NULL);
 
         LocalVector<int> connections;
         LocalVector<int> aggregates;
@@ -258,21 +234,18 @@ namespace rocalution
             op.AMGPMISAggregate(connections, &aggregates);
         }
 
-        op.AMGAggregation(aggregates, cast_pro);
+        op.AMGAggregation(aggregates, pro);
 
         // Free unused vectors
         connections.Clear();
         aggregates.Clear();
 
         // Transpose P to obtain R
-        cast_pro->Transpose(cast_res);
+        pro->Transpose(res);
 
-        OperatorType tmp;
-        tmp.CloneBackend(op);
+        // Triple matrix product
         coarse->CloneBackend(op);
-
-        tmp.MatrixMult(*cast_res, op);
-        coarse->MatrixMult(tmp, *cast_pro);
+        coarse->TripleMatrixProduct(*res, op, *pro);
 
         if(this->over_interp_ > static_cast<ValueType>(1))
         {

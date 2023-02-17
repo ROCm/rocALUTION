@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -101,6 +101,7 @@ namespace rocalution
         /** \brief Set the smoother operator format */
         ROCALUTION_EXPORT
         void SetDefaultSmootherFormat(unsigned int op_format);
+        /** \brief Set the operator format */
         ROCALUTION_EXPORT
         void SetOperatorFormat(unsigned int op_format, int op_blockdim);
 
@@ -117,12 +118,11 @@ namespace rocalution
 
     protected:
         /** \brief Constructs the prolongation, restriction and coarse operator */
-        virtual void Aggregate_(const OperatorType&  op,
-                                Operator<ValueType>* pro,
-                                Operator<ValueType>* res,
-                                OperatorType*        coarse,
-                                ParallelManager*     pm,
-                                LocalVector<int>*    trans)
+        virtual void Aggregate_(const OperatorType& op,
+                                OperatorType*       pro,
+                                OperatorType*       res,
+                                OperatorType*       coarse,
+                                LocalVector<int>*   trans)
             = 0;
 
         /** \brief Maximal coarse grid size */

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -170,9 +170,9 @@ namespace rocalution
         OperatorType** op_level_;
 
         /** \brief Restriction operator hierarchy */
-        Operator<ValueType>** restrict_op_level_;
+        OperatorType** restrict_op_level_;
         /** \brief Prolongation operator hierarchy */
-        Operator<ValueType>** prolong_op_level_;
+        OperatorType** prolong_op_level_;
 
         VectorType** d_level_; /**< \private */
         VectorType** r_level_; /**< \private */
@@ -188,9 +188,6 @@ namespace rocalution
 
         /** \brief Smoother for each level */
         IterativeLinearSolver<OperatorType, VectorType, ValueType>** smoother_level_;
-
-        /** \brief Parallel Manager for coarser levels */
-        ParallelManager** pm_level_;
     };
 
 } // namespace rocalution

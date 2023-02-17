@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,12 +72,11 @@ namespace rocalution
         virtual void ReBuildNumeric(void);
 
     protected:
-        virtual void Aggregate_(const OperatorType&  op,
-                                Operator<ValueType>* pro,
-                                Operator<ValueType>* res,
-                                OperatorType*        coarse,
-                                ParallelManager*     pm,
-                                LocalVector<int>*    trans);
+        virtual void Aggregate_(const OperatorType& op,
+                                OperatorType*       pro,
+                                OperatorType*       res,
+                                OperatorType*       coarse,
+                                LocalVector<int>*   trans);
 
         virtual void PrintStart_(void) const;
         virtual void PrintEnd_(void) const;

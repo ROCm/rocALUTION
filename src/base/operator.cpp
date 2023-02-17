@@ -84,6 +84,14 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void Operator<ValueType>::Transpose(void)
+    {
+        LOG_INFO("Operator<ValueType>::Transpose() not implemented for this operator");
+        this->Info();
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
     void Operator<ValueType>::Apply(const GlobalVector<ValueType>& in,
                                     GlobalVector<ValueType>*       out) const
     {

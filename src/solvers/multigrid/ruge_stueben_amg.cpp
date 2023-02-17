@@ -198,61 +198,41 @@ namespace rocalution
         this->op_level_[0]->ConvertToCSR();
         this->op_level_[0]->CloneBackend(*this->op_);
 
+        assert(this->restrict_op_level_[0] != NULL);
+        assert(this->prolong_op_level_[0] != NULL);
+
         if(this->op_->GetFormat() != CSR)
         {
             OperatorType op_csr;
             op_csr.CloneFrom(*this->op_);
             op_csr.ConvertToCSR();
 
-            // Create coarse operator
-            OperatorType tmp;
-            tmp.CloneBackend(*this->op_);
-
-            OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[0]);
-            OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[0]);
-            assert(cast_res != NULL);
-            assert(cast_pro != NULL);
-
-            tmp.MatrixMult(*cast_res, op_csr);
-            this->op_level_[0]->MatrixMult(tmp, *cast_pro);
+            this->op_level_[0]->TripleMatrixProduct(
+                *this->restrict_op_level_[0], op_csr, *this->prolong_op_level_[0]);
         }
         else
         {
-            // Create coarse operator
-            OperatorType tmp;
-            tmp.CloneBackend(*this->op_);
-
-            OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[0]);
-            OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[0]);
-            assert(cast_res != NULL);
-            assert(cast_pro != NULL);
-
-            tmp.MatrixMult(*cast_res, *this->op_);
-            this->op_level_[0]->MatrixMult(tmp, *cast_pro);
+            this->op_level_[0]->TripleMatrixProduct(
+                *this->restrict_op_level_[0], *this->op_, *this->prolong_op_level_[0]);
         }
 
         for(int i = 1; i < this->levels_ - 1; ++i)
         {
+            // Create coarse operator
             this->op_level_[i]->Clear();
             this->op_level_[i]->ConvertToCSR();
-
-            // Create coarse operator
-            OperatorType tmp;
-            tmp.CloneBackend(*this->op_);
             this->op_level_[i]->CloneBackend(*this->op_);
 
-            OperatorType* cast_res = dynamic_cast<OperatorType*>(this->restrict_op_level_[i]);
-            OperatorType* cast_pro = dynamic_cast<OperatorType*>(this->prolong_op_level_[i]);
-            assert(cast_res != NULL);
-            assert(cast_pro != NULL);
+            assert(this->restrict_op_level_[i] != NULL);
+            assert(this->prolong_op_level_[i] != NULL);
 
             if(i == this->levels_ - this->host_level_ - 1)
             {
                 this->op_level_[i - 1]->MoveToHost();
             }
 
-            tmp.MatrixMult(*cast_res, *this->op_level_[i - 1]);
-            this->op_level_[i]->MatrixMult(tmp, *cast_pro);
+            this->op_level_[i]->TripleMatrixProduct(
+                *this->restrict_op_level_[i], *this->op_level_[i - 1], *this->prolong_op_level_[i]);
 
             if(i == this->levels_ - this->host_level_ - 1)
             {
@@ -292,24 +272,17 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType&  op,
-                                                                         Operator<ValueType>* pro,
-                                                                         Operator<ValueType>* res,
-                                                                         OperatorType*     coarse,
-                                                                         ParallelManager*  pm,
-                                                                         LocalVector<int>* trans)
+    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+                                                                         OperatorType*       pro,
+                                                                         OperatorType*       res,
+                                                                         OperatorType*       coarse,
+                                                                         LocalVector<int>*   trans)
     {
         log_debug(this, "RugeStuebenAMG::Aggregate_()", (const void*&)op, pro, res, coarse, trans);
 
         assert(pro != NULL);
         assert(res != NULL);
         assert(coarse != NULL);
-
-        OperatorType* cast_res = dynamic_cast<OperatorType*>(res);
-        OperatorType* cast_pro = dynamic_cast<OperatorType*>(pro);
-
-        assert(cast_res != NULL);
-        assert(cast_pro != NULL);
 
         // Determine C/F map and S
         LocalVector<int>  CFmap;
@@ -332,10 +305,10 @@ namespace rocalution
         switch(this->interpolation_)
         {
         case Direct:
-            op.RSDirectInterpolation(CFmap, S, cast_pro);
+            op.RSDirectInterpolation(CFmap, S, pro);
             break;
         case ExtPI:
-            op.RSExtPIInterpolation(CFmap, S, this->FF1_, cast_pro);
+            op.RSExtPIInterpolation(CFmap, S, this->FF1_, pro);
             break;
         }
 
@@ -344,26 +317,24 @@ namespace rocalution
         S.Clear();
 
         // Transpose P to obtain R
-        cast_pro->Transpose(cast_res);
+        pro->Transpose(res);
 
         // Create coarse operator
-        OperatorType tmp;
-        tmp.CloneBackend(op);
         coarse->CloneBackend(op);
 
-        tmp.MatrixMult(*cast_res, op);
-        coarse->MatrixMult(tmp, *cast_pro);
+        // Triple matrix product
+        coarse->TripleMatrixProduct(*res, op, *pro);
     }
 
-    template class RugeStuebenAMG<LocalMatrix<double>, LocalVector<double>, double>;
     template class RugeStuebenAMG<LocalMatrix<float>, LocalVector<float>, float>;
+    template class RugeStuebenAMG<LocalMatrix<double>, LocalVector<double>, double>;
 #ifdef SUPPORT_COMPLEX
-    template class RugeStuebenAMG<LocalMatrix<std::complex<double>>,
-                                  LocalVector<std::complex<double>>,
-                                  std::complex<double>>;
     template class RugeStuebenAMG<LocalMatrix<std::complex<float>>,
                                   LocalVector<std::complex<float>>,
                                   std::complex<float>>;
+    template class RugeStuebenAMG<LocalMatrix<std::complex<double>>,
+                                  LocalVector<std::complex<double>>,
+                                  std::complex<double>>;
 #endif
 
 } // namespace rocalution

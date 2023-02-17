@@ -156,7 +156,6 @@ namespace rocalution
         this->trans_level_[0]->CloneBackend(*this->op_);
 
         this->op_->CoarsenOperator(this->op_level_[0],
-                                   this->pm_level_[0],
                                    this->dim_level_[0],
                                    this->dim_level_[0],
                                    *this->trans_level_[0],
@@ -177,7 +176,6 @@ namespace rocalution
             }
 
             this->op_level_[i - 1]->CoarsenOperator(this->op_level_[i],
-                                                    this->pm_level_[i],
                                                     this->dim_level_[i],
                                                     this->dim_level_[i],
                                                     *this->trans_level_[i],
@@ -238,12 +236,11 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType&  op,
-                                                                      Operator<ValueType>* pro,
-                                                                      Operator<ValueType>* res,
-                                                                      OperatorType*        coarse,
-                                                                      ParallelManager*     pm,
-                                                                      LocalVector<int>*    trans)
+    void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+                                                                      OperatorType*       pro,
+                                                                      OperatorType*       res,
+                                                                      OperatorType*       coarse,
+                                                                      LocalVector<int>*   trans)
     {
         log_debug(this, "PairwiseAMG::Aggregate_()", (const void*&)op, pro, res, coarse, trans);
 
@@ -251,12 +248,6 @@ namespace rocalution
         assert(res != NULL);
         assert(coarse != NULL);
         assert(trans != NULL);
-
-        LocalMatrix<ValueType>* cast_res = dynamic_cast<LocalMatrix<ValueType>*>(res);
-        LocalMatrix<ValueType>* cast_pro = dynamic_cast<LocalMatrix<ValueType>*>(pro);
-
-        assert(cast_res != NULL);
-        assert(cast_pro != NULL);
 
         int  nc;
         int* rG = NULL;
@@ -268,7 +259,7 @@ namespace rocalution
 
         op.InitialPairwiseAggregation(
             this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
-        op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
+        op.CoarsenOperator(coarse, nc, nc, *trans, Gsize, rG, rGsize);
 
         int cycle = 0;
 
@@ -277,7 +268,7 @@ namespace rocalution
         {
             coarse->FurtherPairwiseAggregation(
                 this->beta_, nc, trans, Gsize, &rG, rGsize, this->aggregation_ordering_);
-            op.CoarsenOperator(coarse, pm, nc, nc, *trans, Gsize, rG, rGsize);
+            op.CoarsenOperator(coarse, nc, nc, *trans, Gsize, rG, rGsize);
 
             ++cycle;
 
@@ -289,7 +280,7 @@ namespace rocalution
             }
         }
 
-        cast_res->CreateFromMap(*trans, op.GetLocalM(), nc, cast_pro);
+        res->CreateFromMap(*trans, op.GetLocalM(), nc, pro);
 
         // Store data for possible coarse operator rebuild
         this->dim_level_.push_back(nc);

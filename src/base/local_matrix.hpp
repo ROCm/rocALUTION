@@ -877,6 +877,11 @@ namespace rocalution
         ROCALUTION_EXPORT
         void DiagonalMatrixMultR(const LocalVector<ValueType>& diag);
 
+        /** \brief Triple matrix product C=RAP */
+        void TripleMatrixProduct(const LocalMatrix<ValueType>& R,
+                                 const LocalMatrix<ValueType>& A,
+                                 const LocalMatrix<ValueType>& P);
+
         /** \brief Compute the spectrum approximation with Gershgorin circles theorem */
         ROCALUTION_EXPORT
         void Gershgorin(ValueType& lambda_min, ValueType& lambda_max) const;
@@ -1035,7 +1040,6 @@ namespace rocalution
         /** \brief Build coarse operator for pairwise aggregation scheme */
         ROCALUTION_EXPORT
         void CoarsenOperator(LocalMatrix<ValueType>* Ac,
-                             ParallelManager*        pm,
                              int                     nrow,
                              int                     ncol,
                              const LocalVector<int>& G,

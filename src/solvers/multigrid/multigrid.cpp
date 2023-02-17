@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ namespace rocalution
         assert(op != NULL);
         assert(this->levels_ > 0);
 
-        this->restrict_op_level_ = new Operator<ValueType>*[this->levels_];
+        this->restrict_op_level_ = new OperatorType*[this->levels_];
 
         for(int i = 0; i < this->levels_ - 1; ++i)
         {
@@ -80,7 +80,7 @@ namespace rocalution
         assert(op != NULL);
         assert(this->levels_ > 0);
 
-        this->prolong_op_level_ = new Operator<ValueType>*[this->levels_];
+        this->prolong_op_level_ = new OperatorType*[this->levels_];
 
         for(int i = 0; i < this->levels_ - 1; ++i)
         {
