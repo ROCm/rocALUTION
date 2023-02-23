@@ -444,7 +444,7 @@ namespace rocalution
         allocate_hip(1, &d_num_diag);
 
         size_t rocprim_size   = 0;
-        void*  rocprim_buffer = NULL;
+        char*  rocprim_buffer = NULL;
 
         // Get reduction buffer size
         rocprim::reduce(rocprim_buffer,
@@ -455,9 +455,10 @@ namespace rocalution
                         nrow + ncol,
                         rocprim::plus<IndexType>(),
                         stream);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Allocate rocprim buffer
-        hipMalloc(&rocprim_buffer, rocprim_size);
+        allocate_hip(rocprim_size, &rocprim_buffer);
 
         // Do reduction
         rocprim::reduce(rocprim_buffer,
@@ -468,9 +469,10 @@ namespace rocalution
                         nrow + ncol,
                         rocprim::plus<IndexType>(),
                         stream);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Clear rocprim buffer
-        hipFree(rocprim_buffer);
+        free_hip(&rocprim_buffer);
 
         // Copy result to host
         copy_d2h(1, d_num_diag, num_diag);
@@ -511,9 +513,11 @@ namespace rocalution
                                 nrow + ncol,
                                 rocprim::plus<IndexType>(),
                                 stream);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Allocate rocprim buffer
-        hipMalloc(&rocprim_buffer, rocprim_size);
+        rocprim_buffer = NULL;
+        allocate_hip(rocprim_size, &rocprim_buffer);
 
         // Do inclusive sum
         rocprim::exclusive_scan(rocprim_buffer,
@@ -524,9 +528,10 @@ namespace rocalution
                                 nrow + ncol,
                                 rocprim::plus<IndexType>(),
                                 stream);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Clear rocprim buffer
-        hipFree(rocprim_buffer);
+        free_hip(&rocprim_buffer);
 
         // Fill DIA structures
         kernel_dia_fill_offset<<<(nrow + ncol) / blocksize + 1, blocksize, 0, stream>>>(
@@ -608,7 +613,7 @@ namespace rocalution
 
             // Inclusive sum on coo_row_nnz
             size_t rocprim_size   = 0;
-            void*  rocprim_buffer = NULL;
+            char*  rocprim_buffer = NULL;
 
             // Obtain rocprim buffer size
             rocprim::exclusive_scan(rocprim_buffer,
@@ -619,9 +624,10 @@ namespace rocalution
                                     nrow + 1,
                                     rocprim::plus<PointerType>(),
                                     stream);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Allocate rocprim buffer
-            hipMalloc(&rocprim_buffer, rocprim_size);
+            allocate_hip(rocprim_size, &rocprim_buffer);
 
             // Do exclusive sum
             rocprim::exclusive_scan(rocprim_buffer,
@@ -632,9 +638,10 @@ namespace rocalution
                                     nrow + 1,
                                     rocprim::plus<PointerType>(),
                                     stream);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Clear rocprim buffer
-            hipFree(rocprim_buffer);
+            free_hip(&rocprim_buffer);
 
             // Copy result to host
             PointerType nnz;

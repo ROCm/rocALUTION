@@ -739,7 +739,7 @@ namespace rocalution
             if(this->mat_buffer_ == NULL)
             {
                 this->mat_buffer_size_ = buffer_size;
-                hipMalloc(&this->mat_buffer_, buffer_size);
+                allocate_hip(buffer_size, &this->mat_buffer_);
             }
 
             assert(this->mat_buffer_size_ >= buffer_size);
@@ -851,7 +851,7 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -934,7 +934,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 
@@ -1095,13 +1095,13 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
         else if(this->mat_buffer_size_ < buffer_size)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipFree(this->mat_buffer_);
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            free_hip(&this->mat_buffer_);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -1170,7 +1170,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 
@@ -1321,7 +1321,7 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -1397,7 +1397,7 @@ namespace rocalution
         if(this->mat_buffer_ == NULL)
         {
             this->mat_buffer_size_ = buffer_size;
-            hipMalloc(&this->mat_buffer_, buffer_size);
+            allocate_hip(buffer_size, &this->mat_buffer_);
         }
 
         assert(this->mat_buffer_size_ >= buffer_size);
@@ -1436,7 +1436,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 
@@ -1468,7 +1468,7 @@ namespace rocalution
         // Clear buffer
         if(this->mat_buffer_ != NULL)
         {
-            hipFree(this->mat_buffer_);
+            free_hip(&this->mat_buffer_);
             this->mat_buffer_ = NULL;
         }
 

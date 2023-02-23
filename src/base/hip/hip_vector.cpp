@@ -907,7 +907,7 @@ namespace rocalution
 
         if(this->size_ > 0)
         {
-            void*  buffer = NULL;
+            char*  buffer = NULL;
             size_t size   = 0;
 
             ValueType* dres = NULL;
@@ -921,7 +921,7 @@ namespace rocalution
                            HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipMalloc(&buffer, size);
+            allocate_hip(size, &buffer);
 
             rocprimTreduce(buffer,
                            size,
@@ -931,7 +931,7 @@ namespace rocalution
                            HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipFree(buffer);
+            free_hip(&buffer);
 
             copy_d2h(1, dres, &res);
 
@@ -958,7 +958,7 @@ namespace rocalution
 
             assert(cast_vec != NULL);
 
-            void*  buffer = NULL;
+            char*  buffer = NULL;
             size_t size   = 0;
 
             rocprimTinclusivesum(buffer,
@@ -969,7 +969,7 @@ namespace rocalution
                                  HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipMalloc(&buffer, size);
+            allocate_hip(size, &buffer);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             rocprimTinclusivesum(buffer,
@@ -980,7 +980,7 @@ namespace rocalution
                                  HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipFree(buffer);
+            free_hip(&buffer);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             ValueType ret;
@@ -1011,7 +1011,7 @@ namespace rocalution
 
             assert(cast_vec != NULL);
 
-            void*  buffer = NULL;
+            char*  buffer = NULL;
             size_t size   = 0;
 
             rocprimTexclusivesum(buffer,
@@ -1022,7 +1022,7 @@ namespace rocalution
                                  HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipMalloc(&buffer, size);
+            allocate_hip(size, &buffer);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             rocprimTexclusivesum(buffer,
@@ -1033,7 +1033,7 @@ namespace rocalution
                                  HIPSTREAM(this->local_backend_.HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            hipFree(buffer);
+            free_hip(&buffer);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             ValueType ret;

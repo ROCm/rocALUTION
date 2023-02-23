@@ -36,7 +36,7 @@ namespace rocalution
   * \p allocate_host allocates a buffer on the host.
   *
   * @param[in]
-  * size    number of elements the buffer need to be allocated for
+  * n       number of elements the buffer need to be allocated for
   * @param[out]
   * ptr     pointer to the position in memory where the buffer should be allocated,
   *         it is expected that \p *ptr == \p NULL
@@ -45,7 +45,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    ROCALUTION_EXPORT void allocate_host(int64_t size, DataType** ptr);
+    ROCALUTION_EXPORT void allocate_host(int64_t n, DataType** ptr);
 
     /** \ingroup backend_module
   * \brief Allocate page-locked buffer on the host
@@ -53,7 +53,7 @@ namespace rocalution
   * \p allocate_pinned allocates a page-locked buffer on the host.
   *
   * @param[in]
-  * size    number of elements the buffer need to be allocated for
+  * n       number of elements the buffer need to be allocated for
   * @param[out]
   * ptr     pointer to the position in memory where the buffer should be allocated,
   *         it is expected that \p *ptr == \p NULL
@@ -62,7 +62,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    ROCALUTION_EXPORT void allocate_pinned(int64_t size, DataType** ptr);
+    ROCALUTION_EXPORT void allocate_pinned(int64_t n, DataType** ptr);
 
     /** \ingroup backend_module
   * \brief Free buffer on the host
@@ -102,7 +102,7 @@ namespace rocalution
   * \p set_to_zero_host sets a host buffer to zero.
   *
   * @param[in]
-  * size    number of elements
+  * n       number of elements
   * @param[inout]
   * ptr     pointer to the host buffer
   *
@@ -110,7 +110,7 @@ namespace rocalution
   *         or std::complex<double>.
   */
     template <typename DataType>
-    ROCALUTION_EXPORT void set_to_zero_host(int64_t size, DataType* ptr);
+    ROCALUTION_EXPORT void set_to_zero_host(int64_t n, DataType* ptr);
 
     /** \ingroup backend_module
   * \brief Copy a host buffer to another host buffer
@@ -118,7 +118,7 @@ namespace rocalution
   * \p copy_h2h copies a host buffer to another host buffer.
   *
   * @param[in]
-  * size    number of elements
+  * n       number of elements
   * @param[in]
   * src     pointer to the source host buffer
   * @param[out]
@@ -128,7 +128,7 @@ namespace rocalution
   *         std::complex<float> or std::complex<double>
   */
     template <typename DataType>
-    ROCALUTION_EXPORT void copy_h2h(int64_t size, const DataType* src, DataType* dst);
+    ROCALUTION_EXPORT void copy_h2h(int64_t n, const DataType* src, DataType* dst);
 } // namespace rocalution
 
 #endif // ROCALUTION_UTILS_ALLOCATE_FREE_HPP_

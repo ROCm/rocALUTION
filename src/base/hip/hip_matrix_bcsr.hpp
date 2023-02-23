@@ -113,7 +113,7 @@ namespace rocalution
 
         // Matrix buffer (bsrilu0, bsric0, bsrsv)
         size_t mat_buffer_size_;
-        void*  mat_buffer_;
+        char*  mat_buffer_;
 
         HIPAcceleratorVector<ValueType>* tmp_vec_;
 

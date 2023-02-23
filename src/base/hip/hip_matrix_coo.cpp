@@ -811,8 +811,8 @@ namespace rocalution
                 &buffer_size);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
-            void* buffer = nullptr;
-            hipMalloc(&buffer, buffer_size);
+            char* buffer = nullptr;
+            allocate_hip(buffer_size, &buffer);
 
             int* perm = nullptr;
             allocate_hip(this->nnz_, &perm);
@@ -846,7 +846,7 @@ namespace rocalution
 
             this->mat_.val = coo_val_sorted;
 
-            hipFree(buffer);
+            free_hip(&buffer);
         }
 
         return true;

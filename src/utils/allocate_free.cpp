@@ -41,33 +41,33 @@ namespace rocalution
     //#define LONG_PTR long
 
     template <typename DataType>
-    void allocate_host(int64_t size, DataType** ptr)
+    void allocate_host(int64_t n, DataType** ptr)
     {
-        log_debug(0, "allocate_host()", "* begin", size, *ptr);
+        log_debug(0, "allocate_host()", "* begin", n, *ptr);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(*ptr == NULL);
 
             // *********************************************************
             // C++ style
-            //    *ptr = new DataType[size];
+            //    *ptr = new DataType[n];
             // *********************************************************
 
             // *********************************************************
             // C style
-            // *ptr =  (DataType *) malloc(size*sizeof(DataType));
+            // *ptr =  (DataType *) malloc(n*sizeof(DataType));
             // *********************************************************
 
             // *********************************************************
             // C style (zero-set)
-            // *ptr = (DataType *) calloc(size, sizeof(DatatType));
+            // *ptr = (DataType *) calloc(n, sizeof(DatatType));
             // *********************************************************
 
             // *********************************************************
             // Aligned allocation
-            // total size = (size*datatype) + (alignment-1) + (void ptr)
-            // void *non_aligned =  malloc(size*sizeof(DataType)+(MEM_ALIGNMENT-1)+sizeof(void*));
+            // total n = (n*datatype) + (alignment-1) + (void ptr)
+            // void *non_aligned =  malloc(n*sizeof(DataType)+(MEM_ALIGNMENT-1)+sizeof(void*));
             // assert(non_aligned != NULL);
 
             // void *aligned = (void*)( ((LONG_PTR)(non_aligned)+MEM_ALIGNMENT+sizeof(void*) ) &
@@ -77,18 +77,18 @@ namespace rocalution
             // *ptr = (DataType*) aligned;
 
             // LOG_INFO("A " << *ptr << " " <<  aligned << " " << non_aligned << " "<<  sizeof(DataType)
-            // << " " << size);
+            // << " " << n);
             // *********************************************************
 
             // *********************************************************
             // C++ style and error handling
 
-            *ptr = new(std::nothrow) DataType[size];
+            *ptr = new(std::nothrow) DataType[n];
 
             if(!(*ptr))
             { // nullptr
                 LOG_INFO("Cannot allocate memory");
-                LOG_VERBOSE_INFO(2, "Size of the requested buffer = " << size * sizeof(DataType));
+                LOG_VERBOSE_INFO(2, "Size of the requested buffer = " << n * sizeof(DataType));
                 FATAL_ERROR(__FILE__, __LINE__);
             }
             // *********************************************************
@@ -101,11 +101,11 @@ namespace rocalution
 
 #ifndef SUPPORT_HIP
     template <typename DataType>
-    void allocate_pinned(int64_t size, DataType** ptr)
+    void allocate_pinned(int64_t n, DataType** ptr)
     {
-        log_debug(0, "allocate_pinned()", size, *ptr);
+        log_debug(0, "allocate_pinned()", n, *ptr);
 
-        allocate_host(size, ptr);
+        allocate_host(n, ptr);
     }
 #endif
 
@@ -149,27 +149,27 @@ namespace rocalution
 #endif
 
     template <typename DataType>
-    void set_to_zero_host(int64_t size, DataType* ptr)
+    void set_to_zero_host(int64_t n, DataType* ptr)
     {
-        log_debug(0, "set_to_zero_host()", size, ptr);
+        log_debug(0, "set_to_zero_host()", n, ptr);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(ptr != NULL);
 
-            memset(ptr, 0, size * sizeof(DataType));
+            memset(ptr, 0, n * sizeof(DataType));
 
-            // for (int64_t i=0; i<size; ++i)
+            // for (int64_t i=0; i<n; ++i)
             //   ptr[i] = DataType(0);
         }
     }
 
     template <typename DataType>
-    void copy_h2h(int64_t size, const DataType* src, DataType* dst)
+    void copy_h2h(int64_t n, const DataType* src, DataType* dst)
     {
-        log_debug(0, "copy_h2h()", size, src, dst);
+        log_debug(0, "copy_h2h()", n, src, dst);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(src != NULL);
             assert(dst != NULL);
@@ -180,12 +180,12 @@ namespace rocalution
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-            for(int64_t i = 0; i < size; ++i)
+            for(int64_t i = 0; i < n; ++i)
             {
                 dst[i] = src[i];
             }
 #else
-            memcpy(dst, src, sizeof(DataType) * size);
+            memcpy(dst, src, sizeof(DataType) * n);
 #endif
         }
     }

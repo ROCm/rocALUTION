@@ -37,17 +37,17 @@ namespace rocalution
 {
 #ifdef ROCALUTION_HIP_PINNED_MEMORY
     template <typename DataType>
-    void allocate_host(int64_t size, DataType** ptr)
+    void allocate_host(int64_t n, DataType** ptr)
     {
-        log_debug(0, "allocate_host()", size, ptr);
+        log_debug(0, "allocate_host()", n, ptr);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(*ptr == NULL);
 
-            //    *ptr = new DataType[size];
+            //    *ptr = new DataType[n];
 
-            hipMallocHost((void**)ptr, size * sizeof(DataType));
+            hipMallocHost((void**)ptr, n * sizeof(DataType));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             assert(*ptr != NULL);
@@ -70,15 +70,15 @@ namespace rocalution
 #endif
 
     template <typename DataType>
-    void allocate_hip(int64_t size, DataType** ptr)
+    void allocate_hip(int64_t n, DataType** ptr)
     {
-        log_debug(0, "allocate_hip()", size, ptr);
+        log_debug(0, "allocate_hip()", n, ptr);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(*ptr == NULL);
 
-            hipMalloc((void**)ptr, size * sizeof(DataType));
+            hipMalloc((void**)ptr, n * sizeof(DataType));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             assert(*ptr != NULL);
@@ -86,22 +86,22 @@ namespace rocalution
     }
 
     template <typename DataType>
-    void allocate_pinned(int64_t size, DataType** ptr)
+    void allocate_pinned(int64_t n, DataType** ptr)
     {
-        log_debug(0, "allocate_pinned()", size, ptr);
+        log_debug(0, "allocate_pinned()", n, ptr);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(*ptr == NULL);
 
             if(_rocalution_available_accelerator() == true)
             {
-                hipHostMalloc((void**)ptr, size * sizeof(DataType));
+                hipHostMalloc((void**)ptr, n * sizeof(DataType));
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
             }
             else
             {
-                allocate_host(size, ptr);
+                allocate_host(n, ptr);
             }
 
             assert(*ptr != NULL);
@@ -144,21 +144,21 @@ namespace rocalution
     }
 
     template <typename DataType>
-    void set_to_zero_hip(int blocksize, int64_t size, DataType* ptr, bool async, hipStream_t stream)
+    void set_to_zero_hip(int blocksize, int64_t n, DataType* ptr, bool async, hipStream_t stream)
     {
-        log_debug(0, "set_to_zero_hip()", blocksize, size, ptr, async, stream);
+        log_debug(0, "set_to_zero_hip()", blocksize, n, ptr, async, stream);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(ptr != NULL);
 
             if(async == false)
             {
-                hipMemset(ptr, 0, size * sizeof(DataType));
+                hipMemset(ptr, 0, n * sizeof(DataType));
             }
             else
             {
-                hipMemsetAsync(ptr, 0, size * sizeof(DataType), stream);
+                hipMemsetAsync(ptr, 0, n * sizeof(DataType), stream);
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -166,25 +166,25 @@ namespace rocalution
     }
 
     template <typename DataType>
-    void set_to_one_hip(int blocksize, int64_t size, DataType* ptr, bool async, hipStream_t stream)
+    void set_to_one_hip(int blocksize, int64_t n, DataType* ptr, bool async, hipStream_t stream)
     {
-        log_debug(0, "set_to_one_hip()", blocksize, size, ptr, async, stream);
+        log_debug(0, "set_to_one_hip()", blocksize, n, ptr, async, stream);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(ptr != NULL);
 
             // 1D accessing, no stride
             dim3 BlockSize(blocksize);
-            dim3 GridSize(size / blocksize + 1);
+            dim3 GridSize(n / blocksize + 1);
 
             if(async == false)
             {
-                kernel_set_to_ones<<<GridSize, BlockSize>>>(size, ptr);
+                kernel_set_to_ones<<<GridSize, BlockSize>>>(n, ptr);
             }
             else
             {
-                kernel_set_to_ones<<<GridSize, BlockSize, 0, stream>>>(size, ptr);
+                kernel_set_to_ones<<<GridSize, BlockSize, 0, stream>>>(n, ptr);
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -192,22 +192,22 @@ namespace rocalution
     }
 
     template <typename DataType>
-    void copy_d2h(int64_t size, const DataType* src, DataType* dst, bool async, hipStream_t stream)
+    void copy_d2h(int64_t n, const DataType* src, DataType* dst, bool async, hipStream_t stream)
     {
-        log_debug(0, "copy_d2h()", size, src, dst);
+        log_debug(0, "copy_d2h()", n, src, dst);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(src != NULL);
             assert(dst != NULL);
 
             if(async == false)
             {
-                hipMemcpy(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToHost);
+                hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToHost);
             }
             else
             {
-                hipMemcpyAsync(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToHost, stream);
+                hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToHost, stream);
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -215,22 +215,22 @@ namespace rocalution
     }
 
     template <typename DataType>
-    void copy_h2d(int64_t size, const DataType* src, DataType* dst, bool async, hipStream_t stream)
+    void copy_h2d(int64_t n, const DataType* src, DataType* dst, bool async, hipStream_t stream)
     {
-        log_debug(0, "copy_h2d()", size, src, dst);
+        log_debug(0, "copy_h2d()", n, src, dst);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(src != NULL);
             assert(dst != NULL);
 
             if(async == false)
             {
-                hipMemcpy(dst, src, sizeof(DataType) * size, hipMemcpyHostToDevice);
+                hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyHostToDevice);
             }
             else
             {
-                hipMemcpyAsync(dst, src, sizeof(DataType) * size, hipMemcpyHostToDevice, stream);
+                hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyHostToDevice, stream);
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -238,22 +238,22 @@ namespace rocalution
     }
 
     template <typename DataType>
-    void copy_d2d(int64_t size, const DataType* src, DataType* dst, bool async, hipStream_t stream)
+    void copy_d2d(int64_t n, const DataType* src, DataType* dst, bool async, hipStream_t stream)
     {
-        log_debug(0, "copy_d2d()", size, src, dst);
+        log_debug(0, "copy_d2d()", n, src, dst);
 
-        if(size > 0)
+        if(n > 0)
         {
             assert(src != NULL);
             assert(dst != NULL);
 
             if(async == false)
             {
-                hipMemcpy(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToDevice);
+                hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToDevice);
             }
             else
             {
-                hipMemcpyAsync(dst, src, sizeof(DataType) * size, hipMemcpyDeviceToDevice, stream);
+                hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToDevice, stream);
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
