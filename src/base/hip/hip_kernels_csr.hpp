@@ -1445,6 +1445,141 @@ namespace rocalution
         }
     }
 
+    // Count the total vertices of this boundary row
+    template <typename I, typename J>
+    __global__ void kernel_csr_extract_boundary_rows_nnz(I boundary_size,
+                                                         const I* __restrict__ boundary_index,
+                                                         const J* __restrict__ int_csr_row_ptr,
+                                                         const J* __restrict__ gst_csr_row_ptr,
+                                                         I* __restrict__ row_nnz)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // Get boundary row
+        I row = boundary_index[gid];
+
+        // Write total number of nnz for this boundary row
+        row_nnz[gid] = int_csr_row_ptr[row + 1] - int_csr_row_ptr[row] + gst_csr_row_ptr[row + 1]
+                       - gst_csr_row_ptr[row];
+    }
+
+    template <typename T, typename I, typename J, typename K>
+    __global__ void kernel_csr_extract_boundary_rows(I boundary_size,
+                                                     const I* __restrict__ boundary_index,
+                                                     K global_col_offset,
+                                                     const J* __restrict__ csr_row_ptr,
+                                                     const I* __restrict__ csr_col_ind,
+                                                     const T* __restrict__ csr_val,
+                                                     const J* __restrict__ ghost_csr_row_ptr,
+                                                     const I* __restrict__ ghost_csr_col_ind,
+                                                     const T* __restrict__ ghost_csr_val,
+                                                     const K* __restrict__ l2g,
+                                                     const I* __restrict__ send_row_ptr,
+                                                     K* __restrict__ send_col_ind,
+                                                     T* __restrict__ send_val)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // This row is a boundary row
+        I row = boundary_index[gid];
+
+        // Index into send array
+        I send_row = send_row_ptr[gid];
+
+        // Extract interior part
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
+
+        // Interior
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            // Shift column by global column offset, to obtain the global column index
+            send_col_ind[send_row] = csr_col_ind[j] + global_col_offset;
+            send_val[send_row]     = csr_val[j];
+            ++send_row;
+        }
+
+        // Extract ghost part
+        row_begin = ghost_csr_row_ptr[row];
+        row_end   = ghost_csr_row_ptr[row + 1];
+
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            // Map the local ghost column to global column
+            send_col_ind[send_row] = l2g[ghost_csr_col_ind[j]];
+            send_val[send_row]     = ghost_csr_val[j];
+            ++send_row;
+        }
+    }
+
+    template <typename I, typename K>
+    __global__ void kernel_csr_renumber_global_to_local_count(I nnz,
+                                                              const K* __restrict__ global_sorted,
+                                                              I* __restrict__ local_col)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= nnz)
+        {
+            return;
+        }
+
+        // First column entry cannot be a duplicate
+        if(gid == 0)
+        {
+            local_col[0] = 1;
+
+            return;
+        }
+
+        // Get global column
+        K global_col = global_sorted[gid];
+        K prev_col   = global_sorted[gid - 1];
+
+        // Compare column indices
+        if(global_col == prev_col)
+        {
+            // Same index as previous column
+            local_col[gid] = 0;
+        }
+        else
+        {
+            // New local column index
+            local_col[gid] = 1;
+        }
+    }
+
+    template <typename I>
+    __global__ void kernel_csr_renumber_global_to_local_fill(I nnz,
+                                                             const I* __restrict__ local_col,
+                                                             const I* __restrict__ perm,
+                                                             I* __restrict__ csr_col_ind)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= nnz)
+        {
+            return;
+        }
+
+        // Back permutation into matrix
+        csr_col_ind[perm[gid]] = local_col[gid] - 1;
+    }
+
 } // namespace rocalution
 
 #endif // ROCALUTION_HIP_HIP_KERNELS_CSR_HPP_

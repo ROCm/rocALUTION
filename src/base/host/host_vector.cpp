@@ -32,6 +32,7 @@
 #include "../base_vector.hpp"
 #include "rocalution/version.hpp"
 
+#include <algorithm>
 #include <complex>
 #include <fstream>
 #include <limits>
@@ -202,6 +203,13 @@ namespace rocalution
     void HostVector<ValueType>::CopyToData(ValueType* data) const
     {
         copy_h2h(this->size_, this->vec_, data);
+    }
+
+    template <typename ValueType>
+    void HostVector<ValueType>::CopyToHostData(ValueType* data) const
+    {
+        // We are already on host, just copy
+        this->CopyToData(data);
     }
 
     template <typename ValueType>
@@ -1500,6 +1508,26 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void HostVector<ValueType>::AddIndexValues(const BaseVector<int>&       index,
+                                               const BaseVector<ValueType>& values)
+    {
+        const HostVector<int>*       cast_idx = dynamic_cast<const HostVector<int>*>(&index);
+        const HostVector<ValueType>* cast_vec = dynamic_cast<const HostVector<ValueType>*>(&values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+#ifdef _OPENMP
+#pragma parallel for schuedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < cast_idx->size_; ++i)
+        {
+            this->vec_[cast_idx->vec_[i]] += cast_vec->vec_[i];
+        }
+    }
+
+    template <typename ValueType>
     void HostVector<ValueType>::GetContinuousValues(int64_t    start,
                                                     int64_t    end,
                                                     ValueType* values) const
@@ -1521,6 +1549,37 @@ namespace rocalution
         assert(end <= this->size_);
 
         copy_h2h(end - start, values, this->vec_ + start);
+    }
+
+    template <typename ValueType>
+    void HostVector<ValueType>::RSPMISUpdateCFmap(const BaseVector<int>& index,
+                                                  BaseVector<ValueType>* values)
+    {
+        assert(values != NULL);
+
+        const HostVector<int>* cast_idx = dynamic_cast<const HostVector<int>*>(&index);
+        HostVector<ValueType>* cast_vec = dynamic_cast<HostVector<ValueType>*>(values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+#ifdef _OPENMP
+#pragma parallel for schuedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < cast_idx->size_; ++i)
+        {
+            if(cast_vec->vec_[i] == static_cast<ValueType>(0))
+            {
+                // Update
+                this->vec_[cast_idx->vec_[i]] = static_cast<ValueType>(0);
+            }
+            else
+            {
+                // Pack
+                cast_vec->vec_[i] = this->vec_[cast_idx->vec_[i]];
+            }
+        }
     }
 
     template <typename ValueType>
@@ -1683,6 +1742,63 @@ namespace rocalution
 
             this->vec_[i] = value;
         }
+    }
+
+    template <typename ValueType>
+    void HostVector<ValueType>::Sort(BaseVector<ValueType>* sorted, BaseVector<int>* perm) const
+    {
+        if(this->size_ > 0)
+        {
+            assert(sorted != NULL);
+
+            HostVector<ValueType>* cast_sort = dynamic_cast<HostVector<ValueType>*>(sorted);
+            HostVector<int>*       cast_perm = dynamic_cast<HostVector<int>*>(perm);
+
+            assert(cast_sort != NULL);
+            assert(cast_sort->size_ >= this->size_);
+
+            if(cast_perm == NULL)
+            {
+                // Sort without permutation
+                copy_h2h(this->size_, this->vec_, cast_sort->vec_);
+                std::sort(cast_sort->vec_, cast_sort->vec_ + this->size_);
+            }
+            else
+            {
+                assert(cast_perm != NULL);
+                assert(cast_perm->size_ >= this->size_);
+
+                // Create identity permutation
+                std::iota(cast_perm->vec_, cast_perm->vec_ + this->size_, 0);
+
+                // Sort with permutation
+                std::sort(
+                    cast_perm->vec_,
+                    cast_perm->vec_ + this->size_,
+                    [&](const int& a, const int& b) { return (this->vec_[a] < this->vec_[b]); });
+
+                for(int i = 0; i < this->size_; ++i)
+                {
+                    cast_sort->vec_[i] = this->vec_[cast_perm->vec_[i]];
+                }
+            }
+        }
+    }
+
+    template <>
+    void HostVector<std::complex<float>>::Sort(BaseVector<std::complex<float>>* sorted,
+                                               BaseVector<int>*                 perm) const
+    {
+        LOG_INFO("HostVector::Sort(), how to sort complex numbers?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    void HostVector<std::complex<double>>::Sort(BaseVector<std::complex<double>>* sorted,
+                                                BaseVector<int>*                  perm) const
+    {
+        LOG_INFO("HostVector::Sort(), how to sort complex numbers?");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template class HostVector<bool>;

@@ -67,7 +67,7 @@ namespace rocalution
         if(global == false)
         {
             kernel_csr_rs_pmis_strong_influences<false, 256, 8>
-                <<<(this->nrow_ * 8 - 1) / 256 + 1,
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -75,6 +75,27 @@ namespace rocalution
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          this->mat_.val,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         (ValueType*)NULL,
+                                                                         eps,
+                                                                         cast_w->vec_,
+                                                                         cast_S->vec_);
+        }
+        else
+        {
+            kernel_csr_rs_pmis_strong_influences<true, 256, 8>
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
+                                                                         cast_gst->mat_.val,
                                                                          eps,
                                                                          cast_w->vec_,
                                                                          cast_S->vec_);
@@ -145,13 +166,32 @@ namespace rocalution
         if(global == false)
         {
             kernel_csr_rs_pmis_correct_coarse<false, 256, 8>
-                <<<(this->nrow_ * 8 - 1) / 256 + 1,
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
                                                                          this->nnz_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         cast_w->vec_,
+                                                                         cast_S->vec_,
+                                                                         cast_cf->vec_,
+                                                                         cast_m->vec_);
+        }
+        else
+        {
+            kernel_csr_rs_pmis_correct_coarse<true, 256, 8>
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
                                                                          cast_w->vec_,
                                                                          cast_S->vec_,
                                                                          cast_cf->vec_,
@@ -185,13 +225,30 @@ namespace rocalution
         if(global == false)
         {
             kernel_csr_rs_pmis_coarse_edges_to_fine<false, 256, 8>
-                <<<(this->nrow_ * 8 - 1) / 256 + 1,
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
                                                                          this->nnz_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         cast_S->vec_,
+                                                                         cast_cf->vec_);
+        }
+        else
+        {
+            kernel_csr_rs_pmis_coarse_edges_to_fine<true, 256, 8>
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
                                                                          cast_S->vec_,
                                                                          cast_cf->vec_);
         }
@@ -280,6 +337,22 @@ namespace rocalution
         // We already know the number of rows of P
         cast_pi->nrow_ = this->nrow_;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_hip(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
         // Determine row nnz of P
         if(global == false)
         {
@@ -292,11 +365,37 @@ namespace rocalution
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          this->mat_.val,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         (ValueType*)NULL,
                                                                          cast_S->vec_,
                                                                          cast_cf->vec_,
                                                                          cast_Amin->vec_,
                                                                          cast_Amax->vec_,
                                                                          cast_pi->mat_.row_offset,
+                                                                         (PtrType*)NULL,
+                                                                         cast_f2c->vec_);
+        }
+        else
+        {
+            kernel_csr_rs_direct_interp_nnz<true, 256>
+                <<<(this->nrow_ - 1) / 256 + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
+                                                                         cast_gst->mat_.val,
+                                                                         cast_S->vec_,
+                                                                         cast_cf->vec_,
+                                                                         cast_Amin->vec_,
+                                                                         cast_Amax->vec_,
+                                                                         cast_pi->mat_.row_offset,
+                                                                         cast_pg->mat_.row_offset,
                                                                          cast_f2c->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -352,6 +451,15 @@ namespace rocalution
         // Do we need communication?
         bool global = prolong_gst != NULL;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+        }
+
         // rocprim buffer
         size_t rocprim_size;
         char*  rocprim_buffer = NULL;
@@ -395,6 +503,35 @@ namespace rocalution
         allocate_hip(cast_pi->nnz_, &cast_pi->mat_.col);
         allocate_hip(cast_pi->nnz_, &cast_pi->mat_.val);
 
+        // Ghost part
+        if(global == true)
+        {
+            // Exclusive sum to obtain row offset pointers of ghost
+            // part of P
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    cast_pg->mat_.row_offset,
+                                    cast_pg->mat_.row_offset,
+                                    0,
+                                    this->nrow_ + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Initialize nnz of P ghost
+            copy_d2h(1, cast_pg->mat_.row_offset + this->nrow_, &tmp);
+            cast_pg->nnz_ = tmp;
+
+            // Initialize ncol of P ghost
+            cast_pg->ncol_ = this->nrow_;
+
+            // Allocate P ghost
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
+
         free_hip(&rocprim_buffer);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -410,15 +547,157 @@ namespace rocalution
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          this->mat_.val,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         (ValueType*)NULL,
                                                                          cast_pi->mat_.row_offset,
                                                                          cast_pi->mat_.col,
                                                                          cast_pi->mat_.val,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         (ValueType*)NULL,
                                                                          cast_S->vec_,
                                                                          cast_cf->vec_,
                                                                          cast_Amin->vec_,
                                                                          cast_Amax->vec_,
-                                                                         cast_f2c->vec_);
+                                                                         cast_f2c->vec_,
+                                                                         (int*)NULL);
         }
+        else
+        {
+            kernel_csr_rs_direct_interp_fill<true, 256>
+                <<<(this->nrow_ - 1) / 256 + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         this->mat_.val,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
+                                                                         cast_gst->mat_.val,
+                                                                         cast_pi->mat_.row_offset,
+                                                                         cast_pi->mat_.col,
+                                                                         cast_pi->mat_.val,
+                                                                         cast_pg->mat_.row_offset,
+                                                                         cast_glo->vec_,
+                                                                         cast_pg->mat_.val,
+                                                                         cast_S->vec_,
+                                                                         cast_cf->vec_,
+                                                                         cast_Amin->vec_,
+                                                                         cast_Amax->vec_,
+                                                                         cast_f2c->vec_,
+                                                                         cast_l2g->vec_);
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::RSExtPIBoundaryNnz(const BaseVector<int>&  boundary,
+                                                                const BaseVector<int>&  CFmap,
+                                                                const BaseVector<bool>& S,
+                                                                const BaseMatrix<ValueType>& ghost,
+                                                                BaseVector<PtrType>* row_nnz) const
+    {
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary);
+        const HIPAcceleratorVector<int>* cast_cf
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&CFmap);
+        const HIPAcceleratorVector<bool>* cast_S
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&S);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        HIPAcceleratorVector<int>* cast_nnz = dynamic_cast<HIPAcceleratorVector<int>*>(row_nnz);
+
+        assert(cast_bnd != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_nnz != NULL);
+
+        assert(cast_nnz->size_ >= cast_bnd->size_);
+
+        // Sanity check - boundary size should not exceed 32 bits
+        assert(cast_bnd->size_ < std::numeric_limits<int>::max());
+
+        kernel_csr_rs_extpi_strong_coarse_boundary_rows_nnz<<<
+            (cast_bnd->size_ - 1) / 256 + 1,
+            256,
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                  this->nnz_,
+                                                                  static_cast<int>(cast_bnd->size_),
+                                                                  cast_bnd->vec_,
+                                                                  this->mat_.row_offset,
+                                                                  this->mat_.col,
+                                                                  cast_gst->mat_.row_offset,
+                                                                  cast_gst->mat_.col,
+                                                                  cast_cf->vec_,
+                                                                  cast_S->vec_,
+                                                                  cast_nnz->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::RSExtPIExtractBoundary(
+        int64_t                      global_column_begin,
+        const BaseVector<int>&       boundary,
+        const BaseVector<int64_t>&   l2g,
+        const BaseVector<int>&       CFmap,
+        const BaseVector<bool>&      S,
+        const BaseMatrix<ValueType>& ghost,
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        BaseVector<int64_t>*         bnd_csr_col_ind) const
+    {
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary);
+        const HIPAcceleratorVector<int64_t>* cast_l2g
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&l2g);
+        const HIPAcceleratorVector<int>* cast_cf
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&CFmap);
+        const HIPAcceleratorVector<bool>* cast_S
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&S);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        const HIPAcceleratorVector<int>* cast_ptr
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&bnd_csr_row_ptr);
+        HIPAcceleratorVector<int64_t>* cast_col
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(bnd_csr_col_ind);
+
+        assert(cast_bnd != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+
+        // Sanity check - boundary nnz should not exceed 32 bits
+        assert(cast_bnd->size_ < std::numeric_limits<int>::max());
+
+        kernel_csr_rs_extpi_extract_strong_coarse_boundary_rows<<<
+            (cast_bnd->size_ - 1) / 256 + 1,
+            256,
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                  this->nnz_,
+                                                                  global_column_begin,
+                                                                  static_cast<int>(cast_bnd->size_),
+                                                                  cast_bnd->vec_,
+                                                                  this->mat_.row_offset,
+                                                                  this->mat_.col,
+                                                                  cast_gst->mat_.row_offset,
+                                                                  cast_gst->mat_.col,
+                                                                  cast_l2g->vec_,
+                                                                  cast_cf->vec_,
+                                                                  cast_S->vec_,
+                                                                  cast_ptr->vec_,
+                                                                  cast_col->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         return true;
@@ -474,6 +753,25 @@ namespace rocalution
         // We already know the number of rows of P
         cast_pi->nrow_ = this->nrow_;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_gst != NULL);
+            assert(cast_ptr != NULL);
+            assert(cast_col != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_hip(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
         // rocprim buffer
         size_t rocprim_size;
         char*  rocprim_buffer = NULL;
@@ -484,7 +782,7 @@ namespace rocalution
         if(global == false)
         {
             kernel_csr_rs_extpi_interp_max<false, BLOCKSIZE, 16>
-                <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1,
+                <<<(this->nrow_ - 1) / (BLOCKSIZE / 16) + 1,
                    BLOCKSIZE,
                    0,
                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -492,6 +790,27 @@ namespace rocalution
                                                                          FF1,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         (int*)NULL,
+                                                                         cast_S->vec_,
+                                                                         cast_cf->vec_,
+                                                                         cast_pi->mat_.row_offset);
+        }
+        else
+        {
+            kernel_csr_rs_extpi_interp_max<true, BLOCKSIZE, 16>
+                <<<(this->nrow_ - 1) / (BLOCKSIZE / 16) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         FF1,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
+                                                                         cast_ptr->vec_,
                                                                          cast_S->vec_,
                                                                          cast_cf->vec_,
                                                                          cast_pi->mat_.row_offset);
@@ -535,171 +854,251 @@ namespace rocalution
             if(max_nnz < 16)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 8, 16>
-                    <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 8) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 32)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 16, 32>
-                    <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 16) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 64)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 32, 64>
-                    <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 32) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 128)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 64, 128>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 256)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 64, 256>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 512)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 64, 512>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 1024)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 64, 1024>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 2048)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, BLOCKSIZE, 64, 2048>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 4096)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, 128, 64, 4096>
-                    <<<(this->nrow_ * 64 - 1) / 128 + 1,
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else if(max_nnz < 8192)
             {
                 kernel_csr_rs_extpi_interp_nnz<false, 64, 64, 8192>
-                    <<<(this->nrow_ * 64 - 1) / 64 + 1,
+                    <<<(this->nrow_ - 1) / (64 / 64) + 1,
                        64,
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
+                        (int*)NULL,
                         cast_pi->mat_.row_offset,
+                        (PtrType*)NULL,
                         cast_f2c->vec_);
             }
             else
@@ -709,6 +1108,272 @@ namespace rocalution
 
                 free_hip(&cast_pi->mat_.row_offset);
                 cast_pi->nrow_ = 0;
+
+                return false;
+            }
+        }
+        else
+        {
+            if(max_nnz < 16)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 8, 16>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 8) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 32)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 16, 32>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 16) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 64)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 32, 64>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 32) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 128)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 64, 128>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < BLOCKSIZE)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 64, BLOCKSIZE>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 512)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 64, 512>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 1024)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 64, 1024>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 2048)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, BLOCKSIZE, 64, 2048>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 4096)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, 128, 64, 4096>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else if(max_nnz < 8192)
+            {
+                kernel_csr_rs_extpi_interp_nnz<true, 64, 64, 8192>
+                    <<<(this->nrow_ - 1) / (64 / 64) + 1,
+                       64,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_l2g->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset,
+                        cast_f2c->vec_);
+            }
+            else
+            {
+                // More nnz per row will not fit into LDS
+                // Fall back to host
+
+                free_hip(&cast_pi->mat_.row_offset);
+                free_hip(&cast_pg->mat_.row_offset);
+
+                cast_pi->nrow_ = 0;
+                cast_pg->nrow_ = 0;
 
                 return false;
             }
@@ -775,6 +1440,20 @@ namespace rocalution
         // Do we need communication?
         bool global = prolong_gst != NULL;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_gst != NULL);
+            assert(cast_ptr != NULL);
+            assert(cast_col != NULL);
+            assert(cast_ext_ptr != NULL);
+            assert(cast_ext_col != NULL);
+            assert(cast_ext_val != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+        }
+
         // rocprim buffer
         size_t rocprim_size;
         char*  rocprim_buffer = NULL;
@@ -808,6 +1487,25 @@ namespace rocalution
         // Maximum fill
         int max_hash_fill;
         copy_d2h(1, d_max_hash, &max_hash_fill);
+
+        // Ghost part
+        if(global == true)
+        {
+            rocprim::reduce(rocprim_buffer,
+                            rocprim_size,
+                            cast_pg->mat_.row_offset,
+                            d_max_hash + 1,
+                            0,
+                            this->nrow_,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            int max_hash_fill_gst;
+
+            copy_d2h(1, d_max_hash + 1, &max_hash_fill_gst);
+            max_hash_fill += max_hash_fill_gst;
+        }
 
         free_hip(&d_max_hash);
         free_hip(&rocprim_buffer);
@@ -851,6 +1549,35 @@ namespace rocalution
         allocate_hip(cast_pi->nnz_, &cast_pi->mat_.col);
         allocate_hip(cast_pi->nnz_, &cast_pi->mat_.val);
 
+        // Ghost part
+        if(global == true)
+        {
+            // Exclusive sum to obtain row offset pointers of ghost
+            // part of P
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    cast_pg->mat_.row_offset,
+                                    cast_pg->mat_.row_offset,
+                                    0,
+                                    this->nrow_ + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Initialize nnz of P ghost
+            copy_d2h(1, cast_pg->mat_.row_offset + this->nrow_, &tmp);
+            cast_pg->nnz_ = tmp;
+
+            // Initialize ncol of P ghost
+            cast_pg->ncol_ = this->nrow_;
+
+            // Allocate P ghost
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
+
         free_hip(&rocprim_buffer);
 
         // Extract diagonal matrix entries
@@ -868,21 +1595,35 @@ namespace rocalution
             {
                 size_t ssize = BLOCKSIZE / 8 * 16 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, BLOCKSIZE, 8, 16>
-                    <<<(this->nrow_ * 8 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 8) + 1,
                        BLOCKSIZE,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -891,21 +1632,35 @@ namespace rocalution
             {
                 size_t ssize = BLOCKSIZE / 16 * 32 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, BLOCKSIZE, 16, 32>
-                    <<<(this->nrow_ * 16 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 16) + 1,
                        BLOCKSIZE,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -914,21 +1669,35 @@ namespace rocalution
             {
                 size_t ssize = BLOCKSIZE / 32 * 64 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, BLOCKSIZE, 32, 64>
-                    <<<(this->nrow_ * 32 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 32) + 1,
                        BLOCKSIZE,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -937,21 +1706,35 @@ namespace rocalution
             {
                 size_t ssize = BLOCKSIZE / 64 * 128 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, BLOCKSIZE, 64, 128>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -960,21 +1743,35 @@ namespace rocalution
             {
                 size_t ssize = BLOCKSIZE / 64 * 256 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, BLOCKSIZE, 64, 256>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -983,21 +1780,35 @@ namespace rocalution
             {
                 size_t ssize = BLOCKSIZE / 64 * 512 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, BLOCKSIZE, 64, 512>
-                    <<<(this->nrow_ * 64 - 1) / BLOCKSIZE + 1,
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
                        BLOCKSIZE,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -1006,21 +1817,35 @@ namespace rocalution
             {
                 size_t ssize = 128 / 64 * 1024 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, 128, 64, 1024>
-                    <<<(this->nrow_ * 64 - 1) / 128 + 1,
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -1029,21 +1854,35 @@ namespace rocalution
             {
                 size_t ssize = 64 / 64 * 2048 * (sizeof(int) + sizeof(ValueType));
                 kernel_csr_rs_extpi_interp_fill<false, 64, 64, 2048>
-                    <<<(this->nrow_ * 64 - 1) / 64 + 1,
+                    <<<(this->nrow_ - 1) / (64 / 64) + 1,
                        64,
                        ssize,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
                         this->nrow_,
                         this->ncol_,
                         this->nnz_,
+                        0,
+                        0,
                         FF1,
                         this->mat_.row_offset,
                         this->mat_.col,
                         this->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int*)NULL,
                         diag.vec_,
                         cast_pi->mat_.row_offset,
                         cast_pi->mat_.col,
                         cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
                         cast_S->vec_,
                         cast_cf->vec_,
                         cast_f2c->vec_);
@@ -1058,6 +1897,362 @@ namespace rocalution
 
                 cast_pi->nnz_  = 0;
                 cast_pi->ncol_ = 0;
+
+                return false;
+            }
+        }
+        else
+        {
+            if(max_hash_fill < 16)
+            {
+                size_t ssize = BLOCKSIZE / 8 * 16 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, BLOCKSIZE, 8, 16>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 8) + 1,
+                       BLOCKSIZE,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < 32)
+            {
+                size_t ssize = BLOCKSIZE / 16 * 32 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, BLOCKSIZE, 16, 32>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 16) + 1,
+                       BLOCKSIZE,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < 64)
+            {
+                size_t ssize = BLOCKSIZE / 32 * 64 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, BLOCKSIZE, 32, 64>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 32) + 1,
+                       BLOCKSIZE,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < 128)
+            {
+                size_t ssize = BLOCKSIZE / 64 * 128 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, BLOCKSIZE, 64, 128>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < BLOCKSIZE)
+            {
+                size_t ssize = BLOCKSIZE / 64 * BLOCKSIZE * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, BLOCKSIZE, 64, BLOCKSIZE>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < 512)
+            {
+                size_t ssize = BLOCKSIZE / 64 * 512 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, BLOCKSIZE, 64, 512>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < 1024)
+            {
+                size_t ssize = BLOCKSIZE / 64 * 1024 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, BLOCKSIZE, 64, 1024>
+                    <<<(this->nrow_ - 1) / (BLOCKSIZE / 64) + 1,
+                       BLOCKSIZE,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < 2048)
+            {
+                size_t ssize = 128 / 64 * 2048 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, 128, 64, 2048>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else if(max_hash_fill < 4096)
+            {
+                size_t ssize = 64 / 64 * 4096 * (sizeof(int64_t) + sizeof(ValueType));
+                kernel_csr_rs_extpi_interp_fill<true, 64, 64, 4096>
+                    <<<(this->nrow_ - 1) / (64 / 64) + 1,
+                       64,
+                       ssize,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->ncol_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        FF1,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_ptr->vec_,
+                        cast_col->vec_,
+                        cast_ext_ptr->vec_,
+                        cast_ext_col->vec_,
+                        cast_ext_val->vec_,
+                        cast_l2g->vec_,
+                        diag.vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_glo->vec_,
+                        cast_pg->mat_.val,
+                        cast_S->vec_,
+                        cast_cf->vec_,
+                        cast_f2c->vec_);
+            }
+            else
+            {
+                // More nnz per row will not fit into LDS
+                // Fall back to host
+                cast_glo->Clear();
+
+                free_hip(&cast_pi->mat_.col);
+                free_hip(&cast_pi->mat_.val);
+
+                free_hip(&cast_pg->mat_.col);
+                free_hip(&cast_pg->mat_.val);
+
+                cast_pi->nnz_ = 0;
+                cast_pg->nnz_ = 0;
+
+                cast_pi->ncol_ = 0;
+                cast_pg->ncol_ = 0;
 
                 return false;
             }

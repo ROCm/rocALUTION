@@ -24,6 +24,8 @@
 #include "ruge_stueben_amg.hpp"
 #include "../../utils/def.hpp"
 
+#include "../../base/global_matrix.hpp"
+#include "../../base/global_vector.hpp"
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
 
@@ -327,13 +329,21 @@ namespace rocalution
     }
 
     template class RugeStuebenAMG<LocalMatrix<float>, LocalVector<float>, float>;
+    template class RugeStuebenAMG<GlobalMatrix<float>, GlobalVector<float>, float>;
     template class RugeStuebenAMG<LocalMatrix<double>, LocalVector<double>, double>;
+    template class RugeStuebenAMG<GlobalMatrix<double>, GlobalVector<double>, double>;
 #ifdef SUPPORT_COMPLEX
     template class RugeStuebenAMG<LocalMatrix<std::complex<float>>,
                                   LocalVector<std::complex<float>>,
                                   std::complex<float>>;
+    template class RugeStuebenAMG<GlobalMatrix<std::complex<float>>,
+                                  GlobalVector<std::complex<float>>,
+                                  std::complex<float>>;
     template class RugeStuebenAMG<LocalMatrix<std::complex<double>>,
                                   LocalVector<std::complex<double>>,
+                                  std::complex<double>>;
+    template class RugeStuebenAMG<GlobalMatrix<std::complex<double>>,
+                                  GlobalVector<std::complex<double>>,
                                   std::complex<double>>;
 #endif
 

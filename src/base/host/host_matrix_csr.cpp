@@ -4778,6 +4778,20 @@ namespace rocalution
                 }
             }
 
+            if(global == true)
+            {
+                PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                {
+                    ValueType val = cast_gst->mat_.val[j];
+
+                    min_a_ik = (min_a_ik < val) ? min_a_ik : val;
+                    max_a_ik = (max_a_ik > val) ? max_a_ik : val;
+                }
+            }
+
             // Threshold to check for strength of connection
             ValueType cond = (sign ? max_a_ik : min_a_ik) * static_cast<ValueType>(eps);
 
@@ -4801,6 +4815,34 @@ namespace rocalution
                     // distinguish neighbor points with equal number of strong
                     // connections.
                     cast_w->vec_[col] += 1.0f;
+                }
+            }
+
+            if(global == true)
+            {
+                PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                {
+                    int       col = cast_gst->mat_.col[j];
+                    ValueType val = cast_gst->mat_.val[j];
+
+                    if(val < cond)
+                    {
+                        // col is strongly connected to i
+                        cast_S->vec_[j + this->nnz_] = true;
+
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+                        // Increment omega, as it holds all strongly connected edges
+                        // of vertex col.
+                        // Additionally, omega holds a random number between 0 and 1 to
+                        // distinguish neighbor points with equal number of strong
+                        // connections.
+                        cast_w->vec_[col + this->nrow_] += 1.0f;
+                    }
                 }
             }
         }
@@ -4933,6 +4975,47 @@ namespace rocalution
                         }
                     }
                 }
+
+                if(global == true)
+                {
+                    PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                    PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                    // Loop over the full boundary row to compare weights of other vertices that
+                    // have been marked coarse in the current iteration
+                    for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                    {
+                        // Process only vertices that are strongly connected
+                        if(cast_S->vec_[j + this->nnz_])
+                        {
+                            int col = cast_gst->mat_.col[j];
+
+                            // If this vertex has been marked coarse in the current iteration,
+                            // we need to check whether it is accepted as a coarse vertex or not.
+                            if(cast_m->vec_[col + this->nrow_])
+                            {
+                                // Get the weight of the current vertex for comparison
+                                float omega_col = cast_w->vec_[col + this->nrow_];
+
+                                if(omega_row > omega_col)
+                                {
+                                    // The diagonal entry has more edges and will remain
+                                    // a coarse point, whereas this vertex gets reverted
+                                    // back to undecided, for further processing.
+                                    cast_cf->vec_[col + this->nrow_] = 0;
+                                }
+                                else if(omega_row < omega_col)
+                                {
+                                    // The diagonal entry has fewer edges and gets
+                                    // reverted back to undecided for further processing,
+                                    // whereas this vertex stays
+                                    // a coarse one.
+                                    cast_cf->vec_[i] = 0;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -4984,6 +5067,30 @@ namespace rocalution
                         {
                             cast_cf->vec_[i] = 2;
                             break;
+                        }
+                    }
+                }
+
+                if(global == true)
+                {
+                    PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                    PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                    // Loop over all ghost edges of this undecided vertex
+                    // and check, if there is a coarse point connected
+                    for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                    {
+                        // Check, whether this edge is strongly connected to the vertex
+                        if(cast_S->vec_[j + this->nnz_])
+                        {
+                            int col = cast_gst->mat_.col[j];
+
+                            // If this edge is coarse, our vertex must be fine
+                            if(cast_cf->vec_[col + this->nrow_] == 1)
+                            {
+                                cast_cf->vec_[i] = 2;
+                                break;
+                            }
                         }
                     }
                 }
@@ -5073,6 +5180,22 @@ namespace rocalution
         // We already know the number of rows of P
         cast_pi->nrow_ = this->nrow_;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_host(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -5084,6 +5207,11 @@ namespace rocalution
                 // Set this points state to coarse
                 cast_f2c->vec_[row]           = 1;
                 cast_pi->mat_.row_offset[row] = 1;
+
+                if(global == true)
+                {
+                    cast_pg->mat_.row_offset[row] = 0;
+                }
             }
             else
             {
@@ -5108,6 +5236,24 @@ namespace rocalution
                     amax = (amax > this->mat_.val[j]) ? amax : this->mat_.val[j];
                 }
 
+                // Ghost part
+                if(global == true)
+                {
+                    for(PtrType j = cast_gst->mat_.row_offset[row];
+                        j < cast_gst->mat_.row_offset[row + 1];
+                        ++j)
+                    {
+                        if(!cast_S->vec_[j + this->nnz_]
+                           || cast_cf->vec_[cast_gst->mat_.col[j] + this->nrow_] != 1)
+                        {
+                            continue;
+                        }
+
+                        amin = (amin < cast_gst->mat_.val[j]) ? amin : cast_gst->mat_.val[j];
+                        amax = (amax > cast_gst->mat_.val[j]) ? amax : cast_gst->mat_.val[j];
+                    }
+                }
+
                 cast_Amin->vec_[row] = amin = amin * static_cast<ValueType>(0.2f);
                 cast_Amax->vec_[row] = amax = amax * static_cast<ValueType>(0.2f);
 
@@ -5125,6 +5271,30 @@ namespace rocalution
                 }
 
                 cast_pi->mat_.row_offset[row] = nnz;
+
+                // Ghost part
+                if(global == true)
+                {
+                    PtrType gst_nnz = 0;
+
+                    row_begin = cast_gst->mat_.row_offset[row];
+                    row_end   = cast_gst->mat_.row_offset[row + 1];
+
+                    for(PtrType j = row_begin; j < row_end; ++j)
+                    {
+                        int col = cast_gst->mat_.col[j];
+
+                        if(cast_S->vec_[j + this->nnz_] && cast_cf->vec_[col + this->nrow_] == 1)
+                        {
+                            if(cast_gst->mat_.val[j] <= amin || cast_gst->mat_.val[j] >= amax)
+                            {
+                                ++gst_nnz;
+                            }
+                        }
+                    }
+
+                    cast_pg->mat_.row_offset[row] = gst_nnz;
+                }
             }
         }
 
@@ -5182,6 +5352,15 @@ namespace rocalution
         // Do we need communication?
         bool global = prolong_gst != NULL;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+        }
+
         // Exclusive sum to obtain row offset pointers of P
         // P contains only nnz per row, so far
         for(int i = this->nrow_; i > 0; --i)
@@ -5205,6 +5384,30 @@ namespace rocalution
         // Allocate column and value arrays
         allocate_host(cast_pi->nnz_, &cast_pi->mat_.col);
         allocate_host(cast_pi->nnz_, &cast_pi->mat_.val);
+
+        // Once again for the ghost part
+        if(global == true)
+        {
+            for(int i = this->nrow_; i > 0; --i)
+            {
+                cast_pg->mat_.row_offset[i] = cast_pg->mat_.row_offset[i - 1];
+            }
+
+            cast_pg->mat_.row_offset[0] = 0;
+
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                cast_pg->mat_.row_offset[i + 1] += cast_pg->mat_.row_offset[i];
+            }
+
+            cast_pg->nnz_  = cast_pg->mat_.row_offset[this->nrow_];
+            cast_pg->ncol_ = this->nrow_;
+
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -5270,6 +5473,47 @@ namespace rocalution
                 }
             }
 
+            if(global == true)
+            {
+                PtrType ghost_row_begin = cast_gst->mat_.row_offset[row];
+                PtrType ghost_row_end   = cast_gst->mat_.row_offset[row + 1];
+
+                for(PtrType j = ghost_row_begin; j < ghost_row_end; ++j)
+                {
+                    int       col = cast_gst->mat_.col[j];
+                    ValueType val = cast_gst->mat_.val[j];
+
+                    if(val < static_cast<ValueType>(0))
+                    {
+                        a_num += val;
+
+                        if(cast_S->vec_[j + this->nnz_] && cast_cf->vec_[col + this->nrow_] == 1)
+                        {
+                            a_den += val;
+
+                            if(val > cast_Amin->vec_[row])
+                            {
+                                d_neg += val;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        b_num += val;
+
+                        if(cast_S->vec_[j + this->nnz_] && cast_cf->vec_[col + this->nrow_] == 1)
+                        {
+                            b_den += val;
+
+                            if(val < cast_Amax->vec_[row])
+                            {
+                                d_pos += val;
+                            }
+                        }
+                    }
+                }
+            }
+
             ValueType cf_neg = static_cast<ValueType>(1);
             ValueType cf_pos = static_cast<ValueType>(1);
 
@@ -5309,6 +5553,204 @@ namespace rocalution
                     cast_pi->mat_.val[row_P]
                         = (val < static_cast<ValueType>(0) ? alpha : beta) * val;
                     ++row_P;
+                }
+            }
+
+            if(global)
+            {
+                PtrType ghost_row_P     = cast_pg->mat_.row_offset[row];
+                PtrType ghost_row_begin = cast_gst->mat_.row_offset[row];
+                PtrType ghost_row_end   = cast_gst->mat_.row_offset[row + 1];
+
+                for(PtrType j = ghost_row_begin; j < ghost_row_end; ++j)
+                {
+                    int       col = cast_gst->mat_.col[j];
+                    ValueType val = cast_gst->mat_.val[j];
+
+                    if(cast_S->vec_[j + this->nnz_] && cast_cf->vec_[col + this->nrow_] == 1)
+                    {
+                        if(val > cast_Amin->vec_[row] && val < cast_Amax->vec_[row])
+                        {
+                            continue;
+                        }
+
+                        cast_glo->vec_[ghost_row_P] = cast_l2g->vec_[col];
+                        cast_pg->mat_.val[ghost_row_P]
+                            = (val < static_cast<ValueType>(0) ? alpha : beta) * val;
+                        ++ghost_row_P;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::RSExtPIBoundaryNnz(const BaseVector<int>&       boundary,
+                                                      const BaseVector<int>&       CFmap,
+                                                      const BaseVector<bool>&      S,
+                                                      const BaseMatrix<ValueType>& ghost,
+                                                      BaseVector<PtrType>*         row_nnz) const
+    {
+        const HostVector<int>*          cast_bnd = dynamic_cast<const HostVector<int>*>(&boundary);
+        const HostVector<int>*          cast_cf  = dynamic_cast<const HostVector<int>*>(&CFmap);
+        const HostVector<bool>*         cast_S   = dynamic_cast<const HostVector<bool>*>(&S);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        HostVector<PtrType>* cast_nnz = dynamic_cast<HostVector<PtrType>*>(row_nnz);
+
+        assert(cast_bnd != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_nnz != NULL);
+
+        assert(cast_nnz->size_ >= cast_bnd->size_);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int64_t i = 0; i < cast_bnd->size_; ++i)
+        {
+            // Get boundary row
+            int row = cast_bnd->vec_[i];
+
+            // Counter
+            PtrType ext_nnz = 0;
+
+            // Interior part
+            PtrType row_begin = this->mat_.row_offset[row];
+            PtrType row_end   = this->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Check whether this vertex is strongly connected
+                if(cast_S->vec_[j] == false)
+                {
+                    continue;
+                }
+
+                // Get column index
+                int col = this->mat_.col[j];
+
+                // Only coarse points contribute
+                if(cast_cf->vec_[col] != 2)
+                {
+                    ++ext_nnz;
+                }
+            }
+
+            // Ghost part
+            row_begin = cast_gst->mat_.row_offset[row];
+            row_end   = cast_gst->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Check whether this vertex is strongly connected
+                if(cast_S->vec_[j + this->nnz_] == false)
+                {
+                    continue;
+                }
+
+                // Get column index
+                int col = cast_gst->mat_.col[j];
+
+                // Only coarse points contribute
+                if(cast_cf->vec_[col + this->nrow_] != 2)
+                {
+                    ++ext_nnz;
+                }
+            }
+
+            // Write total number of strongly connected coarse vertices to global memory
+            cast_nnz->vec_[i] = ext_nnz;
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool
+        HostMatrixCSR<ValueType>::RSExtPIExtractBoundary(int64_t                global_column_begin,
+                                                         const BaseVector<int>& boundary,
+                                                         const BaseVector<int64_t>&   l2g,
+                                                         const BaseVector<int>&       CFmap,
+                                                         const BaseVector<bool>&      S,
+                                                         const BaseMatrix<ValueType>& ghost,
+                                                         const BaseVector<PtrType>& bnd_csr_row_ptr,
+                                                         BaseVector<int64_t>* bnd_csr_col_ind) const
+    {
+        const HostVector<int>*          cast_bnd = dynamic_cast<const HostVector<int>*>(&boundary);
+        const HostVector<int64_t>*      cast_l2g = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+        const HostVector<int>*          cast_cf  = dynamic_cast<const HostVector<int>*>(&CFmap);
+        const HostVector<bool>*         cast_S   = dynamic_cast<const HostVector<bool>*>(&S);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        const HostVector<PtrType>* cast_ptr
+            = dynamic_cast<const HostVector<PtrType>*>(&bnd_csr_row_ptr);
+        HostVector<int64_t>* cast_col = dynamic_cast<HostVector<int64_t>*>(bnd_csr_col_ind);
+
+        assert(cast_bnd != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_cf != NULL);
+        assert(cast_S != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int64_t i = 0; i < cast_bnd->size_; ++i)
+        {
+            // Get boundary row and index into A_ext
+            int     row = cast_bnd->vec_[i];
+            PtrType idx = cast_ptr->vec_[i];
+
+            // Extract interior part
+            PtrType row_begin = this->mat_.row_offset[row];
+            PtrType row_end   = this->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Check whether this vertex is strongly connected
+                if(cast_S->vec_[j] == false)
+                {
+                    continue;
+                }
+
+                // Get column index
+                int col = this->mat_.col[j];
+
+                // Only coarse points contribute
+                if(cast_cf->vec_[col] != 2)
+                {
+                    // Shift column by global column offset, to obtain the global column index
+                    cast_col->vec_[idx++] = col + global_column_begin;
+                }
+            }
+
+            // Extract ghost part
+            row_begin = cast_gst->mat_.row_offset[row];
+            row_end   = cast_gst->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Check whether this vertex is strongly connected
+                if(cast_S->vec_[j + this->nnz_] == false)
+                {
+                    continue;
+                }
+
+                // Get column index
+                int col = cast_gst->mat_.col[j];
+
+                // Only coarse points contribute
+                if(cast_cf->vec_[col + this->nrow_] != 2)
+                {
+                    // Transform local ghost index into global column index
+                    cast_col->vec_[idx++] = cast_l2g->vec_[col];
                 }
             }
         }
@@ -5360,6 +5802,25 @@ namespace rocalution
         // We already know the number of rows of P
         cast_pi->nrow_ = this->nrow_;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_gst != NULL);
+            assert(cast_ptr != NULL);
+            assert(cast_col != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_host(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -5375,11 +5836,17 @@ namespace rocalution
                 // Set row nnz
                 cast_pi->mat_.row_offset[row] = 1;
 
+                if(global == true)
+                {
+                    cast_pg->mat_.row_offset[row] = 0;
+                }
+
                 continue;
             }
 
             // Set, to discard duplicated column entries (no need to be ordered)
-            std::unordered_set<int> int_set;
+            std::unordered_set<int>     int_set;
+            std::unordered_set<int64_t> gst_set;
 
             // Row entry and exit points
             PtrType row_begin = this->mat_.row_offset[row];
@@ -5414,6 +5881,8 @@ namespace rocalution
                 {
                     // This is a fine point, check for strongly connected coarse points
 
+                    bool skip_ghost = false;
+
                     // Row entry and exit of this fine point
                     PtrType row_begin_j = this->mat_.row_offset[col_j];
                     PtrType row_end_j   = this->mat_.row_offset[col_j + 1];
@@ -5446,7 +5915,116 @@ namespace rocalution
                             // Stop if FF interpolation is limited
                             if(FF1 == true)
                             {
+                                skip_ghost = true;
                                 break;
+                            }
+                        }
+                    }
+
+                    if(skip_ghost == false && global == true)
+                    {
+                        // Row entry and exit of this fine point
+                        row_begin_j = cast_gst->mat_.row_offset[col_j];
+                        row_end_j   = cast_gst->mat_.row_offset[col_j + 1];
+
+                        // Ghost iterate over the range of columns of B.
+                        for(PtrType k = row_begin_j; k < row_end_j; ++k)
+                        {
+                            // Skip points that do not influence the fine point
+                            if(cast_S->vec_[k + this->nnz_] == false)
+                            {
+                                continue;
+                            }
+
+                            // Check whether k is a coarse point
+                            int col_k = cast_gst->mat_.col[k];
+
+                            // Check whether k is a coarse point
+                            if(cast_cf->vec_[col_k + this->nrow_] == 1)
+                            {
+                                // Get (global) column index
+                                int64_t gcol_k = cast_l2g->vec_[col_k] + global_column_end
+                                                 - global_column_begin;
+
+                                // This is a coarse point, it contributes, count it for the row int_nnz
+                                // We need to use a set here, to discard duplicates.
+                                gst_set.insert(gcol_k);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(global == true)
+            {
+                // Row entry and exit points
+                row_begin = cast_gst->mat_.row_offset[row];
+                row_end   = cast_gst->mat_.row_offset[row + 1];
+
+                // Loop over all columns of the i-th row, whereas each lane processes a column
+                for(PtrType j = row_begin; j < row_end; ++j)
+                {
+                    // Skip points that do not influence the current point
+                    if(cast_S->vec_[j + this->nnz_] == false)
+                    {
+                        continue;
+                    }
+
+                    // Get the column index
+                    int col_j = cast_gst->mat_.col[j];
+
+                    // Switch between coarse and fine points that influence the i-th point
+                    if(cast_cf->vec_[col_j + this->nrow_] == 1)
+                    {
+                        // Get (global) column index
+                        int64_t gcol_j
+                            = cast_l2g->vec_[col_j] + global_column_end - global_column_begin;
+
+                        // This is a coarse point and thus contributes, count it for the row int_nnz
+                        // We need to use a set here, to discard duplicates.
+                        gst_set.insert(gcol_j);
+                    }
+                    else
+                    {
+                        // This is a fine point, check for strongly connected coarse points
+
+                        // Row entry and exit of this fine point
+                        PtrType row_begin_j = cast_ptr->vec_[col_j];
+                        PtrType row_end_j   = cast_ptr->vec_[col_j + 1];
+
+                        // Loop over all columns of the fine point
+                        for(PtrType k = row_begin_j; k < row_end_j; ++k)
+                        {
+                            // Get the (global) column index
+                            int64_t gcol_k = cast_col->vec_[k];
+
+                            // Differentiate between local and ghost column
+                            if(gcol_k >= global_column_begin && gcol_k < global_column_end)
+                            {
+                                // Get (local) column index
+                                int col_k = static_cast<int>(gcol_k - global_column_begin);
+
+                                // This is a coarse point, it contributes, count it for the row nnz
+                                // We need to use a set here, to discard duplicates.
+                                int_set.insert(col_k);
+
+                                // Stop if FF interpolation is limited
+                                if(FF1 == true)
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                // This is a coarse point, it contributes, count it for the row nnz
+                                // We need to use a set here, to discard duplicates.
+                                gst_set.insert(gcol_k + global_column_end - global_column_begin);
+
+                                // Stop if FF interpolation is limited
+                                if(FF1 == true)
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -5455,6 +6033,11 @@ namespace rocalution
 
             // Write row nnz back to global memory
             cast_pi->mat_.row_offset[row] = int_set.size();
+
+            if(global == true)
+            {
+                cast_pg->mat_.row_offset[row] = gst_set.size();
+            }
 
             // Set this points state to fine
             cast_f2c->vec_[row] = 0;
@@ -5511,6 +6094,20 @@ namespace rocalution
         // Do we need communication?
         bool global = prolong_gst != NULL;
 
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_gst != NULL);
+            assert(cast_ptr != NULL);
+            assert(cast_col != NULL);
+            assert(cast_ext_ptr != NULL);
+            assert(cast_ext_col != NULL);
+            assert(cast_ext_val != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+        }
+
         // Exclusive sum to obtain row offset pointers of P
         // P contains only nnz per row, so far
         for(int i = this->nrow_; i > 0; --i)
@@ -5534,6 +6131,30 @@ namespace rocalution
         // Allocate column and value arrays
         allocate_host(cast_pi->nnz_, &cast_pi->mat_.col);
         allocate_host(cast_pi->nnz_, &cast_pi->mat_.val);
+
+        // Once again for the ghost part
+        if(global == true)
+        {
+            for(int i = this->nrow_; i > 0; --i)
+            {
+                cast_pg->mat_.row_offset[i] = cast_pg->mat_.row_offset[i - 1];
+            }
+
+            cast_pg->mat_.row_offset[0] = 0;
+
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                cast_pg->mat_.row_offset[i + 1] += cast_pg->mat_.row_offset[i];
+            }
+
+            cast_pg->nnz_  = cast_pg->mat_.row_offset[this->nrow_];
+            cast_pg->ncol_ = this->nrow_;
+
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
 
         // Extract diagonal matrix entries
         HostVector<ValueType> diag(this->local_backend_);
@@ -5564,7 +6185,8 @@ namespace rocalution
             }
 
             // Hash table
-            std::map<int, ValueType> int_table;
+            std::map<int, ValueType>     int_table;
+            std::map<int64_t, ValueType> gst_table;
 
             // Fill the hash table according to the nnz pattern of P
             // This is identical to the nnz per row part
@@ -5601,6 +6223,8 @@ namespace rocalution
                 {
                     // This is a fine point, check for strongly connected coarse points
 
+                    bool skip_ghost = false;
+
                     // Row entry and exit of this fine point
                     PtrType row_begin_k = this->mat_.row_offset[col_ik];
                     PtrType row_end_k   = this->mat_.row_offset[col_ik + 1];
@@ -5632,7 +6256,97 @@ namespace rocalution
                             // Stop if FF interpolation is limited
                             if(FF1 == true)
                             {
+                                skip_ghost = true;
                                 break;
+                            }
+                        }
+                    }
+
+                    if(skip_ghost == false && global == true)
+                    {
+                        // Loop over all ghost columns of the fine point
+                        for(PtrType l = cast_gst->mat_.row_offset[col_ik];
+                            l < cast_gst->mat_.row_offset[col_ik + 1];
+                            ++l)
+                        {
+                            if(cast_S->vec_[l + this->nnz_] == false)
+                            {
+                                continue;
+                            }
+
+                            // Get the column index
+                            int col_kl = cast_gst->mat_.col[l];
+
+                            // Check whether l is a coarse point
+                            if(cast_cf->vec_[col_kl + this->nrow_] == 1)
+                            {
+                                // This is a coarse point, it contributes
+
+                                // Global column shifted by local columns
+                                int64_t gcol_kl = cast_l2g->vec_[col_kl] + global_column_end
+                                                  - global_column_begin;
+                                gst_table[gcol_kl] = zero;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(global == true)
+            {
+                for(PtrType k = cast_gst->mat_.row_offset[row];
+                    k < cast_gst->mat_.row_offset[row + 1];
+                    ++k)
+                {
+                    // Skip points that do not influence the current point
+                    if(cast_S->vec_[k + this->nnz_] == false)
+                    {
+                        continue;
+                    }
+
+                    // Get the column index
+                    int col_ik = cast_gst->mat_.col[k];
+
+                    // Switch between coarse and fine points that influence the i-th point
+                    if(cast_cf->vec_[col_ik + this->nrow_] == 1)
+                    {
+                        // Explicitly create an entry in the hash table
+                        gst_table[cast_l2g->vec_[col_ik] + global_column_end - global_column_begin]
+                            = zero;
+                    }
+                    else
+                    {
+                        for(PtrType l = cast_ptr->vec_[col_ik]; l < cast_ptr->vec_[col_ik + 1]; ++l)
+                        {
+                            // Get the (global) column index
+                            int64_t gcol_kl = cast_col->vec_[l];
+
+                            // Differentiate between local and ghost column
+                            if(gcol_kl >= global_column_begin && gcol_kl < global_column_end)
+                            {
+                                int col_kl = static_cast<int>(gcol_kl - global_column_begin);
+
+                                // This is a coarse point, it contributes, count it for the row nnz
+                                // We need to use a set here, to discard duplicates.
+                                int_table[col_kl] = zero;
+
+                                // Stop if FF interpolation is limited
+                                if(FF1 == true)
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                // This is a coarse point, it contributes, count it for the row nnz
+                                // We need to use a set here, to discard duplicates.
+                                gst_table[gcol_kl + global_column_end - global_column_begin] = zero;
+
+                                // Stop if FF interpolation is limited
+                                if(FF1 == true)
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -5726,6 +6440,43 @@ namespace rocalution
                         }
                     }
 
+                    if(global == true)
+                    {
+                        // Loop over all columns of the fine point
+                        for(PtrType l = cast_gst->mat_.row_offset[col_ik];
+                            l < cast_gst->mat_.row_offset[col_ik + 1];
+                            ++l)
+                        {
+                            // Get the column index
+                            int col_kl = cast_gst->mat_.col[l];
+
+                            // Get the (global) column index
+                            int64_t gcol_kl
+                                = cast_l2g->vec_[col_kl] + global_column_end - global_column_begin;
+
+                            // Get the column value
+                            ValueType val_kl = cast_gst->mat_.val[l];
+
+                            // Sign of a_kl
+                            bool pos_kl = val_kl >= zero;
+
+                            // Only coarse points contribute
+                            if(cast_cf->vec_[col_kl + this->nrow_] == 1)
+                            {
+                                // Check if sign is different from i-th row diagonal
+                                if(pos_ii != pos_kl)
+                                {
+                                    // Entry contributes only if it is part of C^hat
+                                    // (e.g. we need to check the hash table)
+                                    if(gst_table.find(gcol_kl) != gst_table.end())
+                                    {
+                                        sum_l += val_kl;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Update sum over l with a_ik
                     sum_l = val_ik / sum_l;
 
@@ -5758,6 +6509,40 @@ namespace rocalution
                             if(int_table.find(col_kl) != int_table.end())
                             {
                                 int_table[col_kl] += val_kl * sum_l;
+                            }
+                        }
+                    }
+
+                    if(global == true)
+                    {
+                        // Row entry and exit of this fine point
+                        row_begin_k = cast_gst->mat_.row_offset[col_ik];
+                        row_end_k   = cast_gst->mat_.row_offset[col_ik + 1];
+
+                        // Additionally, for eq19 we need to add all coarse points in row k,
+                        // if they have different sign than the diagonal a_kk
+                        for(PtrType l = row_begin_k; l < row_end_k; ++l)
+                        {
+                            // Get the column index
+                            int col_kl = cast_gst->mat_.col[l];
+
+                            // Get the (global) column index
+                            int64_t gcol_kl
+                                = cast_l2g->vec_[col_kl] + global_column_end - global_column_begin;
+
+                            // Get the column value
+                            ValueType val_kl = cast_gst->mat_.val[l];
+
+                            // Compute the sign of a_kl
+                            bool pos_kl = val_kl >= zero;
+
+                            // Check for different sign
+                            if(pos_kk != pos_kl)
+                            {
+                                if(gst_table.find(gcol_kl) != gst_table.end())
+                                {
+                                    gst_table[gcol_kl] += val_kl * sum_l;
+                                }
                             }
                         }
                     }
@@ -5795,6 +6580,186 @@ namespace rocalution
                 }
             }
 
+            if(global == true)
+            {
+                // Loop over all columns of the i-th row
+                for(PtrType k = cast_gst->mat_.row_offset[row];
+                    k < cast_gst->mat_.row_offset[row + 1];
+                    ++k)
+                {
+                    // Get the column index
+                    int col_ik = cast_gst->mat_.col[k];
+
+                    // Get the column value
+                    ValueType val_ik = cast_gst->mat_.val[k];
+
+                    // Check, whether the k-th entry of the row is a fine point and strongly
+                    // connected to the i-th point (e.g. k \in F^S_i)
+                    if(cast_S->vec_[k + this->nnz_] == true
+                       && cast_cf->vec_[col_ik + this->nrow_] == 2)
+                    {
+                        // Accumulator for the sum over l
+                        ValueType sum_l = zero;
+
+                        // Diagonal element of k-th row
+                        ValueType val_kk = zero;
+
+                        // Global column index
+                        int64_t grow_k = cast_l2g->vec_[col_ik];
+
+                        // Row entry and exit of this fine point
+                        PtrType row_begin_k = cast_ext_ptr->vec_[col_ik];
+                        PtrType row_end_k   = cast_ext_ptr->vec_[col_ik + 1];
+
+                        // Loop over all columns of the fine point
+                        for(PtrType l = row_begin_k; l < row_end_k; ++l)
+                        {
+                            // Get the (global) column index
+                            int64_t gcol_kl = cast_ext_col->vec_[l];
+
+                            // Get the column value
+                            ValueType val_kl = cast_ext_val->vec_[l];
+
+                            // Sign of a_kl
+                            bool pos_kl = val_kl >= zero;
+
+                            // Extract diagonal value
+                            if(grow_k == gcol_kl)
+                            {
+                                val_kk = val_kl;
+                            }
+
+                            // Differentiate between local and ghost column
+                            if(gcol_kl >= global_column_begin && gcol_kl < global_column_end)
+                            {
+                                // Get the (local) column index
+                                int col_kl = static_cast<int>(gcol_kl - global_column_begin);
+
+                                // Differentiate between diagonal and off-diagonal
+                                if(col_kl == row)
+                                {
+                                    // Column that matches the i-th row
+                                    // Since we sum up all l in C^hat_i and i, the diagonal need to
+                                    // be added to the sum over l, e.g. a^bar_kl
+                                    // a^bar contributes only, if the sign is different to the
+                                    // i-th row diagonal sign.
+                                    if(pos_ii != pos_kl)
+                                    {
+                                        sum_l += val_kl;
+                                    }
+                                }
+                                else
+                                {
+                                    // Check if sign is different from i-th row diagonal
+                                    if(pos_ii != pos_kl)
+                                    {
+                                        // Entry contributes only if it is part of C^hat
+                                        // (e.g. we need to check the hash table)
+                                        if(int_table.find(col_kl) != int_table.end())
+                                        {
+                                            sum_l += val_kl;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Check if sign is different from i-th row diagonal
+                                if(pos_ii != pos_kl)
+                                {
+                                    if(gst_table.find(gcol_kl + global_column_end
+                                                      - global_column_begin)
+                                       != gst_table.end())
+                                    {
+                                        sum_l += val_kl;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Store a_ki, if present
+                        ValueType val_ki = zero;
+
+                        // Compute the k-th sum
+                        sum_l = val_ik / sum_l;
+
+                        // Loop over all columns of A ext
+                        for(PtrType l = row_begin_k; l < row_end_k; ++l)
+                        {
+                            // Get the (global) column index
+                            int64_t gcol_kl = cast_ext_col->vec_[l];
+
+                            // Get the column value
+                            ValueType val_kl = cast_ext_val->vec_[l];
+
+                            // Sign of a_kl
+                            bool pos_kl = val_kl >= zero;
+
+                            if((val_kk >= zero) == pos_kl)
+                            {
+                                val_kl = zero;
+                            }
+
+                            // Differentiate between local and ghost column
+                            if(gcol_kl >= global_column_begin && gcol_kl < global_column_end)
+                            {
+                                // Get the (local) column index
+                                int col_kl = static_cast<int>(gcol_kl - global_column_begin);
+
+                                // Differentiate between diagonal and off-diagonal
+                                if(row == col_kl)
+                                {
+                                    // If a_ki exists, keep it for later
+                                    val_ki = val_kl;
+                                }
+
+                                // Entry contributes only if it is part of the hash table
+                                if(int_table.find(col_kl) != int_table.end())
+                                {
+                                    int_table[col_kl] += val_kl * sum_l;
+                                }
+                            }
+                            else
+                            {
+                                // Global column
+                                if(gst_table.find(gcol_kl + global_column_end - global_column_begin)
+                                   != gst_table.end())
+                                {
+                                    gst_table[gcol_kl + global_column_end - global_column_begin]
+                                        += val_kl * sum_l;
+                                }
+                            }
+                        }
+
+                        sum_n += val_ki * sum_l;
+                    }
+
+                    // Map global id
+                    int64_t gcol_ik
+                        = cast_l2g->vec_[col_ik] + global_column_end - global_column_begin;
+
+                    // Boolean, to flag whether a_ik is in C hat or not
+                    // (we can query the hash table for it)
+                    bool in_C_hat = false;
+
+                    // Check, whether global col_ik is in C hat or not
+                    if(gst_table.find(gcol_ik) != gst_table.end())
+                    {
+                        // Append a_ik to the sum of eq19
+                        gst_table[gcol_ik] += val_ik;
+
+                        in_C_hat = true;
+                    }
+
+                    // If a_ik is not in C^hat and does not strongly influence i, it contributes
+                    // to the sum
+                    if(cast_S->vec_[k + this->nnz_] == false && in_C_hat == false)
+                    {
+                        sum_k += val_ik;
+                    }
+                }
+            }
+
             // Precompute a_ii_tilde
             ValueType a_ii_tilde = static_cast<ValueType>(-1) / (sum_n + sum_k + val_ii);
 
@@ -5808,6 +6773,21 @@ namespace rocalution
                 cast_pi->mat_.col[int_idx] = cast_f2c->vec_[it->first];
                 cast_pi->mat_.val[int_idx] = a_ii_tilde * it->second;
                 ++int_idx;
+            }
+
+            if(global == true)
+            {
+                // Entry point into P (ghost)
+                PtrType gst_idx = cast_pg->mat_.row_offset[row];
+
+                // Finally, extract the numerical values from the hash table and fill P such
+                // that the resulting matrix is sorted by columns
+                for(auto it = gst_table.begin(); it != gst_table.end(); ++it)
+                {
+                    cast_glo->vec_[gst_idx] = it->first - global_column_end + global_column_begin;
+                    cast_pg->mat_.val[gst_idx] = a_ii_tilde * it->second;
+                    ++gst_idx;
+                }
             }
         }
 
@@ -7179,6 +8159,168 @@ namespace rocalution
             for(PtrType aj = this->mat_.row_offset[idx]; aj < this->mat_.row_offset[idx + 1]; ++aj)
             {
                 cast_vec->vec_[this->mat_.col[aj]] = this->mat_.val[aj];
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ExtractBoundaryRowNnz(BaseVector<PtrType>*   row_nnz,
+                                                         const BaseVector<int>& boundary_index,
+                                                         const BaseMatrix<ValueType>& gst) const
+    {
+        assert(row_nnz != NULL);
+
+        HostVector<PtrType>*   cast_vec = dynamic_cast<HostVector<PtrType>*>(row_nnz);
+        const HostVector<int>* cast_idx = dynamic_cast<const HostVector<int>*>(&boundary_index);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&gst);
+
+        assert(cast_vec != NULL);
+        assert(cast_idx != NULL);
+        assert(cast_gst != NULL);
+
+        for(int64_t i = 0; i < cast_idx->size_; ++i)
+        {
+            // This is a boundary row
+            int row = cast_idx->vec_[i];
+
+            cast_vec->vec_[i] = this->mat_.row_offset[row + 1] - this->mat_.row_offset[row]
+                                + cast_gst->mat_.row_offset[row + 1]
+                                - cast_gst->mat_.row_offset[row];
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ExtractBoundaryRows(const BaseVector<PtrType>& bnd_csr_row_ptr,
+                                                       BaseVector<int64_t>*       bnd_csr_col_ind,
+                                                       BaseVector<ValueType>*     bnd_csr_val,
+                                                       int64_t                global_column_offset,
+                                                       const BaseVector<int>& boundary_index,
+                                                       const BaseVector<int64_t>&   ghost_mapping,
+                                                       const BaseMatrix<ValueType>& gst) const
+    {
+        assert(bnd_csr_col_ind != NULL);
+        assert(bnd_csr_val != NULL);
+
+        const HostVector<PtrType>* cast_ptr
+            = dynamic_cast<const HostVector<PtrType>*>(&bnd_csr_row_ptr);
+        HostVector<int64_t>*       cast_col = dynamic_cast<HostVector<int64_t>*>(bnd_csr_col_ind);
+        HostVector<ValueType>*     cast_val = dynamic_cast<HostVector<ValueType>*>(bnd_csr_val);
+        const HostVector<int>*     cast_bnd = dynamic_cast<const HostVector<int>*>(&boundary_index);
+        const HostVector<int64_t>* cast_l2g
+            = dynamic_cast<const HostVector<int64_t>*>(&ghost_mapping);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&gst);
+
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+        assert(cast_val != NULL);
+        assert(cast_bnd != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_gst != NULL);
+
+        for(int64_t i = 0; i < cast_bnd->size_; ++i)
+        {
+            // This is a boundary row
+            int row = cast_bnd->vec_[i];
+
+            // Index into boundary structures
+            PtrType idx = cast_ptr->vec_[i];
+
+            // Entry points
+            PtrType row_begin = this->mat_.row_offset[row];
+            PtrType row_end   = this->mat_.row_offset[row + 1];
+
+            // Interior
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Shift column by global column offset,
+                // to obtain the global column index
+                cast_col->vec_[idx] = this->mat_.col[j] + global_column_offset;
+                cast_val->vec_[idx] = this->mat_.val[j];
+
+                ++idx;
+            }
+
+            // Ghost
+            row_begin = cast_gst->mat_.row_offset[row];
+            row_end   = cast_gst->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Map the local ghost column to global column
+                cast_col->vec_[idx] = cast_l2g->vec_[cast_gst->mat_.col[j]];
+                cast_val->vec_[idx] = cast_gst->mat_.val[j];
+
+                ++idx;
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices)
+    {
+        if(this->nnz_ > 0)
+        {
+            const HostVector<int64_t>* cast_col
+                = dynamic_cast<const HostVector<int64_t>*>(&column_indices);
+
+            assert(cast_col != NULL);
+
+            // Allocate temporary arrays
+            HostVector<int>     perm(this->local_backend_);
+            HostVector<int64_t> sorted(this->local_backend_);
+            HostVector<int>     workspace(this->local_backend_);
+
+            perm.Allocate(this->nnz_);
+            sorted.Allocate(this->nnz_);
+            workspace.Allocate(this->nnz_);
+
+            cast_col->Sort(&sorted, &perm);
+
+            // Renumber columns consecutively, starting with 0
+
+            // Loop over all non-zero entries
+            for(int64_t i = 0; i < this->nnz_; ++i)
+            {
+                // First column entry cannot be a duplicate
+                if(i == 0)
+                {
+                    workspace.vec_[0] = 1;
+
+                    continue;
+                }
+
+                // Next column in line
+                int64_t global_col = sorted.vec_[i];
+
+                // Compare column indices
+                if(global_col == sorted.vec_[i - 1])
+                {
+                    // Same index as previous column
+                    workspace.vec_[i] = 0;
+                }
+                else
+                {
+                    // New column index
+                    workspace.vec_[i] = 1;
+                }
+            }
+
+            // Inclusive sum
+            this->ncol_ = workspace.InclusiveSum(workspace);
+
+            // Write new column indices into matrix
+            for(int64_t i = 0; i < this->nnz_; ++i)
+            {
+                // Decrement by 1
+                this->mat_.col[perm.vec_[i]] = workspace.vec_[i] - 1;
             }
         }
 

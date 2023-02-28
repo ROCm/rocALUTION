@@ -2,12 +2,15 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION 3.0.1
+## rocALUTION 3.0.2
 ### Added
 - Added support for 64bit integer vectors
 - Added inclusive and exclusive sum functionality for Vector classes
 - Added Transpose functionality for all Operators
 - Added TripleMatrixProduct functionality for Global/LocalMatrix
+- Added GlobalMatrix (MPI) support for Ruge-Stueben AMG
+- New example for MPI distributed CG with Ruge-Stueben AMG preconditioner
+- Added Sort() function for LocalVector class
 ### Improved
 - Added multiple streams to the HIP backend
 - Matrix dimensions and number of non-zeros are now stored using 64bit integers

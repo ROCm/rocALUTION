@@ -261,6 +261,21 @@ namespace rocalution
                            int64_t                  m,
                            GlobalMatrix<ValueType>* pro);
 
+        /** \brief Ruge Stueben coarsening */
+        void RSCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;
+        /** \brief Parallel maximal independent set coarsening for RS AMG*/
+        void RSPMISCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;
+
+        /** \brief Ruge Stueben Direct Interpolation */
+        void RSDirectInterpolation(const LocalVector<int>&  CFmap,
+                                   const LocalVector<bool>& S,
+                                   GlobalMatrix<ValueType>* prolong) const;
+        /** \brief Ruge Stueben Ext+i Interpolation */
+        void RSExtPIInterpolation(const LocalVector<int>&  CFmap,
+                                  const LocalVector<bool>& S,
+                                  bool                     FF1,
+                                  GlobalMatrix<ValueType>* prolong) const;
+
     protected:
         virtual bool is_host_(void) const;
         virtual bool is_accel_(void) const;

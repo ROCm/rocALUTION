@@ -3717,6 +3717,105 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::ExtractBoundaryRowNnz(
+        BaseVector<PtrType>*         row_nnz,
+        const BaseVector<int>&       boundary_index,
+        const BaseMatrix<ValueType>& gst) const
+    {
+        assert(row_nnz != NULL);
+
+        HIPAcceleratorVector<int>* cast_vec = dynamic_cast<HIPAcceleratorVector<int>*>(row_nnz);
+        const HIPAcceleratorVector<int>* cast_idx
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary_index);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&gst);
+
+        assert(cast_vec != NULL);
+        assert(cast_idx != NULL);
+        assert(cast_gst != NULL);
+
+        // Sanity check - boundary nnz should not exceed 32 bits
+        assert(cast_idx->size_ < std::numeric_limits<int>::max());
+
+        dim3 BlockSize(this->local_backend_.HIP_block_size);
+        dim3 GridSize((cast_idx->size_ - 1) / this->local_backend_.HIP_block_size + 1);
+
+        kernel_csr_extract_boundary_rows_nnz<<<
+            GridSize,
+            BlockSize,
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_idx->size_),
+                                                                  cast_idx->vec_,
+                                                                  this->mat_.row_offset,
+                                                                  cast_gst->mat_.row_offset,
+                                                                  cast_vec->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::ExtractBoundaryRows(
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        BaseVector<int64_t>*         bnd_csr_col_ind,
+        BaseVector<ValueType>*       bnd_csr_val,
+        int64_t                      global_column_offset,
+        const BaseVector<int>&       boundary_index,
+        const BaseVector<int64_t>&   ghost_mapping,
+        const BaseMatrix<ValueType>& gst) const
+    {
+        assert(bnd_csr_col_ind != NULL);
+        assert(bnd_csr_val != NULL);
+
+        const HIPAcceleratorVector<int>* cast_ptr
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&bnd_csr_row_ptr);
+        HIPAcceleratorVector<int64_t>* cast_col
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(bnd_csr_col_ind);
+        HIPAcceleratorVector<ValueType>* cast_val
+            = dynamic_cast<HIPAcceleratorVector<ValueType>*>(bnd_csr_val);
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary_index);
+        const HIPAcceleratorVector<int64_t>* cast_l2g
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&ghost_mapping);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&gst);
+
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+        assert(cast_val != NULL);
+        assert(cast_bnd != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_gst != NULL);
+
+        // Sanity check - boundary nnz should not exceed 32 bits
+        assert(cast_bnd->size_ < std::numeric_limits<int>::max());
+
+        dim3 BlockSize(this->local_backend_.HIP_block_size);
+        dim3 GridSize((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size + 1);
+
+        kernel_csr_extract_boundary_rows<<<GridSize,
+                                           BlockSize,
+                                           0,
+                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            static_cast<int>(cast_bnd->size_),
+            cast_bnd->vec_,
+            global_column_offset,
+            this->mat_.row_offset,
+            this->mat_.col,
+            this->mat_.val,
+            cast_gst->mat_.row_offset,
+            cast_gst->mat_.col,
+            cast_gst->mat_.val,
+            cast_l2g->vec_,
+            cast_ptr->vec_,
+            cast_col->vec_,
+            cast_val->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::AMGConnect(ValueType        eps,
                                                         BaseVector<int>* connections) const
     {
@@ -3886,7 +3985,7 @@ namespace rocalution
             if(avg_nnz_per_row <= 8)
             {
                 kernel_csr_amg_find_max_mis_tuples_shared<256, 1>
-                    <<<dim3((this->nrow_ * 1 - 1) / 256 + 1),
+                    <<<dim3((this->nrow_ - 1) / (256 / 1) + 1),
                        dim3(256),
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -3900,7 +3999,7 @@ namespace rocalution
             else if(avg_nnz_per_row <= 16)
             {
                 kernel_csr_amg_find_max_mis_tuples_shared<256, 2>
-                    <<<dim3((this->nrow_ * 2 - 1) / 256 + 1),
+                    <<<dim3((this->nrow_ - 1) / (256 / 2) + 1),
                        dim3(256),
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -3914,7 +4013,7 @@ namespace rocalution
             else if(avg_nnz_per_row <= 32)
             {
                 kernel_csr_amg_find_max_mis_tuples_shared<256, 4>
-                    <<<dim3((this->nrow_ * 4 - 1) / 256 + 1),
+                    <<<dim3((this->nrow_ - 1) / (256 / 4) + 1),
                        dim3(256),
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -3928,7 +4027,7 @@ namespace rocalution
             else if(avg_nnz_per_row <= 64)
             {
                 kernel_csr_amg_find_max_mis_tuples_shared<256, 8>
-                    <<<dim3((this->nrow_ * 8 - 1) / 256 + 1),
+                    <<<dim3((this->nrow_ - 1) / (256 / 8) + 1),
                        dim3(256),
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -3942,7 +4041,7 @@ namespace rocalution
             else if(avg_nnz_per_row <= 128)
             {
                 kernel_csr_amg_find_max_mis_tuples_shared<256, 16>
-                    <<<dim3((this->nrow_ * 16 - 1) / 256 + 1),
+                    <<<dim3((this->nrow_ - 1) / (256 / 16) + 1),
                        dim3(256),
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -3956,7 +4055,7 @@ namespace rocalution
             else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
             {
                 kernel_csr_amg_find_max_mis_tuples_shared<256, 32>
-                    <<<dim3((this->nrow_ * 32 - 1) / 256 + 1),
+                    <<<dim3((this->nrow_ - 1) / (256 / 32) + 1),
                        dim3(256),
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -3970,7 +4069,7 @@ namespace rocalution
             else
             {
                 kernel_csr_amg_find_max_mis_tuples_shared<256, 64>
-                    <<<dim3((this->nrow_ * 64 - 1) / 256 + 1),
+                    <<<dim3((this->nrow_ - 1) / (256 / 64) + 1),
                        dim3(256),
                        0,
                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
@@ -4684,6 +4783,57 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // cast_prolong->Sort();
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::RenumberGlobalToLocal(
+        const BaseVector<int64_t>& column_indices)
+    {
+        if(this->nnz_ > 0)
+        {
+            const HIPAcceleratorVector<int64_t>* cast_col
+                = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&column_indices);
+
+            assert(cast_col != NULL);
+
+            // Sanity check - ghost nnz should not exceed 32 bits
+            assert(this->nnz_ < std::numeric_limits<int>::max());
+
+            // Allocate temporary arrays
+            HIPAcceleratorVector<int>     perm(this->local_backend_);
+            HIPAcceleratorVector<int64_t> sorted(this->local_backend_);
+            HIPAcceleratorVector<int>     workspace(this->local_backend_);
+
+            perm.Allocate(this->nnz_);
+            sorted.Allocate(this->nnz_);
+            workspace.Allocate(this->nnz_);
+
+            // Obtain sorted permutation
+            cast_col->Sort(&sorted, &perm);
+
+            // Renumber columns consecutively, starting with 0
+            kernel_csr_renumber_global_to_local_count<<<
+                (this->nnz_ - 1) / 256 + 1,
+                256,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                static_cast<int>(this->nnz_), sorted.vec_, workspace.vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Exclusive sum and update number of columns
+            this->ncol_ = workspace.InclusiveSum(workspace);
+
+            // Write new column indices into matrix
+            kernel_csr_renumber_global_to_local_fill<<<
+                (this->nnz_ - 1) / 256 + 1,
+                256,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                static_cast<int>(this->nnz_), workspace.vec_, perm.vec_, this->mat_.col);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
 
         return true;
     }

@@ -685,6 +685,29 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSExtPIBoundaryNnz(const BaseVector<int>&       boundary,
+                                                   const BaseVector<int>&       CFmap,
+                                                   const BaseVector<bool>&      S,
+                                                   const BaseMatrix<ValueType>& ghost,
+                                                   BaseVector<PtrType>*         row_nnz) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RSExtPIExtractBoundary(int64_t                global_column_begin,
+                                                       const BaseVector<int>& boundary,
+                                                       const BaseVector<int64_t>&   l2g,
+                                                       const BaseVector<int>&       CFmap,
+                                                       const BaseVector<bool>&      S,
+                                                       const BaseMatrix<ValueType>& ghost,
+                                                       const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                                       BaseVector<int64_t>* bnd_csr_col_ind) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::RSExtPIProlongNnz(int64_t                      global_column_begin,
                                                   int64_t                      global_column_end,
                                                   bool                         FF1,
@@ -1097,6 +1120,32 @@ namespace rocalution
 
     template <typename ValueType>
     bool BaseMatrix<ValueType>::ExtractRowVector(int idx, BaseVector<ValueType>* vec) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::ExtractBoundaryRowNnz(BaseVector<PtrType>*         row_nnz,
+                                                      const BaseVector<int>&       boundary_index,
+                                                      const BaseMatrix<ValueType>& gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::ExtractBoundaryRows(const BaseVector<PtrType>& bnd_csr_row_ptr,
+                                                    BaseVector<int64_t>*       bnd_csr_col_ind,
+                                                    BaseVector<ValueType>*     bnd_csr_val,
+                                                    int64_t                    global_column_offset,
+                                                    const BaseVector<int>&     boundary_index,
+                                                    const BaseVector<int64_t>& ghost_mapping,
+                                                    const BaseMatrix<ValueType>& gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices)
     {
         return false;
     }

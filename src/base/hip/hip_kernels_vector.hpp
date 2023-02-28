@@ -26,6 +26,8 @@
 
 #include <hip/hip_runtime.h>
 
+#include "hip_atomics.hpp"
+
 namespace rocalution
 {
     template <typename ValueType, typename IndexType>
@@ -267,6 +269,52 @@ namespace rocalution
         }
 
         out[ind] = static_cast<ValueType>(in[ind]);
+    }
+
+    // Add index values from communication
+    template <typename ValueType, typename IndexType>
+    __global__ void kernel_add_index_values(int64_t size,
+                                            const IndexType* __restrict__ index,
+                                            const ValueType* __restrict__ in,
+                                            ValueType* __restrict__ out)
+    {
+        int64_t i = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if(i >= size)
+        {
+            return;
+        }
+
+        // We need to use atomic add because we cannot be sure
+        // that entries of index are unique
+        atomicAdd(&out[index[i]], in[i]);
+    }
+
+    // Update and pack CF map for communication
+    template <unsigned int BLOCKSIZE, typename IndexType>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_rs_pmis_cf_update_pack(int64_t size,
+                                           const IndexType* __restrict__ index,
+                                           IndexType* __restrict__ in,
+                                           IndexType* __restrict__ out)
+    {
+        int64_t i = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if(i >= size)
+        {
+            return;
+        }
+
+        // Update from buffer
+        if(in[i] == 0)
+        {
+            out[index[i]] = 0;
+        }
+        else
+        {
+            // Pack
+            in[i] = out[index[i]];
+        }
     }
 
 } // namespace rocalution

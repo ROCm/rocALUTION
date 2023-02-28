@@ -26,6 +26,8 @@
 #include "../utils/def.hpp"
 #include "../utils/log.hpp"
 #include "../utils/math_functions.hpp"
+#include "base_matrix.hpp"
+#include "base_vector.hpp"
 #include "global_vector.hpp"
 #include "local_matrix.hpp"
 #include "local_vector.hpp"
@@ -1741,6 +1743,907 @@ namespace rocalution
         pro->pm_  = NULL;
 
         this->matrix_interior_.CreateFromMap(map, n, m, &pro->matrix_interior_);
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::RSCoarsening(float              eps,
+                                               LocalVector<int>*  CFmap,
+                                               LocalVector<bool>* S) const
+    {
+        log_debug(this, "GlobalMatrix::RSCoarsening()", eps, CFmap, S);
+
+        assert(eps < 1.0f);
+        assert(eps > 0.0f);
+        assert(CFmap != NULL);
+        assert(S != NULL);
+        assert(this->is_host_() == CFmap->is_host_());
+        assert(this->is_host_() == S->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        // Calling global routine with single process
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.RSCoarsening(eps, CFmap, S);
+
+            return;
+        }
+
+        LOG_VERBOSE_INFO(2,
+                         "*** error: GlobalMatrix::RSCoarsening() is not available on GlobalMatrix "
+                         "class - use PMIS coarsening instead");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::RSPMISCoarsening(float              eps,
+                                                   LocalVector<int>*  CFmap,
+                                                   LocalVector<bool>* S) const
+    {
+        log_debug(this, "GlobalMatrix::RSPMISCoarsening()", eps, CFmap, S);
+
+        assert(eps < 1.0f);
+        assert(eps > 0.0f);
+        assert(CFmap != NULL);
+        assert(S != NULL);
+        assert(this->is_host_() == CFmap->is_host_());
+        assert(this->is_host_() == S->is_host_());
+        assert(this->is_host_() == this->halo_.is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        // Calling global routine with single process
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.RSPMISCoarsening(eps, CFmap, S);
+
+            return;
+        }
+
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType> csr_int;
+        LocalMatrix<ValueType> csr_gst;
+
+        const LocalMatrix<ValueType>* int_ptr = &this->matrix_interior_;
+        const LocalMatrix<ValueType>* gst_ptr = &this->matrix_ghost_;
+
+        if(int_ptr->GetFormat() != CSR)
+        {
+            csr_int.CloneFrom(*int_ptr);
+            csr_int.ConvertToCSR();
+            int_ptr = &csr_int;
+        }
+
+        if(gst_ptr->GetFormat() != CSR)
+        {
+            csr_gst.CloneFrom(*gst_ptr);
+            csr_gst.ConvertToCSR();
+            gst_ptr = &csr_gst;
+        }
+
+        if(this->GetNnz() > 0)
+        {
+            // Communication sizes
+            int nsend = this->pm_->GetNumSenders();
+            int nrecv = this->pm_->GetNumReceivers();
+
+            // Some communication related buffers
+            int*   hisend_buffer = NULL;
+            int*   hirecv_buffer = NULL;
+            float* hsend_buffer  = NULL;
+            float* hrecv_buffer  = NULL;
+
+            allocate_host(nsend, &hisend_buffer);
+            allocate_host(nrecv, &hirecv_buffer);
+            allocate_host(nsend, &hsend_buffer);
+            allocate_host(nrecv, &hrecv_buffer);
+
+            // Allocate S
+            S->Allocate("S", int_ptr->GetNnz() + gst_ptr->GetNnz());
+
+            // Sample rng
+            LocalVector<float> omega;
+            omega.CloneBackend(*this);
+            omega.Allocate("omega", int_ptr->GetM() + nrecv);
+
+            // Determine strong influences in the matrix
+            unsigned long long seed = this->pm_->GetGlobalRowBegin(); // TODO
+            int_ptr->matrix_->RSPMISStrongInfluences(
+                eps, S->vector_, omega.vector_, seed, *gst_ptr->matrix_);
+
+            // Update S, omega and CF mapping from neighbors
+
+            // Prepare send buffer
+            omega.GetContinuousValues(int_ptr->GetM(), omega.GetSize(), hrecv_buffer);
+
+            // Send omega ghost to neighbors
+            this->pm_->InverseCommunicateAsync_(hrecv_buffer, hsend_buffer);
+
+            // Synchronize
+            this->pm_->InverseCommunicateSync_();
+
+            // Update omega with received omega from neighbors
+            LocalVector<float> send_buffer;
+            send_buffer.CloneBackend(*this);
+            send_buffer.Allocate("send buffer", nsend);
+            send_buffer.CopyFromHostData(hsend_buffer);
+
+            omega.AddIndexValues(this->halo_, send_buffer);
+
+            // Pack updated omega
+            omega.GetIndexValues(this->halo_, &send_buffer);
+            send_buffer.CopyToHostData(hsend_buffer);
+
+            // Receive updated omega from neighbors
+            this->pm_->CommunicateAsync_(hsend_buffer, hrecv_buffer);
+
+            // Allocate CF mapping
+            CFmap->Allocate("CF map", int_ptr->GetM() + nrecv);
+
+            // Mark all vertices as undecided
+            CFmap->Zeros();
+
+            LocalVector<bool> marked;
+            marked.CloneBackend(*this);
+            marked.Allocate("marked coarse", int_ptr->GetM() + nrecv);
+
+            // Synchronize
+            this->pm_->CommunicateSync_();
+
+            // Update omega with received omega from neighbors
+            omega.SetContinuousValues(int_ptr->GetM(), omega.GetSize(), hrecv_buffer);
+
+            // Iteratively find coarse and fine vertices until all undecided vertices have
+            // been marked (JPL approach)
+            int iter = 0;
+
+            while(true)
+            {
+                // First, mark all vertices that have not been assigned yet, as coarse
+                int_ptr->matrix_->RSPMISUnassignedToCoarse(
+                    CFmap->vector_, marked.vector_, *omega.vector_);
+
+                // Now, correct previously marked vertices with respect to omega
+                int_ptr->matrix_->RSPMISCorrectCoarse(CFmap->vector_,
+                                                      *S->vector_,
+                                                      *marked.vector_,
+                                                      *omega.vector_,
+                                                      *gst_ptr->matrix_);
+
+                // Communicate ghost CF map to neighbors and update interior CF map with data
+                // received from neighbors
+
+                // Prepare send buffer
+                CFmap->GetContinuousValues(int_ptr->GetM(), CFmap->GetSize(), hirecv_buffer);
+
+                // Send CF map to neighbors
+                this->pm_->InverseCommunicateAsync_(hirecv_buffer, hisend_buffer);
+
+                // Synchronize
+                this->pm_->InverseCommunicateSync_();
+
+                // Update interior CF map with data received and pack send buffer
+                LocalVector<int> isend_buffer;
+                isend_buffer.CloneBackend(*this);
+                isend_buffer.Allocate("int send buffer", nsend);
+                isend_buffer.CopyFromHostData(hisend_buffer);
+
+                CFmap->vector_->RSPMISUpdateCFmap(*this->halo_.vector_, isend_buffer.vector_);
+
+                isend_buffer.CopyToHostData(hisend_buffer);
+
+                // Receive updated CF map from neighbors
+                this->pm_->CommunicateAsync_(hisend_buffer, hirecv_buffer);
+
+                // Synchronize
+                this->pm_->CommunicateSync_();
+
+                // Update CFmap with received CFmap from neighbors
+                CFmap->SetContinuousValues(int_ptr->GetM(), CFmap->GetSize(), hirecv_buffer);
+
+                // Mark remaining edges of a coarse point to fine
+                int_ptr->matrix_->RSPMISCoarseEdgesToFine(
+                    CFmap->vector_, *S->vector_, *gst_ptr->matrix_);
+
+                // Pack updated CF map for communication
+                CFmap->GetIndexValues(this->halo_, &isend_buffer);
+                isend_buffer.CopyToHostData(hisend_buffer);
+
+                // Communicate
+                this->pm_->CommunicateAsync_(hisend_buffer, hirecv_buffer);
+
+                // Now, we need to check whether we have vertices left that are marked
+                // undecided, in order to restart the loop
+                bool undecided;
+                int_ptr->matrix_->RSPMISCheckUndecided(undecided, *CFmap->vector_);
+
+                // Get global number of undecided vertices
+                int local_undecided = undecided;
+                int global_undecided;
+
+#ifdef SUPPORT_MULTINODE
+                MRequest req;
+                communication_async_allreduce_single_max(
+                    &local_undecided, &global_undecided, this->pm_->GetComm(), &req);
+#endif
+
+                // Synchronize
+                this->pm_->CommunicateSync_();
+
+                // Update CFmap with received CFmap from neighbors
+                CFmap->SetContinuousValues(int_ptr->GetM(), CFmap->GetSize(), hirecv_buffer);
+
+#ifdef SUPPORT_MULTINODE
+                communication_sync(&req);
+#endif
+
+                // If no more undecided vertices are left, we are done
+                if(global_undecided == 0)
+                {
+                    break;
+                }
+
+                ++iter;
+
+                // Print some warning if number of iteration is getting huge
+                if(iter > 20)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: GlobalMatrix::RSPMISCoarsening() Current "
+                                     "number of iterations: "
+                                         << iter);
+                }
+            }
+
+            free_host(&hsend_buffer);
+            free_host(&hrecv_buffer);
+            free_host(&hisend_buffer);
+            free_host(&hirecv_buffer);
+
+            omega.Clear();
+        }
+
+        std::string CFmap_name = "CF map of " + this->object_name_;
+        std::string S_name     = "S of " + this->object_name_;
+
+        CFmap->object_name_ = CFmap_name;
+        S->object_name_     = S_name;
+
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: GlobalMatrix::RSPMISCoarsening() is performed in CSR format");
+        }
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::RSDirectInterpolation(const LocalVector<int>&  CFmap,
+                                                        const LocalVector<bool>& S,
+                                                        GlobalMatrix<ValueType>* prolong) const
+    {
+        log_debug(this,
+                  "GlobalMatrix::RSDirectInterpolation()",
+                  (const void*&)CFmap,
+                  (const void*&)S,
+                  prolong);
+
+        assert(prolong != NULL);
+        assert(this != prolong);
+        assert(prolong->GetFormat() == CSR);
+
+        assert(this->is_host_() == prolong->is_host_());
+        assert(this->is_host_() == CFmap.is_host_());
+        assert(this->is_host_() == S.is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        // Calling global routine with single process
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.RSDirectInterpolation(CFmap, S, &prolong->matrix_interior_);
+
+            // Prolongation PM
+            prolong->CreateParallelManager_();
+            prolong->pm_self_->SetMPICommunicator(this->pm_->comm_);
+
+            prolong->pm_self_->SetGlobalNrow(prolong->matrix_interior_.GetM());
+            prolong->pm_self_->SetGlobalNcol(prolong->matrix_interior_.GetN());
+
+            prolong->pm_self_->SetLocalNrow(prolong->matrix_interior_.GetM());
+            prolong->pm_self_->SetLocalNcol(prolong->matrix_interior_.GetN());
+
+            return;
+        }
+
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType> csr_int;
+        LocalMatrix<ValueType> csr_gst;
+
+        const LocalMatrix<ValueType>* int_ptr = &this->matrix_interior_;
+        const LocalMatrix<ValueType>* gst_ptr = &this->matrix_ghost_;
+
+        if(int_ptr->GetFormat() != CSR)
+        {
+            csr_int.CloneFrom(*int_ptr);
+            csr_int.ConvertToCSR();
+            int_ptr = &csr_int;
+        }
+
+        if(gst_ptr->GetFormat() != CSR)
+        {
+            csr_gst.CloneFrom(*gst_ptr);
+            csr_gst.ConvertToCSR();
+            gst_ptr = &csr_gst;
+        }
+
+        // Start with fresh P operator
+        prolong->Clear();
+
+        // fine to coarse map
+        LocalVector<int> f2c_map;
+        f2c_map.CloneBackend(*this);
+        f2c_map.Allocate("f2c map", int_ptr->GetM() + 1);
+
+        // Amin/max
+        LocalVector<ValueType> Amin;
+        LocalVector<ValueType> Amax;
+
+        Amin.CloneBackend(*this);
+        Amax.CloneBackend(*this);
+
+        Amin.Allocate("A min", int_ptr->GetM());
+        Amax.Allocate("A max", int_ptr->GetM());
+
+        // Determine number of non-zeros for P
+        int_ptr->matrix_->RSDirectProlongNnz(*CFmap.vector_,
+                                             *S.vector_,
+                                             *gst_ptr->matrix_,
+                                             Amin.vector_,
+                                             Amax.vector_,
+                                             f2c_map.vector_,
+                                             prolong->matrix_interior_.matrix_,
+                                             prolong->matrix_ghost_.matrix_);
+
+        // Obtain the local to global ghost mapping
+        LocalVector<int64_t> l2g;
+        l2g.CloneBackend(*this);
+        l2g.Allocate("l2g ghost map", this->pm_->GetNumReceivers());
+        l2g.CopyFromHostData(this->pm_->GetGhostToGlobalMap());
+
+        // Temporary array to store global ghost columns
+        LocalVector<int64_t> ghost_col;
+        ghost_col.CloneBackend(*this);
+
+        // Fill column indices and values of P
+        int_ptr->matrix_->RSDirectProlongFill(*l2g.vector_,
+                                              *f2c_map.vector_,
+                                              *CFmap.vector_,
+                                              *S.vector_,
+                                              *gst_ptr->matrix_,
+                                              *Amin.vector_,
+                                              *Amax.vector_,
+                                              prolong->matrix_interior_.matrix_,
+                                              prolong->matrix_ghost_.matrix_,
+                                              ghost_col.vector_);
+
+        Amin.Clear();
+        Amax.Clear();
+
+        // Ghost of P MUST be CSR
+        assert(prolong->matrix_ghost_.GetFormat() == CSR);
+
+        // Communicate global sizes of P
+        int64_t global_ncol;
+        int64_t local_ncol = prolong->GetLocalN();
+
+#ifdef SUPPORT_MULTINODE
+        MRequest req;
+        communication_async_allreduce_single_sum(&local_ncol, &global_ncol, this->pm_->comm_, &req);
+#endif
+
+        // Setup parallel manager of P
+        prolong->CreateParallelManager_();
+        prolong->pm_self_->SetMPICommunicator(this->pm_->comm_);
+
+        // To generate the parallel manager, we need to access the sorted global ghost column ids
+        LocalVector<int64_t> sorted_ghost_col;
+        sorted_ghost_col.CloneBackend(*this);
+        sorted_ghost_col.Allocate("sorted global ghost columns", ghost_col.GetSize());
+
+        // Sort the global ghost columns (we do not need the permutation vector)
+        ghost_col.Sort(&sorted_ghost_col, NULL);
+
+        // Get the sorted ghost columns on host
+        int64_t* pghost_col = NULL;
+        sorted_ghost_col.MoveToHost();
+        sorted_ghost_col.LeaveDataPtr(&pghost_col);
+
+#ifdef SUPPORT_MULTINODE
+        communication_sync(&req);
+#endif
+
+        // Sizes
+        prolong->pm_self_->SetGlobalNrow(this->pm_->global_nrow_);
+        prolong->pm_self_->SetGlobalNcol(global_ncol);
+        prolong->pm_self_->SetLocalNrow(this->pm_->local_nrow_);
+        prolong->pm_self_->SetLocalNcol(local_ncol);
+
+        // Generate the PM
+        prolong->pm_self_->GenerateFromGhostColumnsWithParent_(
+            prolong->matrix_ghost_.GetNnz(), pghost_col, *this->pm_);
+
+        // Communicate global offsets
+        prolong->pm_self_->CommunicateGlobalOffsetAsync_();
+
+        // This is a prolongation operator, means we need to convert the global
+        // fine boundary columns from to local coarse columns
+        int* f2c = NULL;
+        f2c_map.MoveToHost();
+        f2c_map.LeaveDataPtr(&f2c);
+
+        // Clear
+        free_host(&pghost_col);
+
+        // Sync global offsets communication
+        prolong->pm_self_->CommunicateGlobalOffsetSync_();
+
+        // Convert local boundary columns from global fine to local coarse
+        prolong->pm_self_->BoundaryTransformGlobalFineToLocalCoarse_(f2c);
+
+        // Communicate ghost to global map
+        prolong->pm_self_->CommunicateGhostToGlobalMapAsync_();
+
+        // Clear
+        free_host(&f2c);
+
+        // Finally, renumber ghost columns (from global to local)
+        // We couldn't do this earlier, because the parallel manager need
+        // to know the global ghost column ids
+        prolong->matrix_ghost_.matrix_->RenumberGlobalToLocal(*ghost_col.vector_);
+
+        // Synchronize
+        prolong->pm_self_->CommunicateGhostToGlobalMapSync_();
+
+        prolong->SetParallelManager(*prolong->pm_self_);
+
+        // Rename P
+        prolong->object_name_ = "Prolongation Operator of " + this->object_name_;
+
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: GlobalMatrix::RSDirectInterpolation() is performed in CSR format");
+        }
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+#endif
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::RSExtPIInterpolation(const LocalVector<int>&  CFmap,
+                                                       const LocalVector<bool>& S,
+                                                       bool                     FF1,
+                                                       GlobalMatrix<ValueType>* prolong) const
+    {
+        log_debug(this,
+                  "GlobalMatrix::RSExtPIInterpolation()",
+                  (const void*&)CFmap,
+                  (const void*&)S,
+                  FF1,
+                  prolong);
+
+        assert(prolong != NULL);
+        assert(this != prolong);
+
+        assert(prolong->GetFormat() == CSR);
+
+        assert(this->is_host_() == prolong->is_host_());
+        assert(this->is_host_() == CFmap.is_host_());
+        assert(this->is_host_() == S.is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        // Calling global routine with single process
+        if(this->pm_ == NULL || this->pm_->num_procs_ == 1)
+        {
+            this->matrix_interior_.RSExtPIInterpolation(CFmap, S, FF1, &prolong->matrix_interior_);
+
+            // Prolongation PM
+            prolong->CreateParallelManager_();
+            prolong->pm_self_->SetMPICommunicator(this->pm_->comm_);
+
+            prolong->pm_self_->SetGlobalNrow(prolong->matrix_interior_.GetM());
+            prolong->pm_self_->SetGlobalNcol(prolong->matrix_interior_.GetN());
+
+            prolong->pm_self_->SetLocalNrow(prolong->matrix_interior_.GetM());
+            prolong->pm_self_->SetLocalNcol(prolong->matrix_interior_.GetN());
+
+            return;
+        }
+
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType> csr_int;
+        LocalMatrix<ValueType> csr_gst;
+
+        const LocalMatrix<ValueType>* int_ptr = &this->matrix_interior_;
+        const LocalMatrix<ValueType>* gst_ptr = &this->matrix_ghost_;
+
+        if(int_ptr->GetFormat() != CSR)
+        {
+            csr_int.CloneFrom(*int_ptr);
+            csr_int.ConvertToCSR();
+            int_ptr = &csr_int;
+        }
+
+        if(gst_ptr->GetFormat() != CSR)
+        {
+            csr_gst.CloneFrom(*gst_ptr);
+            csr_gst.ConvertToCSR();
+            gst_ptr = &csr_gst;
+        }
+
+        // Start with fresh P operator
+        prolong->Clear();
+
+        // Communication sizes
+        int nsend = this->pm_->GetNumSenders();
+        int nrecv = this->pm_->GetNumReceivers();
+
+        // To do Ext+I interpolation, we need to fetch additional rows of A, such that
+        // we can locally access all rows that do not belong to the current rank, but
+        // are required due to column dependencies.
+        // This means, we have to send all rows of A where A has a dependency on to
+        // the neighboring rank
+        int A_ext_m_send = nsend;
+
+        // First, count the total number of non-zero entries per boundary row that are strongly connected
+        // and coarse points, including ghost part (we need to send full rows, not only interior)
+        LocalVector<PtrType> A_ext_row_ptr_send;
+        A_ext_row_ptr_send.CloneBackend(*this);
+        A_ext_row_ptr_send.Allocate("A ext row ptr", A_ext_m_send + 1);
+
+        int_ptr->matrix_->RSExtPIBoundaryNnz(*this->halo_.vector_,
+                                             *CFmap.vector_,
+                                             *S.vector_,
+                                             *gst_ptr->matrix_,
+                                             A_ext_row_ptr_send.vector_);
+
+        // Transfer send buffer to host
+        PtrType* send_buffer = NULL;
+        allocate_host(A_ext_m_send + 1, &send_buffer);
+        A_ext_row_ptr_send.CopyToHostData(send_buffer);
+
+        // Number of rows of A we receive from our neighbors
+        int A_ext_m_recv = nrecv;
+
+        // Host receive buffer
+        PtrType* hA_ext_row_nnz_recv = NULL;
+        allocate_host(A_ext_m_recv + 1, &hA_ext_row_nnz_recv);
+
+        // Initiate communication of nnz per row (async)
+        this->pm_->CommunicateAsync_(send_buffer, hA_ext_row_nnz_recv);
+
+        // Extract ghost to global map
+        LocalVector<int64_t> l2g;
+        l2g.CloneBackend(*this);
+        l2g.Allocate("A ghost map", nrecv);
+        l2g.CopyFromHostData(this->pm_->GetGhostToGlobalMap());
+
+        // Exclusive sum to obtain row pointers
+        PtrType A_ext_nnz_send = A_ext_row_ptr_send.ExclusiveSum();
+
+        // Global column offset for this rank
+        int64_t global_col_begin = this->pm_->GetGlobalColumnBegin();
+        int64_t global_col_end   = this->pm_->GetGlobalColumnEnd();
+
+        // Now, extract boundary column indices and values of all strongly connected coarse points
+        LocalVector<int64_t> A_ext_col_ind_send;
+        A_ext_col_ind_send.CloneBackend(*this);
+        A_ext_col_ind_send.Allocate("A ext col ind send", A_ext_nnz_send);
+
+        int_ptr->matrix_->RSExtPIExtractBoundary(global_col_begin,
+                                                 *this->halo_.vector_,
+                                                 *l2g.vector_,
+                                                 *CFmap.vector_,
+                                                 *S.vector_,
+                                                 *gst_ptr->matrix_,
+                                                 *A_ext_row_ptr_send.vector_,
+                                                 A_ext_col_ind_send.vector_);
+
+        // Allocate row pointer array
+        LocalVector<PtrType> A_ext_row_ptr_recv;
+
+        // Synchronize communication
+        this->pm_->CommunicateSync_();
+
+        // Place our received data into structure
+        A_ext_row_ptr_recv.SetDataPtr(&hA_ext_row_nnz_recv, "A ext row ptr", A_ext_m_recv + 1);
+        A_ext_row_ptr_recv.CloneBackend(*this);
+
+        // Obtain row pointers
+        PtrType A_ext_nnz_recv = A_ext_row_ptr_recv.ExclusiveSum();
+
+        // We need a copy of A_ext_row_ptr on the host for communication
+        PtrType* hA_ext_row_ptr_recv = NULL;
+        allocate_host(A_ext_m_recv + 1, &hA_ext_row_ptr_recv);
+        A_ext_row_ptr_recv.CopyToHostData(hA_ext_row_ptr_recv);
+
+        // We need a copy of A_ext_col_ind_send on host for communication
+        int64_t* pA_ext_col_ind_send = NULL;
+        A_ext_col_ind_send.MoveToHost();
+        A_ext_col_ind_send.LeaveDataPtr(&pA_ext_col_ind_send);
+
+        // Initiate communication of column indices and values
+        int64_t* hA_ext_col_ind_recv = NULL;
+        allocate_host(A_ext_nnz_recv, &hA_ext_col_ind_recv);
+
+        // We need a copy of A_ext_row_ptr on host for communication
+        PtrType* hA_ext_row_ptr_send = NULL;
+        allocate_host(A_ext_m_send + 1, &hA_ext_row_ptr_send);
+        A_ext_row_ptr_send.CopyToHostData(hA_ext_row_ptr_send);
+
+        this->pm_->CommunicateCSRAsync_(hA_ext_row_ptr_send,
+                                        pA_ext_col_ind_send,
+                                        (ValueType*)NULL,
+                                        hA_ext_row_ptr_recv,
+                                        hA_ext_col_ind_recv,
+                                        (ValueType*)NULL);
+
+        // fine to coarse map
+        LocalVector<int> f2c_map;
+        f2c_map.CloneBackend(*this);
+        f2c_map.Allocate("f2c map", int_ptr->GetM() + 1);
+
+        // Synchronize communication
+        this->pm_->CommunicateCSRSync_();
+
+        // Clear
+        free_host(&hA_ext_row_ptr_send);
+        free_host(&pA_ext_col_ind_send);
+
+        LocalVector<int64_t> A_ext_col_ind_recv;
+        A_ext_col_ind_recv.SetDataPtr(&hA_ext_col_ind_recv, "A ext col ind", A_ext_nnz_recv);
+        A_ext_col_ind_recv.CloneBackend(*this);
+
+        // Determine number of non-zeros for P
+        int_ptr->matrix_->RSExtPIProlongNnz(global_col_begin,
+                                            global_col_end,
+                                            FF1,
+                                            *l2g.vector_,
+                                            *CFmap.vector_,
+                                            *S.vector_,
+                                            *gst_ptr->matrix_,
+                                            *A_ext_row_ptr_recv.vector_,
+                                            *A_ext_col_ind_recv.vector_,
+                                            f2c_map.vector_,
+                                            prolong->matrix_interior_.matrix_,
+                                            prolong->matrix_ghost_.matrix_);
+
+        // Obtain neighboring rows
+
+        // Count the non-zeros of each boundary row, including the ghost part
+        int_ptr->matrix_->ExtractBoundaryRowNnz(
+            A_ext_row_ptr_send.vector_, *this->halo_.vector_, *gst_ptr->matrix_);
+
+        // Transfer send buffer to host
+        A_ext_row_ptr_send.CopyToHostData(send_buffer);
+
+        // Initiate communication of nnz per row
+        this->pm_->CommunicateAsync_(send_buffer, &hA_ext_row_ptr_recv[1]);
+
+        // Exclusive sum to obtain row pointers of send buffer
+        A_ext_nnz_send = A_ext_row_ptr_send.ExclusiveSum();
+
+        // Extract the boundary nnz and convert them to global indices
+        LocalVector<ValueType> A_ext_val_send;
+        A_ext_val_send.CloneBackend(*this);
+
+        LocalVector<int64_t> A_ext_col_ind_send_global;
+        A_ext_col_ind_send_global.CloneBackend(*this);
+        A_ext_col_ind_send_global.Allocate("A ext col ind send", A_ext_nnz_send);
+        A_ext_val_send.Allocate("A ext val send", A_ext_nnz_send);
+
+        int_ptr->matrix_->ExtractBoundaryRows(*A_ext_row_ptr_send.vector_,
+                                              A_ext_col_ind_send_global.vector_,
+                                              A_ext_val_send.vector_,
+                                              global_col_begin,
+                                              *this->halo_.vector_,
+                                              *l2g.vector_,
+                                              *gst_ptr->matrix_);
+
+        // Wait for nnz per row communication to finish
+        this->pm_->CommunicateSync_();
+
+        // Clear
+        free_host(&send_buffer);
+
+        // Exclusive sum to obtain offsets from what we just received
+        hA_ext_row_ptr_recv[0] = 0;
+        for(int i = 0; i < A_ext_m_recv; ++i)
+        {
+            hA_ext_row_ptr_recv[i + 1] += hA_ext_row_ptr_recv[i];
+        }
+
+        // Number of non-zeros we are going to receive
+        A_ext_nnz_recv = hA_ext_row_ptr_recv[A_ext_m_recv];
+
+        // Prepare communication buffers
+        PtrType*   pA_ext_row_ptr_send        = NULL;
+        int64_t*   pA_ext_col_ind_send_global = NULL;
+        ValueType* pA_ext_val_send            = NULL;
+
+        int64_t*   pA_ext_col_ind_recv_global = NULL;
+        ValueType* pA_ext_val_recv            = NULL;
+
+        // Allocate receive buffers
+        allocate_host(A_ext_nnz_recv, &pA_ext_col_ind_recv_global);
+        allocate_host(A_ext_nnz_recv, &pA_ext_val_recv);
+
+        // Obtain send buffers
+        A_ext_row_ptr_send.MoveToHost();
+        A_ext_row_ptr_send.LeaveDataPtr(&pA_ext_row_ptr_send);
+        A_ext_col_ind_send_global.MoveToHost();
+        A_ext_col_ind_send_global.LeaveDataPtr(&pA_ext_col_ind_send_global);
+        A_ext_val_send.MoveToHost();
+        A_ext_val_send.LeaveDataPtr(&pA_ext_val_send);
+
+        // Initiate communication of column indices and values
+        this->pm_->CommunicateCSRAsync_(pA_ext_row_ptr_send,
+                                        pA_ext_col_ind_send_global,
+                                        pA_ext_val_send,
+                                        hA_ext_row_ptr_recv,
+                                        pA_ext_col_ind_recv_global,
+                                        pA_ext_val_recv);
+
+        // Synchronize communication
+        this->pm_->CommunicateCSRSync_();
+
+        // Clean up send buffers
+        free_host(&pA_ext_row_ptr_send);
+        free_host(&pA_ext_val_send);
+        free_host(&pA_ext_col_ind_send_global);
+
+        // Put received data into structure
+        LocalVector<PtrType>   A_ext_row_ptr_recv_full;
+        LocalVector<int64_t>   A_ext_col_ind_recv_full;
+        LocalVector<ValueType> A_ext_val_recv_full;
+
+        A_ext_row_ptr_recv_full.SetDataPtr(&hA_ext_row_ptr_recv, "", A_ext_m_recv + 1);
+        A_ext_col_ind_recv_full.SetDataPtr(&pA_ext_col_ind_recv_global, "", A_ext_nnz_recv);
+        A_ext_val_recv_full.SetDataPtr(&pA_ext_val_recv, "", A_ext_nnz_recv);
+
+        A_ext_row_ptr_recv_full.CloneBackend(*this);
+        A_ext_col_ind_recv_full.CloneBackend(*this);
+        A_ext_val_recv_full.CloneBackend(*this);
+
+        // Fill column indices and values of P
+        LocalVector<int64_t> ghost_col;
+        ghost_col.CloneBackend(*this);
+
+        int_ptr->matrix_->RSExtPIProlongFill(global_col_begin,
+                                             global_col_end,
+                                             FF1,
+                                             *l2g.vector_,
+                                             *f2c_map.vector_,
+                                             *CFmap.vector_,
+                                             *S.vector_,
+                                             *gst_ptr->matrix_,
+                                             *A_ext_row_ptr_recv.vector_,
+                                             *A_ext_col_ind_recv.vector_,
+                                             *A_ext_row_ptr_recv_full.vector_,
+                                             *A_ext_col_ind_recv_full.vector_,
+                                             *A_ext_val_recv_full.vector_,
+                                             prolong->matrix_interior_.matrix_,
+                                             prolong->matrix_ghost_.matrix_,
+                                             ghost_col.vector_);
+
+        // Clear
+        A_ext_col_ind_recv.Clear();
+
+        // Finally, generate the parallel manager for prolongation operator
+        // For this, we need to access the ghost columns.
+        // Additionally, we need the fine to coarse map in order to convert the
+        // received boundary indices to coarse.
+
+        // Ghost of P MUST be CSR
+        assert(prolong->matrix_ghost_.GetFormat() == CSR);
+
+        // Communicate global sizes of P
+        int64_t global_ncol;
+        int64_t local_ncol = prolong->matrix_interior_.GetN();
+
+#ifdef SUPPORT_MULTINODE
+        MRequest req;
+        communication_async_allreduce_single_sum(&local_ncol, &global_ncol, this->pm_->comm_, &req);
+#endif
+
+        // Setup parallel manager of P
+        prolong->CreateParallelManager_();
+        prolong->pm_self_->SetMPICommunicator(this->pm_->comm_);
+
+        // To generate the parallel manager, we need to access the sorted global ghost column ids
+        LocalVector<int64_t> sorted_ghost_col;
+        sorted_ghost_col.CloneBackend(*this);
+        sorted_ghost_col.Allocate("sorted global ghost columns", ghost_col.GetSize());
+
+        // Sort the global ghost columns (we do not need the permutation vector)
+        ghost_col.Sort(&sorted_ghost_col, NULL);
+
+        // Get the sorted ghost columns on host
+        int64_t* pghost_col = NULL;
+        sorted_ghost_col.MoveToHost();
+        sorted_ghost_col.LeaveDataPtr(&pghost_col);
+
+#ifdef SUPPORT_MULTINODE
+        communication_sync(&req);
+#endif
+
+        // Sizes
+        prolong->pm_self_->SetGlobalNrow(this->pm_->global_nrow_);
+        prolong->pm_self_->SetGlobalNcol(global_ncol);
+        prolong->pm_self_->SetLocalNrow(this->pm_->local_nrow_);
+        prolong->pm_self_->SetLocalNcol(local_ncol);
+
+        // Generate the PM
+        prolong->pm_self_->GenerateFromGhostColumnsWithParent_(
+            prolong->matrix_ghost_.GetNnz(), pghost_col, *this->pm_);
+
+        // Communicate offsets
+        prolong->pm_self_->CommunicateGlobalOffsetAsync_();
+
+        // This is a prolongation operator, means we need to convert the global
+        // fine boundary columns from to local coarse columns
+        // Convert local boundary columns from global fine to local coarse
+        int* f2c = NULL;
+        f2c_map.MoveToHost();
+        f2c_map.LeaveDataPtr(&f2c);
+
+        // Clear
+        free_host(&pghost_col);
+
+        // Sync global offsets communication
+        prolong->pm_self_->CommunicateGlobalOffsetSync_();
+
+        // Convert local boundary columns from global fine to local coarse
+        prolong->pm_self_->BoundaryTransformGlobalFineToLocalCoarse_(f2c);
+
+        // Clear
+        free_host(&f2c);
+
+        // Communicate ghost to global map
+        prolong->pm_self_->CommunicateGhostToGlobalMapAsync_();
+
+        // Finally, renumber ghost columns (from global to local)
+        // We couldn't do this earlier, because the parallel manager need
+        // to know the global ghost column ids
+        prolong->matrix_ghost_.matrix_->RenumberGlobalToLocal(*ghost_col.vector_);
+
+        // Synchronize
+        prolong->pm_self_->CommunicateGhostToGlobalMapSync_();
+
+        prolong->SetParallelManager(*prolong->pm_self_);
+
+        // Rename P
+        prolong->object_name_ = "Prolongation Operator of " + this->object_name_;
+
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: GlobalMatrix::RSExtPIInterpolation() is performed in CSR format");
+        }
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+#endif
     }
 
     template <typename ValueType>

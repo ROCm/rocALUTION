@@ -24,6 +24,7 @@
 #include "parallel_manager.hpp"
 #include "../utils/def.hpp"
 #include "base_rocalution.hpp"
+#include "rocalution/utils/types.hpp"
 
 #include "../utils/allocate_free.hpp"
 #include "../utils/log.hpp"
@@ -65,7 +66,15 @@ namespace rocalution
         this->recv_offset_index_ = NULL;
         this->send_offset_index_ = NULL;
 
-        this->boundary_index_ = NULL;
+        this->boundary_index_  = NULL;
+        this->boundary_buffer_ = NULL;
+
+        this->ghost_to_global_map_ = false;
+        this->ghost_mapping_       = NULL;
+
+        this->global_offset_     = false;
+        this->global_row_offset_ = NULL;
+        this->global_col_offset_ = NULL;
 
         this->async_send_ = 0;
         this->async_recv_ = 0;
@@ -79,6 +88,9 @@ namespace rocalution
     ParallelManager::~ParallelManager()
     {
         this->Clear();
+
+        free_host(&this->global_row_offset_);
+        free_host(&this->global_col_offset_);
     }
 
     void ParallelManager::SetMPICommunicator(const void* comm)
@@ -90,6 +102,16 @@ namespace rocalution
         MPI_Comm_rank(*(MPI_Comm*)this->comm_, &this->rank_);
         MPI_Comm_size(*(MPI_Comm*)this->comm_, &this->num_procs_);
 #endif
+
+        if(this->global_row_offset_ == NULL)
+        {
+            allocate_host(this->num_procs_ + 1, &this->global_row_offset_);
+        }
+
+        if(this->global_col_offset_ == NULL)
+        {
+            allocate_host(this->num_procs_ + 1, &this->global_col_offset_);
+        }
     }
 
     void ParallelManager::Clear(void)
@@ -98,6 +120,9 @@ namespace rocalution
         this->global_ncol_ = 0;
         this->local_nrow_  = 0;
         this->local_ncol_  = 0;
+
+        this->global_offset_       = false;
+        this->ghost_to_global_map_ = false;
 
         free_host(&this->recvs_);
         free_host(&this->recv_offset_index_);
@@ -114,9 +139,12 @@ namespace rocalution
         this->nsend_ = 0;
 
         free_host(&this->boundary_index_);
+        free_host(&this->boundary_buffer_);
 
         this->recv_index_size_ = 0;
         this->send_index_size_ = 0;
+
+        free_host(&this->ghost_mapping_);
     }
 
     int ParallelManager::GetNumProcs(void) const
@@ -124,6 +152,78 @@ namespace rocalution
         assert(this->Status());
 
         return this->num_procs_;
+    }
+
+    int64_t ParallelManager::GetGlobalRowBegin(int rank) const
+    {
+        // Default rank is this rank
+        rank = (rank < 0 || rank >= this->num_procs_) ? this->rank_ : rank;
+
+        if(this->global_offset_ == false)
+        {
+            // We need to sync all on-going communication
+            this->Synchronize_();
+
+            this->CommunicateGlobalOffsetAsync_();
+            this->CommunicateGlobalOffsetSync_();
+            this->global_offset_ = true;
+        }
+
+        return this->global_row_offset_[rank];
+    }
+
+    int64_t ParallelManager::GetGlobalRowEnd(int rank) const
+    {
+        // Default rank is this rank
+        rank = (rank < 0 || rank >= this->num_procs_) ? this->rank_ : rank;
+
+        if(this->global_offset_ == false)
+        {
+            // We need to sync all on-going communication
+            this->Synchronize_();
+
+            this->CommunicateGlobalOffsetAsync_();
+            this->CommunicateGlobalOffsetSync_();
+            this->global_offset_ = true;
+        }
+
+        return this->global_row_offset_[rank + 1];
+    }
+
+    int64_t ParallelManager::GetGlobalColumnBegin(int rank) const
+    {
+        // Default rank is this rank
+        rank = (rank < 0 || rank >= this->num_procs_) ? this->rank_ : rank;
+
+        if(this->global_offset_ == false)
+        {
+            // We need to sync all on-going communication
+            this->Synchronize_();
+
+            this->CommunicateGlobalOffsetAsync_();
+            this->CommunicateGlobalOffsetSync_();
+            this->global_offset_ = true;
+        }
+
+        return this->global_col_offset_[rank];
+    }
+
+    int64_t ParallelManager::GetGlobalColumnEnd(int rank) const
+    {
+        // Default rank is this rank
+        rank = (rank < 0 || rank >= this->num_procs_) ? this->rank_ : rank;
+
+        if(this->global_offset_ == false)
+        {
+            // We need to sync all on-going communication
+            this->Synchronize_();
+
+            this->CommunicateGlobalOffsetAsync_();
+            this->CommunicateGlobalOffsetSync_();
+            this->global_offset_ = true;
+        }
+
+        return this->global_col_offset_[rank + 1];
     }
 
     void ParallelManager::SetGlobalNrow(int64_t nrow)
@@ -219,6 +319,7 @@ namespace rocalution
         }
 
         allocate_host(size, &this->boundary_index_);
+        allocate_host(size, &this->boundary_buffer_);
 
         copy_h2h(size, index, this->boundary_index_);
     }
@@ -228,6 +329,24 @@ namespace rocalution
         assert(this->Status());
 
         return this->boundary_index_;
+    }
+
+    const int64_t* ParallelManager::GetGhostToGlobalMap(void) const
+    {
+        assert(this->Status());
+
+        if(this->ghost_to_global_map_ == false)
+        {
+            // We need to sync all on-going communication
+            this->Synchronize_();
+
+            this->CommunicateGhostToGlobalMapAsync_();
+            this->CommunicateGhostToGlobalMapSync_();
+
+            this->ghost_to_global_map_ = true;
+        }
+
+        return this->ghost_mapping_;
     }
 
     void ParallelManager::SetReceivers(int nrecv, const int* recvs, const int* recv_offset)
@@ -255,6 +374,11 @@ namespace rocalution
 #ifdef SUPPORT_MULTINODE
         allocate_host(2 * nrecv + 1, &this->recv_event_);
 #endif
+
+        if(this->ghost_mapping_ == NULL)
+        {
+            allocate_host(this->recv_index_size_, &this->ghost_mapping_);
+        }
     }
 
     void ParallelManager::SetSenders(int nsend, const int* sends, const int* send_offset)
@@ -560,6 +684,12 @@ namespace rocalution
             }
         }
 
+        // Ghost mapping
+        if(this->ghost_mapping_ == NULL)
+        {
+            allocate_host(this->recv_index_size_, &this->ghost_mapping_);
+        }
+
         // Number of nnz we receive
         this->recv_index_size_ = this->recv_offset_index_[this->nrecv_];
 
@@ -656,6 +786,470 @@ namespace rocalution
         this->Synchronize_();
     }
 
+    template <typename ValueType>
+    void ParallelManager::InverseCommunicateAsync_(ValueType* send_buffer,
+                                                   ValueType* recv_buffer) const
+    {
+        log_debug(this,
+                  "ParallelManager::InverseCommunicateAsync_()",
+                  "#*# begin",
+                  send_buffer,
+                  recv_buffer);
+
+        assert(this->async_send_ == 0);
+        assert(this->async_recv_ == 0);
+
+        int tag = 0;
+
+        // async recv boundary from neighbors
+        for(int n = 0; n < this->nsend_; ++n)
+        {
+            // nnz that we receive from process n
+            int nnz = this->send_offset_index_[n + 1] - this->send_offset_index_[n];
+
+            // if this has ghost values that belong to process i
+            if(nnz > 0)
+            {
+                assert(recv_buffer != NULL);
+
+#ifdef SUPPORT_MULTINODE
+                communication_async_recv(recv_buffer + this->send_offset_index_[n],
+                                         nnz,
+                                         this->sends_[n],
+                                         tag,
+                                         &this->send_event_[this->async_send_++],
+                                         this->comm_);
+#endif
+            }
+        }
+
+        // async send boundary to neighbors
+        for(int n = 0; n < this->nrecv_; ++n)
+        {
+            // nnz that we send to process i
+            int nnz = this->recv_offset_index_[n + 1] - this->recv_offset_index_[n];
+
+            // if process i has ghost values that belong to this
+            if(nnz > 0)
+            {
+                assert(send_buffer != NULL);
+
+#ifdef SUPPORT_MULTINODE
+                communication_async_send(send_buffer + this->recv_offset_index_[n],
+                                         nnz,
+                                         this->recvs_[n],
+                                         tag,
+                                         &this->recv_event_[this->async_recv_++],
+                                         this->comm_);
+#endif
+            }
+        }
+
+        log_debug(this, "ParallelManager::InverseCommunicateAsync_()", "#*# end");
+    }
+
+    void ParallelManager::InverseCommunicateSync_(void) const
+    {
+        this->Synchronize_();
+    }
+
+    template <typename I, typename J, typename T>
+    void ParallelManager::CommunicateCSRAsync_(I* send_row_ptr,
+                                               J* send_col_ind,
+                                               T* send_val,
+                                               I* recv_row_ptr,
+                                               J* recv_col_ind,
+                                               T* recv_val) const
+    {
+        log_debug(this,
+                  "ParallelManager::CommunicateCSRAsync_()",
+                  "#*# begin",
+                  send_row_ptr,
+                  send_col_ind,
+                  send_val,
+                  recv_row_ptr,
+                  recv_col_ind,
+                  recv_val);
+
+        assert(this->Status());
+        assert(this->async_send_ == 0);
+        assert(this->async_recv_ == 0);
+
+        int tag = 0;
+
+        // Async recv from neighbors
+        for(int n = 0; n < this->nrecv_; ++n)
+        {
+            int first_row = this->recv_offset_index_[n];
+            int last_row  = this->recv_offset_index_[n + 1];
+
+            // We expect something, so row ptr cannot be null
+            assert(recv_row_ptr != NULL);
+
+            // nnz that we receive from process i
+            int nnz = static_cast<int>(recv_row_ptr[last_row] - recv_row_ptr[first_row]);
+
+            // if this has ghost values that belong to process i
+            if(nnz > 0)
+            {
+#ifdef SUPPORT_MULTINODE
+                // If col pointer is null, we do not expect anything
+                if(recv_col_ind != nullptr)
+                {
+                    communication_async_recv(recv_col_ind + recv_row_ptr[first_row],
+                                             nnz,
+                                             this->recvs_[n],
+                                             tag,
+                                             &this->recv_event_[this->async_recv_++],
+                                             this->comm_);
+                }
+
+                // If val pointer is null, we do not expect anything
+                if(recv_val != nullptr)
+                {
+                    communication_async_recv(recv_val + recv_row_ptr[first_row],
+                                             nnz,
+                                             this->recvs_[n],
+                                             tag,
+                                             &this->recv_event_[this->async_recv_++],
+                                             this->comm_);
+                }
+#endif
+            }
+        }
+
+        // Async send boundary to neighbors
+        for(int n = 0; n < this->nsend_; ++n)
+        {
+            // nnz that we send to process i
+            int first_row = this->send_offset_index_[n];
+            int last_row  = this->send_offset_index_[n + 1];
+
+            // We send something, so row ptr cannot be null
+            assert(send_row_ptr != NULL);
+
+            int nnz = static_cast<int>(send_row_ptr[last_row] - send_row_ptr[first_row]);
+
+            // if process i has ghost values that belong to this
+            if(nnz > 0)
+            {
+#ifdef SUPPORT_MULTINODE
+                // If col pointer is null, we do not send anything
+                if(send_col_ind != nullptr)
+                {
+                    communication_async_send(send_col_ind + send_row_ptr[first_row],
+                                             nnz,
+                                             this->sends_[n],
+                                             tag,
+                                             &this->send_event_[this->async_send_++],
+                                             this->comm_);
+                }
+
+                // If val pointer is null, we do not send anything
+                if(send_val != nullptr)
+                {
+                    communication_async_send(send_val + send_row_ptr[first_row],
+                                             nnz,
+                                             this->sends_[n],
+                                             tag,
+                                             &this->send_event_[this->async_send_++],
+                                             this->comm_);
+                }
+#endif
+            }
+        }
+
+        log_debug(this, "ParallelManager::CommunicateCSRAsync_()", "#*# end");
+    }
+
+    void ParallelManager::CommunicateCSRSync_(void) const
+    {
+        this->Synchronize_();
+    }
+
+    void ParallelManager::CommunicateGlobalOffsetAsync_(void) const
+    {
+        log_debug(this, "ParallelManager::CommunicateGlobalOffsetAsync_()", "#*# begin");
+
+        assert(this->global_row_offset_ != NULL);
+        assert(this->global_col_offset_ != NULL);
+
+        // Check guards
+        assert(this->async_recv_ <= 2 * this->nrecv_);
+        assert(this->async_send_ <= 2 * this->nsend_);
+
+        // Increment guard
+        ++this->async_recv_;
+        ++this->async_send_;
+
+        int64_t local_nrow = this->local_nrow_;
+        int64_t local_ncol = this->local_ncol_;
+
+#ifdef SUPPORT_MULTINODE
+        communication_async_allgather_single(
+            &local_nrow, this->global_row_offset_ + 1, this->recv_event_, this->comm_);
+        communication_async_allgather_single(
+            &local_ncol, this->global_col_offset_ + 1, this->send_event_, this->comm_);
+#endif
+
+        log_debug(this, "ParallelManager::CommunicateGlobalOffsetAsync_()", "#*# end");
+    }
+
+    void ParallelManager::CommunicateGlobalOffsetSync_(void) const
+    {
+        log_debug(this, "ParallelManager::CommunicateGlobalOffsetSync_()", "#*# begin");
+
+        assert(this->global_row_offset_ != NULL);
+        assert(this->global_col_offset_ != NULL);
+
+#ifdef SUPPORT_MULTINODE
+        communication_sync(this->recv_event_);
+        communication_sync(this->send_event_);
+#endif
+
+        // Decrement guard
+        --this->async_send_;
+        --this->async_recv_;
+
+        this->global_row_offset_[0] = 0;
+        this->global_col_offset_[0] = 0;
+
+        for(int n = 0; n < this->num_procs_; ++n)
+        {
+            this->global_row_offset_[n + 1] += this->global_row_offset_[n];
+            this->global_col_offset_[n + 1] += this->global_col_offset_[n];
+        }
+
+        log_debug(this, "ParallelManager::CommunicateGlobalOffsetSync_()", "#*# end");
+    }
+
+    void ParallelManager::CommunicateGhostToGlobalMapAsync_(void) const
+    {
+        log_debug(this, "ParallelManager::CommunicateGhostToGlobalMap_()", "#*# begin");
+
+        assert(this->Status());
+
+        // Obtain local indices from neighbors and store them in the map
+
+        // First, get global column begin (this might require communication, so we need to grab it first to avoid deadlock
+        int64_t global_col_begin = this->GetGlobalColumnBegin();
+
+        // Prepare send buffer
+        for(int i = 0; i < this->send_index_size_; ++i)
+        {
+            this->boundary_buffer_[i] = this->boundary_index_[i] + global_col_begin;
+        }
+
+        // Communicate
+        this->CommunicateAsync_(this->boundary_buffer_, this->ghost_mapping_);
+
+        log_debug(this, "ParallelManager::CommunicateGhostToGlobalMap_()", "#*# end");
+    }
+
+    void ParallelManager::CommunicateGhostToGlobalMapSync_(void) const
+    {
+        this->Synchronize_();
+    }
+
+    void ParallelManager::GenerateFromGhostColumnsWithParent_(int64_t                nnz,
+                                                              const int64_t*         ghost_col,
+                                                              const ParallelManager& parent,
+                                                              bool                   transposed)
+    {
+        // Allocate
+        std::vector<int>     recv_size(parent.num_procs_, 0);
+        std::vector<int64_t> recv_index;
+        recv_index.reserve(nnz);
+
+        int64_t last_col = -1;
+        for(int64_t i = 0; i < nnz; ++i)
+        {
+            // Global column index
+            int64_t global_col = ghost_col[i];
+
+            // Sanity check
+            assert(global_col >= 0);
+            assert(global_col < transposed ? parent.global_nrow_ : parent.global_ncol_);
+
+            // Check for duplicates
+            if(global_col == last_col)
+            {
+                continue;
+            }
+
+            // Check which process we are expecting to receive this entry from
+            for(int n = 0; n < parent.num_procs_; ++n)
+            {
+                if(n == parent.rank_)
+                {
+                    continue;
+                }
+
+                int64_t col_begin
+                    = transposed ? parent.GetGlobalRowBegin(n) : parent.GetGlobalColumnBegin(n);
+                int64_t col_end
+                    = transposed ? parent.GetGlobalRowEnd(n) : parent.GetGlobalColumnEnd(n);
+
+                if(global_col >= col_begin && global_col < col_end)
+                {
+                    ++recv_size[n];
+                    recv_index.push_back(global_col);
+
+                    break;
+                }
+            }
+
+            last_col = global_col;
+        }
+
+        // Send / receive number of points this rank need to receive from its neighbor
+        std::vector<int> send_size(parent.num_procs_);
+#ifdef SUPPORT_MULTINODE
+        MRequest req;
+        communication_async_alltoall_single(recv_size.data(), send_size.data(), parent.comm_, &req);
+#endif
+
+        // Determine receiving offsets and sizes
+        this->nrecv_ = 0;
+
+        for(int n = 0; n < parent.num_procs_; ++n)
+        {
+            // Do not communicate with yourself
+            if(n == parent.rank_)
+            {
+                continue;
+            }
+
+            // If we need to receive points from n, set up the structure
+            if(recv_size[n] > 0)
+            {
+                ++this->nrecv_;
+            }
+        }
+
+        allocate_host(this->nrecv_, &this->recvs_);
+        allocate_host(this->nrecv_ + 1, &this->recv_offset_index_);
+
+        this->recv_offset_index_[0] = 0;
+
+        for(int n = 0, i = 0; n < parent.num_procs_; ++n)
+        {
+            // Do not communicate with yourself
+            if(n == parent.rank_)
+            {
+                continue;
+            }
+
+            // Number of boundary points we need to share
+            int nbp = recv_size[n];
+
+            // If we need to receive points from n, set up the structure
+            if(nbp > 0)
+            {
+                this->recvs_[i]               = n;
+                this->recv_offset_index_[++i] = nbp;
+            }
+        }
+
+        // Exclusive sum to obtain offsets
+        for(int n = 0; n < this->nrecv_; ++n)
+        {
+            this->recv_offset_index_[n + 1] += this->recv_offset_index_[n];
+        }
+
+        this->recv_index_size_ = this->recv_offset_index_[this->nrecv_];
+#ifdef SUPPORT_MULTINODE
+        allocate_host(2 * this->nrecv_ + 1, &this->recv_event_);
+#endif
+
+        if(this->ghost_mapping_ == NULL)
+        {
+            allocate_host(this->recv_index_size_, &this->ghost_mapping_);
+        }
+
+        // Synchronize All to All communication
+#ifdef SUPPORT_MULTINODE
+        communication_sync(&req);
+#endif
+
+        // Determine sending offsets and sizes
+        this->nsend_ = 0;
+
+        for(int n = 0; n < parent.num_procs_; ++n)
+        {
+            // Do not communicate with yourself
+            if(n == parent.rank_)
+            {
+                continue;
+            }
+
+            if(send_size[n] > 0)
+            {
+                ++this->nsend_;
+            }
+        }
+
+        allocate_host(this->nsend_, &this->sends_);
+        allocate_host(this->nsend_ + 1, &this->send_offset_index_);
+
+        this->send_offset_index_[0] = 0;
+
+        for(int n = 0, i = 0; n < parent.num_procs_; ++n)
+        {
+            // Do not communicate with yourself
+            if(n == parent.rank_)
+            {
+                continue;
+            }
+
+            // Number of boundary points we need to send
+            int nbp = send_size[n];
+
+            // If we need to send points to n, set up the structure
+            if(nbp > 0)
+            {
+                this->sends_[i]               = n;
+                this->send_offset_index_[++i] = nbp;
+            }
+        }
+
+        // Exclusive sum to obtain offsets
+        for(int i = 0; i < this->nsend_; ++i)
+        {
+            this->send_offset_index_[i + 1] += this->send_offset_index_[i];
+        }
+
+#ifdef SUPPORT_MULTINODE
+        allocate_host(2 * this->nsend_ + 1, &this->send_event_);
+#endif
+
+        // Tell neighbors, which boundary points need to be send
+        this->send_index_size_ = this->send_offset_index_[this->nsend_];
+
+        allocate_host(this->send_index_size_, &this->boundary_index_);
+        allocate_host(this->send_index_size_, &this->boundary_buffer_);
+
+        // Communicate global boundary indices
+        this->InverseCommunicateAsync_(recv_index.data(), this->boundary_buffer_);
+        this->InverseCommunicateSync_();
+    }
+
+    void ParallelManager::BoundaryTransformGlobalFineToLocalCoarse_(const int* f2c)
+    {
+        int64_t offset = this->GetGlobalRowBegin();
+
+        for(int i = 0; i < this->send_index_size_; ++i)
+        {
+            int64_t global_fine = this->boundary_buffer_[i];
+
+            // Map from global fine to local fine index
+            int64_t local_fine = global_fine - offset;
+
+            // Map from local fine to local coarse
+            this->boundary_index_[i] = static_cast<int>(f2c[local_fine]);
+        }
+    }
+
     template void ParallelManager::CommunicateAsync_<int>(int*, int*) const;
     template void ParallelManager::CommunicateAsync_<float>(float*, float*) const;
     template void ParallelManager::CommunicateAsync_<double>(double*, double*) const;
@@ -665,5 +1259,23 @@ namespace rocalution
     template void
         ParallelManager::CommunicateAsync_<std::complex<double>>(std::complex<double>*,
                                                                  std::complex<double>*) const;
+
+    template void ParallelManager::InverseCommunicateAsync_<int>(int*, int*) const;
+    template void ParallelManager::InverseCommunicateAsync_<float>(float*, float*) const;
+    template void ParallelManager::InverseCommunicateAsync_<double>(double*, double*) const;
+    template void
+        ParallelManager::InverseCommunicateAsync_<std::complex<float>>(std::complex<float>*,
+                                                                       std::complex<float>*) const;
+    template void ParallelManager::InverseCommunicateAsync_<std::complex<double>>(
+        std::complex<double>*, std::complex<double>*) const;
+
+    template void ParallelManager::CommunicateCSRAsync_<PtrType, int64_t, float>(
+        PtrType*, int64_t*, float*, PtrType*, int64_t*, float*) const;
+    template void ParallelManager::CommunicateCSRAsync_<PtrType, int64_t, double>(
+        PtrType*, int64_t*, double*, PtrType*, int64_t*, double*) const;
+    template void ParallelManager::CommunicateCSRAsync_<PtrType, int64_t, std::complex<float>>(
+        PtrType*, int64_t*, std::complex<float>*, PtrType*, int64_t*, std::complex<float>*) const;
+    template void ParallelManager::CommunicateCSRAsync_<PtrType, int64_t, std::complex<double>>(
+        PtrType*, int64_t*, std::complex<double>*, PtrType*, int64_t*, std::complex<double>*) const;
 
 } // namespace rocalution

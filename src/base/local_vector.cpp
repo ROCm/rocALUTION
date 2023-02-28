@@ -946,6 +946,18 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalVector<ValueType>::CopyToHostData(ValueType* data) const
+    {
+        log_debug(this, "LocalVector::CopyToHostData()", data);
+
+        if(this->GetSize() > 0)
+        {
+            assert(data != NULL);
+            this->vector_->CopyToHostData(data);
+        }
+    }
+
+    template <typename ValueType>
     void LocalVector<ValueType>::Permute(const LocalVector<int>& permutation)
     {
         log_debug(this, "LocalVector::Permute()", (const void*&)permutation);
@@ -1144,6 +1156,15 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalVector<ValueType>::AddIndexValues(const LocalVector<int>&       index,
+                                                const LocalVector<ValueType>& values)
+    {
+        log_debug(this, "LocalVector::AddIndexValues()", (const void*&)index, (const void*&)values);
+
+        this->vector_->AddIndexValues(*index.vector_, *values.vector_);
+    }
+
+    template <typename ValueType>
     void LocalVector<ValueType>::GetContinuousValues(int64_t    start,
                                                      int64_t    end,
                                                      ValueType* values) const
@@ -1250,6 +1271,29 @@ namespace rocalution
         if(this->GetSize() > 0)
         {
             this->vector_->Power(power);
+        }
+    }
+
+    template <typename ValueType>
+    void LocalVector<ValueType>::Sort(LocalVector<ValueType>* sorted, LocalVector<int>* perm) const
+    {
+        log_debug(this, "LocalVector::Sort()", sorted, perm);
+
+        assert(sorted != NULL);
+        assert(this != sorted);
+
+        assert(this->GetSize() <= sorted->GetSize());
+        assert(this->is_host_() == sorted->is_host_());
+
+        if(perm != NULL)
+        {
+            assert(this->GetSize() <= perm->GetSize());
+            assert(this->is_host_() == perm->is_host_());
+        }
+
+        if(this->GetSize() > 0)
+        {
+            this->vector_->Sort(sorted->vector_, (perm != NULL) ? perm->vector_ : NULL);
         }
     }
 

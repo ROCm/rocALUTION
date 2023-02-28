@@ -542,6 +542,12 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::CopyToHostData(ValueType* data) const
+    {
+        copy_d2h(this->size_, this->vec_, data);
+    }
+
+    template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::Zeros(void)
     {
         set_to_zero_hip(this->local_backend_.HIP_block_size, this->size_, this->vec_);
@@ -1366,6 +1372,41 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::AddIndexValues(const BaseVector<int>&       index,
+                                                         const BaseVector<ValueType>& values)
+    {
+        const HIPAcceleratorVector<int>* cast_idx
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&index);
+        const HIPAcceleratorVector<ValueType>* cast_vec
+            = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+        if(cast_idx->size_ > 0)
+        {
+            dim3 BlockSize(this->local_backend_.HIP_block_size);
+            dim3 GridSize(cast_idx->size_ / this->local_backend_.HIP_block_size + 1);
+
+            kernel_add_index_values<<<GridSize,
+                                      BlockSize,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <>
+    void HIPAcceleratorVector<bool>::AddIndexValues(const BaseVector<int>&  index,
+                                                    const BaseVector<bool>& values)
+    {
+        LOG_INFO("AddIndexValues<bool>() is not available");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::GetContinuousValues(int64_t    start,
                                                               int64_t    end,
                                                               ValueType* values) const
@@ -1398,6 +1439,36 @@ namespace rocalution
                  this->vec_ + start,
                  true,
                  HIPSTREAM(this->local_backend_.HIP_stream_current));
+    }
+
+    template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::RSPMISUpdateCFmap(const BaseVector<int>& index,
+                                                            BaseVector<ValueType>* values)
+    {
+        LOG_INFO("RSPMISUpdateCFmap() is only available for int");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    void HIPAcceleratorVector<int>::RSPMISUpdateCFmap(const BaseVector<int>& index,
+                                                      BaseVector<int>*       values)
+    {
+        assert(values != NULL);
+
+        const HIPAcceleratorVector<int>* cast_idx
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&index);
+        HIPAcceleratorVector<int>* cast_vec = dynamic_cast<HIPAcceleratorVector<int>*>(values);
+
+        assert(cast_idx != NULL);
+        assert(cast_vec != NULL);
+        assert(cast_vec->size_ == cast_idx->size_);
+
+        kernel_rs_pmis_cf_update_pack<256><<<(cast_idx->size_ - 1) / 256 + 1,
+                                             256,
+                                             0,
+                                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
     template <typename ValueType>
@@ -1567,6 +1638,120 @@ namespace rocalution
             LOG_INFO("HIPAcceleratorVector::Power(), no pow() for int in HIP");
             FATAL_ERROR(__FILE__, __LINE__);
         }
+    }
+
+    template <typename ValueType>
+    void HIPAcceleratorVector<ValueType>::Sort(BaseVector<ValueType>* sorted,
+                                               BaseVector<int>*       perm) const
+    {
+        if(this->size_ > 0)
+        {
+            assert(sorted != NULL);
+
+            HIPAcceleratorVector<ValueType>* cast_sort
+                = dynamic_cast<HIPAcceleratorVector<ValueType>*>(sorted);
+            HIPAcceleratorVector<int>* cast_perm = dynamic_cast<HIPAcceleratorVector<int>*>(perm);
+
+            assert(cast_sort != NULL);
+
+            void*  buffer = NULL;
+            size_t size;
+
+            unsigned int begin_bit = 0;
+            unsigned int end_bit   = 8 * sizeof(ValueType);
+
+            if(cast_perm == NULL)
+            {
+                // Sort without permutation
+                rocprim::radix_sort_keys(buffer,
+                                         size,
+                                         this->vec_,
+                                         cast_sort->vec_,
+                                         this->size_,
+                                         begin_bit,
+                                         end_bit,
+                                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+                hipMalloc(&buffer, size);
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+                rocprim::radix_sort_keys(buffer,
+                                         size,
+                                         this->vec_,
+                                         cast_sort->vec_,
+                                         this->size_,
+                                         begin_bit,
+                                         end_bit,
+                                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+                hipFree(buffer);
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+            }
+            else
+            {
+                assert(cast_perm != NULL);
+
+                // workspace
+                int* workspace = NULL;
+                allocate_hip(this->size_, &workspace);
+
+                // Create identity permutation
+                rocsparse_status status = rocsparse_create_identity_permutation(
+                    ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                    this->size_,
+                    workspace);
+                CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+                // Radix sort pairs
+                rocprim::radix_sort_pairs(buffer,
+                                          size,
+                                          this->vec_,
+                                          cast_sort->vec_,
+                                          workspace,
+                                          cast_perm->vec_,
+                                          this->size_,
+                                          begin_bit,
+                                          end_bit,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current));
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+                hipMalloc(&buffer, size);
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+                rocprim::radix_sort_pairs(buffer,
+                                          size,
+                                          this->vec_,
+                                          cast_sort->vec_,
+                                          workspace,
+                                          cast_perm->vec_,
+                                          this->size_,
+                                          begin_bit,
+                                          end_bit,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current));
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+                hipFree(buffer);
+                CHECK_HIP_ERROR(__FILE__, __LINE__);
+            }
+        }
+    }
+
+    template <>
+    void HIPAcceleratorVector<std::complex<float>>::Sort(BaseVector<std::complex<float>>* sorted,
+                                                         BaseVector<int>* perm) const
+    {
+        LOG_INFO("HIPAcceleratorVector::Sort(), how to sort complex numbers?");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <>
+    void HIPAcceleratorVector<std::complex<double>>::Sort(BaseVector<std::complex<double>>* sorted,
+                                                          BaseVector<int>* perm) const
+    {
+        LOG_INFO("HIPAcceleratorVector::Sort(), how to sort complex numbers?");
+        FATAL_ERROR(__FILE__, __LINE__);
     }
 
     template class HIPAcceleratorVector<double>;

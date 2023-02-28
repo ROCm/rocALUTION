@@ -75,6 +75,7 @@ namespace rocalution
         virtual void CopyFromData(const ValueType* data);
         virtual void CopyFromHostData(const ValueType* data);
         virtual void CopyToData(ValueType* data) const;
+        virtual void CopyToHostData(ValueType* data) const;
 
         virtual void CopyFromPermute(const BaseVector<ValueType>& src,
                                      const BaseVector<int>&       permutation);
@@ -132,11 +133,16 @@ namespace rocalution
         // set index values
         virtual void SetIndexValues(const BaseVector<int>&       index,
                                     const BaseVector<ValueType>& values);
+        // add index values
+        virtual void AddIndexValues(const BaseVector<int>&       index,
+                                    const BaseVector<ValueType>& values);
         // get continuous index values
         virtual void GetContinuousValues(int64_t start, int64_t end, ValueType* values) const;
         // set continuous index values
         virtual void SetContinuousValues(int64_t start, int64_t end, const ValueType* values);
 
+        // update cf map
+        virtual void RSPMISUpdateCFmap(const BaseVector<int>& index, BaseVector<ValueType>* values);
         // get coarse boundary mapping
         virtual void ExtractCoarseMapping(
             int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const;
@@ -158,6 +164,9 @@ namespace rocalution
                 rand_engine.Generate(this->vec_, this->size_);
             };
         };
+
+        // out of place sort with permutation
+        virtual void Sort(BaseVector<ValueType>* sorted, BaseVector<int>* perm) const;
 
     private:
         ValueType* vec_;

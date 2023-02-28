@@ -411,6 +411,20 @@ namespace rocalution
         /// Extract values from a row of a matrix to a vector
         virtual bool ExtractRowVector(int idx, BaseVector<ValueType>* vec) const;
 
+        /// Extract number of boundary row nnz
+        virtual bool ExtractBoundaryRowNnz(BaseVector<PtrType>*         row_nnz,
+                                           const BaseVector<int>&       boundary_index,
+                                           const BaseMatrix<ValueType>& gst) const;
+
+        /// Extract boundary rows
+        virtual bool ExtractBoundaryRows(const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                         BaseVector<int64_t>*         bnd_csr_col_ind,
+                                         BaseVector<ValueType>*       bnd_csr_val,
+                                         int64_t                      global_column_offset,
+                                         const BaseVector<int>&       boundary_index,
+                                         const BaseVector<int64_t>&   ghost_mapping,
+                                         const BaseMatrix<ValueType>& gst) const;
+
         virtual bool AMGConnect(ValueType eps, BaseVector<int>* connections) const;
         virtual bool AMGAggregate(const BaseVector<int>& connections,
                                   BaseVector<int>*       aggregates) const;
@@ -467,6 +481,19 @@ namespace rocalution
                                          BaseVector<int64_t>*         global_ghost_col) const;
 
         /// Ruge Stueben Ext+i Interpolation
+        virtual bool RSExtPIBoundaryNnz(const BaseVector<int>&       boundary,
+                                        const BaseVector<int>&       CFmap,
+                                        const BaseVector<bool>&      S,
+                                        const BaseMatrix<ValueType>& ghost,
+                                        BaseVector<PtrType>*         row_nnz) const;
+        virtual bool RSExtPIExtractBoundary(int64_t                      global_column_begin,
+                                            const BaseVector<int>&       boundary,
+                                            const BaseVector<int64_t>&   l2g,
+                                            const BaseVector<int>&       CFmap,
+                                            const BaseVector<bool>&      S,
+                                            const BaseMatrix<ValueType>& ghost,
+                                            const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                            BaseVector<int64_t>*         bnd_csr_col_ind) const;
         virtual bool RSExtPIProlongNnz(int64_t                      global_column_begin,
                                        int64_t                      global_column_end,
                                        bool                         FF1,
@@ -545,6 +572,9 @@ namespace rocalution
                                      int                    Gsize,
                                      const int*             rG,
                                      int                    rGsize) const;
+
+        /// Renumber global indices to local indices
+        virtual bool RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices);
 
     protected:
         /// Number of rows

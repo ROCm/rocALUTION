@@ -113,6 +113,7 @@ namespace rocalution
         virtual void CopyFromData(const ValueType* data);
         virtual void CopyFromHostData(const ValueType* data);
         virtual void CopyToData(ValueType* data) const;
+        virtual void CopyToHostData(ValueType* data) const;
 
         /// Restriction operator based on restriction mapping vector
         virtual bool Restriction(const BaseVector<ValueType>& vec_fine, const BaseVector<int>& map);
@@ -176,10 +177,17 @@ namespace rocalution
         virtual void SetIndexValues(const BaseVector<int>&       index,
                                     const BaseVector<ValueType>& values)
             = 0;
+        /// Adds index values
+        virtual void AddIndexValues(const BaseVector<int>&       index,
+                                    const BaseVector<ValueType>& values)
+            = 0;
         /// Gets continuous index values
         virtual void GetContinuousValues(int64_t start, int64_t end, ValueType* values) const = 0;
         /// Sets continuous index values
         virtual void SetContinuousValues(int64_t start, int64_t end, const ValueType* values) = 0;
+        /// Updates the CF map
+        virtual void RSPMISUpdateCFmap(const BaseVector<int>& index, BaseVector<ValueType>* values)
+            = 0;
         /// Extract coarse boundary mapping
         virtual void ExtractCoarseMapping(
             int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const = 0;
@@ -193,6 +201,8 @@ namespace rocalution
 
         virtual void SetRandomUniform(unsigned long long seed, ValueType a, ValueType b)     = 0;
         virtual void SetRandomNormal(unsigned long long seed, ValueType mean, ValueType var) = 0;
+
+        virtual void Sort(BaseVector<ValueType>* sorted, BaseVector<int>* perm) const = 0;
 
     protected:
         /// The size of the vector

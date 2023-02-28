@@ -96,6 +96,15 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void BaseVector<ValueType>::CopyToHostData(ValueType* data) const
+    {
+        LOG_INFO("CopyToHostData(ValueType *val) const");
+        this->Info();
+        LOG_INFO("This function is not available for this backend");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
     void BaseVector<ValueType>::CopyFromFloat(const BaseVector<float>& vec)
     {
         LOG_INFO("BaseVector::CopyFromFloat(const BaseVector<float>& vec)");

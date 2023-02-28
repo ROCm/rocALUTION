@@ -98,6 +98,18 @@ namespace rocalution
         /** \brief Return the number of involved processes */
         ROCALUTION_EXPORT
         int GetNumProcs(void) const;
+        /** \brief Return the global row begin */
+        ROCALUTION_EXPORT
+        int64_t GetGlobalRowBegin(int rank = -1) const;
+        /** \brief Return the global row end */
+        ROCALUTION_EXPORT
+        int64_t GetGlobalRowEnd(int rank = -1) const;
+        /** \brief Return the global column begin */
+        ROCALUTION_EXPORT
+        int64_t GetGlobalColumnBegin(int rank = -1) const;
+        /** \brief Return the global column end */
+        ROCALUTION_EXPORT
+        int64_t GetGlobalColumnEnd(int rank = -1) const;
 
         /** \brief Initialize the global number of rows */
         ROCALUTION_EXPORT
@@ -118,6 +130,10 @@ namespace rocalution
         /** \brief Get all boundary indices of this ranks process */
         ROCALUTION_EXPORT
         const int* GetBoundaryIndex(void) const;
+
+        /** \brief Get ghost to global mapping for this rank */
+        ROCALUTION_EXPORT
+        const int64_t* GetGhostToGlobalMap(void) const;
 
         /** \brief Number of processes, the current process is receiving data from, array of
       * the processes, the current process is receiving data from and offsets, where the
@@ -158,9 +174,45 @@ namespace rocalution
         // Synchronize communication
         void CommunicateSync_(void) const;
 
+        // Back-communicate boundary data (async)
+        template <typename ValueType>
+        void InverseCommunicateAsync_(ValueType* send_buffer, ValueType* recv_buffer) const;
+        // Synchronize communication
+        void InverseCommunicateSync_(void) const;
+
+        // Communicate CSR matrix data (async)
+        template <typename I, typename J, typename T>
+        void CommunicateCSRAsync_(I* send_row_ptr,
+                                  J* send_col_ind,
+                                  T* send_val,
+                                  I* recv_row_ptr,
+                                  J* recv_col_ind,
+                                  T* recv_val) const;
+        // Synchronize communication
+        void CommunicateCSRSync_(void) const;
+
+        // Generate parallel manager from ghost columns, mapping and parent PM
+        void GenerateFromGhostColumnsWithParent_(int64_t                nnz,
+                                                 const int64_t*         ghost_col,
+                                                 const ParallelManager& parent,
+                                                 bool                   transposed = false);
+
+        // Transform global fine points to local coarse points
+        void BoundaryTransformGlobalFineToLocalCoarse_(const int* f2c);
+
     private:
         // Synchronize all events within this PM
         void Synchronize_(void) const;
+
+        // Communicate global row and column offsets (async)
+        void CommunicateGlobalOffsetAsync_(void) const;
+        // Synchronize communication
+        void CommunicateGlobalOffsetSync_(void) const;
+
+        // Communicate ghost to global mapping (async)
+        void CommunicateGhostToGlobalMapAsync_(void) const;
+        // Synchronize communication
+        void CommunicateGhostToGlobalMapSync_(void) const;
 
         // Communicator
         const void* comm_;
@@ -200,7 +252,20 @@ namespace rocalution
         int* send_offset_index_;
 
         // Boundary index ids
-        int* boundary_index_;
+        int*     boundary_index_;
+        int64_t* boundary_buffer_;
+
+        // Flag whether global offsets are available
+        mutable bool global_offset_;
+        // Global row offsets
+        int64_t* global_row_offset_;
+        // Global column offsets
+        int64_t* global_col_offset_;
+
+        // Flag whether ghost to global mapping is available
+        mutable bool ghost_to_global_map_;
+        // Ghost to global id mapping
+        int64_t* ghost_mapping_;
 
         // Track ongoing asynchronous communication
         mutable int async_send_;

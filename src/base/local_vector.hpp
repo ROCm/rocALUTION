@@ -285,6 +285,17 @@ namespace rocalution
       */
         ROCALUTION_EXPORT
         void CopyToData(ValueType* data) const;
+        /** \brief Copy (export) vector to host data
+      * \details
+      * Copy (export) vector data that is described in one array (values). The output
+      * array has to be allocated on the host, using the corresponding size of the data, first.
+      * Size can be obtain by GetSize().
+      *
+      * @param[out]
+      * data    exported data on host.
+      */
+        ROCALUTION_EXPORT
+        void CopyToHostData(ValueType* data) const;
 
         /** \brief Perform in-place permutation (forward) of the vector */
         ROCALUTION_EXPORT
@@ -358,6 +369,9 @@ namespace rocalution
         /** \brief Set indexed values */
         ROCALUTION_EXPORT
         void SetIndexValues(const LocalVector<int>& index, const LocalVector<ValueType>& values);
+        /** \brief Add indexed values */
+        ROCALUTION_EXPORT
+        void AddIndexValues(const LocalVector<int>& index, const LocalVector<ValueType>& values);
         /** \brief Get continuous indexed values */
         ROCALUTION_EXPORT
         void GetContinuousValues(int64_t start, int64_t end, ValueType* values) const;
@@ -372,6 +386,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         void ExtractCoarseBoundary(
             int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const;
+
+        /** \brief Out-of-place radix sort that can also obtain the permutation */
+        ROCALUTION_EXPORT
+        void Sort(LocalVector<ValueType>* sorted, LocalVector<int>* perm = NULL) const;
 
     protected:
         virtual bool is_host_(void) const;
