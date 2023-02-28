@@ -109,7 +109,8 @@ endif()
 include(GenerateExportHeader)
 generate_export_header(rocalution EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/rocalution/export.hpp)
 
-list(APPEND CMAKE_HOST_FLAGS "-O3;-march=native")
+# list(APPEND CMAKE_HOST_FLAGS "-O3;-march=native")
+list(APPEND CMAKE_HOST_FLAGS "-O3")
 target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
 
 # Create rocALUTION hip library
@@ -120,7 +121,8 @@ if(SUPPORT_HIP)
   endforeach()
 
   # HIP flags workaround while target_compile_options do not work
-  list(APPEND HIP_HIPCC_FLAGS "-O3 -march=native -Wno-unused-command-line-argument -fPIC -std=c++14")
+  # list(APPEND HIP_HIPCC_FLAGS "-O3 -march=native -Wno-unused-command-line-argument -fPIC -std=c++14")
+  list(APPEND HIP_HIPCC_FLAGS "-O3 -Wno-unused-command-line-argument -fPIC -std=c++14")
   foreach(target ${AMDGPU_TARGETS})
     list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
   endforeach()

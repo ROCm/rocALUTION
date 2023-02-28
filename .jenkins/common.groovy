@@ -12,12 +12,12 @@ def runCompileCommand(platform, project, boolean sameOrg=false)
     {
         project.libraryDependencies.each
         { libraryName ->
-            getDependenciesCommand += auxiliary.getLibrary(libraryName, platform.jenkinsLabel, 'develop', sameOrg)
+            getDependenciesCommand += auxiliary.getLibrary(libraryName, platform.jenkinsLabel, null, sameOrg)
         }
     }
 
     def command = """#!/usr/bin/env bash
-                set -x
+                set -ex
                 cd ${project.paths.project_build_prefix}
                 ${getDependenciesCommand}
                 ${centos7devtoolset}
