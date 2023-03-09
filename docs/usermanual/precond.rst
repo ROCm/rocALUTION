@@ -103,7 +103,7 @@ Diagonal Preconditioner for Saddle-Point Problems
 The overlapped area is shown in :numref:`AS`.
 
 .. _AS:
-.. figure:: ../fig/AS.png
+.. figure:: ./data/images/AS.png
   :alt: 4 block additive schwarz
   :align: center
 
@@ -117,7 +117,7 @@ Block-Jacobi (MPI) Preconditioner
 The Block-Jacobi (MPI) preconditioner is shown in :numref:`BJ`.
 
 .. _BJ:
-.. figure:: ../fig/BJ.png
+.. figure:: ./data/images/BJ.png
   :alt: 4 block jacobi
   :align: center
 

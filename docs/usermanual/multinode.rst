@@ -7,13 +7,13 @@ Introduction
 This chapter describes all base objects (matrices and vectors) for computation on multi-node (distributed memory) systems.
 
 .. _multi-node1:
-.. figure:: ../fig/multi-node1.png
+.. figure:: ./data/images/multi-node1.png
   :alt: multi-node system configuration
   :align: center
 
   An example for a multi-node configuration, where all nodes are connected via network. Single socket systems with a single accelerator.
 
-.. figure:: ../fig/multi-node2.png
+.. figure:: ./data/images/multi-node2.png
   :alt: multi-node system configuration
   :align: center
 
@@ -28,7 +28,7 @@ For the communication channel between different nodes (and between the accelerat
 rocALUTION supports non-overlapping type of distribution, where the computational domain is split into several sub-domain with the corresponding information about the boundary and ghost layers. An example is shown in :numref:`domain1`. The square box domain is distributed into four sub-domains. Each subdomain belongs to a process *P0*, *P1*, *P2* and *P3*.
 
 .. _domain1:
-.. figure:: ../fig/domain1.png
+.. figure:: ./data/images/domain1.png
   :alt: domain distribution
   :align: center
 
@@ -48,7 +48,7 @@ Code Structure
 Each object contains two local sub-objects. The global matrix stores interior and ghost matrix by local objects. Similarily, the global vector stores its data by two local objects. In addition to the local data, the global objects have information about the global communication through the parallel manager.
 
 .. _global_objects:
-.. figure:: ../fig/global_objects.png
+.. figure:: ./data/images/global_objects.png
   :alt: global matrices and vectors
   :align: center
 
@@ -104,7 +104,7 @@ The user can store and load all global structures from and to files. For a solve
 Reading/writing from/to files can be done fully in parallel without any communication. :numref:`4x4_mpi` visualizes data of a :math:`4 \times 4` grid example which is distributed among 4 MPI processes (organized in :math:`2 \times 2`). Each local matrix stores the local unknowns (with local indexing). :numref:`4x4_mpi_rank0` furthermore illustrates the data associated with *RANK0*.
 
 .. _4x4_mpi:
-.. figure:: ../fig/4x4_mpi.png
+.. figure:: ./data/images/4x4_mpi.png
   :alt: 4x4 grid, distributed in 4 domains (2x2)
   :align: center
 
@@ -112,7 +112,7 @@ Reading/writing from/to files can be done fully in parallel without any communic
 
 
 .. _4x4_mpi_rank0:
-.. figure:: ../fig/4x4_mpi_rank0.png
+.. figure:: ./data/images/4x4_mpi_rank0.png
   :alt: 4x4 grid, distributed in 4 domains (2x2), showing rank0
   :align: center
 
@@ -152,7 +152,7 @@ Parallel Manager
 The data for each rank can be split into receiving and sending information. For receiving data from neighboring processes, see :numref:`receiving`, *RANK0* need to know what type of data will be received and from whom. For sending data to neighboring processes, see :numref:`sending`, *RANK0* need to know where and what to send.
 
 .. _receiving:
-.. figure:: ../fig/receiving.png
+.. figure:: ./data/images/receiving.png
   :alt: receiving data example
   :align: center
 
@@ -165,7 +165,7 @@ To receive data, *RANK0* requires:
 * How will the received data (from each rank) be stored in the ghost vector (RECEIVERS_INDEX_OFFSET - integer array). In this example, the first 30 elements will be received from *P1* :math:`[0, 2)` and the second 30 from *P2* :math:`[2, 4)`.
 
 .. _sending:
-.. figure:: ../fig/sending.png
+.. figure:: ./data/images/sending.png
   :alt: sending data example
   :align: center
 
