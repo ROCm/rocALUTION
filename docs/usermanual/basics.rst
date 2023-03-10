@@ -13,7 +13,7 @@ In the current version, cross ValueType object operations are not supported. :nu
 Further details are also given in the :ref:`design_document`.
 
 .. _operators:
-.. figure:: ./data/images/operators.png
+.. figure:: ../data/images/operators.png
   :alt: operator and vector classes
   :align: center
 

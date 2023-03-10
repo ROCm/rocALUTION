@@ -7,7 +7,7 @@ Introduction
 In this chapter, all base objects (matrices, vectors and stencils) for computation on a single-node (shared-memory) system are described. A typical configuration is illustrated in :numref:`single-node`.
 
 .. _single-node:
-.. figure:: ./data/images/single-node.png
+.. figure:: ../data/images/single-node.png
   :alt: single-node system configuration
   :align: center
 

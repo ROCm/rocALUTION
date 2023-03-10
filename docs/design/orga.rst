@@ -36,7 +36,7 @@ The only template parameter of the operators and vectors is the data type (Value
 :numref:`operatorsd` gives an overview of supported operators and vectors.
 
 .. _operatorsd:
-.. figure:: ./data/images/operators.png
+.. figure:: ../data/images/operators.png
   :alt: operator and vector classes
   :align: center
 
@@ -99,7 +99,7 @@ The Solver class is purely virtual and provides an interface for
 - :cpp:func:`MoveToHost <rocalution::Solver::MoveToHost>` and :cpp:func:`MoveToAccelerator <rocalution::Solver::MoveToAccelerator>` to offload the solver (including preconditioners and sub-solvers) to the host / accelerator.
 
 .. _solvers:
-.. figure:: ./data/images/solvers.png
+.. figure:: ../data/images/solvers.png
    :alt: solver and preconditioner classes
    :align: center
 
