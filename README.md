@@ -4,6 +4,18 @@ rocALUTION is a sparse linear algebra library with focus on exploring fine-grain
 ## Documentation
 The latest rocALUTION documentation and API description can be found [here][].
 
+### How to build documentation
+
+Run the following steps to build documentation.
+
+```
+cd docs
+
+pip3 install -r .sphinx/requirements.txt
+
+python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
+```
+
 ## Quickstart rocALUTION build
 
 #### CMake 3.5 or later
