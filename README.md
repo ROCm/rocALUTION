@@ -6,6 +6,8 @@ The latest rocALUTION documentation and API description can be found [here][].
 
 ### How to build documentation
 
+Run the following steps to build documentation.
+
 ```
 cd docs
 
