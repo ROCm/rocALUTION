@@ -51,6 +51,7 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 - Vector::GetGhostSize() is deprecated and will be removed
 - Multigrid::SetOperatorFormat(unsigned int) is deprecated and will be removed, use Multigrid::SetOperatorFormat(unsigned int, int) instead
 - RugeStuebenAMG::SetCouplingStrength(ValueType) is deprecated and will be removed, use SetStrengthThreshold(float) instead
+- Remove native compiler option previously used during default library compilation
 
 ## rocALUTION 2.1.0 for ROCm 5.3.0
 ### Added
