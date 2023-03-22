@@ -2,6 +2,10 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## rocALUTION 2.1.4 for ROCm 5.4.4
+### Changed
+- Remove native compiler option previously used during default library compilation
+
 ## rocALUTION 2.1.3 for ROCm 5.4.0
 ### Added
 - Added build support for Navi31 and Navi33
@@ -16,7 +20,6 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 - Vector::GetGhostSize() is deprecated and will be removed
 - Multigrid::SetOperatorFormat(unsigned int) is deprecated and will be removed, use Multigrid::SetOperatorFormat(unsigned int, int) instead
 - RugeStuebenAMG::SetCouplingStrength(ValueType) is deprecated and will be removed, use SetStrengthThreshold(float) instead
-- Remove native compiler option previously used during default library compilation
 
 ## rocALUTION 2.1.0 for ROCm 5.3.0
 ### Added
