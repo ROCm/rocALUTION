@@ -199,7 +199,7 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void UAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+    bool UAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
                                                                 OperatorType*       pro,
                                                                 OperatorType*       res,
                                                                 OperatorType*       coarse,
@@ -251,6 +251,8 @@ namespace rocalution
         {
             coarse->Scale(static_cast<ValueType>(1) / this->over_interp_);
         }
+
+        return true;
     }
 
     template class UAAMG<LocalMatrix<double>, LocalVector<double>, double>;

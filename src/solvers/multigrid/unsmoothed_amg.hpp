@@ -72,7 +72,7 @@ namespace rocalution
         virtual void ReBuildNumeric(void);
 
     protected:
-        virtual void Aggregate_(const OperatorType& op,
+        virtual bool Aggregate_(const OperatorType& op,
                                 OperatorType*       pro,
                                 OperatorType*       res,
                                 OperatorType*       coarse,

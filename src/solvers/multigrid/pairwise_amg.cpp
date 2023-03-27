@@ -236,7 +236,7 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+    bool PairwiseAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
                                                                       OperatorType*       pro,
                                                                       OperatorType*       res,
                                                                       OperatorType*       coarse,
@@ -287,6 +287,8 @@ namespace rocalution
         this->Gsize_level_.push_back(Gsize);
         this->rGsize_level_.push_back(rGsize);
         this->rG_level_.push_back(rG);
+
+        return true;
     }
 
     template class PairwiseAMG<LocalMatrix<float>, LocalVector<float>, float>;

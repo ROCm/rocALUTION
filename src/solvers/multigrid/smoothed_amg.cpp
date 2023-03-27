@@ -239,7 +239,7 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void SAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+    bool SAAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
                                                                 OperatorType*       pro,
                                                                 OperatorType*       res,
                                                                 OperatorType*       coarse,
@@ -293,6 +293,8 @@ namespace rocalution
         // Triple matrix product
         coarse->CloneBackend(op);
         coarse->TripleMatrixProduct(*res, op, *pro);
+
+        return true;
     }
 
     template class SAAMG<LocalMatrix<double>, LocalVector<double>, double>;

@@ -274,7 +274,7 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
-    void RugeStuebenAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
+    bool RugeStuebenAMG<OperatorType, VectorType, ValueType>::Aggregate_(const OperatorType& op,
                                                                          OperatorType*       pro,
                                                                          OperatorType*       res,
                                                                          OperatorType*       coarse,
@@ -318,6 +318,17 @@ namespace rocalution
         CFmap.Clear();
         S.Clear();
 
+        // Sanity check
+        assert(pro->GetM() == op.GetN());
+
+        // We need to revert the level creation, if the number of columns of P is zero
+        // because in that case, R will have zero rows and thus the coarse level will be
+        // a 0x0 matrix.
+        if(pro->GetN() == 0)
+        {
+            return false;
+        }
+
         // Transpose P to obtain R
         pro->Transpose(res);
 
@@ -326,6 +337,8 @@ namespace rocalution
 
         // Triple matrix product
         coarse->TripleMatrixProduct(*res, op, *pro);
+
+        return true;
     }
 
     template class RugeStuebenAMG<LocalMatrix<float>, LocalVector<float>, float>;

@@ -85,7 +85,7 @@ namespace rocalution
 
     protected:
         /** \brief Constructs the prolongation, restriction and coarse operator */
-        virtual void Aggregate_(const OperatorType& op,
+        virtual bool Aggregate_(const OperatorType& op,
                                 OperatorType*       pro,
                                 OperatorType*       res,
                                 OperatorType*       coarse,

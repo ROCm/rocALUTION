@@ -228,11 +228,14 @@ namespace rocalution
             trans_list_.back()->CloneBackend(*this->op_);
 
             // Create prolongation and restriction operators
-            this->Aggregate_(*this->op_,
-                             prolong_list_.back(),
-                             restrict_list_.back(),
-                             op_list_.back(),
-                             trans_list_.back());
+            bool success = this->Aggregate_(*this->op_,
+                                            prolong_list_.back(),
+                                            restrict_list_.back(),
+                                            op_list_.back(),
+                                            trans_list_.back());
+
+            // The very first level is not allowed to fail
+            assert(success == true);
 
             ++this->levels_;
 
@@ -250,11 +253,33 @@ namespace rocalution
                 prolong_list_.back()->CloneBackend(*this->op_);
                 trans_list_.back()->CloneBackend(*this->op_);
 
-                this->Aggregate_(*prev_op_,
-                                 prolong_list_.back(),
-                                 restrict_list_.back(),
-                                 op_list_.back(),
-                                 trans_list_.back());
+                bool success = this->Aggregate_(*prev_op_,
+                                                prolong_list_.back(),
+                                                restrict_list_.back(),
+                                                op_list_.back(),
+                                                trans_list_.back());
+
+                // Check if aggregation was successful
+                if(success == false)
+                {
+                    // Something went wrong with level creation
+                    // Revert level and stop generating new levels
+                    prolong_list_.back()->Clear();
+                    restrict_list_.back()->Clear();
+                    op_list_.back()->Clear();
+                    trans_list_.back()->Clear();
+
+                    delete prolong_list_.back();
+                    delete restrict_list_.back();
+                    delete op_list_.back();
+                    delete trans_list_.back();
+
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: BaseAMG::Build() Requested coarse operator "
+                                     "size cannot be reached.");
+
+                    break;
+                }
 
                 ++this->levels_;
 
