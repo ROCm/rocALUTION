@@ -191,12 +191,25 @@ namespace rocalution
         // Synchronize communication
         void CommunicateCSRSync_(void) const;
 
+        // Back-communicate CSR matrix data (async)
+        template <typename I, typename J, typename T>
+        void InverseCommunicateCSRAsync_(I* send_row_ptr,
+                                         J* send_col_ind,
+                                         T* send_val,
+                                         I* recv_row_ptr,
+                                         J* recv_col_ind,
+                                         T* recv_val) const;
+        // Synchronize communication
+        void InverseCommunicateCSRSync_(void) const;
+
         // Generate parallel manager from ghost columns, mapping and parent PM
         void GenerateFromGhostColumnsWithParent_(int64_t                nnz,
                                                  const int64_t*         ghost_col,
                                                  const ParallelManager& parent,
                                                  bool                   transposed = false);
 
+        // Transform global to local ids
+        void BoundaryTransformGlobalToLocal_(void);
         // Transform global fine points to local coarse points
         void BoundaryTransformGlobalFineToLocalCoarse_(const int* f2c);
 

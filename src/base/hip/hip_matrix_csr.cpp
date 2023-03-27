@@ -3717,6 +3717,31 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::ExtractExtRowNnz(int                  offset,
+                                                              BaseVector<PtrType>* row_nnz) const
+    {
+        assert(row_nnz != NULL);
+
+        if(this->nnz_ > 0)
+        {
+            HIPAcceleratorVector<int>* cast_vec = dynamic_cast<HIPAcceleratorVector<int>*>(row_nnz);
+
+            assert(cast_vec != NULL);
+
+            int size = this->nrow_ - offset;
+
+            kernel_calc_row_nnz<<<(size - 1) / 256 + 1,
+                                  256,
+                                  0,
+                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                size, this->mat_.row_offset + offset, cast_vec->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::ExtractBoundaryRowNnz(
         BaseVector<PtrType>*         row_nnz,
         const BaseVector<int>&       boundary_index,
@@ -4788,6 +4813,40 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::ExtractGlobalColumnIndices(
+        int                        ncol,
+        int64_t                    global_offset,
+        const BaseVector<int64_t>& l2g,
+        BaseVector<int64_t>*       global_col) const
+    {
+        if(this->nnz_ > 0)
+        {
+            const HIPAcceleratorVector<int64_t>* cast_l2g
+                = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&l2g);
+            HIPAcceleratorVector<int64_t>* cast_col
+                = dynamic_cast<HIPAcceleratorVector<int64_t>*>(global_col);
+
+            assert(cast_col != NULL);
+            assert(this->nnz_ == cast_col->size_);
+
+            // Sanity check, communicated sub-matrices should not exceed 32 bits
+            assert(this->nnz_ < std::numeric_limits<int>::max());
+
+            int size = static_cast<int>(this->nnz_);
+
+            kernel_csr_extract_global_column_indices<<<
+                (size - 1) / 256 + 1,
+                256,
+                0,
+                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                ncol, size, global_offset, this->mat_.col, cast_l2g->vec_, cast_col->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::RenumberGlobalToLocal(
         const BaseVector<int64_t>& column_indices)
     {
@@ -4834,6 +4893,100 @@ namespace rocalution
                 static_cast<int>(this->nnz_), workspace.vec_, perm.vec_, this->mat_.col);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::CopyGhostFromGlobalReceive(
+        const BaseVector<int>&       boundary,
+        const BaseVector<PtrType>&   recv_csr_row_ptr,
+        const BaseVector<int64_t>&   recv_csr_col_ind,
+        const BaseVector<ValueType>& recv_csr_val,
+        BaseVector<int64_t>*         global_col)
+    {
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary);
+        const HIPAcceleratorVector<int>* cast_ptr
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&recv_csr_row_ptr);
+        const HIPAcceleratorVector<int64_t>* cast_col
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&recv_csr_col_ind);
+        const HIPAcceleratorVector<ValueType>* cast_val
+            = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&recv_csr_val);
+        HIPAcceleratorVector<int64_t>* cast_glo
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(global_col);
+
+        assert(cast_bnd != NULL);
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+        assert(cast_val != NULL);
+
+        // Sanity check - boundary nnz should not exceed 32 bits
+        assert(cast_bnd->size_ < std::numeric_limits<int>::max());
+
+        // First, we need to determine the number of non-zeros
+        kernel_csr_copy_ghost_from_global_nnz<<<
+            (cast_bnd->size_ - 1) / 256 + 1,
+            256,
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
+                                                                  cast_bnd->vec_,
+                                                                  cast_ptr->vec_,
+                                                                  this->mat_.row_offset);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Exclusive sum to obtain offsets
+        size_t rocprim_size;
+        char*  rocprim_buffer = NULL;
+
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                this->mat_.row_offset,
+                                this->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                this->mat_.row_offset,
+                                this->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&rocprim_buffer);
+
+        // Allocate global column index vector
+        cast_glo->Allocate(this->nnz_);
+
+        // Workspace
+        PtrType* workspace = NULL;
+        allocate_hip(this->nrow_ + 1, &workspace);
+        copy_d2d(this->nrow_ + 1, this->mat_.row_offset, workspace);
+
+        // Fill matrices
+        kernel_csr_copy_ghost_from_global<<<(cast_bnd->size_ - 1) / 256 + 1,
+                                            256,
+                                            0,
+                                            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            static_cast<int>(cast_bnd->size_),
+            cast_bnd->vec_,
+            cast_ptr->vec_,
+            cast_col->vec_,
+            cast_val->vec_,
+            workspace,
+            cast_glo->vec_,
+            this->mat_.val);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&workspace);
 
         return true;
     }

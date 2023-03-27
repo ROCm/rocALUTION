@@ -967,6 +967,120 @@ namespace rocalution
         this->Synchronize_();
     }
 
+    template <typename I, typename J, typename T>
+    void ParallelManager::InverseCommunicateCSRAsync_(I* send_row_ptr,
+                                                      J* send_col_ind,
+                                                      T* send_val,
+                                                      I* recv_row_ptr,
+                                                      J* recv_col_ind,
+                                                      T* recv_val) const
+    {
+        log_debug(this,
+                  "ParallelManager::InverseCommunicateCSRAsync_()",
+                  "#*# begin",
+                  send_row_ptr,
+                  send_col_ind,
+                  send_val,
+                  recv_row_ptr,
+                  recv_col_ind,
+                  recv_val);
+
+        assert(this->Status());
+        assert(this->async_send_ == 0);
+        assert(this->async_recv_ == 0);
+
+        int tag = 0;
+
+        // Async recv from neighbors
+        for(int n = 0; n < this->nsend_; ++n)
+        {
+            int first_row = this->send_offset_index_[n];
+            int last_row  = this->send_offset_index_[n + 1];
+
+            // We expect something, so row ptr cannot be null
+            assert(recv_row_ptr != NULL);
+
+            // nnz that we receive from process i
+            int nnz = static_cast<int>(recv_row_ptr[last_row] - recv_row_ptr[first_row]);
+
+            // if this has ghost values that belong to process i
+            if(nnz > 0)
+            {
+#ifdef SUPPORT_MULTINODE
+                // If col pointer is null, we do not expect anything
+                if(recv_col_ind != nullptr)
+                {
+                    communication_async_recv(recv_col_ind + recv_row_ptr[first_row],
+                                             nnz,
+                                             this->sends_[n],
+                                             tag,
+                                             &this->send_event_[this->async_send_++],
+                                             this->comm_);
+                }
+
+                // If val pointer is null, we do not expect anything
+                if(recv_val != nullptr)
+                {
+                    communication_async_recv(recv_val + recv_row_ptr[first_row],
+                                             nnz,
+                                             this->sends_[n],
+                                             tag,
+                                             &this->send_event_[this->async_send_++],
+                                             this->comm_);
+                }
+#endif
+            }
+        }
+
+        // Async send boundary to neighbors
+        for(int n = 0; n < this->nrecv_; ++n)
+        {
+            // nnz that we send to process i
+            int first_row = this->recv_offset_index_[n];
+            int last_row  = this->recv_offset_index_[n + 1];
+
+            // We send something, so row ptr cannot be null
+            assert(send_row_ptr != NULL);
+
+            int nnz = static_cast<int>(send_row_ptr[last_row] - send_row_ptr[first_row]);
+
+            // if process i has ghost values that belong to this
+            if(nnz > 0)
+            {
+#ifdef SUPPORT_MULTINODE
+                // If col pointer is null, we do not send anything
+                if(send_col_ind != nullptr)
+                {
+                    communication_async_send(send_col_ind + send_row_ptr[first_row],
+                                             nnz,
+                                             this->recvs_[n],
+                                             tag,
+                                             &this->recv_event_[this->async_recv_++],
+                                             this->comm_);
+                }
+
+                // If val pointer is null, we do not send anything
+                if(send_val != nullptr)
+                {
+                    communication_async_send(send_val + send_row_ptr[first_row],
+                                             nnz,
+                                             this->recvs_[n],
+                                             tag,
+                                             &this->recv_event_[this->async_recv_++],
+                                             this->comm_);
+                }
+#endif
+            }
+        }
+
+        log_debug(this, "ParallelManager::InverseCommunicateCSRAsync_()", "#*# end");
+    }
+
+    void ParallelManager::InverseCommunicateCSRSync_(void) const
+    {
+        this->CommunicateCSRSync_();
+    }
+
     void ParallelManager::CommunicateGlobalOffsetAsync_(void) const
     {
         log_debug(this, "ParallelManager::CommunicateGlobalOffsetAsync_()", "#*# begin");
@@ -1234,6 +1348,17 @@ namespace rocalution
         this->InverseCommunicateSync_();
     }
 
+    void ParallelManager::BoundaryTransformGlobalToLocal_(void)
+    {
+        int64_t offset = this->GetGlobalColumnBegin();
+
+        for(int i = 0; i < this->send_index_size_; ++i)
+        {
+            // Boundary index is a local id, thus fits into 32 bits
+            this->boundary_index_[i] = static_cast<int>(this->boundary_buffer_[i] - offset);
+        }
+    }
+
     void ParallelManager::BoundaryTransformGlobalFineToLocalCoarse_(const int* f2c)
     {
         int64_t offset = this->GetGlobalRowBegin();
@@ -1277,5 +1402,18 @@ namespace rocalution
         PtrType*, int64_t*, std::complex<float>*, PtrType*, int64_t*, std::complex<float>*) const;
     template void ParallelManager::CommunicateCSRAsync_<PtrType, int64_t, std::complex<double>>(
         PtrType*, int64_t*, std::complex<double>*, PtrType*, int64_t*, std::complex<double>*) const;
+
+    template void ParallelManager::InverseCommunicateCSRAsync_<PtrType, int64_t, float>(
+        PtrType*, int64_t*, float*, PtrType*, int64_t*, float*) const;
+    template void ParallelManager::InverseCommunicateCSRAsync_<PtrType, int64_t, double>(
+        PtrType*, int64_t*, double*, PtrType*, int64_t*, double*) const;
+    template void
+        ParallelManager::InverseCommunicateCSRAsync_<PtrType, int64_t, std::complex<float>>(
+            PtrType*, int64_t*, std::complex<float>*, PtrType*, int64_t*, std::complex<float>*)
+            const;
+    template void
+        ParallelManager::InverseCommunicateCSRAsync_<PtrType, int64_t, std::complex<double>>(
+            PtrType*, int64_t*, std::complex<double>*, PtrType*, int64_t*, std::complex<double>*)
+            const;
 
 } // namespace rocalution

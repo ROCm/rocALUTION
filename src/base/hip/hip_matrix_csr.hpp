@@ -156,6 +156,11 @@ namespace rocalution
         virtual bool Transpose(void);
         virtual bool Transpose(BaseMatrix<ValueType>* T) const;
 
+        virtual bool ExtractGlobalColumnIndices(int                        ncol,
+                                                int64_t                    global_offset,
+                                                const BaseVector<int64_t>& l2g,
+                                                BaseVector<int64_t>*       global_col) const;
+        virtual bool ExtractExtRowNnz(int offset, BaseVector<PtrType>* row_nnz) const;
         virtual bool ExtractBoundaryRowNnz(BaseVector<PtrType>*         row_nnz,
                                            const BaseVector<int>&       boundary_index,
                                            const BaseMatrix<ValueType>& gst) const;
@@ -257,6 +262,12 @@ namespace rocalution
                                         BaseVector<int64_t>*         global_ghost_col) const;
 
         virtual bool RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices);
+
+        virtual bool CopyGhostFromGlobalReceive(const BaseVector<int>&       boundary,
+                                                const BaseVector<PtrType>&   recv_csr_row_ptr,
+                                                const BaseVector<int64_t>&   recv_csr_col_ind,
+                                                const BaseVector<ValueType>& recv_csr_val,
+                                                BaseVector<int64_t>*         global_col);
 
     private:
         MatrixCSR<ValueType, int, PtrType> mat_;

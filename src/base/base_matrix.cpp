@@ -1125,6 +1125,21 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::ExtractGlobalColumnIndices(int                        ncol,
+                                                           int64_t                    global_offset,
+                                                           const BaseVector<int64_t>& l2g,
+                                                           BaseVector<int64_t>* global_col) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::ExtractExtRowNnz(int offset, BaseVector<PtrType>* row_nnz) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::ExtractBoundaryRowNnz(BaseVector<PtrType>*         row_nnz,
                                                       const BaseVector<int>&       boundary_index,
                                                       const BaseMatrix<ValueType>& gst) const
@@ -1140,6 +1155,17 @@ namespace rocalution
                                                     const BaseVector<int>&     boundary_index,
                                                     const BaseVector<int64_t>& ghost_mapping,
                                                     const BaseMatrix<ValueType>& gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::CopyGhostFromGlobalReceive(
+        const BaseVector<int>&       boundary,
+        const BaseVector<PtrType>&   recv_csr_row_ptr,
+        const BaseVector<int64_t>&   recv_csr_col_ind,
+        const BaseVector<ValueType>& recv_csr_val,
+        BaseVector<int64_t>*         global_col)
     {
         return false;
     }

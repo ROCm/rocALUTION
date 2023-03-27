@@ -1524,6 +1524,93 @@ namespace rocalution
         }
     }
 
+    template <typename I, typename J>
+    __global__ void kernel_csr_copy_ghost_from_global_nnz(I boundary_size,
+                                                          const I* __restrict__ boundary_index,
+                                                          const I* __restrict__ csr_row_ptr,
+                                                          J* __restrict__ row_nnz)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // Get boundary row
+        I row = boundary_index[gid];
+
+        // Write total number of nnz for this boundary row
+        atomicAdd(row_nnz + row, csr_row_ptr[gid + 1] - csr_row_ptr[gid]);
+    }
+
+    template <typename T, typename I, typename J, typename K>
+    __global__ void kernel_csr_copy_ghost_from_global(I boundary_size,
+                                                      const I* __restrict__ boundary_index,
+                                                      const I* __restrict__ csr_row_ptr,
+                                                      const K* __restrict__ csr_col_ind,
+                                                      const T* __restrict__ csr_val,
+                                                      J* __restrict__ ext_row_ptr,
+                                                      K* __restrict__ ext_col_ind,
+                                                      T* __restrict__ ext_val)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // This row is a boundary row
+        I row = boundary_index[gid];
+
+        I row_begin = csr_row_ptr[gid];
+        I row_end   = csr_row_ptr[gid + 1];
+
+        // Index into extracted matrix, we have to use atomics here, because other
+        // blocks might also update this row
+        J idx = atomicAdd(ext_row_ptr + row, row_end - row_begin);
+
+        for(I j = row_begin; j < row_end; ++j)
+        {
+            ext_col_ind[idx] = csr_col_ind[j];
+            ext_val[idx]     = csr_val[j];
+            ++idx;
+        }
+    }
+
+    template <typename I, typename K>
+    __global__ void kernel_csr_extract_global_column_indices(I ncol,
+                                                             I nnz,
+                                                             K global_offset,
+                                                             const I* __restrict__ csr_col_ind,
+                                                             const K* __restrict__ l2g,
+                                                             K* __restrict__ global_col)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= nnz)
+        {
+            return;
+        }
+
+        int local_col = csr_col_ind[gid];
+
+        if(local_col >= ncol)
+        {
+            // This is an ext column, map to global
+            global_col[gid] = l2g[local_col - ncol];
+        }
+        else
+        {
+            // This is a local column, shift by offset
+            global_col[gid] = local_col + global_offset;
+        }
+    }
+
     template <typename I, typename K>
     __global__ void kernel_csr_renumber_global_to_local_count(I nnz,
                                                               const K* __restrict__ global_sorted,

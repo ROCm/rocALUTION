@@ -171,6 +171,11 @@ namespace rocalution
         virtual bool ReplaceRowVector(int idx, const BaseVector<ValueType>& vec);
         virtual bool ExtractRowVector(int idx, BaseVector<ValueType>* vec) const;
 
+        virtual bool ExtractGlobalColumnIndices(int                        ncol,
+                                                int64_t                    global_offset,
+                                                const BaseVector<int64_t>& l2g,
+                                                BaseVector<int64_t>*       global_col) const;
+        virtual bool ExtractExtRowNnz(int offset, BaseVector<PtrType>* row_nnz) const;
         virtual bool ExtractBoundaryRowNnz(BaseVector<PtrType>*         row_nnz,
                                            const BaseVector<int>&       boundary_index,
                                            const BaseMatrix<ValueType>& gst) const;
@@ -316,6 +321,11 @@ namespace rocalution
                                      const int*             rG,
                                      int                    rGsize) const;
 
+        virtual bool CopyGhostFromGlobalReceive(const BaseVector<int>&       boundary,
+                                                const BaseVector<PtrType>&   recv_csr_row_ptr,
+                                                const BaseVector<int64_t>&   recv_csr_col_ind,
+                                                const BaseVector<ValueType>& recv_csr_val,
+                                                BaseVector<int64_t>*         global_col);
         virtual bool RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices);
 
     private:

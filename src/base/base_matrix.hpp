@@ -425,6 +425,15 @@ namespace rocalution
                                          const BaseVector<int64_t>&   ghost_mapping,
                                          const BaseMatrix<ValueType>& gst) const;
 
+        /// Extract global column indices
+        virtual bool ExtractGlobalColumnIndices(int                        ncol,
+                                                int64_t                    global_offset,
+                                                const BaseVector<int64_t>& l2g,
+                                                BaseVector<int64_t>*       global_col) const;
+
+        /// Extract non zeros of matrix extension
+        virtual bool ExtractExtRowNnz(int offset, BaseVector<PtrType>* row_nnz) const;
+
         virtual bool AMGConnect(ValueType eps, BaseVector<int>* connections) const;
         virtual bool AMGAggregate(const BaseVector<int>& connections,
                                   BaseVector<int>*       aggregates) const;
@@ -573,6 +582,12 @@ namespace rocalution
                                      const int*             rG,
                                      int                    rGsize) const;
 
+        /// Create ghost columns from global ids
+        virtual bool CopyGhostFromGlobalReceive(const BaseVector<int>&       boundary,
+                                                const BaseVector<PtrType>&   recv_csr_row_ptr,
+                                                const BaseVector<int64_t>&   recv_csr_col_ind,
+                                                const BaseVector<ValueType>& recv_csr_val,
+                                                BaseVector<int64_t>*         global_col);
         /// Renumber global indices to local indices
         virtual bool RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices);
 

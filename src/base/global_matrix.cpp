@@ -1064,7 +1064,212 @@ namespace rocalution
 
         if(this->GetNnz() > 0)
         {
-            FATAL_ERROR(__FILE__, __LINE__);
+            // Some dummy structures
+            LocalVector<int64_t> global_zero;
+            global_zero.CloneBackend(*this);
+
+            // Transpose local matrices
+            LocalMatrix<ValueType> T_ext;
+            T_ext.CloneBackend(*this);
+
+            this->matrix_interior_.Transpose(&T->matrix_interior_);
+            this->matrix_ghost_.Transpose(&T_ext);
+
+            // Generate T ghost and parallel manager of T
+
+            // T_ext and T ghost MUST be CSR
+            assert(T_ext.GetFormat() == CSR);
+            assert(T->matrix_ghost_.GetFormat() == CSR);
+
+            // Now we need to extract rows that do not belong to us and thus
+            // need to be sent to neighboring processes
+            int64_t nrows_send = T_ext.GetM();
+            int     nrows_recv = this->pm_->GetNumSenders();
+
+            // Extract row nnz for the rows that we have to send to neighbors
+            LocalVector<PtrType> T_ext_row_ptr_send;
+            T_ext_row_ptr_send.CloneBackend(*this);
+            T_ext_row_ptr_send.Allocate("row nnz send", nrows_send);
+
+            T_ext.matrix_->ExtractExtRowNnz(0, T_ext_row_ptr_send.vector_);
+
+            // Prepare send / receive buffers
+            PtrType* pT_ext_row_nnz_send = NULL;
+            PtrType* pT_ext_row_ptr_recv = NULL;
+
+            LocalVector<PtrType> T_ext_row_ptr_recv;
+#ifdef SUPPORT_RDMA
+            T_ext_row_ptr_recv.CloneBackend(*this);
+#endif
+            T_ext_row_ptr_recv.Allocate("row ptr recv", nrows_recv + 1);
+
+#ifndef SUPPORT_RDMA
+            T_ext_row_ptr_send.MoveToHost();
+#endif
+
+            // Get host pointers for communication
+            T_ext_row_ptr_recv.LeaveDataPtr(&pT_ext_row_ptr_recv);
+            T_ext_row_ptr_send.LeaveDataPtr(&pT_ext_row_nnz_send);
+
+            // Initiate communication of nnz per row
+            this->pm_->InverseCommunicateAsync_(pT_ext_row_nnz_send, pT_ext_row_ptr_recv);
+
+            // Extract column indices and transform them to global indices (for sending)
+            LocalVector<int64_t> T_ext_col_ind_send;
+            T_ext_col_ind_send.CloneBackend(*this);
+            T_ext_col_ind_send.Allocate("col ind send", T_ext.GetNnz());
+
+            T_ext.matrix_->ExtractGlobalColumnIndices(T_ext.GetN(),
+                                                      this->pm_->GetGlobalRowBegin(),
+                                                      *global_zero.vector_,
+                                                      T_ext_col_ind_send.vector_);
+
+            // Wait for nnz per row communication to finish
+            this->pm_->InverseCommunicateSync_();
+
+            // Clean up
+            free_host(&pT_ext_row_nnz_send);
+
+            // Put receive buffer back in structure
+            T_ext_row_ptr_recv.SetDataPtr(&pT_ext_row_ptr_recv, "row ptr recv", nrows_recv + 1);
+
+#ifndef SUPPORT_RDMA
+            T_ext_row_ptr_recv.CloneBackend(*this);
+#endif
+
+            // Exclusive sum to obtain recv row pointers
+            PtrType nnz_recv = T_ext_row_ptr_recv.ExclusiveSum();
+
+            // Prepare receive buffers
+            int64_t*   pT_ext_col_ind_recv = NULL;
+            ValueType* pT_ext_val_recv     = NULL;
+
+            LocalVector<int64_t>   T_ext_col_ind_recv;
+            LocalVector<ValueType> T_ext_val_recv;
+
+#ifdef SUPPORT_RDMA
+            T_ext_col_ind_recv.CloneBackend(*this);
+            T_ext_val_recv.CloneBackend(*this);
+#endif
+
+            T_ext_col_ind_recv.Allocate("col ind recv", nnz_recv);
+            T_ext_val_recv.Allocate("val recv", nnz_recv);
+
+            T_ext_col_ind_recv.LeaveDataPtr(&pT_ext_col_ind_recv);
+            T_ext_val_recv.LeaveDataPtr(&pT_ext_val_recv);
+
+            // Prepare send buffers
+            int64_t*   pT_ext_col_ind_send_global = NULL;
+            PtrType*   pT_ext_row_ptr_send        = NULL;
+            int*       pT_ext_col_ind_send        = NULL;
+            ValueType* pT_ext_val_send            = NULL;
+
+#ifndef SUPPORT_RDMA
+            T_ext_row_ptr_recv.MoveToHost();
+            T_ext_col_ind_send.MoveToHost();
+            T_ext.MoveToHost();
+#endif
+
+            T_ext_row_ptr_recv.LeaveDataPtr(&pT_ext_row_ptr_recv);
+            T_ext_col_ind_send.LeaveDataPtr(&pT_ext_col_ind_send_global);
+            T_ext.LeaveDataPtrCSR(&pT_ext_row_ptr_send, &pT_ext_col_ind_send, &pT_ext_val_send);
+
+            // Initiate communication of column indices and values
+            this->pm_->InverseCommunicateCSRAsync_(pT_ext_row_ptr_send,
+                                                   pT_ext_col_ind_send_global,
+                                                   pT_ext_val_send,
+                                                   pT_ext_row_ptr_recv,
+                                                   pT_ext_col_ind_recv,
+                                                   pT_ext_val_recv);
+
+            // Wait for additional column indices and values communication to finish
+            this->pm_->InverseCommunicateCSRSync_();
+
+            // Now we can clear T ext related send buffers
+            free_host(&pT_ext_row_ptr_send);
+            free_host(&pT_ext_col_ind_send);
+            free_host(&pT_ext_val_send);
+            free_host(&pT_ext_col_ind_send_global);
+
+            // Setup manager of T
+
+            // Start with a clean manager
+            T->CreateParallelManager_();
+
+            // Same communicator as initial matrix
+            T->pm_self_->SetMPICommunicator(this->pm_->comm_);
+
+            // Sizes of the transposed
+            T->pm_self_->SetGlobalNrow(this->pm_->global_ncol_);
+            T->pm_self_->SetGlobalNcol(this->pm_->global_nrow_);
+            T->pm_self_->SetLocalNrow(this->pm_->local_ncol_);
+            T->pm_self_->SetLocalNcol(this->pm_->local_nrow_);
+
+            // Put the global column indices back into structure
+            T_ext_col_ind_recv.SetDataPtr(&pT_ext_col_ind_recv, "col ind recv", nnz_recv);
+            T_ext_col_ind_recv.CloneBackend(*this);
+
+            // To generate the parallel manager, we need to access the sorted global ghost column ids
+            LocalVector<int64_t> sorted_ghost_col;
+            sorted_ghost_col.CloneBackend(*this);
+            sorted_ghost_col.Allocate("sorted global ghost columns", T_ext_col_ind_recv.GetSize());
+
+            // Sort the global ghost columns (we do not need the permutation vector)
+            T_ext_col_ind_recv.Sort(&sorted_ghost_col, NULL);
+
+            // Get the sorted ghost columns on host
+            int64_t* pghost_col = NULL;
+            sorted_ghost_col.MoveToHost();
+            sorted_ghost_col.LeaveDataPtr(&pghost_col);
+
+            // Generate the manager from ghost of T and manager of non-transposed
+            T->pm_self_->GenerateFromGhostColumnsWithParent_(
+                nnz_recv, pghost_col, *this->pm_, true);
+
+            // Communicate global offsets
+            T->pm_self_->CommunicateGlobalOffsetAsync_();
+
+            // Clear
+            free_host(&pghost_col);
+
+            // Wrap received data into structure
+            T_ext_row_ptr_recv.SetDataPtr(&pT_ext_row_ptr_recv, "row ptr recv", nrows_recv + 1);
+            T_ext_val_recv.SetDataPtr(&pT_ext_val_recv, "val recv", nnz_recv);
+
+#ifndef SUPPORT_RDMA
+            T_ext_row_ptr_recv.CloneBackend(*this);
+            T_ext_val_recv.CloneBackend(*this);
+#endif
+
+            T->pm_self_->CommunicateGlobalOffsetSync_();
+
+            // Convert global boundary index into local index
+            T->pm_self_->BoundaryTransformGlobalToLocal_();
+
+            // Communicate ghost to global map
+            T->pm_self_->CommunicateGhostToGlobalMapAsync_();
+
+            // Allocate T ghost
+            T->matrix_ghost_.AllocateCSR(
+                "ghost", nnz_recv, T->pm_self_->local_nrow_, T->pm_self_->local_ncol_);
+
+            // Finally generate the ghost of T (global columns)
+            LocalVector<int64_t> T_ext_cols;
+            T_ext_cols.CloneBackend(*this);
+
+            T->matrix_ghost_.matrix_->CopyGhostFromGlobalReceive(*this->halo_.vector_,
+                                                                 *T_ext_row_ptr_recv.vector_,
+                                                                 *T_ext_col_ind_recv.vector_,
+                                                                 *T_ext_val_recv.vector_,
+                                                                 T_ext_cols.vector_);
+
+            // Transform global to local ghost columns
+            T->matrix_ghost_.matrix_->RenumberGlobalToLocal(*T_ext_cols.vector_);
+
+            // Synchronize
+            T->pm_self_->CommunicateGhostToGlobalMapSync_();
+
+            T->SetParallelManager(*T->pm_self_);
         }
 
 #ifdef DEBUG_MODE

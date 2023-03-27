@@ -8166,6 +8166,63 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ExtractGlobalColumnIndices(int     ncol,
+                                                              int64_t global_offset,
+                                                              const BaseVector<int64_t>& l2g,
+                                                              BaseVector<int64_t>* global_col) const
+    {
+        if(this->nnz_ > 0)
+        {
+            const HostVector<int64_t>* cast_l2g = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+            HostVector<int64_t>*       cast_col = dynamic_cast<HostVector<int64_t>*>(global_col);
+
+            assert(cast_col != NULL);
+            assert(this->nnz_ == cast_col->size_);
+
+            for(int64_t i = 0; i < this->nnz_; ++i)
+            {
+                int local_col = this->mat_.col[i];
+
+                if(local_col >= ncol)
+                {
+                    // This is an ext column, map to global
+                    cast_col->vec_[i] = cast_l2g->vec_[local_col - ncol];
+                }
+                else
+                {
+                    // This is a local column, shift by offset
+                    cast_col->vec_[i] = local_col + global_offset;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ExtractExtRowNnz(int offset, BaseVector<PtrType>* row_nnz) const
+    {
+        assert(row_nnz != NULL);
+
+        if(this->GetNnz() > 0)
+        {
+            HostVector<PtrType>* cast_vec = dynamic_cast<HostVector<PtrType>*>(row_nnz);
+
+            assert(cast_vec != NULL);
+
+            int size = this->nrow_ - offset;
+
+            for(int i = 0; i < size; ++i)
+            {
+                cast_vec->vec_[i]
+                    = this->mat_.row_offset[i + 1 + offset] - this->mat_.row_offset[i + offset];
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HostMatrixCSR<ValueType>::ExtractBoundaryRowNnz(BaseVector<PtrType>*   row_nnz,
                                                          const BaseVector<int>& boundary_index,
                                                          const BaseMatrix<ValueType>& gst) const
@@ -8259,6 +8316,80 @@ namespace rocalution
                 ++idx;
             }
         }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::CopyGhostFromGlobalReceive(
+        const BaseVector<int>&       boundary,
+        const BaseVector<PtrType>&   recv_csr_row_ptr,
+        const BaseVector<int64_t>&   recv_csr_col_ind,
+        const BaseVector<ValueType>& recv_csr_val,
+        BaseVector<int64_t>*         global_col)
+    {
+        const HostVector<int>*     cast_bnd = dynamic_cast<const HostVector<int>*>(&boundary);
+        const HostVector<PtrType>* cast_ptr
+            = dynamic_cast<const HostVector<PtrType>*>(&recv_csr_row_ptr);
+        const HostVector<int64_t>* cast_col
+            = dynamic_cast<const HostVector<int64_t>*>(&recv_csr_col_ind);
+        const HostVector<ValueType>* cast_val
+            = dynamic_cast<const HostVector<ValueType>*>(&recv_csr_val);
+        HostVector<int64_t>* cast_glo = dynamic_cast<HostVector<int64_t>*>(global_col);
+
+        assert(cast_bnd != NULL);
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+        assert(cast_val != NULL);
+
+        // First, we need to determine the number of non-zeros
+        for(int i = 0; i < cast_bnd->size_; ++i)
+        {
+            int     row = cast_bnd->vec_[i];
+            PtrType nnz = cast_ptr->vec_[i + 1] - cast_ptr->vec_[i];
+
+            this->mat_.row_offset[row + 1] += nnz;
+        }
+
+        // Exclusive sum to obtain offsets
+        this->mat_.row_offset[0] = 0;
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            this->mat_.row_offset[i + 1] += this->mat_.row_offset[i];
+        }
+
+        assert(this->mat_.row_offset[this->nrow_] == this->nnz_);
+
+        cast_glo->Allocate(this->nnz_);
+
+        // Fill matrices
+        for(int i = 0; i < cast_bnd->size_; ++i)
+        {
+            int row = cast_bnd->vec_[i];
+
+            PtrType row_begin = cast_ptr->vec_[i];
+            PtrType row_end   = cast_ptr->vec_[i + 1];
+
+            PtrType idx = this->mat_.row_offset[row];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                cast_glo->vec_[idx] = cast_col->vec_[j];
+                this->mat_.val[idx] = cast_val->vec_[j];
+
+                ++idx;
+            }
+
+            this->mat_.row_offset[row] = idx;
+        }
+
+        // Shift back
+        for(int i = this->nrow_; i > 0; --i)
+        {
+            this->mat_.row_offset[i] = this->mat_.row_offset[i - 1];
+        }
+
+        this->mat_.row_offset[0] = 0;
 
         return true;
     }
