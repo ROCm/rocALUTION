@@ -296,6 +296,10 @@ namespace rocalution
             handle, nrow, src_descr, src.row_offset, dst_descr, &dst->max_row);
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
+        // Synchronize stream to make sure, result is available on the host
+        hipStreamSynchronize(HIPSTREAM(backend->HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
         // Limit ELL size to 5 times CSR nnz
         if(dst->max_row > 5 * (nnz / nrow))
         {
