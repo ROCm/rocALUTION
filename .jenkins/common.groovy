@@ -29,11 +29,21 @@ def runCompileCommand(platform, project, boolean sameOrg=false)
 
 def runTestCommand (platform, project, gfilter)
 {
+    def hmmTestCommand= ''
+    if (platform.jenkinsLabel.contains('gfx90a'))
+    {
+        hmmTestCommand = """
+                            HSA_XNACK=0 GTEST_LISTENER=NO_PASS_LINE_IN_LOG  ./rocalution-test --gtest_output=xml:test_detail_hmm_xnack_off.xml --gtest_color=yes --gtest_filter=**
+                            HSA_XNACK=1 GTEST_LISTENER=NO_PASS_LINE_IN_LOG  ./rocalution-test --gtest_output=xml:test_detail_hmm_xnack_on.xml --gtest_color=yes --gtest_filter=**
+                         """
+    }
+
     String sudo = auxiliary.sudo(platform.jenkinsLabel)
     def command = """#!/usr/bin/env bash
                     set -x
                     cd ${project.paths.project_build_prefix}/build/release/clients/staging
                     ${sudo} LD_LIBRARY_PATH=/opt/rocm/hcc/lib GTEST_LISTENER=NO_PASS_LINE_IN_LOG ./rocalution-test --gtest_output=xml --gtest_color=yes #--gtest_filter=${gfilter}-*known_bug*
+                    ${hmmTestCommand}
                 """
 
     platform.runCommand(this, command)
