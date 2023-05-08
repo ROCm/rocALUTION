@@ -297,7 +297,7 @@ namespace rocalution
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // Synchronize stream to make sure, result is available on the host
-        hipStreamSynchronize(HIPSTREAM(backend->HIP_stream_current));
+        hipStreamSynchronize(0);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Limit ELL size to 5 times CSR nnz
