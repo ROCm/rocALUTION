@@ -2,6 +2,10 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
+## rocALUTION 2.1.10 for ROCm 5.7.0
+### Improved
+- Fixed OpenMP runtime issue with Windows toolchain
+
 ## rocALUTION 2.1.9 for ROCm 5.6.0
 ### Improved
 - Fixed synchronization issues in level 1 routines
