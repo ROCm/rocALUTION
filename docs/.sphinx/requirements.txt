@@ -159,7 +159,7 @@ pycparser==2.21
     # via cffi
 pydata-sphinx-theme==0.13.1
     # via sphinx-book-theme
-pygithub==1.57
+pygithub==1.58.1
     # via rocm-docs-core
 pygments==2.14.0
     # via
