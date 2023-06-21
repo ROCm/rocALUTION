@@ -2,7 +2,9 @@
 
 Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
 
-## rocALUTION 2.1.10 for ROCm 5.7.0
+## rocALUTION 2.1.11 for ROCm 5.7.0
+### Added
+- Added support for gfx940, gfx941 and gfx942
 ### Improved
 - Fixed OpenMP runtime issue with Windows toolchain
 
