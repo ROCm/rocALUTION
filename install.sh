@@ -50,24 +50,12 @@ supported_distro( )
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
-check_exit_code( )
-{
-  if (( $1 != 0 )); then
-    exit $1
-  fi
-}
-
-# This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
 elevate_if_not_root( )
 {
-  local uid=$(id -u)
-
-  if (( ${uid} )); then
-    sudo $@
-    check_exit_code
+  if (( $EUID )); then
+    sudo "$@" || exit
   else
-    $@
-    check_exit_code
+    "$@" || exit
   fi
 }
 
@@ -529,23 +517,19 @@ pushd .
       -DCMAKE_MODULE_PATH="${rocm_path}/lib/cmake/hip ${rocm_path}/hip/cmake" \
       -DCMAKE_EXE_LINKER_FLAGS=" -Wl,--enable-new-dtags -Wl,--rpath,${rocm_path}/lib:${rocm_path}/lib64" \
       -DROCM_DISABLE_LDCONFIG=ON \
-      -DROCM_PATH="${rocm_path}" ../..
+      -DROCM_PATH="${rocm_path}" ../.. || exit
   else
-    CXX=${compiler} ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=${install_prefix} -DROCM_PATH=${rocm_path} ../..
+    CXX=${compiler} ${cmake_executable} ${cmake_common_options} ${cmake_client_options} -DCMAKE_INSTALL_PREFIX=${install_prefix} -DROCM_PATH=${rocm_path} ../.. || exit
   fi
 
-  check_exit_code
-
-  make -j$(nproc) install
-  check_exit_code
+  make -j$(nproc) install || exit
 
   # #################################################
   # install
   # #################################################
   # installing through package manager, which makes uninstalling easy
   if [[ "${install_package}" == true ]]; then
-    make package
-    check_exit_code
+    make package || exit
 
     case "${ID}" in
       ubuntu)
