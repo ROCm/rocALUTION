@@ -77,13 +77,18 @@ option(BUILD_OPTCPU "Enable all instruction subsets supported by the local machi
 # Dependencies
 include(cmake/Dependencies.cmake)
 
-# Availability of rocm_check_target_ids command assures that we can also build
-# for gfx90a target
-if(COMMAND rocm_check_target_ids)
-  set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030;gfx90a:xnack-;gfx90a:xnack+;gfx1100;gfx1101;gfx1102")
-else()
-  set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030;gfx1100;gfx1101;gfx1102")
-endif()
+set(DEFAULT_AMDGPU_TARGETS
+  gfx803
+  gfx900:xnack-
+  gfx906:xnack-
+  gfx908:xnack-
+  gfx90a:xnack-
+  gfx90a:xnack+
+  gfx1030
+  gfx1100
+  gfx1101
+  gfx1102
+)
 set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
 
 # Find HIP package
