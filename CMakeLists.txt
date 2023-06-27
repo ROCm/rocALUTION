@@ -175,7 +175,7 @@ set(ROCALUTION_CONFIG_DIR "\${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_LI
 
 rocm_create_package(
   NAME ${package_name}
-  DESCRIPTION "Radeon Open Compute library for sparse linear systems"
+  DESCRIPTION "ROCm library for sparse linear systems"
   MAINTAINER "rocALUTION Maintainer <rocalution-maintainer@amd.com>"
   LDCONFIG
   LDCONFIG_DIR ${ROCALUTION_CONFIG_DIR}
