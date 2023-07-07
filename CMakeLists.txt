@@ -59,6 +59,9 @@ project(rocalution LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_HIP_STANDARD 14)
+set(CMAKE_HIP_STANDARD_REQUIRED ON)
+set(CMAKE_HIP_EXTENSIONS OFF)
 
 # Build options
 option(BUILD_SHARED_LIBS "Build rocALUTION as a shared library" ON)
@@ -91,17 +94,24 @@ set(DEFAULT_AMDGPU_TARGETS
 )
 set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
 
-# Find HIP package
-find_package(HIP)
-
-if (NOT HIP_FOUND)
-  message("-- HIP not found. Compiling WITHOUT HIP support.")
+include(CheckLanguage)
+include(CMakeDependentOption)
+check_language(HIP)
+cmake_dependent_option(USE_HIPCXX "Use CMake HIP language support" ON CMAKE_HIP_COMPILER OFF)
+if(USE_HIPCXX)
+  enable_language(HIP)
 else()
-  option(SUPPORT_HIP "Compile WITH HIP support." ON)
+  find_package(HIP MODULE) # hip_add_library is only provided by the find module
+  if(NOT HIP_FOUND)
+    message("-- HIP not found. Compiling WITHOUT HIP support.")
+  endif()
 endif()
+
+cmake_dependent_option(SUPPORT_HIP "Compile WITH HIP support" ON "USE_HIPCXX OR HIP_FOUND" OFF)
 
 # HIP related library dependencies
 if(SUPPORT_HIP)
+  find_package(hip REQUIRED)
   find_package(rocblas REQUIRED)
   find_package(rocsparse REQUIRED)
   find_package(rocprim REQUIRED)

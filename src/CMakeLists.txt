@@ -145,27 +145,37 @@ target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
   # Flag source file as a hip source file
-  foreach(i ${HIP_SOURCES})
-    set_source_files_properties(${i} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
-  endforeach()
-
-  # HIP flags workaround while target_compile_options do not work
-
-  # If CPU optimizations for local machine is actived
-  if(BUILD_OPTCPU)
-    list(APPEND HIP_HIPCC_FLAGS "-march=native")
+  if(USE_HIPCXX)
+    set_source_files_properties(${HIP_SOURCES} PROPERTIES LANGUAGE HIP)
+  else()
+    set_source_files_properties(${HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
   endif()
 
-  list(APPEND HIP_HIPCC_FLAGS "-O3 -fPIC -std=c++14")
-  foreach(target ${AMDGPU_TARGETS})
-    list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
-  endforeach()
-
-  # Create rocALUTION HIP library
-  if(WIN32)
-    add_library(rocalution_hip OBJECT ${HIP_SOURCES})
+  if(USE_HIPCXX)
+    add_library(rocalution_hip ${HIP_SOURCES})
+    # If CPU optimizations for local machine is actived
+    if(BUILD_OPTCPU)
+      target_compile_options(rocalution_hip PRIVATE "-march=native")
+    endif()
   else()
-    hip_add_library(rocalution_hip ${HIP_SOURCES})
+    # HIP flags workaround while target_compile_options do not work
+
+    # If CPU optimizations for local machine is actived
+    if(BUILD_OPTCPU)
+      list(APPEND HIP_HIPCC_FLAGS "-march=native")
+    endif()
+  
+    list(APPEND HIP_HIPCC_FLAGS "-O3 -fPIC -std=c++14")
+    foreach(target ${AMDGPU_TARGETS})
+      list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
+    endforeach()
+  
+    # Create rocALUTION HIP library
+    if(WIN32)
+      add_library(rocalution_hip OBJECT ${HIP_SOURCES})
+    else()
+      hip_add_library(rocalution_hip ${HIP_SOURCES})
+    endif()
   endif()
 
   if(SUPPORT_MPI)
