@@ -97,7 +97,7 @@ set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific ma
 include(CheckLanguage)
 include(CMakeDependentOption)
 check_language(HIP)
-cmake_dependent_option(USE_HIPCXX "Use CMake HIP language support" ON CMAKE_HIP_COMPILER OFF)
+cmake_dependent_option(USE_HIPCXX "Use CMake HIP language support" OFF CMAKE_HIP_COMPILER OFF)
 if(USE_HIPCXX)
   enable_language(HIP)
 else()
