@@ -6,6 +6,9 @@
 
 from rocm_docs import ROCmDocs
 
+
+external_projects_current_project = "rocalution"
+
 docs_core = ROCmDocs("rocALUTION Documentation")
 docs_core.run_doxygen()
 docs_core.setup()
