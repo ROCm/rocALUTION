@@ -12,7 +12,7 @@ def runCompileCommand(platform, project, boolean sameOrg=false)
     {
         project.libraryDependencies.each
         { libraryName ->
-            getDependenciesCommand += auxiliary.getLibrary(libraryName, platform.jenkinsLabel, 'develop', sameOrg)
+            getDependenciesCommand += auxiliary.getLibrary(libraryName, platform.jenkinsLabel, null, sameOrg)
         }
     }
 

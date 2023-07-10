@@ -76,7 +76,7 @@ include(cmake/Dependencies.cmake)
 # Availability of rocm_check_target_ids command assures that we can also build
 # for gfx90a target
 if(COMMAND rocm_check_target_ids)
-  set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030;gfx90a:xnack-;gfx90a:xnack+;gfx1100;gfx1101;gfx1102")
+  set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030;gfx90a:xnack-;gfx90a:xnack+;gfx940;gfx941;gfx942;gfx1100;gfx1101;gfx1102")
 else()
   set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack-;gfx1030;gfx1100;gfx1101;gfx1102")
 endif()
@@ -112,7 +112,7 @@ endif()
 
 
 # Setup version
-set(VERSION_STRING "2.1.10")
+set(VERSION_STRING "2.1.11")
 rocm_setup_version(VERSION ${VERSION_STRING})
 set(rocalution_SOVERSION 0.1)
 
