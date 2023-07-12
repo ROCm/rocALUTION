@@ -126,12 +126,25 @@ install_packages( )
   local library_dependencies_ubuntu=( "make" "cmake" "pkg-config" )
   local library_dependencies_centos=( "epel-release" "make" "cmake3" "gcc-c++" "rpm-build" )
   local library_dependencies_fedora=( "make" "cmake" "gcc-c++" "libcxx-devel" "rpm-build" )
-  local library_dependencies_sles=( "make" "cmake" "gcc-c++" "libcxxtools9" "rpm-build" )
+  local library_dependencies_sles=( "make" "cmake" "gcc-c++" "rpm-build" )
 
   local client_dependencies_ubuntu=( "libboost-program-options-dev" )
   local client_dependencies_centos=( "boost-devel" )
   local client_dependencies_fedora=( "boost-devel" )
   local client_dependencies_sles=( "libboost_program_options1_66_0-devel" "pkg-config" "dpkg" )
+
+  if [[ ( "${ID}" == "sles" ) ]]; then
+    if [[ -f /etc/os-release ]]; then
+      . /etc/os-release
+
+      function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+      if [[ $(version $VERSION_ID) -ge $(version 15.4) ]]; then
+          library_dependencies_sles+=( "libcxxtools10" )
+      else
+          library_dependencies_sles+=( "libcxxtools9" )
+      fi
+    fi
+  fi
 
   # Host build
   if [[ "${build_host}" == false ]]; then
@@ -489,13 +502,13 @@ pushd .
       cmake_common_options="${cmake_common_options} -DBUILD_CODE_COVERAGE=ON"
   fi
 
-  #Enable backward compatibility wrappers 
+  #Enable backward compatibility wrappers
   if [[ "${build_freorg_bkwdcomp}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DBUILD_FILE_REORG_BACKWARD_COMPATIBILITY=ON"
   else
     cmake_common_options="${cmake_common_options} -DBUILD_FILE_REORG_BACKWARD_COMPATIBILITY=OFF"
   fi
- 
+
   # Verbose cmake
   if [[ "${verb}" == true ]]; then
     cmake_common_options="${cmake_common_options} -DBUILD_VERBOSE=ON"
