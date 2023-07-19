@@ -1907,7 +1907,7 @@ namespace rocalution
                     // If CSR conversion fails too, exit with error
                     if(new_mat->ConvertFrom(*this->matrix_host_) == false)
                     {
-                        LOG_INFO("Unsupported (on host) convertion type to CSR");
+                        LOG_INFO("Unsupported (on host) conversion to CSR");
                         this->Info();
                         FATAL_ERROR(__FILE__, __LINE__);
                     }
