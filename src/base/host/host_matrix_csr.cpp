@@ -1867,6 +1867,40 @@ namespace rocalution
         HostVector<int>* cast_perm = dynamic_cast<HostVector<int>*>(permutation);
         assert(cast_perm != NULL);
 
+        /*
+        *   Create CSC
+        */
+        PtrType* csc_ptr = NULL;
+        int*     csc_ind = NULL;
+
+        allocate_host(this->ncol_ + 1, &csc_ptr);
+        allocate_host(this->nnz_, &csc_ind);
+
+        set_to_zero_host(this->nrow_ + 1, csc_ptr);
+
+        for(PtrType i = 0; i < this->nnz_; ++i)
+        {
+            csc_ptr[this->mat_.col[i] + 1] += 1;
+        }
+
+        for(int i = 1; i < this->nrow_ + 1; ++i)
+        {
+            csc_ptr[i] += csc_ptr[i - 1];
+        }
+
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            for(PtrType k = this->mat_.row_offset[i]; k < this->mat_.row_offset[i + 1]; ++k)
+            {
+                csc_ind[csc_ptr[this->mat_.col[k]]++] = i;
+            }
+        }
+        for(int i = this->nrow_; i > 0; --i)
+        {
+            csc_ptr[i] = csc_ptr[i - 1];
+        }
+        csc_ptr[0] = 0;
+
         // node colors (init value = 0 i.e. no color)
         int* color = NULL;
         allocate_host(this->nrow_, &color);
@@ -1890,11 +1924,26 @@ namespace rocalution
                 }
             }
 
-            for(PtrType aj = this->mat_.row_offset[ai]; aj < this->mat_.row_offset[ai + 1]; ++aj)
+            for(PtrType aj = csc_ptr[ai]; aj < csc_ptr[ai + 1]; ++aj)
+            {
+                if(ai != csc_ind[aj])
+                {
+                    row_col[color[csc_ind[aj]]] = true;
+                }
+            }
+
+            PtrType count = this->mat_.row_offset[ai + 1] - this->mat_.row_offset[ai]
+                            + csc_ptr[ai + 1] - csc_ptr[ai];
+
+            for(PtrType aj = 0; aj < count; ++aj)
             {
                 if(row_col[color[ai]] == true)
                 {
                     ++color[ai];
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -1903,6 +1952,9 @@ namespace rocalution
                 num_colors = color[ai];
             }
         }
+
+        free_host(&csc_ptr);
+        free_host(&csc_ind);
 
         allocate_host(num_colors, size_colors);
         set_to_zero_host(num_colors, *size_colors);

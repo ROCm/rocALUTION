@@ -2900,6 +2900,40 @@ namespace rocalution
         copy_d2h(this->nrow_ + 1, this->mat_.row_offset, h_row_offset);
         copy_d2h(this->nnz_, this->mat_.col, h_col);
 
+        /*
+        *   Create CSC
+        */
+        PtrType* csc_ptr = NULL;
+        int*     csc_ind = NULL;
+
+        allocate_host(this->ncol_ + 1, &csc_ptr);
+        allocate_host(this->nnz_, &csc_ind);
+
+        set_to_zero_host(this->nrow_ + 1, csc_ptr);
+
+        for(PtrType i = 0; i < this->nnz_; ++i)
+        {
+            csc_ptr[h_col[i] + 1] += 1;
+        }
+
+        for(int i = 1; i < this->nrow_ + 1; ++i)
+        {
+            csc_ptr[i] += csc_ptr[i - 1];
+        }
+
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            for(PtrType k = h_row_offset[i]; k < h_row_offset[i + 1]; ++k)
+            {
+                csc_ind[csc_ptr[h_col[k]]++] = i;
+            }
+        }
+        for(int i = this->nrow_; i > 0; --i)
+        {
+            csc_ptr[i] = csc_ptr[i - 1];
+        }
+        csc_ptr[0] = 0;
+
         memset(color, 0, this->nrow_ * sizeof(int));
         num_colors = 0;
         std::vector<bool> row_col;
@@ -2918,11 +2952,25 @@ namespace rocalution
                 }
             }
 
-            for(PtrType aj = h_row_offset[ai]; aj < h_row_offset[ai + 1]; ++aj)
+            for(PtrType aj = csc_ptr[ai]; aj < csc_ptr[ai + 1]; ++aj)
+            {
+                if(ai != csc_ind[aj])
+                {
+                    row_col[color[csc_ind[aj]]] = true;
+                }
+            }
+
+            PtrType count = h_row_offset[ai + 1] - h_row_offset[ai] + csc_ptr[ai + 1] - csc_ptr[ai];
+
+            for(PtrType aj = 0; aj < count; ++aj)
             {
                 if(row_col[color[ai]] == true)
                 {
                     ++color[ai];
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -2934,6 +2982,8 @@ namespace rocalution
 
         free_host(&h_row_offset);
         free_host(&h_col);
+        free_host(&csc_ptr);
+        free_host(&csc_ind);
 
         allocate_host(num_colors, size_colors);
         set_to_zero_host(num_colors, *size_colors);
