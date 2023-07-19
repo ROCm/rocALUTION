@@ -20,7 +20,17 @@ Full documentation for rocALUTION is available at [rocalution.readthedocs.io](ht
 ### Changed
 - Deprecated functions have been removed
 
-## rocALUTION 2.1.8
+## rocALUTION 2.1.11 for ROCm 5.7.0
+### Added
+- Added support for gfx940, gfx941 and gfx942
+### Improved
+- Fixed OpenMP runtime issue with Windows toolchain
+
+## rocALUTION 2.1.9 for ROCm 5.6.0
+### Improved
+- Fixed synchronization issues in level 1 routines
+
+## rocALUTION 2.1.8 for ROCm 5.5.0
 ### Added
 - Added build support for Navi32
 ### Improved

@@ -87,6 +87,9 @@ set(DEFAULT_AMDGPU_TARGETS
   gfx908:xnack-
   gfx90a:xnack-
   gfx90a:xnack+
+  gfx940
+  gfx941
+  gfx942
   gfx1030
   gfx1100
   gfx1101
