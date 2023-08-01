@@ -39,6 +39,8 @@
 #include "host_vector.hpp"
 #include "rocalution/utils/types.hpp"
 
+#include "host_ilut_driver_csr.hpp"
+
 #include <algorithm>
 #include <complex>
 #include <limits>
@@ -1504,193 +1506,98 @@ namespace rocalution
         int nrow = this->nrow_;
         int ncol = this->ncol_;
 
-        PtrType*   row_offset  = NULL;
-        PtrType*   diag_offset = NULL;
-        int*       nnz_entries = NULL;
-        bool*      nnz_pos     = (bool*)malloc(nrow * sizeof(bool));
-        ValueType* w           = NULL;
+        int64_t nnz = std::min(2 * maxrow, nrow) * nrow;
+
+        int remaining_nnz = nnz;
+
+        PtrType*   row_offset = NULL;
+        int*       col        = NULL;
+        ValueType* val        = NULL;
 
         allocate_host(nrow + 1, &row_offset);
-        allocate_host(nrow, &diag_offset);
-        allocate_host(nrow, &nnz_entries);
-        allocate_host(nrow, &w);
+        allocate_host(nnz, &col);
+        allocate_host(nnz, &val);
 
-        for(int i = 0; i < nrow; ++i)
-        {
-            w[i]           = 0.0;
-            nnz_entries[i] = -1;
-            nnz_pos[i]     = false;
-            diag_offset[i] = 0;
-        }
+        void*    buffer            = NULL;
+        PtrType* temp_pivot_buffer = NULL;
 
-        // pre-allocate 1.5x nnz arrays for preconditioner matrix
-        float      nnzA       = static_cast<float>(this->nnz_);
-        size_t     alloc_size = static_cast<size_t>(nnzA * 1.5f);
-        int*       col        = (int*)malloc(alloc_size * sizeof(int));
-        ValueType* val        = (ValueType*)malloc(alloc_size * sizeof(ValueType));
+        ILUTDriverCSR<ValueType, int> driver(nrow, nrow);
 
-        // initialize row_offset
+        buffer = (void*)malloc(driver.buffer_size());
+        driver.set_buffer(buffer);
+
+        allocate_host(nrow, &temp_pivot_buffer);
+        memset(temp_pivot_buffer, 0, sizeof(PtrType) * nrow);
+
+        // initialize row ptr B
         row_offset[0] = 0;
-        int64_t nnz   = 0;
 
-        // loop over all rows
-        for(int ai = 0; ai < this->nrow_; ++ai)
+        // for each row
+        for(int i = 0; i < nrow; i++)
         {
-            row_offset[ai + 1] = row_offset[ai];
+            PtrType row_begin = mat_.row_offset[i];
+            PtrType row_end   = mat_.row_offset[i + 1];
+            PtrType row_size  = row_end - row_begin;
 
-            PtrType row_begin = this->mat_.row_offset[ai];
-            PtrType row_end   = this->mat_.row_offset[ai + 1];
-            double  row_norm  = 0.0;
+            // Initialize working structure
+            driver.initialize(&mat_.val[row_begin], &mat_.col[row_begin], row_size, 0, i);
 
-            // fill working array with ai-th row
-            int m = 0;
-            for(PtrType aj = row_begin; aj < row_end; ++aj)
+            ValueType k_val;
+            int       k_col;
+
+            // for each column in row i under the diagonal
+            while(driver.next_lower(k_col, k_val))
             {
-                int idx        = this->mat_.col[aj];
-                w[idx]         = this->mat_.val[aj];
-                nnz_entries[m] = idx;
-                nnz_pos[idx]   = true;
-
-                row_norm += std::abs(this->mat_.val[aj]);
-                ++m;
-            }
-
-            // threshold for dropping strategy
-            double threshold = t * row_norm / static_cast<double>(row_end - row_begin);
-
-            for(int k = 0; k < nrow; ++k)
-            {
-                if(nnz_entries[k] == -1)
+                //find the index of element k, k in the upper matrix
+                PtrType pivot_index;
+                if((pivot_index = temp_pivot_buffer[k_col]) <= 0)
                 {
-                    break;
+                    // zero pivot
+                    continue;
                 }
+                pivot_index--;
 
-                int aj = nnz_entries[k];
+                // get the coefficient to perform row(i) = row(i) - factor * row(k)
+                // factor = a(i, k) / a(k, k)
+                ValueType factor = static_cast<ValueType>(1) / val[pivot_index];
 
-                // get smallest column index
-                int sidx = k;
-                for(int j = k + 1; j < nrow; ++j)
+                factor = factor * k_val;
+
+                if(std::abs(factor) > std::abs(t))
                 {
-                    if(nnz_entries[j] == -1)
+                    // put pivot in lower matrix; put in a(i, k)
+                    driver.save_lower(factor);
+
+                    // subtract row(k) from row(i); perform row(i) = row(i) - pivot * row(k)
+                    // for each non-zero element in row k after column k
+                    for(PtrType subtrahend_index = pivot_index + 1;
+                        subtrahend_index < row_offset[k_col + 1];
+                        subtrahend_index++)
                     {
-                        break;
-                    }
+                        // a(i, j) = a(i, j) - pivot * a(k, j)
+                        int       column     = col[subtrahend_index];
+                        ValueType val_to_add = -factor * val[subtrahend_index];
 
-                    if(nnz_entries[j] < aj)
-                    {
-                        sidx = j;
-                        aj   = nnz_entries[j];
-                    }
-                }
-
-                aj = nnz_entries[k];
-
-                // swap column index
-                if(k != sidx)
-                {
-                    nnz_entries[k]    = nnz_entries[sidx];
-                    nnz_entries[sidx] = aj;
-                    aj                = nnz_entries[k];
-                }
-
-                // lower matrix part
-                if(aj < ai)
-                {
-                    // if zero diagonal entry do nothing
-                    if(val[diag_offset[aj]] == static_cast<ValueType>(0))
-                    {
-                        LOG_INFO("(ILUT) zero row");
-                        continue;
-                    }
-
-                    w[aj] /= val[diag_offset[aj]];
-
-                    // do linear combination with previous row
-                    for(PtrType l = diag_offset[aj] + 1; l < row_offset[aj + 1]; ++l)
-                    {
-                        int       idx    = col[l];
-                        ValueType fillin = w[aj] * val[l];
-
-                        // drop off strategy for fill in
-                        if(nnz_pos[idx] == false)
-                        {
-                            if(std::abs(fillin) >= threshold)
-                            {
-                                nnz_entries[m] = idx;
-                                nnz_pos[idx]   = true;
-                                w[idx] -= fillin;
-                                ++m;
-                            }
-                        }
-                        else
-                        {
-                            w[idx] -= fillin;
-                        }
+                        driver.add_to_element(column, val_to_add);
                     }
                 }
             }
 
-            // fill ai-th row of preconditioner matrix
-            for(int k = 0, num_lower = 0, num_upper = 0; k < nrow; ++k)
+            // filter elements
+            driver.trim(t, maxrow);
+
+            // store elements
+            int store_size = driver.row_size();
+
+            if(remaining_nnz < store_size)
             {
-                int aj = nnz_entries[k];
+                nnz += static_cast<size_t>(nnz * 1.5f);
+                remaining_nnz += static_cast<size_t>(nnz * 1.5f);
 
-                if(aj == -1)
-                {
-                    break;
-                }
+                LOG_INFO("ILUTFactorize reallocating");
 
-                if(nnz_pos[aj] == false)
-                {
-                    break;
-                }
-
-                // lower part
-                if(aj < ai && num_lower < maxrow)
-                {
-                    val[nnz] = w[aj];
-                    col[nnz] = aj;
-
-                    ++row_offset[ai + 1];
-                    ++num_lower;
-                    ++nnz;
-
-                    // upper part
-                }
-                else if(aj > ai && num_upper < maxrow)
-                {
-                    val[nnz] = w[aj];
-                    col[nnz] = aj;
-
-                    ++row_offset[ai + 1];
-                    ++num_upper;
-                    ++nnz;
-
-                    // diagonal part
-                }
-                else if(aj == ai)
-                {
-                    val[nnz] = w[aj];
-                    col[nnz] = aj;
-
-                    diag_offset[ai] = row_offset[ai + 1];
-
-                    ++row_offset[ai + 1];
-                    ++nnz;
-                }
-
-                // clear working arrays
-                w[aj]          = static_cast<ValueType>(0);
-                nnz_entries[k] = -1;
-                nnz_pos[aj]    = false;
-            }
-
-            // resize preconditioner matrix if needed
-            if(alloc_size < static_cast<size_t>(nnz + 2 * maxrow + 1))
-            {
-                alloc_size += static_cast<size_t>(nnzA * 1.5f);
-                int*       col_tmp = (int*)realloc(col, alloc_size * sizeof(int));
-                ValueType* val_tmp = (ValueType*)realloc(val, alloc_size * sizeof(ValueType));
+                int*       col_tmp = (int*)realloc(col, nnz * sizeof(int));
+                ValueType* val_tmp = (ValueType*)realloc(val, nnz * sizeof(ValueType));
 
                 if(col_tmp == NULL || val_tmp == NULL)
                 {
@@ -1706,16 +1613,29 @@ namespace rocalution
                     val = val_tmp;
                 }
             }
+
+            int diag_in;
+            if(driver.store_row(&val[row_offset[i]], &col[row_offset[i]], diag_in))
+            {
+                temp_pivot_buffer[i] = row_offset[i] + diag_in + 1;
+            }
+            else
+            {
+                LOG_INFO("(ILUT) zero row");
+            }
+
+            row_offset[i + 1] = row_offset[i] + store_size;
+            remaining_nnz -= store_size;
         }
 
-        free_host(&w);
-        free_host(&diag_offset);
-        free_host(&nnz_entries);
-        free(nnz_pos);
+        free(buffer);
+        free(temp_pivot_buffer);
 
         // pinned memory
         int*       p_col = NULL;
         ValueType* p_val = NULL;
+
+        nnz = row_offset[nrow];
 
         allocate_host(nnz, &p_col);
         allocate_host(nnz, &p_val);
@@ -1728,6 +1648,8 @@ namespace rocalution
 
         this->Clear();
         this->SetDataPtrCSR(&row_offset, &p_col, &p_val, nnz, nrow, ncol);
+
+        this->Sort();
 
         return true;
     }

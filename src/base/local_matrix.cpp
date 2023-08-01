@@ -3015,7 +3015,7 @@ namespace rocalution
 #endif
 
         assert(maxrow > 0);
-        assert(t > 0.0);
+        assert(t >= 0.0);
 
         if(this->GetNnz() > 0)
         {
