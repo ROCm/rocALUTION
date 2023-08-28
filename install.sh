@@ -275,7 +275,7 @@ build_relocatable=false
 build_static=false
 build_address_sanitizer=false
 build_codecoverage=false
-build_freorg_bkwdcomp=true
+build_freorg_bkwdcomp=false
 compiler=c++
 verb=false
 
