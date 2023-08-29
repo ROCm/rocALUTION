@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -107,12 +107,17 @@ namespace rocalution
         ROCALUTION_EXPORT
         void InitLevels(int levels);
 
+        /** \brief Perform one Vcycle solve iteration */
         ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
+        /** \brief Build multigrid solver */
         virtual void Build(void);
+        /** \brief Initialize multigrid solver (called from Build()) */
         virtual void Initialize(void);
+        /** \brief Clear multigrid solver */
         virtual void Clear(void);
+        /** \brief Finalize multigrid solver (called from Clear()) */
         virtual void Finalize(void);
 
     protected:

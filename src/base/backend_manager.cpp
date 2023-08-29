@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -435,7 +435,6 @@ namespace rocalution
         // HIP
         case HIP:
             return _rocalution_init_base_hip_vector<ValueType>(backend_descriptor);
-            break;
 #endif
 
         default:
@@ -468,7 +467,6 @@ namespace rocalution
         case HIP:
             return _rocalution_init_base_hip_matrix<ValueType>(
                 backend_descriptor, matrix_format, blockdim);
-            break;
 #endif
 
         default:
@@ -500,28 +498,20 @@ namespace rocalution
         {
         case CSR:
             return new HostMatrixCSR<ValueType>(backend_descriptor);
-            break;
         case COO:
             return new HostMatrixCOO<ValueType>(backend_descriptor);
-            break;
         case DIA:
             return new HostMatrixDIA<ValueType>(backend_descriptor);
-            break;
         case ELL:
             return new HostMatrixELL<ValueType>(backend_descriptor);
-            break;
         case HYB:
             return new HostMatrixHYB<ValueType>(backend_descriptor);
-            break;
         case DENSE:
             return new HostMatrixDENSE<ValueType>(backend_descriptor);
-            break;
         case MCSR:
             return new HostMatrixMCSR<ValueType>(backend_descriptor);
-            break;
         case BCSR:
             return new HostMatrixBCSR<ValueType>(backend_descriptor, blockdim);
-            break;
         default:
             return NULL;
         }

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -104,8 +104,8 @@ namespace rocalution
         virtual void Sync(void);
 
         /** \brief Rebuild the solver only with numerical computation (no allocation or data
-      * structure computation)
-      */
+        * structure computation)
+        */
         ROCALUTION_EXPORT
         virtual void ReBuildNumeric(void);
 
@@ -117,20 +117,22 @@ namespace rocalution
         virtual void MoveToAccelerator(void);
 
         /** \brief Provide verbose output of the solver
-      * \details
-      * - verb = 0 -> no output
-      * - verb = 1 -> print info about the solver (start, end);
-      * - verb = 2 -> print (iter, residual) via iteration control;
-      */
+        * \details
+        * - verb = 0 -> no output
+        * - verb = 1 -> print info about the solver (start, end);
+        * - verb = 2 -> print (iter, residual) via iteration control;
+        */
         ROCALUTION_EXPORT
         virtual void Verbose(int verb = 1);
 
+        /** \brief Mark this solver as being a preconditioner */
         ROCALUTION_EXPORT
         inline void FlagPrecond(void)
         {
             this->is_precond_ = true;
         }
 
+        /** \brief Mark this solver as being a smoother */
         ROCALUTION_EXPORT
         inline void FlagSmoother(void)
         {
@@ -369,6 +371,7 @@ namespace rocalution
         virtual void SolveZeroSol(const VectorType& rhs, VectorType* x);
 
     protected:
+        /** \brief Solve Operator x = rhs, setting initial x = 0 */
         void SolveZeroSol_(const VectorType& rhs, VectorType* x);
 
         /** \brief Relaxation parameter */

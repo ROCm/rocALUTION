@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,54 +28,54 @@
 
 namespace rocalution
 {
-    /// Return double value
+    /** \brief Return double value */
     double rocalution_double(const int& val);
-    /// Return double value
+    /** \brief Return double value */
     double rocalution_double(const int64_t& val);
-    /// Return double value
+    /** \brief Return double value */
     double rocalution_double(const float& val);
-    /// Return double value
+    /** \brief Return double value */
     double rocalution_double(const double& val);
-    /// Return double value
+    /** \brief Return double value */
     double rocalution_double(const std::complex<float>& val);
-    /// Return double value
+    /** \brief Return double value */
     double rocalution_double(const std::complex<double>& val);
 
-    /// Return conjugate complex
+    /** \brief Return conjugate complex */
     inline float rocalution_conj(const float& val)
     {
         return val;
     }
-    /// Return conjugate complex
+    /** \brief Return conjugate complex */
     inline double rocalution_conj(const double& val)
     {
         return val;
     }
-    /// Return conjugate complex
+    /** \brief Return conjugate complex */
     inline std::complex<float> rocalution_conj(const std::complex<float>& val)
     {
         return std::conj(val);
     }
-    /// Return conjugate complex
+    /** \brief Return conjugate complex */
     inline std::complex<double> rocalution_conj(const std::complex<double>& val)
     {
         return std::conj(val);
     }
 
-    /// Return smallest positive floating point number
+    /** \brief Return smallest positive floating point number */
     template <typename ValueType>
     ValueType rocalution_eps(void);
 
-    /// Overloaded < operator for complex numbers
+    /** \brief Overloaded < operator for complex numbers */
     template <typename ValueType>
     bool operator<(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
-    /// Overloaded > operator for complex numbers
+    /** \brief Overloaded > operator for complex numbers */
     template <typename ValueType>
     bool operator>(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
-    /// Overloaded <= operator for complex numbers
+    /** \brief Overloaded <= operator for complex numbers */
     template <typename ValueType>
     bool operator<=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
-    /// Overloaded >= operator for complex numbers
+    /** \brief Overloaded >= operator for complex numbers */
     template <typename ValueType>
     bool operator>=(const std::complex<ValueType>& lhs, const std::complex<ValueType>& rhs);
 

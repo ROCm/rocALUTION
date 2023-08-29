@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,16 +67,20 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual ~LocalStencil();
 
+        /** \brief Shows simple info about the stencil. */
         ROCALUTION_EXPORT
         virtual void Info() const;
 
         /** \brief Return the dimension of the stencil */
         ROCALUTION_EXPORT
         int64_t GetNDim(void) const;
+        /** \brief Return the number of rows in the local stencil. */
         ROCALUTION_EXPORT
         virtual int64_t GetM(void) const;
+        /** \brief Return the number of columns in the local stencil. */
         ROCALUTION_EXPORT
         virtual int64_t GetN(void) const;
+        /** \brief Return the number of non-zeros in the local stencil. */
         ROCALUTION_EXPORT
         virtual int64_t GetNnz(void) const;
 
@@ -84,26 +88,33 @@ namespace rocalution
         ROCALUTION_EXPORT
         void SetGrid(int size);
 
+        /** \brief Clear (free) the stencil */
         ROCALUTION_EXPORT
         virtual void Clear();
 
+        /** \brief Perform stencil-vector multiplication, out = this * in; */
         ROCALUTION_EXPORT
         virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+        /** \brief Perform stencil-vector multiplication, out = scalar * this * in; */
         ROCALUTION_EXPORT
         virtual void ApplyAdd(const LocalVector<ValueType>& in,
                               ValueType                     scalar,
                               LocalVector<ValueType>*       out) const;
 
+        /** \brief Move all data (i.e. move the stencil) to the accelerator */
         ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
+        /** \brief Move all data (i.e. move the stencil) to the host */
         ROCALUTION_EXPORT
         virtual void MoveToHost(void);
 
     protected:
+        /** \brief Return true if the object is on the host */
         virtual bool is_host_(void) const
         {
             return true;
         };
+        /** \brief Return true if the object is on the accelerator */
         virtual bool is_accel_(void) const
         {
             return false;

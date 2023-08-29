@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,54 +42,70 @@ namespace rocalution
     template <typename ValueType>
     class HostMatrix;
 
-    // Backend descriptor - keeps information about the
-    // hardware - OpenMP (threads); HIP (blocksizes, handles, etc);
+    /** \ingroup backend_module
+  * \struct Rocalution_Backend_Descriptor
+  * \brief Rocalution backend descriptor class
+  * \details
+  * Backend descriptor - keeps information about the hardware - OpenMP (threads); HIP (blocksizes, handles, etc).
+  */
     struct Rocalution_Backend_Descriptor
     {
-        // set by initbackend();
+        /** \brief set by initbackend(); */
         bool init;
 
-        // current backend
-        int  backend;
+        /** \brief current backend */
+        int backend;
+        /** \brief Flag whether to use accelerator */
         bool accelerator;
+        /** \brief Flag whether to disable accelerator */
         bool disable_accelerator;
 
-        // OpenMP threads
+        /** \brief OpenMP threads */
         int OpenMP_threads;
-        // OpenMP threads before ROCALUTION init
+        /** \brief OpenMP threads before ROCALUTION init */
         int OpenMP_def_threads;
-        // OpenMP nested before ROCALUTION init
+        /** \brief OpenMP nested before ROCALUTION init */
         int OpenMP_def_nested;
-        // Host affinity (true-yes/false-no)
+        /** \brief Host affinity (true-yes/false-no) */
         bool OpenMP_affinity;
-        // Host threshold size
+        /** \brief Host threshold size */
         int64_t OpenMP_threshold;
 
-        // HIP section
-        // handles
-        // rocblas_handle casted in void **
+        // HIP handle section
+        /** \brief rocblas_handle casted in void ** */
         void* ROC_blas_handle;
-        // rocsparse_handle casted in void **
+        /** \brief rocsparse_handle casted in void ** */
         void* ROC_sparse_handle;
 
-        // HIP stream casted in void **
+        // HIP stream section
+        /** \brief HIP dedault stream casted in void ** */
         void* HIP_stream_default;
+        /** \brief HIP interior stream casted in void ** */
         void* HIP_stream_interior;
+        /** \brief HIP ghost stream casted in void ** */
         void* HIP_stream_ghost;
+        /** \brief HIP current stream casted in void ** */
         void* HIP_stream_current;
 
+        /** \brief HIP device identifier */
         int HIP_dev;
+        /** \brief HIP warp size */
         int HIP_warp;
+        /** \brief HIP block size */
         int HIP_block_size;
+        /** \brief HIP max threads */
         int HIP_max_threads;
+        /** \brief HIP multiprocessor count */
         int HIP_num_procs;
+        /** \brief HIP thread per processor count */
         int HIP_threads_per_proc;
 
-        // MPI rank/id
+        /** \brief MPI rank/id */
         int rank;
 
-        // Logging
-        int            log_mode;
+        /** \brief Logging mode */
+        int log_mode;
+        /** \brief Logging file */
         std::ofstream* log_file;
     };
 

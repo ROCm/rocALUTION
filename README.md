@@ -105,4 +105,4 @@ All code based on rocALUTION is portable and independent of the hardware, it wil
 [rocBLAS]: https://github.com/ROCmSoftwarePlatform/rocBLAS
 [rocSPARSE]: https://github.com/ROCmSoftwarePlatform/rocSPARSE
 [rocRAND]: https://github.com/ROCmSoftwarePlatform/rocRAND
-[here]: https://rocalution.readthedocs.io
+[here]: https://rocm.docs.amd.com/projects/rocALUTION/en/latest/

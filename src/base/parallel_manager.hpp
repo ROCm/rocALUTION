@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -168,19 +168,19 @@ namespace rocalution
         void WriteFileASCII(const std::string& filename) const;
 
     protected:
-        // Communicate boundary data (async)
+        /** \brief Communicate boundary data (async) */
         template <typename ValueType>
         void CommunicateAsync_(ValueType* send_buffer, ValueType* recv_buffer) const;
-        // Synchronize communication
+        /** \brief Synchronize communication */
         void CommunicateSync_(void) const;
 
-        // Back-communicate boundary data (async)
+        /** \brief Back-communicate boundary data (async) */
         template <typename ValueType>
         void InverseCommunicateAsync_(ValueType* send_buffer, ValueType* recv_buffer) const;
-        // Synchronize communication
+        /** \brief Synchronize communication */
         void InverseCommunicateSync_(void) const;
 
-        // Communicate CSR matrix data (async)
+        /** \brief Communicate CSR matrix data (async) */
         template <typename I, typename J, typename T>
         void CommunicateCSRAsync_(I* send_row_ptr,
                                   J* send_col_ind,
@@ -188,10 +188,10 @@ namespace rocalution
                                   I* recv_row_ptr,
                                   J* recv_col_ind,
                                   T* recv_val) const;
-        // Synchronize communication
+        /** \brief Synchronize communication */
         void CommunicateCSRSync_(void) const;
 
-        // Back-communicate CSR matrix data (async)
+        /** \brief Back-communicate CSR matrix data (async) */
         template <typename I, typename J, typename T>
         void InverseCommunicateCSRAsync_(I* send_row_ptr,
                                          J* send_col_ind,
@@ -199,18 +199,18 @@ namespace rocalution
                                          I* recv_row_ptr,
                                          J* recv_col_ind,
                                          T* recv_val) const;
-        // Synchronize communication
+        /** \brief Synchronize communication */
         void InverseCommunicateCSRSync_(void) const;
 
-        // Generate parallel manager from ghost columns, mapping and parent PM
+        /** \brief Generate parallel manager from ghost columns, mapping and parent PM */
         void GenerateFromGhostColumnsWithParent_(int64_t                nnz,
                                                  const int64_t*         ghost_col,
                                                  const ParallelManager& parent,
                                                  bool                   transposed = false);
 
-        // Transform global to local ids
+        /** \brief Transform global to local ids */
         void BoundaryTransformGlobalToLocal_(void);
-        // Transform global fine points to local coarse points
+        /** \brief Transform global fine points to local coarse points */
         void BoundaryTransformGlobalFineToLocalCoarse_(const int* f2c);
 
     private:

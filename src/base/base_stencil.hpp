@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,38 +51,38 @@ namespace rocalution
         BaseStencil();
         virtual ~BaseStencil();
 
-        /// Return the number of rows in the stencil
+        /** \brief Return the number of rows in the stencil */
         int GetM(void) const;
-        /// Return the number of columns in the stencil
+        /** \brief Return the number of columns in the stencil */
         int GetN(void) const;
-        /// Return the dimension of the stencil
+        /** \brief Return the dimension of the stencil */
         int GetNDim(void) const;
-        /// Return the nnz per row
+        /** \brief Return the nnz per row */
         virtual int64_t GetNnz(void) const = 0;
 
-        /// Shows simple info about the object
+        /** \brief Shows simple info about the object */
         virtual void Info(void) const = 0;
-        /// Return the stencil format id (see stencil_formats.hpp)
+        /** \brief Return the stencil format id (see stencil_formats.hpp) */
         virtual unsigned int GetStencilId(void) const = 0;
-        /// Copy the backend descriptor information
+        /** \brief Copy the backend descriptor information */
         virtual void set_backend(const Rocalution_Backend_Descriptor& local_backend);
-        // Set the grid size
+        /** \brief Set the grid size */
         virtual void SetGrid(int size);
 
-        /// Apply the stencil to vector, out = this*in;
+        /** \brief Apply the stencil to vector, out = this*in; */
         virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const = 0;
-        /// Apply and add the stencil to vector, out = out + scalar*this*in;
+        /** \brief Apply and add the stencil to vector, out = out + scalar*this*in; */
         virtual void ApplyAdd(const BaseVector<ValueType>& in,
                               ValueType                    scalar,
                               BaseVector<ValueType>*       out) const = 0;
 
     protected:
-        /// Number of rows
+        /** \brief Number of rows */
         int ndim_;
-        /// Number of columns
+        /** \brief Number of columns */
         int size_;
 
-        /// Backend descriptor (local copy)
+        /** \brief Backend descriptor (local copy) */
         Rocalution_Backend_Descriptor local_backend_;
 
         friend class BaseVector<ValueType>;
@@ -106,10 +106,10 @@ namespace rocalution
         AcceleratorStencil();
         virtual ~AcceleratorStencil();
 
-        /// Copy (accelerator stencil) from host stencil
+        /** \brief Copy (accelerator stencil) from host stencil */
         virtual void CopyFromHost(const HostStencil<ValueType>& src) = 0;
 
-        /// Copy (accelerator stencil) to host stencil
+        /** \brief Copy (accelerator stencil) to host stencil */
         virtual void CopyToHost(HostStencil<ValueType>* dst) const = 0;
     };
 

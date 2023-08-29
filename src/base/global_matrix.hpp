@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,16 +62,26 @@ namespace rocalution
         explicit GlobalMatrix(const ParallelManager& pm);
         virtual ~GlobalMatrix();
 
+        /** \brief Return the number of rows in the global matrix. */
         virtual int64_t GetM(void) const;
+        /** \brief Return the number of columns in the global matrix. */
         virtual int64_t GetN(void) const;
+        /** \brief Return the number of non-zeros in the global matrix. */
         virtual int64_t GetNnz(void) const;
+        /** \brief Return the number of rows in the interior matrix. */
         virtual int64_t GetLocalM(void) const;
+        /** \brief Return the number of columns in the interior matrix. */
         virtual int64_t GetLocalN(void) const;
+        /** \brief Return the number of non-zeros in the interior matrix. */
         virtual int64_t GetLocalNnz(void) const;
+        /** \brief Return the number of rows in the ghost matrix. */
         virtual int64_t GetGhostM(void) const;
+        /** \brief Return the number of columns in the ghost matrix. */
         virtual int64_t GetGhostN(void) const;
+        /** \brief Return the number of non-zeros in the ghost matrix. */
         virtual int64_t GetGhostNnz(void) const;
 
+        /** \brief Return the global matrix format id (see matrix_formats.hpp) */
         unsigned int GetFormat(void) const;
 
         /** \private */
@@ -79,20 +89,22 @@ namespace rocalution
         /** \private */
         const LocalMatrix<ValueType>& GetGhost() const;
 
+        /** \brief Move all data (i.e. move the part of the global matrix stored on this rank) to the accelerator */
         virtual void MoveToAccelerator(void);
+        /** \brief Move all data (i.e. move the part of the global matrix stored on this rank) to the host */
         virtual void MoveToHost(void);
-
+        /** \brief Shows simple info about the matrix. */
         virtual void Info(void) const;
 
         /** \brief Perform a sanity check of the matrix
-      * \details
-      * Checks, if the matrix contains valid data, i.e. if the values are not infinity
-      * and not NaN (not a number) and if the structure of the matrix is correct (e.g.
-      * indices cannot be negative, CSR and COO matrices have to be sorted, etc.).
-      *
-      * \retval true if the matrix is ok (empty matrix is also ok).
-      * \retval false if there is something wrong with the structure or values.
-      */
+        * \details
+        * Checks, if the matrix contains valid data, i.e. if the values are not infinity
+        * and not NaN (not a number) and if the structure of the matrix is correct (e.g.
+        * indices cannot be negative, CSR and COO matrices have to be sorted, etc.).
+        *
+        * \retval true if the matrix is ok (empty matrix is also ok).
+        * \retval false if there is something wrong with the structure or values.
+        */
         virtual bool Check(void) const;
 
         /** \brief Allocate CSR Matrix */
@@ -100,6 +112,7 @@ namespace rocalution
         /** \brief Allocate COO Matrix */
         void AllocateCOO(const std::string& name, int64_t local_nnz, int64_t ghost_nnz);
 
+        /** \brief Clear (free) the matrix */
         virtual void Clear(void);
 
         /** \brief Set the parallel manager of a global matrix */
@@ -164,8 +177,8 @@ namespace rocalution
         void LeaveGhostDataPtrCOO(int** row, int** col, ValueType** val);
 
         /** \brief Clone the entire matrix (values,structure+backend descr) from another
-      * GlobalMatrix
-      */
+        * GlobalMatrix
+        */
         void CloneFrom(const GlobalMatrix<ValueType>& src);
         /** \brief Copy matrix (values and structure) from another GlobalMatrix */
         void CopyFrom(const GlobalMatrix<ValueType>& src);
@@ -189,7 +202,9 @@ namespace rocalution
         /** \brief Convert the matrix to specified matrix ID format */
         void ConvertTo(unsigned int matrix_format, int blockdim = 1);
 
+        /** \brief Perform matrix-vector multiplication, out = this * in; */
         virtual void Apply(const GlobalVector<ValueType>& in, GlobalVector<ValueType>* out) const;
+        /** \brief Perform matrix-vector multiplication, out = scalar * this * in; */
         virtual void ApplyAdd(const GlobalVector<ValueType>& in,
                               ValueType                      scalar,
                               GlobalVector<ValueType>*       out) const;
@@ -215,16 +230,16 @@ namespace rocalution
         void WriteFileCSR(const std::string& filename) const;
 
         /** \brief Sort the matrix indices
-      * \details
-      * Sorts the matrix by indices.
-      * - For CSR matrices, column values are sorted.
-      * - For COO matrices, row indices are sorted.
-      */
+        * \details
+        * Sorts the matrix by indices.
+        * - For CSR matrices, column values are sorted.
+        * - For COO matrices, row indices are sorted.
+        */
         void Sort(void);
 
         /** \brief Extract the inverse (reciprocal) diagonal values of the matrix into a
-      * GlobalVector
-      */
+        * GlobalVector
+        */
         void ExtractInverseDiagonal(GlobalVector<ValueType>* vec_inv_diag) const;
 
         /** \brief Scale all the values in the matrix */
@@ -277,7 +292,9 @@ namespace rocalution
                                   GlobalMatrix<ValueType>* prolong) const;
 
     protected:
+        /** \brief Return true if the object is on the host */
         virtual bool is_host_(void) const;
+        /** \brief Return true if the object is on the accelerator */
         virtual bool is_accel_(void) const;
 
     private:

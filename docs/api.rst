@@ -4,10 +4,6 @@
 API
 ###
 
-.. toctree::
-   :maxdepth: 3
-   :caption: Contents:
-
 This section provides a detailed list of the library API
 
 Host Utility Functions

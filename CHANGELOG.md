@@ -1,6 +1,6 @@
 # Change Log for rocALUTION
 
-Full documentation for rocALUTION is available at [rocalution.readthedocs.io](https://rocalution.readthedocs.io/en/latest/).
+Full documentation for rocALUTION is available at [rocm.docs.amd.com](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
 ## rocALUTION 3.0.2
 ### Added

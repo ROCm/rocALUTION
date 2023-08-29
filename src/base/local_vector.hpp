@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,19 +63,26 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual ~LocalVector();
 
+        /** \brief Move all data (i.e. move the vector) to the accelerator */
         ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
+        /** \brief Move all data (i.e. move the vector) to the accelerator asynchronously */
         ROCALUTION_EXPORT
         virtual void MoveToAcceleratorAsync(void);
+        /** \brief Move all data (i.e. move the vector) to the host */
         ROCALUTION_EXPORT
         virtual void MoveToHost(void);
+        /** \brief Move all data (i.e. move the vector) to the host asynchronously */
         ROCALUTION_EXPORT
         virtual void MoveToHostAsync(void);
+        /** \brief Synchronize the vector */
         ROCALUTION_EXPORT
         virtual void Sync(void);
 
+        /** \brief Shows simple info about the vector. */
         ROCALUTION_EXPORT
         virtual void Info(void) const;
+        /** \brief Return the size of the vector. */
         ROCALUTION_EXPORT
         virtual int64_t GetSize(void) const;
 
@@ -86,6 +93,14 @@ namespace rocalution
         ROCALUTION_EXPORT
         LocalVector<ValueType>& GetInterior();
 
+        /** \brief Perform a sanity check of the vector
+        * \details
+        * Checks, if the vector contains valid data, i.e. if the values are not infinity
+        * and not NaN (not a number).
+        *
+        * \retval true if the vector is ok (empty vector is also ok).
+        * \retval false if there is something wrong with the values.
+        */
         ROCALUTION_EXPORT
         virtual bool Check(void) const;
 
@@ -162,18 +177,24 @@ namespace rocalution
         ROCALUTION_EXPORT
         void LeaveDataPtr(ValueType** ptr);
 
+        /** \brief Clear (free) the vector */
         ROCALUTION_EXPORT
         virtual void Clear();
+        /** \brief Set the values of the vector to zero */
         ROCALUTION_EXPORT
         virtual void Zeros();
+        /** \brief Set the values of the vector to one */
         ROCALUTION_EXPORT
         virtual void Ones();
+        /** \brief Set the values of the vector to given argument */
         ROCALUTION_EXPORT
         virtual void SetValues(ValueType val);
+        /** \brief Set the values of the vector to random uniformly distributed values (between -1 and 1) */
         ROCALUTION_EXPORT
         virtual void SetRandomUniform(unsigned long long seed,
                                       ValueType          a = static_cast<ValueType>(-1),
                                       ValueType          b = static_cast<ValueType>(1));
+        /** \brief Set the values of the vector to random normally distributed values (between 0 and 1) */
         ROCALUTION_EXPORT
         virtual void SetRandomNormal(unsigned long long seed,
                                      ValueType          mean = static_cast<ValueType>(0),
@@ -214,24 +235,34 @@ namespace rocalution
         const ValueType& operator[](int64_t i) const;
         /**@}*/
 
+        /** \brief Read LocalVector from ASCII file. */
         ROCALUTION_EXPORT
         virtual void ReadFileASCII(const std::string& filename);
+        /** \brief Write LocalVector to ASCII file. */
         ROCALUTION_EXPORT
         virtual void WriteFileASCII(const std::string& filename) const;
+        /** \brief Read LocalVector from binary file. */
         ROCALUTION_EXPORT
         virtual void ReadFileBinary(const std::string& filename);
+        /** \brief Write LocalVector to binary file. */
         ROCALUTION_EXPORT
         virtual void WriteFileBinary(const std::string& filename) const;
 
+        /** \brief Clone the entire vector (values,structure+backend descr) from another
+        * LocalVector
+        */
         ROCALUTION_EXPORT
         virtual void CopyFrom(const LocalVector<ValueType>& src);
+        /** \brief Async copy from another local vector */
         ROCALUTION_EXPORT
         virtual void CopyFromAsync(const LocalVector<ValueType>& src);
+        /** \brief Copy values from another local float vector */
         ROCALUTION_EXPORT
         virtual void CopyFromFloat(const LocalVector<float>& src);
+        /** \brief Copy values from another local double vector */
         ROCALUTION_EXPORT
         virtual void CopyFromDouble(const LocalVector<double>& src);
-
+        /** \brief Copy from another vector */
         ROCALUTION_EXPORT
         virtual void CopyFrom(const LocalVector<ValueType>& src,
                               int64_t                       src_offset,
@@ -248,6 +279,7 @@ namespace rocalution
         void CopyFromPermuteBackward(const LocalVector<ValueType>& src,
                                      const LocalVector<int>&       permutation);
 
+        /** \brief Clone from another vector */
         ROCALUTION_EXPORT
         virtual void CloneFrom(const LocalVector<ValueType>& src);
 
@@ -313,10 +345,68 @@ namespace rocalution
         ROCALUTION_EXPORT
         void Prolongation(const LocalVector<ValueType>& vec_coarse, const LocalVector<int>& map);
 
+        /** \brief Perform scalar-vector multiplication and add it to another vector, this = this + alpha * x;
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * x.Allocate("x", 100);
+      * y.Allocate("y", 100);
+      *
+      * x.Ones();
+      * y.Ones();
+      *
+      * T alpha = 2.0;
+      * y.AddScale(x, alpha);
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual void AddScale(const LocalVector<ValueType>& x, ValueType alpha);
+
+        /** \brief Perform scalar-vector multiplication and add another vector, this = alpha * this + x;
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * x.Allocate("x", 100);
+      * y.Allocate("y", 100);
+      *
+      * x.Ones();
+      * y.Ones();
+      *
+      * T alpha = 2.0;
+      * y.ScaleAdd(alpha, x);
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual void ScaleAdd(ValueType alpha, const LocalVector<ValueType>& x);
+
+        /** \brief Perform scalar-vector multiplication and add another scaled vector (i.e. axpby), this = alpha * this + beta * x;
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * x.Allocate("x", 100);
+      * y.Allocate("y", 100);
+      *
+      * x.Ones();
+      * y.Ones();
+      *
+      * T alpha = 2.0;
+      * T beta = -1.0;
+      * y.ScaleAddScale(alpha, x, beta);
+      * \endcode
+      */
+        /**@{*/
         ROCALUTION_EXPORT
         virtual void
             ScaleAddScale(ValueType alpha, const LocalVector<ValueType>& x, ValueType beta);
@@ -327,39 +417,232 @@ namespace rocalution
                                    int64_t                       src_offset,
                                    int64_t                       dst_offset,
                                    int64_t                       size);
+
+        /** \brief Perform vector update of type this = alpha*this + x*beta + y*gamma */
         ROCALUTION_EXPORT
         virtual void ScaleAdd2(ValueType                     alpha,
                                const LocalVector<ValueType>& x,
                                ValueType                     beta,
                                const LocalVector<ValueType>& y,
                                ValueType                     gamma);
+        /**@}*/
+
+        /** \brief Scale vector, this = alpha * this;
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("y", 100);
+      *
+      * y.Ones();
+      *
+      * T alpha = 2.0;
+      * y.Scale(alpha);
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual void Scale(ValueType alpha);
+
+        /** \brief Perform dot product
+      * \details
+      * Perform dot product of 'this' vector and the vector x. In the case of complex types, this performs
+      * conjugate dot product.
+      *
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("x", 100);
+      * y.Allocate("y", 100);
+      *
+      * x.Ones();
+      * y.Ones();
+      *
+      * y.Dot(x);
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual ValueType Dot(const LocalVector<ValueType>& x) const;
+
+        /** \brief Perform dot product
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("x", 100);
+      * y.Allocate("y", 100);
+      *
+      * x.Ones();
+      * y.Ones();
+      *
+      * y.Dot(x);
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual ValueType DotNonConj(const LocalVector<ValueType>& x) const;
+
+        /** \brief Compute L2 (Euclidean) norm of vector
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("y", 100);
+      *
+      * y.Ones();
+      *
+      * T norm2 = y.Norm();
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual ValueType Norm(void) const;
+
+        /** \brief Reduce (sum) the vector components
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("y", 100);
+      *
+      * y.Ones();
+      *
+      * T sum = y.Reduce();
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual ValueType Reduce(void) const;
+
+        /** \brief Compute inclsuive sum of vector
+      * \par Example
+      * Given starting vector:
+      *    this = [1, 1, 1, 1]
+      * After performing inclusive sum out vector will be:
+      *    this = [1, 2, 3, 4]
+      * The function returns 4.
+      *
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("y", 100);
+      *
+      * y.Ones();
+      *
+      * T sum = y.InclusiveSum();
+      * \endcode
+      */
+        /**@{*/
         ROCALUTION_EXPORT
         virtual ValueType InclusiveSum(void);
         ROCALUTION_EXPORT
         virtual ValueType InclusiveSum(const LocalVector<ValueType>& vec);
+        /**@}*/
+
+        /** \brief Compute exclusive sum of vector
+      * \par Example
+      * Given starting vector:
+      *    this = [1, 1, 1, 1]
+      * After performing exclusive sum out vector will be:
+      *    this = [0, 1, 2, 3]
+      * The function returns 3.
+      *
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("y", 100);
+      *
+      * y.Ones();
+      *
+      * T sum = y.ExclusiveSum();
+      * \endcode
+      */
+        /**@{*/
         ROCALUTION_EXPORT
         virtual ValueType ExclusiveSum(void);
         ROCALUTION_EXPORT
         virtual ValueType ExclusiveSum(const LocalVector<ValueType>& vec);
+        /**@}*/
+
+        /** \brief Compute absolute value sum of vector components
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("y", 100);
+      *
+      * y.Ones();
+      *
+      * y.Scale(-1.0);
+      * T sum = y.Asum();
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual ValueType Asum(void) const;
+
+        /** \brief Compute maximum absolute value component of vector
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("y", 100);
+      *
+      * y.Ones();
+      *
+      * T max = y.Amax();
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual int64_t Amax(ValueType& value) const;
+
+        /** \brief Perform pointwise multiplication of vector
+      * \details
+      * Perform pointwise multiplication of vector components with the vector components of x, this = this * x.
+      * Alternatively, one can also perform pointwise multiplication of vector components of x with
+      * vector components of y and set that to the current 'this' vector, this = x * y.
+      *
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate vectors
+      * y.Allocate("x", 100);
+      * y.Allocate("y", 100);
+      *
+      * x.Ones();
+      * y.Ones();
+      *
+      * y.PointWiseMult(x);
+      * \endcode
+      */
+        /**@{*/
         ROCALUTION_EXPORT
         virtual void PointWiseMult(const LocalVector<ValueType>& x);
         ROCALUTION_EXPORT
         virtual void PointWiseMult(const LocalVector<ValueType>& x,
                                    const LocalVector<ValueType>& y);
+        /**@}*/
+
+        /** \brief Take the power of each vector component */
         ROCALUTION_EXPORT
         virtual void Power(double power);
 
@@ -392,7 +675,9 @@ namespace rocalution
         void Sort(LocalVector<ValueType>* sorted, LocalVector<int>* perm = NULL) const;
 
     protected:
+        /** \brief Return true if the object is on the host */
         virtual bool is_host_(void) const;
+        /** \brief Return true if the object is on the accelerator */
         virtual bool is_accel_(void) const;
 
     private:

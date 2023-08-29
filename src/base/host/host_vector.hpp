@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,13 +82,13 @@ namespace rocalution
         virtual bool Prolongation(const BaseVector<ValueType>& vec_coarse,
                                   const BaseVector<int>&       map);
 
-        /// Read vector from ASCII file
+        /** \brief Read vector from ASCII file */
         void ReadFileASCII(const std::string& filename);
-        /// Write vector to ASCII file
+        /** \brief Write vector to ASCII file */
         void WriteFileASCII(const std::string& filename) const;
-        /// Read vector from binary file
+        /** \brief Read vector from binary file */
         void ReadFileBinary(const std::string& filename);
-        /// Write vector to binary file
+        /** \brief Write vector to binary file */
         void WriteFileBinary(const std::string& filename) const;
 
         // this = this + alpha*x

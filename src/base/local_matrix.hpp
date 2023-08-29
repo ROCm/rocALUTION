@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,6 +70,7 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual ~LocalMatrix();
 
+        /** \brief Shows simple info about the matrix. */
         ROCALUTION_EXPORT
         virtual void Info(void) const;
 
@@ -80,10 +81,13 @@ namespace rocalution
         ROCALUTION_EXPORT
         int GetBlockDimension(void) const;
 
+        /** \brief Return the number of rows in the local matrix. */
         ROCALUTION_EXPORT
         virtual int64_t GetM(void) const;
+        /** \brief Return the number of columns in the local matrix. */
         ROCALUTION_EXPORT
         virtual int64_t GetN(void) const;
+        /** \brief Return the number of non-zeros in the local matrix. */
         ROCALUTION_EXPORT
         virtual int64_t GetNnz(void) const;
 
@@ -267,6 +271,7 @@ namespace rocalution
         void LeaveDataPtrDENSE(ValueType** val);
         /**@}*/
 
+        /** \brief Clear (free) the matrix */
         ROCALUTION_EXPORT
         void Clear(void);
 
@@ -662,14 +667,19 @@ namespace rocalution
         ROCALUTION_EXPORT
         void WriteFileCSR(const std::string& filename) const;
 
+        /** \brief Move all data (i.e. move the matrix) to the accelerator */
         ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
+        /** \brief Move all data (i.e. move the matrix) to the accelerator asynchronously */
         ROCALUTION_EXPORT
         virtual void MoveToAcceleratorAsync(void);
+        /** \brief Move all data (i.e. move the matrix) to the host */
         ROCALUTION_EXPORT
         virtual void MoveToHost(void);
+        /** \brief Move all data (i.e. move the matrix) to the host asynchronously */
         ROCALUTION_EXPORT
         virtual void MoveToHostAsync(void);
+        /** \brief Synchronize the matrix */
         ROCALUTION_EXPORT
         virtual void Sync(void);
 
@@ -834,8 +844,46 @@ namespace rocalution
         ROCALUTION_EXPORT
         void ConvertTo(unsigned int matrix_format, int blockdim = 1);
 
+        /** \brief Perform matrix-vector multiplication, out = this * in;
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalMatrix<T> A;
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate matrices and vectors
+      * A.AllocateCSR("my CSR matrix", 456, 100, 100);
+      * x.Allocate("x", A.GetN());
+      * y.Allocate("y", A.GetM());
+      *
+      * // Fill data in A matrix and x vector
+      *
+      * A.Apply(x, &y);
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual void Apply(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+
+        /** \brief Perform matrix-vector multiplication, out = scalar * this * in;
+      * \par Example
+      * \code{.cpp}
+      * // rocALUTION structures
+      * LocalMatrix<T> A;
+      * LocalVector<T> x;
+      * LocalVector<T> y;
+      *
+      * // Allocate matrices and vectors
+      * A.AllocateCSR("my CSR matrix", 456, 100, 100);
+      * x.Allocate("x", A.GetN());
+      * y.Allocate("y", A.GetM());
+      *
+      * // Fill data in A matrix and x vector
+      *
+      * T scalar = 2.0;
+      * A.Apply(x, scalar, &y);
+      * \endcode
+      */
         ROCALUTION_EXPORT
         virtual void ApplyAdd(const LocalVector<ValueType>& in,
                               ValueType                     scalar,
@@ -1048,7 +1096,9 @@ namespace rocalution
                              int                     rGsize) const;
 
     protected:
+        /** \brief Return true if the object is on the host */
         virtual bool is_host_(void) const;
+        /** \brief Return true if the object is on the accelerator */
         virtual bool is_accel_(void) const;
 
     private:

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,44 +36,44 @@ namespace rocalution
     template <typename ValueType>
     class HostMatrix;
 
-    /// Initialize HIP (rocBLAS, rocSPARSE)
+    /** \brief Initialize HIP (rocBLAS, rocSPARSE) */
     bool rocalution_init_hip();
-    /// Release HIP resources (rocBLAS, rocSPARSE)
+    /** \brief Release HIP resources (rocBLAS, rocSPARSE) */
     void rocalution_stop_hip();
 
-    /// Print information about the HIPs in the systems
+    /** \brief Print information about the HIPs in the systems */
     void rocalution_info_hip(const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
-    /// Sync the device (for async transfers)
+    /** \brief Sync the device (for async transfers) */
     void rocalution_hip_sync(void);
 
-    /// Sync the default stream
+    /** \brief Sync the default stream */
     void rocalution_hip_sync_default(void);
 
-    /// Sync the interior stream
+    /** \brief Sync the interior stream */
     void rocalution_hip_sync_interior(void);
 
-    /// Sync the ghost stream
+    /** \brief Sync the ghost stream */
     void rocalution_hip_sync_ghost(void);
 
-    /// Returns name of device architecture
+    /** \brief Returns name of device architecture */
     std::string rocalution_get_arch_hip(void);
 
-    /// Set the rocsparse stream to 'interior'
+    /** \brief Set the rocsparse stream to 'interior' */
     void rocalution_hip_compute_interior(void);
 
-    /// Set the rocsparse stream to 'ghost'
+    /** \brief Set the rocsparse stream to 'ghost' */
     void rocalution_hip_compute_ghost(void);
 
-    /// Set the rocsparse stream to default
+    /** \brief Set the rocsparse stream to default */
     void rocalution_hip_compute_default(void);
 
-    /// Build (and return) a vector on HIP
+    /** \brief Build (and return) a vector on HIP */
     template <typename ValueType>
     AcceleratorVector<ValueType>* _rocalution_init_base_hip_vector(
         const struct Rocalution_Backend_Descriptor& backend_descriptor);
 
-    /// Build (and return) a matrix on HIP
+    /** \brief Build (and return) a matrix on HIP */
     template <typename ValueType>
     AcceleratorMatrix<ValueType>* _rocalution_init_base_hip_matrix(
         const struct Rocalution_Backend_Descriptor& backend_descriptor,
