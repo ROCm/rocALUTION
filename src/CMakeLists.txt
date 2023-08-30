@@ -123,7 +123,7 @@ if(SUPPORT_HIP)
 endif()
 
 # Target properties
-rocm_set_soversion(rocalution ${rocalution_SOVERSION})
+rocm_set_soversion(rocalution "1.0.0")
 set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 if(WIN32)
   set_target_properties(rocalution PROPERTIES CXX_VISIBILITY_PRESET "hidden" VISIBILITY_INLINES_HIDDEN ON)
@@ -183,7 +183,7 @@ if(SUPPORT_HIP)
     target_link_libraries(rocalution_hip PUBLIC MPI::MPI_CXX)
   endif()
 
-  rocm_set_soversion(rocalution_hip ${rocalution_SOVERSION})
+  rocm_set_soversion(rocalution_hip "1.0.0")
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
   if(WIN32)

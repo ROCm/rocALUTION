@@ -134,9 +134,7 @@ endif()
 
 
 # Setup version
-set(VERSION_STRING "3.0.3")
-rocm_setup_version(VERSION ${VERSION_STRING})
-set(rocalution_SOVERSION 0.1)
+rocm_setup_version(VERSION "3.0.3")
 
 if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
   set( BUILD_CLIENTS ON )
