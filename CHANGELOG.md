@@ -2,21 +2,21 @@
 
 Full documentation for rocALUTION is available at [rocm.docs.amd.com](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
-## rocALUTION 3.0.2
+## rocALUTION 3.0.3
 ### Added
 - Added support for 64bit integer vectors
 - Added inclusive and exclusive sum functionality for Vector classes
-- Added Transpose functionality for all Operators
-- Added TripleMatrixProduct functionality for Global/LocalMatrix
-- Added GlobalMatrix (MPI) support for Ruge-Stueben AMG
-- New example for MPI distributed CG with Ruge-Stueben AMG preconditioner
+- Added Transpose functionality for Global/LocalMatrix
+- Added TripleMatrixProduct functionality LocalMatrix
 - Added Sort() function for LocalVector class
 ### Improved
-- Added multiple streams to the HIP backend
+- Added multiple stream support to the HIP backend
 - Matrix dimensions and number of non-zeros are now stored using 64bit integers
 - Fixed typos in the documentation
 - Unit tests do not ignore BCSR block dimension anymore
-- GlobalMatrix::Apply() now runs on multiple streams
+- GlobalMatrix::Apply() now uses multiple streams to better hide communication
+- Improved ILUT preconditioner
+- Fixed a bug in multicoloring for non-symmetric matrix patterns
 ### Changed
 - Deprecated functions have been removed
 
