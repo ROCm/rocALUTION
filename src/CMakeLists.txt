@@ -123,7 +123,7 @@ if(SUPPORT_HIP)
 endif()
 
 # Target properties
-rocm_set_soversion(rocalution "1.0.0")
+rocm_set_soversion(rocalution "1.0")
 set_target_properties(rocalution PROPERTIES DEBUG_POSTFIX "-d")
 if(WIN32)
   set_target_properties(rocalution PROPERTIES CXX_VISIBILITY_PRESET "hidden" VISIBILITY_INLINES_HIDDEN ON)

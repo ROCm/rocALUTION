@@ -157,7 +157,7 @@ endif()
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  rocm_package_add_dependencies(DEPENDS "hip-rocclr >= 4.0.0" "rocsparse >= 1.12.10" "rocblas >= 2.22.0" "rocrand >= 0.0.1")
+  rocm_package_add_dependencies(DEPENDS "hip-rocclr >= 4.0.0" "rocsparse >= 1.12.10" "rocblas >= 2.22.0" "rocrand >= 2.1.0")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
