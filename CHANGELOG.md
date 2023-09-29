@@ -2,23 +2,31 @@
 
 Full documentation for rocALUTION is available at [rocm.docs.amd.com](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
-## rocALUTION 3.0.3
+## rocALUTION 3.0.3 for ROCm 6.0.0
 ### Added
 - Added support for 64bit integer vectors
 - Added inclusive and exclusive sum functionality for Vector classes
 - Added Transpose functionality for Global/LocalMatrix
 - Added TripleMatrixProduct functionality LocalMatrix
 - Added Sort() function for LocalVector class
-### Improved
 - Added multiple stream support to the HIP backend
-- Matrix dimensions and number of non-zeros are now stored using 64bit integers
-- Fixed typos in the documentation
-- Unit tests do not ignore BCSR block dimension anymore
+### Optimized
 - GlobalMatrix::Apply() now uses multiple streams to better hide communication
-- Improved ILUT preconditioner
-- Fixed a bug in multicoloring for non-symmetric matrix patterns
 ### Changed
-- Deprecated functions have been removed
+- Matrix dimensions and number of non-zeros are now stored using 64bit integers
+- Improved ILUT preconditioner
+### Removed
+- Removed LocalVector::GetIndexValues(ValueType\*)
+- Removed LocalVector::SetIndexValues(const ValueType\*)
+- Removed LocalMatrix::RSDirectInterpolation(const LocalVector&, const LocalVector&, LocalMatrix\*, LocalMatrix\*)
+- Removed LocalMatrix::RSExtPIInterpolation(const LocalVector&, const LocalVector&, bool, float, LocalMatrix\*, LocalMatrix\*)
+- Removed LocalMatrix::RugeStueben()
+- Removed LocalMatrix::AMGSmoothedAggregation(ValueType, const LocalVector&, const LocalVector&, LocalMatrix\*, LocalMatrix\*, int)
+- Removed LocalMatrix::AMGAggregation(const LocalVector&, LocalMatrix\*, LocalMatrix\*)
+### Fixed
+- Unit tests do not ignore BCSR block dimension anymore
+- Fixed typos in the documentation
+- Fixed a bug in multicoloring for non-symmetric matrix patterns
 
 ## rocALUTION 2.1.11 for ROCm 5.7.0
 ### Added
