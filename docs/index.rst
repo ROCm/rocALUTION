@@ -7,6 +7,8 @@ Based on C++ and HIP, it provides a portable, generic and flexible design that a
 
 In the following, three separate chapters are available:
 
+  * Installation Guide (either `Linux <usermanual/Linux_Install_Guide.html>`__ or `Windows <usermanual/Windows_Install_Guide.html>`__): Describes how to install and configure the rocALUTION library; designed
+    to get users up and running quickly with the library
   * :ref:`user_manual`: This is the manual of rocALUTION. It can be seen as a starting guide for new users but also a reference book for more experienced users.
   * :ref:`design_document`: The Design Document is targeted to advanced users / developers that want to understand, modify or extend the functionality of the rocALUTION library.
     To embed rocALUTION into your project, it is not required to read the Design Document.
