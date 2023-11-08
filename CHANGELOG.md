@@ -160,9 +160,13 @@ Documentation for rocALUTION is available at
 ### Changes
 
 * Packaging has been split into a runtime package (`rocalution`) and a development package
-  (`rocalution-devel`).
-
-  The development package depends on runtime. The runtime package suggests the development package for all supported OSes except CentOS 7 to aid in the transition. The suggests feature in packaging is introduced as a deprecated feature and will be removed in a future rocm release.
+  (`rocalution-devel`):
+  The development package depends on the runtime package. When installing the runtime package,
+  the package manager will suggest the installation of the development package to aid users
+  transitioning from the previous version's combined package. This suggestion by package manager is
+  for all supported operating systems (except CentOS 7) to aid in the transition. The `suggestion`
+  feature in the runtime package is introduced as a deprecated feature and will be removed in a future
+  ROCm release.
 
 ### Deprecations
 
