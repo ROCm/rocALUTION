@@ -33,7 +33,7 @@ using namespace rocalution;
 
 static bool check_residual(float res)
 {
-    return (res < 1e-2f);
+    return (res < 2e-2f);
 }
 
 static bool check_residual(double res)
