@@ -32,6 +32,8 @@
 
 namespace rocalution
 {
+    enum _itilu0_alg : unsigned int;
+    typedef _itilu0_alg ItILU0Algorithm;
 
     template <typename ValueType>
     class BaseMatrix;
@@ -480,6 +482,9 @@ namespace rocalution
         /** \brief Perform ILU(0) factorization */
         ROCALUTION_EXPORT
         void ILU0Factorize(void);
+        /** \brief Perform Iterative ILU(0) factorization */
+        ROCALUTION_EXPORT
+        void ItILU0Factorize(ItILU0Algorithm alg, int option, int max_iter, double tolerance);
         /** \brief Perform LU factorization */
         ROCALUTION_EXPORT
         void LUFactorize(void);

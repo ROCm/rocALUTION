@@ -60,6 +60,8 @@
 
 #include "hip_sparse.hpp"
 
+#include "../../solvers/preconditioners/preconditioner.hpp"
+
 #include <limits>
 #include <vector>
 
@@ -1339,6 +1341,128 @@ namespace rocalution
             status = rocsparse_csrilu0_clear(
                 ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle), this->mat_info_);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::ItILU0Factorize(ItILU0Algorithm alg,
+                                                             int             option,
+                                                             int             max_iter,
+                                                             double          tolerance)
+    {
+        if(this->nnz_ > 0)
+        {
+            rocsparse_status status;
+
+            rocsparse_itilu0_alg itilu0_alg;
+            rocsparse_int        itilu0_option = 0;
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+            switch(alg)
+            {
+            case ItILU0Algorithm::Default:
+                itilu0_alg = rocsparse_itilu0_alg_default;
+                break;
+            case ItILU0Algorithm::AsyncInPlace:
+                itilu0_alg = rocsparse_itilu0_alg_async_inplace;
+                break;
+            case ItILU0Algorithm::AsyncSplit:
+                itilu0_alg = rocsparse_itilu0_alg_async_split;
+                break;
+            case ItILU0Algorithm::SyncSplit:
+                itilu0_alg = rocsparse_itilu0_alg_sync_split;
+                break;
+            case ItILU0Algorithm::SyncSplitFusion:
+                itilu0_alg = rocsparse_itilu0_alg_sync_split_fusion;
+                break;
+            default:
+                itilu0_alg = rocsparse_itilu0_alg_default;
+                break;
+            }
+
+            itilu0_option
+                |= ((option & ItILU0Option::Verbose) > 0) ? rocsparse_itilu0_option_verbose : 0;
+            itilu0_option |= ((option & ItILU0Option::StoppingCriteria) > 0)
+                                 ? rocsparse_itilu0_option_stopping_criteria
+                                 : 0;
+            itilu0_option |= ((option & ItILU0Option::ComputeNrmCorrection) > 0)
+                                 ? rocsparse_itilu0_option_compute_nrm_correction
+                                 : 0;
+            itilu0_option |= ((option & ItILU0Option::ComputeNrmResidual) > 0)
+                                 ? rocsparse_itilu0_option_compute_nrm_residual
+                                 : 0;
+            itilu0_option |= ((option & ItILU0Option::COOFormat) > 0)
+                                 ? rocsparse_itilu0_option_coo_format
+                                 : 0;
+
+            // Create buffer
+            size_t buffer_size = 0;
+            status             = rocsparse_csritilu0_buffer_size(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                itilu0_alg,
+                itilu0_option,
+                max_iter,
+                this->nrow_,
+                this->nnz_,
+                this->mat_.row_offset,
+                this->mat_.col,
+                rocsparse_index_base_zero,
+                rocsparseTdatatype<ValueType>(),
+                &buffer_size);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            char* buffer = NULL;
+            allocate_hip(buffer_size, &buffer);
+
+            if(buffer_size > 0)
+            {
+                assert(buffer != NULL);
+            }
+
+            status = rocsparse_csritilu0_preprocess(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                itilu0_alg,
+                itilu0_option,
+                max_iter,
+                this->nrow_,
+                this->nnz_,
+                this->mat_.row_offset,
+                this->mat_.col,
+                rocsparse_index_base_zero,
+                rocsparseTdatatype<ValueType>(),
+                buffer_size,
+                buffer);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            ValueType* ilu0 = NULL;
+            allocate_hip(this->nnz_, &ilu0);
+
+            assert(ilu0 != NULL);
+
+            status = rocsparseTcsritilu0_compute(
+                ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                itilu0_alg,
+                itilu0_option,
+                &max_iter,
+                tolerance,
+                this->nrow_,
+                this->nnz_,
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                ilu0,
+                rocsparse_index_base_zero,
+                buffer_size,
+                buffer);
+            CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+
+            free_hip(&buffer);
+            free_hip(&this->mat_.val);
+
+            this->mat_.val = ilu0;
         }
 
         return true;

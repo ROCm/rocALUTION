@@ -25,6 +25,7 @@
 #define ROCALUTION_HIP_HIP_UTILS_HPP_
 
 #include "../../utils/log.hpp"
+#include "../../utils/type_traits.hpp"
 #include "../backend_manager.hpp"
 #include "backend_hip.hpp"
 #include "hip_atomics.hpp"

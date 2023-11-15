@@ -410,6 +410,15 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::ItILU0Factorize(ItILU0Algorithm alg,
+                                                int             option,
+                                                int             max_iter,
+                                                double          tolerance)
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::MatrixAdd(const BaseMatrix<ValueType>& mat,
                                           ValueType                    alpha,
                                           ValueType                    beta,

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,10 @@ rocalution_enum_coarsening_strategy
 rocalution_enum_preconditioner rocalution_bench_solver_parameters::GetEnumPreconditioner() const
 {
     return this->m_enum_preconditioner;
+};
+rocalution_enum_itilu0_alg rocalution_bench_solver_parameters::GetEnumItILU0Algorithm() const
+{
+    return this->m_enum_itilu0_alg;
 };
 rocalution_enum_itsolver rocalution_bench_solver_parameters::GetEnumIterativeSolver() const
 {

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
 typedef std::tuple<int, std::string, unsigned int> fcg_tuple;
 
 int          fcg_size[]    = {7, 63};
-std::string  fcg_precond[] = {"None", "Chebyshev", "SPAI", "TNS", "ILUT", "MCSGS"};
+std::string  fcg_precond[] = {"None", "Chebyshev", "SPAI", "TNS", "ItILU0", "ILUT", "MCSGS"};
 unsigned int fcg_format[]  = {2, 5, 6, 7};
 
 class parameterized_fcg : public testing::TestWithParam<fcg_tuple>

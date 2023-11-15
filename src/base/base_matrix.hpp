@@ -30,6 +30,8 @@
 
 namespace rocalution
 {
+    enum _itilu0_alg : unsigned int;
+    typedef _itilu0_alg ItILU0Algorithm;
 
     template <typename ValueType>
     class BaseVector;
@@ -322,6 +324,9 @@ namespace rocalution
         * and
         * Preconditioners", PhD Thesis, 2012, KIT) */
         virtual bool ILUpFactorizeNumeric(int p, const BaseMatrix<ValueType>& mat);
+        /// Perform Iterative ILU0 factorization
+        virtual bool
+            ItILU0Factorize(ItILU0Algorithm alg, int option, int max_iter, double tolerance);
 
         /** \brief Perform IC(0) factorization */
         virtual bool ICFactorize(BaseVector<ValueType>* inv_diag);

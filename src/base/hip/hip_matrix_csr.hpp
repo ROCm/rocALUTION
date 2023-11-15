@@ -116,6 +116,8 @@ namespace rocalution
                                bool                         structure);
 
         virtual bool ILU0Factorize(void);
+        virtual bool
+            ItILU0Factorize(ItILU0Algorithm alg, int option, int max_iter, double tolerance);
 
         virtual bool ICFactorize(BaseVector<ValueType>* inv_diag = NULL);
 

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,10 @@
 
 typedef std::tuple<int, std::string, unsigned int> cr_tuple;
 
-int          cr_size[]    = {7, 63};
-std::string  cr_precond[] = {"None", "Chebyshev", "FSAI", "Jacobi", "SGS", "ILU", "IC", "MCSGS"};
-unsigned int cr_format[]  = {2, 4, 7};
+int         cr_size[] = {7, 63};
+std::string cr_precond[]
+    = {"None", "Chebyshev", "FSAI", "Jacobi", "SGS", "ILU", "ItILU0", "IC", "MCSGS"};
+unsigned int cr_format[] = {2, 4, 7};
 
 class parameterized_cr : public testing::TestWithParam<cr_tuple>
 {

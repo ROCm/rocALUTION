@@ -1655,6 +1655,16 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ItILU0Factorize(ItILU0Algorithm alg,
+                                                   int             option,
+                                                   int             max_iter,
+                                                   double          tolerance)
+    {
+        // On host, we fall back to default ILU0
+        return this->ILU0Factorize();
+    }
+
+    template <typename ValueType>
     bool HostMatrixCSR<ValueType>::ICFactorize(BaseVector<ValueType>* inv_diag)
     {
         assert(this->nrow_ == this->ncol_);

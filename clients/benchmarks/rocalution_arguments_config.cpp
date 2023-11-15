@@ -1,6 +1,6 @@
 /*! \file */
 /* ************************************************************************
-* Copyright (C) 2022 Advanced Micro Devices, Inc. All rights Reserved.
+* Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights Reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -82,6 +82,11 @@ void rocalution_arguments_config::set_description(options_description& desc)
             ADD_OPTION(double, e, 0.05, "ilut tolerance");
             break;
         }
+        case rocalution_bench_solver_parameters::itilu0_tol:
+        {
+            ADD_OPTION(double, e, 2e-07, "itilu0 tolerance");
+            break;
+        }
         case rocalution_bench_solver_parameters::mcgs_relax:
         {
             ADD_OPTION(double, e, 1.0, "relaxation coefficient");
@@ -155,6 +160,18 @@ void rocalution_arguments_config::set_description(options_description& desc)
             break;
         }
 
+        case rocalution_bench_solver_parameters::itilu0_max_iter:
+        {
+            ADD_OPTION(int, e, 1000, "itilu0 maximum number of iterations.");
+            break;
+        }
+
+        case rocalution_bench_solver_parameters::itilu0_options:
+        {
+            ADD_OPTION(int, e, 1000, "itilu0 combination of options.");
+            break;
+        }
+
         case rocalution_bench_solver_parameters::mcilu_p:
         {
             ADD_OPTION(int, e, 0, "multicolored ilu parameter p.");
@@ -217,6 +234,11 @@ void rocalution_arguments_config::set_description(options_description& desc)
         case rocalution_bench_solver_parameters::coarsening_strategy:
         {
             ADD_OPTION(std::string, e, "", "coarsening strategy");
+            break;
+        }
+        case rocalution_bench_solver_parameters::itilu0_alg:
+        {
+            ADD_OPTION(std::string, e, "Default", "ItILU0 algorithm");
             break;
         }
         case rocalution_bench_solver_parameters::matrix:
@@ -331,6 +353,17 @@ int rocalution_arguments_config::parse(int& argc, char**& argv, options_descript
             if(coarsening_strategy_string != "")
             {
                 this->m_enum_coarsening_strategy(coarsening_strategy_string.c_str());
+            }
+
+            break;
+        }
+        case rocalution_bench_solver_parameters::itilu0_alg:
+        {
+
+            auto itilu0_alg_string = this->Get(rocalution_bench_solver_parameters::itilu0_alg);
+            if(itilu0_alg_string != "")
+            {
+                this->m_enum_itilu0_alg(itilu0_alg_string.c_str());
             }
 
             break;

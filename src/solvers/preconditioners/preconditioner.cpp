@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -509,6 +509,195 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
+    ItILU0<OperatorType, VectorType, ValueType>::ItILU0()
+    {
+        log_debug(this, "ItILU0::ItILU0()", "default constructor");
+
+        this->alg_     = ItILU0Algorithm::Default;
+        this->option_  = 0;
+        this->maxiter_ = 10;
+        this->tol_     = 1e-2;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    ItILU0<OperatorType, VectorType, ValueType>::~ItILU0()
+    {
+        log_debug(this, "ItILU0::ItILU0()", "destructor");
+
+        this->Clear();
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::Print(void) const
+    {
+        std::string algorithm;
+        switch(this->alg_)
+        {
+        case Default:
+        case AsyncInPlace:
+            algorithm = "AsyncInPlace,";
+            break;
+        case AsyncSplit:
+            algorithm = "AsyncSplit,";
+            break;
+        case SyncSplit:
+            algorithm = "SyncSplit,";
+            break;
+        case SyncSplitFusion:
+            algorithm = "SyncSplitFusion,";
+            break;
+        }
+
+        std::string option;
+
+        // Check if Verbose is set
+        if(this->option_ & 1)
+        {
+            option += "Verbose,";
+        }
+
+        // Check if StoppingCriteria is set
+        if((this->option_ >> 1) & 1)
+        {
+            option += "StoppingCriteria,";
+        }
+
+        // Check if ComputeNrmCorrection is set
+        if((this->option_ >> 2) & 1)
+        {
+            option += "ComputeNrmCorrection,";
+        }
+
+        // Check if ComputeNrmResidual is set
+        if((this->option_ >> 3) & 1)
+        {
+            option += "ComputeNrmResidual,";
+        }
+
+        // Check if COOFormat is set
+        if((this->option_ >> 5) & 1)
+        {
+            option += "COOFormat,";
+        }
+
+        LOG_INFO("ItILU0(" << algorithm << option << this->maxiter_ << "," << this->tol_
+                           << ") preconditioner");
+
+        if(this->build_ == true)
+        {
+            LOG_INFO("ItILU0 nnz = " << this->ItILU0_.GetNnz());
+        }
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::SetAlgorithm(ItILU0Algorithm alg)
+    {
+        log_debug(this, "ItILU0::SetAlgorithm()", alg);
+        assert(this->build_ == false);
+
+        this->alg_ = alg;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::SetOptions(int option)
+    {
+        log_debug(this, "ItILU0::SetOptions()", option);
+
+        assert(option >= 0);
+        assert(this->build_ == false);
+
+        this->option_ = option;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::SetMaxIter(int max_iter)
+    {
+        log_debug(this, "ItILU0::SetMaxIter()", max_iter);
+
+        assert(max_iter > 0);
+        assert(this->build_ == false);
+
+        this->maxiter_ = max_iter;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::SetTolerance(double tolerance)
+    {
+        log_debug(this, "ItILU0::SetTolerance()", tolerance);
+
+        assert(tolerance >= 0);
+        assert(this->build_ == false);
+
+        this->tol_ = tolerance;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::Build(void)
+    {
+        log_debug(this, "ItILU0::Build()", this->build_, " #*# begin");
+
+        if(this->build_ == true)
+        {
+            this->Clear();
+        }
+
+        assert(this->build_ == false);
+        this->build_ = true;
+
+        assert(this->op_ != NULL);
+
+        this->ItILU0_.CloneFrom(*this->op_);
+
+        this->ItILU0_.ItILU0Factorize(this->alg_, this->option_, this->maxiter_, this->tol_);
+
+        this->ItILU0_.LUAnalyse();
+
+        log_debug(this, "ItILU0::Build()", this->build_, " #*# end");
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::Clear(void)
+    {
+        log_debug(this, "ItILU0::Clear()", this->build_);
+
+        this->ItILU0_.Clear();
+        this->ItILU0_.LUAnalyseClear();
+        this->build_ = false;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
+    {
+        log_debug(this, "ItILU0::MoveToHostLocalData_()", this->build_);
+
+        this->ItILU0_.MoveToHost();
+        this->ItILU0_.LUAnalyse();
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
+    {
+        log_debug(this, "ItILU0::MoveToAcceleratorLocalData_()", this->build_);
+
+        this->ItILU0_.MoveToAccelerator();
+        this->ItILU0_.LUAnalyse();
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void ItILU0<OperatorType, VectorType, ValueType>::Solve(const VectorType& rhs, VectorType* x)
+    {
+        log_debug(this, "ItILU0::Solve()", " #*# begin", (const void*&)rhs, x);
+
+        assert(this->build_ == true);
+        assert(x != NULL);
+        assert(x != &rhs);
+
+        this->ItILU0_.LUSolve(rhs, x);
+
+        log_debug(this, "ItILU0::Solve()", " #*# end");
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
     ILUT<OperatorType, VectorType, ValueType>::ILUT()
     {
         log_debug(this, "ILUT::ILUT()", "default constructor");
@@ -947,6 +1136,17 @@ namespace rocalution
     template class ILU<LocalMatrix<std::complex<float>>,
                        LocalVector<std::complex<float>>,
                        std::complex<float>>;
+#endif
+
+    template class ItILU0<LocalMatrix<double>, LocalVector<double>, double>;
+    template class ItILU0<LocalMatrix<float>, LocalVector<float>, float>;
+#ifdef SUPPORT_COMPLEX
+    template class ItILU0<LocalMatrix<std::complex<double>>,
+                          LocalVector<std::complex<double>>,
+                          std::complex<double>>;
+    template class ItILU0<LocalMatrix<std::complex<float>>,
+                          LocalVector<std::complex<float>>,
+                          std::complex<float>>;
 #endif
 
     template class ILUT<LocalMatrix<double>, LocalVector<double>, double>;

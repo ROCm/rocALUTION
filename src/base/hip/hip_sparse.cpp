@@ -30,6 +30,47 @@
 
 namespace rocalution
 {
+    // ValueType to rocsparse_datatype
+    template <>
+    rocsparse_datatype rocsparseTdatatype<float>()
+    {
+        return rocsparse_datatype_f32_r;
+    }
+    template <>
+    rocsparse_datatype rocsparseTdatatype<double>()
+    {
+        return rocsparse_datatype_f64_r;
+    }
+    template <>
+    rocsparse_datatype rocsparseTdatatype<std::complex<float>>()
+    {
+        return rocsparse_datatype_f32_c;
+    }
+    template <>
+    rocsparse_datatype rocsparseTdatatype<std::complex<double>>()
+    {
+        return rocsparse_datatype_f64_c;
+    }
+    template <>
+    rocsparse_datatype rocsparseTdatatype<int8_t>()
+    {
+        return rocsparse_datatype_i8_r;
+    }
+    template <>
+    rocsparse_datatype rocsparseTdatatype<uint8_t>()
+    {
+        return rocsparse_datatype_u8_r;
+    }
+    template <>
+    rocsparse_datatype rocsparseTdatatype<int32_t>()
+    {
+        return rocsparse_datatype_i32_r;
+    }
+    template <>
+    rocsparse_datatype rocsparseTdatatype<uint32_t>()
+    {
+        return rocsparse_datatype_u32_r;
+    }
 
     // rocsparse csrmv analysis
     template <>
@@ -4095,6 +4136,134 @@ namespace rocalution
             csr_row_ptr_C,
             csr_col_ind_C,
             rocsparse_double_complex(std::real(tol), std::imag(tol)));
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_compute(rocsparse_handle     handle,
+                                                 rocsparse_itilu0_alg alg,
+                                                 rocsparse_int        option,
+                                                 rocsparse_int*       nmaxiter,
+                                                 float                tol,
+                                                 rocsparse_int        m,
+                                                 rocsparse_int        nnz,
+                                                 const rocsparse_int* csr_row_ptr,
+                                                 const rocsparse_int* csr_col_ind,
+                                                 const float*         csr_val,
+                                                 float*               ilu0,
+                                                 rocsparse_index_base idx_base,
+                                                 size_t               buffer_size,
+                                                 void*                buffer)
+    {
+        return rocsparse_scsritilu0_compute(handle,
+                                            alg,
+                                            option,
+                                            nmaxiter,
+                                            tol,
+                                            m,
+                                            nnz,
+                                            csr_row_ptr,
+                                            csr_col_ind,
+                                            csr_val,
+                                            ilu0,
+                                            idx_base,
+                                            buffer_size,
+                                            buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_compute(rocsparse_handle     handle,
+                                                 rocsparse_itilu0_alg alg,
+                                                 rocsparse_int        option,
+                                                 rocsparse_int*       nmaxiter,
+                                                 double               tol,
+                                                 rocsparse_int        m,
+                                                 rocsparse_int        nnz,
+                                                 const rocsparse_int* csr_row_ptr,
+                                                 const rocsparse_int* csr_col_ind,
+                                                 const double*        csr_val,
+                                                 double*              ilu0,
+                                                 rocsparse_index_base idx_base,
+                                                 size_t               buffer_size,
+                                                 void*                buffer)
+    {
+        return rocsparse_dcsritilu0_compute(handle,
+                                            alg,
+                                            option,
+                                            nmaxiter,
+                                            tol,
+                                            m,
+                                            nnz,
+                                            csr_row_ptr,
+                                            csr_col_ind,
+                                            csr_val,
+                                            ilu0,
+                                            idx_base,
+                                            buffer_size,
+                                            buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_compute(rocsparse_handle           handle,
+                                                 rocsparse_itilu0_alg       alg,
+                                                 rocsparse_int              option,
+                                                 rocsparse_int*             nmaxiter,
+                                                 float                      tol,
+                                                 rocsparse_int              m,
+                                                 rocsparse_int              nnz,
+                                                 const rocsparse_int*       csr_row_ptr,
+                                                 const rocsparse_int*       csr_col_ind,
+                                                 const std::complex<float>* csr_val,
+                                                 std::complex<float>*       ilu0,
+                                                 rocsparse_index_base       idx_base,
+                                                 size_t                     buffer_size,
+                                                 void*                      buffer)
+    {
+        return rocsparse_ccsritilu0_compute(handle,
+                                            alg,
+                                            option,
+                                            nmaxiter,
+                                            tol,
+                                            m,
+                                            nnz,
+                                            csr_row_ptr,
+                                            csr_col_ind,
+                                            (const rocsparse_float_complex*)csr_val,
+                                            (rocsparse_float_complex*)ilu0,
+                                            idx_base,
+                                            buffer_size,
+                                            buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_compute(rocsparse_handle            handle,
+                                                 rocsparse_itilu0_alg        alg,
+                                                 rocsparse_int               option,
+                                                 rocsparse_int*              nmaxiter,
+                                                 double                      tol,
+                                                 rocsparse_int               m,
+                                                 rocsparse_int               nnz,
+                                                 const rocsparse_int*        csr_row_ptr,
+                                                 const rocsparse_int*        csr_col_ind,
+                                                 const std::complex<double>* csr_val,
+                                                 std::complex<double>*       ilu0,
+                                                 rocsparse_index_base        idx_base,
+                                                 size_t                      buffer_size,
+                                                 void*                       buffer)
+    {
+        return rocsparse_zcsritilu0_compute(handle,
+                                            alg,
+                                            option,
+                                            nmaxiter,
+                                            tol,
+                                            m,
+                                            nnz,
+                                            csr_row_ptr,
+                                            csr_col_ind,
+                                            (const rocsparse_double_complex*)csr_val,
+                                            (rocsparse_double_complex*)ilu0,
+                                            idx_base,
+                                            buffer_size,
+                                            buffer);
     }
 
 } // namespace rocalution

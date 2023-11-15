@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2020-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,38 +26,6 @@
 
 namespace rocalution
 {
-    //
-    // Convenience traits.
-    //
-    template <typename T>
-    struct numeric_traits
-    {
-        using value_type = T;
-    };
-
-    template <>
-    struct numeric_traits<std::complex<float>>
-    {
-        using value_type = float;
-    };
-
-    template <>
-    struct numeric_traits<std::complex<double>>
-    {
-        using value_type = double;
-    };
-
-    template <>
-    struct numeric_traits<float>
-    {
-        using value_type = float;
-    };
-    template <>
-    struct numeric_traits<double>
-    {
-        using value_type = double;
-    };
-
     template <typename IMPL>
     struct CRTP_HIPRand_Traits;
 

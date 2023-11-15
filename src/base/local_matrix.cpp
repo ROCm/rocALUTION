@@ -3006,6 +3006,76 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::ItILU0Factorize(ItILU0Algorithm alg,
+                                                 int             option,
+                                                 int             max_iter,
+                                                 double          tolerance)
+    {
+        log_debug(this, "LocalMatrix::ItILU0Factorize()", alg, option, max_iter, tolerance);
+
+        assert(option >= 0);
+        assert(max_iter > 0);
+        assert(tolerance > 0);
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->ItILU0Factorize(alg, option, max_iter, tolerance);
+
+            if((err == false) && (this->GetFormat() == CSR) && (this->is_host_() == true))
+            {
+                LOG_INFO("Computation of LocalMatrix::ItILU0Factorize() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                // Move to host
+                bool is_accel = this->is_accel_();
+                this->MoveToHost();
+
+                // Convert to CSR
+                unsigned int format   = this->GetFormat();
+                int          blockdim = this->GetBlockDimension();
+                this->ConvertToCSR();
+
+                // We fall back on standard ILU factorization
+                if(this->matrix_->ItILU0Factorize(alg, option, max_iter, tolerance) == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItILU0Factorize() failed");
+                    this->Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(format != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2,
+                        "*** warning: LocalMatrix::ItILU0Factorize() is performed in CSR format");
+
+                    this->ConvertTo(format, blockdim);
+                }
+
+                if(is_accel == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItILU0Factorize() is performed on the host");
+
+                    this->MoveToAccelerator();
+                }
+            }
+        }
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::ILUTFactorize(double t, int maxrow)
     {
         log_debug(this, "LocalMatrix::ILUTFactorize()", t, maxrow);

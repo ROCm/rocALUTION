@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2020-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,51 +21,48 @@
  *
  * ************************************************************************ */
 
-#ifndef ROCALUTION_HIP_RAND_NORMAL_HPP_
-#define ROCALUTION_HIP_RAND_NORMAL_HPP_
+#ifndef ROCALUTION_UTILS_TYPE_TRAITS_HPP_
+#define ROCALUTION_UTILS_TYPE_TRAITS_HPP_
 
-#include "hip_rand.hpp"
-#include "hip_utils.hpp"
-#include <rocrand.hpp>
+#include <complex>
 
 namespace rocalution
 {
     //
-    // Implementation of a normal distribution using rocRAND.
+    // Convenience traits.
     //
     template <typename T>
-    class HIPRandNormal_rocRAND;
-
-    template <typename T>
-    struct CRTP_HIPRand_Traits<HIPRandNormal_rocRAND<T>>
+    struct numeric_traits
     {
-        using data_t = T;
+        using value_type = T;
+    };
+
+    template <>
+    struct numeric_traits<std::complex<float>>
+    {
+        using value_type = float;
+    };
+
+    template <>
+    struct numeric_traits<std::complex<double>>
+    {
+        using value_type = double;
+    };
+
+    template <>
+    struct numeric_traits<float>
+    {
+        using value_type = float;
+    };
+    template <>
+    struct numeric_traits<double>
+    {
+        using value_type = double;
     };
 
     template <typename T>
-    class HIPRandNormal_rocRAND : public CRTP_HIPRand<HIPRandNormal_rocRAND<T>>
-    {
-    protected:
-        using value_type = typename numeric_traits<T>::value_type;
-        rocrand_cpp::mtgp32_engine<0UL>              m_engine;
-        rocrand_cpp::normal_distribution<value_type> m_distribution;
+    using numeric_traits_t = typename numeric_traits<T>::value_type;
 
-    public:
-        inline HIPRandNormal_rocRAND(unsigned long long seed, value_type mean, value_type var)
-            : m_engine(seed)
-            , m_distribution(mean, var){};
+}
 
-        inline void Generate(T* data, size_t size)
-        {
-            if(size > 0)
-            {
-                assert(0 == sizeof(T) % sizeof(value_type));
-                this->m_distribution(
-                    this->m_engine, ((value_type*)data), size * (sizeof(T) / sizeof(value_type)));
-            }
-        };
-    };
-
-} // namespace rocalution
-
-#endif // ROCALUTION_BASE_VECTOR_HPP_
+#endif // ROCALUTION_UTILS_TYPE_TRAITS_HPP_

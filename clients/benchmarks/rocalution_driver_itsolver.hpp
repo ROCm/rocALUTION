@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -321,6 +321,53 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             //
             // no specific parameters
             //
+            this->m_preconditioner = p;
+            return true;
+        }
+        case rocalution_enum_preconditioner::ItILU0:
+        {
+            auto enum_itilu0_alg = parameters.GetEnumItILU0Algorithm();
+            if(enum_itilu0_alg.is_invalid())
+            {
+                rocalution_bench_errmsg << "enum_itilu0_alg is invalid." << std::endl;
+                return false;
+            }
+
+            auto* p
+                = new rocalution::ItILU0<rocalution::LocalMatrix<T>, rocalution::LocalVector<T>, T>;
+            p->SetMaxIter(parameters.Get(params_t::itilu0_max_iter));
+            p->SetTolerance(parameters.Get(params_t::itilu0_tol));
+            p->SetOptions(parameters.Get(params_t::itilu0_options));
+
+            switch(enum_itilu0_alg.value)
+            {
+            case rocalution_enum_itilu0_alg::Default:
+            {
+                p->SetAlgorithm(ItILU0Algorithm::Default);
+                break;
+            }
+            case rocalution_enum_itilu0_alg::AsyncInPlace:
+            {
+                p->SetAlgorithm(ItILU0Algorithm::AsyncInPlace);
+                break;
+            }
+            case rocalution_enum_itilu0_alg::AsyncSplit:
+            {
+                p->SetAlgorithm(ItILU0Algorithm::AsyncSplit);
+                break;
+            }
+            case rocalution_enum_itilu0_alg::SyncSplit:
+            {
+                p->SetAlgorithm(ItILU0Algorithm::SyncSplit);
+                break;
+            }
+            case rocalution_enum_itilu0_alg::SyncSplitFusion:
+            {
+                p->SetAlgorithm(ItILU0Algorithm::SyncSplitFusion);
+                break;
+            }
+            }
+
             this->m_preconditioner = p;
             return true;
         }

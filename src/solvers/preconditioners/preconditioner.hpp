@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -241,6 +241,93 @@ namespace rocalution
         OperatorType ILU_;
         int          p_;
         bool         level_;
+    };
+
+    /*! \brief List of ItILU0 algorithms.
+     *  \details
+     *  This is a list of supported algorithm types that are used to perform the ItILU0 preconditioner.
+     */
+    typedef enum _itilu0_alg : unsigned int
+    {
+        Default      = 0, /**< ASynchronous ITILU0 algorithm with in-place storage */
+        AsyncInPlace = 1, /**< ASynchronous ITILU0 algorithm with in-place storage */
+        AsyncSplit   = 2, /**< ASynchronous ITILU0 algorithm with explicit storage splitting */
+        SyncSplit    = 3, /**< Synchronous ITILU0 algorithm with explicit storage splitting */
+        SyncSplitFusion
+        = 4 /**< Semi-synchronous ITILU0 algorithm with explicit storage splitting */
+    } ItILU0Algorithm;
+
+    /*! \brief List of ItILU0 options.
+     *  \details
+     *  This is a list of supported options that are used to perform the ItILU0 preconditioner.
+     */
+    typedef enum _itilu0_option : unsigned int
+    {
+        Verbose              = 1,
+        StoppingCriteria     = 2,
+        ComputeNrmCorrection = 4,
+        ComputeNrmResidual   = 8,
+        COOFormat            = 32
+    } ItILU0Option;
+
+    /** \ingroup precond_module
+  * \class ItILU0
+  * \brief Iterative Incomplete LU factorization with 0 fill-ins and no pivoting
+  * \details
+  * The Iterative Incomplete LU factorization with 0 fill-ins iteratively computes a sparse lower and sparse
+  * upper triangular matrix such that \f$A \approx LU\f$.
+  *
+  * \tparam OperatorType - can be LocalMatrix
+  * \tparam VectorType - can be LocalVector
+  * \tparam ValueType - can be float, double, std::complex<float> or std::complex<double>
+  */
+    template <class OperatorType, class VectorType, typename ValueType>
+    class ItILU0 : public Preconditioner<OperatorType, VectorType, ValueType>
+    {
+    public:
+        ROCALUTION_EXPORT
+        ItILU0();
+        ROCALUTION_EXPORT
+        virtual ~ItILU0();
+
+        ROCALUTION_EXPORT
+        virtual void Print(void) const;
+        ROCALUTION_EXPORT
+        virtual void Solve(const VectorType& rhs, VectorType* x);
+
+        /** \brief Initialize ItILU0(p) preconditioner.
+      *
+      * - alg       = Iterative Incomplete LU factorization algorithm.
+      * - option    = Combination of ItILU0 option enumeration values
+      * - max_iter  = Maximum number of iterations.
+      * - tolerance = Tolerance to use for stopping criteria.
+      */
+        ROCALUTION_EXPORT
+        void SetAlgorithm(ItILU0Algorithm alg);
+        /** \brief Set the preconditioner options */
+        ROCALUTION_EXPORT
+        void SetOptions(int option);
+        /** \brief Set the preconditioner convergence criteria */
+        ROCALUTION_EXPORT
+        void SetMaxIter(int max_iter);
+        /** \brief Set the preconditioner convergence criteria */
+        ROCALUTION_EXPORT
+        void SetTolerance(double tolerance);
+        ROCALUTION_EXPORT
+        virtual void Build(void);
+        ROCALUTION_EXPORT
+        virtual void Clear(void);
+
+    protected:
+        virtual void MoveToHostLocalData_(void);
+        virtual void MoveToAcceleratorLocalData_(void);
+
+    private:
+        OperatorType    ItILU0_;
+        ItILU0Algorithm alg_;
+        int             option_;
+        int             maxiter_;
+        double          tol_;
     };
 
     /** \ingroup precond_module

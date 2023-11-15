@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,10 @@
 
 typedef std::tuple<int, std::string, unsigned int> bicgstab_tuple;
 
-int          bicgstab_size[]    = {7, 63};
-std::string  bicgstab_precond[] = {"None", "Chebyshev", "TNS", "Jacobi", "ILUT", "MCGS", "MCILU"};
-unsigned int bicgstab_format[]  = {1, 2, 4, 6};
+int         bicgstab_size[] = {7, 63};
+std::string bicgstab_precond[]
+    = {"None", "Chebyshev", "TNS", "Jacobi", "ItILU0", "ILUT", "MCGS", "MCILU"};
+unsigned int bicgstab_format[] = {1, 2, 4, 6};
 
 class parameterized_bicgstab : public testing::TestWithParam<bicgstab_tuple>
 {

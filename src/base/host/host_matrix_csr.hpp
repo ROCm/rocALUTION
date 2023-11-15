@@ -132,6 +132,8 @@ namespace rocalution
         virtual bool ILU0Factorize(void);
         virtual bool ILUpFactorizeNumeric(int p, const BaseMatrix<ValueType>& mat);
         virtual bool ILUTFactorize(double t, int maxrow);
+        virtual bool
+            ItILU0Factorize(ItILU0Algorithm alg, int option, int max_iter, double tolerance);
 
         virtual void LUAnalyse(void);
         virtual void LUAnalyseClear(void);

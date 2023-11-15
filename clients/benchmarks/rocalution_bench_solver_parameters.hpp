@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 
 #include "rocalution_enum_coarsening_strategy.hpp"
 #include "rocalution_enum_directsolver.hpp"
+#include "rocalution_enum_itilu0_alg.hpp"
 #include "rocalution_enum_itsolver.hpp"
 #include "rocalution_enum_matrix_init.hpp"
 #include "rocalution_enum_preconditioner.hpp"
@@ -42,6 +43,11 @@ protected:
     // @brief Which matrix initialization.
     //
     rocalution_enum_matrix_init m_enum_matrix_init{};
+
+    //
+    // @brief Which ItILU0 algorithm.
+    //
+    rocalution_enum_itilu0_alg m_enum_itilu0_alg{};
 
     //
     // @brief Which iterative solver.
@@ -90,6 +96,10 @@ public:
     //
     rocalution_enum_itsolver GetEnumIterativeSolver() const;
     //
+    // @brief Get which ItILU0 algorithm.
+    //
+    rocalution_enum_itilu0_alg GetEnumItILU0Algorithm() const;
+    //
     // @brief Get which matrix initialization
     //
     rocalution_enum_matrix_init GetEnumMatrixInit() const;
@@ -122,6 +132,8 @@ public:
   PINT_TRANSFORM(krylov_basis)						\
   PINT_TRANSFORM(ndim)							\
   PINT_TRANSFORM(ilut_n)						\
+  PINT_TRANSFORM(itilu0_max_iter)				\
+  PINT_TRANSFORM(itilu0_options)				\
   PINT_TRANSFORM(mcilu_p)						\
   PINT_TRANSFORM(mcilu_q)						\
   PINT_TRANSFORM(max_iter)						\
@@ -153,6 +165,7 @@ public:
   PSTRING_TRANSFORM(coarsening_strategy)				\
   PSTRING_TRANSFORM(direct_solver)					\
   PSTRING_TRANSFORM(iterative_solver)					\
+  PSTRING_TRANSFORM(itilu0_alg)					\
   PSTRING_TRANSFORM(matrix)						\
   PSTRING_TRANSFORM(matrix_filename)					\
   PSTRING_TRANSFORM(preconditioner)					\
@@ -197,6 +210,7 @@ public:
   PDOUBLE_TRANSFORM(div_tol)				\
   PDOUBLE_TRANSFORM(residual_tol)			\
   PDOUBLE_TRANSFORM(ilut_tol)				\
+  PDOUBLE_TRANSFORM(itilu0_tol)				\
   PDOUBLE_TRANSFORM(mcgs_relax)				\
   PDOUBLE_TRANSFORM(solver_over_interp)			\
   PDOUBLE_TRANSFORM(solver_coupling_strength) \

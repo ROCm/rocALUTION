@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,13 +28,13 @@
 
 typedef std::tuple<int, int, std::string, std::string, unsigned int> gmres_tuple;
 
-int          gmres_size[]               = {7, 63};
-int          gmres_basis[]              = {20, 60};
-std::string  gmres_matrix[]             = {"laplacian"};
-std::string  gmres_bad_precond_matrix[] = {"permuted_identity"};
-std::string  gmres_precond[]     = {"None", "Chebyshev", "GS", "ILU", "ILUT", "MCGS", "MCILU"};
-std::string  gmres_bad_precond[] = {"MCGS"};
-unsigned int gmres_format[]      = {1, 2, 5, 6};
+int         gmres_size[]               = {7, 63};
+int         gmres_basis[]              = {20, 60};
+std::string gmres_matrix[]             = {"laplacian"};
+std::string gmres_bad_precond_matrix[] = {"permuted_identity"};
+std::string gmres_precond[] = {"None", "Chebyshev", "GS", "ILU", "ItILU0", "ILUT", "MCGS", "MCILU"};
+std::string gmres_bad_precond[] = {"MCGS"};
+unsigned int gmres_format[]     = {1, 2, 5, 6};
 
 class parameterized_gmres : public testing::TestWithParam<gmres_tuple>
 {

@@ -24,10 +24,14 @@
 #ifndef ROCALUTION_HIP_HIP_SPARSE_HPP_
 #define ROCALUTION_HIP_HIP_SPARSE_HPP_
 
+#include "../../utils/type_traits.hpp"
 #include <rocsparse/rocsparse.h>
 
 namespace rocalution
 {
+    // ValueType to rocsparse_datatype
+    template <typename ValueType>
+    rocsparse_datatype rocsparseTdatatype();
 
     // rocsparse csrmv analysis
     template <typename ValueType>
@@ -585,6 +589,23 @@ namespace rocalution
                                                 rocsparse_int*            csr_row_ptr_C,
                                                 rocsparse_int*            csr_col_ind_C,
                                                 ValueType                 tol);
+
+    // rocsparse csritilu0 compute
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsritilu0_compute(rocsparse_handle            handle,
+                                                 rocsparse_itilu0_alg        alg,
+                                                 rocsparse_int               option,
+                                                 rocsparse_int*              nmaxiter,
+                                                 numeric_traits_t<ValueType> tol,
+                                                 rocsparse_int               m,
+                                                 rocsparse_int               nnz,
+                                                 const rocsparse_int*        csr_row_ptr,
+                                                 const rocsparse_int*        csr_col_ind,
+                                                 const ValueType*            csr_val,
+                                                 ValueType*                  ilu0,
+                                                 rocsparse_index_base        idx_base,
+                                                 size_t                      buffer_size,
+                                                 void*                       buffer);
 
 } // namespace rocalution
 
