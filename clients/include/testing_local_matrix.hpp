@@ -118,6 +118,23 @@ void testing_local_matrix_bad_args(void)
         ASSERT_DEATH(mat1.QRSolve(vec1, null_vec), ".*Assertion.*out != (NULL|__null)*");
     }
 
+    // ItLSolve, ItUSolve, ItLLSolve, ItLUSolve
+    {
+        LocalVector<T>* null_vec = nullptr;
+        int             max_iter = 1;
+        double          tol      = 0;
+        ASSERT_DEATH(mat1.ItLSolve(max_iter, tol, true, vec1, null_vec),
+                     ".*Assertion.*out != (NULL|__null)*");
+        ASSERT_DEATH(mat1.ItUSolve(max_iter, tol, true, vec1, null_vec),
+                     ".*Assertion.*out != (NULL|__null)*");
+        ASSERT_DEATH(mat1.ItLLSolve(max_iter, tol, true, vec1, null_vec),
+                     ".*Assertion.*out != (NULL|__null)*");
+        ASSERT_DEATH(mat1.ItLLSolve(max_iter, tol, true, vec1, vec1, null_vec),
+                     ".*Assertion.*out != (NULL|__null)*");
+        ASSERT_DEATH(mat1.ItLUSolve(max_iter, tol, true, vec1, null_vec),
+                     ".*Assertion.*out != (NULL|__null)*");
+    }
+
     // ICFactorize, Householder
     {
         T               val;

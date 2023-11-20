@@ -309,6 +309,16 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::ItLUSolve(int                          max_iter,
+                                          double                       tolerance,
+                                          bool                         use_tol,
+                                          const BaseVector<ValueType>& in,
+                                          BaseVector<ValueType>*       out) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::LLSolve(const BaseVector<ValueType>& in,
                                         BaseVector<ValueType>*       out) const
     {
@@ -319,6 +329,47 @@ namespace rocalution
     bool BaseMatrix<ValueType>::LLSolve(const BaseVector<ValueType>& in,
                                         const BaseVector<ValueType>& inv_diag,
                                         BaseVector<ValueType>*       out) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::ItLLSolve(int                          max_iter,
+                                          double                       tolerance,
+                                          bool                         use_tol,
+                                          const BaseVector<ValueType>& in,
+                                          BaseVector<ValueType>*       out) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::ItLLSolve(int                          max_iter,
+                                          double                       tolerance,
+                                          bool                         use_tol,
+                                          const BaseVector<ValueType>& in,
+                                          const BaseVector<ValueType>& inv_diag,
+                                          BaseVector<ValueType>*       out) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::ItLSolve(int                          max_iter,
+                                         double                       tolerance,
+                                         bool                         use_tol,
+                                         const BaseVector<ValueType>& in,
+                                         BaseVector<ValueType>*       out) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::ItUSolve(int                          max_iter,
+                                         double                       tolerance,
+                                         bool                         use_tol,
+                                         const BaseVector<ValueType>& in,
+                                         BaseVector<ValueType>*       out) const
     {
         return false;
     }
@@ -490,6 +541,26 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void BaseMatrix<ValueType>::ItLUAnalyse(void)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItLUAnalyse(void)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::ItLUAnalyseClear(void)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItLUAnalyseClear(void)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
     void BaseMatrix<ValueType>::LLAnalyse(void)
     {
         LOG_INFO("BaseMatrix<ValueType>::LLAnalyse(void)");
@@ -503,6 +574,26 @@ namespace rocalution
     void BaseMatrix<ValueType>::LLAnalyseClear(void)
     {
         LOG_INFO("BaseMatrix<ValueType>::LLAnalyseClear(void)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::ItLLAnalyse(void)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItLLAnalyse(void)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::ItLLAnalyseClear(void)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItLLAnalyseClear(void)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("The function is not implemented (yet)!");
@@ -530,6 +621,26 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void BaseMatrix<ValueType>::ItLAnalyse(bool diag_unit)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItLAnalyse(bool diag_unit=false)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::ItLAnalyseClear(void)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItLAnalyseClear(void)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::LSolve(const BaseVector<ValueType>& in,
                                        BaseVector<ValueType>*       out) const
     {
@@ -550,6 +661,26 @@ namespace rocalution
     void BaseMatrix<ValueType>::UAnalyseClear(void)
     {
         LOG_INFO("BaseMatrix<ValueType>::UAnalyseClear(void)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::ItUAnalyse(bool diag_unit)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItUAnalyse(bool diag_unit=false)");
+        LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
+        this->Info();
+        LOG_INFO("The function is not implemented (yet)!");
+        FATAL_ERROR(__FILE__, __LINE__);
+    }
+
+    template <typename ValueType>
+    void BaseMatrix<ValueType>::ItUAnalyseClear(void)
+    {
+        LOG_INFO("BaseMatrix<ValueType>::ItUAnalyseClear(void)");
         LOG_INFO("Matrix format=" << _matrix_format_names[this->GetMatFormat()]);
         this->Info();
         LOG_INFO("The function is not implemented (yet)!");

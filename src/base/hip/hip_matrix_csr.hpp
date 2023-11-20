@@ -125,6 +125,14 @@ namespace rocalution
         virtual void LUAnalyseClear(void);
         virtual bool LUSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
 
+        virtual void ItLUAnalyse(void);
+        virtual void ItLUAnalyseClear(void);
+        virtual bool ItLUSolve(int                          max_iter,
+                               double                       tolerance,
+                               bool                         use_tol,
+                               const BaseVector<ValueType>& in,
+                               BaseVector<ValueType>*       out) const;
+
         virtual void LLAnalyse(void);
         virtual void LLAnalyseClear(void);
         virtual bool LLSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
@@ -139,6 +147,36 @@ namespace rocalution
         virtual void UAnalyse(bool diag_unit = false);
         virtual void UAnalyseClear(void);
         virtual bool USolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+
+        virtual void ItLLAnalyse(void);
+        virtual void ItLLAnalyseClear(void);
+        virtual bool ItLLSolve(int                          max_iter,
+                               double                       tolerance,
+                               bool                         use_tol,
+                               const BaseVector<ValueType>& in,
+                               BaseVector<ValueType>*       out) const;
+        virtual bool ItLLSolve(int                          max_iter,
+                               double                       tolerance,
+                               bool                         use_tol,
+                               const BaseVector<ValueType>& in,
+                               const BaseVector<ValueType>& inv_diag,
+                               BaseVector<ValueType>*       out) const;
+
+        virtual void ItLAnalyse(bool diag_unit = false);
+        virtual void ItLAnalyseClear(void);
+        virtual bool ItLSolve(int                          max_iter,
+                              double                       tolerance,
+                              bool                         use_tol,
+                              const BaseVector<ValueType>& in,
+                              BaseVector<ValueType>*       out) const;
+
+        virtual void ItUAnalyse(bool diag_unit = false);
+        virtual void ItUAnalyseClear(void);
+        virtual bool ItUSolve(int                          max_iter,
+                              double                       tolerance,
+                              bool                         use_tol,
+                              const BaseVector<ValueType>& in,
+                              BaseVector<ValueType>*       out) const;
 
         virtual bool Gershgorin(ValueType& lambda_min, ValueType& lambda_max) const;
 
@@ -279,6 +317,7 @@ namespace rocalution
         rocsparse_mat_descr mat_descr_;
 
         rocsparse_mat_info mat_info_;
+        rocsparse_mat_info mat_info_itsv_;
 
         // Matrix buffer (csrilu0, csric0, csrsv)
         size_t mat_buffer_size_;

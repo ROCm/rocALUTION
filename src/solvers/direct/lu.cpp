@@ -59,6 +59,7 @@ namespace rocalution
     void LU<OperatorType, VectorType, ValueType>::PrintStart_(void) const
     {
         LOG_INFO("LU direct solver starts");
+        this->solver_descr_.Print();
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -86,7 +87,7 @@ namespace rocalution
 
         this->lu_.CloneFrom(*this->op_);
         this->lu_.LUFactorize();
-        this->lu_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->lu_, LUAnalyse);
 
         log_debug(this, "LU::Build()", this->build_, " #*# end");
     }
@@ -99,7 +100,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             this->lu_.Clear();
-            this->lu_.LUAnalyseClear();
+            DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->lu_, LUAnalyseClear);
             this->build_ = false;
         }
     }
@@ -112,7 +113,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             this->lu_.MoveToHost();
-            this->lu_.LUAnalyse();
+            DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->lu_, LUAnalyse);
         }
     }
 
@@ -124,7 +125,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             this->lu_.MoveToAccelerator();
-            this->lu_.LUAnalyse();
+            DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->lu_, LUAnalyse);
         }
     }
 
@@ -137,7 +138,7 @@ namespace rocalution
         assert(x != &rhs);
         assert(this->build_ == true);
 
-        this->lu_.LUSolve(rhs, x);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(this->solver_descr_, this->lu_, LUSolve, rhs, x);
 
         log_debug(this, "LU::Solve_()", " #*# end");
     }

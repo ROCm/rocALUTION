@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -369,6 +369,60 @@ namespace rocalution
         /** \brief Solve U out = in; if level-scheduling algorithm is provided then the
         * graph traversing is performed in parallel */
         virtual bool USolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+
+        /// Analyse the structure for Iterative solve
+        virtual void ItLUAnalyse(void);
+        /// Delete the analysed data (see ItLUAnalyse)
+        virtual void ItLUAnalyseClear(void);
+        /// Solve LU out = in iteratively using the Jacobi method.
+        virtual bool ItLUSolve(int                          max_iter,
+                               double                       tolerance,
+                               bool                         use_tol,
+                               const BaseVector<ValueType>& in,
+                               BaseVector<ValueType>*       out) const;
+
+        /// Analyse the structure (level-scheduling)
+        virtual void ItLLAnalyse(void);
+        /// Delete the analysed data (see ItLLAnalyse)
+        virtual void ItLLAnalyseClear(void);
+        /// Solve LL^T out = in iteratively using the Jacobi method.
+        virtual bool ItLLSolve(int                          max_iter,
+                               double                       tolerance,
+                               bool                         use_tol,
+                               const BaseVector<ValueType>& in,
+                               BaseVector<ValueType>*       out) const;
+        virtual bool ItLLSolve(int                          max_iter,
+                               double                       tolerance,
+                               bool                         use_tol,
+                               const BaseVector<ValueType>& in,
+                               const BaseVector<ValueType>& inv_diag,
+                               BaseVector<ValueType>*       out) const;
+
+        /// Analyse the structure (level-scheduling) L-part
+        /// diag_unit == true the diag is 1;
+        /// diag_unit == false the diag is 0;
+        virtual void ItLAnalyse(bool diag_unit = false);
+        /// Delete the analysed data (see ItLAnalyse) L-party
+        virtual void ItLAnalyseClear(void);
+        /// Solve L out = in iteratively using the Jacobi method.
+        virtual bool ItLSolve(int                          max_iter,
+                              double                       tolerance,
+                              bool                         use_tol,
+                              const BaseVector<ValueType>& in,
+                              BaseVector<ValueType>*       out) const;
+
+        /// Analyse the structure (level-scheduling) U-part;
+        /// diag_unit == true the diag is 1;
+        /// diag_unit == false the diag is 0;
+        virtual void ItUAnalyse(bool diag_unit = false);
+        /// Delete the analysed data (see ItUAnalyse) U-party
+        virtual void ItUAnalyseClear(void);
+        /// Solve U out = in iteratively using the Jacobi method.
+        virtual bool ItUSolve(int                          max_iter,
+                              double                       tolerance,
+                              bool                         use_tol,
+                              const BaseVector<ValueType>& in,
+                              BaseVector<ValueType>*       out) const;
 
         /** \brief Compute Householder vector */
         virtual bool Householder(int idx, ValueType& beta, BaseVector<ValueType>* vec) const;

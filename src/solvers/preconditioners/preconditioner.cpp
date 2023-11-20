@@ -199,6 +199,7 @@ namespace rocalution
     void GS<OperatorType, VectorType, ValueType>::Print(void) const
     {
         LOG_INFO("Gauss-Seidel (GS) preconditioner");
+        this->solver_descr_.Print();
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -217,7 +218,7 @@ namespace rocalution
         assert(this->op_ != NULL);
 
         this->GS_.CloneFrom(*this->op_);
-        this->GS_.LAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->GS_, LAnalyse, false);
 
         log_debug(this, "GS::Build()", this->build_, " #*# end");
     }
@@ -231,7 +232,7 @@ namespace rocalution
 
         this->GS_.Clear();
         this->GS_.CloneFrom(*this->op_);
-        this->GS_.LAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->GS_, LAnalyse, false);
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -240,7 +241,7 @@ namespace rocalution
         log_debug(this, "GS::Clear()", this->build_);
 
         this->GS_.Clear();
-        this->GS_.LAnalyseClear();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->GS_, LAnalyseClear);
 
         this->build_ = false;
     }
@@ -253,7 +254,7 @@ namespace rocalution
         assert(this->build_ == true);
         assert(x != NULL);
 
-        this->GS_.LSolve(rhs, x);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(this->solver_descr_, this->GS_, LSolve, rhs, x);
 
         log_debug(this, "GS::Solve()", " #*# end");
     }
@@ -264,7 +265,7 @@ namespace rocalution
         log_debug(this, "GS::MoveToHostLocalData_()", this->build_);
 
         this->GS_.MoveToHost();
-        this->GS_.LAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->GS_, LAnalyse, false);
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -273,7 +274,7 @@ namespace rocalution
         log_debug(this, "GS::MoveToAcceleratorLocalData_()", this->build_);
 
         this->GS_.MoveToAccelerator();
-        this->GS_.LAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->GS_, LAnalyse, false);
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -294,6 +295,7 @@ namespace rocalution
     void SGS<OperatorType, VectorType, ValueType>::Print(void) const
     {
         LOG_INFO("Symmetric Gauss-Seidel (SGS) preconditioner");
+        this->solver_descr_.Print();
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -312,8 +314,8 @@ namespace rocalution
         assert(this->op_ != NULL);
 
         this->SGS_.CloneFrom(*this->op_);
-        this->SGS_.LAnalyse(false);
-        this->SGS_.UAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, LAnalyse, false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, UAnalyse, false);
 
         this->diag_entries_.CloneBackend(*this->op_);
         this->SGS_.ExtractInverseDiagonal(&this->diag_entries_);
@@ -338,8 +340,8 @@ namespace rocalution
         this->diag_entries_.CloneBackend(*this->op_);
         this->SGS_.ExtractDiagonal(&this->diag_entries_);
 
-        this->SGS_.LAnalyse(false);
-        this->SGS_.UAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, LAnalyse, false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, UAnalyse, false);
 
         this->v_.Clear();
         this->v_.CloneBackend(*this->op_);
@@ -352,8 +354,8 @@ namespace rocalution
         log_debug(this, "SGS::Clear()", this->build_);
 
         this->SGS_.Clear();
-        this->SGS_.LAnalyseClear();
-        this->SGS_.UAnalyseClear();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, LAnalyseClear);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, UAnalyseClear);
 
         this->diag_entries_.Clear();
         this->v_.Clear();
@@ -369,9 +371,9 @@ namespace rocalution
         assert(this->build_ == true);
         assert(x != NULL);
 
-        this->SGS_.LSolve(rhs, &this->v_);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(this->solver_descr_, this->SGS_, LSolve, rhs, &this->v_);
         this->v_.PointWiseMult(this->diag_entries_);
-        this->SGS_.USolve(this->v_, x);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(this->solver_descr_, this->SGS_, USolve, this->v_, x);
 
         log_debug(this, "SGS::Solve()", " #*# end");
     }
@@ -382,8 +384,8 @@ namespace rocalution
         log_debug(this, "SGS::MoveToHostLocalData_()", this->build_);
 
         this->SGS_.MoveToHost();
-        this->SGS_.LAnalyse(false);
-        this->SGS_.UAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, LAnalyse, false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, UAnalyse, false);
 
         this->diag_entries_.MoveToHost();
         this->v_.MoveToHost();
@@ -395,8 +397,8 @@ namespace rocalution
         log_debug(this, "SGS::MoveToAcceleratorLocalData_()", this->build_);
 
         this->SGS_.MoveToAccelerator();
-        this->SGS_.LAnalyse(false);
-        this->SGS_.UAnalyse(false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, LAnalyse, false);
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->SGS_, UAnalyse, false);
 
         this->diag_entries_.MoveToAccelerator();
         this->v_.MoveToAccelerator();
@@ -427,6 +429,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             LOG_INFO("ILU nnz = " << this->ILU_.GetNnz());
+            this->solver_descr_.Print();
         }
     }
 
@@ -461,7 +464,7 @@ namespace rocalution
 
         this->ILU_.ILUpFactorize(this->p_, this->level_);
 
-        this->ILU_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ILU_, LUAnalyse);
 
         log_debug(this, "ILU::Build()", this->build_, " #*# end");
     }
@@ -472,7 +475,7 @@ namespace rocalution
         log_debug(this, "ILU::Clear()", this->build_);
 
         this->ILU_.Clear();
-        this->ILU_.LUAnalyseClear();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ILU_, LUAnalyseClear);
         this->build_ = false;
     }
 
@@ -482,7 +485,7 @@ namespace rocalution
         log_debug(this, "ILU::MoveToHostLocalData_()", this->build_);
 
         this->ILU_.MoveToHost();
-        this->ILU_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ILU_, LUAnalyse);
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -491,7 +494,7 @@ namespace rocalution
         log_debug(this, "ILU::MoveToAcceleratorLocalData_()", this->build_);
 
         this->ILU_.MoveToAccelerator();
-        this->ILU_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ILU_, LUAnalyse);
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -503,7 +506,7 @@ namespace rocalution
         assert(x != NULL);
         assert(x != &rhs);
 
-        this->ILU_.LUSolve(rhs, x);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(this->solver_descr_, this->ILU_, LUSolve, rhs, x);
 
         log_debug(this, "ILU::Solve()", " #*# end");
     }
@@ -586,6 +589,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             LOG_INFO("ItILU0 nnz = " << this->ItILU0_.GetNnz());
+            this->solver_descr_.Print();
         }
     }
 
@@ -647,10 +651,8 @@ namespace rocalution
         assert(this->op_ != NULL);
 
         this->ItILU0_.CloneFrom(*this->op_);
-
         this->ItILU0_.ItILU0Factorize(this->alg_, this->option_, this->maxiter_, this->tol_);
-
-        this->ItILU0_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ItILU0_, LUAnalyse);
 
         log_debug(this, "ItILU0::Build()", this->build_, " #*# end");
     }
@@ -661,7 +663,7 @@ namespace rocalution
         log_debug(this, "ItILU0::Clear()", this->build_);
 
         this->ItILU0_.Clear();
-        this->ItILU0_.LUAnalyseClear();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ItILU0_, LUAnalyseClear);
         this->build_ = false;
     }
 
@@ -671,7 +673,7 @@ namespace rocalution
         log_debug(this, "ItILU0::MoveToHostLocalData_()", this->build_);
 
         this->ItILU0_.MoveToHost();
-        this->ItILU0_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ItILU0_, LUAnalyse);
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -680,7 +682,7 @@ namespace rocalution
         log_debug(this, "ItILU0::MoveToAcceleratorLocalData_()", this->build_);
 
         this->ItILU0_.MoveToAccelerator();
-        this->ItILU0_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ItILU0_, LUAnalyse);
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
@@ -692,7 +694,7 @@ namespace rocalution
         assert(x != NULL);
         assert(x != &rhs);
 
-        this->ItILU0_.LUSolve(rhs, x);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(this->solver_descr_, this->ItILU0_, LUSolve, rhs, x);
 
         log_debug(this, "ItILU0::Solve()", " #*# end");
     }
@@ -722,6 +724,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             LOG_INFO("ILUT nnz = " << this->ILUT_.GetNnz());
+            this->solver_descr_.Print();
         }
     }
 
@@ -765,7 +768,7 @@ namespace rocalution
 
         this->ILUT_.CloneFrom(*this->op_);
         this->ILUT_.ILUTFactorize(this->t_, this->max_row_);
-        this->ILUT_.LUAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ILUT_, LUAnalyse);
 
         log_debug(this, "ILUT::Build()", this->build_, " #*# end");
     }
@@ -776,7 +779,7 @@ namespace rocalution
         log_debug(this, "ILUT::Clear()", this->build_);
 
         this->ILUT_.Clear();
-        this->ILUT_.LUAnalyseClear();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ILUT_, LUAnalyseClear);
         this->build_ = false;
     }
 
@@ -805,7 +808,7 @@ namespace rocalution
         assert(x != NULL);
         assert(x != &rhs);
 
-        this->ILUT_.LUSolve(rhs, x);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(this->solver_descr_, this->ILUT_, LUSolve, rhs, x);
 
         log_debug(this, "ILUT::Solve()", " #*# end");
     }
@@ -832,6 +835,7 @@ namespace rocalution
         if(this->build_ == true)
         {
             LOG_INFO("IC nnz = " << this->IC_.GetNnz());
+            this->solver_descr_.Print();
         }
     }
 
@@ -855,7 +859,7 @@ namespace rocalution
 
         this->op_->ExtractL(&this->IC_, true);
         this->IC_.ICFactorize(&this->inv_diag_entries_);
-        this->IC_.LLAnalyse();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->IC_, LLAnalyse);
 
         log_debug(this, "IC::Build()", this->build_, " #*# end");
     }
@@ -867,7 +871,7 @@ namespace rocalution
 
         this->inv_diag_entries_.Clear();
         this->IC_.Clear();
-        this->IC_.LLAnalyseClear();
+        DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->IC_, LLAnalyseClear);
         this->build_ = false;
     }
 
@@ -898,7 +902,8 @@ namespace rocalution
         assert(x != NULL);
         assert(x != &rhs);
 
-        this->IC_.LLSolve(rhs, this->inv_diag_entries_, x);
+        DISPATCH_OPERATOR_SOLVE_STRATEGY(
+            this->solver_descr_, this->IC_, LLSolve, rhs, this->inv_diag_entries_, x);
 
         log_debug(this, "IC::Solve()", " #*# end");
     }

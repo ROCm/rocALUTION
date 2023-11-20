@@ -36,6 +36,7 @@
 #include "host_matrix_ell.hpp"
 #include "host_matrix_hyb.hpp"
 #include "host_matrix_mcsr.hpp"
+#include "host_sparse.hpp"
 #include "host_vector.hpp"
 #include "rocalution/utils/types.hpp"
 
@@ -84,6 +85,11 @@ namespace rocalution
 
         this->L_diag_unit_ = false;
         this->U_diag_unit_ = false;
+
+        this->mat_buffer_size_ = 0;
+        this->mat_buffer_      = NULL;
+
+        this->tmp_vec_ = NULL;
     }
 
     template <typename ValueType>
@@ -104,6 +110,11 @@ namespace rocalution
         this->nrow_ = 0;
         this->ncol_ = 0;
         this->nnz_  = 0;
+
+        this->ItLAnalyseClear();
+        this->ItUAnalyseClear();
+        this->ItLUAnalyseClear();
+        this->ItLLAnalyseClear();
     }
 
     template <typename ValueType>
@@ -1398,7 +1409,7 @@ namespace rocalution
                     cast_out->vec_[ai] -= this->mat_.val[aj] * cast_out->vec_[this->mat_.col[aj]];
                 }
 
-                if(this->L_diag_unit_ == false)
+                if(this->U_diag_unit_ == false)
                 {
                     if(this->mat_.col[aj] == ai)
                     {
@@ -1407,9 +1418,634 @@ namespace rocalution
                 }
             }
 
-            if(this->L_diag_unit_ == false)
+            if(this->U_diag_unit_ == false)
             {
                 cast_out->vec_[ai] /= this->mat_.val[diag_aj];
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItLUAnalyse(void)
+    {
+        assert(this->ncol_ == this->nrow_);
+        assert(this->tmp_vec_ == NULL);
+
+        this->tmp_vec_ = new HostVector<ValueType>(this->local_backend_);
+
+        assert(this->tmp_vec_ != NULL);
+
+        // Status
+        bool status;
+
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+        // Create buffer, if not already available
+        size_t buffer_size   = 0;
+        size_t L_buffer_size = 0;
+        size_t U_buffer_size = 0;
+
+        status = host_csritsv_buffer_size(host_sparse_operation_none,
+                                          this->nrow_,
+                                          static_cast<PtrType>(this->nnz_),
+                                          host_sparse_fill_mode_lower,
+                                          host_sparse_diag_type_unit,
+                                          host_sparse_matrix_type_general,
+                                          this->mat_.val,
+                                          this->mat_.row_offset,
+                                          this->mat_.col,
+                                          &L_buffer_size);
+
+        if(!status)
+        {
+            LOG_INFO("ItLUAnalyse() failed");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        status = host_csritsv_buffer_size(host_sparse_operation_none,
+                                          this->nrow_,
+                                          static_cast<PtrType>(this->nnz_),
+                                          host_sparse_fill_mode_upper,
+                                          host_sparse_diag_type_non_unit,
+                                          host_sparse_matrix_type_general,
+                                          this->mat_.val,
+                                          this->mat_.row_offset,
+                                          this->mat_.col,
+                                          &U_buffer_size);
+
+        if(!status)
+        {
+            LOG_INFO("ItLUAnalyse() failed");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        buffer_size = std::max(L_buffer_size, U_buffer_size);
+
+        // Check buffer size
+        if(this->mat_buffer_ != NULL && buffer_size > this->mat_buffer_size_)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        if(this->mat_buffer_ == NULL)
+        {
+            this->mat_buffer_size_ = buffer_size;
+            allocate_host(buffer_size, &this->mat_buffer_);
+        }
+
+        assert(this->mat_buffer_size_ >= buffer_size);
+        assert(this->mat_buffer_ != NULL);
+
+        // Allocate temporary vector
+        this->tmp_vec_->Allocate(this->nrow_);
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItLUAnalyseClear(void)
+    {
+        // Clear buffer
+        if(this->mat_buffer_ != NULL)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        this->mat_buffer_size_ = 0;
+
+        // Clear temporary vector
+        if(this->tmp_vec_ != NULL)
+        {
+            delete this->tmp_vec_;
+            this->tmp_vec_ = NULL;
+        }
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ItLUSolve(int                          max_iter,
+                                             double                       tolerance,
+                                             bool                         use_tol,
+                                             const BaseVector<ValueType>& in,
+                                             BaseVector<ValueType>*       out) const
+    {
+        if(this->nnz_ > 0)
+        {
+            assert(out != NULL);
+            assert(this->ncol_ == this->nrow_);
+            assert(in.GetSize() == this->ncol_);
+            assert(out->GetSize() == this->nrow_);
+
+            assert(this->tmp_vec_ != NULL);
+
+            const HostVector<ValueType>* cast_in  = dynamic_cast<const HostVector<ValueType>*>(&in);
+            HostVector<ValueType>*       cast_out = dynamic_cast<HostVector<ValueType>*>(out);
+
+            assert(cast_in != NULL);
+            assert(cast_out != NULL);
+
+            bool status;
+
+            int                               zero_pivot;
+            const ValueType                   alpha = static_cast<ValueType>(1);
+            const numeric_traits_t<ValueType> temp_tol
+                = static_cast<numeric_traits_t<ValueType>>(tolerance);
+
+            const numeric_traits_t<ValueType>* tol_ptr = (use_tol == false) ? nullptr : &temp_tol;
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+            // Solve L
+            status = host_csritsv_solve(&max_iter,
+                                        tol_ptr,
+                                        nullptr,
+                                        host_sparse_operation_none,
+                                        this->nrow_,
+                                        static_cast<PtrType>(this->nnz_),
+                                        &alpha,
+                                        host_sparse_fill_mode_lower,
+                                        host_sparse_diag_type_unit,
+                                        host_sparse_matrix_type_general,
+                                        this->mat_.val,
+                                        this->mat_.row_offset,
+                                        this->mat_.col,
+                                        cast_in->vec_,
+                                        this->tmp_vec_->vec_,
+                                        this->mat_buffer_,
+                                        &zero_pivot);
+
+            if(!status)
+            {
+                LOG_INFO("ItLUSolve() failed to solve L");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            // Solve U
+            status = host_csritsv_solve(&max_iter,
+                                        tol_ptr,
+                                        nullptr,
+                                        host_sparse_operation_none,
+                                        this->nrow_,
+                                        static_cast<PtrType>(this->nnz_),
+                                        &alpha,
+                                        host_sparse_fill_mode_upper,
+                                        host_sparse_diag_type_non_unit,
+                                        host_sparse_matrix_type_general,
+                                        this->mat_.val,
+                                        this->mat_.row_offset,
+                                        this->mat_.col,
+                                        this->tmp_vec_->vec_,
+                                        cast_out->vec_,
+                                        this->mat_buffer_,
+                                        &zero_pivot);
+
+            if(!status)
+            {
+                LOG_INFO("ItLUSolve() failed to solve U");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItLLAnalyse(void)
+    {
+        assert(this->ncol_ == this->nrow_);
+        assert(this->tmp_vec_ == NULL);
+
+        this->tmp_vec_ = new HostVector<ValueType>(this->local_backend_);
+
+        assert(this->tmp_vec_ != NULL);
+
+        // Status
+        bool status;
+
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+        // Create buffer, if not already available
+        size_t buffer_size    = 0;
+        size_t L_buffer_size  = 0;
+        size_t Lt_buffer_size = 0;
+
+        status = host_csritsv_buffer_size(host_sparse_operation_none,
+                                          this->nrow_,
+                                          static_cast<PtrType>(this->nnz_),
+                                          host_sparse_fill_mode_lower,
+                                          host_sparse_diag_type_non_unit,
+                                          host_sparse_matrix_type_general,
+                                          this->mat_.val,
+                                          this->mat_.row_offset,
+                                          this->mat_.col,
+                                          &L_buffer_size);
+
+        if(!status)
+        {
+            LOG_INFO("ItLLAnalyse() failed");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        status = host_csritsv_buffer_size(host_sparse_operation_transpose,
+                                          this->nrow_,
+                                          static_cast<PtrType>(this->nnz_),
+                                          host_sparse_fill_mode_lower,
+                                          host_sparse_diag_type_non_unit,
+                                          host_sparse_matrix_type_general,
+                                          this->mat_.val,
+                                          this->mat_.row_offset,
+                                          this->mat_.col,
+                                          &Lt_buffer_size);
+
+        if(!status)
+        {
+            LOG_INFO("ItLLAnalyse() failed");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        buffer_size = std::max(L_buffer_size, Lt_buffer_size);
+
+        // Check buffer size
+        if(this->mat_buffer_ != NULL && buffer_size > this->mat_buffer_size_)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        if(this->mat_buffer_ == NULL)
+        {
+            this->mat_buffer_size_ = buffer_size;
+            allocate_host(buffer_size, &this->mat_buffer_);
+        }
+
+        assert(this->mat_buffer_size_ >= buffer_size);
+        assert(this->mat_buffer_ != NULL);
+
+        // Allocate temporary vector
+        this->tmp_vec_->Allocate(this->nrow_);
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItLLAnalyseClear(void)
+    {
+        // Clear buffer
+        if(this->mat_buffer_ != NULL)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        this->mat_buffer_size_ = 0;
+
+        // Clear temporary vector
+        if(this->tmp_vec_ != NULL)
+        {
+            delete this->tmp_vec_;
+            this->tmp_vec_ = NULL;
+        }
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ItLLSolve(int                          max_iter,
+                                             double                       tolerance,
+                                             bool                         use_tol,
+                                             const BaseVector<ValueType>& in,
+                                             BaseVector<ValueType>*       out) const
+    {
+        if(this->nnz_ > 0)
+        {
+            assert(out != NULL);
+            assert(this->ncol_ == this->nrow_);
+            assert(in.GetSize() == this->ncol_);
+            assert(out->GetSize() == this->nrow_);
+
+            assert(this->tmp_vec_ != NULL);
+
+            const HostVector<ValueType>* cast_in  = dynamic_cast<const HostVector<ValueType>*>(&in);
+            HostVector<ValueType>*       cast_out = dynamic_cast<HostVector<ValueType>*>(out);
+
+            assert(cast_in != NULL);
+            assert(cast_out != NULL);
+
+            bool status;
+
+            int                               zero_pivot;
+            const ValueType                   alpha = static_cast<ValueType>(1);
+            const numeric_traits_t<ValueType> temp_tol
+                = static_cast<numeric_traits_t<ValueType>>(tolerance);
+
+            const numeric_traits_t<ValueType>* tol_ptr = (use_tol == false) ? nullptr : &temp_tol;
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+            // Solve L
+            status = host_csritsv_solve(&max_iter,
+                                        tol_ptr,
+                                        nullptr,
+                                        host_sparse_operation_none,
+                                        this->nrow_,
+                                        static_cast<PtrType>(this->nnz_),
+                                        &alpha,
+                                        host_sparse_fill_mode_lower,
+                                        host_sparse_diag_type_non_unit,
+                                        host_sparse_matrix_type_general,
+                                        this->mat_.val,
+                                        this->mat_.row_offset,
+                                        this->mat_.col,
+                                        cast_in->vec_,
+                                        this->tmp_vec_->vec_,
+                                        this->mat_buffer_,
+                                        &zero_pivot);
+
+            if(!status)
+            {
+                LOG_INFO("ItLLSolve() failed");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            // Solve Lt
+            status = host_csritsv_solve(&max_iter,
+                                        tol_ptr,
+                                        nullptr,
+                                        host_sparse_operation_transpose,
+                                        this->nrow_,
+                                        static_cast<PtrType>(this->nnz_),
+                                        &alpha,
+                                        host_sparse_fill_mode_lower,
+                                        host_sparse_diag_type_non_unit,
+                                        host_sparse_matrix_type_general,
+                                        this->mat_.val,
+                                        this->mat_.row_offset,
+                                        this->mat_.col,
+                                        this->tmp_vec_->vec_,
+                                        cast_out->vec_,
+                                        this->mat_buffer_,
+                                        &zero_pivot);
+
+            if(!status)
+            {
+                LOG_INFO("ItLLSolve() failed");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ItLLSolve(int                          max_iter,
+                                             double                       tolerance,
+                                             bool                         use_tol,
+                                             const BaseVector<ValueType>& in,
+                                             const BaseVector<ValueType>& inv_diag,
+                                             BaseVector<ValueType>*       out) const
+    {
+        return ItLLSolve(max_iter, tolerance, use_tol, in, out);
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItLAnalyse(bool diag_unit)
+    {
+        assert(this->ncol_ == this->nrow_);
+
+        // Status
+        bool status;
+
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+        this->L_diag_unit_ = diag_unit;
+
+        // Create buffer, if not already available
+        size_t buffer_size = 0;
+
+        status = host_csritsv_buffer_size(
+            host_sparse_operation_none,
+            this->nrow_,
+            static_cast<PtrType>(this->nnz_),
+            host_sparse_fill_mode_lower,
+            (this->L_diag_unit_ ? host_sparse_diag_type_unit : host_sparse_diag_type_non_unit),
+            host_sparse_matrix_type_general,
+            this->mat_.val,
+            this->mat_.row_offset,
+            this->mat_.col,
+            &buffer_size);
+
+        if(!status)
+        {
+            LOG_INFO("ItLAnalyse() failed");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        // Check buffer size
+        if(this->mat_buffer_ != NULL && buffer_size > this->mat_buffer_size_)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        if(this->mat_buffer_ == NULL)
+        {
+            this->mat_buffer_size_ = buffer_size;
+            allocate_host(buffer_size, &this->mat_buffer_);
+        }
+
+        assert(this->mat_buffer_size_ >= buffer_size);
+        assert(this->mat_buffer_ != NULL);
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItLAnalyseClear(void)
+    {
+        // Clear buffer
+        if(this->mat_buffer_ != NULL)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        this->mat_buffer_size_ = 0;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ItLSolve(int                          max_iter,
+                                            double                       tolerance,
+                                            bool                         use_tol,
+                                            const BaseVector<ValueType>& in,
+                                            BaseVector<ValueType>*       out) const
+    {
+        if(this->nnz_ > 0)
+        {
+            assert(out != NULL);
+            assert(this->ncol_ == this->nrow_);
+            assert(in.GetSize() == this->ncol_);
+            assert(out->GetSize() == this->nrow_);
+
+            const HostVector<ValueType>* cast_in  = dynamic_cast<const HostVector<ValueType>*>(&in);
+            HostVector<ValueType>*       cast_out = dynamic_cast<HostVector<ValueType>*>(out);
+
+            assert(cast_in != NULL);
+            assert(cast_out != NULL);
+
+            bool status;
+
+            int                               zero_pivot;
+            const ValueType                   alpha = static_cast<ValueType>(1);
+            const numeric_traits_t<ValueType> temp_tol
+                = static_cast<numeric_traits_t<ValueType>>(tolerance);
+
+            const numeric_traits_t<ValueType>* tol_ptr = (use_tol == false) ? nullptr : &temp_tol;
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+            // Solve L
+            status = host_csritsv_solve(
+                &max_iter,
+                tol_ptr,
+                nullptr,
+                host_sparse_operation_none,
+                this->nrow_,
+                static_cast<PtrType>(this->nnz_),
+                &alpha,
+                host_sparse_fill_mode_lower,
+                (this->L_diag_unit_ ? host_sparse_diag_type_unit : host_sparse_diag_type_non_unit),
+                host_sparse_matrix_type_general,
+                this->mat_.val,
+                this->mat_.row_offset,
+                this->mat_.col,
+                cast_in->vec_,
+                cast_out->vec_,
+                this->mat_buffer_,
+                &zero_pivot);
+
+            if(!status)
+            {
+                LOG_INFO("ItLSolve() failed");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItUAnalyse(bool diag_unit)
+    {
+        assert(this->ncol_ == this->nrow_);
+
+        // Status
+        bool status;
+
+        assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+        this->U_diag_unit_ = diag_unit;
+
+        // Create buffer, if not already available
+        size_t buffer_size = 0;
+
+        status = host_csritsv_buffer_size(
+            host_sparse_operation_none,
+            this->nrow_,
+            static_cast<PtrType>(this->nnz_),
+            host_sparse_fill_mode_upper,
+            (this->U_diag_unit_ ? host_sparse_diag_type_unit : host_sparse_diag_type_non_unit),
+            host_sparse_matrix_type_general,
+            this->mat_.val,
+            this->mat_.row_offset,
+            this->mat_.col,
+            &buffer_size);
+
+        if(!status)
+        {
+            LOG_INFO("ItUAnalyse() failed");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        // Check buffer size
+        if(this->mat_buffer_ != NULL && buffer_size > this->mat_buffer_size_)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        if(this->mat_buffer_ == NULL)
+        {
+            this->mat_buffer_size_ = buffer_size;
+            allocate_host(buffer_size, &this->mat_buffer_);
+        }
+
+        assert(this->mat_buffer_size_ >= buffer_size);
+        assert(this->mat_buffer_ != NULL);
+    }
+
+    template <typename ValueType>
+    void HostMatrixCSR<ValueType>::ItUAnalyseClear(void)
+    {
+        // Clear buffer
+        if(this->mat_buffer_ != NULL)
+        {
+            free_host(&this->mat_buffer_);
+            this->mat_buffer_ = NULL;
+        }
+
+        this->mat_buffer_size_ = 0;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ItUSolve(int                          max_iter,
+                                            double                       tolerance,
+                                            bool                         use_tol,
+                                            const BaseVector<ValueType>& in,
+                                            BaseVector<ValueType>*       out) const
+    {
+        if(this->nnz_ > 0)
+        {
+            assert(out != NULL);
+            assert(this->ncol_ == this->nrow_);
+            assert(in.GetSize() == this->ncol_);
+            assert(out->GetSize() == this->nrow_);
+
+            const HostVector<ValueType>* cast_in  = dynamic_cast<const HostVector<ValueType>*>(&in);
+            HostVector<ValueType>*       cast_out = dynamic_cast<HostVector<ValueType>*>(out);
+
+            assert(cast_in != NULL);
+            assert(cast_out != NULL);
+
+            bool status;
+
+            int                               zero_pivot;
+            const ValueType                   alpha = static_cast<ValueType>(1);
+            const numeric_traits_t<ValueType> temp_tol
+                = static_cast<numeric_traits_t<ValueType>>(tolerance);
+
+            const numeric_traits_t<ValueType>* tol_ptr = (use_tol == false) ? nullptr : &temp_tol;
+
+            assert(this->nnz_ <= std::numeric_limits<int>::max());
+
+            // Solve U
+            status = host_csritsv_solve(
+                &max_iter,
+                tol_ptr,
+                nullptr,
+                host_sparse_operation_none,
+                this->nrow_,
+                static_cast<PtrType>(this->nnz_),
+                &alpha,
+                host_sparse_fill_mode_upper,
+                (this->U_diag_unit_ ? host_sparse_diag_type_unit : host_sparse_diag_type_non_unit),
+                host_sparse_matrix_type_general,
+                this->mat_.val,
+                this->mat_.row_offset,
+                this->mat_.col,
+                cast_in->vec_,
+                cast_out->vec_,
+                this->mat_buffer_,
+                &zero_pivot);
+
+            if(!status)
+            {
+                LOG_INFO("ItUSolve() failed");
+                FATAL_ERROR(__FILE__, __LINE__);
             }
         }
 

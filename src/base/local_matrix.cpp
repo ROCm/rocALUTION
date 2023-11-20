@@ -2945,6 +2945,571 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLUAnalyse(void)
+    {
+        log_debug(this, "LocalMatrix::ItLUAnalyse()");
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItLUAnalyse();
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLUAnalyseClear(void)
+    {
+        log_debug(this, "LocalMatrix::ItLUAnalyseClear()");
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItLUAnalyseClear();
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLUSolve(int                           max_iter,
+                                           double                        tolerance,
+                                           bool                          use_tol,
+                                           const LocalVector<ValueType>& in,
+                                           LocalVector<ValueType>*       out) const
+    {
+        log_debug(
+            this, "LocalMatrix::ItLUSolve()", max_iter, tolerance, use_tol, (const void*&)in, out);
+
+        assert(out != NULL);
+        assert(in.GetSize() == this->GetN());
+        assert(out->GetSize() == this->GetM());
+        assert(max_iter > 0);
+
+        if(use_tol == true)
+        {
+            assert(tolerance >= 0.0);
+        }
+
+        assert(((this->matrix_ == this->matrix_host_) && (in.vector_ == in.vector_host_)
+                && (out->vector_ == out->vector_host_))
+               || ((this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_)
+                   && (out->vector_ == out->vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err
+                = this->matrix_->ItLUSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::ItLUSolve() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                // Convert to CSR
+                LocalMatrix<ValueType> mat_csr;
+                mat_csr.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_csr.CopyFrom(*this);
+
+                mat_csr.ConvertToCSR();
+
+                // Try CSR format first
+                err = mat_csr.matrix_->ItLUSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false) && (this->is_host_() == true))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLUSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                // Try Host
+                LocalVector<ValueType> vec_host;
+                vec_host.CopyFrom(in);
+
+                vec_host.MoveToHost();
+                out->MoveToHost();
+                mat_csr.MoveToHost();
+
+                err = mat_csr.matrix_->ItLUSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLUSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLUSolve() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLUSolve() is performed on the host");
+
+                    out->MoveToAccelerator();
+                }
+            }
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLLAnalyse(void)
+    {
+        log_debug(this, "LocalMatrix::ItLLAnalyse()");
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItLLAnalyse();
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLLAnalyseClear(void)
+    {
+        log_debug(this, "LocalMatrix::ItLLAnalyseClear()");
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItLLAnalyseClear();
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLLSolve(int                           max_iter,
+                                           double                        tolerance,
+                                           bool                          use_tol,
+                                           const LocalVector<ValueType>& in,
+                                           LocalVector<ValueType>*       out) const
+    {
+        log_debug(
+            this, "LocalMatrix::ItLLSolve()", max_iter, tolerance, use_tol, (const void*&)in, out);
+
+        assert(out != NULL);
+        assert(in.GetSize() == this->GetN());
+        assert(out->GetSize() == this->GetM());
+        assert(max_iter > 0);
+
+        if(use_tol == true)
+        {
+            assert(tolerance >= 0.0);
+        }
+
+        assert(((this->matrix_ == this->matrix_host_) && (in.vector_ == in.vector_host_)
+                && (out->vector_ == out->vector_host_))
+               || ((this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_)
+                   && (out->vector_ == out->vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err
+                = this->matrix_->ItLLSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                // Convert to CSR
+                LocalMatrix<ValueType> mat_csr;
+                mat_csr.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_csr.CopyFrom(*this);
+
+                mat_csr.ConvertToCSR();
+
+                // Try CSR format first
+                err = mat_csr.matrix_->ItLLSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false) && (this->is_host_() == true))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                // Try Host
+                LocalVector<ValueType> vec_host;
+                vec_host.CopyFrom(in);
+
+                vec_host.MoveToHost();
+                out->MoveToHost();
+                mat_csr.MoveToHost();
+
+                err = mat_csr.matrix_->ItLLSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLLSolve() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLLSolve() is performed on the host");
+
+                    out->MoveToAccelerator();
+                }
+            }
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLLSolve(int                           max_iter,
+                                           double                        tolerance,
+                                           bool                          use_tol,
+                                           const LocalVector<ValueType>& in,
+                                           const LocalVector<ValueType>& inv_diag,
+                                           LocalVector<ValueType>*       out) const
+    {
+        log_debug(this,
+                  "LocalMatrix::ItLLSolve()",
+                  max_iter,
+                  tolerance,
+                  use_tol,
+                  (const void*&)in,
+                  (const void*&)inv_diag,
+                  out);
+
+        assert(out != NULL);
+        assert(in.GetSize() == this->GetN());
+        assert(out->GetSize() == this->GetM());
+
+        assert(max_iter > 0);
+
+        if(use_tol == true)
+        {
+            assert(tolerance >= 0.0);
+        }
+
+        assert(((this->matrix_ == this->matrix_host_) && (in.vector_ == in.vector_host_)
+                && (out->vector_ == out->vector_host_)
+                && (inv_diag.vector_ == inv_diag.vector_host_))
+               || ((this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_)
+                   && (out->vector_ == out->vector_accel_)
+                   && (inv_diag.vector_ == inv_diag.vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->ItLLSolve(
+                max_iter, tolerance, use_tol, *in.vector_, *inv_diag.vector_, out->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                // Convert to CSR
+                LocalMatrix<ValueType> mat_csr;
+                mat_csr.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_csr.CopyFrom(*this);
+
+                mat_csr.ConvertToCSR();
+
+                err = mat_csr.matrix_->ItLLSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, *inv_diag.vector_, out->vector_);
+                if((err == false) && (this->is_host_() == true))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                // Try Host
+                LocalVector<ValueType> vec_host;
+                vec_host.CopyFrom(in);
+
+                vec_host.MoveToHost();
+                out->MoveToHost();
+                mat_csr.MoveToHost();
+
+                err = mat_csr.matrix_->ItLLSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, *inv_diag.vector_, out->vector_);
+                if((err == false))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLLSolve() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLLSolve() is performed on the host");
+
+                    out->MoveToAccelerator();
+                }
+            }
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLAnalyse(bool diag_unit)
+    {
+        log_debug(this, "LocalMatrix::ItLAnalyse()", diag_unit);
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItLAnalyse(diag_unit);
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLAnalyseClear(void)
+    {
+        log_debug(this, "LocalMatrix::ItLAnalyseClear()");
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItLAnalyseClear();
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItLSolve(int                           max_iter,
+                                          double                        tolerance,
+                                          bool                          use_tol,
+                                          const LocalVector<ValueType>& in,
+                                          LocalVector<ValueType>*       out) const
+    {
+        log_debug(
+            this, "LocalMatrix::ItLSolve()", max_iter, tolerance, use_tol, (const void*&)in, out);
+
+        assert(out != NULL);
+        assert(in.GetSize() == this->GetN());
+        assert(out->GetSize() == this->GetM());
+
+        assert(max_iter > 0);
+
+        if(use_tol == true)
+        {
+            assert(tolerance >= 0.0);
+        }
+
+        assert(((this->matrix_ == this->matrix_host_) && (in.vector_ == in.vector_host_)
+                && (out->vector_ == out->vector_host_))
+               || ((this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_)
+                   && (out->vector_ == out->vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err
+                = this->matrix_->ItLSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::ItLSolve() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                // Convert to CSR
+                LocalMatrix<ValueType> mat_csr;
+                mat_csr.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_csr.CopyFrom(*this);
+
+                mat_csr.ConvertToCSR();
+
+                err = mat_csr.matrix_->ItLSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false) && (this->is_host_() == true))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                // Try Host
+                LocalVector<ValueType> vec_host;
+                vec_host.CopyFrom(in);
+
+                vec_host.MoveToHost();
+                out->MoveToHost();
+                mat_csr.MoveToHost();
+
+                err = mat_csr.matrix_->ItLSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItLSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLSolve() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItLSolve() is performed on the host");
+
+                    out->MoveToAccelerator();
+                }
+            }
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItUAnalyse(bool diag_unit)
+    {
+        log_debug(this, "LocalMatrix::ItUAnalyse()", diag_unit);
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItUAnalyse(diag_unit);
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItUAnalyseClear(void)
+    {
+        log_debug(this, "LocalMatrix::ItUAnalyseClear()");
+
+        if(this->GetNnz() > 0)
+        {
+            this->matrix_->ItUAnalyseClear();
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::ItUSolve(int                           max_iter,
+                                          double                        tolerance,
+                                          bool                          use_tol,
+                                          const LocalVector<ValueType>& in,
+                                          LocalVector<ValueType>*       out) const
+    {
+        log_debug(
+            this, "LocalMatrix::ItUSolve()", max_iter, tolerance, use_tol, (const void*&)in, out);
+
+        assert(out != NULL);
+        assert(in.GetSize() == this->GetN());
+        assert(out->GetSize() == this->GetM());
+
+        assert(max_iter > 0);
+
+        if(use_tol == true)
+        {
+            assert(tolerance >= 0.0);
+        }
+
+        assert(((this->matrix_ == this->matrix_host_) && (in.vector_ == in.vector_host_)
+                && (out->vector_ == out->vector_host_))
+               || ((this->matrix_ == this->matrix_accel_) && (in.vector_ == in.vector_accel_)
+                   && (out->vector_ == out->vector_accel_)));
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err
+                = this->matrix_->ItUSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::ItUSolve() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                // Convert to CSR
+                LocalMatrix<ValueType> mat_csr;
+                mat_csr.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_csr.CopyFrom(*this);
+
+                err = mat_csr.matrix_->ItUSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false) && (this->is_host_() == true))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItUSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                // Try Host
+                LocalVector<ValueType> vec_host;
+                vec_host.CopyFrom(in);
+
+                vec_host.MoveToHost();
+                out->MoveToHost();
+                mat_csr.MoveToHost();
+
+                err = mat_csr.matrix_->ItUSolve(
+                    max_iter, tolerance, use_tol, *in.vector_, out->vector_);
+                if((err == false))
+                {
+                    LOG_INFO("Computation of LocalMatrix::ItUSolve() failed");
+                    mat_csr.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItUSolve() is performed in CSR format");
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2, "*** warning: LocalMatrix::ItUSolve() is performed on the host");
+
+                    out->MoveToAccelerator();
+                }
+            }
+        }
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::ILU0Factorize(void)
     {
         log_debug(this, "LocalMatrix::ILU0Factorize()");

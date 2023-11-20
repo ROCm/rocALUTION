@@ -82,6 +82,11 @@ void rocalution_arguments_config::set_description(options_description& desc)
             ADD_OPTION(double, e, 0.05, "ilut tolerance");
             break;
         }
+        case rocalution_bench_solver_parameters::itsolve_tol:
+        {
+            ADD_OPTION(double, e, 1e-03, "iterative solve tolerance (see --iterative_solve).");
+            break;
+        }
         case rocalution_bench_solver_parameters::itilu0_tol:
         {
             ADD_OPTION(double, e, 2e-07, "itilu0 tolerance");
@@ -160,6 +165,15 @@ void rocalution_arguments_config::set_description(options_description& desc)
             break;
         }
 
+        case rocalution_bench_solver_parameters::itsolve_max_iter:
+        {
+            ADD_OPTION(int,
+                       e,
+                       30,
+                       "iterative solve maximum number of iterations (see "
+                       "--iterative_solve).");
+            break;
+        }
         case rocalution_bench_solver_parameters::itilu0_max_iter:
         {
             ADD_OPTION(int, e, 1000, "itilu0 maximum number of iterations.");
@@ -265,6 +279,11 @@ void rocalution_arguments_config::set_description(options_description& desc)
     {
         switch(e)
         {
+        case rocalution_bench_solver_parameters::iterative_solve:
+        {
+            ADD_OPTION(bool, e, false, "perform triangular iterative solve during solving step.");
+            break;
+        }
         case rocalution_bench_solver_parameters::verbose:
         {
             ADD_OPTION(bool, e, false, "verbose");

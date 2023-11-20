@@ -327,6 +327,8 @@ public:
 
     unsigned int format;
 
+    bool unit_diag = false;
+
     Arguments& operator=(const Arguments& rhs)
     {
         this->rank         = rhs.rank;
@@ -363,6 +365,8 @@ public:
         this->coarsening_strategy = rhs.coarsening_strategy;
 
         this->format = rhs.format;
+
+        this->unit_diag = rhs.unit_diag;
 
         return *this;
     }

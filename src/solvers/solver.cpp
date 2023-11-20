@@ -38,6 +38,96 @@
 
 namespace rocalution
 {
+    SolverDescr::SolverDescr() {}
+
+    SolverDescr::SolverDescr(const SolverDescr& other)
+        : tri_solver_alg_(other.tri_solver_alg_)
+        , itsolver_max_iter_(other.itsolver_max_iter_)
+        , itsolver_tol_(other.itsolver_tol_)
+        , itsolver_use_tol_(other.itsolver_use_tol_)
+    {
+    }
+
+    SolverDescr::~SolverDescr() {}
+
+    SolverDescr& SolverDescr::operator=(const SolverDescr& rhs)
+    {
+        if(this != &rhs)
+        {
+            this->tri_solver_alg_    = rhs.tri_solver_alg_;
+            this->itsolver_max_iter_ = rhs.itsolver_max_iter_;
+            this->itsolver_tol_      = rhs.itsolver_tol_;
+            this->itsolver_use_tol_  = rhs.itsolver_use_tol_;
+        }
+
+        return *this;
+    }
+
+    void SolverDescr::SetTriSolverAlg(TriSolverAlg alg)
+    {
+        this->tri_solver_alg_ = alg;
+    }
+
+    TriSolverAlg SolverDescr::GetTriSolverAlg() const
+    {
+        return this->tri_solver_alg_;
+    }
+
+    void SolverDescr::SetIterativeSolverMaxIteration(int max_iter)
+    {
+        this->itsolver_max_iter_ = max_iter;
+    }
+
+    int SolverDescr::GetIterativeSolverMaxIteration() const
+    {
+        return this->itsolver_max_iter_;
+    }
+
+    void SolverDescr::SetIterativeSolverTolerance(double tol)
+    {
+        this->itsolver_tol_ = tol;
+    }
+
+    double SolverDescr::GetIterativeSolverTolerance() const
+    {
+        return this->itsolver_tol_;
+    }
+
+    void SolverDescr::Print(void) const
+    {
+        switch(this->tri_solver_alg_)
+        {
+        case TriSolverAlg_Default:
+            // We do not print anything in default direct case
+            break;
+        case TriSolverAlg_Iterative:
+            if(this->itsolver_use_tol_ == true)
+            {
+                LOG_INFO("TriSolverAlg = iterative (" << this->itsolver_max_iter_ << ", "
+                                                      << this->itsolver_tol_ << ")");
+            }
+            else
+            {
+                LOG_INFO("TriSolverAlg = iterative (" << this->itsolver_max_iter_ << ")");
+            }
+            break;
+        }
+    }
+
+    void SolverDescr::EnableIterativeSolverTolerance(void)
+    {
+        this->itsolver_use_tol_ = true;
+    }
+
+    void SolverDescr::DisableIterativeSolverTolerance(void)
+    {
+        this->itsolver_use_tol_ = false;
+    }
+
+    bool SolverDescr::GetIterativeSolverUseTolerance(void) const
+    {
+        return this->itsolver_use_tol_;
+    }
 
     template <class OperatorType, class VectorType, typename ValueType>
     Solver<OperatorType, VectorType, ValueType>::Solver()
@@ -197,6 +287,17 @@ namespace rocalution
         log_debug(this, "Solver::Verbose()", verb);
 
         this->verb_ = verb;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
+    void Solver<OperatorType, VectorType, ValueType>::SetSolverDescriptor(const SolverDescr& descr)
+    {
+        log_debug(this, "Solver::SetSolverDescriptor()", (const void*&)descr);
+
+        // Cannot change solver strategy after solver has been built
+        assert(this->build_ == false);
+
+        this->solver_descr_ = descr;
     }
 
     template <class OperatorType, class VectorType, typename ValueType>

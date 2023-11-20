@@ -256,7 +256,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
                 AIChebyshev<rocalution::LocalMatrix<T>, rocalution::LocalVector<T>, T>;
             p->Set(3, lambda_max / 7.0, lambda_max);
             this->m_preconditioner = p;
-            return true;
+            break;
         }
 
         case rocalution_enum_preconditioner::FSAI:
@@ -264,7 +264,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             auto* p
                 = new rocalution::FSAI<rocalution::LocalMatrix<T>, rocalution::LocalVector<T>, T>;
             this->m_preconditioner = p;
-            return true;
+            break;
         }
 
         case rocalution_enum_preconditioner::SPAI:
@@ -272,14 +272,14 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             auto* p
                 = new rocalution::SPAI<rocalution::LocalMatrix<T>, rocalution::LocalVector<T>, T>;
             this->m_preconditioner = p;
-            return true;
+            break;
         }
         case rocalution_enum_preconditioner::TNS:
         {
             auto* p
                 = new rocalution::TNS<rocalution::LocalMatrix<T>, rocalution::LocalVector<T>, T>;
             this->m_preconditioner = p;
-            return true;
+            break;
         }
 
         case rocalution_enum_preconditioner::Jacobi:
@@ -290,7 +290,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             // no specific parameters
             //
             this->m_preconditioner = p;
-            return true;
+            break;
         }
 
         case rocalution_enum_preconditioner::GS:
@@ -300,7 +300,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             // no specific parameters
             //
             this->m_preconditioner = p;
-            return true;
+            break;
         }
 
         case rocalution_enum_preconditioner::SGS:
@@ -311,7 +311,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             // no specific parameters
             //
             this->m_preconditioner = p;
-            return true;
+            break;
         }
 
         case rocalution_enum_preconditioner::ILU:
@@ -322,7 +322,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             // no specific parameters
             //
             this->m_preconditioner = p;
-            return true;
+            break;
         }
         case rocalution_enum_preconditioner::ItILU0:
         {
@@ -378,7 +378,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             p->Set(parameters.Get(params_t::ilut_tol), parameters.Get(params_t::ilut_n));
 
             this->m_preconditioner = p;
-            return true;
+            break;
         }
         case rocalution_enum_preconditioner::IC:
         {
@@ -387,7 +387,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             // no specific parameters
             //
             this->m_preconditioner = p;
-            return true;
+            break;
         }
         case rocalution_enum_preconditioner::MCGS:
         {
@@ -395,7 +395,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
                 MultiColoredGS<rocalution::LocalMatrix<T>, rocalution::LocalVector<T>, T>;
             p->SetRelaxation(parameters.Get(params_t::mcgs_relax));
             this->m_preconditioner = p;
-            return true;
+            break;
         }
         case rocalution_enum_preconditioner::MCSGS:
         {
@@ -405,7 +405,7 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
             // no specific parameters
             //
             this->m_preconditioner = p;
-            return true;
+            break;
         }
         case rocalution_enum_preconditioner::MCILU:
         {
@@ -417,8 +417,30 @@ struct rocalution_driver_itsolver_default : rocalution_driver_itsolver_base<ITSO
                    parameters.Get(params_t::mcilu_use_level));
 
             this->m_preconditioner = p;
-            return true;
+            break;
         }
+        }
+
+        if(this->m_preconditioner != nullptr)
+        {
+            const auto itsolve = parameters.Get(params_t::iterative_solve);
+
+            rocalution::SolverDescr descr;
+
+            if(itsolve)
+            {
+                descr.SetTriSolverAlg(TriSolverAlg_Iterative);
+                descr.SetIterativeSolverMaxIteration(parameters.Get(params_t::itsolve_max_iter));
+                descr.SetIterativeSolverTolerance(parameters.Get(params_t::itsolve_tol));
+            }
+            else
+            {
+                descr.SetTriSolverAlg(TriSolverAlg_Default);
+            }
+
+            this->m_preconditioner->SetSolverDescriptor(descr);
+
+            return true;
         }
 
         return false;

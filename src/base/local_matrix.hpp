@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -562,6 +562,76 @@ namespace rocalution
       */
         ROCALUTION_EXPORT
         void USolve(const LocalVector<ValueType>& in, LocalVector<ValueType>* out) const;
+
+        /** \brief Analyse the structure for Iterative solve */
+        ROCALUTION_EXPORT
+        void ItLUAnalyse(void);
+        /** \brief Delete the analysed data (see ItLUAnalyse) */
+        ROCALUTION_EXPORT
+        void ItLUAnalyseClear(void);
+        /** \brief Solve LU out = in iteratively using the Jacobi method. */
+        ROCALUTION_EXPORT
+        void ItLUSolve(int                           max_iter,
+                       double                        tolerance,
+                       bool                          use_tol,
+                       const LocalVector<ValueType>& in,
+                       LocalVector<ValueType>*       out) const;
+
+        /** \brief Analyse the structure (level-scheduling) */
+        ROCALUTION_EXPORT
+        void ItLLAnalyse(void);
+        /** \brief Delete the analysed data (see ItLLAnalyse) */
+        ROCALUTION_EXPORT
+        void ItLLAnalyseClear(void);
+        /** \brief Solve LL^T out = in iteratively using the Jacobi method. */
+        ROCALUTION_EXPORT
+        void ItLLSolve(int                           max_iter,
+                       double                        tolerance,
+                       bool                          use_tol,
+                       const LocalVector<ValueType>& in,
+                       LocalVector<ValueType>*       out) const;
+        /** \brief Solve LL^T out = in iteratively using the Jacobi method. */
+        ROCALUTION_EXPORT
+        void ItLLSolve(int                           max_iter,
+                       double                        tolerance,
+                       bool                          use_tol,
+                       const LocalVector<ValueType>& in,
+                       const LocalVector<ValueType>& inv_diag,
+                       LocalVector<ValueType>*       out) const;
+
+        /** \brief Analyse the structure (level-scheduling) L-part
+      * - diag_unit == true the diag is 1;
+      * - diag_unit == false the diag is 0;
+      */
+        ROCALUTION_EXPORT
+        void ItLAnalyse(bool diag_unit = false);
+        /** \brief Delete the analysed data (see ItLAnalyse) L-part */
+        ROCALUTION_EXPORT
+        void ItLAnalyseClear(void);
+        /** \brief Solve L out = in iteratively using the Jacobi method. */
+        ROCALUTION_EXPORT
+        void ItLSolve(int                           max_iter,
+                      double                        tolerance,
+                      bool                          use_tol,
+                      const LocalVector<ValueType>& in,
+                      LocalVector<ValueType>*       out) const;
+
+        /** \brief Analyse the structure (level-scheduling) U-part;
+      * - diag_unit == true the diag is 1;
+      * - diag_unit == false the diag is 0;
+      */
+        ROCALUTION_EXPORT
+        void ItUAnalyse(bool diag_unit = false);
+        /** \brief Delete the analysed data (see ItUAnalyse) U-part */
+        ROCALUTION_EXPORT
+        void ItUAnalyseClear(void);
+        /** \brief Solve U out = in iteratively using the Jacobi method. */
+        ROCALUTION_EXPORT
+        void ItUSolve(int                           max_iter,
+                      double                        tolerance,
+                      bool                          use_tol,
+                      const LocalVector<ValueType>& in,
+                      LocalVector<ValueType>*       out) const;
 
         /** \brief Compute Householder vector */
         ROCALUTION_EXPORT

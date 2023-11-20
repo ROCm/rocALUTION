@@ -74,6 +74,7 @@ add_rocalution_example(sp-precond.cpp)
 add_rocalution_example(stencil.cpp)
 add_rocalution_example(tns.cpp)
 add_rocalution_example(var-precond.cpp)
+add_rocalution_example(itsolve.cpp)
 
 # MPI examples
 if(SUPPORT_MPI)

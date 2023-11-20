@@ -108,6 +108,54 @@ namespace rocalution
                                      rocsparse_solve_policy    policy,
                                      void*                     temp_buffer);
 
+    // rocsprarse csritsv buffer size
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsritsv_buffer_size(rocsparse_handle          handle,
+                                                   rocsparse_operation       trans,
+                                                   rocsparse_int             m,
+                                                   rocsparse_int             nnz,
+                                                   const rocsparse_mat_descr descr,
+                                                   const ValueType*          csr_val,
+                                                   const rocsparse_int*      csr_row_ptr,
+                                                   const rocsparse_int*      csr_col_ind,
+                                                   rocsparse_mat_info        info,
+                                                   size_t*                   buffer_size);
+
+    // rocsprarse csritsv analysis
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsritsv_analysis(rocsparse_handle          handle,
+                                                rocsparse_operation       trans,
+                                                rocsparse_int             m,
+                                                rocsparse_int             nnz,
+                                                const rocsparse_mat_descr descr,
+                                                const ValueType*          csr_val,
+                                                const rocsparse_int*      csr_row_ptr,
+                                                const rocsparse_int*      csr_col_ind,
+                                                rocsparse_mat_info        info,
+                                                rocsparse_analysis_policy analysis,
+                                                rocsparse_solve_policy    solve,
+                                                void*                     temp_buffer);
+
+    // rocsprarse csritsv solve
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsritsv_solve(rocsparse_handle                   handle,
+                                             rocsparse_int*                     host_nmaxiter,
+                                             const numeric_traits_t<ValueType>* host_tol,
+                                             numeric_traits_t<ValueType>*       host_history,
+                                             rocsparse_operation                trans,
+                                             rocsparse_int                      m,
+                                             rocsparse_int                      nnz,
+                                             const ValueType*                   alpha,
+                                             const rocsparse_mat_descr          descr,
+                                             const ValueType*                   csr_val,
+                                             const rocsparse_int*               csr_row_ptr,
+                                             const rocsparse_int*               csr_col_ind,
+                                             rocsparse_mat_info                 info,
+                                             const ValueType*                   x,
+                                             ValueType*                         y,
+                                             rocsparse_solve_policy             policy,
+                                             void*                              temp_buffer);
+
     // rocsparse bsrsv buffer size
     template <typename ValueType>
     rocsparse_status rocsparseTbsrsv_buffer_size(rocsparse_handle          handle,

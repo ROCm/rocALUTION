@@ -110,6 +110,7 @@ public:
 
     // clang-format off
 #define PBOOL_TRANSFORM_EACH			\
+  PBOOL_TRANSFORM(iterative_solve) \
   PBOOL_TRANSFORM(verbose)			\
   PBOOL_TRANSFORM(mcilu_use_level)
     // clang-format on
@@ -132,6 +133,7 @@ public:
   PINT_TRANSFORM(krylov_basis)						\
   PINT_TRANSFORM(ndim)							\
   PINT_TRANSFORM(ilut_n)						\
+  PINT_TRANSFORM(itsolve_max_iter)      \
   PINT_TRANSFORM(itilu0_max_iter)				\
   PINT_TRANSFORM(itilu0_options)				\
   PINT_TRANSFORM(mcilu_p)						\
@@ -210,6 +212,7 @@ public:
   PDOUBLE_TRANSFORM(div_tol)				\
   PDOUBLE_TRANSFORM(residual_tol)			\
   PDOUBLE_TRANSFORM(ilut_tol)				\
+  PDOUBLE_TRANSFORM(itsolve_tol)    \
   PDOUBLE_TRANSFORM(itilu0_tol)				\
   PDOUBLE_TRANSFORM(mcgs_relax)				\
   PDOUBLE_TRANSFORM(solver_over_interp)			\

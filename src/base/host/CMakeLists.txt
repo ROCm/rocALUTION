@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+# Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,5 +35,6 @@ set(HOST_SOURCES
   base/host/host_affinity.cpp
   base/host/host_io.cpp
   base/host/host_stencil_laplace2d.cpp
+  base/host/host_sparse.cpp
   base/host/host_ilut_driver_csr.cpp
 )

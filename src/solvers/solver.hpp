@@ -29,8 +29,124 @@
 #include "iter_ctrl.hpp"
 #include "rocalution/export.hpp"
 
+// HELPER DEFINITIONS
+#define DISPATCH_OPERATOR_SOLVE_STRATEGY(descr_, op_, func_, ...) \
+    switch(descr_.GetTriSolverAlg())                              \
+    {                                                             \
+    case TriSolverAlg_Default:                                    \
+    {                                                             \
+        op_.func_(__VA_ARGS__);                                   \
+        break;                                                    \
+    }                                                             \
+    case TriSolverAlg_Iterative:                                  \
+    {                                                             \
+        op_.It##func_(descr_.GetIterativeSolverMaxIteration(),    \
+                      descr_.GetIterativeSolverTolerance(),       \
+                      descr_.GetIterativeSolverUseTolerance(),    \
+                      __VA_ARGS__);                               \
+        break;                                                    \
+    }                                                             \
+    }
+
+#define DISPATCH_OPERATOR_ANALYSE_STRATEGY(descr_, op_, func_, ...) \
+    switch(descr_.GetTriSolverAlg())                                \
+    {                                                               \
+    case TriSolverAlg_Default:                                      \
+    {                                                               \
+        op_.func_(__VA_ARGS__);                                     \
+        break;                                                      \
+    }                                                               \
+    case TriSolverAlg_Iterative:                                    \
+    {                                                               \
+        op_.It##func_(__VA_ARGS__);                                 \
+        break;                                                      \
+    }                                                               \
+    }
+
 namespace rocalution
 {
+    /*! \brief Triangular system solve algorithms
+     *  \details
+     *  This is a list of algorithms to solve triangular systems
+     */
+    typedef enum _tri_solver_alg : unsigned int
+    {
+        TriSolverAlg_Default   = 0, /**< The default direct solver. */
+        TriSolverAlg_Iterative = 1, /**< Iteratively solve triangular systems. */
+    } TriSolverAlg;
+
+    /** \ingroup precond_module
+  * \class SolverDescr
+  * \brief Descriptor class that controls the solving strategy.
+  */
+    class SolverDescr
+    {
+    public:
+        ROCALUTION_EXPORT
+        SolverDescr();
+        /** \brief Constructor */
+        ROCALUTION_EXPORT
+        SolverDescr(const SolverDescr& other);
+
+        ROCALUTION_EXPORT
+        virtual ~SolverDescr(void);
+
+        /** \brief operator=*/
+        ROCALUTION_EXPORT
+        SolverDescr& operator=(const SolverDescr& rhs);
+
+        // Setters and Getters
+
+        /** \brief Set triangular solver algorithm */
+        ROCALUTION_EXPORT
+        void SetTriSolverAlg(TriSolverAlg alg);
+        /** \brief Get triangular solver algorithm */
+        ROCALUTION_EXPORT
+        TriSolverAlg GetTriSolverAlg(void) const;
+
+        /** \brief Set maximum solver iterations */
+        ROCALUTION_EXPORT
+        void SetIterativeSolverMaxIteration(int max_iter);
+        /** \brief Get maximum solver iterations */
+        ROCALUTION_EXPORT
+        int GetIterativeSolverMaxIteration(void) const;
+
+        /** \brief Set solver tolerance */
+        ROCALUTION_EXPORT
+        void SetIterativeSolverTolerance(double tol);
+        /** \brief Get solver tolerance */
+        ROCALUTION_EXPORT
+        double GetIterativeSolverTolerance(void) const;
+
+        /** \brief Print solver stats */
+        ROCALUTION_EXPORT
+        void Print(void) const;
+
+        /** \brief Enable tolerance as stopping criteria (default) */
+        ROCALUTION_EXPORT
+        void EnableIterativeSolverTolerance(void);
+
+        /** \brief Disable tolerance as stopping criteria */
+        ROCALUTION_EXPORT
+        void DisableIterativeSolverTolerance(void);
+
+        /** \brief Return if tolerance is used as a stopping criteria */
+        ROCALUTION_EXPORT
+        bool GetIterativeSolverUseTolerance(void) const;
+
+    protected:
+        /** \brief Triangular solver algorithm */
+        TriSolverAlg tri_solver_alg_ = TriSolverAlg_Default;
+
+        /** \brief Maximum solver iterations */
+        int itsolver_max_iter_ = 30;
+
+        /** \brief Solver tolerance */
+        double itsolver_tol_ = 1e-3;
+
+        /** \brief Use tolerance as stopping criteria */
+        bool itsolver_use_tol_ = true;
+    };
 
     /** \ingroup solver_module
   * \class Solver
@@ -125,6 +241,10 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual void Verbose(int verb = 1);
 
+        /** \brief Set solver descriptor */
+        ROCALUTION_EXPORT
+        virtual void SetSolverDescriptor(const SolverDescr& descr);
+
         /** \brief Mark this solver as being a preconditioner */
         ROCALUTION_EXPORT
         inline void FlagPrecond(void)
@@ -145,6 +265,9 @@ namespace rocalution
 
         /** \brief Pointer to the defined preconditioner */
         Solver<OperatorType, VectorType, ValueType>* precond_;
+
+        /** \brief Solver descriptor */
+        SolverDescr solver_descr_;
 
         /** \brief Flag to store whether this solver is a preconditioner or not */
         bool is_precond_;
