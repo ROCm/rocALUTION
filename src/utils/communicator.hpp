@@ -34,6 +34,9 @@ namespace rocalution
     };
 
     template <typename ValueType>
+    void communication_sync_exscan(ValueType* send, ValueType* recv, int count, const void* comm);
+
+    template <typename ValueType>
     void communication_sync_allreduce_single_sum(ValueType*  local,
                                                  ValueType*  global,
                                                  const void* comm);

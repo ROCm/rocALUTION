@@ -29,6 +29,13 @@
 
 namespace rocalution
 {
+    template <>
+    void communication_sync_exscan(int64_t* send, int64_t* recv, int count, const void* comm)
+    {
+        int status = MPI_Exscan(send, recv, count, MPI_INT64_T, MPI_SUM, *(MPI_Comm*)comm);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
     // Allreduce single SUM - SYNC
     template <>
     void communication_sync_allreduce_single_sum(double* local, double* global, const void* comm)
@@ -642,6 +649,15 @@ namespace rocalution
 
     template <>
     void communication_async_recv(
+        bool* buf, int count, int source, int tag, MRequest* request, const void* comm)
+    {
+        int status
+            = MPI_Irecv(buf, count, MPI_CXX_BOOL, source, tag, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
+
+    template <>
+    void communication_async_recv(
         int* buf, int count, int source, int tag, MRequest* request, const void* comm)
     {
         int status = MPI_Irecv(buf, count, MPI_INT, source, tag, *(MPI_Comm*)comm, &request->req);
@@ -696,6 +712,15 @@ namespace rocalution
         CHECK_MPI_ERROR(status, __FILE__, __LINE__);
     }
 #endif
+
+    template <>
+    void communication_async_send(
+        bool* buf, int count, int dest, int tag, MRequest* request, const void* comm)
+    {
+        int status
+            = MPI_Isend(buf, count, MPI_CXX_BOOL, dest, tag, *(MPI_Comm*)comm, &request->req);
+        CHECK_MPI_ERROR(status, __FILE__, __LINE__);
+    }
 
     template <>
     void communication_async_send(

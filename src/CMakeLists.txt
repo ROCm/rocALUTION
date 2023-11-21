@@ -164,12 +164,12 @@ if(SUPPORT_HIP)
     if(BUILD_OPTCPU)
       list(APPEND HIP_HIPCC_FLAGS "-march=native")
     endif()
-  
+
     list(APPEND HIP_HIPCC_FLAGS "-O3 -fPIC -std=c++14")
     foreach(target ${AMDGPU_TARGETS})
       list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
     endforeach()
-  
+
     # Create rocALUTION HIP library
     if(WIN32)
       add_library(rocalution_hip OBJECT ${HIP_SOURCES})

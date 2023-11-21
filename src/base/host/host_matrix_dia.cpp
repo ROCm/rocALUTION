@@ -78,16 +78,13 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixDIA<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_host(&this->mat_.val);
-            free_host(&this->mat_.offset);
+        free_host(&this->mat_.val);
+        free_host(&this->mat_.offset);
 
-            this->nrow_         = 0;
-            this->ncol_         = 0;
-            this->nnz_          = 0;
-            this->mat_.num_diag = 0;
-        }
+        this->nrow_         = 0;
+        this->ncol_         = 0;
+        this->nnz_          = 0;
+        this->mat_.num_diag = 0;
     }
 
     template <typename ValueType>
@@ -96,39 +93,40 @@ namespace rocalution
         assert(nnz >= 0);
         assert(ncol >= 0);
         assert(nrow >= 0);
+        assert(ndiag >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnz > 0)
-        {
-            assert(ndiag > 0);
+        allocate_host(nnz, &this->mat_.val);
+        allocate_host(ndiag, &this->mat_.offset);
 
-            allocate_host(nnz, &this->mat_.val);
-            allocate_host(ndiag, &this->mat_.offset);
+        set_to_zero_host(nnz, mat_.val);
+        set_to_zero_host(ndiag, mat_.offset);
 
-            set_to_zero_host(nnz, mat_.val);
-            set_to_zero_host(ndiag, mat_.offset);
-
-            this->nrow_         = nrow;
-            this->ncol_         = ncol;
-            this->nnz_          = nnz;
-            this->mat_.num_diag = ndiag;
-        }
+        this->nrow_         = nrow;
+        this->ncol_         = ncol;
+        this->nnz_          = nnz;
+        this->mat_.num_diag = ndiag;
     }
 
     template <typename ValueType>
     void HostMatrixDIA<ValueType>::SetDataPtrDIA(
         int** offset, ValueType** val, int64_t nnz, int nrow, int ncol, int num_diag)
     {
-        assert(*offset != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
-        assert(num_diag > 0);
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
+        assert(num_diag >= 0);
+
+        if(num_diag > 0)
+        {
+            assert(*offset != NULL);
+        }
+
+        if(nnz > 0)
+        {
+            assert(*val != NULL);
+        }
 
         if(nrow < ncol)
         {
@@ -153,10 +151,10 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixDIA<ValueType>::LeaveDataPtrDIA(int** offset, ValueType** val, int& num_diag)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
-        assert(this->mat_.num_diag > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
+        assert(this->mat_.num_diag >= 0);
 
         if(this->nrow_ < this->ncol_)
         {
@@ -167,7 +165,6 @@ namespace rocalution
             assert(this->nnz_ == this->nrow_ * this->mat_.num_diag);
         }
 
-        // see free_host function for details
         *offset = this->mat_.offset;
         *val    = this->mat_.val;
 
@@ -187,22 +184,22 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
-        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixDIA<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixDIA<ValueType>*>(&mat))
         {
-            this->AllocateDIA(
-                cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_, cast_mat->mat_.num_diag);
-
-            assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_)
-                   && (this->ncol_ == cast_mat->ncol_));
-
-            if(this->nnz_ > 0)
+            if(this->nnz_ == 0)
             {
-                copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
-                copy_h2h(this->mat_.num_diag, cast_mat->mat_.offset, this->mat_.offset);
+                this->AllocateDIA(
+                    cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_, cast_mat->mat_.num_diag);
             }
+
+            assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
+            assert(this->ncol_ == cast_mat->ncol_);
+
+            copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
+            copy_h2h(this->mat_.num_diag, cast_mat->mat_.offset, this->mat_.offset);
         }
         else
         {
@@ -223,9 +220,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateDIA(0, mat.GetM(), mat.GetN(), 0);
+
             return true;
         }
 

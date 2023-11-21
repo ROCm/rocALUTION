@@ -124,51 +124,42 @@ namespace rocalution
         assert(nrowb >= 0);
         assert(blockdim > 1);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnzb > 0)
-        {
-            allocate_hip(nrowb + 1, &this->mat_.row_offset);
-            allocate_hip(nnzb, &this->mat_.col);
-            allocate_hip(nnzb * blockdim * blockdim, &this->mat_.val);
+        allocate_hip(nrowb + 1, &this->mat_.row_offset);
+        allocate_hip(nnzb, &this->mat_.col);
+        allocate_hip(nnzb * blockdim * blockdim, &this->mat_.val);
 
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nrowb + 1, this->mat_.row_offset);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnzb, this->mat_.col);
-            set_to_zero_hip(
-                this->local_backend_.HIP_block_size, nnzb * blockdim * blockdim, this->mat_.val);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nrowb + 1, this->mat_.row_offset);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnzb, this->mat_.col);
+        set_to_zero_hip(
+            this->local_backend_.HIP_block_size, nnzb * blockdim * blockdim, this->mat_.val);
 
-            this->nrow_ = nrowb * blockdim;
-            this->ncol_ = ncolb * blockdim;
-            this->nnz_  = nnzb * blockdim * blockdim;
+        this->nrow_ = nrowb * blockdim;
+        this->ncol_ = ncolb * blockdim;
+        this->nnz_  = nnzb * blockdim * blockdim;
 
-            this->mat_.nrowb    = nrowb;
-            this->mat_.ncolb    = ncolb;
-            this->mat_.nnzb     = nnzb;
-            this->mat_.blockdim = blockdim;
-        }
+        this->mat_.nrowb    = nrowb;
+        this->mat_.ncolb    = ncolb;
+        this->mat_.nnzb     = nnzb;
+        this->mat_.blockdim = blockdim;
     }
 
     template <typename ValueType>
     void HIPAcceleratorMatrixBCSR<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_hip(&this->mat_.row_offset);
-            free_hip(&this->mat_.col);
-            free_hip(&this->mat_.val);
+        free_hip(&this->mat_.row_offset);
+        free_hip(&this->mat_.col);
+        free_hip(&this->mat_.val);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
 
-            this->LAnalyseClear();
-            this->UAnalyseClear();
-            this->LUAnalyseClear();
-            this->LLAnalyseClear();
-        }
+        this->LAnalyseClear();
+        this->UAnalyseClear();
+        this->LUAnalyseClear();
+        this->LLAnalyseClear();
     }
 
     template <typename ValueType>
@@ -180,13 +171,17 @@ namespace rocalution
                                                              int         ncolb,
                                                              int         blockdim)
     {
-        assert(*row_offset != NULL);
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnzb > 0);
-        assert(nrowb > 0);
-        assert(ncolb > 0);
+        assert(nnzb >= 0);
+        assert(nrowb >= 0);
+        assert(ncolb >= 0);
         assert(blockdim > 1);
+        assert(*row_offset != NULL);
+
+        if(nnzb > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -212,9 +207,9 @@ namespace rocalution
                                                                ValueType** val,
                                                                int&        blockdim)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
         assert(this->mat_.blockdim > 1);
 
         hipDeviceSynchronize();
@@ -243,7 +238,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -264,7 +258,12 @@ namespace rocalution
             assert(this->mat_.nnzb == cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == cast_mat->mat_.blockdim);
 
-            copy_h2d(this->mat_.nrowb + 1, cast_mat->mat_.row_offset, this->mat_.row_offset);
+            // Copy only if initialized
+            if(cast_mat->mat_.row_offset != NULL)
+            {
+                copy_h2d(this->mat_.nrowb + 1, cast_mat->mat_.row_offset, this->mat_.row_offset);
+            }
+
             copy_h2d(this->mat_.nnzb, cast_mat->mat_.col, this->mat_.col);
             copy_h2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      cast_mat->mat_.val,
@@ -306,7 +305,11 @@ namespace rocalution
             assert(this->mat_.nnzb == cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == cast_mat->mat_.blockdim);
 
-            copy_d2h(this->mat_.nrowb + 1, this->mat_.row_offset, cast_mat->mat_.row_offset);
+            if(this->mat_.row_offset != NULL)
+            {
+                copy_d2h(this->mat_.nrowb + 1, this->mat_.row_offset, cast_mat->mat_.row_offset);
+            }
+
             copy_d2h(this->mat_.nnzb, this->mat_.col, cast_mat->mat_.col);
             copy_d2h(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      this->mat_.val,
@@ -329,7 +332,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -350,7 +352,13 @@ namespace rocalution
             assert(this->mat_.nnzb == hip_cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == hip_cast_mat->mat_.blockdim);
 
-            copy_h2d(this->mat_.nrowb + 1, hip_cast_mat->mat_.row_offset, this->mat_.row_offset);
+            // Copy only if initialized
+            if(hip_cast_mat->mat_.row_offset != NULL)
+            {
+                copy_h2d(
+                    this->mat_.nrowb + 1, hip_cast_mat->mat_.row_offset, this->mat_.row_offset);
+            }
+
             copy_h2d(this->mat_.nnzb, hip_cast_mat->mat_.col, this->mat_.col);
             copy_h2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      hip_cast_mat->mat_.val,
@@ -401,7 +409,12 @@ namespace rocalution
             assert(this->mat_.nnzb == hip_cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == hip_cast_mat->mat_.blockdim);
 
-            copy_d2d(this->mat_.nrowb + 1, this->mat_.row_offset, hip_cast_mat->mat_.row_offset);
+            if(this->mat_.row_offset != NULL)
+            {
+                copy_d2d(
+                    this->mat_.nrowb + 1, this->mat_.row_offset, hip_cast_mat->mat_.row_offset);
+            }
+
             copy_d2d(this->mat_.nnzb, this->mat_.col, hip_cast_mat->mat_.col);
             copy_d2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      this->mat_.val,
@@ -431,7 +444,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -452,24 +464,26 @@ namespace rocalution
             assert(this->mat_.nnzb == cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == cast_mat->mat_.blockdim);
 
-            if(this->nnz_ > 0)
+            // Copy only if initialized
+            if(cast_mat->mat_.row_offset != NULL)
             {
                 copy_h2d(this->mat_.nrowb + 1,
                          cast_mat->mat_.row_offset,
                          this->mat_.row_offset,
                          true,
                          HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_h2d(this->mat_.nnzb,
-                         cast_mat->mat_.col,
-                         this->mat_.col,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_h2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
-                         cast_mat->mat_.val,
-                         this->mat_.val,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_h2d(this->mat_.nnzb,
+                     cast_mat->mat_.col,
+                     this->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_h2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
+                     cast_mat->mat_.val,
+                     this->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -507,24 +521,25 @@ namespace rocalution
             assert(this->mat_.nnzb == cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == cast_mat->mat_.blockdim);
 
-            if(this->nnz_ > 0)
+            if(this->mat_.row_offset != NULL)
             {
                 copy_d2h(this->mat_.nrowb + 1,
                          this->mat_.row_offset,
                          cast_mat->mat_.row_offset,
                          true,
                          HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_d2h(this->mat_.nnzb,
-                         this->mat_.col,
-                         cast_mat->mat_.col,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_d2h(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
-                         this->mat_.val,
-                         cast_mat->mat_.val,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_d2h(this->mat_.nnzb,
+                     this->mat_.col,
+                     cast_mat->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2h(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
+                     this->mat_.val,
+                     cast_mat->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -543,7 +558,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixBCSR<ValueType>*>(&src)) != NULL)
@@ -564,24 +578,26 @@ namespace rocalution
             assert(this->mat_.nnzb == hip_cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == hip_cast_mat->mat_.blockdim);
 
-            if(this->nnz_ > 0)
+            // Copy only if initialized
+            if(hip_cast_mat->mat_.row_offset != NULL)
             {
                 copy_d2d(this->mat_.nrowb + 1,
                          hip_cast_mat->mat_.row_offset,
                          this->mat_.row_offset,
                          true,
                          HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_d2d(this->mat_.nnzb,
-                         hip_cast_mat->mat_.col,
-                         this->mat_.col,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_d2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
-                         hip_cast_mat->mat_.val,
-                         this->mat_.val,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_d2d(this->mat_.nnzb,
+                     hip_cast_mat->mat_.col,
+                     this->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
+                     hip_cast_mat->mat_.val,
+                     this->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -628,24 +644,25 @@ namespace rocalution
             assert(this->mat_.nnzb == hip_cast_mat->mat_.nnzb);
             assert(this->mat_.blockdim == hip_cast_mat->mat_.blockdim);
 
-            if(this->nnz_ > 0)
+            if(this->mat_.row_offset != NULL)
             {
                 copy_d2d(this->mat_.nrowb + 1,
                          this->mat_.row_offset,
                          hip_cast_mat->mat_.row_offset,
                          true,
                          HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_d2d(this->mat_.nnzb,
-                         this->mat_.col,
-                         hip_cast_mat->mat_.col,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
-                copy_d2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
-                         this->mat_.val,
-                         hip_cast_mat->mat_.val,
-                         true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
             }
+
+            copy_d2d(this->mat_.nnzb,
+                     this->mat_.col,
+                     hip_cast_mat->mat_.col,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+            copy_d2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
+                     this->mat_.val,
+                     hip_cast_mat->mat_.val,
+                     true,
+                     HIPSTREAM(this->local_backend_.HIP_stream_current));
         }
         else
         {
@@ -669,9 +686,14 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            int mb = (mat.GetM() + 1) / 2;
+            int nb = (mat.GetN() + 1) / 2;
+
+            this->AllocateBCSR(0, mb, nb, 2);
+
             return true;
         }
 

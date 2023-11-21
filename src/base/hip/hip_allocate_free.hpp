@@ -44,6 +44,14 @@ namespace rocalution
         int blocksize, int64_t n, DataType* ptr, bool async = false, hipStream_t stream = 0);
 
     template <typename DataType>
+    void set_to_value_hip(int         blocksize,
+                          int64_t     n,
+                          DataType*   ptr,
+                          DataType    value,
+                          bool        async  = false,
+                          hipStream_t stream = 0);
+
+    template <typename DataType>
     void copy_d2h(
         int64_t n, const DataType* src, DataType* dst, bool async = false, hipStream_t stream = 0);
 

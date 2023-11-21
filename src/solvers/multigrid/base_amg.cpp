@@ -235,7 +235,11 @@ namespace rocalution
                                             trans_list_.back());
 
             // The very first level is not allowed to fail
-            assert(success == true);
+            if(success == false)
+            {
+                LOG_INFO("Could not build initial AMG level");
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
 
             ++this->levels_;
 

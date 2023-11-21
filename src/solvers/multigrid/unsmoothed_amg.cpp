@@ -24,6 +24,8 @@
 #include "unsmoothed_amg.hpp"
 #include "../../utils/def.hpp"
 
+#include "../../base/global_matrix.hpp"
+#include "../../base/global_vector.hpp"
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
 
@@ -211,34 +213,35 @@ namespace rocalution
         assert(res != NULL);
         assert(coarse != NULL);
 
-        LocalVector<int> connections;
-        LocalVector<int> aggregates;
+        LocalVector<bool>    connections;
+        LocalVector<int64_t> aggregates;
+        LocalVector<int64_t> aggregate_root_nodes;
 
         connections.CloneBackend(op);
         aggregates.CloneBackend(op);
+        aggregate_root_nodes.CloneBackend(op);
 
         ValueType eps = this->eps_;
         for(int i = 0; i < this->levels_ - 1; ++i)
         {
             eps *= static_cast<ValueType>(0.5);
         }
-
-        op.AMGConnect(eps, &connections);
-
-        if(strat_ == CoarseningStrategy::Greedy)
+        switch(strat_)
         {
-            op.AMGAggregate(connections, &aggregates);
-        }
-        else if(strat_ == CoarseningStrategy::PMIS)
-        {
-            op.AMGPMISAggregate(connections, &aggregates);
+        case Greedy:
+            op.AMGGreedyAggregate(eps, &connections, &aggregates, &aggregate_root_nodes);
+            break;
+        case PMIS:
+            op.AMGPMISAggregate(eps, &connections, &aggregates, &aggregate_root_nodes);
+            break;
         }
 
-        op.AMGAggregation(aggregates, pro);
+        op.AMGUnsmoothedAggregation(aggregates, aggregate_root_nodes, pro);
 
         // Free unused vectors
         connections.Clear();
         aggregates.Clear();
+        aggregate_root_nodes.Clear();
 
         // Transpose P to obtain R
         pro->Transpose(res);
@@ -256,13 +259,21 @@ namespace rocalution
     }
 
     template class UAAMG<LocalMatrix<double>, LocalVector<double>, double>;
+    template class UAAMG<GlobalMatrix<double>, GlobalVector<double>, double>;
     template class UAAMG<LocalMatrix<float>, LocalVector<float>, float>;
+    template class UAAMG<GlobalMatrix<float>, GlobalVector<float>, float>;
 #ifdef SUPPORT_COMPLEX
     template class UAAMG<LocalMatrix<std::complex<double>>,
                          LocalVector<std::complex<double>>,
                          std::complex<double>>;
+    template class UAAMG<GlobalMatrix<std::complex<double>>,
+                         GlobalVector<std::complex<double>>,
+                         std::complex<double>>;
     template class UAAMG<LocalMatrix<std::complex<float>>,
                          LocalVector<std::complex<float>>,
+                         std::complex<float>>;
+    template class UAAMG<GlobalMatrix<std::complex<float>>,
+                         GlobalVector<std::complex<float>>,
                          std::complex<float>>;
 #endif
 

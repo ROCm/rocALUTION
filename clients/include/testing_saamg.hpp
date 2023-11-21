@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -125,10 +125,6 @@ bool testing_saamg(Arguments argus)
     // Solver
     FCG<LocalMatrix<T>, LocalVector<T>, T> ls;
 
-    // Start time measurement
-    double tick = rocalution_time();
-    double tack = rocalution_time();
-
     // AMG
     SAAMG<LocalMatrix<T>, LocalVector<T>, T> p;
 
@@ -156,12 +152,6 @@ bool testing_saamg(Arguments argus)
     p.SetCouplingStrength(0.001);
     p.SetInterpRelax(2.0 / 3.0);
     p.BuildHierarchy();
-
-    // Stop build hierarchy time measurement
-    tack = rocalution_time();
-    std::cout << "Build Hierarchy took: " << (tack - tick) / 1e6 << " sec" << std::endl;
-    // Start smoother time measurement
-    tick = rocalution_time();
 
     // Get number of hierarchy levels
     int levels = p.GetNumLevels();
@@ -206,11 +196,6 @@ bool testing_saamg(Arguments argus)
 
     ls.Init(1e-8, 0.0, 1e+8, 10000);
 
-    // Stop build smoother time measurement
-    tack = rocalution_time();
-    std::cout << "Smoother build took: " << (tack - tick) / 1e6 << " sec" << std::endl;
-    // Start build time measurement
-    tick = rocalution_time();
     ls.Build();
 
     if(rebuildnumeric)
@@ -227,17 +212,7 @@ bool testing_saamg(Arguments argus)
     // Matrix format
     A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
-    // Stop building time measurement
-    tack = rocalution_time();
-    std::cout << "Build took: " << (tack - tick) / 1e6 << " sec" << std::endl;
-    // Start solving time measurement
-    tick = rocalution_time();
-
     ls.Solve(rebuildnumeric ? b2 : b, &x);
-
-    // Stop solving time measurement
-    tack = rocalution_time();
-    std::cout << "Solving took: " << (tack - tick) / 1e6 << " sec" << std::endl;
 
     // Verify solution
     x.ScaleAdd(-1.0, e);

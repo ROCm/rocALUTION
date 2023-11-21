@@ -135,74 +135,54 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
+        this->nnz_  = 0;
         this->nrow_ = nrow;
         this->ncol_ = ncol;
-        this->nnz_  = 0;
 
-        if(ell_nnz > 0)
-        {
-            // ELL
-            assert(ell_nnz == ell_max_row * nrow);
+        // ELL
+        assert(ell_nnz == ell_max_row * nrow);
 
-            allocate_hip(ell_nnz, &this->mat_.ELL.val);
-            allocate_hip(ell_nnz, &this->mat_.ELL.col);
+        allocate_hip(ell_nnz, &this->mat_.ELL.val);
+        allocate_hip(ell_nnz, &this->mat_.ELL.col);
 
-            set_to_zero_hip(this->local_backend_.HIP_block_size, ell_nnz, this->mat_.ELL.val);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, ell_nnz, this->mat_.ELL.col);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, ell_nnz, this->mat_.ELL.val);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, ell_nnz, this->mat_.ELL.col);
 
-            this->mat_.ELL.max_row = ell_max_row;
-            this->ell_nnz_         = ell_nnz;
-            this->nnz_ += ell_nnz;
-        }
+        this->mat_.ELL.max_row = ell_max_row;
+        this->ell_nnz_         = ell_nnz;
+        this->nnz_ += ell_nnz;
 
-        if(coo_nnz > 0)
-        {
-            // COO
-            allocate_hip(coo_nnz, &this->mat_.COO.row);
-            allocate_hip(coo_nnz, &this->mat_.COO.col);
-            allocate_hip(coo_nnz, &this->mat_.COO.val);
+        // COO
+        allocate_hip(coo_nnz, &this->mat_.COO.row);
+        allocate_hip(coo_nnz, &this->mat_.COO.col);
+        allocate_hip(coo_nnz, &this->mat_.COO.val);
 
-            set_to_zero_hip(this->local_backend_.HIP_block_size, coo_nnz, this->mat_.COO.row);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, coo_nnz, this->mat_.COO.col);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, coo_nnz, this->mat_.COO.val);
-            this->coo_nnz_ = coo_nnz;
+        set_to_zero_hip(this->local_backend_.HIP_block_size, coo_nnz, this->mat_.COO.row);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, coo_nnz, this->mat_.COO.col);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, coo_nnz, this->mat_.COO.val);
+        this->coo_nnz_ = coo_nnz;
 
-            this->nnz_ += coo_nnz;
-        }
+        this->nnz_ += coo_nnz;
     }
 
     template <typename ValueType>
     void HIPAcceleratorMatrixHYB<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            if(this->ell_nnz_ > 0)
-            {
-                free_hip(&this->mat_.ELL.val);
-                free_hip(&this->mat_.ELL.col);
+        free_hip(&this->mat_.ELL.val);
+        free_hip(&this->mat_.ELL.col);
+        free_hip(&this->mat_.COO.row);
+        free_hip(&this->mat_.COO.col);
+        free_hip(&this->mat_.COO.val);
 
-                this->ell_nnz_         = 0;
-                this->mat_.ELL.max_row = 0;
-            }
+        this->ell_nnz_         = 0;
+        this->mat_.ELL.max_row = 0;
+        this->coo_nnz_         = 0;
 
-            if(this->coo_nnz_ > 0)
-            {
-                free_hip(&this->mat_.COO.row);
-                free_hip(&this->mat_.COO.col);
-                free_hip(&this->mat_.COO.val);
-
-                this->coo_nnz_ = 0;
-            }
-
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -212,7 +192,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixHYB<ValueType>*>(&src)) != NULL)
@@ -227,6 +206,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->ell_nnz_ == cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == cast_mat->coo_nnz_);
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
@@ -268,6 +249,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->ell_nnz_ == cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == cast_mat->coo_nnz_);
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
@@ -294,7 +277,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixHYB<ValueType>*>(&src)) != NULL)
@@ -309,6 +291,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == hip_cast_mat->nnz_);
+            assert(this->ell_nnz_ == hip_cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == hip_cast_mat->coo_nnz_);
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
@@ -359,6 +343,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == hip_cast_mat->nnz_);
+            assert(this->ell_nnz_ == hip_cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == hip_cast_mat->coo_nnz_);
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
@@ -392,7 +378,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixHYB<ValueType>*>(&src)) != NULL)
@@ -407,6 +392,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->ell_nnz_ == cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == cast_mat->coo_nnz_);
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
@@ -468,6 +455,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->ell_nnz_ == cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == cast_mat->coo_nnz_);
             assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
@@ -514,7 +503,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixHYB<ValueType>*>(&src)) != NULL)
@@ -529,6 +517,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == hip_cast_mat->nnz_);
+            assert(this->ell_nnz_ == hip_cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == hip_cast_mat->coo_nnz_);
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
@@ -599,6 +589,8 @@ namespace rocalution
             }
 
             assert(this->nnz_ == hip_cast_mat->nnz_);
+            assert(this->ell_nnz_ == hip_cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == hip_cast_mat->coo_nnz_);
             assert(this->nrow_ == hip_cast_mat->nrow_);
             assert(this->ncol_ == hip_cast_mat->ncol_);
 
@@ -650,9 +642,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateHYB(0, 0, 0, mat.GetM(), mat.GetN());
+
             return true;
         }
 

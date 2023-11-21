@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+# Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,6 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm ${ROCM_PATH})
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-     ${ROCM_PATH}/lib/cmake/hip
      ${ROCM_PATH}/hip/cmake)
 
 # Set a default build type if none was specified

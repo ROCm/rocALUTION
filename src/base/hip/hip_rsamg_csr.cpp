@@ -39,7 +39,7 @@ namespace rocalution
         float                        eps,
         BaseVector<bool>*            S,
         BaseVector<float>*           omega,
-        unsigned long long           seed,
+        int64_t                      global_row_offset,
         const BaseMatrix<ValueType>& ghost) const
     {
         assert(S != NULL);
@@ -60,8 +60,12 @@ namespace rocalution
         // Initialize S to false (no dependencies)
         cast_S->Zeros();
 
-        // Sample rng
-        omega->SetRandomUniform(seed, 0, 1); // TODO only fill up to this->nrow_!!!
+        // Sample some numbers using hash function to initialize omega
+        kernel_set_omega<<<(this->nrow_ - 1) / 256 + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            this->nrow_, global_row_offset, cast_w->vec_);
 
         // Determine strong influences in the matrix
         if(global == false)

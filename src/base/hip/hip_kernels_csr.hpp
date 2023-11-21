@@ -904,7 +904,143 @@ namespace rocalution
         vec[col[aj]] = val[aj];
     }
 
-    // AMG Connect
+    template <typename I, typename J>
+    __global__ void kernel_csr_boundary_nnz(I       boundary_size,
+                                            int64_t nnz,
+                                            const I* __restrict__ boundary_index,
+                                            const J* __restrict__ csr_row_ptr,
+                                            const I* __restrict__ csr_col_ind,
+                                            const J* __restrict__ ghost_csr_row_ptr,
+                                            const I* __restrict__ ghost_csr_col_ind,
+                                            const bool* __restrict__ connections,
+                                            J* __restrict__ row_nnz)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // This row is a boundary row
+        I row = boundary_index[gid];
+
+        J ext_nnz = 0;
+
+        // Extract interior part
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
+
+        // Interior
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            // Check whether this vertex is strongly connected
+            if(connections[j] == true)
+            {
+                ++ext_nnz;
+            }
+        }
+
+        // Ghost part
+        J gst_row_begin = ghost_csr_row_ptr[row];
+        J gst_row_end   = ghost_csr_row_ptr[row + 1];
+
+        for(J j = gst_row_begin; j < gst_row_end; ++j)
+        {
+            // Check whether this vertex is strongly connected
+            if(connections[j + nnz] == true)
+            {
+                ++ext_nnz;
+            }
+        }
+
+        // Write total number of strongly connected coarse vertices to global memory
+        row_nnz[gid] = ext_nnz;
+    }
+
+    template <typename I, typename J>
+    __global__ void kernel_csr_extract_boundary(I       boundary_size,
+                                                int64_t nnz,
+                                                int64_t global_column_begin,
+                                                const I* __restrict__ boundary_index,
+                                                const J* __restrict__ csr_row_ptr,
+                                                const I* __restrict__ csr_col_ind,
+                                                const J* __restrict__ ghost_csr_row_ptr,
+                                                const I* __restrict__ ghost_csr_col_ind,
+                                                const bool* __restrict__ connections,
+                                                const int64_t* __restrict__ l2g,
+                                                const J* __restrict__ bnd_row_ptr,
+                                                int64_t* __restrict__ bnd_col_ind)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // This row is a boundary row
+        I row = boundary_index[gid];
+
+        // Index into boundary array
+        J idx = bnd_row_ptr[gid];
+
+        // Extract interior part
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
+
+        // Interior
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            if(connections[j] == true)
+            {
+                // Get column index
+                I col = csr_col_ind[j];
+
+                // Shift column by global column offset, to obtain the global column index
+                bnd_col_ind[idx++] = col + global_column_begin;
+            }
+        }
+
+        // Extract ghost part
+        J gst_row_begin = ghost_csr_row_ptr[row];
+        J gst_row_end   = ghost_csr_row_ptr[row + 1];
+
+        for(J j = gst_row_begin; j < gst_row_end; ++j)
+        {
+            // Check whether this vertex is strongly connected
+            if(connections[j + nnz] == true)
+            {
+                // Get column index
+                I col = ghost_csr_col_ind[j];
+
+                // Transform local ghost index into global column index
+                bnd_col_ind[idx++] = l2g[col];
+            }
+        }
+    }
+
+    __device__ __forceinline__ mis_tuple lexographical_max(mis_tuple* ti, mis_tuple* tj)
+    {
+        // find lexographical maximum
+        if(tj->s > ti->s)
+        {
+            return *tj;
+        }
+        else if(tj->s == ti->s)
+        {
+            if(tj->v > ti->v)
+            {
+                return *tj;
+            }
+        }
+
+        return *ti;
+    }
+
+    // Note: Remove in next major release
     template <unsigned int WF_SIZE, typename T, typename I, typename J>
     __global__ void kernel_csr_amg_connect(I nrow,
                                            T eps2,
@@ -918,7 +1054,6 @@ namespace rocalution
         I gid = blockIdx.x * blockDim.x + tid;
         I lid = tid & (WF_SIZE - 1);
         I row = gid / WF_SIZE;
-
         if(row >= nrow)
         {
             return;
@@ -938,7 +1073,7 @@ namespace rocalution
         }
     }
 
-    // AMG Aggregate
+    // Note: Remove in next major release
     __device__ __forceinline__ unsigned int hash(unsigned int x)
     {
         x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -947,6 +1082,7 @@ namespace rocalution
         return x;
     }
 
+    // Note: Remove in next major release
     template <typename I, typename J>
     __global__ void kernel_csr_amg_init_mis_tuples(I nrow,
                                                    const J* __restrict__ row_offset,
@@ -979,21 +1115,7 @@ namespace rocalution
         tuples[row].i = row;
     }
 
-    __device__ __forceinline__ mis_tuple lexographical_max(mis_tuple* ti, mis_tuple* tj)
-    {
-        // find lexographical maximum
-        if(tj->s > ti->s)
-        {
-            return *tj;
-        }
-        else if(tj->s == ti->s && (tj->v > ti->v))
-        {
-            return *tj;
-        }
-
-        return *ti;
-    }
-
+    // Note: Remove in next major release
     template <unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
         void kernel_csr_amg_find_max_mis_tuples_shared(I nrow,
@@ -1004,14 +1126,12 @@ namespace rocalution
                                                        mis_tuple* __restrict__ max_tuples,
                                                        bool* done)
     {
-        I tid = threadIdx.x;
-        I gid = blockIdx.x * BLOCKSIZE + tid;
-        I lid = tid & (WFSIZE - 1);
-        I wid = tid / WFSIZE;
-        I row = gid / WFSIZE;
-
+        I                    tid = threadIdx.x;
+        I                    gid = blockIdx.x * BLOCKSIZE + tid;
+        I                    lid = tid & (WFSIZE - 1);
+        I                    wid = tid / WFSIZE;
+        I                    row = gid / WFSIZE;
         __shared__ mis_tuple smax_tuple[BLOCKSIZE];
-
         if(row >= nrow)
         {
             return;
@@ -1101,6 +1221,7 @@ namespace rocalution
         }
     }
 
+    // Note: Remove in next major release
     template <typename I>
     __global__ void kernel_csr_amg_update_mis_tuples(I nrow,
                                                      const mis_tuple* __restrict__ max_tuples,
@@ -1136,6 +1257,7 @@ namespace rocalution
         }
     }
 
+    // Note: Remove in next major release
     template <typename I, typename J>
     __global__ void kernel_csr_amg_update_aggregates(I nrow,
                                                      const J* __restrict__ row_offset,
@@ -1180,7 +1302,7 @@ namespace rocalution
         }
     }
 
-    // AMGSmoothedAggregation
+    // Note: Remove in next major release
     template <unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
@@ -1196,7 +1318,6 @@ namespace rocalution
     {
         unsigned int lid = threadIdx.x & (WFSIZE - 1);
         unsigned int wid = threadIdx.x / WFSIZE;
-
         if(warpSize == WFSIZE)
         {
             wid = __builtin_amdgcn_readfirstlane(wid);
@@ -1255,6 +1376,7 @@ namespace rocalution
         }
     }
 
+    // Note: Remove in next major release
     template <unsigned int BLOCKSIZE,
               unsigned int WFSIZE,
               unsigned int HASHSIZE,
@@ -1276,15 +1398,12 @@ namespace rocalution
     {
         unsigned int lid = threadIdx.x & (WFSIZE - 1);
         unsigned int wid = threadIdx.x / WFSIZE;
-
         if(warpSize == WFSIZE)
         {
             wid = __builtin_amdgcn_readfirstlane(wid);
         }
-
         // The row this thread operates on
         I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
-
         // Do not run out of bounds
         if(row >= nrow)
         {
@@ -1306,7 +1425,6 @@ namespace rocalution
 
         // Accumulator
         T dia = static_cast<T>(0);
-
         // Loop over all columns of the i-th row, whereas each lane processes a column
         for(J j = row_begin + lid; j < row_end; j += WFSIZE)
         {
@@ -1368,6 +1486,7 @@ namespace rocalution
         map.store_sorted(&csr_col_ind_P[aj], &csr_val_P[aj]);
     }
 
+    // Note: Remove in next major release
     template <unsigned int BLOCKSIZE, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
         void kernel_csr_unsmoothed_prolong_nnz_per_row(I nrow,
@@ -1397,6 +1516,7 @@ namespace rocalution
         }
     }
 
+    // Note: Remove in next major release
     template <unsigned int BLOCKSIZE, typename T, typename I>
     __launch_bounds__(BLOCKSIZE) __global__
         void kernel_csr_unsmoothed_prolong_fill_simple(I nrow,
@@ -1417,6 +1537,7 @@ namespace rocalution
         prolong_vals[row] = static_cast<T>(1);
     }
 
+    // Note: Remove in next major release
     template <unsigned int BLOCKSIZE, typename T, typename I, typename J>
     __launch_bounds__(BLOCKSIZE) __global__
         void kernel_csr_unsmoothed_prolong_fill(I nrow,
@@ -1445,13 +1566,1206 @@ namespace rocalution
         }
     }
 
-    // Count the total vertices of this boundary row
+    // AMG Connect
+    template <bool GLOBAL, unsigned int WF_SIZE, typename T, typename I, typename J>
+    __global__ void kernel_csr_amg_connect(I       nrow,
+                                           int64_t nnz,
+                                           T       eps2,
+                                           const J* __restrict__ row_offset,
+                                           const I* __restrict__ col,
+                                           const T* __restrict__ val,
+                                           const J* __restrict__ gst_row_offset,
+                                           const I* __restrict__ gst_col,
+                                           const T* __restrict__ gst_val,
+                                           const T* __restrict__ diag,
+                                           const int64_t* __restrict__ l2g,
+                                           bool* __restrict__ connections)
+    {
+        I tid = threadIdx.x;
+        I gid = blockIdx.x * blockDim.x + tid;
+        I lid = tid & (WF_SIZE - 1);
+        I row = gid / WF_SIZE;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        T eps_diag_r = eps2 * diag[row];
+
+        J row_begin = row_offset[row];
+        J row_end   = row_offset[row + 1];
+
+        for(J i = row_begin + lid; i < row_end; i += WF_SIZE)
+        {
+            I c = col[i];
+            T v = val[i];
+
+            connections[i] = (c != row) && (hip_real(v * v) > hip_real(eps_diag_r * diag[c]));
+        }
+
+        if(GLOBAL)
+        {
+            J gst_row_begin = gst_row_offset[row];
+            J gst_row_end   = gst_row_offset[row + 1];
+
+            for(J i = gst_row_begin + lid; i < gst_row_end; i += WF_SIZE)
+            {
+                I c = gst_col[i];
+                T v = gst_val[i];
+
+                connections[i + nnz] = (hip_real(v * v) > hip_real(eps_diag_r * diag[c + nrow]));
+            }
+        }
+    }
+
+    // AMG Aggregate
+    __device__ __forceinline__ unsigned int hash1(unsigned int x)
+    {
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = (x >> 16) ^ x;
+        return x / 2;
+    }
+
+    template <bool GLOBAL, typename I, typename J>
+    __global__ void kernel_csr_amg_init_mis_tuples(int64_t global_column_begin,
+                                                   I       nrow,
+                                                   int64_t nnz,
+                                                   const J* __restrict__ row_offset,
+                                                   const J* __restrict__ gst_row_offset,
+                                                   const bool* __restrict__ connections,
+                                                   int* __restrict__ state,
+                                                   int* __restrict__ hash)
+    {
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        int s = -2;
+
+        J row_begin = row_offset[row];
+        J row_end   = row_offset[row + 1];
+
+        for(J j = row_begin; j < row_end; j++)
+        {
+            if(connections[j] == true)
+            {
+                s = 0;
+                break;
+            }
+        }
+
+        if(GLOBAL == true)
+        {
+            J gst_row_begin = gst_row_offset[row];
+            J gst_row_end   = gst_row_offset[row + 1];
+
+            for(J j = gst_row_begin; j < gst_row_end; ++j)
+            {
+                if(connections[j + nnz] == true)
+                {
+                    s = 0;
+                    break;
+                }
+            }
+        }
+
+        state[row] = s;
+        hash[row]  = hash1(row + global_column_begin);
+    }
+
+    template <bool GLOBAL, unsigned int BLOCKSIZE, unsigned int WFSIZE, typename I, typename J>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_amg_find_max_node(I       nrow,
+                                          int64_t nnz,
+                                          int64_t global_column_begin,
+                                          int64_t global_column_end,
+                                          const J* __restrict__ row_offset,
+                                          const I* __restrict__ cols,
+                                          const J* __restrict__ gst_row_offset,
+                                          const I* __restrict__ gst_cols,
+                                          const bool* __restrict__ connections,
+                                          const I* __restrict__ state,
+                                          const I* __restrict__ hash,
+                                          const J* __restrict__ bnd_row_offset,
+                                          const int64_t* __restrict__ bnd_cols,
+                                          const I* __restrict__ bnd_state,
+                                          const I* __restrict__ bnd_hash,
+                                          I* __restrict__ max_state,
+                                          int64_t* __restrict__ aggregates,
+                                          bool* undecided)
+    {
+        I tid = threadIdx.x;
+        I gid = blockIdx.x * BLOCKSIZE + tid;
+        I lid = tid & (WFSIZE - 1);
+        I wid = tid / WFSIZE;
+        I row = gid / WFSIZE;
+
+        __shared__ mis_tuple smax_tuple[BLOCKSIZE];
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        smax_tuple[WFSIZE * wid].s = state[row];
+        smax_tuple[WFSIZE * wid].v = hash[row];
+        smax_tuple[WFSIZE * wid].i = row;
+
+        __syncthreads();
+
+        mis_tuple t_max = smax_tuple[WFSIZE * wid];
+
+        // Find distance one max node
+        J row_begin = row_offset[row];
+        J row_end   = row_offset[row + 1];
+
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            if(connections[j] == true)
+            {
+                I col = cols[j];
+
+                mis_tuple tj;
+                tj.s = state[col];
+                tj.v = hash[col];
+                tj.i = col;
+
+                t_max = lexographical_max(&tj, &t_max);
+            }
+        }
+
+        if(GLOBAL)
+        {
+            J gst_row_begin = gst_row_offset[row];
+            J gst_row_end   = gst_row_offset[row + 1];
+
+            for(J j = gst_row_begin + lid; j < gst_row_end; j += WFSIZE)
+            {
+                if(connections[j + nnz] == true)
+                {
+                    I col = gst_cols[j];
+
+                    mis_tuple tj;
+                    tj.s = state[nrow + col];
+                    tj.v = hash[nrow + col];
+                    tj.i = nrow + col;
+
+                    t_max = lexographical_max(&tj, &t_max);
+                }
+            }
+        }
+
+        smax_tuple[WFSIZE * wid + lid] = t_max;
+
+        __syncthreads();
+
+        // Finish reducing the intra block lexographical max
+        if(WFSIZE >= 64)
+        {
+            if(lid < 32)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 32]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 32)
+        {
+            if(lid < 16)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 16]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 16)
+        {
+            if(lid < 8)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 8]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 8)
+        {
+            if(lid < 4)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 4]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 4)
+        {
+            if(lid < 2)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 2]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 2)
+        {
+            if(lid < 1)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 1]);
+            __threadfence_block();
+        }
+
+        __syncthreads();
+        t_max = smax_tuple[WFSIZE * wid];
+        __syncthreads();
+
+        // Find distance two max node
+        if(t_max.i < nrow)
+        {
+            I r = t_max.i;
+
+            row_begin = row_offset[r];
+            row_end   = row_offset[r + 1];
+
+            for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+            {
+                if(connections[j] == true)
+                {
+                    I col = cols[j];
+
+                    mis_tuple tj;
+                    tj.s = state[col];
+                    tj.v = hash[col];
+                    tj.i = col;
+
+                    t_max = lexographical_max(&tj, &t_max);
+                }
+            }
+
+            if(GLOBAL)
+            {
+                J gst_row_begin = gst_row_offset[r];
+                J gst_row_end   = gst_row_offset[r + 1];
+
+                for(J j = gst_row_begin + lid; j < gst_row_end; j += WFSIZE)
+                {
+                    if(connections[j + nnz] == true)
+                    {
+                        I col = gst_cols[j];
+
+                        mis_tuple tj;
+                        tj.s = state[nrow + col];
+                        tj.v = hash[nrow + col];
+                        tj.i = nrow + col;
+
+                        t_max = lexographical_max(&tj, &t_max);
+                    }
+                }
+            }
+        }
+        else
+        {
+            J bnd_row_begin = bnd_row_offset[t_max.i - nrow];
+            J bnd_row_end   = bnd_row_offset[t_max.i - nrow + 1];
+
+            for(J j = bnd_row_begin + lid; j < bnd_row_end; j += WFSIZE)
+            {
+                int64_t gcol = bnd_cols[j];
+
+                // Differentiate between local and ghost column
+                I col = -1;
+                if(gcol >= global_column_begin && gcol < global_column_end)
+                {
+                    col = static_cast<I>(gcol - global_column_begin);
+                }
+
+                mis_tuple tj;
+                tj.s = bnd_state[j];
+                tj.v = bnd_hash[j];
+                tj.i = col;
+
+                t_max = lexographical_max(&tj, &t_max);
+            }
+        }
+
+        smax_tuple[WFSIZE * wid + lid] = t_max;
+
+        __syncthreads();
+
+        // Finish reducing the intra block lexographical max
+        if(WFSIZE >= 64)
+        {
+            if(lid < 32)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 32]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 32)
+        {
+            if(lid < 16)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 16]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 16)
+        {
+            if(lid < 8)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 8]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 8)
+        {
+            if(lid < 4)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 4]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 4)
+        {
+            if(lid < 2)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 2]);
+            __threadfence_block();
+        }
+        if(WFSIZE >= 2)
+        {
+            if(lid < 1)
+                smax_tuple[WFSIZE * wid + lid] = lexographical_max(
+                    &smax_tuple[WFSIZE * wid + lid], &smax_tuple[WFSIZE * wid + lid + 1]);
+            __threadfence_block();
+        }
+
+        __syncthreads();
+        t_max = smax_tuple[WFSIZE * wid];
+        __syncthreads();
+
+        if(lid == 0)
+        {
+            if(state[row] == 0)
+            {
+                if(t_max.i == row)
+                {
+                    max_state[row]  = 1;
+                    aggregates[row] = 1;
+                }
+                else if(t_max.s == 1)
+                {
+                    max_state[row]  = -1;
+                    aggregates[row] = 0;
+                }
+                else
+                {
+                    *undecided = true;
+                }
+            }
+        }
+    }
+
+    template <bool GLOBAL, typename I, typename J>
+    __global__ void kernel_csr_amg_update_aggregates(I       nrow,
+                                                     int64_t nnz,
+                                                     int64_t global_column_begin,
+                                                     const J* __restrict__ row_offset,
+                                                     const I* __restrict__ cols,
+                                                     const J* __restrict__ gst_row_offset,
+                                                     const I* __restrict__ gst_cols,
+                                                     const bool* __restrict__ connections,
+                                                     const I* __restrict__ state,
+                                                     const int64_t* __restrict__ l2g,
+                                                     I* __restrict__ max_state,
+                                                     int64_t* __restrict__ aggregates,
+                                                     int64_t* __restrict__ aggregate_root_nodes)
+    {
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        I s = state[row];
+        if(s == -1)
+        {
+            J row_begin = row_offset[row];
+            J row_end   = row_offset[row + 1];
+
+            int64_t global_col = -1;
+            for(J j = row_begin; j < row_end; j++)
+            {
+                if(connections[j] == true)
+                {
+                    I col = cols[j];
+
+                    if(state[col] == 1)
+                    {
+                        aggregates[row]           = aggregates[col];
+                        aggregate_root_nodes[row] = aggregate_root_nodes[col];
+                        max_state[row]            = 1;
+                        global_col                = global_column_begin + col;
+                        break;
+                    }
+                }
+            }
+            if(GLOBAL)
+            {
+                J gst_row_begin = gst_row_offset[row];
+                J gst_row_end   = gst_row_offset[row + 1];
+                for(J j = gst_row_begin; j < gst_row_end; j++)
+                {
+                    if(connections[j + nnz] == true)
+                    {
+                        I col = gst_cols[j];
+                        if(state[col + nrow] == 1)
+                        {
+                            if(global_col == -1 || (global_col >= 0 && l2g[col] < global_col))
+                            {
+                                aggregates[row]           = aggregates[col + nrow];
+                                aggregate_root_nodes[row] = aggregate_root_nodes[col + nrow];
+                                max_state[row]            = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else if(s == -2)
+        {
+            aggregates[row] = -2;
+        }
+    }
+
+    template <typename I>
+    __global__ void
+        kernel_csr_amg_initialize_aggregate_nodes(I       nrow,
+                                                  I       agg_size,
+                                                  int64_t global_column_begin,
+                                                  const int64_t* __restrict__ aggregates,
+                                                  int64_t* __restrict__ aggregate_root_nodes)
+    {
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        aggregate_root_nodes[row] = (aggregates[row] == 1) ? global_column_begin + row : -1;
+    }
+
+    // // AMGSmoothedAggregation
+    // template <unsigned int BLOCKSIZE,
+    //           unsigned int WFSIZE,
+    //           unsigned int HASHSIZE,
+    //           typename I,
+    //           typename J>
+    // __launch_bounds__(BLOCKSIZE) __global__
+    //     void kernel_csr_sa_prolong_nnz(I nrow,
+    //                                    const J* __restrict__ row_offsets,
+    //                                    const I* __restrict__ cols,
+    //                                    const bool* __restrict__ connections,
+    //                                    const int64_t* __restrict__ aggregates,
+    //                                    J* __restrict__ pi_row_nnz)
+    // {
+    //     unsigned int lid = threadIdx.x & (WFSIZE - 1);
+    //     unsigned int wid = threadIdx.x / WFSIZE;
+
+    //     if(warpSize == WFSIZE)
+    //     {
+    //         wid = __builtin_amdgcn_readfirstlane(wid);
+    //     }
+
+    //     // The row this thread operates on
+    //     I row = blockIdx.x * (BLOCKSIZE / WFSIZE) + wid;
+
+    //     // Do not run out of bounds
+    //     if(row >= nrow)
+    //     {
+    //         return;
+    //     }
+
+    //     // Shared memory for the unordered set
+    //     __shared__ int64_t int_table[BLOCKSIZE / WFSIZE * HASHSIZE];
+
+    //     // Each wavefront operates on its own set
+    //     unordered_set<int64_t, HASHSIZE, WFSIZE> int_set(&int_table[wid * HASHSIZE]);
+
+    //     // Row nnz counter
+    //     J pi_nnz = 0;
+    //     J pg_nnz = 0;
+
+    //     // Row entry and exit points
+    //     J row_begin = row_offsets[row];
+    //     J row_end   = row_offsets[row + 1];
+
+    //     // Loop over all columns of the i-th row, whereas each lane processes a column
+    //     for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+    //     {
+    //         // Get the column index
+    //         I col = cols[j];
+
+    //         // Get connection state
+    //         bool con = connections[j];
+
+    //         // Get aggregation state for this column
+    //         int64_t agg = aggregates[col];
+
+    //         // When aggregate is defined, diagonal entries and connected columns will
+    //         // generate a fill in
+    //         if((row == col || con) && agg >= 0)
+    //         {
+    //             // Insert into unordered int_set, to discard duplicates
+    //             pi_nnz += int_set.insert(agg);
+    //         }
+    //     }
+
+    //     // Sum up the row nnz from all lanes
+    //     wf_reduce_sum<WFSIZE>(&pi_nnz);
+
+    //     if(lid == WFSIZE - 1)
+    //     {
+    //         // Write row pi_nnz back to global memory
+    //         pi_row_nnz[row] = pi_nnz;
+    //     }
+    // }
+
+    template <bool         GLOBAL,
+              unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASHSIZE,
+              typename I,
+              typename J>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_sa_prolong_nnz(I       nrow,
+                                       int64_t nnz,
+                                       int64_t global_column_begin,
+                                       int64_t global_column_end,
+                                       const J* __restrict__ row_offsets,
+                                       const I* __restrict__ cols,
+                                       const J* __restrict__ gst_row_offsets,
+                                       const I* __restrict__ gst_cols,
+                                       const bool* __restrict__ connections,
+                                       const int64_t* __restrict__ aggregates,
+                                       const int64_t* __restrict__ aggregate_root_nodes,
+                                       int* f2c,
+                                       J* __restrict__ pi_row_nnz,
+                                       J* __restrict__ pg_row_nnz)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        if(warpSize == WFSIZE)
+        {
+            wid = __builtin_amdgcn_readfirstlane(wid);
+        }
+
+        // The row this thread operates on
+        I row = blockIdx.x * (BLOCKSIZE / WFSIZE) + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Shared memory for the unordered set
+        __shared__ int64_t int_table[BLOCKSIZE / WFSIZE * HASHSIZE];
+        __shared__ int64_t gst_table[BLOCKSIZE / WFSIZE * HASHSIZE];
+
+        // Each wavefront operates on its own set
+        unordered_set<int64_t, HASHSIZE, WFSIZE> int_set(&int_table[wid * HASHSIZE]);
+        unordered_set<int64_t, HASHSIZE, WFSIZE> gst_set(&gst_table[wid * HASHSIZE]);
+
+        // Row nnz counter
+        J pi_nnz = 0;
+        J pg_nnz = 0;
+
+        // Row entry and exit points
+        J row_begin = row_offsets[row];
+        J row_end   = row_offsets[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            // Get the column index
+            I col = cols[j];
+
+            // Get connection state
+            bool con = connections[j];
+
+            // Get aggregation state for this column
+            int64_t agg = aggregates[col];
+
+            // When aggregate is defined, diagonal entries and connected columns will
+            // generate a fill in
+            if((row == col || con) && agg >= 0)
+            {
+                int64_t global_node = aggregate_root_nodes[col];
+
+                if(global_node >= global_column_begin && global_node < global_column_end)
+                {
+                    // Insert into unordered int_set, to discard duplicates
+                    pi_nnz += int_set.insert(global_node);
+                    f2c[global_node - global_column_begin] = 1;
+                }
+                else
+                {
+                    pg_nnz += gst_set.insert(global_node);
+                }
+            }
+        }
+        if(GLOBAL)
+        {
+            J gst_row_begin = gst_row_offsets[row];
+            J gst_row_end   = gst_row_offsets[row + 1];
+            for(J j = gst_row_begin + lid; j < gst_row_end; j += WFSIZE)
+            {
+                // Get the column index
+                I col = gst_cols[j];
+
+                // Get connection state
+                bool con = connections[j + nnz];
+
+                // Get aggregation state for this column
+                int64_t agg = aggregates[col + nrow];
+
+                if(con && agg >= 0)
+                {
+                    int64_t global_node = aggregate_root_nodes[col + nrow];
+
+                    if(global_node >= global_column_begin && global_node < global_column_end)
+                    {
+                        // Insert into unordered int_set, to discard duplicates
+                        pi_nnz += int_set.insert(global_node);
+                        f2c[global_node - global_column_begin] = 1;
+                    }
+                    else
+                    {
+                        pg_nnz += gst_set.insert(global_node);
+                    }
+                }
+            }
+        }
+
+        // Sum up the row nnz from all lanes
+        wf_reduce_sum<WFSIZE>(&pi_nnz);
+
+        if(lid == WFSIZE - 1)
+        {
+            // Write row pi_nnz back to global memory
+            pi_row_nnz[row] = pi_nnz;
+        }
+
+        if(GLOBAL)
+        {
+            wf_reduce_sum<WFSIZE>(&pg_nnz);
+
+            if(lid == WFSIZE - 1)
+            {
+                // Write row pg_nnz back to global memory
+                pg_row_nnz[row] = pg_nnz;
+            }
+        }
+    }
+
+    // template <unsigned int BLOCKSIZE,
+    //           unsigned int WFSIZE,
+    //           unsigned int HASHSIZE,
+    //           typename T,
+    //           typename I,
+    //           typename J>
+    // __launch_bounds__(BLOCKSIZE) __global__
+    //     void kernel_csr_sa_prolong_fill(I   nrow,
+    //                                     T   relax,
+    //                                     int lumping_strat,
+    //                                     const J* __restrict__ row_offsets,
+    //                                     const I* __restrict__ cols,
+    //                                     const T* __restrict__ vals,
+    //                                     const bool* __restrict__ connections,
+    //                                     const int64_t* __restrict__ aggregates,
+    //                                     const J* __restrict__ pi_row_offsets,
+    //                                     I* __restrict__ pi_cols,
+    //                                     T* __restrict__ pi_vals)
+    // {
+    //     unsigned int lid = threadIdx.x & (WFSIZE - 1);
+    //     unsigned int wid = threadIdx.x / WFSIZE;
+
+    //     if(warpSize == WFSIZE)
+    //     {
+    //         wid = __builtin_amdgcn_readfirstlane(wid);
+    //     }
+
+    //     // The row this thread operates on
+    //     I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+    //     // Do not run out of bounds
+    //     if(row >= nrow)
+    //     {
+    //         return;
+    //     }
+
+    //     // Shared memory for the unordered map
+    //     __shared__ int64_t int_table[(BLOCKSIZE / WFSIZE) * HASHSIZE];
+    //     __shared__ char    int_mem[(BLOCKSIZE / WFSIZE) * HASHSIZE * sizeof(T)];
+
+    //     T* int_data = reinterpret_cast<T*>(int_mem);
+
+    //     // Each wavefront operates on its own map
+    //     unordered_map<int64_t, T, HASHSIZE, WFSIZE>   int_map(&int_table[wid * HASHSIZE],
+    //                                                   &int_data[wid * HASHSIZE]);
+
+    //     // Row entry and exit points
+    //     J row_begin = row_offsets[row];
+    //     J row_end   = row_offsets[row + 1];
+
+    //     // Accumulator
+    //     T dia = static_cast<T>(0);
+
+    //     // Loop over all columns of the i-th row, whereas each lane processes a column
+    //     for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+    //     {
+    //         // Get the column index
+    //         I col_j = cols[j];
+
+    //         // Get the value
+    //         T val_j = vals[j];
+
+    //         // Add the diagonal
+    //         if(col_j == row)
+    //         {
+    //             dia += val_j;
+    //         }
+    //         else if(connections[j] == false)
+    //         {
+    //             dia = (lumping_strat == 0) ? dia + val_j : dia - val_j;
+    //         }
+    //     }
+
+    //     // Sum up the accumulator from all lanes
+    //     for(unsigned int i = WFSIZE >> 1; i > 0; i >>= 1)
+    //     {
+    //         dia += hip_shfl_xor(dia, i);
+    //     }
+
+    //     dia = static_cast<T>(1) / dia;
+
+    //     // Loop over all columns of the i-th row, whereas each lane processes a column
+    //     for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+    //     {
+    //         // Get the column index
+    //         I col_j = cols[j];
+
+    //         // Get the value
+    //         T val_j = vals[j];
+
+    //         // Get connection state
+    //         bool con = connections[j];
+
+    //         // Get aggregation state for this column
+    //         int64_t agg = aggregates[col_j];
+
+    //         // When aggregate is defined, diagonal entries and connected columns will
+    //         // generate a fill in
+    //         if((row == col_j || con) && agg >= 0)
+    //         {
+    //             // Insert or add if already present into unordered map
+    //             T val = (col_j == row) ? static_cast<T>(1) - relax : -relax * dia * val_j;
+
+    //             int_map.insert_or_add(agg, val);
+    //         }
+    //     }
+
+    //     // Access into P
+    //     J aj = pi_row_offsets[row];
+
+    //     // Store key val pairs from map into P
+    //     int_map.store_sorted(&pi_cols[aj], &pi_vals[aj]);
+    // }
+
+    template <bool         GLOBAL,
+              unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASHSIZE,
+              typename T,
+              typename I,
+              typename J>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_sa_prolong_fill(I       nrow,
+                                        int64_t nnz,
+                                        int64_t global_column_begin,
+                                        int64_t global_column_end,
+                                        T       relax,
+                                        int     lumping_strat,
+                                        const J* __restrict__ row_offsets,
+                                        const I* __restrict__ cols,
+                                        const T* __restrict__ vals,
+                                        const J* __restrict__ gst_row_offsets,
+                                        const I* __restrict__ gst_cols,
+                                        const T* __restrict__ gst_vals,
+                                        const bool* __restrict__ connections,
+                                        const int64_t* __restrict__ aggregates,
+                                        const int64_t* __restrict__ aggregate_root_nodes,
+                                        const int* __restrict__ f2c,
+                                        const J* __restrict__ pi_row_offsets,
+                                        I* __restrict__ pi_cols,
+                                        T* __restrict__ pi_vals,
+                                        const J* __restrict__ pg_row_offsets,
+                                        I* __restrict__ pg_cols,
+                                        T* __restrict__ pg_vals,
+                                        int64_t* __restrict__ global_ghost_col)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        if(warpSize == WFSIZE)
+        {
+            wid = __builtin_amdgcn_readfirstlane(wid);
+        }
+
+        // The row this thread operates on
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        // Shared memory for the unordered map
+        __shared__ int64_t int_table[(BLOCKSIZE / WFSIZE) * HASHSIZE];
+        __shared__ int64_t gst_table[(BLOCKSIZE / WFSIZE) * HASHSIZE];
+        __shared__ char    int_mem[(BLOCKSIZE / WFSIZE) * HASHSIZE * sizeof(T)];
+        __shared__ char    gst_mem[(BLOCKSIZE / WFSIZE) * HASHSIZE * sizeof(T)];
+
+        T* int_data = reinterpret_cast<T*>(int_mem);
+        T* gst_data = reinterpret_cast<T*>(gst_mem);
+
+        // Each wavefront operates on its own map
+        unordered_map<int64_t, T, HASHSIZE, WFSIZE> int_map(&int_table[wid * HASHSIZE],
+                                                            &int_data[wid * HASHSIZE]);
+        unordered_map<int64_t, T, HASHSIZE, WFSIZE> gst_map(&gst_table[wid * HASHSIZE],
+                                                            &gst_data[wid * HASHSIZE]);
+
+        // Row entry and exit points
+        J row_begin = row_offsets[row];
+        J row_end   = row_offsets[row + 1];
+
+        // Accumulator
+        T dia = static_cast<T>(0);
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            // Get the column index
+            I col_j = cols[j];
+
+            // Get the value
+            T val_j = vals[j];
+
+            // Add the diagonal
+            if(col_j == row)
+            {
+                dia += val_j;
+            }
+            else if(connections[j] == false)
+            {
+                dia = (lumping_strat == 0) ? dia + val_j : dia - val_j;
+            }
+        }
+
+        if(GLOBAL)
+        {
+            // Row entry and exit points
+            J gst_row_begin = gst_row_offsets[row];
+            J gst_row_end   = gst_row_offsets[row + 1];
+
+            for(J j = gst_row_begin + lid; j < gst_row_end; j += WFSIZE)
+            {
+                if(connections[j + nnz] == false)
+                {
+                    if(lumping_strat == 0)
+                    {
+                        dia += gst_vals[j];
+                    }
+                    else
+                    {
+                        dia -= gst_vals[j];
+                    }
+                }
+            }
+        }
+
+        // Sum up the accumulator from all lanes
+        for(unsigned int i = WFSIZE >> 1; i > 0; i >>= 1)
+        {
+            dia += hip_shfl_xor(dia, i);
+        }
+
+        dia = static_cast<T>(1) / dia;
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(J j = row_begin + lid; j < row_end; j += WFSIZE)
+        {
+            // Get the column index
+            I col_j = cols[j];
+
+            // Get the value
+            T val_j = vals[j];
+
+            // Get connection state
+            bool con = connections[j];
+
+            // Get aggregation state for this column
+            int64_t agg = aggregates[col_j];
+
+            // When aggregate is defined, diagonal entries and connected columns will
+            // generate a fill in
+            if((row == col_j || con) && agg >= 0)
+            {
+                // Insert or add if already present into unordered map
+                T val = (col_j == row) ? static_cast<T>(1) - relax : -relax * dia * val_j;
+
+                int64_t global_node = aggregate_root_nodes[col_j];
+
+                if(global_node >= global_column_begin && global_node < global_column_end)
+                {
+                    // int_map.insert_or_add(agg, val);
+                    // int_map.insert_or_add(f2c[global_node - global_column_begin], val);
+                    int_map.insert_or_add(global_node, val);
+                }
+                else
+                {
+                    gst_map.insert_or_add(global_node, val);
+                }
+            }
+        }
+
+        if(GLOBAL)
+        {
+            // Row entry and exit points
+            J gst_row_begin = gst_row_offsets[row];
+            J gst_row_end   = gst_row_offsets[row + 1];
+
+            for(J j = gst_row_begin + lid; j < gst_row_end; j += WFSIZE)
+            {
+                // Get the column index
+                I col_j = gst_cols[j];
+
+                // Get the value
+                T val_j = gst_vals[j];
+
+                // Get connection state
+                bool con = connections[j + nnz];
+
+                // Get aggregation state for this column
+                int64_t agg = aggregates[col_j + nrow];
+
+                // When aggregate is defined, diagonal entries and connected columns will
+                // generate a fill in
+                if(con && agg >= 0)
+                {
+                    // Insert or add if already present into unordered map
+                    T val = -relax * dia * val_j;
+
+                    int64_t global_node = aggregate_root_nodes[col_j + nrow];
+
+                    if(global_node >= global_column_begin && global_node < global_column_end)
+                    {
+                        // int_map.insert_or_add(agg, val);
+                        // int_map.insert_or_add(f2c[global_node - global_column_begin], val);
+                        int_map.insert_or_add(global_node, val);
+                    }
+                    else
+                    {
+                        gst_map.insert_or_add(global_node, val);
+                    }
+                }
+            }
+
+            // Access into P
+            J aj = pg_row_offsets[row];
+
+            // Store key val pairs from map into P
+            gst_map.store_sorted(&global_ghost_col[aj], &pg_vals[aj]);
+        }
+
+        // Access into P
+        J aj   = pi_row_offsets[row];
+        J ajp1 = pi_row_offsets[row + 1];
+
+        // Store key val pairs from map into P
+        //int_map.store_sorted(&pi_cols[aj], &pi_vals[aj]);
+        int_map.sort();
+
+        for(J i = aj + lid; i < ajp1; i += WFSIZE)
+        {
+            pi_cols[i] = f2c[int_map.get_key(i - aj) - global_column_begin];
+            pi_vals[i] = int_map.get_val(i - aj);
+        }
+    }
+
+    // AMGUnsmoothedAggregation
+    template <unsigned int BLOCKSIZE, typename I, typename J>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_unsmoothed_prolong_nnz_per_row(I nrow,
+                                                       const int64_t* __restrict__ aggregates,
+                                                       J* __restrict__ prolong_row_offset)
+    {
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
+        if(row >= nrow)
+        {
+            return;
+        }
+        if(aggregates[row] >= 0)
+        {
+            prolong_row_offset[row + 1] = 1;
+        }
+        else
+        {
+            prolong_row_offset[row + 1] = 0;
+        }
+        if(row == 0)
+        {
+            prolong_row_offset[row] = 0;
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, typename T, typename I>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_unsmoothed_prolong_fill_simple(I nrow,
+                                                       const int64_t* __restrict__ aggregates,
+                                                       I* __restrict__ prolong_cols,
+                                                       T* __restrict__ prolong_vals)
+    {
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
+        if(row >= nrow)
+        {
+            return;
+        }
+        prolong_cols[row] = aggregates[row];
+        prolong_vals[row] = static_cast<T>(1);
+    }
+
+    template <unsigned int BLOCKSIZE, typename T, typename I, typename J>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_unsmoothed_prolong_fill(I nrow,
+                                                const int64_t* __restrict__ aggregates,
+                                                const J* __restrict__ prolong_row_offset,
+                                                I* __restrict__ prolong_cols,
+                                                T* __restrict__ prolong_vals)
+    {
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        int64_t agg = aggregates[row];
+
+        if(agg >= 0)
+        {
+            J j             = prolong_row_offset[row];
+            prolong_cols[j] = agg;
+            prolong_vals[j] = static_cast<T>(1);
+        }
+    }
+
+    template <unsigned int BLOCKSIZE, typename I, typename J>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_ua_prolong_nnz(I       nrow,
+                                       int64_t global_column_begin,
+                                       int64_t global_column_end,
+                                       const int64_t* __restrict__ aggregates,
+                                       const int64_t* __restrict__ aggregate_root_nodes,
+                                       int* __restrict__ f2c,
+                                       J* __restrict__ pi_row_nnz,
+                                       J* __restrict__ pg_row_nnz)
+    {
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        int64_t agg = aggregates[row];
+
+        if(agg >= 0)
+        {
+            int64_t global_node = aggregate_root_nodes[row];
+
+            if(global_node >= global_column_begin && global_node < global_column_end)
+            {
+                pi_row_nnz[row]                        = 1;
+                f2c[global_node - global_column_begin] = 1;
+            }
+            else
+            {
+                pg_row_nnz[row] = 1;
+            }
+        }
+    }
+
+    template <bool GLOBAL, unsigned int BLOCKSIZE, typename T, typename I, typename J>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_ua_prolong_fill(I       nrow,
+                                        int64_t global_column_begin,
+                                        int64_t global_column_end,
+                                        const int64_t* __restrict__ aggregates,
+                                        const int64_t* __restrict__ aggregate_root_nodes,
+                                        const int* __restrict__ f2c,
+                                        const J* __restrict__ pi_row_offsets,
+                                        I* __restrict__ pi_cols,
+                                        T* __restrict__ pi_vals,
+                                        const J* __restrict__ pg_row_offsets,
+                                        I* __restrict__ pg_cols,
+                                        T* __restrict__ pg_vals,
+                                        int64_t* __restrict__ global_ghost_col)
+    {
+        I tid = threadIdx.x;
+        I row = blockIdx.x * BLOCKSIZE + tid;
+
+        if(row >= nrow)
+        {
+            return;
+        }
+
+        int64_t agg = aggregates[row];
+
+        if(agg >= 0)
+        {
+            int64_t global_node = aggregate_root_nodes[row];
+
+            if(global_node >= global_column_begin && global_node < global_column_end)
+            {
+                J pi_row_end = pi_row_offsets[row];
+
+                pi_cols[pi_row_end] = f2c[global_node - global_column_begin];
+                pi_vals[pi_row_end] = 1;
+            }
+            else
+            {
+                J pg_row_end = pg_row_offsets[row];
+
+                pg_vals[pg_row_end]          = 1;
+                global_ghost_col[pg_row_end] = global_node;
+            }
+        }
+    }
+
     template <typename I, typename J>
-    __global__ void kernel_csr_extract_boundary_rows_nnz(I boundary_size,
-                                                         const I* __restrict__ boundary_index,
-                                                         const J* __restrict__ int_csr_row_ptr,
-                                                         const J* __restrict__ gst_csr_row_ptr,
-                                                         I* __restrict__ row_nnz)
+    __global__ void kernel_csr_extract_boundary_state(I       boundary_size,
+                                                      I       nrow,
+                                                      int64_t nnz,
+                                                      const I* __restrict__ boundary_index,
+                                                      const J* __restrict__ csr_row_ptr,
+                                                      const I* __restrict__ csr_col_ind,
+                                                      const J* __restrict__ ghost_csr_row_ptr,
+                                                      const I* __restrict__ ghost_csr_col_ind,
+                                                      const bool* __restrict__ connections,
+                                                      const I* __restrict__ max_state,
+                                                      const I* __restrict__ hash,
+                                                      const J* __restrict__ bnd_row_ptr,
+                                                      I* __restrict__ bnd_max_state,
+                                                      I* __restrict__ bnd_hash)
     {
         I gid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -1461,12 +2775,217 @@ namespace rocalution
             return;
         }
 
-        // Get boundary row
+        // This row is a boundary row
         I row = boundary_index[gid];
 
+        // Index into boundary array
+        J idx = bnd_row_ptr[gid];
+
+        // Extract interior part
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
+
+        // Interior
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            if(connections[j] == true)
+            {
+                I col = csr_col_ind[j];
+
+                bnd_max_state[idx] = max_state[col];
+                bnd_hash[idx]      = hash[col];
+
+                ++idx;
+            }
+        }
+
+        // Extract ghost part
+        row_begin = ghost_csr_row_ptr[row];
+        row_end   = ghost_csr_row_ptr[row + 1];
+
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            if(connections[j + nnz] == true)
+            {
+                I col = ghost_csr_col_ind[j];
+
+                bnd_max_state[idx] = max_state[col + nrow];
+                bnd_hash[idx]      = hash[col + nrow];
+
+                ++idx;
+            }
+        }
+    }
+
+    template <typename I, typename J>
+    __global__ void kernel_csr_merge_interior_ghost_ext_nnz(I       m,
+                                                            I       m_ext,
+                                                            int64_t nnz_gst,
+                                                            const J* __restrict__ int_csr_row_ptr,
+                                                            const J* __restrict__ gst_csr_row_ptr,
+                                                            const J* __restrict__ ext_csr_row_ptr,
+                                                            J* __restrict__ row_nnz)
+    {
+        // Current row
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Count row nnz
+        if(row < m)
+        {
+            int nnz = int_csr_row_ptr[row + 1] - int_csr_row_ptr[row];
+
+            // If ghost part is available
+            if(nnz_gst > 0)
+            {
+                nnz += gst_csr_row_ptr[row + 1] - gst_csr_row_ptr[row];
+            }
+
+            row_nnz[row] = nnz;
+        }
+        else if(row - m < m_ext)
+        {
+            row_nnz[row] = ext_csr_row_ptr[row - m + 1] - ext_csr_row_ptr[row - m];
+        }
+    }
+
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_merge_interior_ghost_nnz(I m,
+                                                        I m_ext,
+                                                        I n,
+                                                        I nnz_gst,
+                                                        const J* __restrict__ int_csr_row_ptr,
+                                                        const I* __restrict__ int_csr_col_ind,
+                                                        const T* __restrict__ int_csr_val,
+                                                        const J* __restrict__ gst_csr_row_ptr,
+                                                        const I* __restrict__ gst_csr_col_ind,
+                                                        const T* __restrict__ gst_csr_val,
+                                                        const J* __restrict__ ext_csr_row_ptr,
+                                                        const I* __restrict__ ext_csr_col_ind,
+                                                        const T* __restrict__ ext_csr_val,
+                                                        const I* __restrict__ ext_gst_csr_col_ind,
+                                                        const J* __restrict__ merged_csr_row_ptr,
+                                                        I* __restrict__ merged_csr_col_ind,
+                                                        T* __restrict__ merged_csr_val)
+    {
+        // Current row
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Access into merged structure
+        J idx = merged_csr_row_ptr[row];
+
+        if(row < m)
+        {
+            // Interior
+            J row_begin = int_csr_row_ptr[row];
+            J row_end   = int_csr_row_ptr[row + 1];
+
+            for(J j = row_begin; j < row_end; ++j)
+            {
+                merged_csr_col_ind[idx] = int_csr_col_ind[j];
+                merged_csr_val[idx]     = int_csr_val[j];
+
+                ++idx;
+            }
+
+            // If ghost is available
+            if(nnz_gst > 0)
+            {
+                J row_begin = gst_csr_row_ptr[row];
+                J row_end   = gst_csr_row_ptr[row + 1];
+
+                for(J j = row_begin; j < row_end; ++j)
+                {
+                    merged_csr_col_ind[idx] = ext_gst_csr_col_ind[j] + n;
+                    merged_csr_val[idx]     = gst_csr_val[j];
+
+                    ++idx;
+                }
+            }
+        }
+        else if(row - m < m_ext)
+        {
+            J row_begin = ext_csr_row_ptr[row - m];
+            J row_end   = ext_csr_row_ptr[row - m + 1];
+
+            for(J j = row_begin; j < row_end; ++j)
+            {
+                merged_csr_col_ind[idx] = ext_csr_col_ind[j];
+                merged_csr_val[idx]     = ext_csr_val[j];
+
+                ++idx;
+            }
+        }
+    }
+
+    // Count the total vertices of this boundary row
+    template <typename I, typename J>
+    __global__ void kernel_csr_extract_boundary_rows_nnz(I boundary_size,
+                                                         const I* __restrict__ boundary_index,
+                                                         const J* __restrict__ int_csr_row_ptr,
+                                                         const J* __restrict__ gst_csr_row_ptr,
+                                                         I* __restrict__ row_nnz)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+        // Get boundary row
+        I row = boundary_index[gid];
         // Write total number of nnz for this boundary row
         row_nnz[gid] = int_csr_row_ptr[row + 1] - int_csr_row_ptr[row] + gst_csr_row_ptr[row + 1]
                        - gst_csr_row_ptr[row];
+    }
+
+    template <typename I, typename J, typename K>
+    __global__ void kernel_csr_extract_boundary_rows(I boundary_size,
+                                                     const I* __restrict__ boundary_index,
+                                                     K global_col_offset,
+                                                     const J* __restrict__ csr_row_ptr,
+                                                     const I* __restrict__ csr_col_ind,
+                                                     const J* __restrict__ ghost_csr_row_ptr,
+                                                     const I* __restrict__ ghost_csr_col_ind,
+                                                     const K* __restrict__ l2g,
+                                                     const I* __restrict__ send_row_ptr,
+                                                     K* __restrict__ send_col_ind)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // This row is a boundary row
+        I row = boundary_index[gid];
+
+        // Index into send array
+        I send_row = send_row_ptr[gid];
+
+        // Extract interior part
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
+
+        // Interior
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            // Shift column by global column offset, to obtain the global column index
+            send_col_ind[send_row] = csr_col_ind[j] + global_col_offset;
+            ++send_row;
+        }
+
+        // Extract ghost part
+        row_begin = ghost_csr_row_ptr[row];
+        row_end   = ghost_csr_row_ptr[row + 1];
+
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            // Map the local ghost column to global column
+            send_col_ind[send_row] = l2g[ghost_csr_col_ind[j]];
+            ++send_row;
+        }
     }
 
     template <typename T, typename I, typename J, typename K>
@@ -1581,6 +3100,245 @@ namespace rocalution
         }
     }
 
+    template <typename I, typename J, typename K>
+    __global__ void kernel_csr_copy_from_global_nnz(I boundary_size,
+                                                    K global_column_begin,
+                                                    K global_column_end,
+                                                    const I* __restrict__ boundary_index,
+                                                    const I* __restrict__ csr_row_ptr,
+                                                    const K* __restrict__ csr_col_ind,
+                                                    J* __restrict__ int_row_nnz,
+                                                    J* __restrict__ gst_row_nnz)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // Get boundary row
+        I row = boundary_index[gid];
+
+        I int_nnz = 0;
+        I gst_nnz = 0;
+
+        I row_begin = csr_row_ptr[gid];
+        I row_end   = csr_row_ptr[gid + 1];
+
+        for(I j = row_begin; j < row_end; ++j)
+        {
+            K col = csr_col_ind[j];
+
+            if(col >= global_column_begin && col < global_column_end)
+            {
+                // Interior column
+                ++int_nnz;
+            }
+            else
+            {
+                // Ghost column
+                ++gst_nnz;
+            }
+        }
+
+        // Write total number of nnz for this row
+        atomicAdd(int_row_nnz + row, int_nnz);
+        atomicAdd(gst_row_nnz + row, gst_nnz);
+    }
+
+    template <typename T, typename I, typename J, typename K>
+    __global__ void kernel_csr_copy_from_global(I boundary_size,
+                                                K global_column_begin,
+                                                K global_column_end,
+                                                const I* __restrict__ boundary_index,
+                                                const I* __restrict__ csr_row_ptr,
+                                                const K* __restrict__ csr_col_ind,
+                                                const T* __restrict__ csr_val,
+                                                J* __restrict__ int_csr_row_ptr,
+                                                I* __restrict__ int_csr_col_ind,
+                                                T* __restrict__ int_csr_val,
+                                                J* __restrict__ gst_csr_row_ptr,
+                                                K* __restrict__ gst_csr_col_ind,
+                                                T* __restrict__ gst_csr_val)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= boundary_size)
+        {
+            return;
+        }
+
+        // This row is a boundary row
+        I row = boundary_index[gid];
+
+        I row_begin = csr_row_ptr[gid];
+        I row_end   = csr_row_ptr[gid + 1];
+
+        // Pre-determine, how many nnz we are going to add for this boundary row
+        I int_nnz = 0;
+        I gst_nnz = 0;
+
+        for(I j = row_begin; j < row_end; ++j)
+        {
+            K col = csr_col_ind[j];
+
+            if(col >= global_column_begin && col < global_column_end)
+            {
+                // Interior column
+                ++int_nnz;
+            }
+            else
+            {
+                // Ghost column
+                ++gst_nnz;
+            }
+        }
+
+        // Index into extracted matrix, we have to use atomics here, because other
+        // blocks might also update this row
+        I idx_int = atomicAdd(int_csr_row_ptr + row, int_nnz);
+        I idx_gst = atomicAdd(gst_csr_row_ptr + row, gst_nnz);
+
+        for(I j = row_begin; j < row_end; ++j)
+        {
+            K col = csr_col_ind[j];
+
+            if(col >= global_column_begin && col < global_column_end)
+            {
+                // Interior column
+                int_csr_col_ind[idx_int] = col - global_column_begin;
+                int_csr_val[idx_int]     = csr_val[j];
+
+                ++idx_int;
+            }
+            else
+            {
+                // Ghost column
+                gst_csr_col_ind[idx_gst] = col;
+                gst_csr_val[idx_gst]     = csr_val[j];
+
+                ++idx_gst;
+            }
+        }
+    }
+
+    template <typename I>
+    __global__ void kernel_csr_update_numbering(I size,
+                                                const I* __restrict__ counts,
+                                                const I* __restrict__ perm,
+                                                I* __restrict__ out)
+    {
+        I idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(idx >= size)
+        {
+            return;
+        }
+
+        // Entry and exit point from run length encode
+        I begin = counts[idx];
+        I end   = counts[idx + 1];
+
+        for(I i = begin; i < end; ++i)
+        {
+            out[perm[i]] = idx;
+        }
+    }
+
+    template <typename I, typename J>
+    __global__ void kernel_csr_split_interior_ghost_nnz(I m,
+                                                        const J* __restrict__ csr_row_ptr,
+                                                        const I* __restrict__ csr_col_ind,
+                                                        J* __restrict__ int_row_nnz,
+                                                        J* __restrict__ gst_row_nnz)
+    {
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(row >= m)
+        {
+            return;
+        }
+
+        I int_nnz = 0;
+        I gst_nnz = 0;
+
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
+
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            I col = csr_col_ind[j];
+
+            if(col >= m)
+            {
+                // This is a ghost column
+                ++gst_nnz;
+            }
+            else
+            {
+                // This is an interior column
+                ++int_nnz;
+            }
+        }
+
+        int_row_nnz[row] = int_nnz;
+        gst_row_nnz[row] = gst_nnz;
+    }
+
+    template <typename T, typename I, typename J>
+    __global__ void kernel_csr_split_interior_ghost(I m,
+                                                    const J* __restrict__ csr_row_ptr,
+                                                    const I* __restrict__ csr_col_ind,
+                                                    const T* __restrict__ csr_val,
+                                                    const J* __restrict__ int_csr_row_ptr,
+                                                    I* __restrict__ int_csr_col_ind,
+                                                    T* __restrict__ int_csr_val,
+                                                    const J* __restrict__ gst_csr_row_ptr,
+                                                    I* __restrict__ gst_csr_col_ind,
+                                                    T* __restrict__ gst_csr_val)
+    {
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(row >= m)
+        {
+            return;
+        }
+
+        J row_begin = csr_row_ptr[row];
+        J row_end   = csr_row_ptr[row + 1];
+
+        J idx_int = int_csr_row_ptr[row];
+        J idx_gst = gst_csr_row_ptr[row];
+
+        for(J j = row_begin; j < row_end; ++j)
+        {
+            I col = csr_col_ind[j];
+
+            if(col >= m)
+            {
+                // This is a ghost column
+                gst_csr_col_ind[idx_gst] = col - m;
+                gst_csr_val[idx_gst]     = csr_val[j];
+
+                ++idx_gst;
+            }
+            else
+            {
+                // This is an interior column
+                int_csr_col_ind[idx_int] = col;
+                int_csr_val[idx_int]     = csr_val[j];
+
+                ++idx_int;
+            }
+        }
+    }
+
     template <typename I, typename K>
     __global__ void kernel_csr_extract_global_column_indices(I ncol,
                                                              I nnz,
@@ -1665,6 +3423,304 @@ namespace rocalution
 
         // Back permutation into matrix
         csr_col_ind[perm[gid]] = local_col[gid] - 1;
+    }
+
+    template <typename I, typename K>
+    __global__ void kernel_csr_local_to_global(I nnz,
+                                               const K* __restrict__ l2g,
+                                               const I* __restrict__ local,
+                                               K* __restrict__ global)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= nnz)
+        {
+            return;
+        }
+
+        // Convert local to global
+        global[gid] = l2g[local[gid]];
+    }
+
+    template <typename I, typename K>
+    __global__ void kernel_csr_ghost_columns_nnz(int64_t size,
+                                                 K       global_column_begin,
+                                                 K       global_column_end,
+                                                 const K* __restrict__ in,
+                                                 I* __restrict__ nnz)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= size)
+        {
+            return;
+        }
+
+        // Get global column id
+        K col = in[gid];
+
+        // Count this column if its not interior
+        nnz[gid] = (col < global_column_begin || col >= global_column_end) ? 1 : 0;
+    }
+
+    template <typename I, typename K>
+    __global__ void kernel_csr_ghost_columns_fill(int64_t nnz,
+                                                  K       global_column_begin,
+                                                  K       global_column_end,
+                                                  const K* __restrict__ in,
+                                                  const I* __restrict__ nnz_ptr,
+                                                  K* __restrict__ out)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= nnz)
+        {
+            return;
+        }
+
+        // Get global column id
+        K col = in[gid];
+
+        // Count this column if its not interior
+        if(col < global_column_begin || col >= global_column_end)
+        {
+            out[nnz_ptr[gid]] = col;
+        }
+    }
+
+    template <typename I, typename K>
+    __global__ void kernel_csr_column_id_transfer(int64_t nnz,
+                                                  I       ncol,
+                                                  K       global_column_begin,
+                                                  K       global_column_end,
+                                                  const K* __restrict__ global,
+                                                  const I* __restrict__ cmb,
+                                                  const I* __restrict__ nnz_ptr,
+                                                  I* __restrict__ out)
+    {
+        I gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(gid >= nnz)
+        {
+            return;
+        }
+
+        K global_col = global[gid];
+
+        // Filter external source to match given column id interval
+        if(global_col >= global_column_begin && global_col < global_column_end)
+        {
+            // Map column into interval
+            out[gid] = global_col - global_column_begin;
+        }
+        else
+        {
+            out[gid] = cmb[nnz_ptr[gid]] + ncol;
+        }
+    }
+
+    // Count the number of nnz per row of two matrices
+    template <typename I, typename J>
+    __global__ void kernel_csr_combined_row_nnz(I m,
+                                                const J* __restrict__ csr_row_ptr_A,
+                                                const J* __restrict__ csr_row_ptr_B,
+                                                J* __restrict__ row_nnz)
+    {
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        // Do not run out of bounds
+        if(row >= m)
+        {
+            return;
+        }
+
+        // Write combined number of row nnz for this row
+        row_nnz[row] = csr_row_ptr_A[row + 1] - csr_row_ptr_A[row] + csr_row_ptr_B[row + 1]
+                       - csr_row_ptr_B[row];
+    }
+
+    template <bool         GLOBAL,
+              unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASHSIZE,
+              typename I,
+              typename J,
+              typename K>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_compress_add_nnz(I m,
+                                         const J* __restrict__ csr_row_ptr_A,
+                                         const I* __restrict__ csr_col_ind_A,
+                                         const J* __restrict__ csr_row_ptr_B,
+                                         const K* __restrict__ csr_col_ind_B,
+                                         const K* __restrict__ l2g,
+                                         J* __restrict__ row_nnz)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        // The row this thread operates on
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= m)
+        {
+            return;
+        }
+
+        // Row nnz counter
+        I nnz = 0;
+
+        // Shared memory for the unordered set
+        __shared__ K sdata[BLOCKSIZE / WFSIZE * HASHSIZE];
+
+        // Each wavefront operates on its own set
+        unordered_set<K, HASHSIZE, WFSIZE> set(&sdata[wid * HASHSIZE]);
+
+        // Row entry and exit points of A
+        J row_begin_A = csr_row_ptr_A[row];
+        J row_end_A   = csr_row_ptr_A[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(J j = row_begin_A + lid; j < row_end_A; j += WFSIZE)
+        {
+            // Get the column index
+            K col_j = GLOBAL ? l2g[csr_col_ind_A[j]] : csr_col_ind_A[j];
+
+            // Add column to the set
+            nnz += set.insert(col_j);
+        }
+
+        // Row entry and exit points of B
+        J row_begin_B = csr_row_ptr_B[row];
+        J row_end_B   = csr_row_ptr_B[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(J j = row_begin_B + lid; j < row_end_B; j += WFSIZE)
+        {
+            // Add column to the set
+            nnz += set.insert(csr_col_ind_B[j]);
+        }
+
+        // Sum up the row nnz from all lanes
+        wf_reduce_sum<WFSIZE>(&nnz);
+
+        // Last lane in wavefront writes row nnz back to global memory
+        if(lid == WFSIZE - 1)
+        {
+            row_nnz[row] = nnz;
+        }
+    }
+
+    template <bool         GLOBAL,
+              unsigned int BLOCKSIZE,
+              unsigned int WFSIZE,
+              unsigned int HASHSIZE,
+              typename T,
+              typename I,
+              typename J,
+              typename K>
+    __launch_bounds__(BLOCKSIZE) __global__
+        void kernel_csr_compress_add_fill(I m,
+                                          const J* __restrict__ csr_row_ptr_A,
+                                          const I* __restrict__ csr_col_ind_A,
+                                          const T* __restrict__ csr_val_A,
+                                          const J* __restrict__ csr_row_ptr_B,
+                                          const K* __restrict__ csr_col_ind_B,
+                                          const T* __restrict__ csr_val_B,
+                                          const K* __restrict__ l2g,
+                                          const J* __restrict__ csr_row_ptr_C,
+                                          K* __restrict__ csr_col_ind_C,
+                                          T* __restrict__ csr_val_C)
+    {
+        unsigned int lid = threadIdx.x & (WFSIZE - 1);
+        unsigned int wid = threadIdx.x / WFSIZE;
+
+        // The row this thread operates on
+        I row = blockIdx.x * BLOCKSIZE / WFSIZE + wid;
+
+        // Do not run out of bounds
+        if(row >= m)
+        {
+            return;
+        }
+
+        // Shared memory for the map
+        extern __shared__ char smem[];
+
+        K* stable = reinterpret_cast<K*>(smem);
+        T* sdata  = reinterpret_cast<T*>(stable + BLOCKSIZE / WFSIZE * HASHSIZE);
+
+        // Each wavefront operates on its own map
+        unordered_map<K, T, HASHSIZE, WFSIZE> map(&stable[wid * HASHSIZE], &sdata[wid * HASHSIZE]);
+
+        // Row entry and exit points of A
+        J row_begin_A = csr_row_ptr_A[row];
+        J row_end_A   = csr_row_ptr_A[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(J j = row_begin_A + lid; j < row_end_A; j += WFSIZE)
+        {
+            // Get the column index and value
+            K col_j = GLOBAL ? l2g[csr_col_ind_A[j]] : csr_col_ind_A[j];
+
+            // Accumulate
+            map.insert_or_add(col_j, csr_val_A[j]);
+        }
+
+        // Row entry and exit points of B
+        J row_begin_B = csr_row_ptr_B[row];
+        J row_end_B   = csr_row_ptr_B[row + 1];
+
+        // Loop over all columns of the i-th row, whereas each lane processes a column
+        for(J j = row_begin_B + lid; j < row_end_B; j += WFSIZE)
+        {
+            // Accumulate
+            map.insert_or_add(csr_col_ind_B[j], csr_val_B[j]);
+        }
+
+        // Finally, extract the numerical values from the hash map and fill C such
+        // that the resulting matrix is sorted by columns
+        for(unsigned int i = lid; i < HASHSIZE; i += WFSIZE)
+        {
+            // Get column from map to fill into C
+            K col = map.get_key(i);
+
+            // Skip, if table is empty
+            if(col == map.empty_key())
+            {
+                continue;
+            }
+
+            // Get index into C
+            J idx = csr_row_ptr_C[row];
+
+            // Hash table index counter
+            unsigned int cnt = 0;
+
+            // Go through the hash table, until we reach its end
+            while(cnt < HASHSIZE)
+            {
+                // We are searching for the right place in C to
+                // insert the i-th hash table entry.
+                // If the i-th hash table column entry is greater then the current one,
+                // we need to leave a slot to its left.
+                if(col > map.get_key(cnt))
+                {
+                    ++idx;
+                }
+
+                // Process next hash table entry
+                ++cnt;
+            }
+
+            // Add hash table entry into P
+            csr_col_ind_C[idx] = col;
+            csr_val_C[idx]     = map.get_val(i);
+        }
     }
 
 } // namespace rocalution

@@ -95,37 +95,35 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnz > 0)
-        {
-            allocate_hip(nrow + 1, &this->mat_.row_offset);
-            allocate_hip(nnz, &this->mat_.col);
-            allocate_hip(nnz, &this->mat_.val);
+        allocate_hip(nrow + 1, &this->mat_.row_offset);
+        allocate_hip(nnz, &this->mat_.col);
+        allocate_hip(nnz, &this->mat_.val);
 
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, mat_.row_offset);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.col);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.val);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, mat_.row_offset);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.col);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.val);
 
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nnz;
-        }
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nnz;
     }
 
     template <typename ValueType>
     void HIPAcceleratorMatrixMCSR<ValueType>::SetDataPtrMCSR(
         int** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
         assert(*row_offset != NULL);
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
+
+        if(nnz > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -145,13 +143,12 @@ namespace rocalution
                                                                int**       col,
                                                                ValueType** val)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
 
         hipDeviceSynchronize();
 
-        // see free_host function for details
         *row_offset = this->mat_.row_offset;
         *col        = this->mat_.col;
         *val        = this->mat_.val;
@@ -168,16 +165,13 @@ namespace rocalution
     template <typename ValueType>
     void HIPAcceleratorMatrixMCSR<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_hip(&this->mat_.row_offset);
-            free_hip(&this->mat_.col);
-            free_hip(&this->mat_.val);
+        free_hip(&this->mat_.row_offset);
+        free_hip(&this->mat_.col);
+        free_hip(&this->mat_.val);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -187,7 +181,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixMCSR<ValueType>*>(&src)) != NULL)
@@ -257,7 +250,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixMCSR<ValueType>*>(&src)) != NULL)
@@ -343,7 +335,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixMCSR<ValueType>*>(&src)) != NULL)
@@ -437,7 +428,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixMCSR<ValueType>*>(&src)) != NULL)
@@ -545,9 +535,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateMCSR(0, mat.GetM(), mat.GetN());
+
             return true;
         }
 
@@ -558,22 +550,6 @@ namespace rocalution
             this->CopyFrom(*cast_mat_mcsr);
             return true;
         }
-
-        /*
-    const HIPAcceleratorMatrixCSR<ValueType>   *cast_mat_csr;
-    if ((cast_mat_csr = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*> (&mat)) != NULL) {
-      this->Clear();
-
-      FATAL_ERROR(__FILE__, __LINE__);
-
-      this->nrow_ = cast_mat_csr->nrow_;
-      this->ncol_ = cast_mat_csr->ncol_;
-      this->nnz_  = cast_mat_csr->nnz_;
-
-      return true;
-
-    }
-    */
 
         return false;
     }

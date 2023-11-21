@@ -41,10 +41,12 @@ void testing_local_matrix_bad_args(void)
     set_device_rocalution(device);
     init_rocalution();
 
-    LocalMatrix<T>   mat1;
-    LocalMatrix<T>   mat2;
-    LocalVector<T>   vec1;
-    LocalVector<int> int1;
+    LocalMatrix<T>       mat1;
+    LocalMatrix<T>       mat2;
+    LocalVector<T>       vec1;
+    LocalVector<bool>    bool1;
+    LocalVector<int>     int1;
+    LocalVector<int64_t> int641;
 
     // null pointers
     int* null_int  = nullptr;
@@ -194,15 +196,27 @@ void testing_local_matrix_bad_args(void)
 
     // AMG
     {
+        int                   val;
+        LocalVector<bool>*    bool_null_vec  = nullptr;
+        LocalVector<int64_t>* int64_null_vec = nullptr;
+        ASSERT_DEATH(mat1.AMGGreedyAggregate(0.1, bool_null_vec, &int641, &int641),
+                     ".*Assertion.*connections != (NULL|__null)*");
+        ASSERT_DEATH(mat1.AMGGreedyAggregate(0.1, &bool1, int64_null_vec, &int641),
+                     ".*Assertion.*aggregates != (NULL|__null)*");
+        ASSERT_DEATH(mat1.AMGGreedyAggregate(0.1, &bool1, &int641, int64_null_vec),
+                     ".*Assertion.*aggregate_root_nodes != (NULL|__null)*");
+
+        LocalMatrix<T>* null_mat = nullptr;
+        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, bool1, int641, int641, null_mat),
+                     ".*Assertion.*prolong != (NULL|__null)*");
+    }
+
+    {
         int               val;
         LocalVector<int>* null_vec = nullptr;
         LocalMatrix<T>*   null_mat = nullptr;
-        ASSERT_DEATH(mat1.AMGConnect(0.1, null_vec), ".*Assertion.*connections != (NULL|__null)*");
-        ASSERT_DEATH(mat1.AMGAggregate(int1, null_vec),
-                     ".*Assertion.*aggregates != (NULL|__null)*");
-        ASSERT_DEATH(mat1.AMGSmoothedAggregation(0.1, int1, int1, null_mat),
+        ASSERT_DEATH(mat1.AMGUnsmoothedAggregation(int641, int641, null_mat),
                      ".*Assertion.*prolong != (NULL|__null)*");
-        ASSERT_DEATH(mat1.AMGAggregation(int1, null_mat), ".*Assertion.*prolong != (NULL|__null)*");
         ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, null_vec, val, &null_int, val, 0),
                      ".*Assertion.*G != (NULL|__null)*");
         ASSERT_DEATH(mat1.InitialPairwiseAggregation(0.1, val, &int1, val, &vint, val, 0),

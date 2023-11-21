@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ namespace rocalution
 {
 
     template <typename ValueType, typename IndexType>
-    __global__ void kernel_set_to_ones(IndexType n, ValueType* __restrict__ data)
+    __global__ void kernel_set_to_value(IndexType n, ValueType* __restrict__ data, ValueType val)
     {
         IndexType ind = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
@@ -39,7 +39,7 @@ namespace rocalution
             return;
         }
 
-        data[ind] = static_cast<ValueType>(1);
+        data[ind] = val;
     }
 
     template <typename IndexType>

@@ -169,6 +169,32 @@ namespace rocalution
     void set_to_one_hip(int blocksize, int64_t n, DataType* ptr, bool async, hipStream_t stream)
     {
         log_debug(0, "set_to_one_hip()", blocksize, n, ptr, async, stream);
+        if(n > 0)
+        {
+            assert(ptr != NULL);
+            // 1D accessing, no stride
+            dim3 BlockSize(blocksize);
+            dim3 GridSize(n / blocksize + 1);
+
+            if(async == false)
+            {
+                kernel_set_to_value<<<GridSize, BlockSize>>>(n, ptr, static_cast<DataType>(1));
+            }
+            else
+            {
+                kernel_set_to_value<<<GridSize, BlockSize, 0, stream>>>(
+                    n, ptr, static_cast<DataType>(1));
+            }
+
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+    }
+
+    template <typename DataType>
+    void set_to_value_hip(
+        int blocksize, int64_t n, DataType* ptr, DataType value, bool async, hipStream_t stream)
+    {
+        log_debug(0, "set_to_value_hip()", blocksize, n, ptr, value, async, stream);
 
         if(n > 0)
         {
@@ -180,11 +206,11 @@ namespace rocalution
 
             if(async == false)
             {
-                kernel_set_to_ones<<<GridSize, BlockSize>>>(n, ptr);
+                kernel_set_to_value<<<GridSize, BlockSize>>>(n, ptr, value);
             }
             else
             {
-                kernel_set_to_ones<<<GridSize, BlockSize, 0, stream>>>(n, ptr);
+                kernel_set_to_value<<<GridSize, BlockSize, 0, stream>>>(n, ptr, value);
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -349,6 +375,18 @@ namespace rocalution
     template void set_to_one_hip<bool>(int, int64_t, bool*, bool, hipStream_t);
     template void set_to_one_hip<int>(int, int64_t, int*, bool, hipStream_t);
     template void set_to_one_hip<int64_t>(int, int64_t, int64_t*, bool, hipStream_t);
+
+    template void set_to_value_hip<float>(int, int64_t, float*, float, bool, hipStream_t);
+    template void set_to_value_hip<double>(int, int64_t, double*, double, bool, hipStream_t);
+#ifdef SUPPORT_COMPLEX
+    template void set_to_value_hip<std::complex<float>>(
+        int, int64_t, std::complex<float>*, std::complex<float>, bool, hipStream_t);
+    template void set_to_value_hip<std::complex<double>>(
+        int, int64_t, std::complex<double>*, std::complex<double>, bool, hipStream_t);
+#endif
+    template void set_to_value_hip<bool>(int, int64_t, bool*, bool, bool, hipStream_t);
+    template void set_to_value_hip<int>(int, int64_t, int*, int, bool, hipStream_t);
+    template void set_to_value_hip<int64_t>(int, int64_t, int64_t*, int64_t, bool, hipStream_t);
 
     template void copy_d2h<float>(int64_t, const float*, float*, bool, hipStream_t);
     template void copy_d2h<double>(int64_t, const double*, double*, bool, hipStream_t);

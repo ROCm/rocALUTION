@@ -78,15 +78,12 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixELL<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_host(&this->mat_.val);
-            free_host(&this->mat_.col);
+        free_host(&this->mat_.val);
+        free_host(&this->mat_.col);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -96,40 +93,37 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
         assert(max_row >= 0);
+        assert(nnz == max_row * nrow);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnz > 0)
-        {
-            assert(nnz == max_row * nrow);
+        allocate_host(nnz, &this->mat_.val);
+        allocate_host(nnz, &this->mat_.col);
 
-            allocate_host(nnz, &this->mat_.val);
-            allocate_host(nnz, &this->mat_.col);
+        set_to_zero_host(nnz, this->mat_.val);
+        set_to_zero_host(nnz, this->mat_.col);
 
-            set_to_zero_host(nnz, this->mat_.val);
-            set_to_zero_host(nnz, this->mat_.col);
-
-            this->mat_.max_row = max_row;
-            this->nrow_        = nrow;
-            this->ncol_        = ncol;
-            this->nnz_         = nnz;
-        }
+        this->mat_.max_row = max_row;
+        this->nrow_        = nrow;
+        this->ncol_        = ncol;
+        this->nnz_         = nnz;
     }
 
     template <typename ValueType>
     void HostMatrixELL<ValueType>::SetDataPtrELL(
         int** col, ValueType** val, int64_t nnz, int nrow, int ncol, int max_row)
     {
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
-        assert(max_row > 0);
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
+        assert(max_row >= 0);
         assert(max_row * nrow == nnz);
+
+        if(nnz > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -145,13 +139,12 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixELL<ValueType>::LeaveDataPtrELL(int** col, ValueType** val, int& max_row)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
-        assert(this->mat_.max_row > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
+        assert(this->mat_.max_row >= 0);
         assert(this->mat_.max_row * this->nrow_ == this->nnz_);
 
-        // see free_host function for details
         *col = this->mat_.col;
         *val = this->mat_.val;
 
@@ -171,16 +164,19 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
-        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixELL<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixELL<ValueType>*>(&mat))
         {
-            this->AllocateELL(
-                cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_, cast_mat->mat_.max_row);
+            if(this->nnz_ == 0)
+            {
+                this->AllocateELL(
+                    cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_, cast_mat->mat_.max_row);
+            }
 
-            assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_)
-                   && (this->ncol_ == cast_mat->ncol_));
+            assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
+            assert(this->ncol_ == cast_mat->ncol_);
 
             copy_h2h(this->nnz_, cast_mat->mat_.col, this->mat_.col);
             copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
@@ -204,9 +200,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateELL(0, mat.GetM(), mat.GetN(), 0);
+
             return true;
         }
 

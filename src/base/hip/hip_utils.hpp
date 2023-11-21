@@ -698,6 +698,21 @@ namespace rocalution
         }
     }
 
+    template <unsigned int BLOCKSIZE, typename ValueType>
+    __launch_bounds__(BLOCKSIZE) __global__ void kernel_axpy(int64_t   size,
+                                                             ValueType alpha,
+                                                             const ValueType* __restrict__ x,
+                                                             ValueType* __restrict__ y)
+    {
+        unsigned int tid = hipThreadIdx_x;
+        int64_t      gid = hipBlockIdx_x * BLOCKSIZE + tid;
+
+        if(gid < size)
+        {
+            y[gid] += alpha * x[gid];
+        }
+    }
+
     static __device__ __forceinline__ float hip_shfl_xor(float val, int i)
     {
         return __shfl_xor(val, i);

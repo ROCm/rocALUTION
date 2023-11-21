@@ -810,9 +810,9 @@ namespace rocalution
                                          src.val,
                                          nrow,
                                          nnz_per_row,
-                                         dst->val,
+                                         nnz_total == 0 ? (ValueType*)0x4 : dst->val,
                                          dst->row_offset,
-                                         dst->col);
+                                         nnz_total == 0 ? (IndexType*)0x4 : dst->col);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
             free_hip(&nnz_per_row);
@@ -870,9 +870,9 @@ namespace rocalution
                                                 temp,
                                                 nrow,
                                                 nnz_per_row,
-                                                dst->val,
+                                                nnz_total == 0 ? (ValueType*)0x4 : dst->val,
                                                 dst->row_offset,
-                                                dst->col);
+                                                nnz_total == 0 ? (IndexType*)0x4 : dst->col);
             CHECK_ROCSPARSE_ERROR(sparse_status, __FILE__, __LINE__);
 
             free_hip(&temp);

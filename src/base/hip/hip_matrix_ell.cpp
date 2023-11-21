@@ -109,53 +109,51 @@ namespace rocalution
         assert(nrow >= 0);
         assert(max_row >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
         if(nnz > 0)
         {
             assert(nnz == max_row * nrow);
-
-            allocate_hip(nnz, &this->mat_.val);
-            allocate_hip(nnz, &this->mat_.col);
-
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, this->mat_.val);
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, this->mat_.col);
-
-            this->mat_.max_row = max_row;
-            this->nrow_        = nrow;
-            this->ncol_        = ncol;
-            this->nnz_         = nnz;
         }
+
+        allocate_hip(nnz, &this->mat_.val);
+        allocate_hip(nnz, &this->mat_.col);
+
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, this->mat_.val);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, this->mat_.col);
+
+        this->mat_.max_row = max_row;
+        this->nrow_        = nrow;
+        this->ncol_        = ncol;
+        this->nnz_         = nnz;
     }
 
     template <typename ValueType>
     void HIPAcceleratorMatrixELL<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_hip(&this->mat_.val);
-            free_hip(&this->mat_.col);
+        free_hip(&this->mat_.val);
+        free_hip(&this->mat_.col);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
     void HIPAcceleratorMatrixELL<ValueType>::SetDataPtrELL(
         int** col, ValueType** val, int64_t nnz, int nrow, int ncol, int max_row)
     {
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
-        assert(max_row > 0);
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
+        assert(max_row >= 0);
         assert(max_row * nrow == nnz);
+
+        if(nnz > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -175,10 +173,10 @@ namespace rocalution
                                                              ValueType** val,
                                                              int&        max_row)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
-        assert(this->mat_.max_row > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
+        assert(this->mat_.max_row >= 0);
         assert(this->mat_.max_row * this->nrow_ == this->nnz_);
 
         hipDeviceSynchronize();
@@ -205,7 +203,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*>(&src)) != NULL)
@@ -274,7 +271,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixELL<ValueType>*>(&src)) != NULL)
@@ -362,7 +358,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixELL<ValueType>*>(&src)) != NULL)
@@ -447,7 +442,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixELL<ValueType>*>(&src)) != NULL)
@@ -549,9 +543,10 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateELL(0, mat.GetM(), mat.GetN(), 0);
             return true;
         }
 

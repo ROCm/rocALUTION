@@ -211,7 +211,6 @@ namespace rocalution
         const BaseRocalution<std::complex<double>>& src);
     template void BaseRocalution<std::complex<double>>::CloneBackend(
         const BaseRocalution<std::complex<float>>& src);
-
 #endif
 
 } // namespace rocalution

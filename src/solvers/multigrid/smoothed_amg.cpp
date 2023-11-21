@@ -24,6 +24,8 @@
 #include "smoothed_amg.hpp"
 #include "../../utils/def.hpp"
 
+#include "../../base/global_matrix.hpp"
+#include "../../base/global_vector.hpp"
 #include "../../base/local_matrix.hpp"
 #include "../../base/local_vector.hpp"
 
@@ -251,60 +253,84 @@ namespace rocalution
         assert(res != NULL);
         assert(coarse != NULL);
 
-        LocalVector<int> connections;
-        LocalVector<int> aggregates;
+        LocalVector<bool>    connections;
+        LocalVector<int64_t> aggregates;
+        LocalVector<int64_t> aggregate_root_nodes;
 
         connections.CloneBackend(op);
         aggregates.CloneBackend(op);
+        aggregate_root_nodes.CloneBackend(op);
 
         ValueType eps = this->eps_;
         for(int i = 0; i < this->levels_ - 1; ++i)
         {
             eps *= static_cast<ValueType>(0.5);
         }
-
-        op.AMGConnect(eps, &connections);
-
-        if(strat_ == CoarseningStrategy::Greedy)
+        switch(strat_)
         {
-            op.AMGAggregate(connections, &aggregates);
-        }
-        else if(strat_ == CoarseningStrategy::PMIS)
-        {
-            op.AMGPMISAggregate(connections, &aggregates);
+        case Greedy:
+            op.AMGGreedyAggregate(eps, &connections, &aggregates, &aggregate_root_nodes);
+            break;
+        case PMIS:
+            op.AMGPMISAggregate(eps, &connections, &aggregates, &aggregate_root_nodes);
+            break;
         }
 
-        if(lumping_strat_ == LumpingStrategy::AddWeakConnections)
+        switch(lumping_strat_)
         {
-            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, pro, 0);
-        }
-        else if(lumping_strat_ == LumpingStrategy::SubtractWeakConnections)
-        {
-            op.AMGSmoothedAggregation(this->relax_, aggregates, connections, pro, 1);
+        case AddWeakConnections:
+            op.AMGSmoothedAggregation(
+                this->relax_, connections, aggregates, aggregate_root_nodes, pro, 0);
+            break;
+        case SubtractWeakConnections:
+            op.AMGSmoothedAggregation(
+                this->relax_, connections, aggregates, aggregate_root_nodes, pro, 1);
+            break;
         }
 
-        // Free unused vectors
+        // Clean up
         connections.Clear();
         aggregates.Clear();
+        aggregate_root_nodes.Clear();
+
+        // Sanity check
+        assert(pro->GetM() == op.GetN());
+
+        // We need to revert the level creation, if the number of columns of P is zero
+        // because in that case, R will have zero rows and thus the coarse level will be
+        // a 0x0 matrix.
+        if(pro->GetN() == 0)
+        {
+            return false;
+        }
 
         // Transpose P to obtain R
         pro->Transpose(res);
 
-        // Triple matrix product
+        // Create coarse operator
         coarse->CloneBackend(op);
-        coarse->TripleMatrixProduct(*res, op, *pro);
 
+        // Triple matrix product
+        coarse->TripleMatrixProduct(*res, op, *pro);
         return true;
     }
 
     template class SAAMG<LocalMatrix<double>, LocalVector<double>, double>;
+    template class SAAMG<GlobalMatrix<double>, GlobalVector<double>, double>;
     template class SAAMG<LocalMatrix<float>, LocalVector<float>, float>;
+    template class SAAMG<GlobalMatrix<float>, GlobalVector<float>, float>;
 #ifdef SUPPORT_COMPLEX
     template class SAAMG<LocalMatrix<std::complex<double>>,
                          LocalVector<std::complex<double>>,
                          std::complex<double>>;
+    template class SAAMG<GlobalMatrix<std::complex<double>>,
+                         GlobalVector<std::complex<double>>,
+                         std::complex<double>>;
     template class SAAMG<LocalMatrix<std::complex<float>>,
                          LocalVector<std::complex<float>>,
+                         std::complex<float>>;
+    template class SAAMG<GlobalMatrix<std::complex<float>>,
+                         GlobalVector<std::complex<float>>,
                          std::complex<float>>;
 #endif
 

@@ -49,6 +49,7 @@
 #include <math.h>
 #include <numeric>
 #include <string.h>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -359,7 +360,6 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
-        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixCSR<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat))
@@ -482,7 +482,7 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
             this->AllocateCSR(mat.GetNnz(), mat.GetM(), mat.GetN());
@@ -734,7 +734,7 @@ namespace rocalution
     bool HostMatrixCSR<ValueType>::ExtractDiagonal(BaseVector<ValueType>* vec_diag) const
     {
         assert(vec_diag != NULL);
-        assert(vec_diag->GetSize() == this->nrow_);
+        assert(vec_diag->GetSize() >= this->nrow_);
 
         HostVector<ValueType>* cast_vec_diag = dynamic_cast<HostVector<ValueType>*>(vec_diag);
 
@@ -4273,9 +4273,7 @@ namespace rocalution
         {
             PtrType j = this->mat_.row_offset[i];
             PtrType e = this->mat_.row_offset[i + 1];
-
-            max_neib = std::max(static_cast<int>(e - j), max_neib);
-
+            max_neib  = std::max(static_cast<int>(e - j), max_neib);
             int state = removed;
             for(; j < e; ++j)
             {
@@ -4285,10 +4283,8 @@ namespace rocalution
                     break;
                 }
             }
-
             cast_agg->vec_[i] = state;
         }
-
         std::vector<int> neib;
         neib.reserve(max_neib);
 
@@ -4318,7 +4314,6 @@ namespace rocalution
                     neib.push_back(c);
                 }
             }
-
             // Temporarily mark undefined points adjacent to the new aggregate as
             // belonging to the aggregate. If nobody claims them later, they will
             // stay here.
@@ -4335,7 +4330,6 @@ namespace rocalution
                 }
             }
         }
-
         return true;
     }
 
@@ -4629,9 +4623,8 @@ namespace rocalution
                 int*       col = NULL;
                 ValueType* val = NULL;
 
-                int64_t nnz  = 0;
-                int     nrow = cast_prolong->nrow_;
-
+                int64_t nnz   = 0;
+                int     nrow  = cast_prolong->nrow_;
                 row_offset[0] = 0;
                 for(int i = 1; i < nrow + 1; ++i)
                 {
@@ -4789,6 +4782,1695 @@ namespace rocalution
         cast_prolong->Clear();
         cast_prolong->SetDataPtrCSR(
             &row_offset, &col, &val, row_offset[this->nrow_], this->nrow_, ncol);
+
+        return true;
+    }
+
+    // ----------------------------------------------------------
+    // original function aggregates( const spmat &A,
+    //                               const std::vector<char> &S )
+    // ----------------------------------------------------------
+    // Modified and adapted from AMGCL,
+    // https://github.com/ddemidov/amgcl
+    // MIT License
+    // ----------------------------------------------------------
+    // CHANGELOG
+    // - adapted interface
+    // ----------------------------------------------------------
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGGreedyAggregate(
+        const BaseVector<bool>& connections,
+        BaseVector<int64_t>*    aggregates,
+        BaseVector<int64_t>*    aggregate_root_nodes) const
+    {
+        assert(aggregate_root_nodes != NULL);
+        assert(aggregates != NULL);
+
+        HostVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<HostVector<int64_t>*>(aggregate_root_nodes);
+        HostVector<int64_t>*    cast_agg  = dynamic_cast<HostVector<int64_t>*>(aggregates);
+        const HostVector<bool>* cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+
+        assert(cast_agg_nodes != NULL);
+        assert(cast_agg != NULL);
+        assert(cast_conn != NULL);
+
+        const int undefined = -1;
+        const int removed   = -2;
+
+        // Remove nodes without neighbours
+        int max_neib = 0;
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            PtrType j = this->mat_.row_offset[i];
+            PtrType e = this->mat_.row_offset[i + 1];
+
+            max_neib = std::max(static_cast<int>(e - j), max_neib);
+
+            int state = removed;
+            for(; j < e; ++j)
+            {
+                if(cast_conn->vec_[j])
+                {
+                    state = undefined;
+                    break;
+                }
+            }
+
+            cast_agg->vec_[i] = state;
+        }
+
+        std::vector<int> neib;
+        neib.reserve(max_neib);
+
+        int64_t last_g = -1;
+
+        // Perform plain aggregation
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            if(cast_agg->vec_[i] != undefined)
+            {
+                continue;
+            }
+
+            // The point is not adjacent to a core of any previous aggregate:
+            // so its a seed of a new aggregate.
+            cast_agg->vec_[i]       = ++last_g;
+            cast_agg_nodes->vec_[i] = i;
+
+            neib.clear();
+
+            // Include its neighbors as well.
+            for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e; ++j)
+            {
+                int c = this->mat_.col[j];
+
+                assert(c >= 0);
+                assert(c < this->nrow_);
+
+                if(cast_conn->vec_[j] && cast_agg->vec_[c] != removed)
+                {
+                    cast_agg->vec_[c]       = last_g;
+                    cast_agg_nodes->vec_[c] = i;
+                    neib.push_back(c);
+                }
+            }
+
+            // Temporarily mark undefined points adjacent to the new aggregate as
+            // belonging to the aggregate. If nobody claims them later, they will
+            // stay here.
+            for(typename std::vector<int>::const_iterator nb = neib.begin(); nb != neib.end(); ++nb)
+            {
+                for(PtrType j = this->mat_.row_offset[*nb], e = this->mat_.row_offset[*nb + 1];
+                    j < e;
+                    ++j)
+                {
+                    if(cast_conn->vec_[j] && cast_agg->vec_[this->mat_.col[j]] == undefined)
+                    {
+                        cast_agg->vec_[this->mat_.col[j]]       = last_g;
+                        cast_agg_nodes->vec_[this->mat_.col[j]] = i;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGBoundaryNnz(const BaseVector<int>&       boundary,
+                                                  const BaseVector<bool>&      connections,
+                                                  const BaseMatrix<ValueType>& ghost,
+                                                  BaseVector<PtrType>*         row_nnz) const
+    {
+        const HostVector<int>*  cast_bnd  = dynamic_cast<const HostVector<int>*>(&boundary);
+        const HostVector<bool>* cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        HostVector<PtrType>* cast_row_nnz = dynamic_cast<HostVector<PtrType>*>(row_nnz);
+
+        assert(cast_bnd != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_row_nnz != NULL);
+
+        assert(cast_row_nnz->size_ >= cast_bnd->size_);
+
+        bool global = cast_gst->nrow_ > 0;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int64_t i = 0; i < cast_bnd->size_; ++i)
+        {
+            // Get boundary row
+            int row = cast_bnd->vec_[i];
+
+            // Counter
+            PtrType ext_nnz = 0;
+
+            // Interior part
+            PtrType row_begin = this->mat_.row_offset[row];
+            PtrType row_end   = this->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Check whether this vertex is strongly connected
+                if(cast_conn->vec_[j] == true)
+                {
+                    ++ext_nnz;
+                }
+            }
+
+            if(global == true)
+            {
+                // Ghost part
+                row_begin = cast_gst->mat_.row_offset[row];
+                row_end   = cast_gst->mat_.row_offset[row + 1];
+
+                for(PtrType j = row_begin; j < row_end; ++j)
+                {
+                    // Check whether this vertex is strongly connected
+                    if(cast_conn->vec_[j + this->nnz_] == true)
+                    {
+                        ++ext_nnz;
+                    }
+                }
+            }
+
+            // Write total number of strongly connected coarse vertices to global memory
+            cast_row_nnz->vec_[i] = ext_nnz;
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGExtractBoundary(int64_t                global_column_begin,
+                                                      const BaseVector<int>& boundary,
+                                                      const BaseVector<int64_t>&   l2g,
+                                                      const BaseVector<bool>&      connections,
+                                                      const BaseMatrix<ValueType>& ghost,
+                                                      const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                                      BaseVector<int64_t>* bnd_csr_col_ind) const
+    {
+        const HostVector<int>*     cast_bnd  = dynamic_cast<const HostVector<int>*>(&boundary);
+        const HostVector<int64_t>* cast_l2g  = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+        const HostVector<bool>*    cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        const HostVector<PtrType>* cast_bnd_ptr
+            = dynamic_cast<const HostVector<PtrType>*>(&bnd_csr_row_ptr);
+        HostVector<int64_t>* cast_bnd_col = dynamic_cast<HostVector<int64_t>*>(bnd_csr_col_ind);
+
+        assert(cast_bnd != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_bnd_ptr != NULL);
+        assert(cast_bnd_col != NULL);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int64_t i = 0; i < cast_bnd->size_; ++i)
+        {
+            // Get boundary row and index into A_ext
+            int     row  = cast_bnd->vec_[i];
+            PtrType idx  = cast_bnd_ptr->vec_[i];
+            PtrType idx2 = cast_bnd_ptr->vec_[i + 1];
+
+            // Extract interior part
+            PtrType row_begin = this->mat_.row_offset[row];
+            PtrType row_end   = this->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Check whether this vertex is strongly connected
+                if(cast_conn->vec_[j] == true)
+                {
+                    // Get column index
+                    int col = this->mat_.col[j];
+
+                    assert(col >= 0);
+                    assert(col < this->nrow_);
+
+                    // Shift column by global column offset, to obtain the global column index
+                    cast_bnd_col->vec_[idx++] = col + global_column_begin;
+                }
+            }
+
+            // Extract ghost part
+            row_begin = cast_gst->mat_.row_offset[row];
+            row_end   = cast_gst->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                // Check whether this vertex is strongly connected
+                if(cast_conn->vec_[j + this->nnz_] == true)
+                {
+                    // Get column index
+                    int col = cast_gst->mat_.col[j];
+
+                    // Transform local ghost index into global column index
+                    cast_bnd_col->vec_[idx++] = cast_l2g->vec_[col];
+                }
+            }
+
+            assert(idx2 == idx);
+        }
+
+        return true;
+    }
+
+    // ----------------------------------------------------------
+    // original function connect(const spmat &A,
+    //                           float eps_strong)
+    // ----------------------------------------------------------
+    // Modified and adapted from AMGCL,
+    // https://github.com/ddemidov/amgcl
+    // MIT License
+    // ----------------------------------------------------------
+    // CHANGELOG
+    // - adapted interface
+    // ----------------------------------------------------------
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGComputeStrongConnections(
+        ValueType                    eps,
+        const BaseVector<ValueType>& diag,
+        const BaseVector<int64_t>&   l2g,
+        BaseVector<bool>*            connections,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        assert(connections != NULL);
+
+        const HostVector<ValueType>* cast_diag = dynamic_cast<const HostVector<ValueType>*>(&diag);
+        const HostVector<int64_t>*   cast_l2g  = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+        HostVector<bool>*            cast_conn = dynamic_cast<HostVector<bool>*>(connections);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+
+        assert(cast_diag != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+
+        bool global = cast_gst->nrow_ > 0;
+
+        ValueType eps2 = eps * eps;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            ValueType eps_dia_i = eps2 * cast_diag->vec_[i];
+
+            PtrType row_begin = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                int       c = this->mat_.col[j];
+                ValueType v = this->mat_.val[j];
+
+                assert(c >= 0);
+                assert(c < this->nrow_);
+
+                cast_conn->vec_[j] = (c != i) && (v * v > eps_dia_i * cast_diag->vec_[c]);
+            }
+
+            if(global == true)
+            {
+                PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                {
+                    int       c = cast_gst->mat_.col[j];
+                    ValueType v = cast_gst->mat_.val[j];
+
+                    cast_conn->vec_[j + this->nnz_]
+                        = (v * v > eps_dia_i * cast_diag->vec_[c + this->nrow_]);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    unsigned int hash1(unsigned int x)
+    {
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = (x >> 16) ^ x;
+        return x / 2;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGPMISInitializeState(int64_t global_column_begin,
+                                                          const BaseVector<bool>&      connections,
+                                                          BaseVector<int>*             state,
+                                                          BaseVector<int>*             hash,
+                                                          const BaseMatrix<ValueType>& ghost) const
+    {
+        assert(state != NULL);
+        assert(hash != NULL);
+
+        HostVector<int>*        cast_state = dynamic_cast<HostVector<int>*>(state);
+        HostVector<int>*        cast_hash  = dynamic_cast<HostVector<int>*>(hash);
+        const HostVector<bool>* cast_conn  = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+
+        assert(cast_state != NULL);
+        assert(cast_hash != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+
+        bool global = cast_gst->nrow_ > 0;
+
+        // Initialize state
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int s = -2;
+
+            PtrType row_start = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
+            for(PtrType j = row_start; j < row_end; j++)
+            {
+                if(cast_conn->vec_[j] == true)
+                {
+                    s = 0;
+                    break;
+                }
+            }
+
+            if(global == true)
+            {
+                PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                {
+                    if(cast_conn->vec_[j + this->nnz_] == true)
+                    {
+                        s = 0;
+                        break;
+                    }
+                }
+            }
+
+            cast_state->vec_[i] = s;
+            cast_hash->vec_[i]  = hash1(i + global_column_begin);
+        }
+
+        return true;
+    }
+
+    mis_tuple lexographical_max(mis_tuple* ti, mis_tuple* tj)
+    {
+        // find lexographical maximum
+        if(tj->s > ti->s)
+        {
+            return *tj;
+        }
+        else if(tj->s == ti->s)
+        {
+            if(tj->v > ti->v)
+            {
+                return *tj;
+            }
+        }
+
+        return *ti;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGExtractBoundaryState(
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       max_state,
+        const BaseVector<int>&       hash,
+        BaseVector<int>*             bnd_max_state,
+        BaseVector<int>*             bnd_hash,
+        int64_t                      global_column_offset,
+        const BaseVector<int>&       boundary_index,
+        const BaseMatrix<ValueType>& gst) const
+    {
+        assert(bnd_max_state != NULL);
+        assert(bnd_hash != NULL);
+
+        HostVector<int>* cast_bnd_max_state = dynamic_cast<HostVector<int>*>(bnd_max_state);
+        HostVector<int>* cast_bnd_hash      = dynamic_cast<HostVector<int>*>(bnd_hash);
+
+        const HostVector<PtrType>* cast_bnd_ptr
+            = dynamic_cast<const HostVector<PtrType>*>(&bnd_csr_row_ptr);
+        const HostVector<bool>* cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostVector<int>*  cast_max_state = dynamic_cast<const HostVector<int>*>(&max_state);
+        const HostVector<int>*  cast_hash      = dynamic_cast<const HostVector<int>*>(&hash);
+        const HostVector<int>*  cast_bnd = dynamic_cast<const HostVector<int>*>(&boundary_index);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&gst);
+
+        assert(cast_bnd_ptr != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_max_state != NULL);
+        assert(cast_hash != NULL);
+        assert(cast_bnd != NULL);
+        assert(cast_gst != NULL);
+
+        for(int64_t i = 0; i < cast_bnd->size_; ++i)
+        {
+            // This is a boundary row
+            int row = cast_bnd->vec_[i];
+
+            // Index into boundary structures
+            PtrType idx  = cast_bnd_ptr->vec_[i];
+            PtrType idx2 = cast_bnd_ptr->vec_[i + 1];
+
+            // Entry points
+            PtrType row_begin = this->mat_.row_offset[row];
+            PtrType row_end   = this->mat_.row_offset[row + 1];
+
+            // Interior
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                if(cast_conn->vec_[j] == true)
+                {
+                    int col = this->mat_.col[j];
+
+                    assert(col >= 0);
+                    assert(col < this->nrow_);
+
+                    cast_bnd_max_state->vec_[idx] = cast_max_state->vec_[col];
+                    cast_bnd_hash->vec_[idx]      = cast_hash->vec_[col];
+
+                    ++idx;
+                }
+            }
+
+            // Ghost
+            row_begin = cast_gst->mat_.row_offset[row];
+            row_end   = cast_gst->mat_.row_offset[row + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                if(cast_conn->vec_[j + this->nnz_] == true)
+                {
+                    int col = cast_gst->mat_.col[j];
+
+                    cast_bnd_max_state->vec_[idx] = cast_max_state->vec_[col + this->nrow_];
+                    cast_bnd_hash->vec_[idx]      = cast_hash->vec_[col + this->nrow_];
+
+                    ++idx;
+                }
+            }
+
+            assert(idx2 == idx);
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGPMISFindMaxNeighbourNode(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        bool&                        undecided,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       state,
+        const BaseVector<int>&       hash,
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        const BaseVector<int64_t>&   bnd_csr_col_ind,
+        const BaseVector<int>&       bnd_state,
+        const BaseVector<int>&       bnd_hash,
+        BaseVector<int>*             max_state,
+        BaseVector<int64_t>*         aggregates,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        HostVector<int>*        cast_max_state = dynamic_cast<HostVector<int>*>(max_state);
+        HostVector<int64_t>*    cast_agg       = dynamic_cast<HostVector<int64_t>*>(aggregates);
+        const HostVector<int>*  cast_hash      = dynamic_cast<const HostVector<int>*>(&hash);
+        const HostVector<int>*  cast_state     = dynamic_cast<const HostVector<int>*>(&state);
+        const HostVector<bool>* cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+
+        const HostVector<PtrType>* cast_bnd_ptr
+            = dynamic_cast<const HostVector<PtrType>*>(&bnd_csr_row_ptr);
+        const HostVector<int64_t>* cast_bnd_col
+            = dynamic_cast<const HostVector<int64_t>*>(&bnd_csr_col_ind);
+        const HostVector<int>* cast_bnd_state = dynamic_cast<const HostVector<int>*>(&bnd_state);
+        const HostVector<int>* cast_bnd_hash  = dynamic_cast<const HostVector<int>*>(&bnd_hash);
+
+        assert(cast_max_state != NULL);
+        assert(cast_agg != NULL);
+        assert(cast_bnd_ptr != NULL);
+        assert(cast_bnd_col != NULL);
+        assert(cast_bnd_state != NULL);
+        assert(cast_bnd_hash != NULL);
+        assert(cast_hash != NULL);
+        assert(cast_state != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+
+        bool global = cast_gst->nrow_ > 0;
+
+        // Find distance one max node
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            mis_tuple t_max;
+            t_max.s = cast_state->vec_[i];
+            t_max.v = cast_hash->vec_[i];
+            t_max.i = i;
+
+            PtrType row_start = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
+            for(PtrType j = row_start; j < row_end; j++)
+            {
+                if(cast_conn->vec_[j] == true)
+                {
+                    int col = this->mat_.col[j];
+
+                    assert(col >= 0);
+                    assert(col < this->nrow_);
+
+                    mis_tuple tj;
+                    tj.s = cast_state->vec_[col];
+                    tj.v = cast_hash->vec_[col];
+                    tj.i = col;
+
+                    t_max = lexographical_max(&tj, &t_max);
+                }
+            }
+
+            if(global == true)
+            {
+                PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                {
+                    if(cast_conn->vec_[j + this->nnz_] == true)
+                    {
+                        int col = cast_gst->mat_.col[j];
+
+                        mis_tuple tj;
+                        tj.s = cast_state->vec_[this->nrow_ + col];
+                        tj.v = cast_hash->vec_[this->nrow_ + col];
+                        tj.i = this->nrow_ + col;
+
+                        t_max = lexographical_max(&tj, &t_max);
+                    }
+                }
+            }
+
+            // Find distance two max node
+            if(t_max.i < this->nrow_)
+            {
+                int row = t_max.i;
+
+                assert(row >= 0);
+                assert(row < this->nrow_);
+
+                PtrType row_start = this->mat_.row_offset[row];
+                PtrType row_end   = this->mat_.row_offset[row + 1];
+
+                for(PtrType j = row_start; j < row_end; j++)
+                {
+                    if(cast_conn->vec_[j] == true)
+                    {
+                        int col = this->mat_.col[j];
+
+                        assert(col >= 0);
+                        assert(col < this->nrow_);
+
+                        mis_tuple tj;
+                        tj.s = cast_state->vec_[col];
+                        tj.v = cast_hash->vec_[col];
+                        tj.i = col;
+
+                        t_max = lexographical_max(&tj, &t_max);
+                    }
+                }
+
+                if(global == true)
+                {
+                    PtrType gst_row_begin = cast_gst->mat_.row_offset[row];
+                    PtrType gst_row_end   = cast_gst->mat_.row_offset[row + 1];
+
+                    for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                    {
+                        if(cast_conn->vec_[j + this->nnz_] == true)
+                        {
+                            int col = cast_gst->mat_.col[j];
+
+                            mis_tuple tj;
+                            tj.s = cast_state->vec_[this->nrow_ + col];
+                            tj.v = cast_hash->vec_[this->nrow_ + col];
+                            tj.i = this->nrow_ + col;
+
+                            t_max = lexographical_max(&tj, &t_max);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                PtrType bnd_row_start = cast_bnd_ptr->vec_[t_max.i - this->nrow_];
+                PtrType bnd_row_end   = cast_bnd_ptr->vec_[t_max.i - this->nrow_ + 1];
+
+                for(PtrType j = bnd_row_start; j < bnd_row_end; j++)
+                {
+                    int64_t gcol = cast_bnd_col->vec_[j];
+
+                    // Differentiate between local and ghost column
+                    int col = -1;
+                    if(gcol >= global_column_begin && gcol < global_column_end)
+                    {
+                        col = static_cast<int>(gcol - global_column_begin);
+
+                        assert(col >= 0);
+                        assert(col < this->nrow_);
+                    }
+
+                    mis_tuple tj;
+                    tj.s = cast_bnd_state->vec_[j];
+                    tj.v = cast_bnd_hash->vec_[j];
+                    tj.i = col;
+
+                    t_max = lexographical_max(&tj, &t_max);
+                }
+            }
+
+            if(cast_state->vec_[i] == 0)
+            {
+                if(t_max.i == i)
+                {
+                    cast_max_state->vec_[i] = 1;
+                    cast_agg->vec_[i]       = 1;
+                }
+                else if(t_max.s == 1)
+                {
+                    cast_max_state->vec_[i] = -1;
+                    cast_agg->vec_[i]       = 0;
+                }
+                else
+                {
+                    undecided = true;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGPMISAddUnassignedNodesToAggregations(
+        int64_t                      global_column_begin,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       state,
+        const BaseVector<int64_t>&   l2g,
+        BaseVector<int>*             max_state,
+        BaseVector<int64_t>*         aggregates,
+        BaseVector<int64_t>*         aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        assert(max_state != NULL);
+        assert(aggregates != NULL);
+
+        HostVector<int64_t>* cast_agg = dynamic_cast<HostVector<int64_t>*>(aggregates);
+        HostVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<HostVector<int64_t>*>(aggregate_root_nodes);
+        HostVector<int>* cast_max_state = dynamic_cast<HostVector<int>*>(max_state);
+
+        const HostVector<int64_t>* cast_l2g   = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+        const HostVector<int>*     cast_state = dynamic_cast<const HostVector<int>*>(&state);
+        const HostVector<bool>*    cast_conn  = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+
+        assert(cast_agg != NULL);
+        assert(cast_max_state != NULL);
+
+        assert(cast_l2g != NULL);
+        assert(cast_state != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+
+        bool global = cast_gst->nrow_ > 0;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int s = cast_state->vec_[i];
+
+            if(s == -1)
+            {
+                PtrType row_begin = this->mat_.row_offset[i];
+                PtrType row_end   = this->mat_.row_offset[i + 1];
+
+                int64_t global_col = -1;
+                for(PtrType j = row_begin; j < row_end; j++)
+                {
+                    if(cast_conn->vec_[j] == true)
+                    {
+                        int c = this->mat_.col[j];
+
+                        assert(c >= 0);
+                        assert(c < this->nrow_);
+
+                        if(cast_state->vec_[c] == 1)
+                        {
+                            cast_agg->vec_[i]       = cast_agg->vec_[c];
+                            cast_max_state->vec_[i] = 1;
+
+                            cast_agg_nodes->vec_[i] = cast_agg_nodes->vec_[c];
+
+                            global_col = global_column_begin + c;
+                            break;
+                        }
+                    }
+                }
+
+                if(global)
+                {
+                    PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                    PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                    for(PtrType j = gst_row_begin; j < gst_row_end; j++)
+                    {
+                        if(cast_conn->vec_[j + this->nnz_] == true)
+                        {
+                            int c = cast_gst->mat_.col[j];
+
+                            if(cast_state->vec_[c + this->nrow_] == 1)
+                            {
+                                if(global_col == -1
+                                   || (global_col >= 0 && cast_l2g->vec_[c] < global_col))
+                                {
+                                    cast_agg->vec_[i]       = cast_agg->vec_[c + this->nrow_];
+                                    cast_max_state->vec_[i] = 1;
+
+                                    cast_agg_nodes->vec_[i] = cast_agg_nodes->vec_[c + this->nrow_];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if(s == -2)
+            {
+                cast_agg->vec_[i] = -2;
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGPMISInitializeAggregateGlobalIndices(
+        int64_t                    global_column_begin,
+        const BaseVector<int64_t>& aggregates,
+        BaseVector<int64_t>*       aggregate_root_nodes) const
+    {
+        assert(aggregate_root_nodes != NULL);
+
+        const HostVector<int64_t>* cast_agg = dynamic_cast<const HostVector<int64_t>*>(&aggregates);
+        HostVector<int64_t>*       cast_agg_nodes
+            = dynamic_cast<HostVector<int64_t>*>(aggregate_root_nodes);
+
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            cast_agg_nodes->vec_[i] = (cast_agg->vec_[i] == 1) ? global_column_begin + i : -1;
+        }
+
+        return true;
+    }
+
+    // ----------------------------------------------------------
+    // original function interp(const sparse::matrix<value_t,
+    //                          index_t> &A, const params &prm)
+    // ----------------------------------------------------------
+    // Modified and adapted from AMGCL,
+    // https://github.com/ddemidov/amgcl
+    // MIT License
+    // ----------------------------------------------------------
+    // CHANGELOG
+    // - adapted interface
+    // ----------------------------------------------------------
+    /*template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGSmoothedAggregation(ValueType                  relax,
+                                                          const BaseVector<bool>&    connections,
+                                                          const BaseVector<int64_t>& aggregates,
+                                                          BaseMatrix<ValueType>*     prolong,
+                                                          int lumping_strat) const
+    {
+        assert(prolong != NULL);
+
+        const HostVector<bool>*    cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostVector<int64_t>* cast_agg = dynamic_cast<const HostVector<int64_t>*>(&aggregates);
+        HostMatrixCSR<ValueType>*  cast_prolong = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
+
+        assert(cast_agg != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_prolong != NULL);
+
+        // Allocate
+        cast_prolong->Clear();
+        cast_prolong->AllocateCSR(this->nnz_, this->nrow_, this->ncol_);
+
+        int ncol = 0;
+
+        for(int i = 0; i < cast_agg->GetSize(); ++i)
+        {
+            if(cast_agg->vec_[i] > ncol)
+            {
+                ncol = cast_agg->vec_[i];
+            }
+        }
+
+        ++ncol;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        {
+            std::vector<PtrType> marker(ncol, -1);
+
+#ifdef _OPENMP
+            int nt  = omp_get_num_threads();
+            int tid = omp_get_thread_num();
+
+            int chunk_size  = (this->nrow_ + nt - 1) / nt;
+            int chunk_start = tid * chunk_size;
+            int chunk_end   = std::min(this->nrow_, chunk_start + chunk_size);
+#else
+            int chunk_start = 0;
+            int chunk_end   = this->nrow_;
+#endif
+
+            // Count number of entries in prolong
+            for(int i = chunk_start; i < chunk_end; ++i)
+            {
+                for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e;
+                    ++j)
+                {
+                    int c = this->mat_.col[j];
+
+                    assert(c >= 0);
+                    assert(c < this->nrow_);
+
+                    if(c != i && !cast_conn->vec_[j])
+                    {
+                        continue;
+                    }
+
+                    int g = cast_agg->vec_[c];
+
+                    if(g >= 0 && marker[g] != i)
+                    {
+                        marker[g] = i;
+                        ++cast_prolong->mat_.row_offset[i + 1];
+                    }
+                }
+            }
+
+            std::fill(marker.begin(), marker.end(), -1);
+
+#ifdef _OPENMP
+#pragma omp barrier
+#pragma omp single
+#endif
+            {
+                PtrType* row_offset = NULL;
+                allocate_host(cast_prolong->nrow_ + 1, &row_offset);
+
+                int*       col = NULL;
+                ValueType* val = NULL;
+
+                int64_t nnz  = 0;
+                int     nrow = cast_prolong->nrow_;
+
+                row_offset[0] = 0;
+                for(int i = 1; i < nrow + 1; ++i)
+                {
+                    row_offset[i] = cast_prolong->mat_.row_offset[i] + row_offset[i - 1];
+                }
+
+                nnz = row_offset[nrow];
+
+                allocate_host(nnz, &col);
+                allocate_host(nnz, &val);
+
+                cast_prolong->Clear();
+                cast_prolong->SetDataPtrCSR(&row_offset, &col, &val, nnz, nrow, ncol);
+            }
+
+            // Fill the interpolation matrix.
+            for(int i = chunk_start; i < chunk_end; ++i)
+            {
+                // Diagonal of the filtered matrix is original matrix diagonal plus (lumping_strat = 0) or
+                // minus (lumping_strat = 1) its weak connections.
+                ValueType dia = static_cast<ValueType>(0);
+                for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e;
+                    ++j)
+                {
+                    if(this->mat_.col[j] == i)
+                    {
+                        dia += this->mat_.val[j];
+                    }
+                    else if(!cast_conn->vec_[j])
+                    {
+                        if(lumping_strat == 0)
+                        {
+                            dia += this->mat_.val[j];
+                        }
+                        else
+                        {
+                            dia -= this->mat_.val[j];
+                        }
+                    }
+                }
+
+                dia = static_cast<ValueType>(1) / dia;
+
+                PtrType row_begin = cast_prolong->mat_.row_offset[i];
+                PtrType row_end   = row_begin;
+
+                for(PtrType j = this->mat_.row_offset[i], e = this->mat_.row_offset[i + 1]; j < e;
+                    ++j)
+                {
+                    int c = this->mat_.col[j];
+
+                    assert(c >= 0);
+                    assert(c < this->nrow_);
+
+                    // Skip weak couplings, ...
+                    if(c != i && !cast_conn->vec_[j])
+                    {
+                        continue;
+                    }
+
+                    // ... and the ones not in any aggregate.
+                    int g = cast_agg->vec_[c];
+                    if(g < 0)
+                    {
+                        continue;
+                    }
+
+                    ValueType v = (c == i) ? static_cast<ValueType>(1) - relax
+                                           : -relax * dia * this->mat_.val[j];
+
+                    if(marker[g] < row_begin)
+                    {
+                        marker[g]                       = row_end;
+                        cast_prolong->mat_.col[row_end] = g;
+                        cast_prolong->mat_.val[row_end] = v;
+                        ++row_end;
+                    }
+                    else
+                    {
+                        cast_prolong->mat_.val[marker[g]] += v;
+                    }
+                }
+            }
+        }
+
+        cast_prolong->Sort();
+
+        return true;
+    }*/
+
+    // ----------------------------------------------------------
+    // original function interp(const sparse::matrix<value_t,
+    //                          index_t> &A, const params &prm)
+    // ----------------------------------------------------------
+    // Modified and adapted from AMGCL,
+    // https://github.com/ddemidov/amgcl
+    // MIT License
+    // ----------------------------------------------------------
+    // CHANGELOG
+    // - adapted interface
+    // ----------------------------------------------------------
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGUnsmoothedAggregation(const BaseVector<int64_t>& aggregates,
+                                                            BaseMatrix<ValueType>* prolong) const
+    {
+        assert(prolong != NULL);
+
+        const HostVector<int64_t>* cast_agg = dynamic_cast<const HostVector<int64_t>*>(&aggregates);
+        HostMatrixCSR<ValueType>*  cast_prolong = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong);
+
+        assert(cast_agg != NULL);
+        assert(cast_prolong != NULL);
+
+        int64_t ncol = 0;
+
+        for(int i = 0; i < cast_agg->GetSize(); ++i)
+        {
+            if(cast_agg->vec_[i] > ncol)
+            {
+                ncol = cast_agg->vec_[i];
+            }
+        }
+
+        ++ncol;
+
+        PtrType* row_offset = NULL;
+        allocate_host(this->nrow_ + 1, &row_offset);
+
+        int*       col = NULL;
+        ValueType* val = NULL;
+
+        row_offset[0] = 0;
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            if(cast_agg->vec_[i] >= 0)
+            {
+                row_offset[i + 1] = row_offset[i] + 1;
+            }
+            else
+            {
+                row_offset[i + 1] = row_offset[i];
+            }
+        }
+
+        allocate_host(row_offset[this->nrow_], &col);
+        allocate_host(row_offset[this->nrow_], &val);
+
+        for(int i = 0, j = 0; i < this->nrow_; ++i)
+        {
+            if(cast_agg->vec_[i] >= 0)
+            {
+                col[j] = cast_agg->vec_[i];
+                val[j] = 1.0;
+                ++j;
+            }
+        }
+
+        cast_prolong->Clear();
+        cast_prolong->SetDataPtrCSR(
+            &row_offset, &col, &val, row_offset[this->nrow_], this->nrow_, ncol);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGSmoothedAggregationProlongNnz(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost,
+        BaseVector<int>*             f2c,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        const HostVector<bool>*    cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostVector<int64_t>* cast_agg = dynamic_cast<const HostVector<int64_t>*>(&aggregates);
+        const HostVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HostVector<int64_t>*>(&aggregate_root_nodes);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        HostVector<int>*          cast_f2c = dynamic_cast<HostVector<int>*>(f2c);
+        HostMatrixCSR<ValueType>* cast_pi  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_int);
+        HostMatrixCSR<ValueType>* cast_pg  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_gst);
+
+        assert(cast_conn != NULL);
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_f2c != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        // Start with fresh P
+        cast_pi->Clear();
+
+        // Allocate P row pointer array
+        allocate_host(this->nrow_ + 1, &cast_pi->mat_.row_offset);
+        set_to_zero_host(this->nrow_ + 1, cast_pi->mat_.row_offset);
+
+        // We already know the number of rows of P
+        cast_pi->nrow_ = this->nrow_;
+
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_host(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+            set_to_zero_host(this->nrow_ + 1, cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
+        // Count number of entries in interior prolong
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            std::unordered_set<int64_t> int_set;
+            std::unordered_set<int64_t> gst_set;
+
+            PtrType row_begin = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                int c = this->mat_.col[j];
+
+                assert(c >= 0);
+                assert(c < this->nrow_);
+
+                if(c != i && !cast_conn->vec_[j])
+                {
+                    continue;
+                }
+
+                int64_t agg = cast_agg->vec_[c];
+
+                if(agg >= 0)
+                {
+                    int64_t global_node = cast_agg_nodes->vec_[c];
+                    assert(global_node != -1);
+
+                    if(global_node >= global_column_begin && global_node < global_column_end)
+                    {
+                        int_set.insert(global_node);
+                        cast_f2c->vec_[global_node - global_column_begin] = 1;
+                    }
+                    else
+                    {
+                        gst_set.insert(global_node);
+                    }
+                }
+            }
+
+            if(global == true)
+            {
+                PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
+                PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
+
+                for(PtrType j = gst_row_begin; j < gst_row_end; ++j)
+                {
+                    int c = cast_gst->mat_.col[j];
+                    if(!cast_conn->vec_[j + this->nnz_])
+                    {
+                        continue;
+                    }
+
+                    int64_t agg = cast_agg->vec_[c + this->nrow_];
+
+                    if(agg >= 0)
+                    {
+                        int64_t global_node = cast_agg_nodes->vec_[c + this->nrow_];
+                        assert(global_node != -1);
+
+                        if(global_node >= global_column_begin && global_node < global_column_end)
+                        {
+                            int_set.insert(global_node);
+                            cast_f2c->vec_[global_node - global_column_begin] = 1;
+                        }
+                        else
+                        {
+                            gst_set.insert(global_node);
+                        }
+                    }
+                }
+
+                cast_pg->mat_.row_offset[i + 1] = gst_set.size();
+            }
+
+            cast_pi->mat_.row_offset[i + 1] = int_set.size();
+        }
+
+        cast_f2c->ExclusiveSum(*cast_f2c);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGSmoothedAggregationProlongFill(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        int                          lumping_strat,
+        ValueType                    relax,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseVector<int64_t>&   l2g,
+        const BaseVector<int>&       f2c,
+        const BaseMatrix<ValueType>& ghost,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst,
+        BaseVector<int64_t>*         global_ghost_col) const
+    {
+        const HostVector<bool>*    cast_conn = dynamic_cast<const HostVector<bool>*>(&connections);
+        const HostVector<int64_t>* cast_agg = dynamic_cast<const HostVector<int64_t>*>(&aggregates);
+        const HostVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HostVector<int64_t>*>(&aggregate_root_nodes);
+        const HostVector<int64_t>*      cast_l2g = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+        const HostVector<int>*          cast_f2c = dynamic_cast<const HostVector<int>*>(&f2c);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        HostMatrixCSR<ValueType>* cast_pi  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_int);
+        HostMatrixCSR<ValueType>* cast_pg  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_gst);
+        HostVector<int64_t>*      cast_glo = dynamic_cast<HostVector<int64_t>*>(global_ghost_col);
+
+        assert(cast_conn != NULL);
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_f2c != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        cast_pi->mat_.row_offset[0] = 0;
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            cast_pi->mat_.row_offset[i + 1] += cast_pi->mat_.row_offset[i];
+        }
+
+        // Initialize nnz of P
+        cast_pi->nnz_ = cast_pi->mat_.row_offset[this->nrow_];
+
+        // Initialize ncol of P
+        cast_pi->ncol_ = cast_f2c->vec_[this->nrow_];
+
+        // Allocate column and value arrays
+        allocate_host(cast_pi->nnz_, &cast_pi->mat_.col);
+        allocate_host(cast_pi->nnz_, &cast_pi->mat_.val);
+        set_to_zero_host(cast_pi->nnz_, cast_pi->mat_.col);
+        set_to_zero_host(cast_pi->nnz_, cast_pi->mat_.val);
+
+        // Once again for the ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+
+            cast_pg->mat_.row_offset[0] = 0;
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                cast_pg->mat_.row_offset[i + 1] += cast_pg->mat_.row_offset[i];
+            }
+
+            // Initialize nnz of P
+            cast_pg->nnz_ = cast_pg->mat_.row_offset[this->nrow_];
+
+            // Initialize ncol of P
+            cast_pg->ncol_ = this->nrow_; // Need to fix this!!!!
+
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.val);
+            set_to_zero_host(cast_pg->nnz_, cast_pg->mat_.col);
+            set_to_zero_host(cast_pg->nnz_, cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
+
+        // Fill the interpolation matrix.
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            // Diagonal of the filtered matrix is original matrix diagonal plus (lumping_strat = 0) or
+            // minus (lumping_strat = 1) its weak connections.
+            ValueType dia = static_cast<ValueType>(0);
+
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            {
+                if(this->mat_.col[j] == i)
+                {
+                    dia += this->mat_.val[j];
+                }
+                else if(!cast_conn->vec_[j])
+                {
+                    if(lumping_strat == 0)
+                    {
+                        dia += this->mat_.val[j];
+                    }
+                    else
+                    {
+                        dia -= this->mat_.val[j];
+                    }
+                }
+            }
+
+            if(global == true)
+            {
+                for(PtrType j = cast_gst->mat_.row_offset[i]; j < cast_gst->mat_.row_offset[i + 1];
+                    ++j)
+                {
+                    if(!cast_conn->vec_[j + this->nnz_])
+                    {
+                        if(lumping_strat == 0)
+                        {
+                            dia += cast_gst->mat_.val[j];
+                        }
+                        else
+                        {
+                            dia -= cast_gst->mat_.val[j];
+                        }
+                    }
+                }
+            }
+
+            dia = static_cast<ValueType>(1) / dia;
+
+            PtrType pi_row_begin = cast_pi->mat_.row_offset[i];
+            PtrType pi_row_end   = pi_row_begin;
+
+            // Hash table
+            std::map<int64_t, ValueType> int_table;
+            std::map<int64_t, ValueType> gst_table;
+
+            for(PtrType j = this->mat_.row_offset[i]; j < this->mat_.row_offset[i + 1]; ++j)
+            {
+                int c = this->mat_.col[j];
+
+                assert(c >= 0);
+                assert(c < this->nrow_);
+
+                // Skip weak couplings, ...
+                if(c != i && !cast_conn->vec_[j])
+                {
+                    continue;
+                }
+
+                // ... and the ones not in any aggregate.
+                int64_t agg = cast_agg->vec_[c];
+                if(agg >= 0)
+                {
+                    ValueType v = (c == i) ? static_cast<ValueType>(1) - relax
+                                           : -relax * dia * this->mat_.val[j];
+
+                    int64_t global_node = cast_agg_nodes->vec_[c];
+                    assert(global_node != -1);
+
+                    if(global_node >= global_column_begin && global_node < global_column_end)
+                    {
+                        if(int_table.find(global_node) != int_table.end())
+                        {
+                            int_table[global_node] += v;
+                        }
+                        else
+                        {
+                            int_table[global_node] = v;
+                        }
+                    }
+                    else
+                    {
+                        if(gst_table.find(global_node) != gst_table.end())
+                        {
+                            gst_table[global_node] += v;
+                        }
+                        else
+                        {
+                            gst_table[global_node] = v;
+                        }
+                    }
+                }
+            }
+            if(global == true)
+            {
+                PtrType pg_row_begin = cast_pg->mat_.row_offset[i];
+                PtrType pg_row_end   = pg_row_begin;
+
+                for(PtrType j = cast_gst->mat_.row_offset[i]; j < cast_gst->mat_.row_offset[i + 1];
+                    ++j)
+                {
+                    int c = cast_gst->mat_.col[j];
+
+                    // Skip weak couplings, ...
+                    if(!cast_conn->vec_[j + this->nnz_])
+                    {
+                        continue;
+                    }
+
+                    // ... and the ones not in any aggregate.
+                    int64_t agg = cast_agg->vec_[c + this->nrow_];
+
+                    if(agg >= 0)
+                    {
+                        ValueType v = -relax * dia * cast_gst->mat_.val[j];
+
+                        int64_t global_node = cast_agg_nodes->vec_[c + this->nrow_];
+                        assert(global_node != -1);
+
+                        if(global_node >= global_column_begin && global_node < global_column_end)
+                        {
+                            if(int_table.find(global_node) != int_table.end())
+                            {
+                                int_table[global_node] += v;
+                            }
+                            else
+                            {
+                                int_table[global_node] = v;
+                            }
+                        }
+                        else
+                        {
+                            if(gst_table.find(global_node) != gst_table.end())
+                            {
+                                gst_table[global_node] += v;
+                            }
+                            else
+                            {
+                                gst_table[global_node] = v;
+                            }
+                        }
+                    }
+                }
+
+                for(auto it = gst_table.begin(); it != gst_table.end(); it++)
+                {
+                    cast_pg->mat_.val[pg_row_end] = it->second;
+                    cast_glo->vec_[pg_row_end]    = it->first;
+                    ++pg_row_end;
+                }
+            }
+
+            for(auto it = int_table.begin(); it != int_table.end(); it++)
+            {
+                cast_pi->mat_.col[pi_row_end] = cast_f2c->vec_[it->first - global_column_begin];
+                cast_pi->mat_.val[pi_row_end] = it->second;
+                ++pi_row_end;
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGUnsmoothedAggregationProlongNnz(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost,
+        BaseVector<int>*             f2c,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        const HostVector<int64_t>* cast_agg = dynamic_cast<const HostVector<int64_t>*>(&aggregates);
+        const HostVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HostVector<int64_t>*>(&aggregate_root_nodes);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        HostVector<int>*          cast_f2c = dynamic_cast<HostVector<int>*>(f2c);
+        HostMatrixCSR<ValueType>* cast_pi  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_int);
+        HostMatrixCSR<ValueType>* cast_pg  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_gst);
+
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_f2c != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        // Start with fresh P
+        cast_pi->Clear();
+
+        // Allocate P row pointer array
+        allocate_host(this->nrow_ + 1, &cast_pi->mat_.row_offset);
+        set_to_zero_host(this->nrow_ + 1, cast_pi->mat_.row_offset);
+
+        // We already know the number of rows of P
+        cast_pi->nrow_ = this->nrow_;
+
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_host(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+            set_to_zero_host(this->nrow_ + 1, cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
+        // Count number of entries in interior prolong
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int64_t agg = cast_agg->vec_[i];
+
+            if(agg >= 0)
+            {
+                int64_t global_node = cast_agg_nodes->vec_[i];
+                assert(global_node != -1);
+
+                if(global_node >= global_column_begin && global_node < global_column_end)
+                {
+                    cast_pi->mat_.row_offset[i + 1]                   = 1;
+                    cast_f2c->vec_[global_node - global_column_begin] = 1;
+                }
+                else
+                {
+                    cast_pg->mat_.row_offset[i + 1] = 1;
+                }
+            }
+        }
+
+        cast_f2c->ExclusiveSum(*cast_f2c);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::AMGUnsmoothedAggregationProlongFill(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseVector<int>&       f2c,
+        const BaseMatrix<ValueType>& ghost,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst,
+        BaseVector<int64_t>*         global_ghost_col) const
+    {
+        const HostVector<int64_t>* cast_agg = dynamic_cast<const HostVector<int64_t>*>(&aggregates);
+        const HostVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HostVector<int64_t>*>(&aggregate_root_nodes);
+        const HostVector<int>*          cast_f2c = dynamic_cast<const HostVector<int>*>(&f2c);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ghost);
+        HostMatrixCSR<ValueType>* cast_pi  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_int);
+        HostMatrixCSR<ValueType>* cast_pg  = dynamic_cast<HostMatrixCSR<ValueType>*>(prolong_gst);
+        HostVector<int64_t>*      cast_glo = dynamic_cast<HostVector<int64_t>*>(global_ghost_col);
+
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_f2c != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        cast_pi->mat_.row_offset[0] = 0;
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            cast_pi->mat_.row_offset[i + 1] += cast_pi->mat_.row_offset[i];
+        }
+
+        // Initialize nnz of P
+        cast_pi->nnz_ = cast_pi->mat_.row_offset[this->nrow_];
+
+        // Initialize ncol of P
+        cast_pi->ncol_ = cast_f2c->vec_[this->nrow_];
+
+        // Allocate column and value arrays
+        allocate_host(cast_pi->nnz_, &cast_pi->mat_.col);
+        allocate_host(cast_pi->nnz_, &cast_pi->mat_.val);
+        set_to_zero_host(cast_pi->nnz_, cast_pi->mat_.col);
+        set_to_zero_host(cast_pi->nnz_, cast_pi->mat_.val);
+
+        // Once again for the ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+
+            cast_pg->mat_.row_offset[0] = 0;
+            for(int i = 0; i < this->nrow_; ++i)
+            {
+                cast_pg->mat_.row_offset[i + 1] += cast_pg->mat_.row_offset[i];
+            }
+
+            // Initialize nnz of P
+            cast_pg->nnz_ = cast_pg->mat_.row_offset[this->nrow_];
+
+            // Initialize ncol of P
+            cast_pg->ncol_ = this->nrow_; // Need to fix this!!!!
+
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_host(cast_pg->nnz_, &cast_pg->mat_.val);
+            set_to_zero_host(cast_pg->nnz_, cast_pg->mat_.col);
+            set_to_zero_host(cast_pg->nnz_, cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
+
+        // Count number of entries in interior prolong
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int64_t agg = cast_agg->vec_[i];
+
+            if(agg >= 0)
+            {
+                int64_t global_node = cast_agg_nodes->vec_[i];
+                assert(global_node != -1);
+
+                if(global_node >= global_column_begin && global_node < global_column_end)
+                {
+                    PtrType pi_row_end = cast_pi->mat_.row_offset[i];
+
+                    cast_pi->mat_.col[pi_row_end]
+                        = cast_f2c->vec_[global_node - global_column_begin];
+                    cast_pi->mat_.val[pi_row_end] = 1;
+                }
+                else
+                {
+                    PtrType pg_row_end = cast_pg->mat_.row_offset[i];
+
+                    cast_pg->mat_.val[pg_row_end] = 1;
+                    cast_glo->vec_[pg_row_end]    = global_node;
+                }
+            }
+        }
 
         return true;
     }
@@ -5335,11 +7017,24 @@ namespace rocalution
         return true;
     }
 
+    static float hash(uint64_t key)
+    {
+        // 64 bit integer mix function
+        key = (~key) + (key << 21); // key = (key << 21) - key - 1;
+        key = key ^ (key >> 24);
+        key = (key + (key << 3)) + (key << 8); // key * 265
+        key = key ^ (key >> 14);
+        key = (key + (key << 2)) + (key << 4); // key * 21
+        key = key ^ (key >> 28);
+        key = key + (key << 31);
+        return static_cast<float>(key / (float)UINT64_MAX);
+    }
+
     template <typename ValueType>
-    bool HostMatrixCSR<ValueType>::RSPMISStrongInfluences(float                        eps,
-                                                          BaseVector<bool>*            S,
-                                                          BaseVector<float>*           omega,
-                                                          unsigned long long           seed,
+    bool HostMatrixCSR<ValueType>::RSPMISStrongInfluences(float              eps,
+                                                          BaseVector<bool>*  S,
+                                                          BaseVector<float>* omega,
+                                                          int64_t            global_row_offset,
                                                           const BaseMatrix<ValueType>& ghost) const
     {
         assert(S != NULL);
@@ -5360,8 +7055,11 @@ namespace rocalution
         // Initialize S to false (no dependencies)
         cast_S->Zeros();
 
-        // Sample rng
-        omega->SetRandomUniform(seed, 0, 1); // TODO only fill up to this->nrow_!!!
+        // Sample some numbers using hash function to initialize omega
+        for(int64_t i = 0; i < this->nrow_; ++i)
+        {
+            cast_w->vec_[i] = hash(i + global_row_offset);
+        }
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -8941,6 +10639,378 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::MergeToLocal(const BaseMatrix<ValueType>& mat_int,
+                                                const BaseMatrix<ValueType>& mat_gst,
+                                                const BaseMatrix<ValueType>& mat_ext,
+                                                const BaseVector<int>&       vec_ext)
+    {
+        assert(this != &mat_int);
+        assert(this != &mat_gst);
+        assert(this != &mat_ext);
+        assert(&mat_int != &mat_gst);
+        assert(&mat_int != &mat_ext);
+        assert(&mat_gst != &mat_ext);
+
+        const HostMatrixCSR<ValueType>* cast_int
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat_int);
+        const HostMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat_gst);
+        const HostMatrixCSR<ValueType>* cast_ext
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&mat_ext);
+        const HostVector<int>* cast_vec = dynamic_cast<const HostVector<int>*>(&vec_ext);
+
+        assert(cast_int != NULL);
+        assert(cast_ext != NULL);
+        assert(cast_vec != NULL);
+
+        // Determine nnz per row
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            if(i < cast_int->nrow_)
+            {
+                PtrType nnz = cast_int->mat_.row_offset[i + 1] - cast_int->mat_.row_offset[i];
+
+                // If ghost is available
+                if(cast_gst->nnz_ > 0)
+                {
+                    nnz += cast_gst->mat_.row_offset[i + 1] - cast_gst->mat_.row_offset[i];
+                }
+
+                this->mat_.row_offset[i + 1] = nnz;
+            }
+            else if(i - cast_int->nrow_ < cast_ext->nrow_)
+            {
+                this->mat_.row_offset[i + 1] = cast_ext->mat_.row_offset[i - cast_int->nrow_ + 1]
+                                               - cast_ext->mat_.row_offset[i - cast_int->nrow_];
+            }
+        }
+
+        // Exclusive sum to obtain pointers
+        this->mat_.row_offset[0] = 0;
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            this->mat_.row_offset[i + 1] += this->mat_.row_offset[i];
+        }
+
+        // Fill
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            // Index into "this"
+            PtrType idx = this->mat_.row_offset[i];
+
+            if(i < cast_int->nrow_)
+            {
+                // Interior
+                for(PtrType j = cast_int->mat_.row_offset[i]; j < cast_int->mat_.row_offset[i + 1];
+                    ++j)
+                {
+                    this->mat_.col[idx] = cast_int->mat_.col[j];
+                    this->mat_.val[idx] = cast_int->mat_.val[j];
+
+                    ++idx;
+                }
+
+                // Ghost
+                if(cast_gst->nnz_ > 0)
+                {
+                    for(PtrType j = cast_gst->mat_.row_offset[i];
+                        j < cast_gst->mat_.row_offset[i + 1];
+                        ++j)
+                    {
+                        this->mat_.col[idx]
+                            = (cast_vec->size_ > 0 ? cast_vec->vec_[j] : cast_gst->mat_.col[j])
+                              + cast_int->ncol_;
+                        this->mat_.val[idx] = cast_gst->mat_.val[j];
+
+                        ++idx;
+                    }
+                }
+            }
+            else if(i - cast_int->nrow_ < cast_ext->nrow_)
+            {
+                for(PtrType j = cast_ext->mat_.row_offset[i - cast_int->nrow_];
+                    j < cast_ext->mat_.row_offset[i - cast_int->nrow_ + 1];
+                    ++j)
+                {
+                    this->mat_.col[idx] = cast_ext->mat_.col[j];
+                    this->mat_.val[idx] = cast_ext->mat_.val[j];
+
+                    ++idx;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::CombineAndRenumber(int                        ncol,
+                                                      int64_t                    ext_nnz,
+                                                      int64_t                    global_col_begin,
+                                                      int64_t                    global_col_end,
+                                                      const BaseVector<int64_t>& l2g,
+                                                      const BaseVector<int64_t>& ext,
+                                                      BaseVector<int>*           merged,
+                                                      BaseVector<int64_t>*       mapping,
+                                                      BaseVector<int>*           local_col) const
+    {
+        assert(merged != NULL);
+        assert(mapping != NULL);
+        assert(local_col != NULL);
+
+        const HostVector<int64_t>* cast_l2g = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+        const HostVector<int64_t>* cast_ext = dynamic_cast<const HostVector<int64_t>*>(&ext);
+        HostVector<int>*           cast_cmb = dynamic_cast<HostVector<int>*>(merged);
+        HostVector<int64_t>*       cast_map = dynamic_cast<HostVector<int64_t>*>(mapping);
+        HostVector<int>*           cast_col = dynamic_cast<HostVector<int>*>(local_col);
+
+        assert(cast_l2g != NULL);
+        assert(cast_ext != NULL);
+        assert(cast_cmb != NULL);
+        assert(cast_map != NULL);
+        assert(cast_col != NULL);
+
+        // Ghost and ext should be 32 bit
+        assert(this->nnz_ + ext_nnz < std::numeric_limits<int>::max());
+
+        // Map columns from local to global
+        int64_t* gcols = NULL;
+        allocate_host(this->nnz_ + ext_nnz, &gcols);
+
+        // Transfer local column indices to global ones
+        for(int64_t i = 0; i < this->nnz_; ++i)
+        {
+            gcols[i] = cast_l2g->vec_[this->mat_.col[i]];
+        }
+
+        // Add additional global columns from ext
+        int total_nnz = static_cast<int>(this->nnz_);
+
+        for(int64_t i = 0; i < ext_nnz; ++i)
+        {
+            int64_t global_col = cast_ext->vec_[i];
+
+            // Filter external source to match given column id interval
+            if(global_col < global_col_begin || global_col >= global_col_end)
+            {
+                gcols[total_nnz] = global_col;
+                ++total_nnz;
+            }
+        }
+
+        // Sort global column array to eliminate duplicates later on
+        int64_t* gcol_sorted = NULL;
+        allocate_host(total_nnz + 1, &gcol_sorted);
+
+        int* perm = NULL;
+        allocate_host(total_nnz, &perm);
+
+        // Create identity permutation
+        std::iota(perm, perm + total_nnz, 0);
+
+        // Sort with permutation
+        std::sort(perm, perm + total_nnz, [&](const int64_t& a, const int64_t& b) {
+            return (gcols[a] < gcols[b]);
+        });
+
+        for(int i = 0; i < total_nnz; ++i)
+        {
+            gcol_sorted[i] = gcols[perm[i]];
+        }
+
+        free_host(&gcols);
+
+        // Run length encode to obtain counts for duplicated entries (we need this for renumbering)
+        cast_map->Clear();
+        cast_cmb->Clear();
+
+        cast_map->Allocate(total_nnz);
+        cast_cmb->Allocate(total_nnz);
+
+        int nruns = 0;
+
+        for(int i = 0; i < total_nnz; ++i)
+        {
+            // Count
+            int cnt = 1;
+
+            while(i < total_nnz - 1 && gcol_sorted[i] == gcol_sorted[i + 1])
+            {
+                ++cnt;
+                ++i;
+            }
+
+            cast_map->vec_[nruns] = gcol_sorted[i];
+            cast_cmb->vec_[nruns] = cnt;
+
+            // Runs
+            ++nruns;
+        }
+
+        // Update col_mapped size
+        cast_map->size_ = nruns;
+
+        // Prefix sum to get entry points to duplicates
+        gcol_sorted[0] = 0;
+
+        for(int i = 0; i < nruns; ++i)
+        {
+            gcol_sorted[i + 1] = gcol_sorted[i] + cast_cmb->vec_[i];
+        }
+
+        // Renumbered column ids
+        for(int i = 0; i < nruns; ++i)
+        {
+            for(int64_t j = gcol_sorted[i]; j < gcol_sorted[i + 1]; ++j)
+            {
+                cast_cmb->vec_[perm[j]] = i;
+            }
+        }
+
+        free_host(&perm);
+        free_host(&gcol_sorted);
+
+        // Column id transformation
+        for(int64_t i = 0, k = 0; i < ext_nnz; ++i)
+        {
+            int64_t global_col = cast_ext->vec_[i];
+
+            // Filter external source to match given column id interval
+            if(global_col >= global_col_begin && global_col < global_col_end)
+            {
+                // Map column into interval
+                cast_col->vec_[i] = static_cast<int>(global_col - global_col_begin);
+            }
+            else
+            {
+                cast_col->vec_[i] = cast_cmb->vec_[k + this->nnz_] + ncol;
+                ++k;
+            }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::SplitInteriorGhost(BaseMatrix<ValueType>* interior,
+                                                      BaseMatrix<ValueType>* ghost) const
+    {
+        assert(interior != NULL);
+        assert(ghost != NULL);
+        assert(interior != ghost);
+
+        HostMatrixCSR<ValueType>* cast_int = dynamic_cast<HostMatrixCSR<ValueType>*>(interior);
+        HostMatrixCSR<ValueType>* cast_gst = dynamic_cast<HostMatrixCSR<ValueType>*>(ghost);
+
+        assert(cast_int != NULL);
+        assert(cast_gst != NULL);
+
+        cast_int->Clear();
+        cast_gst->Clear();
+
+        // First, we need to determine the number of non-zeros for each matrix
+        PtrType* int_csr_row_ptr = NULL;
+        PtrType* gst_csr_row_ptr = NULL;
+
+        allocate_host(this->nrow_ + 1, &int_csr_row_ptr);
+        allocate_host(this->nrow_ + 1, &gst_csr_row_ptr);
+
+        set_to_zero_host(this->nrow_ + 1, int_csr_row_ptr);
+        set_to_zero_host(this->nrow_ + 1, gst_csr_row_ptr);
+
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int int_nnz = 0;
+            int gst_nnz = 0;
+
+            PtrType row_begin = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                int col = this->mat_.col[j];
+
+                if(col >= this->nrow_)
+                {
+                    // This is a ghost column
+                    ++gst_nnz;
+                }
+                else
+                {
+                    // This is an interior column
+                    ++int_nnz;
+                }
+            }
+
+            int_csr_row_ptr[i + 1] = int_nnz;
+            gst_csr_row_ptr[i + 1] = gst_nnz;
+        }
+
+        // Exclusive sum to obtain offsets
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            int_csr_row_ptr[i + 1] += int_csr_row_ptr[i];
+            gst_csr_row_ptr[i + 1] += gst_csr_row_ptr[i];
+        }
+
+        PtrType int_nnz = int_csr_row_ptr[this->nrow_];
+        PtrType gst_nnz = gst_csr_row_ptr[this->nrow_];
+
+        // Allocate
+        int*       int_csr_col_ind = NULL;
+        int*       gst_csr_col_ind = NULL;
+        ValueType* int_csr_val     = NULL;
+        ValueType* gst_csr_val     = NULL;
+
+        allocate_host(int_nnz, &int_csr_col_ind);
+        allocate_host(int_nnz, &int_csr_val);
+        allocate_host(gst_nnz, &gst_csr_col_ind);
+        allocate_host(gst_nnz, &gst_csr_val);
+
+        // Fill matrices
+        for(int i = 0; i < this->nrow_; ++i)
+        {
+            PtrType row_begin = this->mat_.row_offset[i];
+            PtrType row_end   = this->mat_.row_offset[i + 1];
+
+            PtrType idx_int = int_csr_row_ptr[i];
+            PtrType idx_gst = gst_csr_row_ptr[i];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                int col = this->mat_.col[j];
+
+                if(col >= this->nrow_)
+                {
+                    // This is a ghost column
+                    int gst_col = col - this->nrow_;
+
+                    gst_csr_col_ind[idx_gst] = gst_col;
+                    gst_csr_val[idx_gst]     = this->mat_.val[j];
+
+                    ++idx_gst;
+                }
+                else
+                {
+                    // This is an interior column
+                    int_csr_col_ind[idx_int] = col;
+                    int_csr_val[idx_int]     = this->mat_.val[j];
+
+                    ++idx_int;
+                }
+            }
+        }
+
+        cast_int->SetDataPtrCSR(
+            &int_csr_row_ptr, &int_csr_col_ind, &int_csr_val, int_nnz, this->nrow_, this->nrow_);
+
+        cast_gst->SetDataPtrCSR(
+            &gst_csr_row_ptr, &gst_csr_col_ind, &gst_csr_val, gst_nnz, this->nrow_, this->nrow_);
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HostMatrixCSR<ValueType>::CopyGhostFromGlobalReceive(
         const BaseVector<int>&       boundary,
         const BaseVector<PtrType>&   recv_csr_row_ptr,
@@ -9015,6 +11085,156 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool
+        HostMatrixCSR<ValueType>::CopyFromGlobalReceive(int                    nrow,
+                                                        int64_t                global_column_begin,
+                                                        int64_t                global_column_end,
+                                                        const BaseVector<int>& boundary,
+                                                        const BaseVector<PtrType>& recv_csr_row_ptr,
+                                                        const BaseVector<int64_t>& recv_csr_col_ind,
+                                                        const BaseVector<ValueType>& recv_csr_val,
+                                                        BaseMatrix<ValueType>*       ghost,
+                                                        BaseVector<int64_t>*         global_col)
+    {
+        assert(ghost != NULL);
+        assert(global_col != NULL);
+
+        const HostVector<int>*     cast_bnd = dynamic_cast<const HostVector<int>*>(&boundary);
+        const HostVector<PtrType>* cast_ptr
+            = dynamic_cast<const HostVector<PtrType>*>(&recv_csr_row_ptr);
+        const HostVector<int64_t>* cast_col
+            = dynamic_cast<const HostVector<int64_t>*>(&recv_csr_col_ind);
+        const HostVector<ValueType>* cast_val
+            = dynamic_cast<const HostVector<ValueType>*>(&recv_csr_val);
+        HostMatrixCSR<ValueType>* cast_gst = dynamic_cast<HostMatrixCSR<ValueType>*>(ghost);
+        HostVector<int64_t>*      cast_glo = dynamic_cast<HostVector<int64_t>*>(global_col);
+
+        assert(cast_bnd != NULL);
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+        assert(cast_val != NULL);
+        assert(cast_gst != NULL);
+
+        PtrType* int_csr_row_ptr = NULL;
+        PtrType* gst_csr_row_ptr = NULL;
+
+        allocate_host(nrow + 1, &int_csr_row_ptr);
+        allocate_host(nrow + 1, &gst_csr_row_ptr);
+
+        set_to_zero_host(nrow + 1, int_csr_row_ptr);
+        set_to_zero_host(nrow + 1, gst_csr_row_ptr);
+
+        // First, we need to determine the number of non-zeros
+        for(int i = 0; i < cast_bnd->size_; ++i)
+        {
+            int row = cast_bnd->vec_[i];
+
+            int int_nnz = 0;
+            int gst_nnz = 0;
+
+            PtrType row_begin = cast_ptr->vec_[i];
+            PtrType row_end   = cast_ptr->vec_[i + 1];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                int64_t col = cast_col->vec_[j];
+
+                if(col >= global_column_begin && col < global_column_end)
+                {
+                    // This is an interior column
+                    ++int_nnz;
+                }
+                else
+                {
+                    // This is a ghost column
+                    ++gst_nnz;
+                }
+            }
+
+            int_csr_row_ptr[row + 1] += int_nnz;
+            gst_csr_row_ptr[row + 1] += gst_nnz;
+        }
+
+        // Exclusive sum to obtain offsets
+        int_csr_row_ptr[0] = 0;
+        gst_csr_row_ptr[0] = 0;
+
+        for(int i = 0; i < nrow; ++i)
+        {
+            int_csr_row_ptr[i + 1] += int_csr_row_ptr[i];
+            gst_csr_row_ptr[i + 1] += gst_csr_row_ptr[i];
+        }
+
+        PtrType int_nnz = int_csr_row_ptr[nrow];
+        PtrType gst_nnz = gst_csr_row_ptr[nrow];
+
+        cast_glo->Allocate(gst_nnz);
+
+        int*       int_csr_col_ind = NULL;
+        int*       gst_csr_col_ind = NULL;
+        ValueType* int_csr_val     = NULL;
+        ValueType* gst_csr_val     = NULL;
+
+        allocate_host(int_nnz, &int_csr_col_ind);
+        allocate_host(gst_nnz, &gst_csr_col_ind);
+        allocate_host(int_nnz, &int_csr_val);
+        allocate_host(gst_nnz, &gst_csr_val);
+
+        // Fill matrices
+        for(int i = 0; i < cast_bnd->size_; ++i)
+        {
+            int row = cast_bnd->vec_[i];
+
+            PtrType row_begin = cast_ptr->vec_[i];
+            PtrType row_end   = cast_ptr->vec_[i + 1];
+
+            PtrType idx_int = int_csr_row_ptr[row];
+            PtrType idx_gst = gst_csr_row_ptr[row];
+
+            for(PtrType j = row_begin; j < row_end; ++j)
+            {
+                int64_t col = cast_col->vec_[j];
+
+                if(col >= global_column_begin && col < global_column_end)
+                {
+                    // This is an interior column
+                    int_csr_col_ind[idx_int] = static_cast<int>(col - global_column_begin);
+                    int_csr_val[idx_int]     = cast_val->vec_[j];
+
+                    ++idx_int;
+                }
+                else
+                {
+                    // This is a ghost column
+                    cast_glo->vec_[idx_gst] = cast_col->vec_[j];
+                    gst_csr_val[idx_gst]    = cast_val->vec_[j];
+
+                    ++idx_gst;
+                }
+            }
+
+            int_csr_row_ptr[row] = idx_int;
+            gst_csr_row_ptr[row] = idx_gst;
+        }
+
+        // Shift back
+        for(int i = nrow; i > 0; --i)
+        {
+            int_csr_row_ptr[i] = int_csr_row_ptr[i - 1];
+            gst_csr_row_ptr[i] = gst_csr_row_ptr[i - 1];
+        }
+
+        int_csr_row_ptr[0] = 0;
+        gst_csr_row_ptr[0] = 0;
+
+        this->SetDataPtrCSR(&int_csr_row_ptr, &int_csr_col_ind, &int_csr_val, int_nnz, nrow, nrow);
+        cast_gst->SetDataPtrCSR(
+            &gst_csr_row_ptr, &gst_csr_col_ind, &gst_csr_val, gst_nnz, nrow, nrow);
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HostMatrixCSR<ValueType>::RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices)
     {
         if(this->nnz_ > 0)
@@ -9073,6 +11293,159 @@ namespace rocalution
                 // Decrement by 1
                 this->mat_.col[perm.vec_[i]] = workspace.vec_[i] - 1;
             }
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::CompressAdd(const BaseVector<int64_t>&   l2g,
+                                               const BaseVector<int64_t>&   global_ghost_col,
+                                               const BaseMatrix<ValueType>& ext,
+                                               BaseVector<int64_t>*         global_col)
+    {
+        const HostVector<int64_t>* cast_l2g = dynamic_cast<const HostVector<int64_t>*>(&l2g);
+        const HostVector<int64_t>* cast_col
+            = dynamic_cast<const HostVector<int64_t>*>(&global_ghost_col);
+        const HostMatrixCSR<ValueType>* cast_ext
+            = dynamic_cast<const HostMatrixCSR<ValueType>*>(&ext);
+        HostVector<int64_t>* cast_glo = dynamic_cast<HostVector<int64_t>*>(global_col);
+
+        assert(cast_ext != NULL);
+        assert(cast_ext->nrow_ == this->nrow_);
+
+        // Sizes
+        int nrow = this->nrow_;
+        int ncol = this->ncol_;
+
+        // Do we operate on interior? Then, we do not need to convert local to global indices
+        // Additionally, we do not need to store global columns in an extra 64 bit vector
+        bool interior = global_col == NULL;
+
+        if(interior == false)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_glo != NULL);
+
+            cast_glo->Clear();
+        }
+
+        if(this->nnz_ > 0 || cast_ext->nnz_ > 0)
+        {
+            // Count non-zeros of merged matrix
+            PtrType* csr_row_ptr = NULL;
+            allocate_host(nrow + 1, &csr_row_ptr);
+
+            for(int i = 0; i < nrow; ++i)
+            {
+                PtrType row_begin = this->mat_.row_offset[i];
+                PtrType row_end   = this->mat_.row_offset[i + 1];
+
+                // First, we need to count the unique column entries
+                std::unordered_set<int64_t> columns;
+
+                for(PtrType j = row_begin; j < row_end; ++j)
+                {
+                    // Get column index
+                    auto col = (interior == true) ? this->mat_.col[j]
+                                                  : cast_l2g->vec_[this->mat_.col[j]];
+
+                    // Add column
+                    columns.insert(col);
+                }
+
+                row_begin = cast_ext->mat_.row_offset[i];
+                row_end   = cast_ext->mat_.row_offset[i + 1];
+
+                for(PtrType j = row_begin; j < row_end; ++j)
+                {
+                    // Get column index
+                    auto col = (interior == true) ? cast_ext->mat_.col[j] : cast_col->vec_[j];
+
+                    // Add column
+                    columns.insert(col);
+                }
+
+                csr_row_ptr[i + 1] = columns.size();
+            }
+
+            // Exclusive sum to obtain new row pointers
+            csr_row_ptr[0] = 0;
+
+            for(int i = 0; i < cast_ext->nrow_; ++i)
+            {
+                csr_row_ptr[i + 1] += csr_row_ptr[i];
+            }
+
+            // Obtain nnz
+            PtrType nnz = csr_row_ptr[nrow];
+
+            // Allocate
+            int*       csr_col_ind = NULL;
+            ValueType* csr_val     = NULL;
+
+            allocate_host(nnz, &csr_col_ind);
+            allocate_host(nnz, &csr_val);
+
+            // If we are operating on ghost, we need a special vector to store column
+            // indices in 64 bits
+            if(interior == false)
+            {
+                cast_glo->Allocate(nnz);
+            }
+
+            // Fill
+            for(int i = 0; i < nrow; ++i)
+            {
+                PtrType k = csr_row_ptr[i];
+
+                PtrType row_begin = this->mat_.row_offset[i];
+                PtrType row_end   = this->mat_.row_offset[i + 1];
+
+                std::map<int64_t, ValueType> sorted_row;
+
+                for(PtrType j = row_begin; j < row_end; ++j)
+                {
+                    // Get column index
+                    auto col = (interior == true) ? this->mat_.col[j]
+                                                  : cast_l2g->vec_[this->mat_.col[j]];
+
+                    // Fill / merge
+                    sorted_row[col] += this->mat_.val[j];
+                }
+
+                row_begin = cast_ext->mat_.row_offset[i];
+                row_end   = cast_ext->mat_.row_offset[i + 1];
+
+                for(PtrType j = row_begin; j < row_end; ++j)
+                {
+                    // Get column index
+                    auto col = (interior == true) ? cast_ext->mat_.col[j] : cast_col->vec_[j];
+
+                    // Fill / merge
+                    sorted_row[col] += cast_ext->mat_.val[j];
+                }
+
+                for(auto it = sorted_row.begin(); it != sorted_row.end(); ++it)
+                {
+                    if(interior == true)
+                    {
+                        csr_col_ind[k] = it->first;
+                    }
+                    else
+                    {
+                        // Store in extra vector in ghost case
+                        cast_glo->vec_[k] = it->first;
+                    }
+
+                    csr_val[k] = it->second;
+                    ++k;
+                }
+            }
+
+            // Update matrix
+            this->Clear();
+            this->SetDataPtrCSR(&csr_row_ptr, &csr_col_ind, &csr_val, nnz, nrow, ncol);
         }
 
         return true;

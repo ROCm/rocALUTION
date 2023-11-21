@@ -80,16 +80,13 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixBCSR<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_host(&this->mat_.row_offset);
-            free_host(&this->mat_.col);
-            free_host(&this->mat_.val);
+        free_host(&this->mat_.row_offset);
+        free_host(&this->mat_.col);
+        free_host(&this->mat_.val);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -100,31 +97,25 @@ namespace rocalution
         assert(nrowb >= 0);
         assert(blockdim > 1);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnzb > 0)
-        {
-            allocate_host(nrowb + 1, &this->mat_.row_offset);
-            allocate_host(nnzb, &this->mat_.col);
-            allocate_host(nnzb * blockdim * blockdim, &this->mat_.val);
+        allocate_host(nrowb + 1, &this->mat_.row_offset);
+        allocate_host(nnzb, &this->mat_.col);
+        allocate_host(nnzb * blockdim * blockdim, &this->mat_.val);
 
-            set_to_zero_host(nrowb + 1, this->mat_.row_offset);
-            set_to_zero_host(nnzb, this->mat_.col);
-            set_to_zero_host(nnzb * blockdim * blockdim, this->mat_.val);
+        set_to_zero_host(nrowb + 1, this->mat_.row_offset);
+        set_to_zero_host(nnzb, this->mat_.col);
+        set_to_zero_host(nnzb * blockdim * blockdim, this->mat_.val);
 
-            this->nrow_ = nrowb * blockdim;
-            this->ncol_ = ncolb * blockdim;
-            this->nnz_  = nnzb * blockdim * blockdim;
+        this->nrow_ = nrowb * blockdim;
+        this->ncol_ = ncolb * blockdim;
+        this->nnz_  = nnzb * blockdim * blockdim;
 
-            this->mat_.nrowb = nrowb;
-            this->mat_.ncolb = ncolb;
-            this->mat_.nnzb  = nnzb;
+        this->mat_.nrowb = nrowb;
+        this->mat_.ncolb = ncolb;
+        this->mat_.nnzb  = nnzb;
 
-            this->mat_.blockdim = blockdim;
-        }
+        this->mat_.blockdim = blockdim;
     }
 
     template <typename ValueType>
@@ -136,13 +127,17 @@ namespace rocalution
                                                    int         ncolb,
                                                    int         blockdim)
     {
-        assert(*row_offset != NULL);
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnzb > 0);
-        assert(nrowb > 0);
-        assert(ncolb > 0);
+        assert(nnzb >= 0);
+        assert(nrowb >= 0);
+        assert(ncolb >= 0);
         assert(blockdim > 1);
+        assert(*row_offset != NULL);
+
+        if(nnzb > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -166,9 +161,9 @@ namespace rocalution
                                                      ValueType** val,
                                                      int&        blockdim)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
         assert(this->mat_.blockdim > 1);
 
         *row_offset = this->mat_.row_offset;
@@ -193,27 +188,36 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
-        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixBCSR<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixBCSR<ValueType>*>(&mat))
         {
-            this->AllocateBCSR(cast_mat->mat_.nnzb,
-                               cast_mat->mat_.nrowb,
-                               cast_mat->mat_.ncolb,
-                               cast_mat->mat_.blockdim);
+            if(this->nnz_ == 0)
+            {
+                this->AllocateBCSR(cast_mat->mat_.nnzb,
+                                   cast_mat->mat_.nrowb,
+                                   cast_mat->mat_.ncolb,
+                                   cast_mat->mat_.blockdim);
+            }
 
-            assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_)
-                   && (this->ncol_ == cast_mat->ncol_));
+            assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
+            assert(this->ncol_ == cast_mat->ncol_);
+            assert(this->mat_.nrowb == cast_mat->mat_.nrowb);
+            assert(this->mat_.ncolb == cast_mat->mat_.ncolb);
+            assert(this->mat_.nnzb == cast_mat->mat_.nnzb);
+            assert(this->mat_.blockdim == cast_mat->mat_.blockdim);
 
-            if(this->nnz_ > 0)
+            // Copy only if initialized
+            if(cast_mat->mat_.row_offset != NULL)
             {
                 copy_h2h(this->mat_.nrowb + 1, cast_mat->mat_.row_offset, this->mat_.row_offset);
-                copy_h2h(this->mat_.nnzb, cast_mat->mat_.col, this->mat_.col);
-                copy_h2h(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
-                         cast_mat->mat_.val,
-                         this->mat_.val);
             }
+
+            copy_h2h(this->mat_.nnzb, cast_mat->mat_.col, this->mat_.col);
+            copy_h2h(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
+                     cast_mat->mat_.val,
+                     this->mat_.val);
         }
         else
         {
@@ -234,9 +238,14 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            int mb = (mat.GetM() + 1) / 2;
+            int nb = (mat.GetN() + 1) / 2;
+
+            this->AllocateBCSR(0, mb, nb, 2);
+
             return true;
         }
 

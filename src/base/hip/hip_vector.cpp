@@ -562,8 +562,7 @@ namespace rocalution
     template <typename ValueType>
     void HIPAcceleratorVector<ValueType>::SetValues(ValueType val)
     {
-        LOG_INFO("HIPAcceleratorVector::SetValues NYI");
-        FATAL_ERROR(__FILE__, __LINE__);
+        set_to_value_hip(this->local_backend_.HIP_block_size, this->size_, this->vec_, val);
     }
 
     template <typename ValueType>
@@ -599,15 +598,39 @@ namespace rocalution
     template <>
     void HIPAcceleratorVector<int>::AddScale(const BaseVector<int>& x, int alpha)
     {
-        LOG_INFO("No int axpy function");
-        FATAL_ERROR(__FILE__, __LINE__);
+        if(this->size_ > 0)
+        {
+            const HIPAcceleratorVector<int>* cast_x
+                = dynamic_cast<const HIPAcceleratorVector<int>*>(&x);
+
+            assert(cast_x != NULL);
+            assert(this->size_ == cast_x->size_);
+            kernel_axpy<256><<<(this->size_ - 1) / 256 + 1,
+                               256,
+                               0,
+                               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, alpha, cast_x->vec_, this->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
     }
 
     template <>
     void HIPAcceleratorVector<int64_t>::AddScale(const BaseVector<int64_t>& x, int64_t alpha)
     {
-        LOG_INFO("No integral axpy function");
-        FATAL_ERROR(__FILE__, __LINE__);
+        if(this->size_ > 0)
+        {
+            const HIPAcceleratorVector<int64_t>* cast_x
+                = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&x);
+
+            assert(cast_x != NULL);
+            assert(this->size_ == cast_x->size_);
+            kernel_axpy<256><<<(this->size_ - 1) / 256 + 1,
+                               256,
+                               0,
+                               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->size_, alpha, cast_x->vec_, this->vec_);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
     }
 
     template <typename ValueType>

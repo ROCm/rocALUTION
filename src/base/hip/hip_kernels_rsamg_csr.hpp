@@ -33,6 +33,29 @@
 
 namespace rocalution
 {
+    __device__ float hash(uint64_t key)
+    {
+        key = (~key) + (key << 21); // key = (key << 21) - key - 1;
+        key = key ^ (key >> 24);
+        key = (key + (key << 3)) + (key << 8); // key * 265
+        key = key ^ (key >> 14);
+        key = (key + (key << 2)) + (key << 4); // key * 21
+        key = key ^ (key >> 28);
+        key = key + (key << 31);
+        return static_cast<float>(key / (float)UINT64_MAX);
+    }
+
+    template <typename I>
+    __global__ void kernel_set_omega(I nrow, int64_t global_row_offset, float* omega)
+    {
+        I row = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if(row < nrow)
+        {
+            omega[row] = hash(row + global_row_offset);
+        }
+    }
+
     // Determine strong influences
     template <bool         GLOBAL,
               unsigned int BLOCKSIZE,

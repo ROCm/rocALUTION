@@ -87,26 +87,15 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixHYB<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            if(this->ell_nnz_ > 0)
-            {
-                free_host(&this->mat_.ELL.val);
-                free_host(&this->mat_.ELL.col);
+        free_host(&this->mat_.ELL.val);
+        free_host(&this->mat_.ELL.col);
+        free_host(&this->mat_.COO.row);
+        free_host(&this->mat_.COO.col);
+        free_host(&this->mat_.COO.val);
 
-                this->mat_.ELL.max_row = 0;
-                this->ell_nnz_         = 0;
-            }
-
-            if(this->coo_nnz_ > 0)
-            {
-                free_host(&this->mat_.COO.row);
-                free_host(&this->mat_.COO.col);
-                free_host(&this->mat_.COO.val);
-
-                this->coo_nnz_ = 0;
-            }
-        }
+        this->mat_.ELL.max_row = 0;
+        this->ell_nnz_         = 0;
+        this->coo_nnz_         = 0;
 
         this->nrow_ = 0;
         this->ncol_ = 0;
@@ -124,46 +113,36 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        this->nnz_ = 0;
-
-        if(ell_nnz > 0)
-        {
-            // ELL
-            assert(ell_nnz == ell_max_row * nrow);
-
-            allocate_host(ell_nnz, &this->mat_.ELL.val);
-            allocate_host(ell_nnz, &this->mat_.ELL.col);
-
-            set_to_zero_host(ell_nnz, this->mat_.ELL.val);
-            set_to_zero_host(ell_nnz, this->mat_.ELL.col);
-
-            this->mat_.ELL.max_row = ell_max_row;
-            this->ell_nnz_         = ell_nnz;
-            this->nnz_ += ell_nnz;
-        }
-
-        if(coo_nnz > 0)
-        {
-            // COO
-            allocate_host(coo_nnz, &this->mat_.COO.row);
-            allocate_host(coo_nnz, &this->mat_.COO.col);
-            allocate_host(coo_nnz, &this->mat_.COO.val);
-
-            set_to_zero_host(coo_nnz, this->mat_.COO.row);
-            set_to_zero_host(coo_nnz, this->mat_.COO.col);
-            set_to_zero_host(coo_nnz, this->mat_.COO.val);
-
-            this->coo_nnz_ = coo_nnz;
-            this->nnz_ += coo_nnz;
-        }
-
+        this->nnz_  = 0;
         this->nrow_ = nrow;
         this->ncol_ = ncol;
+
+        // ELL
+        assert(ell_nnz == ell_max_row * nrow);
+
+        allocate_host(ell_nnz, &this->mat_.ELL.val);
+        allocate_host(ell_nnz, &this->mat_.ELL.col);
+
+        set_to_zero_host(ell_nnz, this->mat_.ELL.val);
+        set_to_zero_host(ell_nnz, this->mat_.ELL.col);
+
+        this->mat_.ELL.max_row = ell_max_row;
+        this->ell_nnz_         = ell_nnz;
+        this->nnz_ += ell_nnz;
+
+        // COO
+        allocate_host(coo_nnz, &this->mat_.COO.row);
+        allocate_host(coo_nnz, &this->mat_.COO.col);
+        allocate_host(coo_nnz, &this->mat_.COO.val);
+
+        set_to_zero_host(coo_nnz, this->mat_.COO.row);
+        set_to_zero_host(coo_nnz, this->mat_.COO.col);
+        set_to_zero_host(coo_nnz, this->mat_.COO.val);
+
+        this->coo_nnz_ = coo_nnz;
+        this->nnz_ += coo_nnz;
     }
 
     template <typename ValueType>
@@ -171,20 +150,24 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
-        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixHYB<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixHYB<ValueType>*>(&mat))
         {
-            this->AllocateHYB(cast_mat->ell_nnz_,
-                              cast_mat->coo_nnz_,
-                              cast_mat->mat_.ELL.max_row,
-                              cast_mat->nrow_,
-                              cast_mat->ncol_);
+            if(this->nnz_ == 0)
+            {
+                this->AllocateHYB(cast_mat->ell_nnz_,
+                                  cast_mat->coo_nnz_,
+                                  cast_mat->mat_.ELL.max_row,
+                                  cast_mat->nrow_,
+                                  cast_mat->ncol_);
+            }
 
-            assert((this->nnz_ == cast_mat->nnz_) && (this->ell_nnz_ == cast_mat->ell_nnz_)
-                   && (this->coo_nnz_ == cast_mat->coo_nnz_) && (this->nrow_ == cast_mat->nrow_)
-                   && (this->ncol_ == cast_mat->ncol_));
+            assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->ell_nnz_ == cast_mat->ell_nnz_);
+            assert(this->coo_nnz_ == cast_mat->coo_nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
+            assert(this->ncol_ == cast_mat->ncol_);
 
             copy_h2h(this->ell_nnz_, cast_mat->mat_.ELL.col, this->mat_.ELL.col);
             copy_h2h(this->ell_nnz_, cast_mat->mat_.ELL.val, this->mat_.ELL.val);
@@ -211,9 +194,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateHYB(0, 0, 0, mat.GetM(), mat.GetN());
+
             return true;
         }
 

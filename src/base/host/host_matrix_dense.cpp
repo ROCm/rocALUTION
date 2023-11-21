@@ -87,14 +87,11 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixDENSE<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_host(&this->mat_.val);
+        free_host(&this->mat_.val);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -103,28 +100,26 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nrow * ncol > 0)
-        {
-            allocate_host(nrow * ncol, &this->mat_.val);
-            set_to_zero_host(nrow * ncol, mat_.val);
+        allocate_host(nrow * ncol, &this->mat_.val);
+        set_to_zero_host(nrow * ncol, mat_.val);
 
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nrow * ncol;
-        }
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nrow * ncol;
     }
 
     template <typename ValueType>
     void HostMatrixDENSE<ValueType>::SetDataPtrDENSE(ValueType** val, int nrow, int ncol)
     {
-        assert(*val != NULL);
-        assert(nrow > 0);
-        assert(ncol > 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
+
+        if(nrow * ncol > 0)
+        {
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -138,9 +133,9 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixDENSE<ValueType>::LeaveDataPtrDENSE(ValueType** val)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
         assert(this->nnz_ == this->nrow_ * this->ncol_);
 
         *val = this->mat_.val;
@@ -157,15 +152,18 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
-        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixDENSE<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixDENSE<ValueType>*>(&mat))
         {
-            this->AllocateDENSE(cast_mat->nrow_, cast_mat->ncol_);
+            if(this->nnz_ == 0)
+            {
+                this->AllocateDENSE(cast_mat->nrow_, cast_mat->ncol_);
+            }
 
-            assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_)
-                   && (this->ncol_ == cast_mat->ncol_));
+            assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
+            assert(this->ncol_ == cast_mat->ncol_);
 
             copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
         }
@@ -188,9 +186,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateDENSE(mat.GetM(), mat.GetN());
+
             return true;
         }
 

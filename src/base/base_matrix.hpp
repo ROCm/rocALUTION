@@ -493,6 +493,10 @@ namespace rocalution
 
         /** \brief Extract non zeros of matrix extension */
         virtual bool ExtractExtRowNnz(int offset, BaseVector<PtrType>* row_nnz) const;
+        virtual bool MergeToLocal(const BaseMatrix<ValueType>& mat_int,
+                                  const BaseMatrix<ValueType>& mat_gst,
+                                  const BaseMatrix<ValueType>& mat_ext,
+                                  const BaseVector<int>&       vec_ext);
 
         virtual bool AMGConnect(ValueType eps, BaseVector<int>* connections) const;
         virtual bool AMGAggregate(const BaseVector<int>& connections,
@@ -507,6 +511,125 @@ namespace rocalution
         virtual bool AMGAggregation(const BaseVector<int>& aggregates,
                                     BaseMatrix<ValueType>* prolong) const;
 
+        virtual bool AMGGreedyAggregate(const BaseVector<bool>& connections,
+                                        BaseVector<int64_t>*    aggregates,
+                                        BaseVector<int64_t>*    aggregate_root_nodes) const;
+
+        /// Parallel maximal independent set aggregation
+        virtual bool AMGBoundaryNnz(const BaseVector<int>&       boundary,
+                                    const BaseVector<bool>&      connections,
+                                    const BaseMatrix<ValueType>& ghost,
+                                    BaseVector<PtrType>*         row_nnz) const;
+        virtual bool AMGExtractBoundary(int64_t                      global_column_begin,
+                                        const BaseVector<int>&       boundary,
+                                        const BaseVector<int64_t>&   l2g,
+                                        const BaseVector<bool>&      connections,
+                                        const BaseMatrix<ValueType>& ghost,
+                                        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                        BaseVector<int64_t>*         bnd_csr_col_ind) const;
+        virtual bool AMGComputeStrongConnections(ValueType                    eps,
+                                                 const BaseVector<ValueType>& diag,
+                                                 const BaseVector<int64_t>&   l2g,
+                                                 BaseVector<bool>*            connections,
+                                                 const BaseMatrix<ValueType>& ghost) const;
+
+        virtual bool AMGPMISInitializeState(int64_t                      global_column_begin,
+                                            const BaseVector<bool>&      connections,
+                                            BaseVector<int>*             state,
+                                            BaseVector<int>*             hash,
+                                            const BaseMatrix<ValueType>& ghost) const;
+        virtual bool AMGExtractBoundaryState(const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                             const BaseVector<bool>&      connections,
+                                             const BaseVector<int>&       max_state,
+                                             const BaseVector<int>&       hash,
+                                             BaseVector<int>*             bnd_max_state,
+                                             BaseVector<int>*             bnd_hash,
+                                             int64_t                      global_column_offset,
+                                             const BaseVector<int>&       boundary_index,
+                                             const BaseMatrix<ValueType>& gst) const;
+        virtual bool AMGPMISFindMaxNeighbourNode(int64_t                      global_column_begin,
+                                                 int64_t                      global_column_end,
+                                                 bool&                        undecided,
+                                                 const BaseVector<bool>&      connections,
+                                                 const BaseVector<int>&       state,
+                                                 const BaseVector<int>&       hash,
+                                                 const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                                 const BaseVector<int64_t>&   bnd_csr_col_ind,
+                                                 const BaseVector<int>&       bnd_state,
+                                                 const BaseVector<int>&       bnd_hash,
+                                                 BaseVector<int>*             max_state,
+                                                 BaseVector<int64_t>*         aggregates,
+                                                 const BaseMatrix<ValueType>& ghost) const;
+        virtual bool
+                     AMGPMISAddUnassignedNodesToAggregations(int64_t                    global_column_begin,
+                                                             const BaseVector<bool>&    connections,
+                                                             const BaseVector<int>&     state,
+                                                             const BaseVector<int64_t>& l2g,
+                                                             BaseVector<int>*           max_state,
+                                                             BaseVector<int64_t>*       aggregates,
+                                                             BaseVector<int64_t>*       aggregate_root_nodes,
+                                                             const BaseMatrix<ValueType>& ghost) const;
+        virtual bool AMGPMISInitializeAggregateGlobalIndices(
+            int64_t                    global_column_begin,
+            const BaseVector<int64_t>& aggregates,
+            BaseVector<int64_t>*       aggregate_root_nodes) const;
+        /// Smoothed aggregation
+        virtual bool AMGSmoothedAggregation(ValueType                  relax,
+                                            const BaseVector<bool>&    connections,
+                                            const BaseVector<int64_t>& aggregates,
+                                            BaseMatrix<ValueType>*     prolong,
+                                            int                        lumping_strat) const;
+        /// Unsmoothed aggregation
+        virtual bool AMGUnsmoothedAggregation(const BaseVector<int64_t>& aggregates,
+                                              BaseMatrix<ValueType>*     prolong) const;
+
+        virtual bool
+            AMGSmoothedAggregationProlongNnz(int64_t                      global_column_begin,
+                                             int64_t                      global_column_end,
+                                             const BaseVector<bool>&      connections,
+                                             const BaseVector<int64_t>&   aggregates,
+                                             const BaseVector<int64_t>&   aggregate_root_nodes,
+                                             const BaseMatrix<ValueType>& ghost,
+                                             BaseVector<int>*             f2c,
+                                             BaseMatrix<ValueType>*       prolong_int,
+                                             BaseMatrix<ValueType>*       prolong_gst) const;
+
+        virtual bool
+            AMGSmoothedAggregationProlongFill(int64_t                      global_column_begin,
+                                              int64_t                      global_column_end,
+                                              int                          lumping_strat,
+                                              ValueType                    relax,
+                                              const BaseVector<bool>&      connections,
+                                              const BaseVector<int64_t>&   aggregates,
+                                              const BaseVector<int64_t>&   aggregate_root_nodes,
+                                              const BaseVector<int64_t>&   l2g,
+                                              const BaseVector<int>&       f2c,
+                                              const BaseMatrix<ValueType>& ghost,
+                                              BaseMatrix<ValueType>*       prolong_int,
+                                              BaseMatrix<ValueType>*       prolong_gst,
+                                              BaseVector<int64_t>*         global_ghost_col) const;
+
+        virtual bool
+            AMGUnsmoothedAggregationProlongNnz(int64_t                      global_column_begin,
+                                               int64_t                      global_column_end,
+                                               const BaseVector<int64_t>&   aggregates,
+                                               const BaseVector<int64_t>&   aggregate_root_nodes,
+                                               const BaseMatrix<ValueType>& ghost,
+                                               BaseVector<int>*             f2c,
+                                               BaseMatrix<ValueType>*       prolong_int,
+                                               BaseMatrix<ValueType>*       prolong_gst) const;
+
+        virtual bool
+            AMGUnsmoothedAggregationProlongFill(int64_t                      global_column_begin,
+                                                int64_t                      global_column_end,
+                                                const BaseVector<int64_t>&   aggregates,
+                                                const BaseVector<int64_t>&   aggregate_root_nodes,
+                                                const BaseVector<int>&       f2c,
+                                                const BaseMatrix<ValueType>& ghost,
+                                                BaseMatrix<ValueType>*       prolong_int,
+                                                BaseMatrix<ValueType>*       prolong_gst,
+                                                BaseVector<int64_t>* global_ghost_col) const;
+
         /** \brief Ruge Stueben coarsening */
         virtual bool RSCoarsening(float eps, BaseVector<int>* CFmap, BaseVector<bool>* S) const;
 
@@ -514,7 +637,7 @@ namespace rocalution
         virtual bool RSPMISStrongInfluences(float                        eps,
                                             BaseVector<bool>*            S,
                                             BaseVector<float>*           omega,
-                                            unsigned long long           seed,
+                                            int64_t                      global_row_offset,
                                             const BaseMatrix<ValueType>& ghost) const;
         virtual bool RSPMISUnassignedToCoarse(BaseVector<int>*         CFmap,
                                               BaseVector<bool>*        marked,
@@ -642,14 +765,42 @@ namespace rocalution
                                      const int*             rG,
                                      int                    rGsize) const;
 
+        virtual bool CombineAndRenumber(int                        ncol,
+                                        int64_t                    ext_nnz,
+                                        int64_t                    col_begin,
+                                        int64_t                    col_end,
+                                        const BaseVector<int64_t>& l2g,
+                                        const BaseVector<int64_t>& ext,
+                                        BaseVector<int>*           merged,
+                                        BaseVector<int64_t>*       mapping,
+                                        BaseVector<int>*           local_col) const;
+
+        virtual bool SplitInteriorGhost(BaseMatrix<ValueType>* interior,
+                                        BaseMatrix<ValueType>* ghost) const;
+
         /** \brief Create ghost columns from global ids */
         virtual bool CopyGhostFromGlobalReceive(const BaseVector<int>&       boundary,
                                                 const BaseVector<PtrType>&   recv_csr_row_ptr,
                                                 const BaseVector<int64_t>&   recv_csr_col_ind,
                                                 const BaseVector<ValueType>& recv_csr_val,
                                                 BaseVector<int64_t>*         global_col);
+
+        virtual bool CopyFromGlobalReceive(int                          nrow,
+                                           int64_t                      global_column_begin,
+                                           int64_t                      global_column_end,
+                                           const BaseVector<int>&       boundary,
+                                           const BaseVector<PtrType>&   recv_csr_row_ptr,
+                                           const BaseVector<int64_t>&   recv_csr_col_ind,
+                                           const BaseVector<ValueType>& recv_csr_val,
+                                           BaseMatrix<ValueType>*       ghost,
+                                           BaseVector<int64_t>*         global_col);
+
         /** \brief Renumber global indices to local indices */
         virtual bool RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices);
+        virtual bool CompressAdd(const BaseVector<int64_t>&   l2g,
+                                 const BaseVector<int64_t>&   global_ghost_col,
+                                 const BaseMatrix<ValueType>& ext,
+                                 BaseVector<int64_t>*         global_col);
 
     protected:
         /** \brief Number of rows */

@@ -78,16 +78,13 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixMCSR<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_host(&this->mat_.row_offset);
-            free_host(&this->mat_.col);
-            free_host(&this->mat_.val);
+        free_host(&this->mat_.row_offset);
+        free_host(&this->mat_.col);
+        free_host(&this->mat_.val);
 
-            this->nrow_ = 0;
-            this->ncol_ = 0;
-            this->nnz_  = 0;
-        }
+        this->nrow_ = 0;
+        this->ncol_ = 0;
+        this->nnz_  = 0;
     }
 
     template <typename ValueType>
@@ -97,37 +94,35 @@ namespace rocalution
         assert(ncol >= 0);
         assert(nrow >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnz > 0)
-        {
-            allocate_host(nrow + 1, &this->mat_.row_offset);
-            allocate_host(nnz, &this->mat_.col);
-            allocate_host(nnz, &this->mat_.val);
+        allocate_host(nrow + 1, &this->mat_.row_offset);
+        allocate_host(nnz, &this->mat_.col);
+        allocate_host(nnz, &this->mat_.val);
 
-            set_to_zero_host(nrow + 1, mat_.row_offset);
-            set_to_zero_host(nnz, mat_.col);
-            set_to_zero_host(nnz, mat_.val);
+        set_to_zero_host(nrow + 1, mat_.row_offset);
+        set_to_zero_host(nnz, mat_.col);
+        set_to_zero_host(nnz, mat_.val);
 
-            this->nrow_ = nrow;
-            this->ncol_ = ncol;
-            this->nnz_  = nnz;
-        }
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nnz;
     }
 
     template <typename ValueType>
     void HostMatrixMCSR<ValueType>::SetDataPtrMCSR(
         int** row_offset, int** col, ValueType** val, int64_t nnz, int nrow, int ncol)
     {
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
         assert(*row_offset != NULL);
-        assert(*col != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
+
+        if(nnz > 0)
+        {
+            assert(*col != NULL);
+            assert(*val != NULL);
+        }
 
         this->Clear();
 
@@ -143,11 +138,10 @@ namespace rocalution
     template <typename ValueType>
     void HostMatrixMCSR<ValueType>::LeaveDataPtrMCSR(int** row_offset, int** col, ValueType** val)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
 
-        // see free_host function for details
         *row_offset = this->mat_.row_offset;
         *col        = this->mat_.col;
         *val        = this->mat_.val;
@@ -166,22 +160,27 @@ namespace rocalution
     {
         // copy only in the same format
         assert(this->GetMatFormat() == mat.GetMatFormat());
-        assert(this->GetMatBlockDimension() == mat.GetMatBlockDimension());
 
         if(const HostMatrixMCSR<ValueType>* cast_mat
            = dynamic_cast<const HostMatrixMCSR<ValueType>*>(&mat))
         {
-            this->AllocateMCSR(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_);
+            if(this->nnz_ == 0)
+            {
+                this->AllocateMCSR(cast_mat->nnz_, cast_mat->nrow_, cast_mat->ncol_);
+            }
 
-            assert((this->nnz_ == cast_mat->nnz_) && (this->nrow_ == cast_mat->nrow_)
-                   && (this->ncol_ == cast_mat->ncol_));
+            assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
+            assert(this->ncol_ == cast_mat->ncol_);
 
-            if(this->nnz_ > 0)
+            // Copy only if initialized
+            if(cast_mat->mat_.row_offset != NULL)
             {
                 copy_h2h(this->nrow_ + 1, cast_mat->mat_.row_offset, this->mat_.row_offset);
-                copy_h2h(this->nnz_, cast_mat->mat_.col, this->mat_.col);
-                copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
             }
+
+            copy_h2h(this->nnz_, cast_mat->mat_.col, this->mat_.col);
+            copy_h2h(this->nnz_, cast_mat->mat_.val, this->mat_.val);
         }
         else
         {
@@ -202,9 +201,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateMCSR(mat.GetNnz(), mat.GetM(), mat.GetN());
+
             return true;
         }
 

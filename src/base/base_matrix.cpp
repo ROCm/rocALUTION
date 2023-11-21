@@ -746,6 +746,189 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGGreedyAggregate(const BaseVector<bool>& connections,
+                                                   BaseVector<int64_t>*    aggregates,
+                                                   BaseVector<int64_t>* aggregate_root_nodes) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGBoundaryNnz(const BaseVector<int>&       boundary,
+                                               const BaseVector<bool>&      connections,
+                                               const BaseMatrix<ValueType>& ghost,
+                                               BaseVector<PtrType>*         row_nnz) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGExtractBoundary(int64_t                      global_column_begin,
+                                                   const BaseVector<int>&       boundary,
+                                                   const BaseVector<int64_t>&   l2g,
+                                                   const BaseVector<bool>&      connections,
+                                                   const BaseMatrix<ValueType>& ghost,
+                                                   const BaseVector<PtrType>&   bnd_csr_row_ptr,
+                                                   BaseVector<int64_t>* bnd_csr_col_ind) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool
+        BaseMatrix<ValueType>::AMGComputeStrongConnections(ValueType                    eps,
+                                                           const BaseVector<ValueType>& diag,
+                                                           const BaseVector<int64_t>&   l2g,
+                                                           BaseVector<bool>*            connections,
+                                                           const BaseMatrix<ValueType>& ghost) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGPMISInitializeState(int64_t                 global_column_begin,
+                                                       const BaseVector<bool>& connections,
+                                                       BaseVector<int>*        state,
+                                                       BaseVector<int>*        hash,
+                                                       const BaseMatrix<ValueType>& ghost) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGExtractBoundaryState(const BaseVector<PtrType>& bnd_csr_row_ptr,
+                                                        const BaseVector<bool>&    connections,
+                                                        const BaseVector<int>&     max_state,
+                                                        const BaseVector<int>&     hash,
+                                                        BaseVector<int>*           bnd_max_state,
+                                                        BaseVector<int>*           bnd_hash,
+                                                        int64_t                global_column_offset,
+                                                        const BaseVector<int>& boundary_index,
+                                                        const BaseMatrix<ValueType>& gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGPMISFindMaxNeighbourNode(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        bool&                        undecided,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       state,
+        const BaseVector<int>&       hash,
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        const BaseVector<int64_t>&   bnd_csr_col_ind,
+        const BaseVector<int>&       bnd_state,
+        const BaseVector<int>&       bnd_hash,
+        BaseVector<int>*             max_state,
+        BaseVector<int64_t>*         aggregates,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        return false;
+    }
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGPMISAddUnassignedNodesToAggregations(
+        int64_t                      global_column_begin,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       state,
+        const BaseVector<int64_t>&   l2g,
+        BaseVector<int>*             max_state,
+        BaseVector<int64_t>*         aggregates,
+        BaseVector<int64_t>*         aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGPMISInitializeAggregateGlobalIndices(
+        int64_t                    global_column_begin,
+        const BaseVector<int64_t>& aggregates,
+        BaseVector<int64_t>*       aggregate_root_nodes) const
+    {
+        return false;
+    }
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGSmoothedAggregation(ValueType                  relax,
+                                                       const BaseVector<bool>&    connections,
+                                                       const BaseVector<int64_t>& aggregates,
+                                                       BaseMatrix<ValueType>*     prolong,
+                                                       int lumping_strat) const
+    {
+        return false;
+    }
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGUnsmoothedAggregation(const BaseVector<int64_t>& aggregates,
+                                                         BaseMatrix<ValueType>*     prolong) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGSmoothedAggregationProlongNnz(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost,
+        BaseVector<int>*             f2c,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGSmoothedAggregationProlongFill(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        int                          lumping_strat,
+        ValueType                    relax,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseVector<int64_t>&   l2g,
+        const BaseVector<int>&       f2c,
+        const BaseMatrix<ValueType>& ghost,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst,
+        BaseVector<int64_t>*         global_ghost_col) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGUnsmoothedAggregationProlongNnz(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost,
+        BaseVector<int>*             f2c,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::AMGUnsmoothedAggregationProlongFill(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseVector<int>&       f2c,
+        const BaseMatrix<ValueType>& ghost,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst,
+        BaseVector<int64_t>*         global_ghost_col) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::RSCoarsening(float             eps,
                                              BaseVector<int>*  CFmap,
                                              BaseVector<bool>* S) const
@@ -754,10 +937,10 @@ namespace rocalution
     }
 
     template <typename ValueType>
-    bool BaseMatrix<ValueType>::RSPMISStrongInfluences(float                        eps,
-                                                       BaseVector<bool>*            S,
-                                                       BaseVector<float>*           omega,
-                                                       unsigned long long           seed,
+    bool BaseMatrix<ValueType>::RSPMISStrongInfluences(float              eps,
+                                                       BaseVector<bool>*  S,
+                                                       BaseVector<float>* omega,
+                                                       int64_t            global_row_offset,
                                                        const BaseMatrix<ValueType>& ghost) const
     {
         return false;
@@ -1300,6 +1483,36 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::MergeToLocal(const BaseMatrix<ValueType>& mat_int,
+                                             const BaseMatrix<ValueType>& mat_gst,
+                                             const BaseMatrix<ValueType>& mat_ext,
+                                             const BaseVector<int>&       vec_ext)
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::CombineAndRenumber(int                        ncol,
+                                                   int64_t                    ext_nnz,
+                                                   int64_t                    col_begin,
+                                                   int64_t                    col_end,
+                                                   const BaseVector<int64_t>& l2g,
+                                                   const BaseVector<int64_t>& ext,
+                                                   BaseVector<int>*           merged,
+                                                   BaseVector<int64_t>*       mapping,
+                                                   BaseVector<int>*           local_col) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::SplitInteriorGhost(BaseMatrix<ValueType>* interior,
+                                                   BaseMatrix<ValueType>* ghost) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::CopyGhostFromGlobalReceive(
         const BaseVector<int>&       boundary,
         const BaseVector<PtrType>&   recv_csr_row_ptr,
@@ -1311,7 +1524,30 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::CopyFromGlobalReceive(int                    nrow,
+                                                      int64_t                global_column_begin,
+                                                      int64_t                global_column_end,
+                                                      const BaseVector<int>& boundary,
+                                                      const BaseVector<PtrType>&   recv_csr_row_ptr,
+                                                      const BaseVector<int64_t>&   recv_csr_col_ind,
+                                                      const BaseVector<ValueType>& recv_csr_val,
+                                                      BaseMatrix<ValueType>*       ghost,
+                                                      BaseVector<int64_t>*         global_col)
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::RenumberGlobalToLocal(const BaseVector<int64_t>& column_indices)
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::CompressAdd(const BaseVector<int64_t>&   l2g,
+                                            const BaseVector<int64_t>&   global_ghost_col,
+                                            const BaseMatrix<ValueType>& ext,
+                                            BaseVector<int64_t>*         global_col)
     {
         return false;
     }

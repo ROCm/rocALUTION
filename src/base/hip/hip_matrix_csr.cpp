@@ -267,7 +267,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -307,7 +306,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -371,6 +369,7 @@ namespace rocalution
             }
 
             assert(this->nnz_ == cast_mat->nnz_);
+            assert(this->nrow_ == cast_mat->nrow_);
             assert(this->ncol_ == cast_mat->ncol_);
 
             if(this->mat_.row_offset != NULL)
@@ -448,7 +447,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -497,7 +495,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&src)) != NULL)
@@ -702,6 +699,8 @@ namespace rocalution
         // empty matrix is empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateCSR(mat.GetNnz(), mat.GetM(), mat.GetN());
+
             return true;
         }
 
@@ -3188,7 +3187,7 @@ namespace rocalution
                 = dynamic_cast<HIPAcceleratorVector<ValueType>*>(vec_diag);
 
             assert(cast_vec_diag != NULL);
-            assert(cast_vec_diag->size_ == this->nrow_);
+            assert(cast_vec_diag->size_ >= this->nrow_);
 
             int     nrow            = this->nrow_;
             int64_t avg_nnz_per_row = this->nnz_ / nrow;
@@ -3345,8 +3344,8 @@ namespace rocalution
         assert(row_offset >= 0);
         assert(col_offset >= 0);
 
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
 
         HIPAcceleratorMatrixCSR<ValueType>* cast_mat
             = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(mat);
@@ -4889,6 +4888,102 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::MergeToLocal(const BaseMatrix<ValueType>& mat_int,
+                                                          const BaseMatrix<ValueType>& mat_gst,
+                                                          const BaseMatrix<ValueType>& mat_ext,
+                                                          const BaseVector<int>&       vec_ext)
+    {
+        assert(this != &mat_int);
+        assert(this != &mat_gst);
+        assert(this != &mat_ext);
+        assert(&mat_int != &mat_gst);
+        assert(&mat_int != &mat_ext);
+        assert(&mat_gst != &mat_ext);
+
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_int
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&mat_int);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&mat_gst);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_ext
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&mat_ext);
+        const HIPAcceleratorVector<int>* cast_vec
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&vec_ext);
+
+        assert(cast_int != NULL);
+        assert(cast_ext != NULL);
+        assert(cast_vec != NULL);
+
+        // Sanity check - ghost nnz should not exceed 32 bits
+        assert(cast_gst->nnz_ < std::numeric_limits<int>::max());
+
+        // Determine nnz per row
+        kernel_csr_merge_interior_ghost_ext_nnz<<<
+            (this->nrow_ - 1) / 256 + 1,
+            256,
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(cast_int->nrow_,
+                                                                  cast_ext->nrow_,
+                                                                  cast_gst->nnz_,
+                                                                  cast_int->mat_.row_offset,
+                                                                  cast_gst->mat_.row_offset,
+                                                                  cast_ext->mat_.row_offset,
+                                                                  this->mat_.row_offset);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        void*  buffer = NULL;
+        size_t size   = 0;
+
+        // Exclusive sum to obtain pointers
+        rocprimTexclusivesum(buffer,
+                             size,
+                             this->mat_.row_offset,
+                             this->mat_.row_offset,
+                             this->nrow_ + 1,
+                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipMalloc(&buffer, size);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprimTexclusivesum(buffer,
+                             size,
+                             this->mat_.row_offset,
+                             this->mat_.row_offset,
+                             this->nrow_ + 1,
+                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipFree(buffer);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Fill
+        kernel_csr_merge_interior_ghost_nnz<<<(this->nrow_ - 1) / 256 + 1,
+                                              256,
+                                              0,
+                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            cast_int->nrow_,
+            cast_ext->nrow_,
+            cast_int->ncol_,
+            static_cast<int>(cast_gst->nnz_),
+            cast_int->mat_.row_offset,
+            cast_int->mat_.col,
+            cast_int->mat_.val,
+            cast_gst->mat_.row_offset,
+            cast_gst->mat_.col,
+            cast_gst->mat_.val,
+            cast_ext->mat_.row_offset,
+            cast_ext->mat_.col,
+            cast_ext->mat_.val,
+            (cast_vec->size_ > 0) ? cast_vec->vec_ : cast_gst->mat_.col,
+            this->mat_.row_offset,
+            this->mat_.col,
+            this->mat_.val);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HIPAcceleratorMatrixCSR<ValueType>::AMGConnect(ValueType        eps,
                                                         BaseVector<int>* connections) const
     {
@@ -5806,6 +5901,1628 @@ namespace rocalution
                                 rocprim::plus<PtrType>(),
                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
+        allocate_hip(rocprim_size, &rocprim_buffer);
+        rocprim::inclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                this->nrow_ + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        free_hip(&rocprim_buffer);
+        PtrType prolong_nnz = 0;
+        copy_d2h(1, prolong_row_offset + this->nrow_, &prolong_nnz);
+
+        // Allocate prolongation matrix col indices and values arrays
+        allocate_hip(prolong_nnz, &prolong_cols);
+        allocate_hip(prolong_nnz, &prolong_vals);
+        cast_prolong->Clear();
+        cast_prolong->SetDataPtrCSR(&prolong_row_offset,
+                                    &prolong_cols,
+                                    &prolong_vals,
+                                    prolong_nnz,
+                                    prolong_nrow,
+                                    prolong_ncol);
+        if(prolong_nrow == prolong_nnz)
+        {
+            kernel_csr_unsmoothed_prolong_fill_simple<256>
+                <<<dim3((this->nrow_ - 1) / 256 + 1),
+                   dim3(256),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_, cast_agg->vec_, prolong_cols, prolong_vals);
+        }
+        else
+        {
+            kernel_csr_unsmoothed_prolong_fill<256>
+                <<<dim3((this->nrow_ - 1) / 256 + 1),
+                   dim3(256),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_, cast_agg->vec_, prolong_row_offset, prolong_cols, prolong_vals);
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // cast_prolong->Sort();
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGBoundaryNnz(const BaseVector<int>&  boundary,
+                                                            const BaseVector<bool>& connections,
+                                                            const BaseMatrix<ValueType>& ghost,
+                                                            BaseVector<PtrType>* row_nnz) const
+    {
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary);
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        HIPAcceleratorVector<PtrType>* cast_row_nnz
+            = dynamic_cast<HIPAcceleratorVector<PtrType>*>(row_nnz);
+
+        assert(cast_bnd != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_row_nnz != NULL);
+
+        assert(cast_row_nnz->size_ >= cast_bnd->size_);
+
+        bool global = cast_gst->nrow_ > 0;
+
+        kernel_csr_boundary_nnz<<<
+            dim3((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size + 1),
+            dim3(this->local_backend_.HIP_block_size),
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
+                                                                  this->nnz_,
+                                                                  cast_bnd->vec_,
+                                                                  this->mat_.row_offset,
+                                                                  this->mat_.col,
+                                                                  cast_gst->mat_.row_offset,
+                                                                  cast_gst->mat_.col,
+                                                                  cast_conn->vec_,
+                                                                  cast_row_nnz->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGExtractBoundary(
+        int64_t                      global_column_begin,
+        const BaseVector<int>&       boundary,
+        const BaseVector<int64_t>&   l2g,
+        const BaseVector<bool>&      connections,
+        const BaseMatrix<ValueType>& ghost,
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        BaseVector<int64_t>*         bnd_csr_col_ind) const
+    {
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary);
+        const HIPAcceleratorVector<int64_t>* cast_l2g
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&l2g);
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        const HIPAcceleratorVector<PtrType>* cast_bnd_ptr
+            = dynamic_cast<const HIPAcceleratorVector<PtrType>*>(&bnd_csr_row_ptr);
+        HIPAcceleratorVector<int64_t>* cast_bnd_col
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(bnd_csr_col_ind);
+
+        assert(cast_bnd != NULL);
+        assert(cast_l2g != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+        assert(cast_bnd_ptr != NULL);
+        assert(cast_bnd_col != NULL);
+
+        kernel_csr_extract_boundary<<<
+            dim3((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size + 1),
+            dim3(this->local_backend_.HIP_block_size),
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
+                                                                  this->nnz_,
+                                                                  global_column_begin,
+                                                                  cast_bnd->vec_,
+                                                                  this->mat_.row_offset,
+                                                                  this->mat_.col,
+                                                                  cast_gst->mat_.row_offset,
+                                                                  cast_gst->mat_.col,
+                                                                  cast_conn->vec_,
+                                                                  cast_l2g->vec_,
+                                                                  cast_bnd_ptr->vec_,
+                                                                  cast_bnd_col->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGComputeStrongConnections(
+        ValueType                    eps,
+        const BaseVector<ValueType>& diag,
+        const BaseVector<int64_t>&   l2g,
+        BaseVector<bool>*            connections,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        if(this->nnz_ > 0)
+        {
+            assert(connections != NULL);
+
+            const HIPAcceleratorVector<int64_t>* cast_l2g
+                = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&l2g);
+            const HIPAcceleratorVector<ValueType>* cast_diag
+                = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&diag);
+            HIPAcceleratorVector<bool>* cast_conn
+                = dynamic_cast<HIPAcceleratorVector<bool>*>(connections);
+            const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+                = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+
+            assert(cast_l2g != NULL);
+            assert(cast_diag != NULL);
+            assert(cast_conn != NULL);
+            assert(cast_gst != NULL);
+
+            assert(this->nrow_ != 0);
+
+            // Do we need communication?
+            bool global = cast_gst->nrow_ > 0;
+
+            ValueType eps2 = eps * eps;
+
+            int64_t avg_nnz_per_row = this->nnz_ / this->nrow_;
+
+            if(global == false)
+            {
+                if(avg_nnz_per_row <= 8)
+                {
+                    kernel_csr_amg_connect<false, 1>
+                        <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 16)
+                {
+                    kernel_csr_amg_connect<false, 2>
+                        <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 32)
+                {
+                    kernel_csr_amg_connect<false, 4>
+                        <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 64)
+                {
+                    kernel_csr_amg_connect<false, 8>
+                        <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 128)
+                {
+                    kernel_csr_amg_connect<false, 16>
+                        <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
+                {
+                    kernel_csr_amg_connect<false, 32>
+                        <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else
+                {
+                    kernel_csr_amg_connect<false, 64>
+                        <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+            }
+            else
+            {
+                if(avg_nnz_per_row <= 8)
+                {
+                    kernel_csr_amg_connect<true, 1>
+                        <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 16)
+                {
+                    kernel_csr_amg_connect<true, 2>
+                        <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 32)
+                {
+                    kernel_csr_amg_connect<true, 4>
+                        <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 64)
+                {
+                    kernel_csr_amg_connect<true, 8>
+                        <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 128)
+                {
+                    kernel_csr_amg_connect<true, 16>
+                        <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
+                {
+                    kernel_csr_amg_connect<true, 32>
+                        <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+                else
+                {
+                    kernel_csr_amg_connect<true, 64>
+                        <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
+                           dim3(this->local_backend_.HIP_block_size),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            eps2,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_gst->mat_.val,
+                            cast_diag->vec_,
+                            cast_l2g->vec_,
+                            cast_conn->vec_);
+                }
+            }
+
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGPMISInitializeState(
+        int64_t                      global_column_begin,
+        const BaseVector<bool>&      connections,
+        BaseVector<int>*             state,
+        BaseVector<int>*             hash,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        assert(state != NULL);
+        assert(hash != NULL);
+
+        HIPAcceleratorVector<int>* cast_state = dynamic_cast<HIPAcceleratorVector<int>*>(state);
+        HIPAcceleratorVector<int>* cast_hash  = dynamic_cast<HIPAcceleratorVector<int>*>(hash);
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+
+        assert(cast_state != NULL);
+        assert(cast_hash != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+
+        // Do we need communication?
+        bool global = cast_gst->nrow_ > 0;
+
+        dim3 BlockSize(this->local_backend_.HIP_block_size);
+        dim3 GridSize((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1);
+
+        if(global == false)
+        {
+            kernel_csr_amg_init_mis_tuples<false>
+                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    global_column_begin,
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    cast_gst->mat_.row_offset,
+                    cast_conn->vec_,
+                    cast_state->vec_,
+                    cast_hash->vec_);
+        }
+        else
+        {
+            kernel_csr_amg_init_mis_tuples<true>
+                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    global_column_begin,
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    cast_gst->mat_.row_offset,
+                    cast_conn->vec_,
+                    cast_state->vec_,
+                    cast_hash->vec_);
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGExtractBoundaryState(
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       max_state,
+        const BaseVector<int>&       hash,
+        BaseVector<int>*             bnd_max_state,
+        BaseVector<int>*             bnd_hash,
+        int64_t                      global_column_offset,
+        const BaseVector<int>&       boundary_index,
+        const BaseMatrix<ValueType>& gst) const
+    {
+        assert(bnd_max_state != NULL);
+        assert(bnd_hash != NULL);
+
+        HIPAcceleratorVector<int>* cast_bnd_max_state
+            = dynamic_cast<HIPAcceleratorVector<int>*>(bnd_max_state);
+        HIPAcceleratorVector<int>* cast_bnd_hash
+            = dynamic_cast<HIPAcceleratorVector<int>*>(bnd_hash);
+
+        const HIPAcceleratorVector<PtrType>* cast_bnd_ptr
+            = dynamic_cast<const HIPAcceleratorVector<PtrType>*>(&bnd_csr_row_ptr);
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorVector<int>* cast_max_state
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&max_state);
+        const HIPAcceleratorVector<int>* cast_hash
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&hash);
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary_index);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&gst);
+
+        assert(cast_bnd_ptr != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_max_state != NULL);
+        assert(cast_hash != NULL);
+        assert(cast_bnd != NULL);
+        assert(cast_gst != NULL);
+
+        kernel_csr_extract_boundary_state<<<
+            dim3((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size + 1),
+            dim3(this->local_backend_.HIP_block_size),
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
+                                                                  this->nrow_,
+                                                                  this->nnz_,
+                                                                  cast_bnd->vec_,
+                                                                  this->mat_.row_offset,
+                                                                  this->mat_.col,
+                                                                  cast_gst->mat_.row_offset,
+                                                                  cast_gst->mat_.col,
+                                                                  cast_conn->vec_,
+                                                                  cast_max_state->vec_,
+                                                                  cast_hash->vec_,
+                                                                  cast_bnd_ptr->vec_,
+                                                                  cast_bnd_max_state->vec_,
+                                                                  cast_bnd_hash->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGPMISFindMaxNeighbourNode(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        bool&                        undecided,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       state,
+        const BaseVector<int>&       hash,
+        const BaseVector<PtrType>&   bnd_csr_row_ptr,
+        const BaseVector<int64_t>&   bnd_csr_col_ind,
+        const BaseVector<int>&       bnd_state,
+        const BaseVector<int>&       bnd_hash,
+        BaseVector<int>*             max_state,
+        BaseVector<int64_t>*         aggregates,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        if(this->nnz_ > 0)
+        {
+            HIPAcceleratorVector<int>* cast_max_state
+                = dynamic_cast<HIPAcceleratorVector<int>*>(max_state);
+            HIPAcceleratorVector<int64_t>* cast_agg
+                = dynamic_cast<HIPAcceleratorVector<int64_t>*>(aggregates);
+            const HIPAcceleratorVector<int>* cast_hash
+                = dynamic_cast<const HIPAcceleratorVector<int>*>(&hash);
+            const HIPAcceleratorVector<int>* cast_state
+                = dynamic_cast<const HIPAcceleratorVector<int>*>(&state);
+            const HIPAcceleratorVector<bool>* cast_conn
+                = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+            const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+                = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+
+            const HIPAcceleratorVector<PtrType>* cast_bnd_ptr
+                = dynamic_cast<const HIPAcceleratorVector<PtrType>*>(&bnd_csr_row_ptr);
+            const HIPAcceleratorVector<int64_t>* cast_bnd_col
+                = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&bnd_csr_col_ind);
+            const HIPAcceleratorVector<int>* cast_bnd_state
+                = dynamic_cast<const HIPAcceleratorVector<int>*>(&bnd_state);
+            const HIPAcceleratorVector<int>* cast_bnd_hash
+                = dynamic_cast<const HIPAcceleratorVector<int>*>(&bnd_hash);
+
+            assert(cast_max_state != NULL);
+            assert(cast_agg != NULL);
+            assert(cast_bnd_ptr != NULL);
+            assert(cast_bnd_col != NULL);
+            assert(cast_bnd_state != NULL);
+            assert(cast_bnd_hash != NULL);
+            assert(cast_hash != NULL);
+            assert(cast_state != NULL);
+            assert(cast_conn != NULL);
+            assert(cast_gst != NULL);
+
+            assert(this->nrow_ != 0);
+
+            // Do we need communication?
+            bool global = cast_gst->nrow_ > 0;
+
+            int64_t avg_nnz_per_row = this->nnz_ / this->nrow_;
+
+            bool* d_undecided = NULL;
+            allocate_hip(1, &d_undecided);
+            set_to_zero_hip(1, 1, d_undecided);
+
+            if(global == false)
+            {
+                if(avg_nnz_per_row <= 8)
+                {
+                    kernel_csr_amg_find_max_node<false, 256, 1>
+                        <<<dim3((this->nrow_ * 1 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 16)
+                {
+                    kernel_csr_amg_find_max_node<false, 256, 2>
+                        <<<dim3((this->nrow_ * 2 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 32)
+                {
+                    kernel_csr_amg_find_max_node<false, 256, 4>
+                        <<<dim3((this->nrow_ * 4 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 64)
+                {
+                    kernel_csr_amg_find_max_node<false, 256, 8>
+                        <<<dim3((this->nrow_ * 8 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 128)
+                {
+                    kernel_csr_amg_find_max_node<false, 256, 16>
+                        <<<dim3((this->nrow_ * 16 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
+                {
+                    kernel_csr_amg_find_max_node<false, 256, 32>
+                        <<<dim3((this->nrow_ * 32 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else
+                {
+                    kernel_csr_amg_find_max_node<false, 256, 64>
+                        <<<dim3((this->nrow_ * 64 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+            }
+            else
+            {
+                if(avg_nnz_per_row <= 8)
+                {
+                    kernel_csr_amg_find_max_node<true, 256, 1>
+                        <<<dim3((this->nrow_ * 1 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 16)
+                {
+                    kernel_csr_amg_find_max_node<true, 256, 2>
+                        <<<dim3((this->nrow_ * 2 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 32)
+                {
+                    kernel_csr_amg_find_max_node<true, 256, 4>
+                        <<<dim3((this->nrow_ * 4 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 64)
+                {
+                    kernel_csr_amg_find_max_node<true, 256, 8>
+                        <<<dim3((this->nrow_ * 8 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 128)
+                {
+                    kernel_csr_amg_find_max_node<true, 256, 16>
+                        <<<dim3((this->nrow_ * 16 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
+                {
+                    kernel_csr_amg_find_max_node<true, 256, 32>
+                        <<<dim3((this->nrow_ * 32 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+                else
+                {
+                    kernel_csr_amg_find_max_node<true, 256, 64>
+                        <<<dim3((this->nrow_ * 64 - 1) / 256 + 1),
+                           dim3(256),
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->nnz_,
+                            global_column_begin,
+                            global_column_end,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_gst->mat_.row_offset,
+                            cast_gst->mat_.col,
+                            cast_conn->vec_,
+                            cast_state->vec_,
+                            cast_hash->vec_,
+                            cast_bnd_ptr->vec_,
+                            cast_bnd_col->vec_,
+                            cast_bnd_state->vec_,
+                            cast_bnd_hash->vec_,
+                            cast_max_state->vec_,
+                            cast_agg->vec_,
+                            d_undecided);
+                }
+            }
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            copy_d2h(1, d_undecided, &undecided);
+            free_hip(&d_undecided);
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGPMISAddUnassignedNodesToAggregations(
+        int64_t                      global_column_begin,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int>&       state,
+        const BaseVector<int64_t>&   l2g,
+        BaseVector<int>*             max_state,
+        BaseVector<int64_t>*         aggregates,
+        BaseVector<int64_t>*         aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost) const
+    {
+        assert(max_state != NULL);
+        assert(aggregates != NULL);
+
+        HIPAcceleratorVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(aggregate_root_nodes);
+        HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(aggregates);
+        HIPAcceleratorVector<int>* cast_max_state
+            = dynamic_cast<HIPAcceleratorVector<int>*>(max_state);
+
+        const HIPAcceleratorVector<int64_t>* cast_l2g
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&l2g);
+        const HIPAcceleratorVector<int>* cast_state
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&state);
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+
+        assert(cast_agg_nodes != NULL);
+        assert(cast_agg != NULL);
+        assert(cast_max_state != NULL);
+
+        assert(cast_l2g != NULL);
+        assert(cast_state != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_gst != NULL);
+
+        // Do we need communication?
+        bool global = cast_gst->nrow_ > 0;
+
+        if(global == false)
+        {
+            kernel_csr_amg_update_aggregates<false>
+                <<<dim3((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         global_column_begin,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_state->vec_,
+                                                                         cast_l2g->vec_,
+                                                                         cast_max_state->vec_,
+                                                                         cast_agg->vec_,
+                                                                         cast_agg_nodes->vec_);
+        }
+        else
+        {
+            kernel_csr_amg_update_aggregates<true>
+                <<<dim3((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1),
+                   dim3(this->local_backend_.HIP_block_size),
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->nnz_,
+                                                                         global_column_begin,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_gst->mat_.row_offset,
+                                                                         cast_gst->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_state->vec_,
+                                                                         cast_l2g->vec_,
+                                                                         cast_max_state->vec_,
+                                                                         cast_agg->vec_,
+                                                                         cast_agg_nodes->vec_);
+        }
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGPMISInitializeAggregateGlobalIndices(
+        int64_t                    global_column_begin,
+        const BaseVector<int64_t>& aggregates,
+        BaseVector<int64_t>*       aggregate_root_nodes) const
+    {
+        assert(aggregate_root_nodes != NULL);
+
+        const HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregates);
+        HIPAcceleratorVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(aggregate_root_nodes);
+
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+
+        int agg_size = aggregates.GetSize();
+
+        kernel_csr_amg_initialize_aggregate_nodes<<<
+            dim3((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1),
+            dim3(this->local_backend_.HIP_block_size),
+            0,
+            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            this->nrow_, agg_size, global_column_begin, cast_agg->vec_, cast_agg_nodes->vec_);
+
+        return true;
+    }
+
+    /*template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGSmoothedAggregation(
+        ValueType                  relax,
+        const BaseVector<bool>&    connections,
+        const BaseVector<int64_t>& aggregates,
+        BaseMatrix<ValueType>*     prolong,
+        int                        lumping_strat) const
+    {
+        assert(prolong != NULL);
+
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregates);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
+
+        assert(cast_agg != NULL);
+        assert(cast_conn != NULL);
+        assert(cast_prolong != NULL);
+
+        PtrType*   prolong_row_offset = nullptr;
+        int*       prolong_cols       = nullptr;
+        ValueType* prolong_vals       = nullptr;
+
+        // Allocate prolongation matrix row offset array
+        allocate_hip(this->nrow_ + 1, &prolong_row_offset);
+
+        // Determine rocprim buffer size
+        size_t rocprim_size   = 0;
+        char*  rocprim_buffer = NULL;
+
+        size_t size;
+        rocprim::reduce(NULL,
+                        size,
+                        cast_agg->vec_,
+                        prolong_row_offset,
+                        -2,
+                        cast_agg->size_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim_size = std::max(rocprim_size, size);
+
+        rocprim::reduce(NULL,
+                        size,
+                        prolong_row_offset + 1,
+                        prolong_row_offset,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim_size = std::max(rocprim_size, size);
+
+        rocprim::reduce(NULL,
+                        size,
+                        prolong_row_offset,
+                        prolong_row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim_size = std::max(rocprim_size, size);
+
+        rocprim::exclusive_scan(NULL,
+                                size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim_size = std::max(rocprim_size, size);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        cast_agg->vec_,
+                        prolong_row_offset,
+                        -2,
+                        cast_agg->size_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Obtain sizes of P
+        int prolong_ncol;
+        int prolong_nrow = this->nrow_;
+        copy_d2h(1, prolong_row_offset, &prolong_ncol);
+        ++prolong_ncol;
+        // Get maximum non-zeros per row to decided on size of unordered set
+        kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
+                              256,
+                              0,
+                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            this->nrow_, this->mat_.row_offset, prolong_row_offset + 1);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        prolong_row_offset + 1,
+                        prolong_row_offset,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        int max_row_nnz;
+        copy_d2h(1, prolong_row_offset, &max_row_nnz);
+
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(max_row_nnz < 8)
+        {
+            kernel_csr_sa_prolong_nnz<256, 4, 8>
+                <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else if(max_row_nnz < 16)
+        {
+            kernel_csr_sa_prolong_nnz<256, 4, 16>
+                <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else if(max_row_nnz < 32)
+        {
+            kernel_csr_sa_prolong_nnz<256, 8, 32>
+                <<<(this->nrow_ - 1) / (256 / 8) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else if(max_row_nnz < 64)
+        {
+            kernel_csr_sa_prolong_nnz<256, 16, 64>
+                <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else if(max_row_nnz < 128)
+        {
+            kernel_csr_sa_prolong_nnz<256, 16, 128>
+                <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else if(max_row_nnz < 256)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 256>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else if(max_row_nnz < 512)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 512>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else if(max_row_nnz < 1024)
+        {
+            kernel_csr_sa_prolong_nnz<256, 64, 1024>
+                <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         this->mat_.row_offset,
+                                                                         this->mat_.col,
+                                                                         cast_conn->vec_,
+                                                                         cast_agg->vec_,
+                                                                         prolong_row_offset);
+        }
+        else
+        {
+            // Fall back to host
+            free_hip(&prolong_row_offset);
+            free_hip(&rocprim_buffer);
+
+            return false;
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        prolong_row_offset,
+                        prolong_row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        copy_d2h(1, prolong_row_offset + this->nrow_, &max_row_nnz);
+
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        PtrType prolong_nnz;
+        copy_d2h(1, prolong_row_offset + this->nrow_, &prolong_nnz);
+
+        // Allocate prolongation matrix col indices and values arrays
+        allocate_hip(prolong_nnz, &prolong_cols);
+        allocate_hip(prolong_nnz, &prolong_vals);
+        cast_prolong->Clear();
+        cast_prolong->SetDataPtrCSR(&prolong_row_offset,
+                                    &prolong_cols,
+                                    &prolong_vals,
+                                    prolong_nnz,
+                                    prolong_nrow,
+                                    prolong_ncol);
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(max_row_nnz < 8)
+        {
+            kernel_csr_sa_prolong_fill<128, 4, 8>
+                <<<(this->nrow_ - 1) / (128 / 4) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 16)
+        {
+            kernel_csr_sa_prolong_fill<128, 8, 16>
+                <<<(this->nrow_ - 1) / (128 / 8) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 32)
+        {
+            kernel_csr_sa_prolong_fill<128, 16, 32>
+                <<<(this->nrow_ - 1) / (128 / 16) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 64)
+        {
+            kernel_csr_sa_prolong_fill<128, 32, 64>
+                <<<(this->nrow_ - 1) / (128 / 32) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 128)
+        {
+            kernel_csr_sa_prolong_fill<128, 64, 128>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 256)
+        {
+            kernel_csr_sa_prolong_fill<128, 64, 256>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
+        }
+        else if(max_row_nnz < 512)
+        {
+            kernel_csr_sa_prolong_fill<128, 64, 512>
+                <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                   128,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                    this->nrow_,
+                    relax,
+                    lumping_strat,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    cast_prolong->mat_.row_offset,
+                    cast_prolong->mat_.col,
+                    cast_prolong->mat_.val);
+        }
+        else
+        {
+            // Fall back to host
+            cast_prolong->Clear();
+
+            free_hip(&rocprim_buffer);
+
+            return false;
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&rocprim_buffer);
+
+        return true;
+    }*/
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGUnsmoothedAggregation(
+        const BaseVector<int64_t>& aggregates, BaseMatrix<ValueType>* prolong) const
+    {
+        assert(prolong != NULL);
+
+        const HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregates);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_prolong
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong);
+
+        assert(cast_agg != NULL);
+        assert(cast_prolong != NULL);
+
+        PtrType*   prolong_row_offset = nullptr;
+        int*       prolong_cols       = nullptr;
+        ValueType* prolong_vals       = nullptr;
+
+        // Allocate prolongation matrix row offset array
+        allocate_hip(this->nrow_ + 1, &prolong_row_offset);
+
+        int64_t* workspace = NULL;
+        allocate_hip(256, &workspace);
+
+        kernel_find_maximum_blockreduce<256>
+            <<<dim3(256), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                cast_agg->size_, cast_agg->vec_, workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        kernel_find_maximum_finalreduce<256>
+            <<<dim3(1), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                workspace);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        int64_t prolong_ncol = 0;
+        int     prolong_nrow = this->nrow_;
+        copy_d2h(1, workspace, &prolong_ncol);
+        free_hip(&workspace);
+
+        kernel_csr_unsmoothed_prolong_nnz_per_row<256>
+            <<<dim3((this->nrow_ - 1) / 256 + 1),
+               dim3(256),
+               0,
+               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_, cast_agg->vec_, prolong_row_offset);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Perform inclusive scan on csr row pointer array
+        size_t rocprim_size;
+        char*  rocprim_buffer = NULL;
+        rocprim::inclusive_scan(nullptr,
+                                rocprim_size,
+                                prolong_row_offset,
+                                prolong_row_offset,
+                                this->nrow_ + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
 
@@ -5856,6 +7573,1772 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // cast_prolong->Sort();
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGSmoothedAggregationProlongNnz(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost,
+        BaseVector<int>*             f2c,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregates);
+        const HIPAcceleratorVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregate_root_nodes);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        HIPAcceleratorVector<int>* cast_f2c = dynamic_cast<HIPAcceleratorVector<int>*>(f2c);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pi
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_int);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pg
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_gst);
+
+        assert(cast_conn != NULL);
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_f2c != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        // Start with fresh P
+        cast_pi->Clear();
+
+        // Allocate P row pointer array
+        allocate_hip(this->nrow_ + 1, &cast_pi->mat_.row_offset);
+        set_to_zero_hip(256, this->nrow_ + 1, cast_pi->mat_.row_offset);
+
+        // We already know the number of rows of P
+        cast_pi->nrow_ = this->nrow_;
+
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_hip(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+            set_to_zero_hip(256, this->nrow_ + 1, cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
+        // Get maximum non-zeros per row to decided on size of unordered set
+        kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
+                              256,
+                              0,
+                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            this->nrow_, this->mat_.row_offset, cast_pi->mat_.row_offset + 1);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        // Determine rocprim buffer size
+        size_t rocprim_size   = 0;
+        char*  rocprim_buffer = NULL;
+
+        rocprim::reduce(NULL,
+                        rocprim_size,
+                        cast_pi->mat_.row_offset + 1,
+                        cast_pi->mat_.row_offset,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        cast_pi->mat_.row_offset + 1,
+                        cast_pi->mat_.row_offset,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        if(global == true)
+        {
+            // Get maximum non-zeros per row to decided on size of unordered set
+            kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
+                                  256,
+                                  0,
+                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                this->nrow_, cast_gst->mat_.row_offset, cast_pg->mat_.row_offset + 1);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprim::reduce(rocprim_buffer,
+                            rocprim_size,
+                            cast_pg->mat_.row_offset + 1,
+                            cast_pg->mat_.row_offset,
+                            0,
+                            this->nrow_,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+
+        free_hip(&rocprim_buffer);
+
+        int max_row_nnz;
+        copy_d2h(1, cast_pi->mat_.row_offset, &max_row_nnz);
+        if(global == true)
+        {
+            int max_row_nnz_gst;
+            copy_d2h(1, cast_pg->mat_.row_offset, &max_row_nnz_gst);
+            max_row_nnz = std::max(max_row_nnz, max_row_nnz_gst);
+        }
+
+        set_to_zero_hip(256, this->nrow_ + 1, cast_pi->mat_.row_offset);
+        if(global == true)
+        {
+            set_to_zero_hip(256, this->nrow_ + 1, cast_pg->mat_.row_offset);
+        }
+
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(global == false)
+        {
+            if(max_row_nnz < 8)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 4, 8>
+                    <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else if(max_row_nnz < 16)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 4, 16>
+                    <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else if(max_row_nnz < 32)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 8, 32>
+                    <<<(this->nrow_ - 1) / (256 / 8) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else if(max_row_nnz < 64)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 16, 64>
+                    <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else if(max_row_nnz < 128)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 16, 128>
+                    <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else if(max_row_nnz < 256)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 64, 256>
+                    <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else if(max_row_nnz < 512)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 64, 512>
+                    <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else if(max_row_nnz < 1024)
+            {
+                kernel_csr_sa_prolong_nnz<false, 256, 64, 1024>
+                    <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        (PtrType*)NULL);
+            }
+            else
+            {
+                // Fall back to host
+                free_hip(&cast_pi->mat_.row_offset);
+
+                cast_pi->nrow_ = 0;
+
+                return false;
+            }
+        }
+        else
+        {
+            if(max_row_nnz < 8)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 4, 8>
+                    <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else if(max_row_nnz < 16)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 4, 16>
+                    <<<(this->nrow_ - 1) / (256 / 4) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else if(max_row_nnz < 32)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 8, 32>
+                    <<<(this->nrow_ - 1) / (256 / 8) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else if(max_row_nnz < 64)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 16, 64>
+                    <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else if(max_row_nnz < 128)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 16, 128>
+                    <<<(this->nrow_ - 1) / (256 / 16) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else if(max_row_nnz < 256)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 64, 256>
+                    <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else if(max_row_nnz < 512)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 64, 512>
+                    <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else if(max_row_nnz < 1024)
+            {
+                kernel_csr_sa_prolong_nnz<true, 256, 64, 1024>
+                    <<<(this->nrow_ - 1) / (256 / 64) + 1,
+                       256,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pg->mat_.row_offset);
+            }
+            else
+            {
+                // Fall back to host
+                free_hip(&cast_pi->mat_.row_offset);
+                free_hip(&cast_pg->mat_.row_offset);
+
+                cast_pi->nrow_ = 0;
+                cast_pg->nrow_ = 0;
+
+                return false;
+            }
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        cast_f2c->ExclusiveSum(*cast_f2c);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGSmoothedAggregationProlongFill(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        int                          lumping_strat,
+        ValueType                    relax,
+        const BaseVector<bool>&      connections,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseVector<int64_t>&   l2g,
+        const BaseVector<int>&       f2c,
+        const BaseMatrix<ValueType>& ghost,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst,
+        BaseVector<int64_t>*         global_ghost_col) const
+    {
+        const HIPAcceleratorVector<bool>* cast_conn
+            = dynamic_cast<const HIPAcceleratorVector<bool>*>(&connections);
+        const HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregates);
+        const HIPAcceleratorVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregate_root_nodes);
+        const HIPAcceleratorVector<int>* cast_f2c
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&f2c);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pi
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_int);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pg
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_gst);
+        HIPAcceleratorVector<int64_t>* cast_glo
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(global_ghost_col);
+
+        assert(cast_conn != NULL);
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        size_t rocprim_size   = 0;
+        char*  rocprim_buffer = NULL;
+
+        // Determine maximum number of non-zeros per row of internal prolongation matrix
+        rocprim::reduce(NULL,
+                        rocprim_size,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::reduce(rocprim_buffer,
+                        rocprim_size,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.row_offset + this->nrow_,
+                        0,
+                        this->nrow_,
+                        rocprim::maximum<int>(),
+                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        if(global)
+        {
+            rocprim::reduce(rocprim_buffer,
+                            rocprim_size,
+                            cast_pg->mat_.row_offset,
+                            cast_pg->mat_.row_offset + this->nrow_,
+                            0,
+                            this->nrow_,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+
+        free_hip(&rocprim_buffer);
+
+        int max_row_nnz;
+        copy_d2h(1, cast_pi->mat_.row_offset + this->nrow_, &max_row_nnz);
+        if(global)
+        {
+            int max_row_nnz_gst;
+            copy_d2h(1, cast_pg->mat_.row_offset + this->nrow_, &max_row_nnz_gst);
+            max_row_nnz = std::max(max_row_nnz, max_row_nnz_gst);
+        }
+
+        // Perform exclusive scan on internal prolongation row offsets
+        rocprim::exclusive_scan(NULL,
+                                rocprim_size,
+                                cast_pi->mat_.row_offset,
+                                cast_pi->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                cast_pi->mat_.row_offset,
+                                cast_pi->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&rocprim_buffer);
+
+        // Initialize nnz of P
+        PtrType pi_nnz;
+        copy_d2h(1, cast_pi->mat_.row_offset + this->nrow_, &pi_nnz);
+        cast_pi->nnz_ = pi_nnz;
+
+        // Initialize ncol of P
+        int pi_ncol;
+        copy_d2h(1, cast_f2c->vec_ + this->nrow_, &pi_ncol);
+        cast_pi->ncol_ = pi_ncol;
+
+        // Allocate column and value arrays
+        allocate_hip(cast_pi->nnz_, &cast_pi->mat_.col);
+        allocate_hip(cast_pi->nnz_, &cast_pi->mat_.val);
+        set_to_zero_hip(256, cast_pi->nnz_, cast_pi->mat_.col);
+        set_to_zero_hip(256, cast_pi->nnz_, cast_pi->mat_.val);
+
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+
+            // Perform exclusive scan on ghost prolongation row offsets
+            rocprim::exclusive_scan(NULL,
+                                    rocprim_size,
+                                    cast_pg->mat_.row_offset,
+                                    cast_pg->mat_.row_offset,
+                                    0,
+                                    this->nrow_ + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            allocate_hip(rocprim_size, &rocprim_buffer);
+
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    cast_pg->mat_.row_offset,
+                                    cast_pg->mat_.row_offset,
+                                    0,
+                                    this->nrow_ + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            free_hip(&rocprim_buffer);
+
+            // Initialize nnz of P
+            PtrType pg_nnz;
+            copy_d2h(1, cast_pg->mat_.row_offset + this->nrow_, &pg_nnz);
+            cast_pg->nnz_ = pg_nnz;
+
+            // Initialize ncol of P
+            cast_pg->ncol_ = this->nrow_; // Need to fix this!!!!
+
+            // Allocate column and value arrays
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.val);
+            set_to_zero_hip(256, cast_pg->nnz_, cast_pg->mat_.col);
+            set_to_zero_hip(256, cast_pg->nnz_, cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
+
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(global == false)
+        {
+            if(max_row_nnz < 8)
+            {
+                kernel_csr_sa_prolong_fill<false, 128, 4, 8>
+                    <<<(this->nrow_ - 1) / (128 / 4) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int64_t*)NULL);
+            }
+            else if(max_row_nnz < 16)
+            {
+                kernel_csr_sa_prolong_fill<false, 128, 8, 16>
+                    <<<(this->nrow_ - 1) / (128 / 8) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int64_t*)NULL);
+            }
+            else if(max_row_nnz < 32)
+            {
+                kernel_csr_sa_prolong_fill<false, 128, 16, 32>
+                    <<<(this->nrow_ - 1) / (128 / 16) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int64_t*)NULL);
+            }
+            else if(max_row_nnz < 64)
+            {
+                kernel_csr_sa_prolong_fill<false, 128, 32, 64>
+                    <<<(this->nrow_ - 1) / (128 / 32) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int64_t*)NULL);
+            }
+            else if(max_row_nnz < 128)
+            {
+                kernel_csr_sa_prolong_fill<false, 128, 64, 128>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int64_t*)NULL);
+            }
+            else if(max_row_nnz < 256)
+            {
+                kernel_csr_sa_prolong_fill<false, 128, 64, 256>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int64_t*)NULL);
+            }
+            else if(max_row_nnz < 512)
+            {
+                kernel_csr_sa_prolong_fill<false, 128, 64, 512>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        (PtrType*)NULL,
+                        (int*)NULL,
+                        (ValueType*)NULL,
+                        (int64_t*)NULL);
+            }
+            else
+            {
+                free_hip(&cast_pi->mat_.col);
+                free_hip(&cast_pi->mat_.val);
+
+                cast_pi->ncol_ = 0;
+                cast_pi->nnz_  = 0;
+
+                return false;
+            }
+        }
+        else
+        {
+            if(max_row_nnz < 8)
+            {
+                kernel_csr_sa_prolong_fill<true, 128, 4, 8>
+                    <<<(this->nrow_ - 1) / (128 / 4) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_pg->mat_.col,
+                        cast_pg->mat_.val,
+                        cast_glo->vec_);
+            }
+            else if(max_row_nnz < 16)
+            {
+                kernel_csr_sa_prolong_fill<true, 128, 8, 16>
+                    <<<(this->nrow_ - 1) / (128 / 8) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_pg->mat_.col,
+                        cast_pg->mat_.val,
+                        cast_glo->vec_);
+            }
+            else if(max_row_nnz < 32)
+            {
+                kernel_csr_sa_prolong_fill<true, 128, 16, 32>
+                    <<<(this->nrow_ - 1) / (128 / 16) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_pg->mat_.col,
+                        cast_pg->mat_.val,
+                        cast_glo->vec_);
+            }
+            else if(max_row_nnz < 64)
+            {
+                kernel_csr_sa_prolong_fill<true, 128, 32, 64>
+                    <<<(this->nrow_ - 1) / (128 / 32) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_pg->mat_.col,
+                        cast_pg->mat_.val,
+                        cast_glo->vec_);
+            }
+            else if(max_row_nnz < 128)
+            {
+                kernel_csr_sa_prolong_fill<true, 128, 64, 128>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_pg->mat_.col,
+                        cast_pg->mat_.val,
+                        cast_glo->vec_);
+            }
+            else if(max_row_nnz < 256)
+            {
+                kernel_csr_sa_prolong_fill<true, 128, 64, 256>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_pg->mat_.col,
+                        cast_pg->mat_.val,
+                        cast_glo->vec_);
+            }
+            else if(max_row_nnz < 512)
+            {
+                kernel_csr_sa_prolong_fill<true, 128, 64, 512>
+                    <<<(this->nrow_ - 1) / (128 / 64) + 1,
+                       128,
+                       0,
+                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->nnz_,
+                        global_column_begin,
+                        global_column_end,
+                        relax,
+                        lumping_strat,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_gst->mat_.row_offset,
+                        cast_gst->mat_.col,
+                        cast_gst->mat_.val,
+                        cast_conn->vec_,
+                        cast_agg->vec_,
+                        cast_agg_nodes->vec_,
+                        cast_f2c->vec_,
+                        cast_pi->mat_.row_offset,
+                        cast_pi->mat_.col,
+                        cast_pi->mat_.val,
+                        cast_pg->mat_.row_offset,
+                        cast_pg->mat_.col,
+                        cast_pg->mat_.val,
+                        cast_glo->vec_);
+            }
+            else
+            {
+                free_hip(&cast_pi->mat_.col);
+                free_hip(&cast_pi->mat_.val);
+                free_hip(&cast_pg->mat_.col);
+                free_hip(&cast_pg->mat_.val);
+
+                cast_pi->nnz_ = 0;
+                cast_pg->nnz_ = 0;
+
+                cast_pi->ncol_ = 0;
+                cast_pg->ncol_ = 0;
+
+                return false;
+            }
+        }
+
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGUnsmoothedAggregationProlongNnz(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseMatrix<ValueType>& ghost,
+        BaseVector<int>*             f2c,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst) const
+    {
+        const HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregates);
+        const HIPAcceleratorVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregate_root_nodes);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        HIPAcceleratorVector<int>* cast_f2c = dynamic_cast<HIPAcceleratorVector<int>*>(f2c);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pi
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_int);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pg
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_gst);
+
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_f2c != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        // Start with fresh P
+        cast_pi->Clear();
+
+        // Allocate P row pointer array
+        allocate_hip(this->nrow_ + 1, &cast_pi->mat_.row_offset);
+        set_to_zero_hip(256, this->nrow_ + 1, cast_pi->mat_.row_offset);
+
+        // We already know the number of rows of P
+        cast_pi->nrow_ = this->nrow_;
+
+        // Ghost part
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+
+            // Start with fresh P ghost
+            cast_pg->Clear();
+
+            // Allocate P ghost row pointer array
+            allocate_hip(this->nrow_ + 1, &cast_pg->mat_.row_offset);
+            set_to_zero_hip(256, this->nrow_ + 1, cast_pg->mat_.row_offset);
+
+            // Number of ghost rows is identical to interior
+            cast_pg->nrow_ = this->nrow_;
+        }
+
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(global == false)
+        {
+            kernel_csr_ua_prolong_nnz<256>
+                <<<(this->nrow_ - 1) / 256 + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         global_column_begin,
+                                                                         global_column_end,
+                                                                         cast_agg->vec_,
+                                                                         cast_agg_nodes->vec_,
+                                                                         cast_f2c->vec_,
+                                                                         cast_pi->mat_.row_offset,
+                                                                         (PtrType*)NULL);
+        }
+        else
+        {
+            kernel_csr_ua_prolong_nnz<256>
+                <<<(this->nrow_ - 1) / 256 + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         global_column_begin,
+                                                                         global_column_end,
+                                                                         cast_agg->vec_,
+                                                                         cast_agg_nodes->vec_,
+                                                                         cast_f2c->vec_,
+                                                                         cast_pi->mat_.row_offset,
+                                                                         cast_pg->mat_.row_offset);
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        cast_f2c->ExclusiveSum(*cast_f2c);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::AMGUnsmoothedAggregationProlongFill(
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<int64_t>&   aggregates,
+        const BaseVector<int64_t>&   aggregate_root_nodes,
+        const BaseVector<int>&       f2c,
+        const BaseMatrix<ValueType>& ghost,
+        BaseMatrix<ValueType>*       prolong_int,
+        BaseMatrix<ValueType>*       prolong_gst,
+        BaseVector<int64_t>*         global_ghost_col) const
+    {
+        const HIPAcceleratorVector<int64_t>* cast_agg
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregates);
+        const HIPAcceleratorVector<int64_t>* cast_agg_nodes
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&aggregate_root_nodes);
+        const HIPAcceleratorVector<int>* cast_f2c
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&f2c);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ghost);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pi
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_int);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_pg
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(prolong_gst);
+        HIPAcceleratorVector<int64_t>* cast_glo
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(global_ghost_col);
+
+        assert(cast_agg != NULL);
+        assert(cast_agg_nodes != NULL);
+        assert(cast_pi != NULL);
+
+        // Do we need communication?
+        bool global = prolong_gst != NULL;
+
+        size_t rocprim_size   = 0;
+        char*  rocprim_buffer = NULL;
+
+        // Perform exclusive scan on internal prolongation row offsets
+        rocprim::exclusive_scan(NULL,
+                                rocprim_size,
+                                cast_pi->mat_.row_offset,
+                                cast_pi->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        allocate_hip(rocprim_size, &rocprim_buffer);
+
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                cast_pi->mat_.row_offset,
+                                cast_pi->mat_.row_offset,
+                                0,
+                                this->nrow_ + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&rocprim_buffer);
+
+        // Initialize nnz of P
+        PtrType pi_nnz;
+        copy_d2h(1, cast_pi->mat_.row_offset + this->nrow_, &pi_nnz);
+        cast_pi->nnz_ = pi_nnz;
+
+        // Initialize ncol of P
+        int pi_ncol;
+        copy_d2h(1, cast_f2c->vec_ + this->nrow_, &pi_ncol);
+        cast_pi->ncol_ = pi_ncol;
+
+        // Allocate column and value arrays
+        allocate_hip(cast_pi->nnz_, &cast_pi->mat_.col);
+        allocate_hip(cast_pi->nnz_, &cast_pi->mat_.val);
+        set_to_zero_hip(256, cast_pi->nnz_, cast_pi->mat_.col);
+        set_to_zero_hip(256, cast_pi->nnz_, cast_pi->mat_.val);
+
+        if(global == true)
+        {
+            assert(cast_gst != NULL);
+            assert(cast_pg != NULL);
+            assert(cast_glo != NULL);
+
+            // Perform exclusive scan on ghost prolongation row offsets
+            rocprim::exclusive_scan(NULL,
+                                    rocprim_size,
+                                    cast_pg->mat_.row_offset,
+                                    cast_pg->mat_.row_offset,
+                                    0,
+                                    this->nrow_ + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            allocate_hip(rocprim_size, &rocprim_buffer);
+
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    cast_pg->mat_.row_offset,
+                                    cast_pg->mat_.row_offset,
+                                    0,
+                                    this->nrow_ + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            free_hip(&rocprim_buffer);
+
+            // Initialize nnz of P
+            PtrType pg_nnz;
+            copy_d2h(1, cast_pg->mat_.row_offset + this->nrow_, &pg_nnz);
+            cast_pg->nnz_ = pg_nnz;
+
+            // Initialize ncol of P
+            cast_pg->ncol_ = this->nrow_; // Need to fix this!!!!
+
+            // Allocate column and value arrays
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.col);
+            allocate_hip(cast_pg->nnz_, &cast_pg->mat_.val);
+            set_to_zero_hip(256, cast_pg->nnz_, cast_pg->mat_.col);
+            set_to_zero_hip(256, cast_pg->nnz_, cast_pg->mat_.val);
+
+            cast_glo->Allocate(cast_pg->nnz_);
+        }
+
+        // Call corresponding kernel to compute non-zero entries per row of P
+        if(global == false)
+        {
+            kernel_csr_ua_prolong_fill<false, 256>
+                <<<(this->nrow_ - 1) / 256 + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         global_column_begin,
+                                                                         global_column_end,
+                                                                         cast_agg->vec_,
+                                                                         cast_agg_nodes->vec_,
+                                                                         cast_f2c->vec_,
+                                                                         cast_pi->mat_.row_offset,
+                                                                         cast_pi->mat_.col,
+                                                                         cast_pi->mat_.val,
+                                                                         (PtrType*)NULL,
+                                                                         (int*)NULL,
+                                                                         (ValueType*)NULL,
+                                                                         (int64_t*)NULL);
+        }
+        else
+        {
+            kernel_csr_ua_prolong_fill<true, 256>
+                <<<(this->nrow_ - 1) / 256 + 1,
+                   256,
+                   0,
+                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                                                                         global_column_begin,
+                                                                         global_column_end,
+                                                                         cast_agg->vec_,
+                                                                         cast_agg_nodes->vec_,
+                                                                         cast_f2c->vec_,
+                                                                         cast_pi->mat_.row_offset,
+                                                                         cast_pi->mat_.col,
+                                                                         cast_pi->mat_.val,
+                                                                         cast_pg->mat_.row_offset,
+                                                                         cast_pg->mat_.col,
+                                                                         cast_pg->mat_.val,
+                                                                         cast_glo->vec_);
+        }
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::CombineAndRenumber(int     ncol,
+                                                                int64_t ext_nnz,
+                                                                int64_t global_col_begin,
+                                                                int64_t global_col_end,
+                                                                const BaseVector<int64_t>& l2g,
+                                                                const BaseVector<int64_t>& ext,
+                                                                BaseVector<int>*           merged,
+                                                                BaseVector<int64_t>*       mapping,
+                                                                BaseVector<int>* local_col) const
+    {
+        assert(merged != NULL);
+        assert(mapping != NULL);
+        assert(local_col != NULL);
+
+        const HIPAcceleratorVector<int64_t>* cast_l2g
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&l2g);
+        const HIPAcceleratorVector<int64_t>* cast_ext
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&ext);
+        HIPAcceleratorVector<int>*     cast_cmb = dynamic_cast<HIPAcceleratorVector<int>*>(merged);
+        HIPAcceleratorVector<int64_t>* cast_map
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(mapping);
+        HIPAcceleratorVector<int>* cast_col = dynamic_cast<HIPAcceleratorVector<int>*>(local_col);
+
+        assert(cast_l2g != NULL);
+        assert(cast_ext != NULL);
+        assert(cast_cmb != NULL);
+        assert(cast_map != NULL);
+        assert(cast_col != NULL);
+
+        // Sanity check - ghost nnz should not exceed 32 bits
+        assert(this->nnz_ < std::numeric_limits<int>::max());
+
+        // Map columns from local to global
+        int64_t* gcols = NULL;
+        allocate_hip(this->nnz_ + ext_nnz, &gcols);
+
+        // Transfer local column indices to global ones
+        kernel_csr_local_to_global<<<(this->nnz_ - 1) / 256 + 1,
+                                     256,
+                                     0,
+                                     HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            static_cast<int>(this->nnz_), cast_l2g->vec_, this->mat_.col, gcols);
+
+        // Append additional global columns from ext
+        int* workspace = NULL;
+        allocate_hip(ext_nnz + 1, &workspace);
+
+        kernel_csr_ghost_columns_nnz<<<(ext_nnz - 1) / 256 + 1,
+                                       256,
+                                       0,
+                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            ext_nnz, global_col_begin, global_col_end, cast_ext->vec_, workspace);
+
+        // Exclusive scan
+        size_t rocprim_size;
+        void*  rocprim_buffer = NULL;
+
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                workspace,
+                                workspace,
+                                0,
+                                ext_nnz + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                workspace,
+                                workspace,
+                                0,
+                                ext_nnz + 1,
+                                rocprim::plus<int>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        hipFree(rocprim_buffer);
+        rocprim_buffer = NULL;
+
+        // Fill
+        kernel_csr_ghost_columns_fill<<<(ext_nnz - 1) / 256 + 1,
+                                        256,
+                                        0,
+                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            ext_nnz,
+            global_col_begin,
+            global_col_end,
+            cast_ext->vec_,
+            workspace,
+            gcols + this->nnz_);
+
+        int total_nnz;
+        copy_d2h(1, workspace + ext_nnz, &total_nnz);
+
+        total_nnz += this->nnz_;
+
+        // Sort global column array to eliminate duplicates later on
+        HIPAcceleratorVector<int64_t> gcol_sorted(this->local_backend_);
+        HIPAcceleratorVector<int>     perm(this->local_backend_);
+        HIPAcceleratorVector<int64_t> gcol(this->local_backend_);
+
+        gcol_sorted.Allocate(total_nnz);
+        perm.Allocate(total_nnz);
+        gcol.SetDataPtr(&gcols, total_nnz);
+
+        // Sort column array out of place with permutation
+        gcol.Sort(&gcol_sorted, &perm);
+        gcol.Clear();
+
+        // Run length encode to obtain counts for duplicated entries (we need this for renumbering)
+        cast_map->Clear();
+        cast_cmb->Clear();
+
+        cast_map->Allocate(total_nnz);
+        cast_cmb->Allocate(total_nnz);
+
+        int* d_nruns = NULL;
+        allocate_hip(1, &d_nruns);
+
+        rocprim::run_length_encode(rocprim_buffer,
+                                   rocprim_size,
+                                   gcol_sorted.vec_,
+                                   total_nnz,
+                                   cast_map->vec_,
+                                   cast_cmb->vec_,
+                                   d_nruns,
+                                   HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim::run_length_encode(rocprim_buffer,
+                                   rocprim_size,
+                                   gcol_sorted.vec_,
+                                   total_nnz,
+                                   cast_map->vec_,
+                                   cast_cmb->vec_,
+                                   d_nruns,
+                                   HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipFree(rocprim_buffer);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprim_buffer = NULL;
+
+        int nruns;
+        copy_d2h(1, d_nruns, &nruns);
+        free_hip(&d_nruns);
+
+        // Update col_mapped size
+        cast_map->size_ = nruns;
+
+        // Clean
+        gcol_sorted.Clear();
+
+        int* workspace2 = NULL;
+        allocate_hip(nruns + 1, &workspace2);
+
+        // Prefix sum to get entry points to duplicates
+        if(nruns > 0)
+        {
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    cast_cmb->vec_,
+                                    workspace2,
+                                    0,
+                                    nruns + 1,
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipMalloc(&rocprim_buffer, rocprim_size);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    cast_cmb->vec_,
+                                    workspace2,
+                                    0,
+                                    nruns + 1,
+                                    rocprim::plus<int>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipFree(rocprim_buffer);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+        }
+
+        // Renumbered column ids
+        kernel_csr_update_numbering<<<(nruns - 1) / 256 + 1,
+                                      256,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            nruns, workspace2, perm.vec_, cast_cmb->vec_);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        free_hip(&workspace2);
+
+        // Column id transformation
+        kernel_csr_column_id_transfer<<<(ext_nnz - 1) / 256 + 1,
+                                        256,
+                                        0,
+                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            ext_nnz,
+            ncol,
+            global_col_begin,
+            global_col_end,
+            cast_ext->vec_,
+            cast_cmb->vec_ + this->nnz_,
+            workspace,
+            cast_col->vec_);
+
+        free_hip(&workspace);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::SplitInteriorGhost(BaseMatrix<ValueType>* interior,
+                                                                BaseMatrix<ValueType>* ghost) const
+    {
+        assert(interior != NULL);
+        assert(ghost != NULL);
+        assert(interior != ghost);
+
+        HIPAcceleratorMatrixCSR<ValueType>* cast_int
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(interior);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(ghost);
+
+        assert(cast_int != NULL);
+        assert(cast_gst != NULL);
+
+        cast_int->Clear();
+        cast_gst->Clear();
+
+        // First, we need to determine the number of non-zeros for each matrix
+        PtrType* int_csr_row_ptr = NULL;
+        PtrType* gst_csr_row_ptr = NULL;
+
+        allocate_hip(this->nrow_ + 1, &int_csr_row_ptr);
+        allocate_hip(this->nrow_ + 1, &gst_csr_row_ptr);
+
+        set_to_zero_hip(this->local_backend_.HIP_block_size, this->nrow_ + 1, int_csr_row_ptr);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, this->nrow_ + 1, gst_csr_row_ptr);
+
+        kernel_csr_split_interior_ghost_nnz<<<(this->nrow_ - 1) / 256 + 1,
+                                              256,
+                                              0,
+                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            this->nrow_, this->mat_.row_offset, this->mat_.col, int_csr_row_ptr, gst_csr_row_ptr);
+
+        // Exclusive sum to obtain pointers
+        size_t size;
+        void*  buffer = NULL;
+
+        rocprimTexclusivesum(buffer,
+                             size,
+                             int_csr_row_ptr,
+                             int_csr_row_ptr,
+                             this->nrow_ + 1,
+                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipMalloc(&buffer, size);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        rocprimTexclusivesum(buffer,
+                             size,
+                             int_csr_row_ptr,
+                             int_csr_row_ptr,
+                             this->nrow_ + 1,
+                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+        rocprimTexclusivesum(buffer,
+                             size,
+                             gst_csr_row_ptr,
+                             gst_csr_row_ptr,
+                             this->nrow_ + 1,
+                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        hipFree(buffer);
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+        PtrType int_nnz;
+        PtrType gst_nnz;
+
+        copy_d2h(1, int_csr_row_ptr + this->nrow_, &int_nnz);
+        copy_d2h(1, gst_csr_row_ptr + this->nrow_, &gst_nnz);
+
+        // Allocate
+        int*       int_csr_col_ind = NULL;
+        int*       gst_csr_col_ind = NULL;
+        ValueType* int_csr_val     = NULL;
+        ValueType* gst_csr_val     = NULL;
+
+        allocate_hip(int_nnz, &int_csr_col_ind);
+        allocate_hip(int_nnz, &int_csr_val);
+        allocate_hip(gst_nnz, &gst_csr_col_ind);
+        allocate_hip(gst_nnz, &gst_csr_val);
+
+        // Fill matrices
+        kernel_csr_split_interior_ghost<<<(this->nrow_ - 1) / 256 + 1,
+                                          256,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            this->nrow_,
+            this->mat_.row_offset,
+            this->mat_.col,
+            this->mat_.val,
+            int_csr_row_ptr,
+            int_csr_col_ind,
+            int_csr_val,
+            gst_csr_row_ptr,
+            gst_csr_col_ind,
+            gst_csr_val);
+
+        cast_int->SetDataPtrCSR(
+            &int_csr_row_ptr, &int_csr_col_ind, &int_csr_val, int_nnz, this->nrow_, this->nrow_);
+
+        cast_gst->SetDataPtrCSR(
+            &gst_csr_row_ptr, &gst_csr_col_ind, &gst_csr_val, gst_nnz, this->nrow_, this->nrow_);
 
         return true;
     }
@@ -6035,6 +9518,1048 @@ namespace rocalution
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&workspace);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HIPAcceleratorMatrixCSR<ValueType>::CopyFromGlobalReceive(
+        int                          nrow,
+        int64_t                      global_column_begin,
+        int64_t                      global_column_end,
+        const BaseVector<int>&       boundary,
+        const BaseVector<PtrType>&   recv_csr_row_ptr,
+        const BaseVector<int64_t>&   recv_csr_col_ind,
+        const BaseVector<ValueType>& recv_csr_val,
+        BaseMatrix<ValueType>*       ghost,
+        BaseVector<int64_t>*         global_col)
+    {
+        assert(ghost != NULL);
+        assert(global_col != NULL);
+
+        const HIPAcceleratorVector<int>* cast_bnd
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&boundary);
+        const HIPAcceleratorVector<int>* cast_ptr
+            = dynamic_cast<const HIPAcceleratorVector<int>*>(&recv_csr_row_ptr);
+        const HIPAcceleratorVector<int64_t>* cast_col
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&recv_csr_col_ind);
+        const HIPAcceleratorVector<ValueType>* cast_val
+            = dynamic_cast<const HIPAcceleratorVector<ValueType>*>(&recv_csr_val);
+        HIPAcceleratorMatrixCSR<ValueType>* cast_gst
+            = dynamic_cast<HIPAcceleratorMatrixCSR<ValueType>*>(ghost);
+        HIPAcceleratorVector<int64_t>* cast_glo
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(global_col);
+
+        assert(cast_bnd != NULL);
+        assert(cast_ptr != NULL);
+        assert(cast_col != NULL);
+        assert(cast_val != NULL);
+        assert(cast_gst != NULL);
+
+        // Sanity check
+        assert(cast_bnd->size_ < std::numeric_limits<int>::max());
+
+        int boundary_size = static_cast<int>(cast_bnd->size_);
+
+        PtrType* int_csr_row_ptr = NULL;
+        PtrType* gst_csr_row_ptr = NULL;
+
+        allocate_hip(nrow + 1, &int_csr_row_ptr);
+        allocate_hip(nrow + 1, &gst_csr_row_ptr);
+
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, int_csr_row_ptr);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, gst_csr_row_ptr);
+
+        // First, we need to determine the number of non-zeros
+        kernel_csr_copy_from_global_nnz<<<(boundary_size - 1) / 256 + 1,
+                                          256,
+                                          0,
+                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            boundary_size,
+            global_column_begin,
+            global_column_end,
+            cast_bnd->vec_,
+            cast_ptr->vec_,
+            cast_col->vec_,
+            int_csr_row_ptr,
+            gst_csr_row_ptr);
+
+        // Exclusive sum to obtain offsets
+        size_t rocprim_size;
+        void*  rocprim_buffer = NULL;
+
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                int_csr_row_ptr,
+                                int_csr_row_ptr,
+                                0,
+                                nrow + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        hipMalloc(&rocprim_buffer, rocprim_size);
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                int_csr_row_ptr,
+                                int_csr_row_ptr,
+                                0,
+                                nrow + 1,
+                                rocprim::plus<PtrType>());
+        rocprim::exclusive_scan(rocprim_buffer,
+                                rocprim_size,
+                                gst_csr_row_ptr,
+                                gst_csr_row_ptr,
+                                0,
+                                nrow + 1,
+                                rocprim::plus<PtrType>(),
+                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+        hipFree(rocprim_buffer);
+
+        PtrType int_nnz;
+        PtrType gst_nnz;
+
+        copy_d2h(1, int_csr_row_ptr + nrow, &int_nnz);
+        copy_d2h(1, gst_csr_row_ptr + nrow, &gst_nnz);
+
+        // Allocate global column index vector
+        cast_glo->Allocate(gst_nnz);
+
+        // Allocate matrix
+        int*       int_csr_col_ind = NULL;
+        int*       gst_csr_col_ind = NULL;
+        ValueType* int_csr_val     = NULL;
+        ValueType* gst_csr_val     = NULL;
+
+        allocate_hip(int_nnz, &int_csr_col_ind);
+        allocate_hip(gst_nnz, &gst_csr_col_ind);
+        allocate_hip(int_nnz, &int_csr_val);
+        allocate_hip(gst_nnz, &gst_csr_val);
+
+        // Workspace
+        PtrType* int_workspace = NULL;
+        PtrType* gst_workspace = NULL;
+
+        allocate_hip(nrow + 1, &int_workspace);
+        allocate_hip(nrow + 1, &gst_workspace);
+
+        copy_d2d(nrow + 1, int_csr_row_ptr, int_workspace);
+        copy_d2d(nrow + 1, gst_csr_row_ptr, gst_workspace);
+
+        // Fill matrices
+        kernel_csr_copy_from_global<<<(boundary_size - 1) / 256 + 1,
+                                      256,
+                                      0,
+                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            boundary_size,
+            global_column_begin,
+            global_column_end,
+            cast_bnd->vec_,
+            cast_ptr->vec_,
+            cast_col->vec_,
+            cast_val->vec_,
+            int_workspace,
+            int_csr_col_ind,
+            int_csr_val,
+            gst_workspace,
+            cast_glo->vec_,
+            gst_csr_val);
+
+        // Clean up
+        free_hip(&int_workspace);
+        free_hip(&gst_workspace);
+
+        this->SetDataPtrCSR(&int_csr_row_ptr, &int_csr_col_ind, &int_csr_val, int_nnz, nrow, nrow);
+        cast_gst->SetDataPtrCSR(
+            &gst_csr_row_ptr, &gst_csr_col_ind, &gst_csr_val, gst_nnz, nrow, nrow);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool
+        HIPAcceleratorMatrixCSR<ValueType>::CompressAdd(const BaseVector<int64_t>& l2g,
+                                                        const BaseVector<int64_t>& global_ghost_col,
+                                                        const BaseMatrix<ValueType>& ext,
+                                                        BaseVector<int64_t>*         global_col)
+    {
+        const HIPAcceleratorVector<int64_t>* cast_l2g
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&l2g);
+        const HIPAcceleratorVector<int64_t>* cast_col
+            = dynamic_cast<const HIPAcceleratorVector<int64_t>*>(&global_ghost_col);
+        const HIPAcceleratorMatrixCSR<ValueType>* cast_ext
+            = dynamic_cast<const HIPAcceleratorMatrixCSR<ValueType>*>(&ext);
+        HIPAcceleratorVector<int64_t>* cast_glo
+            = dynamic_cast<HIPAcceleratorVector<int64_t>*>(global_col);
+
+        assert(cast_ext != NULL);
+        assert(cast_ext->nrow_ == this->nrow_);
+
+        // Sizes
+        int nrow = this->nrow_;
+        int ncol = this->ncol_;
+
+        // Do we operate on interior? Then, we do not need to convert local to global indices
+        // Additionally, we do not need to store global columns in an extra 64 bit vector
+        bool interior = global_col == NULL;
+
+        if(interior == false)
+        {
+            assert(cast_l2g != NULL);
+            assert(cast_glo != NULL);
+
+            cast_glo->Clear();
+        }
+
+        if(this->nnz_ > 0 || cast_ext->nnz_ > 0)
+        {
+            // Count non-zeros of merged matrix
+            PtrType* csr_row_ptr = NULL;
+            allocate_hip(nrow + 1, &csr_row_ptr);
+
+            // Determine maximum number of nnz per row of the merged matrix
+            kernel_csr_combined_row_nnz<<<(nrow - 1) / 256 + 1, 256>>>(
+                nrow, this->mat_.row_offset, cast_ext->mat_.row_offset, csr_row_ptr);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Find maximum over all rows
+            size_t rocprim_size;
+            void*  rocprim_buffer;
+
+            rocprim::reduce(NULL,
+                            rocprim_size,
+                            csr_row_ptr,
+                            csr_row_ptr + nrow,
+                            0,
+                            nrow,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipMalloc(&rocprim_buffer, rocprim_size);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprim::reduce(rocprim_buffer,
+                            rocprim_size,
+                            csr_row_ptr,
+                            csr_row_ptr + nrow,
+                            0,
+                            nrow,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipFree(rocprim_buffer);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Get maximum row nnz on host
+            PtrType max_row_nnz;
+            copy_d2h(1, csr_row_ptr + nrow, &max_row_nnz);
+
+            // Count non-zeros of compressed and combined matrix
+            if(interior == true)
+            {
+                if(max_row_nnz < 16)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 8, 16>
+                        <<<(nrow - 1) / (256 / 8) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 32)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 16, 32>
+                        <<<(nrow - 1) / (256 / 16) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 64)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 32, 64>
+                        <<<(nrow - 1) / (256 / 32) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 128)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 64, 128>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 256)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 64, 256>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 512)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 64, 512>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 1024)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 64, 1024>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 2048)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 64, 2048>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 4096)
+                {
+                    kernel_csr_compress_add_nnz<false, 256, 64, 4096>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 8192)
+                {
+                    kernel_csr_compress_add_nnz<false, 128, 64, 8192>
+                        <<<(nrow - 1) / (128 / 64) + 1,
+                           128,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 16384)
+                {
+                    kernel_csr_compress_add_nnz<false, 64, 64, 16384>
+                        <<<(nrow - 1) / (64 / 64) + 1,
+                           64,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            (int*)NULL,
+                            csr_row_ptr);
+                }
+                else
+                {
+                    // Exceeding maximum number of nnz per row, falling back to host
+                    free_hip(&csr_row_ptr);
+                    return false;
+                }
+            }
+            else
+            {
+
+                assert(cast_l2g != NULL);
+                assert(cast_glo != NULL);
+
+                if(max_row_nnz < 16)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 8, 16>
+                        <<<(nrow - 1) / (256 / 8) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 32)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 16, 32>
+                        <<<(nrow - 1) / (256 / 16) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 64)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 32, 64>
+                        <<<(nrow - 1) / (256 / 32) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 128)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 64, 128>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 256)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 64, 256>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 512)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 64, 512>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 1024)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 64, 1024>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 2048)
+                {
+                    kernel_csr_compress_add_nnz<true, 256, 64, 2048>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 4096)
+                {
+                    kernel_csr_compress_add_nnz<true, 128, 64, 4096>
+                        <<<(nrow - 1) / (128 / 64) + 1,
+                           128,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else if(max_row_nnz < 8192)
+                {
+                    kernel_csr_compress_add_nnz<true, 64, 64, 8192>
+                        <<<(nrow - 1) / (64 / 64) + 1,
+                           64,
+                           0,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_l2g->vec_,
+                            csr_row_ptr);
+                }
+                else
+                {
+                    // Exceeding maximum number of nnz per row, falling back to host
+                    free_hip(&csr_row_ptr);
+                    return false;
+                }
+            }
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Obtain actual max nnz per row
+            rocprim::reduce(NULL,
+                            rocprim_size,
+                            csr_row_ptr,
+                            csr_row_ptr + nrow,
+                            0,
+                            nrow,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipMalloc(&rocprim_buffer, rocprim_size);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprim::reduce(rocprim_buffer,
+                            rocprim_size,
+                            csr_row_ptr,
+                            csr_row_ptr + nrow,
+                            0,
+                            nrow,
+                            rocprim::maximum<int>(),
+                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipFree(rocprim_buffer);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Get actual maximum row nnz on host
+            copy_d2h(1, csr_row_ptr + nrow, &max_row_nnz);
+
+            // Exclusive sum to obtain new row pointers
+            rocprim::exclusive_scan(NULL,
+                                    rocprim_size,
+                                    csr_row_ptr,
+                                    csr_row_ptr,
+                                    0,
+                                    nrow + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipMalloc(&rocprim_buffer, rocprim_size);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            rocprim::exclusive_scan(rocprim_buffer,
+                                    rocprim_size,
+                                    csr_row_ptr,
+                                    csr_row_ptr,
+                                    0,
+                                    nrow + 1,
+                                    rocprim::plus<PtrType>(),
+                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            hipFree(rocprim_buffer);
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Obtain nnz
+            PtrType nnz;
+            copy_d2h(1, csr_row_ptr + nrow, &nnz);
+
+            // Allocate
+            int*       csr_col_ind = NULL;
+            ValueType* csr_val     = NULL;
+
+            allocate_hip(nnz, &csr_col_ind);
+            allocate_hip(nnz, &csr_val);
+
+            if(interior == false)
+            {
+                // If we are operating on ghost, we need a special vector to store column
+                // indices in 64 bits
+                cast_glo->Allocate(nnz);
+
+                if(max_row_nnz < 16)
+                {
+                    size_t ssize = 256 / 8 * 16 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 256, 8, 16>
+                        <<<(nrow - 1) / (256 / 8) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 32)
+                {
+                    size_t ssize = 256 / 16 * 32 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 256, 16, 32>
+                        <<<(nrow - 1) / (256 / 16) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 64)
+                {
+                    size_t ssize = 256 / 32 * 64 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 256, 32, 64>
+                        <<<(nrow - 1) / (256 / 32) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 128)
+                {
+                    size_t ssize = 256 / 64 * 128 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 256, 64, 128>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 256)
+                {
+                    size_t ssize = 256 / 64 * 256 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 256, 64, 256>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 512)
+                {
+                    size_t ssize = 256 / 64 * 512 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 256, 64, 512>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 1024)
+                {
+                    size_t ssize = 256 / 64 * 1024 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 256, 64, 1024>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 2048)
+                {
+                    size_t ssize = 128 / 64 * 2048 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 128, 64, 2048>
+                        <<<(nrow - 1) / (128 / 64) + 1,
+                           128,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else if(max_row_nnz < 4096)
+                {
+                    size_t ssize = 64 / 64 * 4096 * (sizeof(int64_t) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<true, 64, 64, 4096>
+                        <<<(nrow - 1) / (64 / 64) + 1,
+                           64,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_col->vec_,
+                            cast_ext->mat_.val,
+                            cast_l2g->vec_,
+                            csr_row_ptr,
+                            cast_glo->vec_,
+                            csr_val);
+                }
+                else
+                {
+                    // Exceeding maximum number of nnz per row, falling back to host
+                    free_hip(&csr_row_ptr);
+                    free_hip(&csr_col_ind);
+                    free_hip(&csr_val);
+
+                    cast_glo->Clear();
+
+                    return false;
+                }
+            }
+            else
+            {
+                if(max_row_nnz < 16)
+                {
+                    size_t ssize = 256 / 8 * 16 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 256, 8, 16>
+                        <<<(nrow - 1) / (256 / 8) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 32)
+                {
+                    size_t ssize = 256 / 16 * 32 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 256, 16, 32>
+                        <<<(nrow - 1) / (256 / 16) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 64)
+                {
+                    size_t ssize = 256 / 32 * 64 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 256, 32, 64>
+                        <<<(nrow - 1) / (256 / 32) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 128)
+                {
+                    size_t ssize = 256 / 64 * 128 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 256, 64, 128>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 256)
+                {
+                    size_t ssize = 256 / 64 * 256 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 256, 64, 256>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 512)
+                {
+                    size_t ssize = 256 / 64 * 512 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 256, 64, 512>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 1024)
+                {
+                    size_t ssize = 256 / 64 * 1024 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 256, 64, 1024>
+                        <<<(nrow - 1) / (256 / 64) + 1,
+                           256,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 2048)
+                {
+                    size_t ssize = 128 / 64 * 2048 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 128, 64, 2048>
+                        <<<(nrow - 1) / (128 / 64) + 1,
+                           128,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else if(max_row_nnz < 4096)
+                {
+                    size_t ssize = 64 / 64 * 4096 * (sizeof(int) + sizeof(ValueType));
+                    kernel_csr_compress_add_fill<false, 64, 64, 4096>
+                        <<<(nrow - 1) / (64 / 64) + 1,
+                           64,
+                           ssize,
+                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                            nrow,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_ext->mat_.row_offset,
+                            cast_ext->mat_.col,
+                            cast_ext->mat_.val,
+                            (int*)NULL,
+                            csr_row_ptr,
+                            csr_col_ind,
+                            csr_val);
+                }
+                else
+                {
+                    // Exceeding maximum number of nnz per row, falling back to host
+                    free_hip(&csr_row_ptr);
+                    free_hip(&csr_col_ind);
+                    free_hip(&csr_val);
+
+                    cast_glo->Clear();
+
+                    return false;
+                }
+            }
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
+
+            // Update matrix
+            this->Clear();
+            this->SetDataPtrCSR(&csr_row_ptr, &csr_col_ind, &csr_val, nnz, nrow, ncol);
+        }
 
         return true;
     }

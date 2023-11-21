@@ -1385,6 +1385,7 @@ namespace rocalution
         ParallelManager::CommunicateAsync_<std::complex<double>>(std::complex<double>*,
                                                                  std::complex<double>*) const;
 
+    template void ParallelManager::InverseCommunicateAsync_<bool>(bool*, bool*) const;
     template void ParallelManager::InverseCommunicateAsync_<int>(int*, int*) const;
     template void ParallelManager::InverseCommunicateAsync_<float>(float*, float*) const;
     template void ParallelManager::InverseCommunicateAsync_<double>(double*, double*) const;
@@ -1402,6 +1403,8 @@ namespace rocalution
         PtrType*, int64_t*, std::complex<float>*, PtrType*, int64_t*, std::complex<float>*) const;
     template void ParallelManager::CommunicateCSRAsync_<PtrType, int64_t, std::complex<double>>(
         PtrType*, int64_t*, std::complex<double>*, PtrType*, int64_t*, std::complex<double>*) const;
+    template void ParallelManager::CommunicateCSRAsync_<PtrType, int, int>(
+        PtrType*, int*, int*, PtrType*, int*, int*) const;
 
     template void ParallelManager::InverseCommunicateCSRAsync_<PtrType, int64_t, float>(
         PtrType*, int64_t*, float*, PtrType*, int64_t*, float*) const;

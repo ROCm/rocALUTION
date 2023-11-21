@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (c) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -237,6 +237,9 @@ namespace rocalution
         */
         void Sort(void);
 
+        /** \brief Extract the diagonal values of the matrix into a GlobalVector */
+        void ExtractDiagonal(GlobalVector<ValueType>* vec_diag) const;
+
         /** \brief Extract the inverse (reciprocal) diagonal values of the matrix into a
         * GlobalVector
         */
@@ -275,6 +278,39 @@ namespace rocalution
                            int64_t                  n,
                            int64_t                  m,
                            GlobalMatrix<ValueType>* pro);
+
+        /** \brief Plain aggregation - Modification of a greedy aggregation scheme from
+        * Vanek (1996)
+        */
+        ROCALUTION_EXPORT
+        void AMGGreedyAggregate(ValueType             eps,
+                                LocalVector<bool>*    connections,
+                                LocalVector<int64_t>* aggregates,
+                                LocalVector<int64_t>* aggregate_root_nodes) const;
+
+        /** \brief Parallel aggregation - Parallel maximal independent set aggregation scheme from
+        * Bell, Dalton, & Olsen (2012)
+        */
+        ROCALUTION_EXPORT
+        void AMGPMISAggregate(ValueType             eps,
+                              LocalVector<bool>*    connections,
+                              LocalVector<int64_t>* aggregates,
+                              LocalVector<int64_t>* aggregate_root_nodes) const;
+
+        /** \brief Interpolation scheme based on smoothed aggregation from Vanek (1996) */
+        ROCALUTION_EXPORT
+        void AMGSmoothedAggregation(ValueType                   relax,
+                                    const LocalVector<bool>&    connections,
+                                    const LocalVector<int64_t>& aggregates,
+                                    const LocalVector<int64_t>& aggregate_root_nodes,
+                                    GlobalMatrix<ValueType>*    prolong,
+                                    int                         lumping_strat = 0) const;
+
+        /** \brief Aggregation-based interpolation scheme */
+        ROCALUTION_EXPORT
+        void AMGUnsmoothedAggregation(const LocalVector<int64_t>& aggregates,
+                                      const LocalVector<int64_t>& aggregate_root_nodes,
+                                      GlobalMatrix<ValueType>*    prolong) const;
 
         /** \brief Ruge Stueben coarsening */
         void RSCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;

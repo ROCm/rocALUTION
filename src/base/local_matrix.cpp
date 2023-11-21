@@ -6203,6 +6203,537 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void
+        LocalMatrix<ValueType>::AMGGreedyAggregate(ValueType             eps,
+                                                   LocalVector<bool>*    connections,
+                                                   LocalVector<int64_t>* aggregates,
+                                                   LocalVector<int64_t>* aggregate_root_nodes) const
+    {
+        log_debug(this,
+                  "LocalMatrix::AMGGreedyAggregate()",
+                  connections,
+                  aggregates,
+                  aggregate_root_nodes);
+
+        assert(connections != NULL);
+        assert(aggregates != NULL);
+        assert(aggregate_root_nodes != NULL);
+
+        assert(this->is_host_() == connections->is_host_());
+        assert(this->is_host_() == aggregates->is_host_());
+        assert(this->is_host_() == aggregate_root_nodes->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType>        csr_mat;
+        const LocalMatrix<ValueType>* csr_ptr = this;
+
+        if(csr_ptr->GetFormat() != CSR)
+        {
+            csr_mat.CloneFrom(*csr_ptr);
+            csr_mat.ConvertToCSR();
+            csr_ptr = &csr_mat;
+        }
+
+        if(this->GetNnz() > 0)
+        {
+            // Zero structures
+            LocalMatrix<ValueType> zero_mat;
+            zero_mat.CloneBackend(*this);
+
+            LocalVector<int64_t> zero_vec;
+            zero_vec.CloneBackend(*this);
+
+            LocalVector<ValueType> diag;
+            diag.CloneBackend(*this);
+            diag.Allocate("diag", csr_ptr->GetM());
+
+            csr_ptr->ExtractDiagonal(&diag);
+
+            connections->Allocate("Connections", csr_ptr->GetNnz());
+            aggregates->Allocate("Aggregates", csr_ptr->GetM());
+            aggregate_root_nodes->Allocate("Aggregate root nodes", csr_ptr->GetM());
+
+            csr_ptr->matrix_->AMGComputeStrongConnections(
+                eps, *diag.vector_, *zero_vec.vector_, connections->vector_, *zero_mat.matrix_);
+
+            bool status = csr_ptr->matrix_->AMGGreedyAggregate(
+                *connections->vector_, aggregates->vector_, aggregate_root_nodes->vector_);
+
+            if((status == false) && (this->is_host_() == true))
+            {
+                LOG_INFO("Computation of LocalMatrix::AMGGreedyAggregate() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(status == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                mat_host.CopyFrom(*this);
+
+                // Move to host
+                aggregates->MoveToHost();
+                aggregate_root_nodes->MoveToHost();
+                connections->MoveToHost();
+
+                if(mat_host.matrix_->AMGGreedyAggregate(
+                       *connections->vector_, aggregates->vector_, aggregate_root_nodes->vector_)
+                   == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::AMGGreedyAggregate() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2,
+                        "*** warning: LocalMatrix::AMGGreedyAggregate() is performed on the host");
+
+                    aggregates->MoveToAccelerator();
+                    aggregate_root_nodes->MoveToAccelerator();
+                    connections->MoveToAccelerator();
+                }
+            }
+        }
+
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: LocalMatrix::AMGGreedyAggregate() is performed in CSR format");
+        }
+    }
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::AMGPMISAggregate(ValueType             eps,
+                                                  LocalVector<bool>*    connections,
+                                                  LocalVector<int64_t>* aggregates,
+                                                  LocalVector<int64_t>* aggregate_root_nodes) const
+    {
+        log_debug(
+            this, "LocalMatrix::AMGPMISAggregate()", connections, aggregates, aggregate_root_nodes);
+
+        assert(connections != NULL);
+        assert(aggregates != NULL);
+        assert(aggregate_root_nodes != NULL);
+
+        assert(this->is_host_() == connections->is_host_());
+        assert(this->is_host_() == aggregates->is_host_());
+        assert(this->is_host_() == aggregate_root_nodes->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType>        csr_mat;
+        const LocalMatrix<ValueType>* csr_ptr = this;
+        if(csr_ptr->GetFormat() != CSR)
+        {
+            csr_mat.CloneFrom(*csr_ptr);
+            csr_mat.ConvertToCSR();
+            csr_ptr = &csr_mat;
+        }
+        if(this->GetNnz() > 0)
+        {
+            // Zero structures
+            LocalMatrix<ValueType> zero_mat;
+            zero_mat.CloneBackend(*this);
+
+            LocalVector<int> izero_vec;
+            izero_vec.CloneBackend(*this);
+
+            LocalVector<int64_t> i64zero_vec;
+            i64zero_vec.CloneBackend(*this);
+
+            LocalVector<PtrType> pzero_vec;
+            pzero_vec.CloneBackend(*this);
+
+            connections->Allocate("Connections", csr_ptr->GetNnz());
+            aggregates->Allocate("Aggregates", csr_ptr->GetM());
+            aggregate_root_nodes->Allocate("Aggregate root nodes", csr_ptr->GetM());
+
+            LocalVector<int> hash;
+            hash.CloneBackend(*this);
+            hash.Allocate("hash", csr_ptr->GetM());
+
+            LocalVector<int> state;
+            state.CloneBackend(*this);
+            state.Allocate("state", csr_ptr->GetM());
+
+            LocalVector<int> max_state;
+            max_state.CloneBackend(*this);
+            max_state.Allocate("max_state", csr_ptr->GetM());
+
+            LocalVector<ValueType> diag;
+            diag.CloneBackend(*this);
+            diag.Allocate("diag", csr_ptr->GetM());
+
+            int64_t global_col_begin = 0;
+            int64_t global_col_end   = this->GetN();
+
+            csr_ptr->ExtractDiagonal(&diag);
+
+            // Compute connections
+            csr_ptr->matrix_->AMGComputeStrongConnections(
+                eps, *diag.vector_, *i64zero_vec.vector_, connections->vector_, *zero_mat.matrix_);
+
+            // Initialize max state
+            csr_ptr->matrix_->AMGPMISInitializeState(global_col_begin,
+                                                     *connections->vector_,
+                                                     max_state.vector_,
+                                                     hash.vector_,
+                                                     *zero_mat.matrix_);
+
+            int iter = 0;
+            while(true)
+            {
+                state.CopyFrom(max_state);
+
+                // Find maximum distance 2 node
+                bool undecided = false;
+                csr_ptr->matrix_->AMGPMISFindMaxNeighbourNode(global_col_begin,
+                                                              global_col_end,
+                                                              undecided,
+                                                              *connections->vector_,
+                                                              *state.vector_,
+                                                              *hash.vector_,
+                                                              *pzero_vec.vector_,
+                                                              *i64zero_vec.vector_,
+                                                              *izero_vec.vector_,
+                                                              *izero_vec.vector_,
+                                                              max_state.vector_,
+                                                              aggregates->vector_,
+                                                              *zero_mat.matrix_);
+
+                // If no more undecided nodes are left, we are done
+                if(undecided == false)
+                {
+                    break;
+                }
+
+                ++iter;
+
+                // Print some warning if number of iteration is getting huge
+                if(iter > 20)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::AMGPMISAggregate() Current "
+                                     "number of iterations: "
+                                         << iter);
+                }
+            }
+
+            aggregate_root_nodes->SetValues(-1);
+
+            csr_ptr->matrix_->AMGPMISInitializeAggregateGlobalIndices(
+                global_col_begin, *aggregates->vector_, aggregate_root_nodes->vector_);
+
+            aggregates->ExclusiveSum();
+
+            // Add any unassigned nodes to existing aggregations
+            for(int k = 0; k < 2; k++)
+            {
+                state.CopyFrom(max_state);
+
+                csr_ptr->matrix_->AMGPMISAddUnassignedNodesToAggregations(
+                    global_col_begin,
+                    *connections->vector_,
+                    *state.vector_,
+                    *i64zero_vec.vector_,
+                    max_state.vector_,
+                    aggregates->vector_,
+                    aggregate_root_nodes->vector_,
+                    *zero_mat.matrix_);
+            }
+        }
+
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: LocalMatrix::AMGPMISAggregate() is performed in CSR format");
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::AMGSmoothedAggregation(
+        ValueType                   relax,
+        const LocalVector<bool>&    connections,
+        const LocalVector<int64_t>& aggregates,
+        const LocalVector<int64_t>& aggregate_root_nodes,
+        LocalMatrix<ValueType>*     prolong,
+        int                         lumping_strat) const
+    {
+        log_debug(this,
+                  "LocalMatrix::AMGSmoothedAggregation()",
+                  relax,
+                  (const void*&)connections,
+                  (const void*&)aggregates,
+                  (const void*&)aggregate_root_nodes,
+                  prolong);
+
+        assert(relax > static_cast<ValueType>(0));
+        assert(prolong != NULL);
+        assert(this != prolong);
+        assert(this->is_host_() == connections.is_host_());
+        assert(this->is_host_() == aggregates.is_host_());
+        assert(this->is_host_() == aggregate_root_nodes.is_host_());
+        assert(this->is_host_() == prolong->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType>        csr_mat;
+        const LocalMatrix<ValueType>* csr_ptr = this;
+
+        if(csr_ptr->GetFormat() != CSR)
+        {
+            csr_mat.CloneFrom(*csr_ptr);
+            csr_mat.ConvertToCSR();
+            csr_ptr = &csr_mat;
+        }
+
+        //csr_ptr->matrix_->AMGSmoothedAggregation(relax, *connections.vector_, *aggregates.vector_, prolong->matrix_, lumping_strat);
+
+        // Zero structures
+        LocalMatrix<ValueType> zero_mat;
+        zero_mat.CloneBackend(*this);
+
+        LocalVector<int> izero_vec;
+        izero_vec.CloneBackend(*this);
+
+        LocalVector<int64_t> i64zero_vec;
+        i64zero_vec.CloneBackend(*this);
+
+        int64_t global_col_begin = 0;
+        int64_t global_col_end   = this->GetN();
+
+        // fine to coarse map
+        LocalVector<int> f2c_map;
+        f2c_map.CloneBackend(*this);
+        f2c_map.Allocate("f2c map", csr_ptr->GetM() + 1);
+        f2c_map.Zeros();
+
+        // Determine number of non-zeros for P
+        bool err = csr_ptr->matrix_->AMGSmoothedAggregationProlongNnz(global_col_begin,
+                                                                      global_col_end,
+                                                                      *connections.vector_,
+                                                                      *aggregates.vector_,
+                                                                      *aggregate_root_nodes.vector_,
+                                                                      *zero_mat.matrix_,
+                                                                      f2c_map.vector_,
+                                                                      prolong->matrix_,
+                                                                      NULL);
+
+        if((err == false) && (csr_ptr->is_host_() == true) && (csr_ptr->GetFormat() == CSR))
+        {
+            LOG_INFO("Computation of LocalMatrix::ILU0Factorize() failed");
+            csr_ptr->Info();
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        if(err == false)
+        {
+            // Move to host
+            LocalMatrix<ValueType> mat_host;
+            mat_host.ConvertTo(csr_ptr->GetFormat());
+            mat_host.CopyFrom(*csr_ptr);
+
+            LocalVector<bool> connections_host;
+            connections_host.CopyFrom(connections);
+
+            LocalVector<int64_t> aggregates_host;
+            aggregates_host.CopyFrom(aggregates);
+
+            LocalVector<int64_t> aggregate_root_nodes_host;
+            aggregate_root_nodes_host.CopyFrom(aggregate_root_nodes);
+
+            zero_mat.MoveToHost();
+            i64zero_vec.MoveToHost();
+            f2c_map.MoveToHost();
+            prolong->MoveToHost();
+
+            // Convert to CSR
+            unsigned int format   = mat_host.GetFormat();
+            int          blockdim = mat_host.GetBlockDimension();
+            mat_host.ConvertToCSR();
+
+            if(mat_host.matrix_->AMGSmoothedAggregationProlongNnz(
+                   global_col_begin,
+                   global_col_end,
+                   *connections_host.vector_,
+                   *aggregates_host.vector_,
+                   *aggregate_root_nodes_host.vector_,
+                   *zero_mat.matrix_,
+                   f2c_map.vector_,
+                   prolong->matrix_,
+                   NULL)
+               == false)
+            {
+                LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
+                mat_host.Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(mat_host.matrix_->AMGSmoothedAggregationProlongFill(
+                   global_col_begin,
+                   global_col_end,
+                   lumping_strat,
+                   relax,
+                   *connections_host.vector_,
+                   *aggregates_host.vector_,
+                   *aggregate_root_nodes_host.vector_,
+                   *i64zero_vec.vector_,
+                   *f2c_map.vector_,
+                   *zero_mat.matrix_,
+                   prolong->matrix_,
+                   NULL,
+                   NULL)
+               == false)
+            {
+                LOG_INFO("Computation of LocalMatrix::AMGSmoothedAggregation() failed");
+                mat_host.Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(format != CSR)
+            {
+                LOG_VERBOSE_INFO(2,
+                                 "*** warning: LocalMatrix::AMGSmoothedAggregation() is performed "
+                                 "in CSR format");
+            }
+
+            if(csr_ptr->is_accel_() == true)
+            {
+                LOG_VERBOSE_INFO(
+                    2,
+                    "*** warning: LocalMatrix::AMGSmoothedAggregation() is performed on the host");
+
+                zero_mat.MoveToAccelerator();
+                i64zero_vec.MoveToAccelerator();
+                f2c_map.MoveToAccelerator();
+                prolong->MoveToAccelerator();
+            }
+        }
+        else
+        {
+            // Fill P
+            csr_ptr->matrix_->AMGSmoothedAggregationProlongFill(global_col_begin,
+                                                                global_col_end,
+                                                                lumping_strat,
+                                                                relax,
+                                                                *connections.vector_,
+                                                                *aggregates.vector_,
+                                                                *aggregate_root_nodes.vector_,
+                                                                *i64zero_vec.vector_,
+                                                                *f2c_map.vector_,
+                                                                *zero_mat.matrix_,
+                                                                prolong->matrix_,
+                                                                NULL,
+                                                                NULL);
+        }
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+#endif
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2, "*** warning: LocalMatrix::AMGSmoothedAggregation() is performed in CSR format");
+        }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::AMGUnsmoothedAggregation(
+        const LocalVector<int64_t>& aggregates,
+        const LocalVector<int64_t>& aggregate_root_nodes,
+        LocalMatrix<ValueType>*     prolong) const
+    {
+        log_debug(this,
+                  "LocalMatrix::AMGUnsmoothedAggregation()",
+                  (const void*&)aggregates,
+                  (const void*&)aggregate_root_nodes,
+                  prolong);
+
+        assert(prolong != NULL);
+        assert(this != prolong);
+        assert(this->is_host_() == aggregates.is_host_());
+        assert(this->is_host_() == aggregate_root_nodes.is_host_());
+        assert(this->is_host_() == prolong->is_host_());
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        // Only CSR matrices are supported
+        LocalMatrix<ValueType>        csr_mat;
+        const LocalMatrix<ValueType>* csr_ptr = this;
+
+        if(csr_ptr->GetFormat() != CSR)
+        {
+            csr_mat.CloneFrom(*csr_ptr);
+            csr_mat.ConvertToCSR();
+            csr_ptr = &csr_mat;
+        }
+
+        if(this->GetNnz() > 0)
+        {
+            // csr_ptr->matrix_->AMGUnsmoothedAggregation(*aggregates.vector_, prolong->matrix_);
+
+            // Zero structures
+            LocalMatrix<ValueType> zero_mat;
+            zero_mat.CloneBackend(*this);
+
+            LocalVector<int> izero_vec;
+            izero_vec.CloneBackend(*this);
+
+            int64_t global_col_begin = 0;
+            int64_t global_col_end   = this->GetN();
+
+            // fine to coarse map
+            LocalVector<int> f2c_map;
+            f2c_map.CloneBackend(*this);
+            f2c_map.Allocate("f2c map", csr_ptr->GetM() + 1);
+            f2c_map.Zeros();
+
+            // Determine number of non-zeros for P
+            csr_ptr->matrix_->AMGUnsmoothedAggregationProlongNnz(global_col_begin,
+                                                                 global_col_end,
+                                                                 *aggregates.vector_,
+                                                                 *aggregate_root_nodes.vector_,
+                                                                 *zero_mat.matrix_,
+                                                                 f2c_map.vector_,
+                                                                 prolong->matrix_,
+                                                                 NULL);
+
+            // Fill P
+            csr_ptr->matrix_->AMGUnsmoothedAggregationProlongFill(global_col_begin,
+                                                                  global_col_end,
+                                                                  *aggregates.vector_,
+                                                                  *aggregate_root_nodes.vector_,
+                                                                  *f2c_map.vector_,
+                                                                  *zero_mat.matrix_,
+                                                                  prolong->matrix_,
+                                                                  NULL,
+                                                                  NULL);
+        }
+
+#ifdef DEBUG_MODE
+        prolong->Check();
+#endif
+
+        if(this->GetFormat() != CSR)
+        {
+            LOG_VERBOSE_INFO(
+                2,
+                "*** warning: LocalMatrix::AMGUnsmoothedAggregation() is performed in CSR format");
+        }
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::RSCoarsening(float              eps,
                                               LocalVector<int>*  CFmap,
                                               LocalVector<bool>* S) const
@@ -6384,6 +6915,8 @@ namespace rocalution
                                          << iter);
                 }
             }
+
+            omega.Clear();
         }
 
         std::string CFmap_name = "CF map of " + this->object_name_;
@@ -6544,36 +7077,26 @@ namespace rocalution
         f2c.Allocate("f2c map", mat->GetM() + 1);
 
         // Determine row nnz of P
-        mat->matrix_->RSExtPIProlongNnz(0,
-                                        mat->GetN(),
-                                        FF1,
-                                        *zerog.vector_,
-                                        *CFmap.vector_,
-                                        *S.vector_,
-                                        *zerom.matrix_,
-                                        *zero.vector_,
-                                        *zerog.vector_,
-                                        f2c.vector_,
-                                        prolong->matrix_,
-                                        NULL);
+        mat->RSExtPIProlongNnz(
+            0, mat->GetN(), FF1, zerog, CFmap, S, zerom, zero, zerog, &f2c, prolong, NULL);
 
         // Fill column indices and values of P
-        mat->matrix_->RSExtPIProlongFill(0,
-                                         mat->GetN(),
-                                         FF1,
-                                         *zerog.vector_,
-                                         *f2c.vector_,
-                                         *CFmap.vector_,
-                                         *S.vector_,
-                                         *zerom.matrix_,
-                                         *zero.vector_,
-                                         *zerog.vector_,
-                                         *zero.vector_,
-                                         *zerog.vector_,
-                                         *zerov.vector_,
-                                         prolong->matrix_,
-                                         NULL,
-                                         NULL);
+        mat->RSExtPIProlongFill(0,
+                                mat->GetN(),
+                                FF1,
+                                zerog,
+                                f2c,
+                                CFmap,
+                                S,
+                                zerom,
+                                zero,
+                                zerog,
+                                zero,
+                                zerog,
+                                zerov,
+                                prolong,
+                                NULL,
+                                NULL);
 
         std::string prolong_name = "Prolongation Operator of " + mat->object_name_;
         prolong->object_name_    = prolong_name;
@@ -7744,6 +8267,480 @@ namespace rocalution
                 }
             }
         }
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::CompressAdd(const LocalVector<int64_t>&   l2g,
+                                             const LocalVector<int64_t>&   global_ghost_col,
+                                             const LocalMatrix<ValueType>& ext,
+                                             LocalVector<int64_t>*         global_col)
+    {
+        log_debug(this,
+                  "LocalMatrix::CompressAdd()",
+                  (const void*&)l2g,
+                  (const void*&)global_ghost_col,
+                  (const void*&)ext,
+                  global_col);
+
+        assert(l2g.is_host_() == this->is_host_());
+        assert(global_ghost_col.is_host_() == this->is_host_());
+        assert(ext.is_host_() == this->is_host_());
+
+        if(global_col != NULL)
+        {
+            assert(global_col->is_host_() == this->is_host_());
+        }
+
+#ifdef DEBUG_MODE
+        ext.Check();
+        this->Check();
+#endif
+
+        bool err = this->matrix_->CompressAdd(*l2g.vector_,
+                                              *global_ghost_col.vector_,
+                                              *ext.matrix_,
+                                              (global_col != NULL ? global_col->vector_ : NULL));
+
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+        {
+            LOG_INFO("Computation of LocalMatrix::CompressAdd() failed");
+            this->Info();
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        if(err == false)
+        {
+            LocalVector<int64_t>   l2g_host;
+            LocalVector<int64_t>   ggc_host;
+            LocalMatrix<ValueType> ext_host;
+            l2g_host.CopyFrom(l2g);
+            ggc_host.CopyFrom(global_ghost_col);
+            ext_host.ConvertTo(ext.GetFormat(), ext.GetBlockDimension());
+            ext_host.CopyFrom(ext);
+
+            this->MoveToHost();
+
+            if(global_col != NULL)
+            {
+                global_col->MoveToHost();
+            }
+
+            if(this->matrix_->CompressAdd(*l2g_host.vector_,
+                                          *ggc_host.vector_,
+                                          *ext_host.matrix_,
+                                          (global_col != NULL ? global_col->vector_ : NULL))
+               == false)
+            {
+                LOG_INFO("Computation of LocalMatrix::CompressAdd() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(ext.GetFormat() != CSR)
+            {
+                LOG_VERBOSE_INFO(
+                    2, "*** warning: LocalMatrix::CompressAdd() is performed in CSR format");
+
+                this->ConvertTo(ext.GetFormat(), ext.GetBlockDimension());
+            }
+
+            if(ext.is_accel_() == true)
+            {
+                LOG_VERBOSE_INFO(
+                    2, "*** warning: LocalMatrix::CompressAdd() is performed on the host");
+
+                this->MoveToAccelerator();
+
+                if(global_col != NULL)
+                {
+                    global_col->MoveToAccelerator();
+                }
+            }
+        }
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::RSExtPIProlongNnz(int64_t                     global_column_begin,
+                                                   int64_t                     global_column_end,
+                                                   bool                        FF1,
+                                                   const LocalVector<int64_t>& l2g,
+                                                   const LocalVector<int>&     CFmap,
+                                                   const LocalVector<bool>&    S,
+                                                   const LocalMatrix<ValueType>& ghost,
+                                                   const LocalVector<PtrType>&   bnd_csr_row_ptr,
+                                                   const LocalVector<int64_t>&   bnd_csr_col_ind,
+                                                   LocalVector<int>*             f2c,
+                                                   LocalMatrix<ValueType>*       prolong_int,
+                                                   LocalMatrix<ValueType>*       prolong_gst) const
+    {
+        log_debug(this,
+                  "LocalMatrix::RSExtPIProlongNnz()",
+                  global_column_begin,
+                  global_column_end,
+                  FF1,
+                  (const void*&)l2g,
+                  (const void*&)CFmap,
+                  (const void*&)S,
+                  (const void*&)ghost,
+                  (const void*&)bnd_csr_row_ptr,
+                  (const void*&)bnd_csr_col_ind,
+                  f2c,
+                  prolong_int,
+                  prolong_gst);
+
+        assert(f2c != NULL);
+        assert(prolong_int != NULL);
+        assert(prolong_int != prolong_gst);
+        assert(this != prolong_int);
+        assert(this != prolong_gst);
+
+        assert(this->is_host_() == l2g.is_host_());
+        assert(this->is_host_() == CFmap.is_host_());
+        assert(this->is_host_() == S.is_host_());
+        assert(this->is_host_() == ghost.is_host_());
+        assert(this->is_host_() == bnd_csr_row_ptr.is_host_());
+        assert(this->is_host_() == bnd_csr_col_ind.is_host_());
+        assert(this->is_host_() == f2c->is_host_());
+        assert(this->is_host_() == prolong_int->is_host_());
+        assert(prolong_gst != NULL ? this->is_host_() == prolong_gst->is_host_() : true);
+
+#ifdef DEBUG_MODE
+        this->Check();
+        ghost.Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->RSExtPIProlongNnz(
+                global_column_begin,
+                global_column_end,
+                FF1,
+                *l2g.vector_,
+                *CFmap.vector_,
+                *S.vector_,
+                *ghost.matrix_,
+                *bnd_csr_row_ptr.vector_,
+                *bnd_csr_col_ind.vector_,
+                f2c->vector_,
+                prolong_int->matrix_,
+                (prolong_gst != NULL ? prolong_gst->matrix_ : NULL));
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::RSExtPIProlongNnz() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                LocalVector<int64_t>   l2g_host;
+                LocalVector<int>       cf_host;
+                LocalVector<bool>      S_host;
+                LocalMatrix<ValueType> gst_host;
+                LocalVector<PtrType>   row_host;
+                LocalVector<int64_t>   col_host;
+                mat_host.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                mat_host.CopyFrom(*this);
+                l2g_host.CopyFrom(l2g);
+                cf_host.CopyFrom(CFmap);
+                S_host.CopyFrom(S);
+                gst_host.CopyFrom(ghost);
+                row_host.CopyFrom(bnd_csr_row_ptr);
+                col_host.CopyFrom(bnd_csr_col_ind);
+
+                // Move to host
+                f2c->MoveToHost();
+                prolong_int->MoveToHost();
+
+                if(prolong_gst != NULL)
+                {
+                    prolong_gst->MoveToHost();
+                }
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+                gst_host.ConvertToCSR();
+                prolong_int->ConvertToCSR();
+
+                if(prolong_gst != NULL)
+                {
+                    prolong_gst->ConvertToCSR();
+                }
+
+                if(mat_host.matrix_->RSExtPIProlongNnz(
+                       global_column_begin,
+                       global_column_end,
+                       FF1,
+                       *l2g_host.vector_,
+                       *cf_host.vector_,
+                       *S_host.vector_,
+                       *gst_host.matrix_,
+                       *row_host.vector_,
+                       *col_host.vector_,
+                       f2c->vector_,
+                       prolong_int->matrix_,
+                       (prolong_gst != NULL ? prolong_gst->matrix_ : NULL))
+                   == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::RSExtPIProlongNnz() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(
+                        2,
+                        "*** warning: LocalMatrix::RSExtPIProlongNnz() is performed in CSR format");
+
+                    prolong_int->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+
+                    if(prolong_gst != NULL)
+                    {
+                        prolong_gst->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                    }
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2,
+                        "*** warning: LocalMatrix::RSExtPIProlongNnz() is performed on the host");
+
+                    f2c->MoveToAccelerator();
+                    prolong_int->MoveToAccelerator();
+
+                    if(prolong_gst != NULL)
+                    {
+                        prolong_gst->MoveToAccelerator();
+                    }
+                }
+            }
+        }
+
+#ifdef DEBUG_MODE
+        prolong_int->Check();
+
+        if(prolong_gst != NULL)
+        {
+            prolong_gst->Check();
+        }
+#endif
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::RSExtPIProlongFill(int64_t                     global_column_begin,
+                                                    int64_t                     global_column_end,
+                                                    bool                        FF1,
+                                                    const LocalVector<int64_t>& l2g,
+                                                    const LocalVector<int>&     f2c,
+                                                    const LocalVector<int>&     CFmap,
+                                                    const LocalVector<bool>&    S,
+                                                    const LocalMatrix<ValueType>& ghost,
+                                                    const LocalVector<PtrType>&   bnd_csr_row_ptr,
+                                                    const LocalVector<int64_t>&   bnd_csr_col_ind,
+                                                    const LocalVector<PtrType>&   ext_csr_row_ptr,
+                                                    const LocalVector<int64_t>&   ext_csr_col_ind,
+                                                    const LocalVector<ValueType>& ext_csr_val,
+                                                    LocalMatrix<ValueType>*       prolong_int,
+                                                    LocalMatrix<ValueType>*       prolong_gst,
+                                                    LocalVector<int64_t>* global_ghost_col) const
+    {
+        log_debug(this,
+                  "LocalMatrix::RSExtPIProlongFill()",
+                  global_column_begin,
+                  global_column_end,
+                  FF1,
+                  (const void*&)l2g,
+                  (const void*&)f2c,
+                  (const void*&)CFmap,
+                  (const void*&)S,
+                  (const void*&)ghost,
+                  (const void*&)bnd_csr_row_ptr,
+                  (const void*&)bnd_csr_col_ind,
+                  (const void*&)ext_csr_row_ptr,
+                  (const void*&)ext_csr_col_ind,
+                  (const void*&)ext_csr_val,
+                  prolong_int,
+                  prolong_gst,
+                  global_ghost_col);
+
+        assert(global_column_begin >= 0);
+        assert(global_column_end >= global_column_begin);
+        assert(prolong_int != NULL);
+        assert(prolong_int != prolong_gst);
+        assert(this != prolong_int);
+        assert(this != prolong_gst);
+
+        assert(this->is_host_() == l2g.is_host_());
+        assert(this->is_host_() == f2c.is_host_());
+        assert(this->is_host_() == CFmap.is_host_());
+        assert(this->is_host_() == S.is_host_());
+        assert(this->is_host_() == ghost.is_host_());
+        assert(this->is_host_() == bnd_csr_row_ptr.is_host_());
+        assert(this->is_host_() == bnd_csr_col_ind.is_host_());
+        assert(this->is_host_() == ext_csr_row_ptr.is_host_());
+        assert(this->is_host_() == ext_csr_col_ind.is_host_());
+        assert(this->is_host_() == ext_csr_val.is_host_());
+        assert(this->is_host_() == prolong_int->is_host_());
+        assert(prolong_gst != NULL ? this->is_host_() == prolong_gst->is_host_() : true);
+        assert(global_ghost_col != NULL ? this->is_host_() == global_ghost_col->is_host_() : true);
+
+#ifdef DEBUG_MODE
+        this->Check();
+        ghost.Check();
+#endif
+
+        if(this->GetNnz() > 0)
+        {
+            bool err = this->matrix_->RSExtPIProlongFill(
+                global_column_begin,
+                global_column_end,
+                FF1,
+                *l2g.vector_,
+                *f2c.vector_,
+                *CFmap.vector_,
+                *S.vector_,
+                *ghost.matrix_,
+                *bnd_csr_row_ptr.vector_,
+                *bnd_csr_col_ind.vector_,
+                *ext_csr_row_ptr.vector_,
+                *ext_csr_col_ind.vector_,
+                *ext_csr_val.vector_,
+                prolong_int->matrix_,
+                (prolong_gst != NULL ? prolong_gst->matrix_ : NULL),
+                (global_ghost_col != NULL ? global_ghost_col->vector_ : NULL));
+
+            if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Computation of LocalMatrix::RSExtPIProlongFill() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            if(err == false)
+            {
+                LocalMatrix<ValueType> mat_host;
+                LocalVector<int64_t>   l2g_host;
+                LocalVector<int>       f2c_host;
+                LocalVector<int>       cf_host;
+                LocalVector<bool>      S_host;
+                LocalMatrix<ValueType> gst_host;
+                LocalVector<PtrType>   bndr_host;
+                LocalVector<int64_t>   bndc_host;
+                LocalVector<PtrType>   extr_host;
+                LocalVector<int64_t>   extc_host;
+                LocalVector<ValueType> extv_host;
+                mat_host.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                gst_host.ConvertTo(ghost.GetFormat(), ghost.GetBlockDimension());
+                mat_host.CopyFrom(*this);
+                gst_host.CopyFrom(ghost);
+                l2g_host.CopyFrom(l2g);
+                f2c_host.CopyFrom(f2c);
+                cf_host.CopyFrom(CFmap);
+                S_host.CopyFrom(S);
+                bndr_host.CopyFrom(bnd_csr_row_ptr);
+                bndc_host.CopyFrom(bnd_csr_col_ind);
+                extr_host.CopyFrom(ext_csr_row_ptr);
+                extc_host.CopyFrom(ext_csr_col_ind);
+                extv_host.CopyFrom(ext_csr_val);
+
+                // Move to host
+                prolong_int->MoveToHost();
+
+                if(prolong_gst != NULL)
+                {
+                    prolong_gst->MoveToHost();
+                }
+
+                if(global_ghost_col != NULL)
+                {
+                    global_ghost_col->MoveToHost();
+                }
+
+                // Convert to CSR
+                mat_host.ConvertToCSR();
+                gst_host.ConvertToCSR();
+                prolong_int->ConvertToCSR();
+
+                if(prolong_gst != NULL)
+                {
+                    prolong_gst->ConvertToCSR();
+                }
+
+                if(mat_host.matrix_->RSExtPIProlongFill(
+                       global_column_begin,
+                       global_column_end,
+                       FF1,
+                       *l2g_host.vector_,
+                       *f2c_host.vector_,
+                       *cf_host.vector_,
+                       *S_host.vector_,
+                       *gst_host.matrix_,
+                       *bndr_host.vector_,
+                       *bndc_host.vector_,
+                       *extr_host.vector_,
+                       *extc_host.vector_,
+                       *extv_host.vector_,
+                       prolong_int->matrix_,
+                       (prolong_gst != NULL ? prolong_gst->matrix_ : NULL),
+                       (global_ghost_col != NULL ? global_ghost_col->vector_ : NULL))
+                   == false)
+                {
+                    LOG_INFO("Computation of LocalMatrix::RSExtPIProlongFill() failed");
+                    mat_host.Info();
+                    FATAL_ERROR(__FILE__, __LINE__);
+                }
+
+                if(this->GetFormat() != CSR)
+                {
+                    LOG_VERBOSE_INFO(2,
+                                     "*** warning: LocalMatrix::RSExtPIProlongFill() is performed "
+                                     "in CSR format");
+
+                    prolong_int->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+
+                    if(prolong_gst != NULL)
+                    {
+                        prolong_gst->ConvertTo(this->GetFormat(), this->GetBlockDimension());
+                    }
+                }
+
+                if(this->is_accel_() == true)
+                {
+                    LOG_VERBOSE_INFO(
+                        2,
+                        "*** warning: LocalMatrix::RSExtPIProlongFill() is performed on the host");
+
+                    prolong_int->MoveToAccelerator();
+
+                    if(prolong_gst != NULL)
+                    {
+                        prolong_gst->MoveToAccelerator();
+                    }
+
+                    if(global_ghost_col != NULL)
+                    {
+                        global_ghost_col->MoveToAccelerator();
+                    }
+                }
+            }
+        }
+
+#ifdef DEBUG_MODE
+        prolong_int->Check();
+
+        if(prolong_gst != NULL)
+        {
+            prolong_gst->Check();
+        }
+#endif
     }
 
     template class LocalMatrix<float>;

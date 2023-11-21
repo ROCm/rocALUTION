@@ -1065,22 +1065,38 @@ namespace rocalution
         void ExtractRowVector(int idx, LocalVector<ValueType>* vec) const;
 
         /** \brief Strong couplings for aggregation-based AMG */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void AMGConnect(ValueType eps, LocalVector<int>* connections) const;
         /** \brief Plain aggregation - Modification of a greedy aggregation scheme from
       * Vanek (1996)
       */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void AMGAggregate(const LocalVector<int>& connections, LocalVector<int>* aggregates) const;
 
         /** \brief Parallel aggregation - Parallel maximal independent set aggregation scheme from
       * Bell, Dalton, & Olsen (2012)
       */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void AMGPMISAggregate(const LocalVector<int>& connections,
                               LocalVector<int>*       aggregates) const;
 
         /** \brief Interpolation scheme based on smoothed aggregation from Vanek (1996) */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void AMGSmoothedAggregation(ValueType               relax,
                                     const LocalVector<int>& aggregates,
@@ -1088,9 +1104,45 @@ namespace rocalution
                                     LocalMatrix<ValueType>* prolong,
                                     int                     lumping_strat = 0) const;
         /** \brief Aggregation-based interpolation scheme */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void AMGAggregation(const LocalVector<int>& aggregates,
                             LocalMatrix<ValueType>* prolong) const;
+
+        /** \brief Plain aggregation - Modification of a greedy aggregation scheme from
+      * Vanek (1996)
+      */
+        ROCALUTION_EXPORT
+        void AMGGreedyAggregate(ValueType             eps,
+                                LocalVector<bool>*    connections,
+                                LocalVector<int64_t>* aggregates,
+                                LocalVector<int64_t>* aggregate_root_nodes) const;
+
+        /** \brief Parallel aggregation - Parallel maximal independent set aggregation scheme from
+      * Bell, Dalton, & Olsen (2012)
+      */
+        ROCALUTION_EXPORT
+        void AMGPMISAggregate(ValueType             eps,
+                              LocalVector<bool>*    connections,
+                              LocalVector<int64_t>* aggregates,
+                              LocalVector<int64_t>* aggregate_root_nodes) const;
+
+        /** \brief Interpolation scheme based on smoothed aggregation from Vanek (1996) */
+        ROCALUTION_EXPORT
+        void AMGSmoothedAggregation(ValueType                   relax,
+                                    const LocalVector<bool>&    connections,
+                                    const LocalVector<int64_t>& aggregates,
+                                    const LocalVector<int64_t>& aggregate_root_nodes,
+                                    LocalMatrix<ValueType>*     prolong,
+                                    int                         lumping_strat = 0) const;
+        /** \brief Aggregation-based interpolation scheme */
+        ROCALUTION_EXPORT
+        void AMGUnsmoothedAggregation(const LocalVector<int64_t>& aggregates,
+                                      const LocalVector<int64_t>& aggregate_root_nodes,
+                                      LocalMatrix<ValueType>*     prolong) const;
 
         /** \brief Ruge Stueben coarsening */
         ROCALUTION_EXPORT
@@ -1111,6 +1163,38 @@ namespace rocalution
                                   const LocalVector<bool>& S,
                                   bool                     FF1,
                                   LocalMatrix<ValueType>*  prolong) const;
+
+        /** \brief Ruge Stueben Prolongation matrix non-zeros */
+        void RSExtPIProlongNnz(int64_t                       global_column_begin,
+                               int64_t                       global_column_end,
+                               bool                          FF1,
+                               const LocalVector<int64_t>&   l2g,
+                               const LocalVector<int>&       CFmap,
+                               const LocalVector<bool>&      S,
+                               const LocalMatrix<ValueType>& ghost,
+                               const LocalVector<PtrType>&   bnd_csr_row_ptr,
+                               const LocalVector<int64_t>&   bnd_csr_col_ind,
+                               LocalVector<int>*             f2c,
+                               LocalMatrix<ValueType>*       prolong_int,
+                               LocalMatrix<ValueType>*       prolong_gst) const;
+
+        /** \brief Ruge Stueben fill Prolongation matrix non-zeros */
+        void RSExtPIProlongFill(int64_t                       global_column_begin,
+                                int64_t                       global_column_end,
+                                bool                          FF1,
+                                const LocalVector<int64_t>&   l2g,
+                                const LocalVector<int>&       f2c,
+                                const LocalVector<int>&       CFmap,
+                                const LocalVector<bool>&      S,
+                                const LocalMatrix<ValueType>& ghost,
+                                const LocalVector<PtrType>&   bnd_csr_row_ptr,
+                                const LocalVector<int64_t>&   bnd_csr_col_ind,
+                                const LocalVector<PtrType>&   ext_csr_row_ptr,
+                                const LocalVector<int64_t>&   ext_csr_col_ind,
+                                const LocalVector<ValueType>& ext_csr_val,
+                                LocalMatrix<ValueType>*       prolong_int,
+                                LocalMatrix<ValueType>*       prolong_gst,
+                                LocalVector<int64_t>*         global_ghost_col) const;
 
         /** \brief Factorized Sparse Approximate Inverse assembly for given system matrix
       * power pattern or external sparsity pattern
@@ -1169,6 +1253,13 @@ namespace rocalution
                              int                     Gsize,
                              const int*              rG,
                              int                     rGsize) const;
+
+        /** \brief Merge ghost and Ext matrix */
+        ROCALUTION_EXPORT
+        void CompressAdd(const LocalVector<int64_t>&   l2g,
+                         const LocalVector<int64_t>&   global_ghost_col,
+                         const LocalMatrix<ValueType>& ext,
+                         LocalVector<int64_t>*         global_col);
 
     protected:
         /** \brief Return true if the object is on the host */

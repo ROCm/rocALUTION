@@ -89,40 +89,41 @@ namespace rocalution
         assert(nnz >= 0);
         assert(ncol >= 0);
         assert(nrow >= 0);
+        assert(ndiag >= 0);
 
-        if(this->nnz_ > 0)
-        {
-            this->Clear();
-        }
+        this->Clear();
 
-        if(nnz > 0)
-        {
-            assert(ndiag > 0);
+        allocate_hip(nnz, &this->mat_.val);
+        allocate_hip(ndiag, &this->mat_.offset);
 
-            allocate_hip(nnz, &this->mat_.val);
-            allocate_hip(ndiag, &this->mat_.offset);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.val);
 
-            set_to_zero_hip(this->local_backend_.HIP_block_size, nnz, mat_.val);
+        set_to_zero_hip(this->local_backend_.HIP_block_size, ndiag, mat_.offset);
 
-            set_to_zero_hip(this->local_backend_.HIP_block_size, ndiag, mat_.offset);
-
-            this->nrow_         = nrow;
-            this->ncol_         = ncol;
-            this->nnz_          = nnz;
-            this->mat_.num_diag = ndiag;
-        }
+        this->nrow_         = nrow;
+        this->ncol_         = ncol;
+        this->nnz_          = nnz;
+        this->mat_.num_diag = ndiag;
     }
 
     template <typename ValueType>
     void HIPAcceleratorMatrixDIA<ValueType>::SetDataPtrDIA(
         int** offset, ValueType** val, int64_t nnz, int nrow, int ncol, int num_diag)
     {
-        assert(*offset != NULL);
-        assert(*val != NULL);
-        assert(nnz > 0);
-        assert(nrow > 0);
-        assert(ncol > 0);
-        assert(num_diag > 0);
+        assert(nnz >= 0);
+        assert(nrow >= 0);
+        assert(ncol >= 0);
+        assert(num_diag >= 0);
+
+        if(num_diag > 0)
+        {
+            assert(*offset != NULL);
+        }
+
+        if(nnz > 0)
+        {
+            assert(*val != NULL);
+        }
 
         if(nrow < ncol)
         {
@@ -151,10 +152,10 @@ namespace rocalution
                                                              ValueType** val,
                                                              int&        num_diag)
     {
-        assert(this->nrow_ > 0);
-        assert(this->ncol_ > 0);
-        assert(this->nnz_ > 0);
-        assert(this->mat_.num_diag > 0);
+        assert(this->nrow_ >= 0);
+        assert(this->ncol_ >= 0);
+        assert(this->nnz_ >= 0);
+        assert(this->mat_.num_diag >= 0);
 
         if(this->nrow_ < this->ncol_)
         {
@@ -167,7 +168,6 @@ namespace rocalution
 
         hipDeviceSynchronize();
 
-        // see free_host function for details
         *offset = this->mat_.offset;
         *val    = this->mat_.val;
 
@@ -185,16 +185,13 @@ namespace rocalution
     template <typename ValueType>
     void HIPAcceleratorMatrixDIA<ValueType>::Clear()
     {
-        if(this->nnz_ > 0)
-        {
-            free_hip(&this->mat_.val);
-            free_hip(&this->mat_.offset);
+        free_hip(&this->mat_.val);
+        free_hip(&this->mat_.offset);
 
-            this->nrow_         = 0;
-            this->ncol_         = 0;
-            this->nnz_          = 0;
-            this->mat_.num_diag = 0;
-        }
+        this->nrow_         = 0;
+        this->ncol_         = 0;
+        this->nnz_          = 0;
+        this->mat_.num_diag = 0;
     }
 
     template <typename ValueType>
@@ -204,7 +201,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixDIA<ValueType>*>(&src)) != NULL)
@@ -273,7 +269,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDIA<ValueType>*>(&src)) != NULL)
@@ -361,7 +356,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // CPU to HIP copy
         if((cast_mat = dynamic_cast<const HostMatrixDIA<ValueType>*>(&src)) != NULL)
@@ -446,7 +440,6 @@ namespace rocalution
 
         // copy only in the same format
         assert(this->GetMatFormat() == src.GetMatFormat());
-        assert(this->GetMatBlockDimension() == src.GetMatBlockDimension());
 
         // HIP to HIP copy
         if((hip_cast_mat = dynamic_cast<const HIPAcceleratorMatrixDIA<ValueType>*>(&src)) != NULL)
@@ -548,9 +541,11 @@ namespace rocalution
     {
         this->Clear();
 
-        // empty matrix is empty matrix
+        // Empty matrix
         if(mat.GetNnz() == 0)
         {
+            this->AllocateDIA(0, mat.GetM(), mat.GetN(), 0);
+
             return true;
         }
 
