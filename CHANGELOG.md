@@ -3,6 +3,23 @@
 Documentation for rocALUTION is available at
 [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
+## rocALUTION 3.1.0 for ROCm 6.1.0
+
+### Additions
+
+* `TripleMatrixProduct` functionality for `GlobalMatrix`
+* Multi-Node/GPU support for `UA-AMG`, `SA-AMG` and `RS-AMG`
+* Iterative ILU0 preconditioner `ItILU0`
+* Iterative triangular solve, selectable via `SolverDecr` class
+
+### Deprecations
+
+* `LocalMatrix::AMGConnect`
+* `LocalMatrix::AMGAggregate`
+* `LocalMatrix::AMGPMISAggregate`
+* `LocalMatrix::AMGSmoothedAggregation`
+* `LocalMatrix::AMGAggregation`
+
 ## rocALUTION 3.0.3 for ROCm 6.0.0
 
 ### Additions
