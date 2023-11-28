@@ -20,6 +20,10 @@ Documentation for rocALUTION is available at
 * `LocalMatrix::AMGSmoothedAggregation`
 * `LocalMatrix::AMGAggregation`
 
+### Known Issues
+* `PairwiseAMG` does currently not support matrix sizes that exceed int32 range
+* `PairwiseAMG` might fail building the hierarchy on certain input matrices
+
 ## rocALUTION 3.0.3 for ROCm 6.0.0
 
 ### Additions
