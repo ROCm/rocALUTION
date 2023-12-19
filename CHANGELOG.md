@@ -3,7 +3,7 @@
 Documentation for rocALUTION is available at
 [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
-## rocALUTION 3.1.0 for ROCm 6.1.0
+## rocALUTION 3.1.1 for ROCm 6.1.0
 
 ### Additions
 
@@ -19,6 +19,7 @@ Documentation for rocALUTION is available at
 * `LocalMatrix::AMGPMISAggregate`
 * `LocalMatrix::AMGSmoothedAggregation`
 * `LocalMatrix::AMGAggregation`
+* `PairwiseAMG`
 
 ### Known Issues
 * `PairwiseAMG` does currently not support matrix sizes that exceed int32 range

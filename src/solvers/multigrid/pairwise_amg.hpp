@@ -60,6 +60,10 @@ namespace rocalution
     class PairwiseAMG : public BaseAMG<OperatorType, VectorType, ValueType>
     {
     public:
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         PairwiseAMG();
         ROCALUTION_EXPORT
@@ -71,12 +75,24 @@ namespace rocalution
         virtual void ClearLocal(void);
 
         /** \brief Set beta for pairwise aggregation */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void SetBeta(ValueType beta);
         /** \brief Set re-ordering for aggregation */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void SetOrdering(unsigned int ordering);
         /** \brief Set target coarsening factor */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void SetCoarseningFactor(double factor);
 
