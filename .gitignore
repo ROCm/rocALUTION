@@ -38,20 +38,9 @@ tags
 # build-in-source directory
 build
 
-# doc
-docBin
-_build
-
 # Visual Studio stuff
 *.vcxproj.user
 *.suo
 *.sdf
 *.pdb
 *.opensdf
-
-# documentation artifacts
-_build/
-_images/
-_static/
-_templates/
-_toc.yml

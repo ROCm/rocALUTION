@@ -7,3 +7,6 @@ subtrees:
     - file: design/designdoc
     - file: usermanual/usermanual
     - file: api
+  - caption: About
+    entries:
+    - file: license
