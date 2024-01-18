@@ -1,8 +1,8 @@
 # rocALUTION
 
 rocALUTION is a sparse linear algebra library that can be used to explore fine-grained parallelism on
-top of the [ROCm](https://github.com/RadeonOpenCompute/ROCm) platform runtime and toolchains.
-Based on C++ and [HIP](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/), rocALUTION
+top of the [ROCm](https://github.com/ROCm/ROCm) platform runtime and toolchains.
+Based on C++ and [HIP](https://github.com/ROCm/HIP/), rocALUTION
 provides a portable, generic, and flexible design that allows seamless integration with other scientific
 software packages.
 
@@ -10,15 +10,15 @@ rocALUTION offers various backends for different (parallel) hardware:
 
 * Host
 * [OpenMP](http://www.openmp.org/): Designed for multi-core CPUs
-* [HIP](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/): Designed for ROCm-compatible devices
+* [HIP](https://github.com/ROCm/HIP/): Designed for ROCm-compatible devices
 * [MPI](https://www.open-mpi.org/): Designed for multi-node clusters and multi-GPU setups
 
 ## Requirements
 
 To use rocALUTION on GPU devices, you must first install the
-[rocBLAS](https://github.com/ROCmSoftwarePlatform/rocBLAS),
-[rocSPARSE](https://github.com/ROCmSoftwarePlatform/rocSPARSE), and
-[rocRAND](https://github.com/ROCmSoftwarePlatform/rocRAND) libraries. You can install these from
+[rocBLAS](https://github.com/ROCm/rocBLAS),
+[rocSPARSE](https://github.com/ROCm/rocSPARSE), and
+[rocRAND](https://github.com/ROCm/rocRAND) libraries. You can install these from
 the ROCm repository, the GitHub 'releases' tab, or you can manually compile them.
 
 ## Documentation
@@ -43,7 +43,7 @@ determined automatically.
 
 ```bash
 # Clone rocALUTION using git
-git clone https://github.com/ROCmSoftwarePlatform/rocALUTION.git
+git clone https://github.com/ROCm/rocALUTION.git
 
 # Go to rocALUTION directory, create and change to build directory
 cd rocALUTION; mkdir build; cd build
