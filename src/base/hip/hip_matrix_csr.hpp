@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -116,8 +116,12 @@ namespace rocalution
                                bool                         structure);
 
         virtual bool ILU0Factorize(void);
-        virtual bool
-            ItILU0Factorize(ItILU0Algorithm alg, int option, int max_iter, double tolerance);
+        virtual bool ItILU0Factorize(ItILU0Algorithm alg,
+                                     int             option,
+                                     int             max_iter,
+                                     double          tolerance,
+                                     int*            niter,
+                                     double*         history);
 
         virtual bool ICFactorize(BaseVector<ValueType>* inv_diag = NULL);
 

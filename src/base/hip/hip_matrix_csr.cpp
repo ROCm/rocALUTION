@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1361,7 +1361,9 @@ namespace rocalution
     bool HIPAcceleratorMatrixCSR<ValueType>::ItILU0Factorize(ItILU0Algorithm alg,
                                                              int             option,
                                                              int             max_iter,
-                                                             double          tolerance)
+                                                             double          tolerance,
+                                                             int*            niter,
+                                                             double*         history)
     {
         if(this->nnz_ > 0)
         {
@@ -1404,6 +1406,9 @@ namespace rocalution
                                  : 0;
             itilu0_option |= ((option & ItILU0Option::ComputeNrmResidual) > 0)
                                  ? rocsparse_itilu0_option_compute_nrm_residual
+                                 : 0;
+            itilu0_option |= ((option & ItILU0Option::ConvergenceHistory) > 0)
+                                 ? rocsparse_itilu0_option_convergence_history
                                  : 0;
             itilu0_option |= ((option & ItILU0Option::COOFormat) > 0)
                                  ? rocsparse_itilu0_option_coo_format
@@ -1450,7 +1455,7 @@ namespace rocalution
 
             ValueType* ilu0 = NULL;
             allocate_hip(this->nnz_, &ilu0);
-
+            set_to_zero_hip(this->local_backend_.HIP_block_size, this->nnz_, ilu0);
             assert(ilu0 != NULL);
 
             status = rocsparseTcsritilu0_compute(
@@ -1469,6 +1474,39 @@ namespace rocalution
                 buffer_size,
                 buffer);
             CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
+            niter[0] = max_iter;
+            if(history != NULL)
+            {
+                assert((option & ItILU0Option::StoppingCriteria) > 0);
+                if(std::is_same<ValueType, double>{}
+                   || std::is_same<ValueType, std::complex<double>>{})
+                {
+                    rocsparseTcsritilu0_history<double>(
+                        ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                        itilu0_alg,
+                        niter,
+                        history,
+                        buffer_size,
+                        buffer);
+                }
+                else
+                {
+                    int    num_iter      = max_iter;
+                    float* local_history = new float[num_iter * 2];
+                    rocsparseTcsritilu0_history<float>(
+                        ROCSPARSE_HANDLE(this->local_backend_.ROC_sparse_handle),
+                        itilu0_alg,
+                        niter,
+                        local_history,
+                        buffer_size,
+                        buffer);
+
+                    for(int i = 0; i < num_iter * 2; ++i)
+                    {
+                        history[i] = local_history[i];
+                    }
+                }
+            }
 
             free_hip(&buffer);
             free_hip(&this->mat_.val);

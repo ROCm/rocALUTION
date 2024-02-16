@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -3574,7 +3574,9 @@ namespace rocalution
     void LocalMatrix<ValueType>::ItILU0Factorize(ItILU0Algorithm alg,
                                                  int             option,
                                                  int             max_iter,
-                                                 double          tolerance)
+                                                 double          tolerance,
+                                                 int*            niter,
+                                                 double*         history)
     {
         log_debug(this, "LocalMatrix::ItILU0Factorize()", alg, option, max_iter, tolerance);
 
@@ -3588,7 +3590,8 @@ namespace rocalution
 
         if(this->GetNnz() > 0)
         {
-            bool err = this->matrix_->ItILU0Factorize(alg, option, max_iter, tolerance);
+            bool err
+                = this->matrix_->ItILU0Factorize(alg, option, max_iter, tolerance, niter, history);
 
             if((err == false) && (this->GetFormat() == CSR) && (this->is_host_() == true))
             {
@@ -3608,8 +3611,9 @@ namespace rocalution
                 int          blockdim = this->GetBlockDimension();
                 this->ConvertToCSR();
 
-                // We fall back on standard ILU factorization
-                if(this->matrix_->ItILU0Factorize(alg, option, max_iter, tolerance) == false)
+                // We fall back on standard ILU factorization (? assumption we know the implementation)
+                if(this->matrix_->ItILU0Factorize(alg, option, max_iter, tolerance, niter, history)
+                   == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::ItILU0Factorize() failed");
                     this->Info();

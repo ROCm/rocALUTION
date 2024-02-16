@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -267,6 +267,7 @@ namespace rocalution
         StoppingCriteria     = 2,
         ComputeNrmCorrection = 4,
         ComputeNrmResidual   = 8,
+        ConvergenceHistory   = 16,
         COOFormat            = 32
     } ItILU0Option;
 
@@ -313,6 +314,11 @@ namespace rocalution
         /** \brief Set the preconditioner convergence criteria */
         ROCALUTION_EXPORT
         void SetTolerance(double tolerance);
+
+        /** \brief Get the convergence history */
+        ROCALUTION_EXPORT
+        const double* GetConvergenceHistory(int* niter);
+
         ROCALUTION_EXPORT
         virtual void Build(void);
         ROCALUTION_EXPORT
@@ -328,6 +334,8 @@ namespace rocalution
         int             option_;
         int             maxiter_;
         double          tol_;
+        int             niter_{};
+        double*         history_{};
     };
 
     /** \ingroup precond_module

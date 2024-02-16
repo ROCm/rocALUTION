@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -526,7 +526,11 @@ namespace rocalution
     ItILU0<OperatorType, VectorType, ValueType>::~ItILU0()
     {
         log_debug(this, "ItILU0::ItILU0()", "destructor");
-
+        if(this->history_ != nullptr)
+        {
+            delete[] this->history_;
+            this->history_ = nullptr;
+        }
         this->Clear();
     }
 
@@ -554,31 +558,31 @@ namespace rocalution
         std::string option;
 
         // Check if Verbose is set
-        if(this->option_ & 1)
+        if((this->option_ & ItILU0Option::Verbose) > 0)
         {
             option += "Verbose,";
         }
 
         // Check if StoppingCriteria is set
-        if((this->option_ >> 1) & 1)
+        if((this->option_ & ItILU0Option::StoppingCriteria) > 0)
         {
             option += "StoppingCriteria,";
         }
 
         // Check if ComputeNrmCorrection is set
-        if((this->option_ >> 2) & 1)
+        if((this->option_ & ItILU0Option::ComputeNrmCorrection) > 0)
         {
             option += "ComputeNrmCorrection,";
         }
 
         // Check if ComputeNrmResidual is set
-        if((this->option_ >> 3) & 1)
+        if((this->option_ & ItILU0Option::ComputeNrmResidual) > 0)
         {
             option += "ComputeNrmResidual,";
         }
 
         // Check if COOFormat is set
-        if((this->option_ >> 5) & 1)
+        if((this->option_ & ItILU0Option::COOFormat) > 0)
         {
             option += "COOFormat,";
         }
@@ -606,10 +610,8 @@ namespace rocalution
     void ItILU0<OperatorType, VectorType, ValueType>::SetOptions(int option)
     {
         log_debug(this, "ItILU0::SetOptions()", option);
-
         assert(option >= 0);
         assert(this->build_ == false);
-
         this->option_ = option;
     }
 
@@ -636,6 +638,16 @@ namespace rocalution
     }
 
     template <class OperatorType, class VectorType, typename ValueType>
+    const double* ItILU0<OperatorType, VectorType, ValueType>::GetConvergenceHistory(int* niter)
+    {
+        log_debug(this, "ItILU0::GetConvergenceHistory()");
+        assert(niter != NULL);
+        assert(this->build_ == true);
+        niter[0] = this->niter_;
+        return this->history_;
+    }
+
+    template <class OperatorType, class VectorType, typename ValueType>
     void ItILU0<OperatorType, VectorType, ValueType>::Build(void)
     {
         log_debug(this, "ItILU0::Build()", this->build_, " #*# begin");
@@ -651,7 +663,14 @@ namespace rocalution
         assert(this->op_ != NULL);
 
         this->ItILU0_.CloneFrom(*this->op_);
-        this->ItILU0_.ItILU0Factorize(this->alg_, this->option_, this->maxiter_, this->tol_);
+
+        if((this->option_ & ItILU0Option::ConvergenceHistory) > 0)
+        {
+            this->history_ = new double[this->maxiter_ * 2];
+        }
+
+        this->ItILU0_.ItILU0Factorize(
+            this->alg_, this->option_, this->maxiter_, this->tol_, &this->niter_, this->history_);
         DISPATCH_OPERATOR_ANALYSE_STRATEGY(this->solver_descr_, this->ItILU0_, LUAnalyse);
 
         log_debug(this, "ItILU0::Build()", this->build_, " #*# end");
