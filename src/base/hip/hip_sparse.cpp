@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -4611,6 +4611,50 @@ namespace rocalution
                                             idx_base,
                                             buffer_size,
                                             buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_history<float>(rocsparse_handle     handle,
+                                                        rocsparse_itilu0_alg alg,
+                                                        rocsparse_int*       niter,
+                                                        float*               data,
+                                                        size_t               buffer_size,
+                                                        void*                buffer)
+    {
+        return rocsparse_scsritilu0_history(handle, alg, niter, data, buffer_size, buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_history<std::complex<float>>(rocsparse_handle     handle,
+                                                                      rocsparse_itilu0_alg alg,
+                                                                      rocsparse_int*       niter,
+                                                                      float*               data,
+                                                                      size_t buffer_size,
+                                                                      void*  buffer)
+    {
+        return rocsparse_ccsritilu0_history(handle, alg, niter, data, buffer_size, buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_history<double>(rocsparse_handle     handle,
+                                                         rocsparse_itilu0_alg alg,
+                                                         rocsparse_int*       niter,
+                                                         double*              data,
+                                                         size_t               buffer_size,
+                                                         void*                buffer)
+    {
+        return rocsparse_dcsritilu0_history(handle, alg, niter, data, buffer_size, buffer);
+    }
+
+    template <>
+    rocsparse_status rocsparseTcsritilu0_history<std::complex<double>>(rocsparse_handle     handle,
+                                                                       rocsparse_itilu0_alg alg,
+                                                                       rocsparse_int*       niter,
+                                                                       double*              data,
+                                                                       size_t buffer_size,
+                                                                       void*  buffer)
+    {
+        return rocsparse_zcsritilu0_history(handle, alg, niter, data, buffer_size, buffer);
     }
 
 } // namespace rocalution

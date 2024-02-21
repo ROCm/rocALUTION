@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2021 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,12 +76,20 @@ int main(int argc, char* argv[])
 
     // Set iterative ILU stopping criteria
     p.SetTolerance(1e-8);
-    p.SetMaxIter(5);
+    p.SetMaxIter(50);
+
+    const int option = ItILU0Option::Verbose | ItILU0Option::StoppingCriteria
+                       | ItILU0Option::ComputeNrmCorrection | ItILU0Option::ComputeNrmResidual
+                       | ItILU0Option::ConvergenceHistory;
+
+    p.SetOptions(option);
+
+    p.SetAlgorithm(ItILU0Algorithm::SyncSplit);
 
     // Set up iterative triangular solve
     SolverDescr descr;
     descr.SetTriSolverAlg(TriSolverAlg_Iterative);
-    descr.SetIterativeSolverMaxIteration(3);
+    descr.SetIterativeSolverMaxIteration(30);
     descr.SetIterativeSolverTolerance(1e-8);
 
     p.SetSolverDescriptor(descr);
@@ -117,6 +125,26 @@ int main(int argc, char* argv[])
     // Stop time measurement
     tack = rocalution_time();
     std::cout << "Solver execution:" << (tack - tick) / 1e6 << " sec" << std::endl;
+
+    int           niter_preconditioner;
+    const double* history = p.GetConvergenceHistory(&niter_preconditioner);
+    std::cout << "ItILU0::niter = " << niter_preconditioner << std::endl;
+    if((option & ItILU0Option::ComputeNrmCorrection) > 0)
+    {
+        for(int i = 0; i < niter_preconditioner; ++i)
+        {
+            std::cout << "ItILU0::CorrectionNrm[" << i << "] = " << history[i] << std::endl;
+        }
+    }
+
+    if((option & ItILU0Option::ComputeNrmResidual) > 0)
+    {
+        for(int i = 0; i < niter_preconditioner; ++i)
+        {
+            std::cout << "ItILU0::ResidualNrm[" << i << "] = " << history[niter_preconditioner + i]
+                      << std::endl;
+        }
+    }
 
     // Clear solver
     fp.Clear();

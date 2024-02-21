@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -654,6 +654,15 @@ namespace rocalution
                                                  rocsparse_index_base        idx_base,
                                                  size_t                      buffer_size,
                                                  void*                       buffer);
+
+    // rocsparse csritilu0 history
+    template <typename ValueType>
+    rocsparse_status rocsparseTcsritilu0_history(rocsparse_handle             handle,
+                                                 rocsparse_itilu0_alg         alg,
+                                                 rocsparse_int*               niter,
+                                                 numeric_traits_t<ValueType>* data,
+                                                 size_t                       buffer_size,
+                                                 void*                        buffer);
 
 } // namespace rocalution
 
