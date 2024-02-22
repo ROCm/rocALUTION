@@ -6,7 +6,7 @@ Installation and Building for Windows
 Prerequisites
 -------------
 
-- An AMD HIP SDK enabled platform. More information can be found `here <https://docs.amd.com/>`_.
+- An AMD HIP SDK enabled platform. More information can be found `here <https://rocm.docs.amd.com/>`_.
 - rocALUTION is supported on the same Windows versions and toolchains that are supported by the HIP SDK.
 - As the AMD HIP SDK is new and quickly evolving it will have more up to date information regarding the SDK's internal contents. Thus it may overrule statements found in this section on installing and building for Windows.
 
