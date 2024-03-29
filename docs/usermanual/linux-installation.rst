@@ -1,13 +1,20 @@
+.. meta::
+   :description: A sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains
+   :keywords: rocALUTION, ROCm, library, API, tool
+
+.. _linux-installation:
+
 ===================================
-Installation and Building for Linux
+Installation on Linux
 ===================================
+
+This document provides information required to install and configure rocALUTION on Linux.
 
 -------------
 Prerequisites
 -------------
 
-- A ROCm enabled platform. `ROCm Documentation <https://rocm.docs.amd.com/>`_ has more information on
-  supported GPUs, Linux distributions, and Windows SKUs. It also has information on how to install ROCm.
+A ROCm enabled platform. For information on supported GPUs, Linux distributions, ROCm installation, and Windows SKUs, refer to `ROCm Documentation <https://rocm.docs.amd.com/>`_.
 
 -----------------------------
 Installing pre-built packages
@@ -87,15 +94,15 @@ The client contains example code, unit tests and benchmarks. Common uses of `ins
 .. tabularcolumns::
       |\X{1}{6}|\X{5}{6}|
 
-=================== ====
+=================== =============
 Command             Description
-=================== ====
+=================== =============
 `./install.sh -h`   Print help information.
 `./install.sh -dc`  Build dependencies, library and client in your local directory. The `-d` flag only needs to be used once. For subsequent invocations of `install.sh` it is not necessary to rebuild the dependencies.
 `./install.sh -c`   Build library and client in your local directory. It is assumed dependencies are available.
 `./install.sh -idc` Build library, dependencies and client, then build and install rocALUTION package in `/opt/rocm/rocalution`. You will be prompted for sudo access. This will install for all users.
 `./install.sh -ic`  Build library and client, then build and install rocALUTION package in `opt/rocm/rocalution`. You will be prompted for sudo access. This will install for all users.
-=================== ====
+=================== =============
 
 Using individual commands to build rocALUTION
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -176,7 +183,7 @@ Common build problems
 
    **Solution:** Install `rocBLAS <https://github.com/ROCm/rocBLAS>`_ either from source or from `AMD ROCm repository <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
 
-Simple Test
+Simple test
 ^^^^^^^^^^^
 You can test the installation by running a CG solver on a sparse matrix.
 After successfully compiling the library, the CG solver example can be executed.

@@ -1,6 +1,8 @@
 =====================================
-Installation and Building for Windows
+Installation on Windows
 =====================================
+
+This document provides information required to install and configure rocALUTION on Linux.
 
 -------------
 Prerequisites
@@ -12,7 +14,7 @@ Prerequisites
 
 
 ----------------------------
-Installing Prebuilt Packages
+Installing prebuilt packages
 ----------------------------
 
 rocALUTION can be installed on Windows 11 or Windows 10 using the AMD HIP SDK installer.
@@ -37,11 +39,11 @@ The rocalution.hpp header file must be included in the user code to make calls
 into rocALUTION, and the rocALUTION import library and dynamic link library will become respective link-time and run-time
 dependencies for the user application.
 
-Once installed, find rocalution.hpp in the HIP SDK `\\include\\rocalution`
+Once installed, find rocalution.hpp in the HIP SDK ``\\include\\rocalution``
 directory. Only use these two installed files when needed in user code.
 
 ----------------------------------
-Building and Installing rocALUTION
+Building and installing rocALUTION
 ----------------------------------
 
 Building from source is not necessary, as rocALUTION can be used after installing the pre-built packages as described above.
@@ -88,21 +90,21 @@ You can can add the SDK tools to your path with an entry like:
 
    %HIP_PATH%\bin
 
-Building
+Build
 ^^^^^^^^
 
 Below are steps to build using the `rmake.py` script. The user can build either:
 
 * library
 
-* library + client
+* library and client
 
 You only need (library) if you call rocALUTION from your code and only want the library built.
 The client contains testing and benchmark tools.  rmake.py will print to the screen the full cmake command being used to configure rocALUTION based on your rmake command line options.
 This full cmake command can be used in your own build scripts if you want to bypass the python helper script for a fixed set of build options.
 
 
-Build Library
+Build library
 ^^^^^^^^^^^^^
 
 Common uses of rmake.py to build (library) are
@@ -127,9 +129,8 @@ in the table below:
 |                    | need the -i flag.        |
 +--------------------+--------------------------+
 
-
-Build Library + Client
-^^^^^^^^^^^^^^^^^^^^^^
+Build library and client
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some client executables (.exe) are listed in the table below:
 

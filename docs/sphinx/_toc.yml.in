@@ -4,9 +4,25 @@ root: index
 subtrees:
   - numbered: False
     entries:
-    - file: design/designdoc
-    - file: usermanual/usermanual
-    - file: api
-  - caption: About
+    - file: what-is-rocalution
+  - caption: Tutorial
     entries:
-    - file: license
+    - file: usermanual/linux-installation
+    - file: usermanual/windows-installation
+    - file: usermanual/targets
+  - caption: API reference
+    entries:
+    - file: usermanual/basics
+    - file: usermanual/singlenode
+    - file: usermanual/multinode
+    - file: usermanual/solvers
+    - file: usermanual/precond
+    - file: usermanual/backend
+    - file: api
+  - caption: Contribution
+    entries:
+    - file: design/design
+    - file: design/orga
+    - file: design/guides
+    - file: design/functable
+    - file: design/clients

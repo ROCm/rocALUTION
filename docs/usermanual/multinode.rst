@@ -1,12 +1,20 @@
+.. meta::
+   :description: A sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains
+   :keywords: rocALUTION, ROCm, library, API, tool
+
+.. _multi-node:
+
 **********************
 Multi-node Computation
 **********************
 
 Introduction
 ============
+
 This chapter describes all base objects (matrices and vectors) for computation on multi-node (distributed memory) systems.
 
 .. _multi-node1:
+
 .. figure:: ../data/multi-node1.png
   :alt: multi-node system configuration
   :align: center

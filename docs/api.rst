@@ -1,10 +1,10 @@
 .. _api:
 
-###
-API
-###
+#############
+API library
+#############
 
-This section provides a detailed list of the library API
+This document provides the detailed API list.
 
 Host Utility Functions
 ======================

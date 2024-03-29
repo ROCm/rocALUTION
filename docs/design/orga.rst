@@ -1,9 +1,13 @@
+.. meta::
+   :description: A sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains
+   :keywords: rocALUTION, ROCm, library, API, tool
+
+.. _source-code-organization:
+
 ********************************
 Library Source Code Organization
 ********************************
 
-Library Source Code Organization
-================================
 The rocALUTION library is split into three major parts:
 
 - The `src/base/` directory contains all source code that is built on top of the :cpp:class:`BaseRocalution <rocalution::BaseRocalution>` object as well as the backend structure.
