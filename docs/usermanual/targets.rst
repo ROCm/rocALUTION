@@ -14,7 +14,7 @@ Supported operating systems:
 - CentOS 7
 - SLES 15
 
-To compile and run rocALUTION with HIP support, `AMD ROCm Platform <https://github.com/RadeonOpenCompute/ROCm>`_ 2.9 or newer is required.
+To compile and run rocALUTION with HIP support, `AMD ROCm Platform <https://github.com/RadeonOpenCompute/ROCm>`_ 2.9 or later is required.
 
 Supported HIP devices:
 

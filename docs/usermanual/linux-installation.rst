@@ -20,13 +20,13 @@ A ROCm enabled platform. For information on supported GPUs, Linux distributions,
 Installing pre-built packages
 -----------------------------
 
-rocALUTION can be installed from `AMD ROCm repository <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
+You can install rocALUTION from `AMD ROCm repository <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
 The repository hosts the single-node, accelerator enabled version of the library.
-If a different setup is required, e.g. multi-node support, rocALUTION needs to be built from source, see :ref:`rocalution_build_from_source`.
+If a different setup is required, e.g. multi-node support, build :ref:`rocALUTION from source <rocalution_build_from_source>`.
 
 For detailed instructions on how to set up ROCm on different platforms, see the `AMD ROCm Platform Installation Guide for Linux <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
 
-rocALUTION has the following run-time dependencies
+rocALUTION has the following run-time dependencies:
 
 - `AMD ROCm <https://github.com/RadeonOpenCompute/ROCm>`_ 2.9 or later (optional, for HIP support)
 - `rocSPARSE <https://github.com/ROCmSoftwarePlatform/rocSPARSE>`_ (optional, for HIP support)
@@ -44,7 +44,7 @@ Building from GitHub repository
 Requirements
 ^^^^^^^^^^^^
 
-To build rocALUTION from source, the following compile-time and run-time dependencies must be met
+To build rocALUTION from source, ensure that the following compile-time and run-time dependencies are met:
 
 - `git <https://git-scm.com/>`_
 - `CMake <https://cmake.org/>`_ 3.5 or later
@@ -66,12 +66,12 @@ Download the master branch using:
   $ git clone -b master https://github.com/ROCmSoftwarePlatform/rocALUTION.git
   $ cd rocALUTION
 
-Below are steps to build different packages of the library, including dependencies and clients.
-It is recommended to install rocALUTION using the `install.sh` script.
+Below are the steps to build different packages of the library, including dependencies and clients.
+It is recommended to install rocALUTION using the ``install.sh`` script.
 
 Using `install.sh` script to build rocALUTION with dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The following table lists common uses of `install.sh` to build dependencies + library. Accelerator support via HIP and OpenMP will be enabled by default, whereas MPI is disabled.
+The following table lists the common uses of ``install.sh`` to build dependencies and the library. Accelerator support via HIP and OpenMP are enabled by default, whereas MPI is disabled.
 
 .. tabularcolumns::
       |\X{1}{6}|\X{5}{6}|
@@ -79,17 +79,17 @@ The following table lists common uses of `install.sh` to build dependencies + li
 ========================== ====
 Command                    Description
 ========================== ====
-`./install.sh -h`          Print help information.
-`./install.sh -d`          Build dependencies and library in your local directory. The `-d` flag only needs to be used once. For subsequent invocations of `install.sh` it is not necessary to rebuild the dependencies.
-`./install.sh`             Build library in your local directory. It is assumed dependencies are available.
-`./install.sh -i`          Build library, then build and install rocALUTION package in `/opt/rocm/rocalution`. You will be prompted for sudo access. This will install for all users.
-`./install.sh --host`      Build library in your local directory without HIP support. It is assumed dependencies are available.
-`./install.sh --mpi=<dir>` Build library in your local directory with HIP and MPI support. It is assumed dependencies are available.
-========================== ====
+``./install.sh -h``          Prints help information.
+``./install.sh -d``          Builds dependencies and library in your local directory. The ``-d`` flag only needs to be used once. For subsequent invocations of ``install.sh`` it is not necessary to rebuild the dependencies.
+``./install.sh``             Builds library in your local directory assuming the dependencies to be available.
+``./install.sh -i``          Builds library, then builds and installs rocALUTION package in ``/opt/rocm/rocalution``. It prompts for sudo access which installs for all users.
+``./install.sh --host``      Builds library in your local directory without HIP support assuming the dependencies to be available.
+``./install.sh --mpi=<dir>`` Builds library in your local directory with HIP and MPI support assuming the dependencies to be available.
 
-Using `install.sh` script to build rocALUTION with dependencies and clients
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The client contains example code, unit tests and benchmarks. Common uses of `install.sh` to build them are listed in the table below.
+Using ``install.sh`` script to build rocALUTION with dependencies and clients
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The client contains example code, unit tests and benchmarks. Common uses of ``install.sh`` to build them are listed in the table below:
 
 .. tabularcolumns::
       |\X{1}{6}|\X{5}{6}|
@@ -97,18 +97,19 @@ The client contains example code, unit tests and benchmarks. Common uses of `ins
 =================== =============
 Command             Description
 =================== =============
-`./install.sh -h`   Print help information.
-`./install.sh -dc`  Build dependencies, library and client in your local directory. The `-d` flag only needs to be used once. For subsequent invocations of `install.sh` it is not necessary to rebuild the dependencies.
-`./install.sh -c`   Build library and client in your local directory. It is assumed dependencies are available.
-`./install.sh -idc` Build library, dependencies and client, then build and install rocALUTION package in `/opt/rocm/rocalution`. You will be prompted for sudo access. This will install for all users.
-`./install.sh -ic`  Build library and client, then build and install rocALUTION package in `opt/rocm/rocalution`. You will be prompted for sudo access. This will install for all users.
+`./install.sh -h`   Prints help information.
+`./install.sh -dc`  Builds dependencies, library and client in your local directory. The ``-d`` flag only needs to be used once. For subsequent invocations of ``install.sh`` it is not necessary to rebuild the dependencies.
+`./install.sh -c`   Builds library and client in your local directory assuming the dependencies to be available.
+`./install.sh -idc` Builds library, dependencies and client, then builds and installs rocALUTION package in ``/opt/rocm/rocalution``. It prompts for sudo access which installs for all users.
+`./install.sh -ic`  Builds library and client, then builds and installs rocALUTION package in ``opt/rocm/rocalution``. It prompts for sudo access which installs for all users.
 =================== =============
 
 Using individual commands to build rocALUTION
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-CMake 3.5 or later is required in order to build rocALUTION without the use of `install.sh`.
 
-rocALUTION can be built with cmake using the following commands:
+CMake 3.5 or later is required to build rocALUTION without the use of ``install.sh``.
+
+rocALUTION can be built with ``cmake`` using the following commands:
 
 ::
 
@@ -129,7 +130,7 @@ rocALUTION can be built with cmake using the following commands:
   # Install rocALUTION to /opt/rocm
   sudo make install
 
-`GoogleTest <https://github.com/google/googletest>`_ is required in order to build all rocALUTION clients.
+`GoogleTest <https://github.com/google/googletest>`_ is required to build all rocALUTION clients.
 
 rocALUTION with dependencies and clients can be built using the following commands:
 
@@ -155,36 +156,38 @@ rocALUTION with dependencies and clients can be built using the following comman
   # Install rocALUTION to /opt/rocm
   sudo make install
 
-The compilation process produces a shared library file `librocalution.so` and `librocalution_hip.so` if HIP support is enabled.
+The compilation process produces a shared library file ``librocalution.so`` and ``librocalution_hip.so`` if HIP support is enabled.
 Ensure that the library objects can be found in your library path.
-If you do not copy the library to a specific location you can add the path under Linux in the `LD_LIBRARY_PATH` variable.
+If you don't copy the library to a specific location you can add the path under Linux in the ``LD_LIBRARY_PATH`` variable.
 
 ::
 
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_rocalution>
 
 Common build problems
-^^^^^^^^^^^^^^^^^^^^^
-#. **Issue:** Could not find a package file provided by "ROCM" with any of the following names:
-              ROCMConfig.cmake
-              rocm-config.cmake
+^^^^^^^^^^^^^^^^^^^^^^^
+
+#. **Issue:** Could not find any of the following package files provided by "ROCM":
+            - ROCMConfig.cmake
+            - rocm-config.cmake
 
    **Solution:** Install `ROCm cmake modules <https://github.com/ROCm/rocm-cmake>`_ either from source or from `AMD ROCm repository <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
 
-#. **Issue:** Could not find a package file provided by "ROCSPARSE" with any of the following names:
-              ROCSPARSE.cmake
-              rocsparse-config.cmake
+#. **Issue:** Could not find any of the following package files provided by "ROCSPARSE":
+            - ROCSPARSE.cmake
+            - rocsparse-config.cmake
 
    **Solution:** Install `rocSPARSE <https://github.com/ROCmSoftwarePlatform/rocSPARSE>`_ either from source or from `AMD ROCm repository <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
 
-#. **Issue:** Could not find a package file provided by "ROCBLAS" with any of the following names:
-              ROCBLAS.cmake
-              rocblas-config.cmake
+#. **Issue:** Could not find any of the following package files provided by "ROCBLAS":
+            - ROCBLAS.cmake
+            - rocblas-config.cmake
 
-   **Solution:** Install `rocBLAS <https://github.com/ROCm/rocBLAS>`_ either from source or from `AMD ROCm repository <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
+   **Solution:** Install `rocBLAS <https://github.com/ROCm/rocBLAS>`_ either from the source or from `AMD ROCm repository <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html>`_.
 
 Simple test
 ^^^^^^^^^^^
+
 You can test the installation by running a CG solver on a sparse matrix.
 After successfully compiling the library, the CG solver example can be executed.
 
