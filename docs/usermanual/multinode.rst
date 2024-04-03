@@ -5,13 +5,10 @@
 .. _multi-node:
 
 **********************
-Multi-node Computation
+Multi-node computation
 **********************
 
-Introduction
-============
-
-This chapter describes all base objects (matrices and vectors) for computation on multi-node (distributed memory) systems.
+This document describes all the base objects (metrices and vectors) for computation on multi-node (distributed memory) systems.
 
 .. _multi-node1:
 
@@ -51,18 +48,18 @@ To perform a sparse matrix-vector multiplication (SpMV), each process need to mu
 
 where :math:`I` stands for interior and :math:`G` stands for ghost. :math:`x_G` is a vector with three sections, coming from *P1*, *P2* and *P3*. The whole ghost part of the global vector is used mainly for the SpMV product. It does not play any role in the computation of vector-vector operations.
 
-Code Structure
+Code structure
 ==============
 Each object contains two local sub-objects. The global matrix stores interior and ghost matrix by local objects. Similarily, the global vector stores its data by two local objects. In addition to the local data, the global objects have information about the global communication through the parallel manager.
 
 .. _global_objects:
 .. figure:: ../data/global_objects.png
-  :alt: global matrices and vectors
+  :alt: global metrices and vectors
   :align: center
 
-  Global matrices and vectors.
+  Global metrices and vectors.
 
-Parallel Manager
+Parallel manager
 ================
 .. doxygenclass:: rocalution::ParallelManager
 
@@ -89,13 +86,13 @@ To setup a parallel manager, the required information is:
 * Local size of the interior/ghost for each process
 * Communication pattern (what information need to be sent to whom)
 
-Global Matrices and Vectors
+Global metrices and vectors
 ===========================
 .. doxygenfunction:: rocalution::GlobalMatrix::GetInterior
 .. doxygenfunction:: rocalution::GlobalMatrix::GetGhost
 .. doxygenfunction:: rocalution::GlobalVector::GetInterior
 
-The global matrices and vectors store their data via two local objects. For the global matrix, the interior can be access via the :cpp:func:`rocalution::GlobalMatrix::GetInterior` and :cpp:func:`rocalution::GlobalMatrix::GetGhost` functions, which point to two valid local matrices. Similarily, the global vector can be accessed by :cpp:func:`rocalution::GlobalVector::GetInterior`.
+The global metrices and vectors store their data via two local objects. For the global matrix, the interior can be access via the :cpp:func:`rocalution::GlobalMatrix::GetInterior` and :cpp:func:`rocalution::GlobalMatrix::GetGhost` functions, which point to two valid local metrices. Similarily, the global vector can be accessed by :cpp:func:`rocalution::GlobalVector::GetInterior`.
 
 Asynchronous SpMV
 -----------------
@@ -126,7 +123,7 @@ Reading/writing from/to files can be done fully in parallel without any communic
 
   An example of 4 MPI processes and the data associated with *RANK0*.
 
-File Organization
+File organization
 -----------------
 When the parallel manager, global matrix or global vector are writing to a file, the main file (passed as a file name to this function) will contain information for all files on all ranks.
 
@@ -155,7 +152,7 @@ When the parallel manager, global matrix or global vector are writing to a file,
   rhs.dat.rank.2
   rhs.dat.rank.3
 
-Parallel Manager
+Parallel manager
 ----------------
 The data for each rank can be split into receiving and sending information. For receiving data from neighboring processes, see :numref:`receiving`, *RANK0* need to know what type of data will be received and from whom. For sending data to neighboring processes, see :numref:`sending`, *RANK0* need to know where and what to send.
 
@@ -187,9 +184,9 @@ To send data, *RANK0* requires:
 * How will the sending data (from each rank) be stored in the sending buffer (SENDERS_INDEX_OFFSET - integer array). In this example, the first 30 elements will be sent to *P1* :math:`[0, 2)` and the second 30 to *P2* :math:`[2, 4)`.
 * The elements, which need to be send (BOUNDARY_INDEX - integer array). In this example, the data which need to be send to *P1* and *P2* is the ghost layer, marked as ghost *P0*. The vertical stripe need to be send to *P1* and the horizontal stripe to *P2*. The numbering of local unknowns (in local indexing) for *P1* (the vertical stripes) are 1, 2 (size of 2) and stored in the BOUNDARY_INDEX. After 2 elements, the elements for *P2* are stored, they are 2, 3 (2 elements).
 
-Matrices
+Metrices
 --------
-Each rank hosts two local matrices, interior and ghost matrix. They can be stored in separate files, one for each matrix. The file format could be Matrix Market (MTX) or binary.
+Each rank hosts two local metrices, interior and ghost matrix. They can be stored in separate files, one for each matrix. The file format could be Matrix Market (MTX) or binary.
 
 Vectors
 -------

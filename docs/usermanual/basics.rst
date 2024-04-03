@@ -8,6 +8,8 @@
 Basics
 ******
 
+This document covers the basic building blocks of rocALUTION.
+
 Operators and vectors
 =====================
 
@@ -180,17 +182,18 @@ This might significantly reduce the performance of some operations.
 File logging
 ============
 
-rocALUTION trace file logging can be enabled by setting the environment variable `ROCALUTION_LAYER` to 1.
-rocALUTION will then log each rocALUTION function call including object constructor / destructor, address of the object, memory allocation, data transfers, all function calls for matrices, vectors, solvers and preconditioners.
-The log file will be placed in the working directory.
-The log file naming convention is `rocalution-rank-<rank>-<time_since_epoch_in_msec>.log`.
-By default, the environment variable `ROCALUTION_LAYER` is unset, and logging is disabled.
+To enable rocALUTION trace file logging, set the environment variable ``ROCALUTION_LAYER`` to 1.
+rocALUTION then logs each rocALUTION function call including object constructor/destructor, address of the object, memory allocation, data transfers, all function calls for matrices, vectors, solvers, and preconditioners.
+The log file is placed in the working directory.
+The log file naming convention is ``rocalution-rank-<rank>-<time_since_epoch_in_msec>.log``.
+By default, the environment variable ``ROCALUTION_LAYER`` is unset and logging is disabled.
 
 .. note:: Performance might degrade when logging is enabled.
 
 Versions
 ========
-For checking the rocALUTION version in an application, pre-defined macros can be used:
+
+For checking the rocALUTION version in an application, use pre-defined macros:
 
 .. code-block:: cpp
 
@@ -203,4 +206,4 @@ For checking the rocALUTION version in an application, pre-defined macros can be
 
   #define __ROCALUTION_VER        // version
 
-The final `__ROCALUTION_VER` holds the version number as `10000 * major + 100 * minor + patch`, as defined in `src/base/version.hpp.in`.
+The final ``__ROCALUTION_VER`` holds the version number as ``10000 * major + 100 * minor + patch``, as defined in ``src/base/version.hpp.in``.
