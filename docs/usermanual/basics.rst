@@ -8,7 +8,7 @@
 Basics
 ******
 
-This document covers the basic building blocks of rocALUTION.
+This document covers the basic information about rocALUTION.
 
 Operators and vectors
 =====================

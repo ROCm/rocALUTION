@@ -106,7 +106,7 @@ The user can store and load all global structures from and to files. For a solve
 * the sparse matrix
 * and the vector
 
-Reading/writing from/to files can be done fully in parallel without any communication. :numref:`4x4_mpi` visualizes data of a :math:`4 \times 4` grid example which is distributed among 4 MPI processes (organized in :math:`2 \times 2`). Each local matrix stores the local unknowns (with local indexing). :numref:`4x4_mpi_rank0` furthermore illustrates the data associated with *RANK0*.
+Reading/writing from/to files can be done fully in parallel without any communication. :numref:`4x4_mpi` visualizes data of a :math:`4 \times 4` grid example which is distributed among 4 MPI processes (organized in :math:`2 \times 2`). Each local matrix stores the local unknowns (with local indexing). :numref:`4x4_mpi_rank0` furthermore illustrates the data associated with ``RANK0``.
 
 .. _4x4_mpi:
 .. figure:: ../data/4x4_mpi.png
@@ -121,10 +121,11 @@ Reading/writing from/to files can be done fully in parallel without any communic
   :alt: 4x4 grid, distributed in 4 domains (2x2), showing rank0
   :align: center
 
-  An example of 4 MPI processes and the data associated with *RANK0*.
+  An example of 4 MPI processes and the data associated with ``RANK0``.
 
 File organization
 -----------------
+
 When the parallel manager, global matrix or global vector are writing to a file, the main file (passed as a file name to this function) will contain information for all files on all ranks.
 
 .. code-block:: RST
@@ -154,40 +155,43 @@ When the parallel manager, global matrix or global vector are writing to a file,
 
 Parallel manager
 ----------------
-The data for each rank can be split into receiving and sending information. For receiving data from neighboring processes, see :numref:`receiving`, *RANK0* need to know what type of data will be received and from whom. For sending data to neighboring processes, see :numref:`sending`, *RANK0* need to know where and what to send.
+
+The data for each rank can be split into receiving and sending information. For receiving data from neighboring processes, see :numref:`receiving`, ``RANK0`` need to know what type of data will be received and from whom. For sending data to neighboring processes, see :numref:`sending`, ``RANK0`` need to know where and what to send.
 
 .. _receiving:
 .. figure:: ../data/receiving.png
   :alt: receiving data example
   :align: center
 
-  An example of 4 MPI processes, *RANK0* receives data (the associated data is marked bold).
+  An example of 4 MPI processes, ``RANK0`` receives data (the associated data is marked bold).
 
-To receive data, *RANK0* requires:
+To receive data, ``RANK0`` requires:
 
-* Number of MPI ranks, which will send data to *RANK0* (NUMBER_OF_RECEIVERS - integer value).
-* Which are the MPI ranks, sending the data (RECEIVERS_RANK - integer array).
-* How will the received data (from each rank) be stored in the ghost vector (RECEIVERS_INDEX_OFFSET - integer array). In this example, the first 30 elements will be received from *P1* :math:`[0, 2)` and the second 30 from *P2* :math:`[2, 4)`.
+* Number of MPI ranks, which will send data to ``RANK0`` (``NUMBER_OF_RECEIVERS`` - integer value).
+* Which are the MPI ranks, sending the data (``RECEIVERS_RANK`` - integer array).
+* How will the received data (from each rank) be stored in the ghost vector (``RECEIVERS_INDEX_OFFSET`` - integer array). In this example, the first 30 elements will be received from *P1* :math:`[0, 2)` and the second 30 from *P2* :math:`[2, 4)`.
 
 .. _sending:
 .. figure:: ../data/sending.png
   :alt: sending data example
   :align: center
 
-  An example of 4 MPI processes, *RANK0* sends data (the associated data is marked bold).
+  An example of 4 MPI processes, ``RANK0`` sends data (the associated data is marked bold).
 
-To send data, *RANK0* requires:
+To send data, ``RANK0`` requires:
 
-* Total size of the sending information (BOUNDARY_SIZE - integer value).
-* Number of MPI ranks, which will receive data from *RANK0* (NUMBER_OF_SENDERS - integer value).
-* Which are the MPI ranks, receiving the data (SENDERS_RANK - integer array).
-* How will the sending data (from each rank) be stored in the sending buffer (SENDERS_INDEX_OFFSET - integer array). In this example, the first 30 elements will be sent to *P1* :math:`[0, 2)` and the second 30 to *P2* :math:`[2, 4)`.
-* The elements, which need to be send (BOUNDARY_INDEX - integer array). In this example, the data which need to be send to *P1* and *P2* is the ghost layer, marked as ghost *P0*. The vertical stripe need to be send to *P1* and the horizontal stripe to *P2*. The numbering of local unknowns (in local indexing) for *P1* (the vertical stripes) are 1, 2 (size of 2) and stored in the BOUNDARY_INDEX. After 2 elements, the elements for *P2* are stored, they are 2, 3 (2 elements).
+* Total size of the sending information (``BOUNDARY_SIZE`` - integer value).
+* Number of MPI ranks, which will receive data from ``RANK0`` (``NUMBER_OF_SENDERS`` - integer value).
+* Which are the MPI ranks, receiving the data (``SENDERS_RANK`` - integer array).
+* How will the sending data (from each rank) be stored in the sending buffer (``SENDERS_INDEX_OFFSET`` - integer array). In this example, the first 30 elements will be sent to *P1* :math:`[0, 2)` and the second 30 to *P2* :math:`[2, 4)`.
+* The elements, which need to be send (``BOUNDARY_INDEX`` - integer array). In this example, the data which need to be send to *P1* and *P2* is the ghost layer, marked as ghost *P0*. The vertical stripe need to be send to *P1* and the horizontal stripe to *P2*. The numbering of local unknowns (in local indexing) for *P1* (the vertical stripes) are 1, 2 (size of 2) and stored in the ``BOUNDARY_INDEX``. After 2 elements, the elements for ``P2`` are stored, they are 2, 3 (2 elements).
 
 Metrices
 --------
+
 Each rank hosts two local metrices, interior and ghost matrix. They can be stored in separate files, one for each matrix. The file format could be Matrix Market (MTX) or binary.
 
 Vectors
 -------
+
 Each rank holds the local interior vector only. It is stored in a single file. The file could be ASCII or binary.
