@@ -10,7 +10,6 @@ Single-node computation
 
 In this document, all base objects (metrices, vectors, and stencils) for computation on a single-node (shared-memory) system are described. A typical configuration is illustrated in :numref:`single-node`.
 
-.. _single-node:
 .. figure:: ../data/single-node.png
   :alt: single-node system configuration
   :align: center
@@ -23,7 +22,7 @@ The compute node contains none, one or more accelerators. The compute node could
 
 ValueType
 =========
-The value (data) type of the vectors and the matrices is defined as a template. The matrix can be of type float (32-bit), double (64-bit) and complex (64/128-bit). The vector can be float (32-bit), double (64-bit), complex (64/128-bit) and int (32/64-bit). The information about the precision of the data type is shown in the :cpp:func:`rocalution::BaseRocalution::Info` function.
+The value (data) type of the vectors and the metrices is defined as a template. The matrix can be of type float (32-bit), double (64-bit) and complex (64/128-bit). The vector can be float (32-bit), double (64-bit), complex (64/128-bit) and int (32/64-bit). The information about the precision of the data type is shown in the :cpp:func:`rocalution::BaseRocalution::Info` function.
 
 Complex support
 ===============
@@ -57,7 +56,7 @@ Allocation and free
 Matrix formats
 ==============
 
-Matrices, where most of the elements are equal to zero, are called sparse. In most practical applications, the number of non-zero entries is proportional to the size of the matrix (e.g. typically, if the matrix :math:`A \in \mathbb{R}^{N \times N}`, then the number of elements are of order :math:`O(N)`). To save memory, storing zero entries can be avoided by introducing a structure corresponding to the non-zero elements of the matrix. rocALUTION supports sparse CSR, MCSR, COO, ELL, DIA, HYB and dense matrices (DENSE).
+Metrices, where most of the elements are equal to zero, are called sparse. In most practical applications, the number of non-zero entries is proportional to the size of the matrix (e.g. typically, if the matrix :math:`A \in \mathbb{R}^{N \times N}`, then the number of elements are of order :math:`O(N)`). To save memory, storing zero entries can be avoided by introducing a structure corresponding to the non-zero elements of the matrix. rocALUTION supports sparse CSR, MCSR, COO, ELL, DIA, HYB and dense metrices (DENSE).
 
 .. note:: The functionality of every matrix object is different and depends on the matrix format. The CSR format provides the highest support for various functions. For a few operations, an internal conversion is performed, however, for many routines an error message is printed and the program is terminated.
 .. note:: In the current version, some of the conversions are performed on the host (disregarding the actual object allocation - host or accelerator).
@@ -302,7 +301,7 @@ where
 HYB storage format
 ------------------
 
-The DIA and ELL formats cannot efficiently represent completely unstructured sparse matrices. To keep the memory footprint low, DIA requires the elements to belong to a few diagonals and ELL needs a fixed number of elements per row. For many applications this is a too strong restriction. A solution to this issue is to represent the more regular part of the matrix in such a format and the remaining part in COO format. The HYB format is a mixture between ELL and COO, where the maximum elements per row for the ELL part is computed by `nnz/m`. It represents a :math:`m \times n` matrix by
+The DIA and ELL formats cannot efficiently represent completely unstructured sparse metrices. To keep the memory footprint low, DIA requires the elements to belong to a few diagonals and ELL needs a fixed number of elements per row. For many applications this is a too strong restriction. A solution to this issue is to represent the more regular part of the matrix in such a format and the remaining part in COO format. The HYB format is a mixture between ELL and COO, where the maximum elements per row for the ELL part is computed by `nnz/m`. It represents a :math:`m \times n` matrix by
 
 =========== =========================================================================================
 ``m``           Number of rows (integer).
@@ -350,7 +349,7 @@ Access
   :outline:
 .. doxygenfunction:: rocalution::LocalVector::&operator[](int) const
 
-.. note:: Accessing elements via the *[]* operators is slow. Use this for debugging purposes only. There is no direct access to the elements of matrices due to the sparsity structure. Matrices can be imported by a copy function. For CSR matrices, this is :cpp:func:`rocalution::LocalMatrix::CopyFromCSR` and :cpp:func:`rocalution::LocalMatrix::CopyToCSR`.
+.. note:: Accessing elements via the *[]* operators is slow. Use this for debugging purposes only. There is no direct access to the elements of metrices due to the sparsity structure. Metrices can be imported by a copy function. For CSR metrices, this is :cpp:func:`rocalution::LocalMatrix::CopyFromCSR` and :cpp:func:`rocalution::LocalMatrix::CopyToCSR`.
 
 .. code-block:: cpp
 
@@ -448,7 +447,7 @@ All matrix and vector objects provide a *CopyFrom()* function. The destination o
 Clone
 =====
 
-The copy operators allow you to copy the values of the object to another object, without changing the backend specification of the object. In many algorithms, you might need auxiliary vectors or matrices. These objects can be cloned with CloneFrom().
+The copy operators allow you to copy the values of the object to another object, without changing the backend specification of the object. In many algorithms, you might need auxiliary vectors or metrices. These objects can be cloned with CloneFrom().
 
 CloneFrom
 ---------
@@ -467,7 +466,7 @@ Check
 .. doxygenfunction:: rocalution::LocalVector::Check
 .. doxygenfunction:: rocalution::LocalMatrix::Check
 
-Checks, if the object contains valid data. For vectors, the function checks if the values are not infinity and not NaN (not a number). For matrices, this function checks the values and if the structure of the matrix is correct (e.g. indices cannot be negative, CSR and COO matrices have to be sorted, etc.).
+Checks if the object contains valid data. For vectors, the function checks if the values are not infinity and not NaN (not a number). For metrices, this function checks the values and if the structure of the matrix is correct (e.g. indices cannot be negative, CSR and COO metrices have to be sorted, etc.).
 
 Sort
 ====
