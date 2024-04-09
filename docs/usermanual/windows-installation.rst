@@ -139,10 +139,10 @@ Some client executables (.exe) are listed below:
 ====================== ==================================================
 Executable name        Description
 ====================== ==================================================
-``rocalution-test``           Runs Google Tests to test the library
-``rocalution-bench``          Executable to benchmark or test functions
-``./cg lap_25.mtx``           Executes conjugate gradient example
-                          (must download ``mtx`` matrix file you wish to use)
+``rocalution-test``     Runs Google Tests to test the library
+``rocalution-bench``    Executable to benchmark or test functions
+``./cg lap_25.mtx``     Executes conjugate gradient example 
+                        (must download ``mtx`` matrix file you wish to use)
 ====================== ==================================================
 
 Common uses of ``rmake.py`` to build (library and client) are listed below:

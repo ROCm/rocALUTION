@@ -19,6 +19,7 @@ subtrees:
     - file: api/precond
     - file: api/backend
     - file: api/api
+    - file: usermanual/remarks
   - caption: Contribution
     entries:
     - file: design/design

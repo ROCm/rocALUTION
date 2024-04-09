@@ -1,3 +1,9 @@
+.. meta::
+   :description: A sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains
+   :keywords: rocALUTION, ROCm, library, API, tool
+
+.. _remarks:
+
 *******
 Remarks
 *******
@@ -14,7 +20,7 @@ Performance
 * Not all matrix conversions are performed on the device, the platform will give you a warning if the object need to be moved.
 * If you are deploying the rocALUTION library into another software framework try to design your integration functions to avoid :cpp:func:`rocalution::init_rocalution` and :cpp:func:`rocalution::stop_rocalution` every time you call a solver in the library.
 * Be sure to compile the library with the correct optimization level (-O3).
-* Check, if your solver is really performed on the accelerator by printing the matrix information (:cpp:func:`rocalution::BaseRocalution::Info`) just before calling the :cpp:func:`rocalution::Solver::Solve` function.
+* Check if your solver is really performed on the accelerator by printing the matrix information (:cpp:func:`rocalution::BaseRocalution::Info`) just before calling the :cpp:func:`rocalution::Solver::Solve` function.
 * Check the configuration of the library for your hardware with :cpp:func:`rocalution::info_rocalution`.
 * Mixed-Precision defect correction technique is recommended for accelerators (e.g. GPUs) with partial or no double precision support. The stopping criteria for the inner solver has to be tuned well for good performance.
 

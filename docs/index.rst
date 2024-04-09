@@ -31,6 +31,7 @@ Our documentation is structured as follows:
     * :ref:`solvers`
     * :ref:`preconditioners`
     * :ref:`backends`
+    * :ref:`remarks`
     * :ref:`api`
     
   .. grid-item-card:: Contribution
