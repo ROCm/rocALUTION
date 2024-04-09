@@ -116,20 +116,20 @@ Common uses of ``rmake.py`` to build (library) are listed below:
 .. tabularcolumns::
    |\X{1}{4}|\X{3}{4}|
 
-+--------------------+--------------------------+
-| Command            | Description              |
-+====================+==========================+
-| ``./rmake.py -h``  | Help information.        |
-+--------------------+--------------------------+
-| ``./rmake.py``     | Builds library.           |
-+--------------------+--------------------------+
-| ``./rmake.py -i``  | Builds library, then      |
-|                    | builds and installs        |
-|                    | rocALUTION package.      |
-|                    | If you want to keep      |
-|                    | rocALUTION in your local |
++--------------------+-----------------------------+
+| Command            | Description                 |
++====================+=============================+
+| ``./rmake.py -h``  | Help information.           |
++--------------------+-----------------------------+
+| ``./rmake.py``     | Builds library.             |
++--------------------+-----------------------------+
+| ``./rmake.py -i``  | Builds library, then        |
+|                    | builds and installs         |
+|                    | rocALUTION package.         |
+|                    | If you want to keep         |
+|                    | rocALUTION in your local    |
 |                    | tree, don't use ``-i`` flag.|
-+--------------------+--------------------------+
++--------------------+-----------------------------+
 
 Build library and client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,18 +150,18 @@ Common uses of ``rmake.py`` to build (library and client) are listed below:
 .. tabularcolumns::
    |\X{1}{4}|\X{3}{4}|
 
-+------------------------+--------------------------+
-| Command                | Description              |
-+========================+==========================+
-| ``./rmake.py -h``      | Help information.        |
-+------------------------+--------------------------+
-| ``./rmake.py -c``      | Builds library and client |
-|                        | in your local directory. |
-+------------------------+--------------------------+
-| ``./rmake.py -ic``     | Builds and installs      |
-|                        | rocALUTION package, and  |
-|                        | builds the client.       |
-|                        | If you want to keep      |
-|                        | rocALUTION in your local |
++------------------------+----------------------------------+
+| Command                | Description                      |
++========================+==================================+
+| ``./rmake.py -h``      | Help information.                |
++------------------------+----------------------------------+
+| ``./rmake.py -c``      | Builds library and client        |
+|                        | in your local directory.         |
++------------------------+----------------------------------+
+| ``./rmake.py -ic``     | Builds and installs              |
+|                        | rocALUTION package, and          |
+|                        | builds the client.               |
+|                        | If you want to keep              |
+|                        | rocALUTION in your local         |
 |                        | directory, don't use ``-i`` flag.|
-+------------------------+--------------------------+
++------------------------+----------------------------------+

@@ -15,10 +15,10 @@ subtrees:
     - file: usermanual/basics
     - file: usermanual/singlenode
     - file: usermanual/multinode
-    - file: usermanual/solvers
-    - file: usermanual/precond
-    - file: usermanual/backend
-    - file: api
+    - file: api/solvers
+    - file: api/precond
+    - file: api/backend
+    - file: api/api
   - caption: Contribution
     entries:
     - file: design/design
