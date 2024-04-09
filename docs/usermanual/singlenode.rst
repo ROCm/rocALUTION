@@ -8,8 +8,9 @@
 Single-node computation
 ***********************
 
-In this document, all base objects (metrices, vectors, and stencils) for computation on a single-node (shared-memory) system are described. A typical configuration is illustrated in :numref:`single-node`.
+In this document, all base objects (metrices, vectors, and stencils) for computation on a single-node (shared-memory) system are described. A typical configuration is illustrated in the figure below.
 
+.. _single-node-figure:
 .. figure:: ../data/single-node.png
   :alt: single-node system configuration
   :align: center
@@ -90,14 +91,14 @@ COO storage format
 
 The most intuitive sparse format is the coordinate format (COO). It represents the non-zero elements of the matrix by their coordinates and requires two index arrays (one for row and one for column indexing) and the values array. A :math:`m \times n` matrix is represented by
 
-=========== ==================================================================
+=============== ===============================================================
 ``m``           Number of rows (integer).
 ``n``           Number of columns (integer).
 ``nnz``         Number of non-zero elements (integer).
 ``coo_val``     Array of ``nnz`` elements containing the data (floating point).
 ``coo_row_ind`` Array of ``nnz`` elements containing the row indices (integer).
 ``coo_col_ind`` Array of ``nnz`` elements containing the column indices (integer).
-=========== ==================================================================
+=============== ==================================================================
 
 .. note:: The COO matrix is expected to be sorted by row indices and column indices per row. Furthermore, each pair of indices should appear only once.
 
@@ -127,14 +128,14 @@ CSR storage format
 One of the most popular formats in many scientific codes is the compressed sparse row (CSR) format. In this format, instead of row indices, the row offsets to the beginning of each row are stored. Thus, each row elements can be accessed sequentially. However, this format does not allow sequential accessing of the column entries.
 The CSR storage format represents a :math:`m \times n` matrix by
 
-=========== =========================================================================
+=============== ======================================================================
 ``m``           Number of rows (integer).
 ``n``           Number of columns (integer).
 ``nnz``         Number of non-zero elements (integer).
 ``csr_val``     Array of ``nnz`` elements containing the data (floating point).
 ``csr_row_ptr`` Array of ``m+1`` elements that point to the start of every row (integer).
 ``csr_col_ind`` Array of ``nnz`` elements containing the column indices (integer).
-=========== =========================================================================
+=============== =========================================================================
 
 .. note:: The CSR matrix is expected to be sorted by column indices within each row. Furthermore, each pair of indices should appear only once.
 
@@ -162,7 +163,7 @@ BCSR storage format
 -------------------
 The Block Compressed Sparse Row (BCSR) storage format represents a :math:`(mb \cdot \text{bcsr_dim}) \times (nb \cdot \text{bcsr_dim})` matrix by
 
-============ ========================================================================================================================================
+================ =====================================================================================================================================
 ``mb``           Number of block rows (integer)
 ``nb``           Number of block columns (integer)
 ``nnzb``         Number of non-zero blocks (integer)
@@ -170,7 +171,7 @@ The Block Compressed Sparse Row (BCSR) storage format represents a :math:`(mb \c
 ``bcsr_row_ptr`` Array of ``mb+1`` elements that point to the start of every block row (integer).
 ``bcsr_col_ind`` Array of ``nnzb`` elements containing the block column indices (integer).
 ``bcsr_dim``     Dimension of each block (integer).
-============ ========================================================================================================================================
+================ ========================================================================================================================================
 
 The BCSR matrix is expected to be sorted by column indices within each row. If :math:`m` or :math:`n` are not evenly divisible by the block dimension, then zeros are padded to the matrix, such that :math:`mb = (m + \text{bcsr_dim} - 1) / \text{bcsr_dim}` and :math:`nb = (n + \text{bcsr_dim} - 1) / \text{bcsr_dim}`.
 Consider the following :math:`4 \times 3` matrix and the corresponding BCSR structures, with :math:`\text{bcsr_dim} = 2, mb = 2, nb = 2` and :math:`\text{nnzb} = 4` using zero based indexing and column-major storage:
@@ -230,13 +231,13 @@ ELL storage format
 The Ellpack-Itpack (ELL) storage format can be seen as a modification of the CSR format without row offset pointers. Instead, a fixed number of elements per row is stored.
 It represents a :math:`m \times n` matrix by
 
-=========== ================================================================================
+=============== =============================================================================
 ``m``           Number of rows (integer).
 ``n``           Number of columns (integer).
 ``ell_width``   Maximum number of non-zero elements per row (integer)
 ``ell_val``     Array of ``m times ell_width`` elements containing the data (floating point).
 ``ell_col_ind`` Array of ``m times ell_width`` elements containing the column indices (integer).
-=========== ================================================================================
+=============== ================================================================================
 
 .. note:: The ELL matrix is assumed to be stored in column-major format. Rows with less than ``ell_width`` non-zero elements are padded with zeros (``ell_val``) and :math:`-1` (``ell_col_ind``).
 
@@ -267,13 +268,13 @@ DIA storage format
 If all (or most) of the non-zero entries belong to a few diagonals of the matrix, they can be stored with the corresponding offsets. The values in DIA format are stored as array with size :math:`D \times N_D`, where :math:`D` is the number of diagonals in the matrix and :math:`N_D` is the number of elements in the main diagonal. Since not all values in this array are occupied, the not accessible entries are denoted with :math:`\ast`. They correspond to the offsets in the diagonal array (negative values represent offsets from the beginning of the array).
 The DIA storage format represents a :math:`m \times n` matrix by
 
-========== ====
+============== ==============================================================================================
 ``m``          Number of rows (integer)
 ``n``          Number of columns (integer)
 ``ndiag``      Number of occupied diagonals (integer)
 ``dia_offset`` Array of ``ndiag`` elements containing the offset with respect to the main diagonal (integer).
 ``dia_val``	   Array of ``m times ndiag`` elements containing the values (floating point).
-========== ====
+============== ===============================================================================================
 
 Consider the following :math:`5 \times 5` matrix and the corresponding DIA structures, with :math:`m = 5, n = 5` and :math:`\text{ndiag} = 4`:
 
@@ -303,7 +304,7 @@ HYB storage format
 
 The DIA and ELL formats cannot efficiently represent completely unstructured sparse metrices. To keep the memory footprint low, DIA requires the elements to belong to a few diagonals and ELL needs a fixed number of elements per row. For many applications this is a too strong restriction. A solution to this issue is to represent the more regular part of the matrix in such a format and the remaining part in COO format. The HYB format is a mixture between ELL and COO, where the maximum elements per row for the ELL part is computed by `nnz/m`. It represents a :math:`m \times n` matrix by
 
-=========== =========================================================================================
+=============== ======================================================================================
 ``m``           Number of rows (integer).
 ``n``           Number of columns (integer).
 ``nnz``         Number of non-zero elements of the COO part (integer)
@@ -313,7 +314,7 @@ The DIA and ELL formats cannot efficiently represent completely unstructured spa
 ``coo_val``     Array of ``nnz`` elements containing the COO part data (floating point).
 ``coo_row_ind`` Array of ``nnz`` elements containing the COO part row indices (integer).
 ``coo_col_ind`` Array of ``nnz`` elements containing the COO part column indices (integer).
-=========== =========================================================================================
+=============== =========================================================================================
 
 Memory Usage
 ------------
@@ -375,7 +376,7 @@ Raw access to the data
 
 SetDataPtr
 ----------
-For vector and matrix objects, direct access to the raw data can be obtained via pointers. Already allocated data can be set with *SetDataPtr*. Setting data pointers will leave the original pointers empty.
+For vector and matrix objects, direct access to the raw data can be obtained via pointers. Already allocated data can be set with ``SetDataPtr``. Setting data pointers leaves the original pointers empty.
 
 .. doxygenfunction:: rocalution::LocalVector::SetDataPtr
 .. doxygenfunction:: rocalution::LocalMatrix::SetDataPtrCOO
@@ -395,7 +396,7 @@ For vector and matrix objects, direct access to the raw data can be obtained via
 LeaveDataPtr
 ------------
 
-With *LeaveDataPtr*, the raw data from the object can be obtained. This will leave the object empty.
+With ``LeaveDataPtr``, the raw data from the object can be obtained. This leaves the object empty.
 
 .. doxygenfunction:: rocalution::LocalVector::LeaveDataPtr
 .. doxygenfunction:: rocalution::LocalMatrix::LeaveDataPtrCOO
@@ -423,7 +424,7 @@ Copy CSR matrix host data
 Copy data
 =========
 
-The user can copy data to and from a local vector by using *CopyFromData()* *CopyToData()*.
+You can copy data to and from a local vector by using ``CopyFromData()`` and ``CopyToData()``.
 
 .. doxygenfunction:: rocalution::LocalVector::CopyFromData
 .. doxygenfunction:: rocalution::LocalVector::CopyToData
@@ -447,7 +448,7 @@ All matrix and vector objects provide a *CopyFrom()* function. The destination o
 Clone
 =====
 
-The copy operators allow you to copy the values of the object to another object, without changing the backend specification of the object. In many algorithms, you might need auxiliary vectors or metrices. These objects can be cloned with CloneFrom().
+The copy operators allow you to copy the values of the object to another object, without changing the backend specification of the object. In many algorithms, you might need auxiliary vectors or metrices. These objects can be cloned with ``CloneFrom()``.
 
 CloneFrom
 ---------

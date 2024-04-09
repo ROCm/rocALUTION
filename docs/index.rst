@@ -8,7 +8,9 @@
 rocALUTION documentation
 ===========================
 
-Welcome to the rocALUTION docs home page! To learn more, see :ref:`what-is-rocalution`.
+rocALUTION is a sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains. To learn more, see :ref:`what-is-rocalution`.
+
+You can access rocALUTION code on our `GitHub repository <https://github.com/ROCm/rocALUTION>`_.
 
 Our documentation is structured as follows:
 
@@ -39,8 +41,7 @@ Our documentation is structured as follows:
     * :ref:`functionality-table`
     * :ref:`clients`
 
-To contribute to the documentation refer to
+To contribute to the documentation, refer to
 `Contributing to ROCm  <https://rocm.docs.amd.com/en/latest/contribute/contributing.html>`_.
 
-Licensing information can be found on the
-`Licensing <https://rocm.docs.amd.com/en/latest/about/license.html>`_ page.
+You can find licensing information on the `Licensing <https://rocm.docs.amd.com/en/latest/about/license.html>`_ page.
