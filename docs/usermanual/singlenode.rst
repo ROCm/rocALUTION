@@ -27,7 +27,7 @@ The value (data) type of the vectors and the metrices is defined as a template. 
 
 Complex support
 ===============
-Currently, rocALUTION does not support complex computation.
+Currently, rocALUTION doesn't support complex computation.
 
 Allocation and free
 ===================
@@ -89,8 +89,9 @@ Metrices, where most of the elements are equal to zero, are called sparse. In mo
 COO storage format
 ------------------
 
-The most intuitive sparse format is the coordinate format (COO). It represents the non-zero elements of the matrix by their coordinates and requires two index arrays (one for row and one for column indexing) and the values array. A :math:`m \times n` matrix is represented by
+The most intuitive sparse format is the coordinate format (COO). It represents the non-zero elements of the matrix by their coordinates and requires two index arrays (one for row and one for column indexing) and the values array. A :math:`m \times n` matrix is represented by:
 
+=============== ===============================================================
 =============== ===============================================================
 ``m``           Number of rows (integer).
 ``n``           Number of columns (integer).
@@ -126,7 +127,7 @@ CSR storage format
 ------------------
 
 One of the most popular formats in many scientific codes is the compressed sparse row (CSR) format. In this format, instead of row indices, the row offsets to the beginning of each row are stored. Thus, each row elements can be accessed sequentially. However, this format does not allow sequential accessing of the column entries.
-The CSR storage format represents a :math:`m \times n` matrix by
+The CSR storage format represents a :math:`m \times n` matrix by:
 
 =============== ======================================================================
 ``m``           Number of rows (integer).
