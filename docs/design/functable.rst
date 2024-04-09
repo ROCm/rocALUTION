@@ -5,17 +5,18 @@
 .. _functionality-table:
 
 *******************
-Functionality Table
+Functionality table
 *******************
 
-The following tables give an overview whether a rocALUTION routine is implemented on host backend, accelerator backend, or both.
+The following tables list the rocALUTION routines along with the information about the implementation location i.e. host backend, accelerator backend, or both.
 
 LocalMatrix and LocalVector classes
 ===================================
+
 All matrix operations (except SpMV) require a CSR matrix.
 
-.. note:: If the input matrix is not a CSR matrix, an internal conversion will be performed to CSR format, followed by a back conversion to the previous format after the operation.
-          In this case, a warning message on verbosity level 2 will be printed.
+.. note:: If the input matrix is not a CSR matrix, an internal conversion is performed to CSR format, followed by a back conversion to the previous format after the operation.
+          In this case, a warning message on verbosity level 2 is printed.
 
 ==================================================================================== =============================================================================== ======== =======
 **LocalMatrix function**                                                             **Comment**                                                                     **Host** **HIP**
@@ -153,7 +154,7 @@ All matrix operations (except SpMV) require a CSR matrix.
 :cpp:func:`Power <rocalution::LocalVector::Power>`                                     Compute vector power                                                  Yes      Yes
 ====================================================================================== ===================================================================== ======== =======
 
-Solver and Preconditioner classes
+Solver and preconditioner classes
 =================================
 
 .. note:: The building phase of the iterative solver also depends on the selected preconditioner.

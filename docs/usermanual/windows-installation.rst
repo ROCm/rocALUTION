@@ -8,7 +8,7 @@
 Installation on Windows
 =====================================
 
-This document provides information required to install and configure rocALUTION on Linux.
+This document provides information required to install and configure rocALUTION on Windows.
 
 -------------
 Prerequisites
