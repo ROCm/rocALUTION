@@ -91,15 +91,15 @@ COO storage format
 
 The most intuitive sparse format is the coordinate format (COO). It represents the non-zero elements of the matrix by their coordinates and requires two index arrays (one for row and one for column indexing) and the values array. A :math:`m \times n` matrix is represented by:
 
-================ ==================================================================
-================ ==================================================================
+================ ====================================================================
+================ ====================================================================
 ``m``             Number of rows (integer).
 ``n``             Number of columns (integer).
 ``nnz``           Number of non-zero elements (integer).
 ``coo_val``       Array of ``nnz`` elements containing the data (floating point).
 ``coo_row_ind``   Array of ``nnz`` elements containing the row indices (integer).
 ``coo_col_ind``   Array of ``nnz`` elements containing the column indices (integer).
-================ ==================================================================
+================ ====================================================================
 
 .. note:: The COO matrix is expected to be sorted by row indices and column indices per row. Furthermore, each pair of indices should appear only once.
 
