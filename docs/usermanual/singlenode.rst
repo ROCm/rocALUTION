@@ -129,7 +129,7 @@ CSR storage format
 One of the most popular formats in many scientific codes is the compressed sparse row (CSR) format. In this format, instead of row indices, the row offsets to the beginning of each row are stored. Thus, each row elements can be accessed sequentially. However, this format does not allow sequential accessing of the column entries.
 The CSR storage format represents a :math:`m \times n` matrix by:
 
-=============== ======================================================================
+=============== =========================================================================
 ``m``            Number of rows (integer).
 ``n``           Number of columns (integer).
 ``nnz``         Number of non-zero elements (integer).
