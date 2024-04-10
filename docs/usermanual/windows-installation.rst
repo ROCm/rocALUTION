@@ -98,7 +98,7 @@ You can add the SDK tools to your path using:
 Build
 ^^^^^^^^
 
-Below are the steps required to build using the `rmake.py` script. The user can build either of the following:
+Below are the steps required to build using the ``rmake.py`` script. The user can build either of the following:
 
 * library
 

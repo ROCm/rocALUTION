@@ -8,7 +8,7 @@
 Basics
 ******
 
-This document covers the basic information about rocALUTION.
+This document covers the basic information about rocALUTION APIs and their usage.
 
 Operators and vectors
 =====================
@@ -18,7 +18,7 @@ All objects can be moved to an accelerator at run-time.
 The linear operators are defined as local or global metrices (i.e. on a single-node or distributed/multi-node) and local stencils (i.e. matrix-free linear operations).
 The only template parameter of the operators and vectors is the data type (``ValueType``).
 The operator data type could be float, double, complex float, or complex double, while the vector data type can be int, float, double, complex float or complex double (int is used mainly for the permutation vectors).
-In the current version, cross ``ValueType`` object operations are not supported. :numref:`operators` gives an overview of supported operators and vectors.
+In the current version, cross ``ValueType`` object operations are not supported. The following figure gives an overview of supported operators and vectors.
 For more details, refer to the :ref:`design-philosophy`.
 
 .. _operators:
@@ -28,7 +28,7 @@ For more details, refer to the :ref:`design-philosophy`.
 
   Operator and vector classes.
 
-Each of the objects contain a local copy of the hardware descriptor created by the :cpp:func:`rocalution::init_rocalution` function. This allows you to modify it according to your needs and to obtain two or more objects with different hardware specifications (e.g. different amounts of OpenMP threads, HIP block sizes, etc.).
+Each object contains a local copy of the hardware descriptor created by the :cpp:func:`rocalution::init_rocalution` function. This allows you to modify it according to your needs and to obtain two or more objects with different hardware specifications (e.g. different amounts of OpenMP threads, HIP block sizes, etc.).
 
 Local operators and vectors
 ---------------------------
@@ -106,7 +106,7 @@ MPI and multi-accelerators
 --------------------------
 
 When initializing the library with MPI, you need to pass the rank of the MPI process as well as the number of accelerators available on each node.
-Basically, this way you can specify the mapping of MPI process and accelerators - the allocated accelerator will be `rank % num_dev_per_node`.
+Basically, this way you can specify the mapping of MPI process and accelerators - the allocated accelerator is ``rank % num_dev_per_node``.
 Thus, you can run two MPI processes on systems with two accelerators by specifying the number of devices to 2, as illustrated in the example code below.
 
 .. code-block:: cpp
