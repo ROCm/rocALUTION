@@ -16,9 +16,9 @@ Examples
 The examples collection offers different possible set-ups of solvers and preconditioners.
 The following tables provide a quick overview of various examples:
 
-================= ====
-Example           Description
-================= ====
+===================== ====
+Example               Description
+===================== ====
 ``amg``               Algebraic Multigrid solver (smoothed aggregation scheme, GS smoothing)
 ``as-precond``        GMRES solver with Additive Schwarz preconditioning
 ``async``             Asynchronous rocALUTION object transfer
@@ -42,11 +42,11 @@ Example           Description
 ``stencil``           CG solver using stencil as operator
 ``tns``               CG solver with Truncated Neumann Series preconditioning
 ``var-precond``       FGMRES solver with variable preconditioning
-================= ====
+===================== ====
 
-============= ====
-Example (MPI) Description
-============= ====
+================= ====
+Example (MPI)     Description
+================= ====
 ``benchmark_mpi`` Benchmarking important sparse functions
 ``bicgstab_mpi``  BiCGStab solver with multicolored Gauss-Seidel preconditioning
 ``cg-amg_mpi``    CG solver with Algebraic Multigrid (pairwise aggregation scheme) preconditioning
@@ -56,7 +56,7 @@ Example (MPI) Description
 ``global-io_mpi`` File I/O with CG solver and Factorized Sparse Approximate Inverse preconditioning
 ``idr_mpi``       IDR solver with Factorized Sparse Approximate Inverse preconditioning
 ``qmrcgstab_mpi`` QMRCGStab solver with ILU-T preconditioning
-============= ====
+================= ====
 
 Unit Tests
 ==========
