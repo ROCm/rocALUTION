@@ -161,7 +161,7 @@ where
 
 BCSR storage format
 -------------------
-The Block Compressed Sparse Row (BCSR) storage format represents a :math:`(mb \cdot \text{bcsr_dim}) \times (nb \cdot \text{bcsr_dim})` matrix by
+The Block Compressed Sparse Row (BCSR) storage format represents a :math:`(mb \cdot \text{bcsr_dim}) \times (nb \cdot \text{bcsr_dim})` matrix by:
 
 ================ ========================================================================================================================================
 ``mb``           Number of block rows (integer)
@@ -229,7 +229,7 @@ ELL storage format
 ------------------
 
 The Ellpack-Itpack (ELL) storage format can be seen as a modification of the CSR format without row offset pointers. Instead, a fixed number of elements per row is stored.
-It represents a :math:`m \times n` matrix by
+It represents a :math:`m \times n` matrix by:
 
 =============== ================================================================================
 ``m``           Number of rows (integer).
@@ -266,7 +266,7 @@ DIA storage format
 ------------------
 
 If all (or most) of the non-zero entries belong to a few diagonals of the matrix, they can be stored with the corresponding offsets. The values in DIA format are stored as array with size :math:`D \times N_D`, where :math:`D` is the number of diagonals in the matrix and :math:`N_D` is the number of elements in the main diagonal. Since not all values in this array are occupied, the not accessible entries are denoted with :math:`\ast`. They correspond to the offsets in the diagonal array (negative values represent offsets from the beginning of the array).
-The DIA storage format represents a :math:`m \times n` matrix by
+The DIA storage format represents a :math:`m \times n` matrix by:
 
 ============== ===============================================================================================
 ``m``          Number of rows (integer)
@@ -302,7 +302,7 @@ where
 HYB storage format
 ------------------
 
-The DIA and ELL formats cannot efficiently represent completely unstructured sparse metrices. To keep the memory footprint low, DIA requires the elements to belong to a few diagonals and ELL needs a fixed number of elements per row. For many applications this is a too strong restriction. A solution to this issue is to represent the more regular part of the matrix in such a format and the remaining part in COO format. The HYB format is a mixture between ELL and COO, where the maximum elements per row for the ELL part is computed by `nnz/m`. It represents a :math:`m \times n` matrix by
+The DIA and ELL formats cannot efficiently represent completely unstructured sparse metrices. To keep the memory footprint low, DIA requires the elements to belong to a few diagonals and ELL needs a fixed number of elements per row. For many applications this is a too strong restriction. A solution to this issue is to represent the more regular part of the matrix in such a format and the remaining part in COO format. The HYB format is a mixture between ELL and COO, where the maximum elements per row for the ELL part is computed by `nnz/m`. It represents a :math:`m \times n` matrix by:
 
 =============== =========================================================================================
 ``m``           Number of rows (integer).
