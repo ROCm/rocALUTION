@@ -157,7 +157,12 @@ endif()
 
 # Package specific CPACK vars
 if(SUPPORT_HIP)
-  rocm_package_add_dependencies(DEPENDS "hip-rocclr >= 4.0.0" "rocsparse >= 1.12.10" "rocblas >= 2.22.0" "rocrand >= 2.1.0")
+  if(BUILD_ADDRESS_SANITIZER)
+    set(DEPENDS_HIP_RUNTIME "hip-runtime-amd-asan >= 4.5.0" )
+  else()
+    set(DEPENDS_HIP_RUNTIME "hip-runtime-amd >= 4.5.0" )
+  endif()
+  rocm_package_add_dependencies(DEPENDS "${DEPENDS_HIP_RUNTIME}" "rocsparse >= 1.12.10" "rocblas >= 2.22.0" "rocrand >= 2.1.0")
 endif()
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
