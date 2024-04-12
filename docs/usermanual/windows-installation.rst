@@ -71,7 +71,7 @@ Requirements
 Download rocALUTION
 ^^^^^^^^^^^^^^^^^^^
 
-The rocALUTION source code, which is the same as for the ROCm linux distributions, is available at the `rocALUTION github page <https://github.com/ROCmSoftwarePlatform/rocSPARSE>`_.
+The rocALUTION source code, which is the same as for the ROCm linux distributions, is available at the `rocALUTION github page <https://github.com/ROCmSoftwarePlatform/rocALUTION>`_.
 The version of the ROCm HIP SDK may be shown in the path of default installation, but
 you can run the HIP SDK compiler to report the version from the ``bin/`` folder using:
 
