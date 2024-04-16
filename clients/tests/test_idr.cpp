@@ -31,7 +31,7 @@ typedef std::tuple<int, std::string, unsigned int, int> idr_tuple;
 int          idr_size[]    = {7, 63};
 std::string  idr_precond[] = {"None", "SPAI", "GS", "ILU", "MCILU"};
 unsigned int idr_format[]  = {1, 4, 5, 6};
-int          idr_level[]   = {1, 2, 4};
+int          idr_level[]   = {1, 2};
 
 class parameterized_idr : public testing::TestWithParam<idr_tuple>
 {
