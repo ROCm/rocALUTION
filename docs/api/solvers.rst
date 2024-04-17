@@ -2,7 +2,7 @@
    :description: A sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains
    :keywords: rocALUTION, ROCm, library, API, tool
 
-.. _solvers:
+.. _solver-class:
 
 *******
 Solvers

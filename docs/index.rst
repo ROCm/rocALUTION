@@ -28,7 +28,7 @@ Our documentation is structured as follows:
     * :ref:`basics`
     * :ref:`single-node`
     * :ref:`multi-node`
-    * :ref:`solvers`
+    * :ref:`solver-class`
     * :ref:`preconditioners`
     * :ref:`backends`
     * :ref:`api`
