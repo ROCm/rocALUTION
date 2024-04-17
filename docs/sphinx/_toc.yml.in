@@ -5,7 +5,7 @@ subtrees:
   - numbered: False
     entries:
     - file: what-is-rocalution
-  - caption: Tutorial
+  - caption: Install
     entries:
     - file: usermanual/linux-installation
     - file: usermanual/windows-installation

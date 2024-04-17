@@ -73,9 +73,6 @@ Using `install.sh` script to build rocALUTION with dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following table lists the common uses of ``install.sh`` to build dependencies and the library. Accelerator support via HIP and OpenMP are enabled by default, whereas MPI is disabled.
 
-.. tabularcolumns::
-      |\X{1}{6}|\X{5}{6}|
-
 ============================ ====
 Command                      Description
 ============================ ====
@@ -91,9 +88,6 @@ Using ``install.sh`` script to build rocALUTION with dependencies and clients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The client contains example code, unit tests and benchmarks. Common uses of ``install.sh`` to build them are listed in the table below:
-
-.. tabularcolumns::
-      |\X{1}{6}|\X{5}{6}|
 
 ===================== =========================================================================================================================================================================================================
 Command               Description
