@@ -76,16 +76,16 @@ The following table lists the common uses of ``install.sh`` to build dependencie
 .. tabularcolumns::
       |\X{1}{6}|\X{5}{6}|
 
-============================ ====================================================================================================================================================================================================
+============================ ====
 Command                      Description
-============================ ===================================================================================================================================================================================================
+============================ ====
 ``./install.sh -h``          Prints help information.
 ``./install.sh -d``          Builds dependencies and library in your local directory. The ``-d`` flag only needs to be used once. For subsequent invocations of ``install.sh`` it is not necessary to rebuild the dependencies.
 ``./install.sh``             Builds library in your local directory assuming the dependencies to be available.
 ``./install.sh -i``          Builds library, then builds and installs rocALUTION package in ``/opt/rocm/rocalution``. It prompts for sudo access which installs for all users.
 ``./install.sh --host``      Builds library in your local directory without HIP support assuming the dependencies to be available.
 ``./install.sh --mpi=<dir>`` Builds library in your local directory with HIP and MPI support assuming the dependencies to be available.
-============================ ===================================================================================================================================================================================================
+============================ ====
 
 Using ``install.sh`` script to build rocALUTION with dependencies and clients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -8,7 +8,7 @@
 rocALUTION documentation
 ===========================
 
-rocALUTION is a sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains. To learn more, see :ref:`what-is-rocalution`.
+rocALUTION is a sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains. To learn more, see :ref:`what-is-rocalution`
 
 You can access rocALUTION code on our `GitHub repository <https://github.com/ROCm/rocALUTION>`_.
 
@@ -17,7 +17,7 @@ Our documentation is structured as follows:
 .. grid:: 2
   :gutter: 3
 
-  .. grid-item-card:: Tutorial
+  .. grid-item-card:: Install
 
     * :ref:`linux-installation`
     * :ref:`windows-installation`
@@ -31,8 +31,8 @@ Our documentation is structured as follows:
     * :ref:`solvers`
     * :ref:`preconditioners`
     * :ref:`backends`
-    * :ref:`remarks`
     * :ref:`api`
+    * :ref:`remarks`
     
   .. grid-item-card:: Contribution
 
