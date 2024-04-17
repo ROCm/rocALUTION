@@ -27,3 +27,7 @@ subtrees:
     - file: design/guides
     - file: design/functable
     - file: design/clients
+  - caption: About
+    entries:
+    - file: license
+
