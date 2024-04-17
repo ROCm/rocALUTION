@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -478,8 +478,7 @@ namespace rocalution
                         if(blockcol[bcsr_col] == -1)
                         {
                             // Keep block value offset for filling
-                            blockcol[bcsr_col]
-                                = static_cast<IndexType>(bcsr_idx * blockdim * blockdim);
+                            blockcol[bcsr_col] = static_cast<IndexType>(bcsr_idx);
 
                             // Write BCSR column index
                             dst->col[bcsr_idx++] = bcsr_col;
@@ -546,8 +545,6 @@ namespace rocalution
         assert(nrow > 0);
         assert(ncol > 0);
 
-        omp_set_num_threads(omp_threads);
-
         allocate_host(nrow + 1, &dst->row_offset);
         allocate_host(nnz, &dst->col);
         allocate_host(nnz, &dst->val);
@@ -566,7 +563,7 @@ namespace rocalution
                     for(IndexType c = 0; c < src.blockdim; ++c)
                     {
                         dst->col[idx] = src.blockdim * src.col[k] + c;
-                        dst->val[idx] = src.val[BCSR_IND(k, c, r, src.blockdim)];
+                        dst->val[idx] = src.val[BCSR_IND(k, r, c, src.blockdim)];
 
                         ++idx;
                     }
@@ -993,7 +990,7 @@ namespace rocalution
             }
         }
 
-        IndexType size = nrow > ncol ? nrow : ncol;
+        IndexType size = std::min(nrow, ncol);
         *nnz_dia       = size * dst->num_diag;
 
         // Conversion fails if DIA nnz exceeds 5 times CSR nnz

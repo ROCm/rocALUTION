@@ -397,6 +397,32 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        int64_t nrow;
+        int64_t ncol;
+        int64_t nnz;
+
+        PtrType*   ptr = NULL;
+        int*       col = NULL;
+        ValueType* val = NULL;
+
+        if(read_matrix_csr_rocsparseio(nrow, ncol, nnz, &ptr, &col, &val, filename.c_str()) != true)
+        {
+            return false;
+        }
+
+        // Number of rows and columns are expected to be within 32 bits locally
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->Clear();
+        this->SetDataPtrCSR(&ptr, &col, &val, nnz, static_cast<int>(nrow), static_cast<int>(ncol));
+
+        return true;
+    }
+
+    template <typename ValueType>
     bool HostMatrixCSR<ValueType>::ReadFileCSR(const std::string& filename)
     {
         int64_t nrow;
@@ -457,6 +483,18 @@ namespace rocalution
 
         copy_h2h(this->nnz_, col, this->mat_.col);
         copy_h2h(this->nnz_, val, this->mat_.val);
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCSR<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return write_matrix_csr_rocsparseio(this->nrow_,
+                                            this->ncol_,
+                                            this->nnz_,
+                                            this->mat_.row_offset,
+                                            this->mat_.col,
+                                            this->mat_.val,
+                                            filename.c_str());
     }
 
     template <typename ValueType>

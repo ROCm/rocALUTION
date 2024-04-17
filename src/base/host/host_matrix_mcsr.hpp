@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,6 +61,9 @@ namespace rocalution
         virtual void LUAnalyse(void);
         virtual void LUAnalyseClear(void);
         virtual bool LUSolve(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
+
+        virtual bool ReadFileRSIO(const std::string& filename);
+        virtual bool WriteFileRSIO(const std::string& filename) const;
 
         virtual void Apply(const BaseVector<ValueType>& in, BaseVector<ValueType>* out) const;
         virtual void ApplyAdd(const BaseVector<ValueType>& in,

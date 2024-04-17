@@ -26,6 +26,7 @@
 #include "../utils/def.hpp"
 #include "../utils/log.hpp"
 #include "../utils/math_functions.hpp"
+#include "../utils/rocsparseio.h"
 #include "backend_manager.hpp"
 #include "base_matrix.hpp"
 #include "base_vector.hpp"
@@ -1418,6 +1419,152 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    void LocalMatrix<ValueType>::ReadFileRSIO(const std::string& filename,
+                                              bool               maintain_initial_format)
+    {
+        log_debug(this, "LocalMatrix::ReadFileRSIO()", filename);
+
+        LOG_INFO("ReadFileRSIO: filename=" << filename << "; reading...");
+
+        // Clear matrix object before reading
+        this->Clear();
+
+        // For reading, we need a host matrix
+        bool is_accel = this->is_accel_();
+        this->MoveToHost();
+
+        // Store initial format
+        unsigned int format   = this->GetFormat();
+        int          blockdim = this->GetBlockDimension();
+
+        // rocsparse I/O handle
+        rocsparseio_handle handle;
+        rocsparseio_status status;
+
+        // Create handle
+        status = rocsparseio_open(&handle, rocsparseio_rwmode_read, filename.c_str());
+
+        if(status != rocsparseio_status_success)
+        {
+            LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: cannot open file");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        // Get format
+        rocsparseio_format rsio_format;
+        status = rocsparseio_read_format(handle, &rsio_format);
+
+        if(status != rocsparseio_status_success)
+        {
+            LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: cannot read format");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        // Close file
+        status = rocsparseio_close(handle);
+
+        if(status != rocsparseio_status_success)
+        {
+            LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: cannot close file");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        switch(rsio_format)
+        {
+        case rocsparseio_format_dense_matrix:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=DENSE");
+            this->ConvertToDENSE();
+            break;
+        }
+        case rocsparseio_format_sparse_csx:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=CSR");
+            this->ConvertToCSR();
+            break;
+        }
+        case rocsparseio_format_sparse_gebsx:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=BCSR");
+            this->ConvertToBCSR(blockdim);
+            break;
+        }
+        case rocsparseio_format_sparse_coo:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=COO");
+            this->ConvertToCOO();
+            break;
+        }
+        case rocsparseio_format_sparse_ell:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=ELL");
+            this->ConvertToELL();
+            break;
+        }
+        case rocsparseio_format_sparse_dia:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=DIA");
+            this->ConvertToDIA();
+            break;
+        }
+        case rocsparseio_format_sparse_hyb:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=HYB");
+            this->ConvertToHYB();
+            break;
+        }
+        case rocsparseio_format_sparse_mcsx:
+        {
+            LOG_INFO("ReadFileRSIO: filename=" << filename << "; format=MCSR");
+            this->ConvertToMCSR();
+            break;
+        }
+        case rocsparseio_format_dense_vector:
+        {
+            LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: unknown format");
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+        }
+
+        // Read in matrix
+        if(!this->matrix_->ReadFileRSIO(filename))
+        {
+            LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed");
+            this->Info();
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        // Move back to initial backend
+        if(is_accel == true)
+        {
+            this->MoveToAccelerator();
+        }
+
+        // Warning on implicit conversion
+        if(maintain_initial_format == false && format != this->GetFormat())
+        {
+            LOG_VERBOSE_INFO(2,
+                             "*** warning: LocalMatrix::ReadFileRSIO() conversion from "
+                                 << _matrix_format_names[format] << " to "
+                                 << _matrix_format_names[this->GetFormat()]);
+        }
+
+        // Move back to initial format, if requested
+        if(maintain_initial_format == true)
+        {
+            this->ConvertTo(format, blockdim);
+        }
+
+        this->object_name_ = filename;
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        LOG_INFO("ReadFileRSIO: filename=" << filename << "; done");
+    }
+
+    template <typename ValueType>
     void LocalMatrix<ValueType>::WriteFileCSR(const std::string& filename) const
     {
         log_debug(this, "LocalMatrix::WriteFileCSR()", filename);
@@ -1456,6 +1603,57 @@ namespace rocalution
         }
 
         LOG_INFO("WriteFileCSR: filename=" << filename << "; done");
+    }
+
+    template <typename ValueType>
+    void LocalMatrix<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        log_debug(this, "LocalMatrix::WriteFileRSIO()", filename);
+
+        LOG_INFO("WriteFileRSIO: filename=" << filename << "; writing...");
+
+#ifdef DEBUG_MODE
+        this->Check();
+#endif
+
+        bool err = this->matrix_->WriteFileRSIO(filename);
+
+        if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
+        {
+            LOG_INFO("Execution of LocalMatrix::WriteFileRSIO() failed");
+            this->Info();
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        if(err == false)
+        {
+            // Move to host
+            LocalMatrix<ValueType> mat_host;
+            mat_host.ConvertTo(this->GetFormat(), this->GetBlockDimension());
+            mat_host.CopyFrom(*this);
+
+            // Try again on host
+            err = mat_host.matrix_->WriteFileRSIO(filename);
+
+            if((err == false) && (this->GetFormat() == CSR))
+            {
+                LOG_INFO("Execution of LocalMatrix::WriteFileRSIO() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            // Convert to CSR
+            mat_host.ConvertToCSR();
+
+            if(mat_host.matrix_->WriteFileRSIO(filename) == false)
+            {
+                LOG_INFO("Execution of LocalMatrix::WriteFileRSIO() failed");
+                this->Info();
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+        }
+
+        LOG_INFO("WriteFileRSIO: filename=" << filename << "; done");
     }
 
     template <typename ValueType>

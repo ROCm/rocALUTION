@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,8 +45,8 @@
 #define DIA_IND(row, el, nrow, ndiag) DIA_IND_ROW(row, el, nrow, ndiag)
 
 // BCSR indexing
-#define BCSR_IND(j, bi, bj, dim) ((j) + (bi) + (bj) * (dim))
-//#define BCSR_IND(j, bi, bj, dim) ((j) + (bj) + (bi) * (dim))
+#define BCSR_IND(j, bi, bj, dim) (((j) * (dim) * (dim)) + (bi) + (bj) * (dim))
+//#define BCSR_IND(j, bi, bj, dim) (((j)*(dim)*(dim)) + (bj) + (bi) * (dim))
 
 // BCSR_IND_BASE == 0 - column-major
 // BCSR_IND_BASE == 1 - row-major

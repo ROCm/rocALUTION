@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #include "../../utils/log.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
+#include "host_io.hpp"
 #include "host_matrix_csr.hpp"
 #include "host_vector.hpp"
 
@@ -240,6 +241,75 @@ namespace rocalution
         }
 
         return false;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixHYB<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        int64_t nrow;
+        int64_t ncol;
+        int64_t nnz;
+        int64_t coo_nnz;
+        int64_t ell_nnz;
+        int64_t ell_width;
+
+        int*       coo_row = NULL;
+        int*       coo_col = NULL;
+        ValueType* coo_val = NULL;
+        int*       ell_col = NULL;
+        ValueType* ell_val = NULL;
+
+        if(read_matrix_hyb_rocsparseio(nrow,
+                                       ncol,
+                                       nnz,
+                                       coo_nnz,
+                                       &coo_row,
+                                       &coo_col,
+                                       &coo_val,
+                                       ell_nnz,
+                                       ell_width,
+                                       &ell_col,
+                                       &ell_val,
+                                       filename.c_str())
+           != true)
+        {
+            return false;
+        }
+
+        this->Clear();
+
+        this->nrow_ = nrow;
+        this->ncol_ = ncol;
+        this->nnz_  = nnz;
+
+        // COO
+        this->coo_nnz_     = coo_nnz;
+        this->mat_.COO.row = coo_row;
+        this->mat_.COO.col = coo_col;
+        this->mat_.COO.val = coo_val;
+
+        // ELL
+        this->ell_nnz_         = ell_nnz;
+        this->mat_.ELL.max_row = ell_width;
+        this->mat_.ELL.col     = ell_col;
+        this->mat_.ELL.val     = ell_val;
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixHYB<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return write_matrix_hyb_rocsparseio(this->nrow_,
+                                            this->ncol_,
+                                            this->coo_nnz_,
+                                            this->mat_.COO.row,
+                                            this->mat_.COO.col,
+                                            this->mat_.COO.val,
+                                            this->mat_.ELL.max_row,
+                                            this->mat_.ELL.col,
+                                            this->mat_.ELL.val,
+                                            filename.c_str());
     }
 
     template <typename ValueType>

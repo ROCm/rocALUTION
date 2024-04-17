@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #include "../../utils/log.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
+#include "host_io.hpp"
 #include "host_matrix_csr.hpp"
 #include "host_vector.hpp"
 
@@ -239,6 +240,40 @@ namespace rocalution
         }
 
         return false;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixELL<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        int64_t nrow;
+        int64_t ncol;
+        int64_t nnz;
+        int64_t width;
+
+        int*       col = NULL;
+        ValueType* val = NULL;
+
+        if(read_matrix_ell_rocsparseio(nrow, ncol, nnz, width, &col, &val, filename.c_str())
+           != true)
+        {
+            return false;
+        }
+
+        this->Clear();
+        this->SetDataPtrELL(&col, &val, nnz, nrow, ncol, width);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixELL<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return write_matrix_ell_rocsparseio(this->nrow_,
+                                            this->ncol_,
+                                            this->mat_.max_row,
+                                            this->mat_.col,
+                                            this->mat_.val,
+                                            filename.c_str());
     }
 
     template <typename ValueType>

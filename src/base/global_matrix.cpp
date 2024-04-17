@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -2064,6 +2064,102 @@ namespace rocalution
 
         this->matrix_interior_.WriteFileCSR(interior_name);
         this->matrix_ghost_.WriteFileCSR(ghost_name);
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::ReadFileRSIO(const std::string& filename,
+                                               bool               maintain_initial_format)
+    {
+        log_debug(this, "GlobalMatrix::ReadFileRSIO()", filename);
+
+        assert(this->pm_ != NULL);
+        assert(this->pm_->Status() == true);
+
+        // Read header file
+        std::ifstream headfile(filename.c_str(), std::ifstream::in);
+
+        if(!headfile.is_open())
+        {
+            LOG_INFO("Cannot open GlobalMatrix file [read]: " << filename);
+            FATAL_ERROR(__FILE__, __LINE__);
+        }
+
+        // Go to this ranks line in the headfile
+        for(int i = 0; i < this->pm_->rank_; ++i)
+        {
+            headfile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            headfile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+
+        std::string interior_name;
+        std::string ghost_name;
+
+        std::getline(headfile, interior_name);
+        std::getline(headfile, ghost_name);
+
+        headfile.close();
+
+        // Extract directory containing the subfiles
+        size_t      found = filename.find_last_of("\\/");
+        std::string path  = filename.substr(0, found + 1);
+
+        interior_name.erase(remove_if(interior_name.begin(), interior_name.end(), isspace),
+                            interior_name.end());
+        ghost_name.erase(remove_if(ghost_name.begin(), ghost_name.end(), isspace),
+                         ghost_name.end());
+
+        this->matrix_interior_.ReadFileRSIO(path + interior_name, maintain_initial_format);
+        this->matrix_ghost_.ReadFileRSIO(path + ghost_name);
+
+        // Convert ghost matrix to COO
+        this->matrix_ghost_.ConvertToCOO();
+
+        this->object_name_ = filename;
+
+        // Initialize communication pattern
+        this->InitCommPattern_();
+    }
+
+    template <typename ValueType>
+    void GlobalMatrix<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        log_debug(this, "GlobalMatrix::WriteFileRSIO()", filename);
+
+        assert(this->pm_ != NULL);
+
+        // Master rank writes the global headfile
+        if(this->pm_->rank_ == 0)
+        {
+            std::ofstream headfile;
+
+            headfile.open((char*)filename.c_str(), std::ofstream::out);
+            if(!headfile.is_open())
+            {
+                LOG_INFO("Cannot open GlobalMatrix file [write]: " << filename);
+                FATAL_ERROR(__FILE__, __LINE__);
+            }
+
+            for(int i = 0; i < this->pm_->num_procs_; ++i)
+            {
+                std::ostringstream rs;
+                rs << i;
+
+                std::string interior_name = filename + ".interior.rank." + rs.str();
+                std::string ghost_name    = filename + ".ghost.rank." + rs.str();
+
+                headfile << interior_name << "\n";
+                headfile << ghost_name << "\n";
+            }
+        }
+
+        std::ostringstream rs;
+        rs << this->pm_->rank_;
+
+        std::string interior_name = filename + ".interior.rank." + rs.str();
+        std::string ghost_name    = filename + ".ghost.rank." + rs.str();
+
+        this->matrix_interior_.WriteFileRSIO(interior_name);
+        this->matrix_ghost_.WriteFileRSIO(ghost_name);
     }
 
     template <typename ValueType>

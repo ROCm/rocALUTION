@@ -134,7 +134,7 @@ endif()
 
 
 # Setup version
-rocm_setup_version(VERSION "3.1.1")
+rocm_setup_version(VERSION "3.2.0")
 
 if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
   set( BUILD_CLIENTS ON )

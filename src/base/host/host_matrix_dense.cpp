@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@
 #include "../../utils/math_functions.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
+#include "host_io.hpp"
 #include "host_matrix_csr.hpp"
 #include "host_vector.hpp"
 
@@ -223,6 +224,32 @@ namespace rocalution
         }
 
         return false;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixDENSE<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        int64_t nrow;
+        int64_t ncol;
+
+        ValueType* val = NULL;
+
+        if(read_matrix_dense_rocsparseio(nrow, ncol, &val, filename.c_str()) != true)
+        {
+            return false;
+        }
+
+        this->Clear();
+        this->SetDataPtrDENSE(&val, nrow, ncol);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixDENSE<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return write_matrix_dense_rocsparseio(
+            this->nrow_, this->ncol_, this->mat_.val, filename.c_str());
     }
 
     template <typename ValueType>

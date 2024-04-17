@@ -3,6 +3,18 @@
 Documentation for rocALUTION is available at
 [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
+## rocALUTION 3.2.0 for ROCm 6.2.0
+
+### Additions
+* New file I/O based on rocsparse I/O format
+* `GetConvergenceHistory` for ItILU0 preconditioner
+
+### Deprecations
+* `LocalMatrix::ReadFileCSR`
+* `LocalMatrix::WriteFileCSR`
+* `GlobalMatrix::ReadFileCSR`
+* `GlobalMatrix::WriteFileCSR`
+
 ## rocALUTION 3.1.1 for ROCm 6.1.0
 
 ### Additions

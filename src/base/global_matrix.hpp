@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -225,9 +225,25 @@ namespace rocalution
         /** \brief Write matrix to MTX (Matrix Market Format) file */
         void WriteFileMTX(const std::string& filename) const;
         /** \brief Read matrix from CSR (ROCALUTION binary format) file */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         void ReadFileCSR(const std::string& filename);
         /** \brief Write matrix to CSR (ROCALUTION binary format) file */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         void WriteFileCSR(const std::string& filename) const;
+
+        /** \brief Read a matrix from a binary file using rocsparse I/O format */
+        ROCALUTION_EXPORT
+        void ReadFileRSIO(const std::string& filename, bool maintain_initial_format = false);
+
+        /** \brief Write a matrix to binary file using rocsparse I/O format */
+        ROCALUTION_EXPORT
+        void WriteFileRSIO(const std::string& filename) const;
 
         /** \brief Sort the matrix indices
         * \details

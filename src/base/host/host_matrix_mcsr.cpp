@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,12 @@
 #include "../../utils/log.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
+#include "host_io.hpp"
 #include "host_matrix_csr.hpp"
 #include "host_vector.hpp"
 
 #include <complex>
+#include <limits>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -374,6 +376,45 @@ namespace rocalution
     void HostMatrixMCSR<ValueType>::LUAnalyseClear(void)
     {
         // do nothing
+    }
+
+    template <typename ValueType>
+    bool HostMatrixMCSR<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        int64_t nrow;
+        int64_t ncol;
+        int64_t nnz;
+
+        PtrType*   ptr = NULL;
+        int*       col = NULL;
+        ValueType* val = NULL;
+
+        if(read_matrix_mcsr_rocsparseio(nrow, ncol, nnz, &ptr, &col, &val, filename.c_str())
+           != true)
+        {
+            return false;
+        }
+
+        // Number of rows and columns are expected to be within 32 bits locally
+        assert(nrow <= std::numeric_limits<int>::max());
+        assert(ncol <= std::numeric_limits<int>::max());
+
+        this->Clear();
+        this->SetDataPtrMCSR(&ptr, &col, &val, nnz, static_cast<int>(nrow), static_cast<int>(ncol));
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixMCSR<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return write_matrix_mcsr_rocsparseio(this->nrow_,
+                                             this->ncol_,
+                                             this->nnz_,
+                                             this->mat_.row_offset,
+                                             this->mat_.col,
+                                             this->mat_.val,
+                                             filename.c_str());
     }
 
     template <typename ValueType>

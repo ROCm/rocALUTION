@@ -123,6 +123,9 @@ namespace rocalution
         virtual bool ReadFileCSR(const std::string& filename);
         virtual bool WriteFileCSR(const std::string& filename) const;
 
+        virtual bool ReadFileRSIO(const std::string& filename);
+        virtual bool WriteFileRSIO(const std::string& filename) const;
+
         virtual bool CreateFromMap(const BaseVector<int>& map, int n, int m);
         virtual bool
             CreateFromMap(const BaseVector<int>& map, int n, int m, BaseMatrix<ValueType>* pro);

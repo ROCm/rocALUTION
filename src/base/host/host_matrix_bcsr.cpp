@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2020-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2020-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,12 @@
 #include "../../utils/log.hpp"
 #include "../matrix_formats_ind.hpp"
 #include "host_conversion.hpp"
+#include "host_io.hpp"
 #include "host_matrix_csr.hpp"
 #include "host_vector.hpp"
 
 #include <complex>
+#include <limits>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -281,6 +283,50 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool HostMatrixBCSR<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        int64_t nrowb;
+        int64_t ncolb;
+        int64_t nnzb;
+        int64_t blockdim;
+
+        PtrType*   ptr = NULL;
+        int*       col = NULL;
+        ValueType* val = NULL;
+
+        if(read_matrix_bcsr_rocsparseio(
+               nrowb, ncolb, nnzb, blockdim, &ptr, &col, &val, filename.c_str())
+           != true)
+        {
+            return false;
+        }
+
+        // Number of rows and columns are expected to be within 32 bits locally
+        assert(nrowb <= std::numeric_limits<int>::max());
+        assert(ncolb <= std::numeric_limits<int>::max());
+        assert(blockdim <= std::numeric_limits<int>::max());
+
+        this->Clear();
+        this->SetDataPtrBCSR(
+            &ptr, &col, &val, nnzb, static_cast<int>(nrowb), static_cast<int>(ncolb), blockdim);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixBCSR<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return write_matrix_bcsr_rocsparseio(this->mat_.nrowb,
+                                             this->mat_.ncolb,
+                                             this->mat_.nnzb,
+                                             this->mat_.blockdim,
+                                             this->mat_.row_offset,
+                                             this->mat_.col,
+                                             this->mat_.val,
+                                             filename.c_str());
+    }
+
+    template <typename ValueType>
     void HostMatrixBCSR<ValueType>::Apply(const BaseVector<ValueType>& in,
                                           BaseVector<ValueType>*       out) const
     {
@@ -319,7 +365,7 @@ namespace rocalution
 
                         for(int bj = 0; bj < bsrdim; ++bj)
                         {
-                            sum += this->mat_.val[BCSR_IND(bsrdim * bsrdim * aj, bi, bj, bsrdim)]
+                            sum += this->mat_.val[BCSR_IND(aj, bi, bj, bsrdim)]
                                    * cast_in->vec_[bsrdim * col + bj];
                         }
                     }
@@ -371,7 +417,7 @@ namespace rocalution
 
                         for(int bj = 0; bj < bsrdim; ++bj)
                         {
-                            sum += this->mat_.val[BCSR_IND(bsrdim * bsrdim * aj, bi, bj, bsrdim)]
+                            sum += this->mat_.val[BCSR_IND(aj, bi, bj, bsrdim)]
                                    * cast_in->vec_[bsrdim * col + bj];
                         }
                     }

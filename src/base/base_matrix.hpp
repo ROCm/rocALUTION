@@ -282,6 +282,11 @@ namespace rocalution
         /** \brief Write matrix to CSR (ROCALUTION binary format) file */
         virtual bool WriteFileCSR(const std::string& filename) const;
 
+        /** \brief Read matrix from rocsparse I/O file */
+        virtual bool ReadFileRSIO(const std::string& filename);
+        /** \brief Write matrix to rocsparse I/O file */
+        virtual bool WriteFileRSIO(const std::string& filename) const;
+
         /** \brief Perform symbolic computation (structure only) of |this|^p */
         virtual bool SymbolicPower(int p);
 

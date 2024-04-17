@@ -702,8 +702,52 @@ namespace rocalution
       *   mat.ReadFileCSR("my_matrix.csr");
       * \endcode
       */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void ReadFileCSR(const std::string& filename);
+
+        /** \brief Read a matrix from a binary file using rocsparse I/O format
+        * \details
+        * Read a matrix from a binary file using rocsparse I/O format.
+        *
+        * By default, the rocalution matrix object will be converted to fit the
+        * matrix format stored in the file as follows
+        * \code{.cpp}
+        *   LocalMatrix<double> mat;
+        *
+        *   // Read from file (file contains e.g. ELL matrix)
+        *   mat.ReadFileRSIO("myellmatrix.rsio");
+        *
+        *   // Print ELL matrix info
+        *   mat.Info();
+        * \endcode
+        *
+        * In the above example, the rocalution matrix will be converted to the
+        * format, that is specified in myellmatrix.rsio (e.g. ELL).
+        * Alternatively, the user can maintain the initially specified format of
+        * mat as follows
+        * \code{.cpp}
+        *   LocalMatrix<double> mat;
+        *
+        *   // Convert the matrix to COO
+        *   mat.ConvertToCOO();
+        *
+        *   // Read form file (file contains e.g. ELL matrix)
+        *   mat.ReadFileRSIO("myellmatrix.rsio", true);
+        *
+        *   // Print COO matrix info
+        *   mat.Info();
+        * \endcode
+        *
+        * In the second example, the initial matrix format is maintained.
+        * The rocalution matrix format will stay COO, regardless of the matrix
+        * format in the supplied file.
+        */
+        ROCALUTION_EXPORT
+        void ReadFileRSIO(const std::string& filename, bool maintain_initial_format = false);
 
         /** \brief Write CSR matrix to binary file
       * \details
@@ -744,8 +788,23 @@ namespace rocalution
       *   mat.WriteFileCSR("my_matrix.csr");
       * \endcode
       */
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#else
+        [[deprecated("This function will be removed in a future release.")]]
+#endif
         ROCALUTION_EXPORT
         void WriteFileCSR(const std::string& filename) const;
+
+        /** \brief Write a matrix to binary file using rocsparse I/O format
+        * \details
+        * Write a matrix to binary file using rocsparse I/O format.
+        *
+        * The matrix is written using the current rocalution matrix format,
+        * e.g. if this->GetFormat() == ELL, the matrix will be stored in
+        * ELL format.
+        */
+        ROCALUTION_EXPORT
+        void WriteFileRSIO(const std::string& filename) const;
 
         /** \brief Move all data (i.e. move the matrix) to the accelerator */
         ROCALUTION_EXPORT

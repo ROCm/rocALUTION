@@ -256,6 +256,18 @@ namespace rocalution
     }
 
     template <typename ValueType>
+    bool BaseMatrix<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        return false;
+    }
+
+    template <typename ValueType>
+    bool BaseMatrix<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return false;
+    }
+
+    template <typename ValueType>
     bool BaseMatrix<ValueType>::ExtractDiagonal(BaseVector<ValueType>* vec_diag) const
     {
         return false;

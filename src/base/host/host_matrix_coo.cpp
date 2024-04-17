@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -314,6 +314,40 @@ namespace rocalution
         }
 
         return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCOO<ValueType>::ReadFileRSIO(const std::string& filename)
+    {
+        int64_t nrow;
+        int64_t ncol;
+        int64_t nnz;
+
+        int*       row = NULL;
+        int*       col = NULL;
+        ValueType* val = NULL;
+
+        if(read_matrix_coo_rocsparseio(nrow, ncol, nnz, &row, &col, &val, filename.c_str()) != true)
+        {
+            return false;
+        }
+
+        this->Clear();
+        this->SetDataPtrCOO(&row, &col, &val, nnz, nrow, ncol);
+
+        return true;
+    }
+
+    template <typename ValueType>
+    bool HostMatrixCOO<ValueType>::WriteFileRSIO(const std::string& filename) const
+    {
+        return write_matrix_coo_rocsparseio(this->nrow_,
+                                            this->ncol_,
+                                            this->nnz_,
+                                            this->mat_.row,
+                                            this->mat_.col,
+                                            this->mat_.val,
+                                            filename.c_str());
     }
 
     template <typename ValueType>
