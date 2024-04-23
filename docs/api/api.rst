@@ -1,10 +1,14 @@
+.. meta::
+   :description: A sparse linear algebra library with focus on exploring fine-grained parallelism on top of the AMD ROCm runtime and toolchains
+   :keywords: rocALUTION, ROCm, library, API, tool
+
 .. _api:
 
-###
-API
-###
+#############
+API library
+#############
 
-This section provides a detailed list of the library API
+This document provides the detailed API list.
 
 Host Utility Functions
 ======================
