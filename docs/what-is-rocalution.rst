@@ -43,4 +43,4 @@ The major features and characteristics of the rocALUTION library are:
 * Support for several sparse matrix formats
     Compressed Sparse Row (CSR), Modified Compressed Sparse Row (MCSR), Dense (DENSE), Coordinate (COO), ELL, Diagonal (DIA), Hybrid format of ELL and COO (HYB).
 
-The code is open-source under MIT license, see :ref:`rocalution_license` and hosted on the `GitHub rocALUTION page <https://github.com/ROCmSoftwarePlatform/rocALUTION>`_.
+The code is open-source under MIT license, see `License <./license.html>`_ and hosted on the `GitHub rocALUTION page <https://github.com/ROCm/rocALUTION>`_.
