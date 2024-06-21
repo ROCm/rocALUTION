@@ -217,8 +217,6 @@ namespace rocalution
     }
 #endif
 
-    __device__ int __llvm_amdgcn_readlane(int index, int offset) __asm("llvm.amdgcn.readlane");
-
 #if ROCALUTION_USE_MOVE_DPP
     template <unsigned int WFSIZE>
     static __device__ __forceinline__ void wf_reduce_sum(int* sum)
@@ -292,7 +290,7 @@ namespace rocalution
 
         if(WF_SIZE > 32)
         {
-            upper_sum.b32 = __llvm_amdgcn_readlane(temp_sum.b32, 32);
+            upper_sum.b32 = __builtin_amdgcn_readlane(temp_sum.b32, 32);
             temp_sum.val += upper_sum.val;
         }
 
@@ -349,8 +347,8 @@ namespace rocalution
 
         if(WF_SIZE > 32)
         {
-            upper_sum.b32[0] = __llvm_amdgcn_readlane(temp_sum.b32[0], 32);
-            upper_sum.b32[1] = __llvm_amdgcn_readlane(temp_sum.b32[1], 32);
+            upper_sum.b32[0] = __builtin_amdgcn_readlane(temp_sum.b32[0], 32);
+            upper_sum.b32[1] = __builtin_amdgcn_readlane(temp_sum.b32[1], 32);
             temp_sum.val += upper_sum.val;
         }
 
