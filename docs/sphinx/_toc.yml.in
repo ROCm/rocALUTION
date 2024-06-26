@@ -7,26 +7,26 @@ subtrees:
     - file: what-is-rocalution
   - caption: Install
     entries:
-    - file: usermanual/linux-installation
-    - file: usermanual/windows-installation
-    - file: usermanual/targets
+    - file: install/linux-installation
+    - file: install/windows-installation
+    - file: install/targets
   - caption: API reference
     entries:
-    - file: usermanual/basics
-    - file: usermanual/singlenode
-    - file: usermanual/multinode
-    - file: api/solvers
-    - file: api/precond
-    - file: api/backend
-    - file: api/api
-    - file: usermanual/remarks
+    - file: api-reference/basics
+    - file: api-reference/singlenode
+    - file: api-reference/multinode
+    - file: api-reference/solvers
+    - file: api-reference/precond
+    - file: api-reference/backend
+    - file: api-reference/api
+    - file: api-reference/remarks
   - caption: Contribution
     entries:
-    - file: design/design
-    - file: design/orga
-    - file: design/guides
-    - file: design/functable
-    - file: design/clients
+    - file: contribution/design
+    - file: contribution/orga
+    - file: contribution/guides
+    - file: contribution/functable
+    - file: contribution/clients
   - caption: About
     entries:
     - file: license
