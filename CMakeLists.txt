@@ -80,23 +80,33 @@ option(BUILD_OPTCPU "Enable all instruction subsets supported by the local machi
 # Dependencies
 include(cmake/Dependencies.cmake)
 
-set(DEFAULT_AMDGPU_TARGETS
-  gfx803
-  gfx900:xnack-
-  gfx906:xnack-
-  gfx908:xnack-
-  gfx90a:xnack-
-  gfx90a:xnack+
-  gfx940
-  gfx941
-  gfx942
-  gfx1030
-  gfx1100
-  gfx1101
-  gfx1102
-  gfx1200
-  gfx1201
-)
+if(BUILD_ADDRESS_SANITIZER)
+  set(DEFAULT_AMDGPU_TARGETS
+    gfx908:xnack+
+    gfx90a:xnack+
+    gfx940:xnack+
+    gfx941:xnack+
+    gfx942:xnack+
+  )
+else()
+  set(DEFAULT_AMDGPU_TARGETS
+    gfx803
+    gfx900:xnack-
+    gfx906:xnack-
+    gfx908:xnack-
+    gfx90a:xnack-
+    gfx90a:xnack+
+    gfx940
+    gfx941
+    gfx942
+    gfx1030
+    gfx1100
+    gfx1101
+    gfx1102
+    gfx1200
+    gfx1201
+  )
+endif()
 set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
 
 include(CheckLanguage)
