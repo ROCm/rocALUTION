@@ -24,7 +24,7 @@ function display_help()
   echo "    [--static] build static library"
   echo "    [--compiler] compiler to build with"
   echo "    [--verbose] print additional cmake build information"
-  echo "    [--address-sanitizer] Build with address sanitizer enabled. Uses hipcc as compiler"
+  echo "    [--address-sanitizer] Build with address sanitizer enabled. Uses amdclang++ as compiler"
   echo "    [--codecoverage] build with code coverage profiling enabled"
   echo "    [--rm-legacy-include-dir] Remove legacy include dir Packaging added for file/folder reorg backward compatibility"
 }
@@ -331,7 +331,7 @@ while true; do
         shift ;;
     --address-sanitizer)
         build_address_sanitizer=true
-        compiler=hipcc
+        compiler=amdclang++
         shift ;;
     --codecoverage)
         build_codecoverage=true
@@ -348,8 +348,8 @@ while true; do
         fi
         shift 2 ;;
     --static)
-        #Forcing hipcc for static builds temporarily
-        compiler=${rocm_path}/bin/hipcc
+        #Forcing amdclang++ for static builds temporarily
+        compiler=${rocm_path}/bin/amdclang++
         build_static=true
         shift ;;
     --compiler)

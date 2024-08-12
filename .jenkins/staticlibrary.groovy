@@ -16,8 +16,8 @@ def runCI =
     def prj = new rocProject('rocALUTION', 'Static Library PreCheckin')
     // customize for project
     prj.paths.build_command = buildCommand
-    prj.compiler.compiler_name = 'hipcc'
-    prj.compiler.compiler_path = '/opt/rocm/bin/hipcc'
+    prj.compiler.compiler_name = 'amdclang++'
+    prj.compiler.compiler_path = '/opt/rocm/bin/amdclang++'
     prj.libraryDependencies = ['rocPRIM', 'rocBLAS', 'rocSPARSE', 'rocRAND']
 
     // Define test architectures, optional rocm version argument is available
