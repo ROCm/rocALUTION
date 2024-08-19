@@ -949,6 +949,9 @@ namespace rocalution
         // Prepare send buffer
         in.vector_interior_.GetIndexValues(this->halo_, &this->send_buffer_);
 
+        // Synchronize default stream
+        _rocalution_sync_default();
+
         // Change to compute mode ghost
         _rocalution_compute_ghost();
 
