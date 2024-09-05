@@ -94,6 +94,7 @@ set(DEFAULT_AMDGPU_TARGETS
   gfx1100
   gfx1101
   gfx1102
+  gfx1151
 )
 set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
 
