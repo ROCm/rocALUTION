@@ -26,6 +26,7 @@
 
 #include "rocalution/export.hpp"
 
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <map>

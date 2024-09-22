@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_UTILS_MATH_FUNCTIONS_HPP_
 #define ROCALUTION_UTILS_MATH_FUNCTIONS_HPP_
 
+#include <cstdint>
 #include <complex>
 
 namespace rocalution

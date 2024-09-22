@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_HOST_IO_HPP_
 #define ROCALUTION_HOST_IO_HPP_
 
+#include <cstdint>
 #include <string>
 
 namespace rocalution
