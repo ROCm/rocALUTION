@@ -105,7 +105,14 @@ set(static_depends)
 
 # Target link libraries
 if(SUPPORT_OMP)
-  if(WIN32)
+  if(CMAKE_VERSION VERSION_LESS "3.29.0"
+      AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      AND (CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
+      AND (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU"))
+    # Versions of CMake before 3.29.0 didn't correctly add the OpenMP library
+    # to the OpenMP::OpenMP_CXX target when using LLVM Clang with GNU-compatible
+    # front-end (i.e., `clang++`, not `clang-cl`) targeting the MSVC ABI.
+    # Work around that issue by manually linking to libomp.
     target_link_libraries(rocalution PRIVATE OpenMP::OpenMP_CXX libomp)
   else()
     target_link_libraries(rocalution PRIVATE OpenMP::OpenMP_CXX)
