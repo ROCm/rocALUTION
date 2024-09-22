@@ -246,14 +246,12 @@ namespace rocalution
         virtual void SetSolverDescriptor(const SolverDescr& descr);
 
         /** \brief Mark this solver as being a preconditioner */
-        ROCALUTION_EXPORT
         inline void FlagPrecond(void)
         {
             this->is_precond_ = true;
         }
 
         /** \brief Mark this solver as being a smoother */
-        ROCALUTION_EXPORT
         inline void FlagSmoother(void)
         {
             this->is_smoother_ = true;

@@ -68,14 +68,12 @@ namespace rocalution
         virtual ~MultiElimination();
 
         /** \brief Returns the size of the first (diagonal) block of the preconditioner */
-        ROCALUTION_EXPORT
         inline int GetSizeDiagBlock(void) const
         {
             return this->size_;
         }
 
         /** \brief Return the depth of the current level */
-        ROCALUTION_EXPORT
         inline int GetLevel(void) const
         {
             return this->level_;
