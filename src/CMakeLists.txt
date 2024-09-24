@@ -100,6 +100,7 @@ endif()
 add_library(rocalution ${SOURCE} ${PUBLIC_HEADERS})
 add_library(roc::rocalution ALIAS rocalution)
 
+set(package_depends)
 set(static_depends)
 
 # Target link libraries
@@ -109,6 +110,7 @@ if(SUPPORT_OMP)
   else()
     target_link_libraries(rocalution PRIVATE OpenMP::OpenMP_CXX)
   endif()
+  list(APPEND package_depends PACKAGE OpenMP)
 endif()
 
 if(SUPPORT_MPI)
@@ -123,6 +125,7 @@ endif()
 
 if(SUPPORT_HIP)
   target_compile_definitions(rocalution PRIVATE SUPPORT_HIP)
+  list(APPEND package_depends PACKAGE HIP)
 endif()
 
 # Target properties
@@ -248,17 +251,9 @@ else()
 endif()
 
 # Export targets
-if(SUPPORT_OMP)
-  rocm_export_targets(TARGETS roc::rocalution
-                      DEPENDS PACKAGE HIP
-                      DEPENDS PACKAGE OpenMP
-                      STATIC_DEPENDS
-                        ${static_depends}
-                      NAMESPACE roc::)
-else()
-  rocm_export_targets(TARGETS roc::rocalution
-                      DEPENDS PACKAGE HIP
-                      STATIC_DEPENDS
-                        ${static_depends}
-                      NAMESPACE roc::)
-endif()
+rocm_export_targets(TARGETS roc::rocalution
+                    DEPENDS
+                      ${package_depends}
+                    STATIC_DEPENDS
+                      ${static_depends}
+                    NAMESPACE roc::)
