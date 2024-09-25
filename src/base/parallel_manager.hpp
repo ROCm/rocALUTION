@@ -63,14 +63,12 @@ namespace rocalution
         void Clear(void);
 
         /** \brief Return communicator */
-        ROCALUTION_EXPORT
         const void* GetComm(void) const
         {
             return this->comm_;
         }
 
         /** \brief Return rank */
-        ROCALUTION_EXPORT
         int GetRank(void) const
         {
             return this->rank_;
