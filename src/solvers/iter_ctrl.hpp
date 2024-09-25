@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_ITER_CTRL_HPP_
 #define ROCALUTION_ITER_CTRL_HPP_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 

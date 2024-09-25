@@ -24,6 +24,7 @@
 #ifndef ROCALUTION_MATRIX_FORMATS_HPP_
 #define ROCALUTION_MATRIX_FORMATS_HPP_
 
+#include <cstdint>
 #include <string>
 
 namespace rocalution
