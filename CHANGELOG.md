@@ -3,6 +3,11 @@
 Documentation for rocALUTION is available at
 [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
+## rocALUTION 3.2.1 for ROCm 6.2.4
+
+### Additions
+* GFX1151 Support
+
 ## rocALUTION 3.2.0 for ROCm 6.2.0
 
 ### Additions
