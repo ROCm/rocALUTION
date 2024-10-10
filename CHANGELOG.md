@@ -5,8 +5,8 @@ Documentation for rocALUTION is available at
 
 ## rocALUTION 3.2.1 for ROCm 6.2.4
 
-### Additions
-* GFX1151 Support
+### Added
+* Support for the gfx1034 and gfx1151 architectures
 
 ## rocALUTION 3.2.0 for ROCm 6.2.0
 

@@ -91,6 +91,7 @@ set(DEFAULT_AMDGPU_TARGETS
   gfx941
   gfx942
   gfx1030
+  gfx1034
   gfx1100
   gfx1101
   gfx1102
