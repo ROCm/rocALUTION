@@ -1,5 +1,8 @@
 # rocALUTION
 
+> [!NOTE]
+> The published documentation is available at [rocALUTION](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/) in an organized, easy-to-read format, with search and a table of contents. The documentation source files reside in the `docs` folder of this repository. As with all ROCm projects, the documentation is open source. For more information on contributing to the documentation, see [Contribute to ROCm documentation](https://rocm.docs.amd.com/en/latest/contribute/contributing.html).
+
 rocALUTION is a sparse linear algebra library that can be used to explore fine-grained parallelism on
 top of the [ROCm](https://github.com/ROCm/ROCm) platform runtime and toolchains.
 Based on C++ and [HIP](https://github.com/ROCm/HIP/), rocALUTION
