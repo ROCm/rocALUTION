@@ -3,6 +3,20 @@
 Documentation for rocALUTION is available at
 [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
+## rocALUTION 3.2.1 for ROCm 6.3.0
+
+### Additions
+* Support for gfx1200, gfx1201 and gfx1151.
+
+### Changes
+
+* Change default compiler from hipcc to amdclang in install script and cmake files.
+* Change address sanitizer build targets so that only gfx908:xnack+, gfx90a:xnack+, gfx940:xnack+, gfx941:xnack+, and gfx942:xnack+ are built when `BUILD_ADDRESS_SANITIZER=ON`.
+
+### Fixes
+* Fix hang in 'RS-AMG' for Navi on some specific matrix sparsity patterns.
+* Fix wrong results in 'Apply' on multi-GPU setups.
+
 ## rocALUTION 3.2.0 for ROCm 6.2.0
 
 ### Additions
