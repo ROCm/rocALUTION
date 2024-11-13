@@ -84,8 +84,6 @@ if(BUILD_ADDRESS_SANITIZER)
   set(DEFAULT_AMDGPU_TARGETS
     gfx908:xnack+
     gfx90a:xnack+
-    gfx940:xnack+
-    gfx941:xnack+
     gfx942:xnack+
   )
 else()
@@ -96,8 +94,6 @@ else()
     gfx908:xnack-
     gfx90a:xnack-
     gfx90a:xnack+
-    gfx940
-    gfx941
     gfx942
     gfx1030
     gfx1100
