@@ -183,7 +183,7 @@ if(SUPPORT_HIP)
     if((${CMAKE_BUILD_TYPE} MATCHES "Release") OR (${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo"))
       list(APPEND HIP_HIPCC_FLAGS "-DNDEBUG")
     endif()
-    foreach(target ${AMDGPU_TARGETS})
+    foreach(target ${GPU_TARGETS})
       list(APPEND HIP_HIPCC_FLAGS "--offload-arch=${target}")
     endforeach()
 
