@@ -66,4 +66,4 @@ message(STATUS "\t==>BUILD_CLIENTS_TESTS               : ${BUILD_CLIENTS_TESTS}"
 message(STATUS "\t==>BUILD_CLIENTS_SAMPLES             : ${BUILD_CLIENTS_SAMPLES}")
 message(STATUS "==============" )
 message(STATUS "==========================================")
-message(STATUS "\t==>AMDGPU_TARGETS                    : ${AMDGPU_TARGETS}")
+message(STATUS "\t==>GPU_TARGETS                       : ${GPU_TARGETS}")

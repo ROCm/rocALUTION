@@ -218,7 +218,7 @@ def config_cmd():
 #
 # Reject for now
 #
-#    cmake_options.append( f"-DAMDGPU_TARGETS={args.gpu_architecture}" )
+#    cmake_options.append( f"-DGPU_TARGETS={args.gpu_architecture}" )
 
     if args.cmake_dargs:
         for i in args.cmake_dargs:
