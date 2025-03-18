@@ -154,6 +154,8 @@ endif()
 # Set compile options
 list(APPEND CMAKE_HOST_FLAGS "-O3")
 target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
+taget_compile_options(rocalution PRIVATE -fgpu-rdc)
+taget_link_options(rocalution PRIVATE -fgpu-rdc)
 
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
