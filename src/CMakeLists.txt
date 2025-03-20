@@ -154,8 +154,6 @@ endif()
 # Set compile options
 list(APPEND CMAKE_HOST_FLAGS "-O3")
 target_compile_options(rocalution PRIVATE ${CMAKE_HOST_FLAGS})
-taget_compile_options(rocalution PRIVATE -fgpu-rdc)
-taget_link_options(rocalution PRIVATE -fgpu-rdc)
 
 # Create rocALUTION hip library
 if(SUPPORT_HIP)
@@ -168,6 +166,8 @@ if(SUPPORT_HIP)
 
   if(USE_HIPCXX)
     add_library(rocalution_hip ${HIP_SOURCES})
+    target_compile_options(rocalution PRIVATE -fgpu-rdc)
+    target_link_options(rocalution PRIVATE -fgpu-rdc)
     # If CPU optimizations for local machine is actived
     if(BUILD_OPTCPU)
       target_compile_options(rocalution_hip PRIVATE "-march=native")
