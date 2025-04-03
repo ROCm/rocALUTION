@@ -167,7 +167,7 @@ if(SUPPORT_HIP)
   if(USE_HIPCXX)
     add_library(rocalution_hip ${HIP_SOURCES})
     target_compile_options(rocalution PRIVATE -fgpu-rdc)
-    target_link_options(rocalution PRIVATE -fgpu-rdc)
+    target_link_options(rocalution PRIVATE -fgpu-rdc -Xoffload-linker --lto-partitions=1)
     # If CPU optimizations for local machine is actived
     if(BUILD_OPTCPU)
       target_compile_options(rocalution_hip PRIVATE "-march=native")
