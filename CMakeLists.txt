@@ -38,7 +38,8 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm ${ROCM_PATH})
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
      ${ROCM_PATH}/lib/cmake/hip
-     ${ROCM_PATH}/hip/cmake)
+     ${ROCM_PATH}/hip/cmake
+     ${ROCM_PATH}/cmake)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -128,7 +129,9 @@ cmake_dependent_option(SUPPORT_HIP "Compile WITH HIP support" ON "USE_HIPCXX OR 
 
 # HIP related library dependencies
 if(SUPPORT_HIP)
-  find_package(hip REQUIRED)
+  if( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+    find_package( hip REQUIRED CONFIG PATHS ${HIP_DIR} ${ROCM_PATH} /opt/rocm )
+  endif( )
   find_package(rocblas REQUIRED)
   find_package(rocsparse REQUIRED)
   find_package(rocprim REQUIRED)
@@ -148,7 +151,7 @@ endif()
 
 
 # Setup version
-rocm_setup_version(VERSION "3.2.2")
+rocm_setup_version(VERSION "3.2.3")
 
 if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
   set( BUILD_CLIENTS ON )

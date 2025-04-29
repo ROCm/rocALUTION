@@ -2,6 +2,14 @@
 
 Full documentation forrocALUTION is available at [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
+## rocALUTION 3.2.3 for ROCm 6.4.1
+
+### Added
+* The `-a` option has been added to the `rmake.py` build script. This option provides a way to select specific architectures when building on Windows.
+
+### Resolved issues
+* Fixed an issue where the `HIP_PATH` environment variable was being ignored when compiling on Windows.
+
 ## rocALUTION 3.2.2 for ROCm 6.4.0
 
 ### Changed
