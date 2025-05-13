@@ -23,6 +23,8 @@
 
 # Dependencies
 
+include(FetchContent)
+
 # Find OpenMP package
 find_package(OpenMP)
 if (NOT OPENMP_FOUND)
@@ -67,34 +69,20 @@ endif()
 # ROCm cmake package
 find_package(ROCmCMakeBuildTools 0.11.0 CONFIG QUIET PATHS ${CMAKE_PREFIX_PATH})
 if(NOT ROCmCMakeBuildTools_FOUND)
-  find_package(ROCM 0.11.0 CONFIG QUIET PATHS ${CMAKE_PREFIX_PATH}) # deprecated fallback
+  find_package(ROCM 0.7.3 CONFIG QUIET PATHS ${CMAKE_PREFIX_PATH}) # deprecated fallback
   if(NOT ROCM_FOUND)
+    message(STATUS "ROCmCMakeBuildTools not found. Fetching...")
     set(PROJECT_EXTERN_DIR ${CMAKE_CURRENT_BINARY_DIR}/extern)
-    set(rocm_cmake_tag "master" CACHE STRING "rocm-cmake tag to download")
-    file(DOWNLOAD https://github.com/ROCm/rocm-cmake/archive/${rocm_cmake_tag}.zip
-         ${PROJECT_EXTERN_DIR}/rocm-cmake-${rocm_cmake_tag}.zip STATUS status LOG log)
-
-    list(GET status 0 status_code)
-    list(GET status 1 status_string)
-
-    if(NOT status_code EQUAL 0)
-      message(FATAL_ERROR "error: downloading
-      'https://github.com/ROCm/rocm-cmake/archive/${rocm_cmake_tag}.zip' failed
-      status_code: ${status_code}
-      status_string: ${status_string}
-      log: ${log}
-      ")
-    endif()
+    set(rocm_cmake_tag "rocm-6.4.0" CACHE STRING "rocm-cmake tag to download")
+    FetchContent_Declare(
+      rocm-cmake
+      GIT_REPOSITORY https://github.com/ROCm/rocm-cmake.git
+      GIT_TAG ${rocm_cmake_tag}
+      SOURCE_SUBDIR "DISABLE ADDING TO BUILD"
+    )
+    FetchContent_MakeAvailable(rocm-cmake)
+    find_package(ROCmCMakeBuildTools CONFIG REQUIRED NO_DEFAULT_PATH PATHS "${rocm-cmake_SOURCE_DIR}")
   endif()
-
-  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${PROJECT_EXTERN_DIR}/rocm-cmake-${rocm_cmake_tag}.zip
-                  WORKING_DIRECTORY ${PROJECT_EXTERN_DIR})
-  execute_process(COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PROJECT_EXTERN_DIR}/rocm-cmake .
-                  WORKING_DIRECTORY ${PROJECT_EXTERN_DIR}/rocm-cmake-${rocm_cmake_tag})
-  execute_process(COMMAND ${CMAKE_COMMAND} --build rocm-cmake-${rocm_cmake_tag} --target install
-                  WORKING_DIRECTORY ${PROJECT_EXTERN_DIR})
-
-  find_package(ROCmCMakeBuildTools 0.11.0 REQUIRED CONFIG PATHS ${PROJECT_EXTERN_DIR}/rocm-cmake)
 endif()
 
 include(ROCMSetupVersion)
