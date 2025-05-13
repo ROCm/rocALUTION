@@ -4,8 +4,6 @@ Full documentation forrocALUTION is available at [https://rocm.docs.amd.com/proj
 
 ## (Unreleased) rocALUTION 4.0.0
 
-## rocALUTION 3.2.4 for ROCm 6.5.0
-
 ### Added
 * Added support for gfx950.
 
