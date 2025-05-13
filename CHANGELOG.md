@@ -5,12 +5,14 @@ Documentation for rocALUTION is available at
 
 ## rocALUTION 3.2.1 for ROCm 6.2.4
 
-### Additions
-* GFX1151 Support
+### Added
+
+* gfx1151 Support
 
 ## rocALUTION 3.2.0 for ROCm 6.2.0
 
-### Additions
+### Added
+
 * New file I/O based on rocsparse I/O format
 * `GetConvergenceHistory` for ItILU0 preconditioner
 
