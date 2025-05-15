@@ -374,12 +374,12 @@ namespace rocalution
                      cast_mat->mat_.offset,
                      this->mat_.offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->nnz_,
                      cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -416,12 +416,12 @@ namespace rocalution
                      this->mat_.offset,
                      cast_mat->mat_.offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -460,12 +460,12 @@ namespace rocalution
                      hip_cast_mat->mat_.offset,
                      this->mat_.offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->nnz_,
                      hip_cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -512,12 +512,12 @@ namespace rocalution
                      this->mat_.offset,
                      hip_cast_mat->mat_.offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      hip_cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -615,7 +615,7 @@ namespace rocalution
             kernel_dia_spmv<<<GridSize,
                               BlockSize,
                               0,
-                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                              HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow,
                 ncol,
                 num_diag,
@@ -656,7 +656,7 @@ namespace rocalution
             kernel_dia_add_spmv<<<GridSize,
                                   BlockSize,
                                   0,
-                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                  HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow,
                 ncol,
                 num_diag,

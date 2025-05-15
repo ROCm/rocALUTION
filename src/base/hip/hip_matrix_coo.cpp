@@ -364,17 +364,17 @@ namespace rocalution
                      cast_mat->mat_.row,
                      this->mat_.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->nnz_,
                      cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->nnz_,
                      cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -411,17 +411,17 @@ namespace rocalution
                      this->mat_.row,
                      cast_mat->mat_.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.col,
                      cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -457,17 +457,17 @@ namespace rocalution
                      hip_cast_mat->mat_.row,
                      this->mat_.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->nnz_,
                      hip_cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->nnz_,
                      hip_cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -513,17 +513,17 @@ namespace rocalution
                      this->mat_.row,
                      hip_cast_mat->mat_.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.col,
                      hip_cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      hip_cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -717,13 +717,15 @@ namespace rocalution
             dim3 GridSize(s / this->local_backend_.HIP_block_size + 1);
 
             kernel_coo_permute<ValueType, int>
-                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                    nnz,
-                    src.mat_.row,
-                    src.mat_.col,
-                    cast_perm->vec_,
-                    this->mat_.row,
-                    this->mat_.col);
+                <<<GridSize,
+                   BlockSize,
+                   0,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(nnz,
+                                                                               src.mat_.row,
+                                                                               src.mat_.col,
+                                                                               cast_perm->vec_,
+                                                                               this->mat_.row,
+                                                                               this->mat_.col);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -754,7 +756,7 @@ namespace rocalution
             kernel_reverse_index<<<GridSize1,
                                    BlockSize1,
                                    0,
-                                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 n, cast_perm->vec_, pb);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -776,7 +778,10 @@ namespace rocalution
             dim3 GridSize2(s / this->local_backend_.HIP_block_size + 1);
 
             kernel_coo_permute<ValueType, int>
-                <<<GridSize2, BlockSize2, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                <<<GridSize2,
+                   BlockSize2,
+                   0,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     nnz, src.mat_.row, src.mat_.col, pb, this->mat_.row, this->mat_.col);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 

@@ -61,8 +61,10 @@ namespace rocalution
         allocate_hip(nnz, &dst->col);
         allocate_hip(nnz, &dst->val);
 
-        copy_d2d(nnz, src.col, dst->col, true, HIPSTREAM(backend->HIP_stream_current));
-        copy_d2d(nnz, src.val, dst->val, true, HIPSTREAM(backend->HIP_stream_current));
+        copy_d2d(
+            nnz, src.col, dst->col, true, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
+        copy_d2d(
+            nnz, src.val, dst->val, true, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
 
         rocsparse_status status = rocsparse_csr2coo(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                                     src.row_offset,
@@ -97,8 +99,10 @@ namespace rocalution
         allocate_hip(nnz, &dst->col);
         allocate_hip(nnz, &dst->val);
 
-        copy_d2d(nnz, src.col, dst->col, true, HIPSTREAM(backend->HIP_stream_current));
-        copy_d2d(nnz, src.val, dst->val, true, HIPSTREAM(backend->HIP_stream_current));
+        copy_d2d(
+            nnz, src.col, dst->col, true, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
+        copy_d2d(
+            nnz, src.val, dst->val, true, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
 
         rocsparse_status status = rocsparse_coo2csr(ROCSPARSE_HANDLE(backend->ROC_sparse_handle),
                                                     src.row,
@@ -305,7 +309,7 @@ namespace rocalution
         CHECK_ROCSPARSE_ERROR(status, __FILE__, __LINE__);
 
         // Synchronize stream to make sure, result is available on the host
-        hipStreamSynchronize(HIPSTREAM(backend->HIP_stream_current));
+        hipStreamSynchronize(HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Limit ELL size to 5 times CSR nnz
@@ -432,7 +436,7 @@ namespace rocalution
         int blocksize = backend->HIP_block_size;
 
         // Get stream
-        hipStream_t stream = HIPSTREAM(backend->HIP_stream_current);
+        hipStream_t stream = HIPSTREAM(_get_backend_descriptor()->HIP_stream_current);
 
         // Get diagonal mapping vector
         IndexType* diag_idx = NULL;
@@ -579,7 +583,7 @@ namespace rocalution
         int blocksize = backend->HIP_block_size;
 
         // Get stream
-        hipStream_t stream = HIPSTREAM(backend->HIP_stream_current);
+        hipStream_t stream = HIPSTREAM(_get_backend_descriptor()->HIP_stream_current);
 
         // Determine ELL width by average nnz per row
         if(dst->ELL.max_row == 0)
@@ -603,11 +607,7 @@ namespace rocalution
         if(*nnz_ell == 0)
         {
             *nnz_coo = nnz;
-            copy_d2d(nrow + 1,
-                     src.row_offset,
-                     coo_row_nnz,
-                     true,
-                     HIPSTREAM(backend->HIP_stream_current));
+            copy_d2d(nrow + 1, src.row_offset, coo_row_nnz, true, stream);
         }
         else
         {

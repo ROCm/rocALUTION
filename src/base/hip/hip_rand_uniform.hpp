@@ -86,7 +86,8 @@ namespace rocalution
                     kernel_affine_transform<<<GridSize,
                                               BlockSize,
                                               0,
-                                              HIPSTREAM(m_backend->HIP_stream_current)>>>(
+                                              HIPSTREAM(
+                                                  _get_backend_descriptor()->HIP_stream_current)>>>(
                         size * n, this->m_a, this->m_b, (value_type*)data);
 
                     CHECK_HIP_ERROR(__FILE__, __LINE__);

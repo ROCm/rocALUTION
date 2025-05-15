@@ -471,19 +471,19 @@ namespace rocalution
                          cast_mat->mat_.row_offset,
                          this->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_h2d(this->mat_.nnzb,
                      cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -527,19 +527,19 @@ namespace rocalution
                          this->mat_.row_offset,
                          cast_mat->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_d2h(this->mat_.nnzb,
                      this->mat_.col,
                      cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      this->mat_.val,
                      cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -585,19 +585,19 @@ namespace rocalution
                          hip_cast_mat->mat_.row_offset,
                          this->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_d2d(this->mat_.nnzb,
                      hip_cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      hip_cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -650,19 +650,19 @@ namespace rocalution
                          this->mat_.row_offset,
                          hip_cast_mat->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_d2d(this->mat_.nnzb,
                      this->mat_.col,
                      hip_cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->mat_.nnzb * this->mat_.blockdim * this->mat_.blockdim,
                      this->mat_.val,
                      hip_cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {

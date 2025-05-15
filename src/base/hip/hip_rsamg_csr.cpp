@@ -32,134 +32,136 @@
 #include <hip/hip_runtime.h>
 #include <rocprim/rocprim.hpp>
 
-#define DISPATCH_EXTPI_INTERP_NNZ(G, BS, WS, HS)                                                   \
-    {                                                                                              \
-        if(G == false)                                                                             \
-        {                                                                                          \
-            kernel_csr_rs_extpi_interp_nnz<false, BS, WS, HS>                                      \
-                <<<(this->nrow_ - 1) / (BS / WS) + 1,                                              \
-                   BS,                                                                             \
-                   0,                                                                              \
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,              \
-                                                                         this->nnz_,               \
-                                                                         0,                        \
-                                                                         0,                        \
-                                                                         FF1,                      \
-                                                                         this->mat_.row_offset,    \
-                                                                         this->mat_.col,           \
-                                                                         (PtrType*)NULL,           \
-                                                                         (int*)NULL,               \
-                                                                         (int*)NULL,               \
-                                                                         (int*)NULL,               \
-                                                                         cast_S->vec_,             \
-                                                                         cast_cf->vec_,            \
-                                                                         (int*)NULL,               \
-                                                                         cast_pi->mat_.row_offset, \
-                                                                         (PtrType*)NULL,           \
-                                                                         cast_f2c->vec_);          \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            kernel_csr_rs_extpi_interp_nnz<true, BS, WS, HS>                                       \
-                <<<(this->nrow_ - 1) / (BS / WS) + 1,                                              \
-                   BS,                                                                             \
-                   0,                                                                              \
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(                          \
-                    this->nrow_,                                                                   \
-                    this->nnz_,                                                                    \
-                    global_column_begin,                                                           \
-                    global_column_end,                                                             \
-                    FF1,                                                                           \
-                    this->mat_.row_offset,                                                         \
-                    this->mat_.col,                                                                \
-                    cast_gst->mat_.row_offset,                                                     \
-                    cast_gst->mat_.col,                                                            \
-                    cast_ptr->vec_,                                                                \
-                    cast_col->vec_,                                                                \
-                    cast_S->vec_,                                                                  \
-                    cast_cf->vec_,                                                                 \
-                    cast_l2g->vec_,                                                                \
-                    cast_pi->mat_.row_offset,                                                      \
-                    cast_pg->mat_.row_offset,                                                      \
-                    cast_f2c->vec_);                                                               \
-        }                                                                                          \
+#define DISPATCH_EXTPI_INTERP_NNZ(G, BS, WS, HS)                                \
+    {                                                                           \
+        if(G == false)                                                          \
+        {                                                                       \
+            kernel_csr_rs_extpi_interp_nnz<false, BS, WS, HS>                   \
+                <<<(this->nrow_ - 1) / (BS / WS) + 1,                           \
+                   BS,                                                          \
+                   0,                                                           \
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>( \
+                    this->nrow_,                                                \
+                    this->nnz_,                                                 \
+                    0,                                                          \
+                    0,                                                          \
+                    FF1,                                                        \
+                    this->mat_.row_offset,                                      \
+                    this->mat_.col,                                             \
+                    (PtrType*)NULL,                                             \
+                    (int*)NULL,                                                 \
+                    (int*)NULL,                                                 \
+                    (int*)NULL,                                                 \
+                    cast_S->vec_,                                               \
+                    cast_cf->vec_,                                              \
+                    (int*)NULL,                                                 \
+                    cast_pi->mat_.row_offset,                                   \
+                    (PtrType*)NULL,                                             \
+                    cast_f2c->vec_);                                            \
+        }                                                                       \
+        else                                                                    \
+        {                                                                       \
+            kernel_csr_rs_extpi_interp_nnz<true, BS, WS, HS>                    \
+                <<<(this->nrow_ - 1) / (BS / WS) + 1,                           \
+                   BS,                                                          \
+                   0,                                                           \
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>( \
+                    this->nrow_,                                                \
+                    this->nnz_,                                                 \
+                    global_column_begin,                                        \
+                    global_column_end,                                          \
+                    FF1,                                                        \
+                    this->mat_.row_offset,                                      \
+                    this->mat_.col,                                             \
+                    cast_gst->mat_.row_offset,                                  \
+                    cast_gst->mat_.col,                                         \
+                    cast_ptr->vec_,                                             \
+                    cast_col->vec_,                                             \
+                    cast_S->vec_,                                               \
+                    cast_cf->vec_,                                              \
+                    cast_l2g->vec_,                                             \
+                    cast_pi->mat_.row_offset,                                   \
+                    cast_pg->mat_.row_offset,                                   \
+                    cast_f2c->vec_);                                            \
+        }                                                                       \
     }
 
-#define DISPATCH_EXTPI_INTERP_FILL(G, BS, WS, HS)                                                  \
-    {                                                                                              \
-        if(G == false)                                                                             \
-        {                                                                                          \
-            size_t ssize = BS / WS * HS * (sizeof(int) + sizeof(ValueType));                       \
-            kernel_csr_rs_extpi_interp_fill<false, BS, WS, HS>                                     \
-                <<<(this->nrow_ - 1) / (BS / WS) + 1,                                              \
-                   BS,                                                                             \
-                   ssize,                                                                          \
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,              \
-                                                                         this->ncol_,              \
-                                                                         this->nnz_,               \
-                                                                         0,                        \
-                                                                         0,                        \
-                                                                         FF1,                      \
-                                                                         this->mat_.row_offset,    \
-                                                                         this->mat_.col,           \
-                                                                         this->mat_.val,           \
-                                                                         (PtrType*)NULL,           \
-                                                                         (int*)NULL,               \
-                                                                         (ValueType*)NULL,         \
-                                                                         (int*)NULL,               \
-                                                                         (int*)NULL,               \
-                                                                         (int*)NULL,               \
-                                                                         (int*)NULL,               \
-                                                                         (ValueType*)NULL,         \
-                                                                         (int*)NULL,               \
-                                                                         diag.vec_,                \
-                                                                         cast_pi->mat_.row_offset, \
-                                                                         cast_pi->mat_.col,        \
-                                                                         cast_pi->mat_.val,        \
-                                                                         (PtrType*)NULL,           \
-                                                                         (int*)NULL,               \
-                                                                         (ValueType*)NULL,         \
-                                                                         cast_S->vec_,             \
-                                                                         cast_cf->vec_,            \
-                                                                         cast_f2c->vec_);          \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            size_t ssize = BS / WS * HS * (sizeof(int64_t) + sizeof(ValueType));                   \
-            kernel_csr_rs_extpi_interp_fill<true, BS, WS, HS>                                      \
-                <<<(this->nrow_ - 1) / (BS / WS) + 1,                                              \
-                   BS,                                                                             \
-                   ssize,                                                                          \
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(                          \
-                    this->nrow_,                                                                   \
-                    this->ncol_,                                                                   \
-                    this->nnz_,                                                                    \
-                    global_column_begin,                                                           \
-                    global_column_end,                                                             \
-                    FF1,                                                                           \
-                    this->mat_.row_offset,                                                         \
-                    this->mat_.col,                                                                \
-                    this->mat_.val,                                                                \
-                    cast_gst->mat_.row_offset,                                                     \
-                    cast_gst->mat_.col,                                                            \
-                    cast_gst->mat_.val,                                                            \
-                    cast_ptr->vec_,                                                                \
-                    cast_col->vec_,                                                                \
-                    cast_ext_ptr->vec_,                                                            \
-                    cast_ext_col->vec_,                                                            \
-                    cast_ext_val->vec_,                                                            \
-                    cast_l2g->vec_,                                                                \
-                    diag.vec_,                                                                     \
-                    cast_pi->mat_.row_offset,                                                      \
-                    cast_pi->mat_.col,                                                             \
-                    cast_pi->mat_.val,                                                             \
-                    cast_pg->mat_.row_offset,                                                      \
-                    cast_glo->vec_,                                                                \
-                    cast_pg->mat_.val,                                                             \
-                    cast_S->vec_,                                                                  \
-                    cast_cf->vec_,                                                                 \
-                    cast_f2c->vec_);                                                               \
-        }                                                                                          \
+#define DISPATCH_EXTPI_INTERP_FILL(G, BS, WS, HS)                                \
+    {                                                                            \
+        if(G == false)                                                           \
+        {                                                                        \
+            size_t ssize = BS / WS * HS * (sizeof(int) + sizeof(ValueType));     \
+            kernel_csr_rs_extpi_interp_fill<false, BS, WS, HS>                   \
+                <<<(this->nrow_ - 1) / (BS / WS) + 1,                            \
+                   BS,                                                           \
+                   ssize,                                                        \
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(  \
+                    this->nrow_,                                                 \
+                    this->ncol_,                                                 \
+                    this->nnz_,                                                  \
+                    0,                                                           \
+                    0,                                                           \
+                    FF1,                                                         \
+                    this->mat_.row_offset,                                       \
+                    this->mat_.col,                                              \
+                    this->mat_.val,                                              \
+                    (PtrType*)NULL,                                              \
+                    (int*)NULL,                                                  \
+                    (ValueType*)NULL,                                            \
+                    (int*)NULL,                                                  \
+                    (int*)NULL,                                                  \
+                    (int*)NULL,                                                  \
+                    (int*)NULL,                                                  \
+                    (ValueType*)NULL,                                            \
+                    (int*)NULL,                                                  \
+                    diag.vec_,                                                   \
+                    cast_pi->mat_.row_offset,                                    \
+                    cast_pi->mat_.col,                                           \
+                    cast_pi->mat_.val,                                           \
+                    (PtrType*)NULL,                                              \
+                    (int*)NULL,                                                  \
+                    (ValueType*)NULL,                                            \
+                    cast_S->vec_,                                                \
+                    cast_cf->vec_,                                               \
+                    cast_f2c->vec_);                                             \
+        }                                                                        \
+        else                                                                     \
+        {                                                                        \
+            size_t ssize = BS / WS * HS * (sizeof(int64_t) + sizeof(ValueType)); \
+            kernel_csr_rs_extpi_interp_fill<true, BS, WS, HS>                    \
+                <<<(this->nrow_ - 1) / (BS / WS) + 1,                            \
+                   BS,                                                           \
+                   ssize,                                                        \
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(  \
+                    this->nrow_,                                                 \
+                    this->ncol_,                                                 \
+                    this->nnz_,                                                  \
+                    global_column_begin,                                         \
+                    global_column_end,                                           \
+                    FF1,                                                         \
+                    this->mat_.row_offset,                                       \
+                    this->mat_.col,                                              \
+                    this->mat_.val,                                              \
+                    cast_gst->mat_.row_offset,                                   \
+                    cast_gst->mat_.col,                                          \
+                    cast_gst->mat_.val,                                          \
+                    cast_ptr->vec_,                                              \
+                    cast_col->vec_,                                              \
+                    cast_ext_ptr->vec_,                                          \
+                    cast_ext_col->vec_,                                          \
+                    cast_ext_val->vec_,                                          \
+                    cast_l2g->vec_,                                              \
+                    diag.vec_,                                                   \
+                    cast_pi->mat_.row_offset,                                    \
+                    cast_pi->mat_.col,                                           \
+                    cast_pi->mat_.val,                                           \
+                    cast_pg->mat_.row_offset,                                    \
+                    cast_glo->vec_,                                              \
+                    cast_pg->mat_.val,                                           \
+                    cast_S->vec_,                                                \
+                    cast_cf->vec_,                                               \
+                    cast_f2c->vec_);                                             \
+        }                                                                        \
     }
 
 namespace rocalution
@@ -194,7 +196,7 @@ namespace rocalution
         kernel_set_omega<<<(this->nrow_ - 1) / 256 + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             this->nrow_, global_row_offset, cast_w->vec_);
 
         // Determine strong influences in the matrix
@@ -204,17 +206,18 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         (ValueType*)NULL,
-                                                                         eps,
-                                                                         cast_w->vec_,
-                                                                         cast_S->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    (ValueType*)NULL,
+                    eps,
+                    cast_w->vec_,
+                    cast_S->vec_);
         }
         else
         {
@@ -222,17 +225,18 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_gst->mat_.val,
-                                                                         eps,
-                                                                         cast_w->vec_,
-                                                                         cast_S->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_gst->mat_.val,
+                    eps,
+                    cast_w->vec_,
+                    cast_S->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -256,11 +260,11 @@ namespace rocalution
         assert(cast_w != NULL);
 
         // First, mark all vertices that have not been assigned yet, as coarse
-        kernel_csr_rs_pmis_unassigned_to_coarse<<<(cast_cf->size_ - 1) / 256 + 1,
-                                                  256,
-                                                  0,
-                                                  HIPSTREAM(
-                                                      this->local_backend_.HIP_stream_current)>>>(
+        kernel_csr_rs_pmis_unassigned_to_coarse<<<
+            (cast_cf->size_ - 1) / 256 + 1,
+            256,
+            0,
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             cast_cf->size_, cast_w->vec_, cast_cf->vec_, cast_m->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -303,16 +307,17 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         cast_w->vec_,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_m->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    cast_w->vec_,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_m->vec_);
         }
         else
         {
@@ -320,16 +325,17 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_w->vec_,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_m->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_w->vec_,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_m->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -362,14 +368,15 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    cast_S->vec_,
+                    cast_cf->vec_);
         }
         else
         {
@@ -377,14 +384,15 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_S->vec_,
+                    cast_cf->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -407,13 +415,13 @@ namespace rocalution
                         1,
                         d_undecided,
                         true,
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
 
         kernel_csr_rs_pmis_check_undecided<256>
             <<<(this->nrow_ - 1) / 256 + 1,
                256,
                0,
-               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+               HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->nrow_, cast_cf->vec_, d_undecided);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -494,21 +502,22 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         (ValueType*)NULL,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_Amin->vec_,
-                                                                         cast_Amax->vec_,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         (PtrType*)NULL,
-                                                                         cast_f2c->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    (ValueType*)NULL,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_Amin->vec_,
+                    cast_Amax->vec_,
+                    cast_pi->mat_.row_offset,
+                    (PtrType*)NULL,
+                    cast_f2c->vec_);
         }
         else
         {
@@ -516,21 +525,22 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_gst->mat_.val,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_Amin->vec_,
-                                                                         cast_Amax->vec_,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         cast_pg->mat_.row_offset,
-                                                                         cast_f2c->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_gst->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_Amin->vec_,
+                    cast_Amax->vec_,
+                    cast_pi->mat_.row_offset,
+                    cast_pg->mat_.row_offset,
+                    cast_f2c->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -607,7 +617,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -620,7 +630,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Initialize nnz of P
@@ -649,7 +659,7 @@ namespace rocalution
                                     0,
                                     this->nrow_ + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Initialize nnz of P ghost
@@ -676,26 +686,27 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         (ValueType*)NULL,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         cast_pi->mat_.col,
-                                                                         cast_pi->mat_.val,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         (ValueType*)NULL,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_Amin->vec_,
-                                                                         cast_Amax->vec_,
-                                                                         cast_f2c->vec_,
-                                                                         (int*)NULL);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    (ValueType*)NULL,
+                    cast_pi->mat_.row_offset,
+                    cast_pi->mat_.col,
+                    cast_pi->mat_.val,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    (ValueType*)NULL,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_Amin->vec_,
+                    cast_Amax->vec_,
+                    cast_f2c->vec_,
+                    (int*)NULL);
         }
         else
         {
@@ -703,26 +714,27 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_gst->mat_.val,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         cast_pi->mat_.col,
-                                                                         cast_pi->mat_.val,
-                                                                         cast_pg->mat_.row_offset,
-                                                                         cast_glo->vec_,
-                                                                         cast_pg->mat_.val,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_Amin->vec_,
-                                                                         cast_Amax->vec_,
-                                                                         cast_f2c->vec_,
-                                                                         cast_l2g->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_gst->mat_.val,
+                    cast_pi->mat_.row_offset,
+                    cast_pi->mat_.col,
+                    cast_pi->mat_.val,
+                    cast_pg->mat_.row_offset,
+                    cast_glo->vec_,
+                    cast_pg->mat_.val,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_Amin->vec_,
+                    cast_Amax->vec_,
+                    cast_f2c->vec_,
+                    cast_l2g->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -761,17 +773,18 @@ namespace rocalution
             (cast_bnd->size_ - 1) / 256 + 1,
             256,
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                  this->nnz_,
-                                                                  static_cast<int>(cast_bnd->size_),
-                                                                  cast_bnd->vec_,
-                                                                  this->mat_.row_offset,
-                                                                  this->mat_.col,
-                                                                  cast_gst->mat_.row_offset,
-                                                                  cast_gst->mat_.col,
-                                                                  cast_cf->vec_,
-                                                                  cast_S->vec_,
-                                                                  cast_nnz->vec_);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+            this->nrow_,
+            this->nnz_,
+            static_cast<int>(cast_bnd->size_),
+            cast_bnd->vec_,
+            this->mat_.row_offset,
+            this->mat_.col,
+            cast_gst->mat_.row_offset,
+            cast_gst->mat_.col,
+            cast_cf->vec_,
+            cast_S->vec_,
+            cast_nnz->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         return true;
@@ -818,20 +831,21 @@ namespace rocalution
             (cast_bnd->size_ - 1) / 256 + 1,
             256,
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                  this->nnz_,
-                                                                  global_column_begin,
-                                                                  static_cast<int>(cast_bnd->size_),
-                                                                  cast_bnd->vec_,
-                                                                  this->mat_.row_offset,
-                                                                  this->mat_.col,
-                                                                  cast_gst->mat_.row_offset,
-                                                                  cast_gst->mat_.col,
-                                                                  cast_l2g->vec_,
-                                                                  cast_cf->vec_,
-                                                                  cast_S->vec_,
-                                                                  cast_ptr->vec_,
-                                                                  cast_col->vec_);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+            this->nrow_,
+            this->nnz_,
+            global_column_begin,
+            static_cast<int>(cast_bnd->size_),
+            cast_bnd->vec_,
+            this->mat_.row_offset,
+            this->mat_.col,
+            cast_gst->mat_.row_offset,
+            cast_gst->mat_.col,
+            cast_l2g->vec_,
+            cast_cf->vec_,
+            cast_S->vec_,
+            cast_ptr->vec_,
+            cast_col->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         return true;
@@ -918,17 +932,18 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 16) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         FF1,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         (int*)NULL,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_pi->mat_.row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    (int*)NULL,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_pi->mat_.row_offset);
         }
         else
         {
@@ -936,17 +951,18 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 16) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         FF1,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_ptr->vec_,
-                                                                         cast_S->vec_,
-                                                                         cast_cf->vec_,
-                                                                         cast_pi->mat_.row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    FF1,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_ptr->vec_,
+                    cast_S->vec_,
+                    cast_cf->vec_,
+                    cast_pi->mat_.row_offset);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -958,7 +974,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<PtrType>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -971,7 +987,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<PtrType>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -1176,7 +1192,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -1188,7 +1204,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Maximum fill
@@ -1205,7 +1221,7 @@ namespace rocalution
                             0,
                             this->nrow_,
                             rocprim::maximum<int>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             int max_hash_fill_gst;
@@ -1226,7 +1242,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         rocprim_buffer = NULL;
@@ -1239,7 +1255,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Initialize nnz of P
@@ -1268,7 +1284,7 @@ namespace rocalution
                                     0,
                                     this->nrow_ + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // Initialize nnz of P ghost

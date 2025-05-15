@@ -352,17 +352,17 @@ namespace rocalution
                      cast_mat->mat_.row_offset,
                      this->mat_.row_offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->nnz_,
                      cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->nnz_,
                      cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -399,17 +399,17 @@ namespace rocalution
                      this->mat_.row_offset,
                      cast_mat->mat_.row_offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.col,
                      cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -445,17 +445,17 @@ namespace rocalution
                      hip_cast_mat->mat_.row_offset,
                      this->mat_.row_offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->nnz_,
                      hip_cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->nnz_,
                      hip_cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -501,17 +501,17 @@ namespace rocalution
                      this->mat_.row_offset,
                      hip_cast_mat->mat_.row_offset,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.col,
                      hip_cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      hip_cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -582,149 +582,160 @@ namespace rocalution
             {
                 if(nnz_per_row < 4)
                 {
-                    kernel_mcsr_spmv<2><<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<2>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 8)
                 {
-                    kernel_mcsr_spmv<4><<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<4>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 16)
                 {
-                    kernel_mcsr_spmv<8><<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<8>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 32)
                 {
-                    kernel_mcsr_spmv<16><<<GridSize,
-                                           BlockSize,
-                                           0,
-                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<16>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else
                 {
-                    kernel_mcsr_spmv<32><<<GridSize,
-                                           BlockSize,
-                                           0,
-                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<32>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
             }
             else if(this->local_backend_.HIP_warp == 64)
             {
                 if(nnz_per_row < 4)
                 {
-                    kernel_mcsr_spmv<2><<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<2>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 8)
                 {
-                    kernel_mcsr_spmv<4><<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<4>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 16)
                 {
-                    kernel_mcsr_spmv<8><<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<8>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 32)
                 {
-                    kernel_mcsr_spmv<16><<<GridSize,
-                                           BlockSize,
-                                           0,
-                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<16>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 64)
                 {
-                    kernel_mcsr_spmv<32><<<GridSize,
-                                           BlockSize,
-                                           0,
-                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<32>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else
                 {
-                    kernel_mcsr_spmv<64><<<GridSize,
-                                           BlockSize,
-                                           0,
-                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_spmv<64>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
             }
             else
@@ -766,45 +777,48 @@ namespace rocalution
             {
                 if(nnz_per_row < 4)
                 {
-                    kernel_mcsr_add_spmv<2><<<GridSize,
-                                              BlockSize,
-                                              0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        scalar,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_add_spmv<2>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            scalar,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 8)
                 {
-                    kernel_mcsr_add_spmv<4><<<GridSize,
-                                              BlockSize,
-                                              0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        scalar,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_add_spmv<4>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            scalar,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 16)
                 {
-                    kernel_mcsr_add_spmv<8><<<GridSize,
-                                              BlockSize,
-                                              0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        scalar,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_add_spmv<8>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            scalar,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 32)
                 {
@@ -812,7 +826,7 @@ namespace rocalution
                         <<<GridSize,
                            BlockSize,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -827,7 +841,7 @@ namespace rocalution
                         <<<GridSize,
                            BlockSize,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -841,45 +855,48 @@ namespace rocalution
             {
                 if(nnz_per_row < 4)
                 {
-                    kernel_mcsr_add_spmv<2><<<GridSize,
-                                              BlockSize,
-                                              0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        scalar,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_add_spmv<2>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            scalar,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 8)
                 {
-                    kernel_mcsr_add_spmv<4><<<GridSize,
-                                              BlockSize,
-                                              0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        scalar,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_add_spmv<4>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            scalar,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 16)
                 {
-                    kernel_mcsr_add_spmv<8><<<GridSize,
-                                              BlockSize,
-                                              0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                        this->nrow_,
-                        this->mat_.row_offset,
-                        this->mat_.col,
-                        this->mat_.val,
-                        scalar,
-                        cast_in->vec_,
-                        cast_out->vec_);
+                    kernel_mcsr_add_spmv<8>
+                        <<<GridSize,
+                           BlockSize,
+                           0,
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                            this->nrow_,
+                            this->mat_.row_offset,
+                            this->mat_.col,
+                            this->mat_.val,
+                            scalar,
+                            cast_in->vec_,
+                            cast_out->vec_);
                 }
                 else if(nnz_per_row < 32)
                 {
@@ -887,7 +904,7 @@ namespace rocalution
                         <<<GridSize,
                            BlockSize,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -902,7 +919,7 @@ namespace rocalution
                         <<<GridSize,
                            BlockSize,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -917,7 +934,7 @@ namespace rocalution
                         <<<GridSize,
                            BlockSize,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->mat_.row_offset,
                             this->mat_.col,

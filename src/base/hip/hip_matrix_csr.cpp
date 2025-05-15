@@ -325,19 +325,19 @@ namespace rocalution
                          cast_mat->mat_.row_offset,
                          this->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_h2d(this->nnz_,
                      cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->nnz_,
                      cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -416,19 +416,19 @@ namespace rocalution
                          this->mat_.row_offset,
                          cast_mat->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_d2h(this->nnz_,
                      this->mat_.col,
                      cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -514,19 +514,19 @@ namespace rocalution
                          hip_cast_mat->mat_.row_offset,
                          this->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_d2d(this->nnz_,
                      hip_cast_mat->mat_.col,
                      this->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->nnz_,
                      hip_cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -624,19 +624,19 @@ namespace rocalution
                          this->mat_.row_offset,
                          hip_cast_mat->mat_.row_offset,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
 
             copy_d2h(this->nnz_,
                      this->mat_.col,
                      hip_cast_mat->mat_.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->nnz_,
                      this->mat_.val,
                      hip_cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -984,7 +984,7 @@ namespace rocalution
             kernel_permute_row_nnz<<<GridSize,
                                      BlockSize,
                                      0,
-                                     HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->nrow_, this->mat_.row_offset, cast_perm->vec_, d_nnzPerm);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -1002,7 +1002,7 @@ namespace rocalution
                             0,
                             this->nrow_,
                             rocprim::maximum<PtrType>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(size, &buffer);
@@ -1014,7 +1014,7 @@ namespace rocalution
                             0,
                             this->nrow_,
                             rocprim::maximum<PtrType>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&buffer);
@@ -1031,7 +1031,7 @@ namespace rocalution
                                     d_nnzPerm + 1,
                                     this->nrow_,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(size, &buffer);
@@ -1042,7 +1042,7 @@ namespace rocalution
                                     d_nnzPerm + 1,
                                     this->nrow_,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&buffer);
@@ -1059,14 +1059,15 @@ namespace rocalution
                     <<<GridSize,
                        BlockSize,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             d_nnzPerm,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_perm->vec_,
-                                                                             d_offset,
-                                                                             d_data);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        d_nnzPerm,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_perm->vec_,
+                        d_offset,
+                        d_data);
             }
             else if(this->local_backend_.HIP_warp == 64)
             {
@@ -1074,14 +1075,15 @@ namespace rocalution
                     <<<GridSize,
                        BlockSize,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             d_nnzPerm,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_perm->vec_,
-                                                                             d_offset,
-                                                                             d_data);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        d_nnzPerm,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_perm->vec_,
+                        d_offset,
+                        d_data);
             }
             else
             {
@@ -1101,13 +1103,14 @@ namespace rocalution
                     GridSize,
                     BlockSize,
                     0,
-                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                          this->mat_.row_offset,
-                                                                          cast_perm->vec_,
-                                                                          d_offset,
-                                                                          d_data,
-                                                                          this->mat_.col,
-                                                                          this->mat_.val);
+                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    cast_perm->vec_,
+                    d_offset,
+                    d_data,
+                    this->mat_.col,
+                    this->mat_.val);
             }
             else if(maxnnzrow > 32)
             {
@@ -1115,13 +1118,14 @@ namespace rocalution
                     <<<GridSize,
                        BlockSize,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             cast_perm->vec_,
-                                                                             d_offset,
-                                                                             d_data,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        cast_perm->vec_,
+                        d_offset,
+                        d_data,
+                        this->mat_.col,
+                        this->mat_.val);
             }
             else if(maxnnzrow > 16)
             {
@@ -1129,13 +1133,14 @@ namespace rocalution
                     <<<GridSize,
                        BlockSize,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             cast_perm->vec_,
-                                                                             d_offset,
-                                                                             d_data,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        cast_perm->vec_,
+                        d_offset,
+                        d_data,
+                        this->mat_.col,
+                        this->mat_.val);
             }
             else if(maxnnzrow > 8)
             {
@@ -1143,13 +1148,14 @@ namespace rocalution
                     <<<GridSize,
                        BlockSize,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             cast_perm->vec_,
-                                                                             d_offset,
-                                                                             d_data,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        cast_perm->vec_,
+                        d_offset,
+                        d_data,
+                        this->mat_.col,
+                        this->mat_.val);
             }
             else if(maxnnzrow > 4)
             {
@@ -1157,13 +1163,14 @@ namespace rocalution
                     <<<GridSize,
                        BlockSize,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             cast_perm->vec_,
-                                                                             d_offset,
-                                                                             d_data,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        cast_perm->vec_,
+                        d_offset,
+                        d_data,
+                        this->mat_.col,
+                        this->mat_.val);
             }
             else
             {
@@ -1171,13 +1178,14 @@ namespace rocalution
                     <<<GridSize,
                        BlockSize,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             cast_perm->vec_,
-                                                                             d_offset,
-                                                                             d_data,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        cast_perm->vec_,
+                        d_offset,
+                        d_data,
+                        this->mat_.col,
+                        this->mat_.val);
             }
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3236,11 +3244,12 @@ namespace rocalution
                     <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
                        dim3(this->local_backend_.HIP_block_size),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_vec_diag->vec_);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        nrow,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 16)
             {
@@ -3248,11 +3257,12 @@ namespace rocalution
                     <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
                        dim3(this->local_backend_.HIP_block_size),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_vec_diag->vec_);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        nrow,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 32)
             {
@@ -3260,11 +3270,12 @@ namespace rocalution
                     <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
                        dim3(this->local_backend_.HIP_block_size),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_vec_diag->vec_);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        nrow,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 64)
             {
@@ -3272,11 +3283,12 @@ namespace rocalution
                     <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
                        dim3(this->local_backend_.HIP_block_size),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_vec_diag->vec_);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        nrow,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 128)
             {
@@ -3284,11 +3296,12 @@ namespace rocalution
                     <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
                        dim3(this->local_backend_.HIP_block_size),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_vec_diag->vec_);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        nrow,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_vec_diag->vec_);
             }
             else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
             {
@@ -3296,11 +3309,12 @@ namespace rocalution
                     <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
                        dim3(this->local_backend_.HIP_block_size),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_vec_diag->vec_);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        nrow,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_vec_diag->vec_);
             }
             else
             {
@@ -3308,11 +3322,12 @@ namespace rocalution
                     <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
                        dim3(this->local_backend_.HIP_block_size),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(nrow,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             this->mat_.val,
-                                                                             cast_vec_diag->vec_);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        nrow,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        this->mat_.val,
+                        cast_vec_diag->vec_);
             }
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -3342,16 +3357,16 @@ namespace rocalution
             allocate_hip(1, &d_detect_zero_diag);
             set_to_zero_hip(1, 1, d_detect_zero_diag);
 
-            kernel_csr_extract_inv_diag<<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                nrow,
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                cast_vec_inv_diag->vec_,
-                d_detect_zero_diag);
+            kernel_csr_extract_inv_diag<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(nrow,
+                                                                            this->mat_.row_offset,
+                                                                            this->mat_.col,
+                                                                            this->mat_.val,
+                                                                            cast_vec_inv_diag->vec_,
+                                                                            d_detect_zero_diag);
 
             int detect_zero_diag = 0;
             copy_d2h(1, d_detect_zero_diag, &detect_zero_diag);
@@ -3403,14 +3418,14 @@ namespace rocalution
             GridSize,
             BlockSize,
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
-                                                                  this->mat_.col,
-                                                                  this->mat_.val,
-                                                                  row_offset,
-                                                                  col_offset,
-                                                                  row_size,
-                                                                  col_size,
-                                                                  row_nnz);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                        this->mat_.col,
+                                                                        this->mat_.val,
+                                                                        row_offset,
+                                                                        col_offset,
+                                                                        row_size,
+                                                                        col_size,
+                                                                        row_nnz);
 
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3425,7 +3440,7 @@ namespace rocalution
                                 0,
                                 row_size + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -3437,7 +3452,7 @@ namespace rocalution
                                 0,
                                 row_size + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -3457,16 +3472,17 @@ namespace rocalution
                 GridSize,
                 BlockSize,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
-                                                                      this->mat_.col,
-                                                                      this->mat_.val,
-                                                                      row_offset,
-                                                                      col_offset,
-                                                                      row_size,
-                                                                      col_size,
-                                                                      cast_mat->mat_.row_offset,
-                                                                      cast_mat->mat_.col,
-                                                                      cast_mat->mat_.val);
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                this->mat_.row_offset,
+                this->mat_.col,
+                this->mat_.val,
+                row_offset,
+                col_offset,
+                row_size,
+                col_size,
+                cast_mat->mat_.row_offset,
+                cast_mat->mat_.col,
+                cast_mat->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
         else
@@ -3503,7 +3519,7 @@ namespace rocalution
         kernel_csr_slower_nnz_per_row<<<GridSize,
                                         BlockSize,
                                         0,
-                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             nrow, this->mat_.row_offset, this->mat_.col, cast_L->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3518,7 +3534,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -3530,7 +3546,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -3543,17 +3559,17 @@ namespace rocalution
         allocate_hip(nnz_L, &cast_L->mat_.val);
 
         // fill lower triangular part
-        kernel_csr_extract_l_triangular<<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-            nrow,
-            this->mat_.row_offset,
-            this->mat_.col,
-            this->mat_.val,
-            cast_L->mat_.row_offset,
-            cast_L->mat_.col,
-            cast_L->mat_.val);
+        kernel_csr_extract_l_triangular<<<
+            GridSize,
+            BlockSize,
+            0,
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(nrow,
+                                                                        this->mat_.row_offset,
+                                                                        this->mat_.col,
+                                                                        this->mat_.val,
+                                                                        cast_L->mat_.row_offset,
+                                                                        cast_L->mat_.col,
+                                                                        cast_L->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_L->nrow_ = this->nrow_;
@@ -3591,7 +3607,7 @@ namespace rocalution
         kernel_csr_lower_nnz_per_row<<<GridSize,
                                        BlockSize,
                                        0,
-                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             nrow, this->mat_.row_offset, this->mat_.col, cast_L->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3606,7 +3622,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -3618,7 +3634,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -3631,17 +3647,17 @@ namespace rocalution
         allocate_hip(nnz_L, &cast_L->mat_.val);
 
         // fill lower triangular part
-        kernel_csr_extract_l_triangular<<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-            nrow,
-            this->mat_.row_offset,
-            this->mat_.col,
-            this->mat_.val,
-            cast_L->mat_.row_offset,
-            cast_L->mat_.col,
-            cast_L->mat_.val);
+        kernel_csr_extract_l_triangular<<<
+            GridSize,
+            BlockSize,
+            0,
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(nrow,
+                                                                        this->mat_.row_offset,
+                                                                        this->mat_.col,
+                                                                        this->mat_.val,
+                                                                        cast_L->mat_.row_offset,
+                                                                        cast_L->mat_.col,
+                                                                        cast_L->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_L->nrow_ = this->nrow_;
@@ -3679,7 +3695,7 @@ namespace rocalution
         kernel_csr_supper_nnz_per_row<<<GridSize,
                                         BlockSize,
                                         0,
-                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             nrow, this->mat_.row_offset, this->mat_.col, cast_U->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3694,7 +3710,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -3706,7 +3722,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -3719,17 +3735,17 @@ namespace rocalution
         allocate_hip(nnz_U, &cast_U->mat_.val);
 
         // fill upper triangular part
-        kernel_csr_extract_u_triangular<<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-            nrow,
-            this->mat_.row_offset,
-            this->mat_.col,
-            this->mat_.val,
-            cast_U->mat_.row_offset,
-            cast_U->mat_.col,
-            cast_U->mat_.val);
+        kernel_csr_extract_u_triangular<<<
+            GridSize,
+            BlockSize,
+            0,
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(nrow,
+                                                                        this->mat_.row_offset,
+                                                                        this->mat_.col,
+                                                                        this->mat_.val,
+                                                                        cast_U->mat_.row_offset,
+                                                                        cast_U->mat_.col,
+                                                                        cast_U->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_U->nrow_ = this->nrow_;
@@ -3767,7 +3783,7 @@ namespace rocalution
         kernel_csr_upper_nnz_per_row<<<GridSize,
                                        BlockSize,
                                        0,
-                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             nrow, this->mat_.row_offset, this->mat_.col, cast_U->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -3782,7 +3798,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -3794,7 +3810,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -3807,17 +3823,17 @@ namespace rocalution
         allocate_hip(nnz_U, &cast_U->mat_.val);
 
         // fill lower triangular part
-        kernel_csr_extract_u_triangular<<<GridSize,
-                                          BlockSize,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-            nrow,
-            this->mat_.row_offset,
-            this->mat_.col,
-            this->mat_.val,
-            cast_U->mat_.row_offset,
-            cast_U->mat_.col,
-            cast_U->mat_.val);
+        kernel_csr_extract_u_triangular<<<
+            GridSize,
+            BlockSize,
+            0,
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(nrow,
+                                                                        this->mat_.row_offset,
+                                                                        this->mat_.col,
+                                                                        this->mat_.val,
+                                                                        cast_U->mat_.row_offset,
+                                                                        cast_U->mat_.col,
+                                                                        cast_U->mat_.val);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         cast_U->nrow_ = this->nrow_;
@@ -4090,7 +4106,7 @@ namespace rocalution
             kernel_csr_scale_diagonal<<<GridSize,
                                         BlockSize,
                                         0,
-                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4110,7 +4126,8 @@ namespace rocalution
             kernel_csr_scale_offdiagonal<<<GridSize,
                                            BlockSize,
                                            0,
-                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                           HIPSTREAM(
+                                               _get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4130,7 +4147,7 @@ namespace rocalution
             kernel_csr_add_diagonal<<<GridSize,
                                       BlockSize,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4150,7 +4167,8 @@ namespace rocalution
             kernel_csr_add_offdiagonal<<<GridSize,
                                          BlockSize,
                                          0,
-                                         HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                         HIPSTREAM(
+                                             _get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow, this->mat_.row_offset, this->mat_.col, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4171,7 +4189,7 @@ namespace rocalution
             kernel_buffer_addscalar<<<GridSize,
                                       BlockSize,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->nnz_, alpha, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4197,7 +4215,7 @@ namespace rocalution
             kernel_csr_diagmatmult_r<<<GridSize,
                                        BlockSize,
                                        0,
-                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow, this->mat_.row_offset, this->mat_.col, cast_diag->vec_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4223,7 +4241,7 @@ namespace rocalution
             kernel_csr_diagmatmult_l<<<GridSize,
                                        BlockSize,
                                        0,
-                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow, this->mat_.row_offset, cast_diag->vec_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4384,7 +4402,8 @@ namespace rocalution
             kernel_csr_add_csr_same_struct<<<GridSize,
                                              BlockSize,
                                              0,
-                                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                             HIPSTREAM(
+                                                 _get_backend_descriptor()->HIP_stream_current)>>>(
                 nrow,
                 this->mat_.row_offset,
                 this->mat_.col,
@@ -4506,7 +4525,8 @@ namespace rocalution
             kernel_csr_compress_count_nrow<<<GridSize,
                                              BlockSize,
                                              0,
-                                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                             HIPSTREAM(
+                                                 _get_backend_descriptor()->HIP_stream_current)>>>(
                 this->mat_.row_offset, this->mat_.col, this->mat_.val, nrow, drop_off, row_offset);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -4520,7 +4540,7 @@ namespace rocalution
                                     0,
                                     nrow + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(rocprim_size, &rocprim_buffer);
@@ -4532,7 +4552,7 @@ namespace rocalution
                                     0,
                                     nrow + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&rocprim_buffer);
@@ -4549,7 +4569,7 @@ namespace rocalution
             kernel_csr_compress_copy<<<GridSize,
                                        BlockSize,
                                        0,
-                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 tmp.mat_.row_offset,
                 tmp.mat_.col,
                 tmp.mat_.val,
@@ -4667,7 +4687,7 @@ namespace rocalution
                 GridSize,
                 BlockSize,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->mat_.row_offset, this->mat_.col, nrow, idx, cast_vec->vec_, row_offset);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -4681,7 +4701,7 @@ namespace rocalution
                                     0,
                                     this->nrow_ + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(rocprim_size, &rocprim_buffer);
@@ -4693,7 +4713,7 @@ namespace rocalution
                                     0,
                                     this->nrow_,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&rocprim_buffer);
@@ -4708,15 +4728,15 @@ namespace rocalution
                 GridSize,
                 BlockSize,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
-                                                                      this->mat_.col,
-                                                                      this->mat_.val,
-                                                                      nrow,
-                                                                      idx,
-                                                                      cast_vec->vec_,
-                                                                      row_offset,
-                                                                      col,
-                                                                      val);
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                            this->mat_.col,
+                                                                            this->mat_.val,
+                                                                            nrow,
+                                                                            idx,
+                                                                            cast_vec->vec_,
+                                                                            row_offset,
+                                                                            col,
+                                                                            val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             this->Clear();
@@ -4747,12 +4767,12 @@ namespace rocalution
                 GridSize,
                 BlockSize,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->mat_.row_offset,
-                                                                      this->mat_.col,
-                                                                      this->mat_.val,
-                                                                      this->nrow_,
-                                                                      idx,
-                                                                      cast_vec->vec_);
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                            this->mat_.col,
+                                                                            this->mat_.val,
+                                                                            this->nrow_,
+                                                                            idx,
+                                                                            cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -4785,16 +4805,16 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(row_nnz / this->local_backend_.HIP_block_size + 1);
 
-            kernel_csr_extract_row_vector<<<GridSize,
-                                            BlockSize,
-                                            0,
-                                            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-                this->mat_.row_offset,
-                this->mat_.col,
-                this->mat_.val,
-                row_nnz,
-                idx,
-                cast_vec->vec_);
+            kernel_csr_extract_row_vector<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->mat_.row_offset,
+                                                                            this->mat_.col,
+                                                                            this->mat_.val,
+                                                                            row_nnz,
+                                                                            idx,
+                                                                            cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -4818,7 +4838,7 @@ namespace rocalution
             kernel_calc_row_nnz<<<(size - 1) / 256 + 1,
                                   256,
                                   0,
-                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                  HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 size, this->mat_.row_offset + offset, cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -4854,11 +4874,12 @@ namespace rocalution
             GridSize,
             BlockSize,
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_idx->size_),
-                                                                  cast_idx->vec_,
-                                                                  this->mat_.row_offset,
-                                                                  cast_gst->mat_.row_offset,
-                                                                  cast_vec->vec_);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+            static_cast<int>(cast_idx->size_),
+            cast_idx->vec_,
+            this->mat_.row_offset,
+            cast_gst->mat_.row_offset,
+            cast_vec->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         return true;
@@ -4906,7 +4927,8 @@ namespace rocalution
         kernel_csr_extract_boundary_rows<<<GridSize,
                                            BlockSize,
                                            0,
-                                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                           HIPSTREAM(
+                                               _get_backend_descriptor()->HIP_stream_current)>>>(
             static_cast<int>(cast_bnd->size_),
             cast_bnd->vec_,
             global_column_offset,
@@ -4959,13 +4981,13 @@ namespace rocalution
             (this->nrow_ - 1) / 256 + 1,
             256,
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(cast_int->nrow_,
-                                                                  cast_ext->nrow_,
-                                                                  cast_gst->nnz_,
-                                                                  cast_int->mat_.row_offset,
-                                                                  cast_gst->mat_.row_offset,
-                                                                  cast_ext->mat_.row_offset,
-                                                                  this->mat_.row_offset);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(cast_int->nrow_,
+                                                                        cast_ext->nrow_,
+                                                                        cast_gst->nnz_,
+                                                                        cast_int->mat_.row_offset,
+                                                                        cast_gst->mat_.row_offset,
+                                                                        cast_ext->mat_.row_offset,
+                                                                        this->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         void*  buffer = NULL;
@@ -4977,7 +4999,7 @@ namespace rocalution
                              this->mat_.row_offset,
                              this->mat_.row_offset,
                              this->nrow_ + 1,
-                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         hipMalloc(&buffer, size);
@@ -4988,7 +5010,7 @@ namespace rocalution
                              this->mat_.row_offset,
                              this->mat_.row_offset,
                              this->nrow_ + 1,
-                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         hipFree(buffer);
@@ -4998,7 +5020,8 @@ namespace rocalution
         kernel_csr_merge_interior_ghost_nnz<<<(this->nrow_ - 1) / 256 + 1,
                                               256,
                                               0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                              HIPSTREAM(
+                                                  _get_backend_descriptor()->HIP_stream_current)>>>(
             cast_int->nrow_,
             cast_ext->nrow_,
             cast_int->ncol_,
@@ -5049,13 +5072,14 @@ namespace rocalution
                 <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         eps2,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         vec_diag.vec_,
-                                                                         cast_conn->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    eps2,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    vec_diag.vec_,
+                    cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 16)
         {
@@ -5063,13 +5087,14 @@ namespace rocalution
                 <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         eps2,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         vec_diag.vec_,
-                                                                         cast_conn->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    eps2,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    vec_diag.vec_,
+                    cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 32)
         {
@@ -5077,13 +5102,14 @@ namespace rocalution
                 <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         eps2,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         vec_diag.vec_,
-                                                                         cast_conn->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    eps2,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    vec_diag.vec_,
+                    cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 64)
         {
@@ -5091,13 +5117,14 @@ namespace rocalution
                 <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         eps2,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         vec_diag.vec_,
-                                                                         cast_conn->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    eps2,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    vec_diag.vec_,
+                    cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 128)
         {
@@ -5105,13 +5132,14 @@ namespace rocalution
                 <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         eps2,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         vec_diag.vec_,
-                                                                         cast_conn->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    eps2,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    vec_diag.vec_,
+                    cast_conn->vec_);
         }
         else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
         {
@@ -5119,13 +5147,14 @@ namespace rocalution
                 <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         eps2,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         vec_diag.vec_,
-                                                                         cast_conn->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    eps2,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    vec_diag.vec_,
+                    cast_conn->vec_);
         }
         else
         {
@@ -5133,13 +5162,14 @@ namespace rocalution
                 <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         eps2,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         this->mat_.val,
-                                                                         vec_diag.vec_,
-                                                                         cast_conn->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    eps2,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    this->mat_.val,
+                    vec_diag.vec_,
+                    cast_conn->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -5179,7 +5209,8 @@ namespace rocalution
         kernel_csr_amg_init_mis_tuples<<<GridSize,
                                          BlockSize,
                                          0,
-                                         HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                         HIPSTREAM(
+                                             _get_backend_descriptor()->HIP_stream_current)>>>(
             this->nrow_, this->mat_.row_offset, cast_conn->vec_, tuples);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -5194,13 +5225,14 @@ namespace rocalution
                     <<<dim3((this->nrow_ - 1) / (256 / 1) + 1),
                        dim3(256),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             cast_conn->vec_,
-                                                                             tuples,
-                                                                             max_tuples,
-                                                                             ddone);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_conn->vec_,
+                        tuples,
+                        max_tuples,
+                        ddone);
             }
             else if(avg_nnz_per_row <= 16)
             {
@@ -5208,13 +5240,14 @@ namespace rocalution
                     <<<dim3((this->nrow_ - 1) / (256 / 2) + 1),
                        dim3(256),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             cast_conn->vec_,
-                                                                             tuples,
-                                                                             max_tuples,
-                                                                             ddone);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_conn->vec_,
+                        tuples,
+                        max_tuples,
+                        ddone);
             }
             else if(avg_nnz_per_row <= 32)
             {
@@ -5222,13 +5255,14 @@ namespace rocalution
                     <<<dim3((this->nrow_ - 1) / (256 / 4) + 1),
                        dim3(256),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             cast_conn->vec_,
-                                                                             tuples,
-                                                                             max_tuples,
-                                                                             ddone);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_conn->vec_,
+                        tuples,
+                        max_tuples,
+                        ddone);
             }
             else if(avg_nnz_per_row <= 64)
             {
@@ -5236,13 +5270,14 @@ namespace rocalution
                     <<<dim3((this->nrow_ - 1) / (256 / 8) + 1),
                        dim3(256),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             cast_conn->vec_,
-                                                                             tuples,
-                                                                             max_tuples,
-                                                                             ddone);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_conn->vec_,
+                        tuples,
+                        max_tuples,
+                        ddone);
             }
             else if(avg_nnz_per_row <= 128)
             {
@@ -5250,13 +5285,14 @@ namespace rocalution
                     <<<dim3((this->nrow_ - 1) / (256 / 16) + 1),
                        dim3(256),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             cast_conn->vec_,
-                                                                             tuples,
-                                                                             max_tuples,
-                                                                             ddone);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_conn->vec_,
+                        tuples,
+                        max_tuples,
+                        ddone);
             }
             else if(avg_nnz_per_row <= 256 || this->local_backend_.HIP_warp == 32)
             {
@@ -5264,13 +5300,14 @@ namespace rocalution
                     <<<dim3((this->nrow_ - 1) / (256 / 32) + 1),
                        dim3(256),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             cast_conn->vec_,
-                                                                             tuples,
-                                                                             max_tuples,
-                                                                             ddone);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_conn->vec_,
+                        tuples,
+                        max_tuples,
+                        ddone);
             }
             else
             {
@@ -5278,21 +5315,22 @@ namespace rocalution
                     <<<dim3((this->nrow_ - 1) / (256 / 64) + 1),
                        dim3(256),
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                             this->mat_.row_offset,
-                                                                             this->mat_.col,
-                                                                             cast_conn->vec_,
-                                                                             tuples,
-                                                                             max_tuples,
-                                                                             ddone);
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                        this->nrow_,
+                        this->mat_.row_offset,
+                        this->mat_.col,
+                        cast_conn->vec_,
+                        tuples,
+                        max_tuples,
+                        ddone);
             }
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-            kernel_csr_amg_update_mis_tuples<<<GridSize,
-                                               BlockSize,
-                                               0,
-                                               HIPSTREAM(
-                                                   this->local_backend_.HIP_stream_current)>>>(
+            kernel_csr_amg_update_mis_tuples<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->nrow_, max_tuples, tuples, cast_agg->vec_, ddone);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -5320,7 +5358,7 @@ namespace rocalution
                                 0,
                                 this->nrow_,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -5332,7 +5370,7 @@ namespace rocalution
                                 0,
                                 this->nrow_,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -5345,13 +5383,13 @@ namespace rocalution
                 GridSize,
                 BlockSize,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                      this->mat_.row_offset,
-                                                                      this->mat_.col,
-                                                                      cast_conn->vec_,
-                                                                      max_tuples,
-                                                                      tuples,
-                                                                      cast_agg->vec_);
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
+                                                                            this->mat_.row_offset,
+                                                                            this->mat_.col,
+                                                                            cast_conn->vec_,
+                                                                            max_tuples,
+                                                                            tuples,
+                                                                            cast_agg->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -5402,7 +5440,7 @@ namespace rocalution
                         -2,
                         cast_agg->size_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -5414,7 +5452,7 @@ namespace rocalution
                         -2,
                         cast_agg->size_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -5430,7 +5468,7 @@ namespace rocalution
         kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
                               256,
                               0,
-                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                              HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             this->nrow_, this->mat_.row_offset, prolong_row_offset + 1);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -5441,7 +5479,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -5453,7 +5491,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -5469,12 +5507,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 4) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 16)
         {
@@ -5482,12 +5521,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 4) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 32)
         {
@@ -5495,12 +5535,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 64)
         {
@@ -5508,12 +5549,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 16) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 128)
         {
@@ -5521,12 +5563,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 16) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 256)
         {
@@ -5534,12 +5577,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 512)
         {
@@ -5547,12 +5591,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 1024)
         {
@@ -5560,12 +5605,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 2048)
         {
@@ -5573,12 +5619,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 4096)
         {
@@ -5586,12 +5633,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 8192)
         {
@@ -5599,12 +5647,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else if(max_row_nnz < 16384)
         {
@@ -5612,12 +5661,13 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (64 / 64) + 1,
                    64,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_agg->vec_,
-                                                                         prolong_row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_conn->vec_,
+                    cast_agg->vec_,
+                    prolong_row_offset);
         }
         else
         {
@@ -5636,7 +5686,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -5648,7 +5698,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -5664,7 +5714,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -5676,7 +5726,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -5704,7 +5754,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 4) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5723,7 +5773,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 8) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5742,7 +5792,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 16) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5761,7 +5811,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 32) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5780,7 +5830,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5799,7 +5849,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5818,7 +5868,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5837,7 +5887,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5856,7 +5906,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (64 / 64) + 1,
                    64,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -5906,12 +5956,12 @@ namespace rocalution
         allocate_hip(256, &workspace);
 
         kernel_find_maximum_blockreduce<256>
-            <<<dim3(256), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            <<<dim3(256), dim3(256), 0, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_agg->size_, cast_agg->vec_, workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         kernel_find_maximum_finalreduce<256>
-            <<<dim3(1), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            <<<dim3(1), dim3(256), 0, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -5924,7 +5974,7 @@ namespace rocalution
             <<<dim3((this->nrow_ - 1) / 256 + 1),
                dim3(256),
                0,
-               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+               HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->nrow_, cast_agg->vec_, prolong_row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -5937,7 +5987,7 @@ namespace rocalution
                                 prolong_row_offset,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         allocate_hip(rocprim_size, &rocprim_buffer);
         rocprim::inclusive_scan(rocprim_buffer,
@@ -5946,7 +5996,7 @@ namespace rocalution
                                 prolong_row_offset,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         free_hip(&rocprim_buffer);
         PtrType prolong_nnz = 0;
@@ -5968,7 +6018,7 @@ namespace rocalution
                 <<<dim3((this->nrow_ - 1) / 256 + 1),
                    dim3(256),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_, cast_agg->vec_, prolong_cols, prolong_vals);
         }
         else
@@ -5977,7 +6027,7 @@ namespace rocalution
                 <<<dim3((this->nrow_ - 1) / 256 + 1),
                    dim3(256),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_, cast_agg->vec_, prolong_row_offset, prolong_cols, prolong_vals);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -6010,19 +6060,20 @@ namespace rocalution
 
         bool global = cast_gst->nrow_ > 0;
 
-        kernel_csr_boundary_nnz<<<
-            dim3((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size + 1),
-            dim3(this->local_backend_.HIP_block_size),
-            0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
-                                                                  this->nnz_,
-                                                                  cast_bnd->vec_,
-                                                                  this->mat_.row_offset,
-                                                                  this->mat_.col,
-                                                                  cast_gst->mat_.row_offset,
-                                                                  cast_gst->mat_.col,
-                                                                  cast_conn->vec_,
-                                                                  cast_row_nnz->vec_);
+        kernel_csr_boundary_nnz<<<dim3((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size
+                                       + 1),
+                                  dim3(this->local_backend_.HIP_block_size),
+                                  0,
+                                  HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+            static_cast<int>(cast_bnd->size_),
+            this->nnz_,
+            cast_bnd->vec_,
+            this->mat_.row_offset,
+            this->mat_.col,
+            cast_gst->mat_.row_offset,
+            cast_gst->mat_.col,
+            cast_conn->vec_,
+            cast_row_nnz->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         return true;
@@ -6062,18 +6113,19 @@ namespace rocalution
             dim3((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size + 1),
             dim3(this->local_backend_.HIP_block_size),
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
-                                                                  this->nnz_,
-                                                                  global_column_begin,
-                                                                  cast_bnd->vec_,
-                                                                  this->mat_.row_offset,
-                                                                  this->mat_.col,
-                                                                  cast_gst->mat_.row_offset,
-                                                                  cast_gst->mat_.col,
-                                                                  cast_conn->vec_,
-                                                                  cast_l2g->vec_,
-                                                                  cast_bnd_ptr->vec_,
-                                                                  cast_bnd_col->vec_);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+            static_cast<int>(cast_bnd->size_),
+            this->nnz_,
+            global_column_begin,
+            cast_bnd->vec_,
+            this->mat_.row_offset,
+            this->mat_.col,
+            cast_gst->mat_.row_offset,
+            cast_gst->mat_.col,
+            cast_conn->vec_,
+            cast_l2g->vec_,
+            cast_bnd_ptr->vec_,
+            cast_bnd_col->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
         return true;
     }
@@ -6121,7 +6173,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6141,7 +6193,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6161,7 +6213,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6181,7 +6233,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6201,7 +6253,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6221,7 +6273,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6241,7 +6293,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6264,7 +6316,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 1 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6284,7 +6336,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 2 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6304,7 +6356,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 4 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6324,7 +6376,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 8 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6344,7 +6396,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 16 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6364,7 +6416,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 32 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6384,7 +6436,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 64 - 1) / this->local_backend_.HIP_block_size + 1),
                            dim3(this->local_backend_.HIP_block_size),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             eps2,
@@ -6438,7 +6490,10 @@ namespace rocalution
         if(global == false)
         {
             kernel_csr_amg_init_mis_tuples<false>
-                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                <<<GridSize,
+                   BlockSize,
+                   0,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     global_column_begin,
                     this->nrow_,
                     this->nnz_,
@@ -6451,7 +6506,10 @@ namespace rocalution
         else
         {
             kernel_csr_amg_init_mis_tuples<true>
-                <<<GridSize, BlockSize, 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                <<<GridSize,
+                   BlockSize,
+                   0,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     global_column_begin,
                     this->nrow_,
                     this->nnz_,
@@ -6510,20 +6568,21 @@ namespace rocalution
             dim3((cast_bnd->size_ - 1) / this->local_backend_.HIP_block_size + 1),
             dim3(this->local_backend_.HIP_block_size),
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
-                                                                  this->nrow_,
-                                                                  this->nnz_,
-                                                                  cast_bnd->vec_,
-                                                                  this->mat_.row_offset,
-                                                                  this->mat_.col,
-                                                                  cast_gst->mat_.row_offset,
-                                                                  cast_gst->mat_.col,
-                                                                  cast_conn->vec_,
-                                                                  cast_max_state->vec_,
-                                                                  cast_hash->vec_,
-                                                                  cast_bnd_ptr->vec_,
-                                                                  cast_bnd_max_state->vec_,
-                                                                  cast_bnd_hash->vec_);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+            static_cast<int>(cast_bnd->size_),
+            this->nrow_,
+            this->nnz_,
+            cast_bnd->vec_,
+            this->mat_.row_offset,
+            this->mat_.col,
+            cast_gst->mat_.row_offset,
+            cast_gst->mat_.col,
+            cast_conn->vec_,
+            cast_max_state->vec_,
+            cast_hash->vec_,
+            cast_bnd_ptr->vec_,
+            cast_bnd_max_state->vec_,
+            cast_bnd_hash->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         return true;
@@ -6599,7 +6658,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 1 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6625,7 +6684,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 2 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6651,7 +6710,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 4 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6677,7 +6736,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 8 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6703,7 +6762,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 16 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6729,7 +6788,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 32 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6755,7 +6814,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 64 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6784,7 +6843,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 1 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6810,7 +6869,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 2 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6836,7 +6895,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 4 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6862,7 +6921,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 8 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6888,7 +6947,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 16 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6914,7 +6973,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 32 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -6940,7 +6999,7 @@ namespace rocalution
                         <<<dim3((this->nrow_ * 64 - 1) / 256 + 1),
                            dim3(256),
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             this->nrow_,
                             this->nnz_,
                             global_column_begin,
@@ -7018,19 +7077,20 @@ namespace rocalution
                 <<<dim3((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         global_column_begin,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_state->vec_,
-                                                                         cast_l2g->vec_,
-                                                                         cast_max_state->vec_,
-                                                                         cast_agg->vec_,
-                                                                         cast_agg_nodes->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    global_column_begin,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_conn->vec_,
+                    cast_state->vec_,
+                    cast_l2g->vec_,
+                    cast_max_state->vec_,
+                    cast_agg->vec_,
+                    cast_agg_nodes->vec_);
         }
         else
         {
@@ -7038,19 +7098,20 @@ namespace rocalution
                 <<<dim3((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1),
                    dim3(this->local_backend_.HIP_block_size),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         this->nnz_,
-                                                                         global_column_begin,
-                                                                         this->mat_.row_offset,
-                                                                         this->mat_.col,
-                                                                         cast_gst->mat_.row_offset,
-                                                                         cast_gst->mat_.col,
-                                                                         cast_conn->vec_,
-                                                                         cast_state->vec_,
-                                                                         cast_l2g->vec_,
-                                                                         cast_max_state->vec_,
-                                                                         cast_agg->vec_,
-                                                                         cast_agg_nodes->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    this->nnz_,
+                    global_column_begin,
+                    this->mat_.row_offset,
+                    this->mat_.col,
+                    cast_gst->mat_.row_offset,
+                    cast_gst->mat_.col,
+                    cast_conn->vec_,
+                    cast_state->vec_,
+                    cast_l2g->vec_,
+                    cast_max_state->vec_,
+                    cast_agg->vec_,
+                    cast_agg_nodes->vec_);
         }
 
         return true;
@@ -7078,7 +7139,7 @@ namespace rocalution
             dim3((this->nrow_ - 1) / this->local_backend_.HIP_block_size + 1),
             dim3(this->local_backend_.HIP_block_size),
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             this->nrow_, agg_size, global_column_begin, cast_agg->vec_, cast_agg_nodes->vec_);
 
         return true;
@@ -7124,7 +7185,7 @@ namespace rocalution
                         -2,
                         cast_agg->size_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         rocprim_size = std::max(rocprim_size, size);
@@ -7136,7 +7197,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         rocprim_size = std::max(rocprim_size, size);
@@ -7148,7 +7209,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         rocprim_size = std::max(rocprim_size, size);
@@ -7160,7 +7221,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         rocprim_size = std::max(rocprim_size, size);
@@ -7174,7 +7235,7 @@ namespace rocalution
                         -2,
                         cast_agg->size_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Obtain sizes of P
@@ -7186,7 +7247,7 @@ namespace rocalution
         kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
                               256,
                               0,
-                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                              HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             this->nrow_, this->mat_.row_offset, prolong_row_offset + 1);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -7197,7 +7258,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         int max_row_nnz;
@@ -7210,7 +7271,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 4) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7223,7 +7284,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 4) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7236,7 +7297,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 8) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7249,7 +7310,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 16) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7262,7 +7323,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 16) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7275,7 +7336,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7288,7 +7349,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7301,7 +7362,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (256 / 64) + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
                                                                          this->mat_.row_offset,
                                                                          this->mat_.col,
                                                                          cast_conn->vec_,
@@ -7325,7 +7386,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         copy_d2h(1, prolong_row_offset + this->nrow_, &max_row_nnz);
@@ -7337,7 +7398,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         PtrType prolong_nnz;
@@ -7360,7 +7421,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 4) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -7379,7 +7440,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 8) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -7398,7 +7459,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 16) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -7417,7 +7478,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 32) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -7436,7 +7497,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -7455,7 +7516,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -7474,7 +7535,7 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / (128 / 64) + 1,
                    128,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_,
                     relax,
                     lumping_strat,
@@ -7528,12 +7589,12 @@ namespace rocalution
         allocate_hip(256, &workspace);
 
         kernel_find_maximum_blockreduce<256>
-            <<<dim3(256), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            <<<dim3(256), dim3(256), 0, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_agg->size_, cast_agg->vec_, workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         kernel_find_maximum_finalreduce<256>
-            <<<dim3(1), dim3(256), 0, HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+            <<<dim3(1), dim3(256), 0, HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 workspace);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -7546,7 +7607,7 @@ namespace rocalution
             <<<dim3((this->nrow_ - 1) / 256 + 1),
                dim3(256),
                0,
-               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+               HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->nrow_, cast_agg->vec_, prolong_row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -7559,7 +7620,7 @@ namespace rocalution
                                 prolong_row_offset,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -7570,7 +7631,7 @@ namespace rocalution
                                 prolong_row_offset,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -7596,7 +7657,7 @@ namespace rocalution
                 <<<dim3((this->nrow_ - 1) / 256 + 1),
                    dim3(256),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_, cast_agg->vec_, prolong_cols, prolong_vals);
         }
         else
@@ -7605,7 +7666,7 @@ namespace rocalution
                 <<<dim3((this->nrow_ - 1) / 256 + 1),
                    dim3(256),
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                     this->nrow_, cast_agg->vec_, prolong_row_offset, prolong_cols, prolong_vals);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -7681,7 +7742,7 @@ namespace rocalution
         kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
                               256,
                               0,
-                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                              HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             this->nrow_, this->mat_.row_offset, cast_pi->mat_.row_offset + 1);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -7696,7 +7757,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
 
         allocate_hip(rocprim_size, &rocprim_buffer);
 
@@ -7707,7 +7768,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         if(global == true)
@@ -7716,7 +7777,7 @@ namespace rocalution
             kernel_calc_row_nnz<<<(this->nrow_ - 1) / 256 + 1,
                                   256,
                                   0,
-                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                  HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->nrow_, cast_gst->mat_.row_offset, cast_pg->mat_.row_offset + 1);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -7727,7 +7788,7 @@ namespace rocalution
                             0,
                             this->nrow_,
                             rocprim::maximum<int>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -7757,7 +7818,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 4) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7779,7 +7840,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 4) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7801,7 +7862,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 8) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7823,7 +7884,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 16) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7845,7 +7906,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 16) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7867,7 +7928,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 64) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7889,7 +7950,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 64) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7911,7 +7972,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 64) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7945,7 +8006,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 4) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7967,7 +8028,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 4) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -7989,7 +8050,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 8) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8011,7 +8072,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 16) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8033,7 +8094,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 16) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8055,7 +8116,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 64) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8077,7 +8138,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 64) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8099,7 +8160,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (256 / 64) + 1,
                        256,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8186,7 +8247,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -8198,7 +8259,7 @@ namespace rocalution
                         0,
                         this->nrow_,
                         rocprim::maximum<int>(),
-                        HIPSTREAM(this->local_backend_.HIP_stream_current));
+                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         if(global)
@@ -8210,7 +8271,7 @@ namespace rocalution
                             0,
                             this->nrow_,
                             rocprim::maximum<int>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -8233,7 +8294,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -8245,7 +8306,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -8280,7 +8341,7 @@ namespace rocalution
                                     0,
                                     this->nrow_ + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(rocprim_size, &rocprim_buffer);
@@ -8292,7 +8353,7 @@ namespace rocalution
                                     0,
                                     this->nrow_ + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&rocprim_buffer);
@@ -8323,7 +8384,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 4) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8354,7 +8415,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 8) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8385,7 +8446,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 16) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8416,7 +8477,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 32) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8447,7 +8508,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8478,7 +8539,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8509,7 +8570,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8553,7 +8614,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 4) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8584,7 +8645,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 8) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8615,7 +8676,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 16) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8646,7 +8707,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 32) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8677,7 +8738,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8708,7 +8769,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8739,7 +8800,7 @@ namespace rocalution
                     <<<(this->nrow_ - 1) / (128 / 64) + 1,
                        128,
                        0,
-                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                         this->nrow_,
                         this->nnz_,
                         global_column_begin,
@@ -8851,14 +8912,15 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         global_column_begin,
-                                                                         global_column_end,
-                                                                         cast_agg->vec_,
-                                                                         cast_agg_nodes->vec_,
-                                                                         cast_f2c->vec_,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         (PtrType*)NULL);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    global_column_begin,
+                    global_column_end,
+                    cast_agg->vec_,
+                    cast_agg_nodes->vec_,
+                    cast_f2c->vec_,
+                    cast_pi->mat_.row_offset,
+                    (PtrType*)NULL);
         }
         else
         {
@@ -8866,14 +8928,15 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         global_column_begin,
-                                                                         global_column_end,
-                                                                         cast_agg->vec_,
-                                                                         cast_agg_nodes->vec_,
-                                                                         cast_f2c->vec_,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         cast_pg->mat_.row_offset);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    global_column_begin,
+                    global_column_end,
+                    cast_agg->vec_,
+                    cast_agg_nodes->vec_,
+                    cast_f2c->vec_,
+                    cast_pi->mat_.row_offset,
+                    cast_pg->mat_.row_offset);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -8927,7 +8990,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -8939,7 +9002,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -8974,7 +9037,7 @@ namespace rocalution
                                     0,
                                     this->nrow_ + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(rocprim_size, &rocprim_buffer);
@@ -8986,7 +9049,7 @@ namespace rocalution
                                     0,
                                     this->nrow_ + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&rocprim_buffer);
@@ -9015,19 +9078,20 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         global_column_begin,
-                                                                         global_column_end,
-                                                                         cast_agg->vec_,
-                                                                         cast_agg_nodes->vec_,
-                                                                         cast_f2c->vec_,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         cast_pi->mat_.col,
-                                                                         cast_pi->mat_.val,
-                                                                         (PtrType*)NULL,
-                                                                         (int*)NULL,
-                                                                         (ValueType*)NULL,
-                                                                         (int64_t*)NULL);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    global_column_begin,
+                    global_column_end,
+                    cast_agg->vec_,
+                    cast_agg_nodes->vec_,
+                    cast_f2c->vec_,
+                    cast_pi->mat_.row_offset,
+                    cast_pi->mat_.col,
+                    cast_pi->mat_.val,
+                    (PtrType*)NULL,
+                    (int*)NULL,
+                    (ValueType*)NULL,
+                    (int64_t*)NULL);
         }
         else
         {
@@ -9035,19 +9099,20 @@ namespace rocalution
                 <<<(this->nrow_ - 1) / 256 + 1,
                    256,
                    0,
-                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(this->nrow_,
-                                                                         global_column_begin,
-                                                                         global_column_end,
-                                                                         cast_agg->vec_,
-                                                                         cast_agg_nodes->vec_,
-                                                                         cast_f2c->vec_,
-                                                                         cast_pi->mat_.row_offset,
-                                                                         cast_pi->mat_.col,
-                                                                         cast_pi->mat_.val,
-                                                                         cast_pg->mat_.row_offset,
-                                                                         cast_pg->mat_.col,
-                                                                         cast_pg->mat_.val,
-                                                                         cast_glo->vec_);
+                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                    this->nrow_,
+                    global_column_begin,
+                    global_column_end,
+                    cast_agg->vec_,
+                    cast_agg_nodes->vec_,
+                    cast_f2c->vec_,
+                    cast_pi->mat_.row_offset,
+                    cast_pi->mat_.col,
+                    cast_pi->mat_.val,
+                    cast_pg->mat_.row_offset,
+                    cast_pg->mat_.col,
+                    cast_pg->mat_.val,
+                    cast_glo->vec_);
         }
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -9095,7 +9160,7 @@ namespace rocalution
         kernel_csr_local_to_global<<<(this->nnz_ - 1) / 256 + 1,
                                      256,
                                      0,
-                                     HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             static_cast<int>(this->nnz_), cast_l2g->vec_, this->mat_.col, gcols);
 
         // Append additional global columns from ext
@@ -9105,7 +9170,7 @@ namespace rocalution
         kernel_csr_ghost_columns_nnz<<<(ext_nnz - 1) / 256 + 1,
                                        256,
                                        0,
-                                       HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                       HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             ext_nnz, global_col_begin, global_col_end, cast_ext->vec_, workspace);
 
         // Exclusive scan
@@ -9119,7 +9184,7 @@ namespace rocalution
                                 0,
                                 ext_nnz + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -9128,7 +9193,7 @@ namespace rocalution
                                 0,
                                 ext_nnz + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         hipFree(rocprim_buffer);
         rocprim_buffer = NULL;
 
@@ -9136,7 +9201,7 @@ namespace rocalution
         kernel_csr_ghost_columns_fill<<<(ext_nnz - 1) / 256 + 1,
                                         256,
                                         0,
-                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             ext_nnz,
             global_col_begin,
             global_col_end,
@@ -9179,7 +9244,7 @@ namespace rocalution
                                    cast_map->vec_,
                                    cast_cmb->vec_,
                                    d_nruns,
-                                   HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         hipMalloc(&rocprim_buffer, rocprim_size);
@@ -9192,7 +9257,7 @@ namespace rocalution
                                    cast_map->vec_,
                                    cast_cmb->vec_,
                                    d_nruns,
-                                   HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         hipFree(rocprim_buffer);
@@ -9223,7 +9288,7 @@ namespace rocalution
                                     0,
                                     nruns + 1,
                                     rocprim::plus<int>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMalloc(&rocprim_buffer, rocprim_size);
@@ -9236,7 +9301,7 @@ namespace rocalution
                                     0,
                                     nruns + 1,
                                     rocprim::plus<int>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipFree(rocprim_buffer);
@@ -9247,7 +9312,7 @@ namespace rocalution
         kernel_csr_update_numbering<<<(nruns - 1) / 256 + 1,
                                       256,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             nruns, workspace2, perm.vec_, cast_cmb->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -9257,7 +9322,7 @@ namespace rocalution
         kernel_csr_column_id_transfer<<<(ext_nnz - 1) / 256 + 1,
                                         256,
                                         0,
-                                        HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                        HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             ext_nnz,
             ncol,
             global_col_begin,
@@ -9304,7 +9369,8 @@ namespace rocalution
         kernel_csr_split_interior_ghost_nnz<<<(this->nrow_ - 1) / 256 + 1,
                                               256,
                                               0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                              HIPSTREAM(
+                                                  _get_backend_descriptor()->HIP_stream_current)>>>(
             this->nrow_, this->mat_.row_offset, this->mat_.col, int_csr_row_ptr, gst_csr_row_ptr);
 
         // Exclusive sum to obtain pointers
@@ -9316,7 +9382,7 @@ namespace rocalution
                              int_csr_row_ptr,
                              int_csr_row_ptr,
                              this->nrow_ + 1,
-                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         hipMalloc(&buffer, size);
@@ -9327,13 +9393,13 @@ namespace rocalution
                              int_csr_row_ptr,
                              int_csr_row_ptr,
                              this->nrow_ + 1,
-                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         rocprimTexclusivesum(buffer,
                              size,
                              gst_csr_row_ptr,
                              gst_csr_row_ptr,
                              this->nrow_ + 1,
-                             HIPSTREAM(this->local_backend_.HIP_stream_current));
+                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         hipFree(buffer);
@@ -9357,20 +9423,20 @@ namespace rocalution
         allocate_hip(gst_nnz, &gst_csr_val);
 
         // Fill matrices
-        kernel_csr_split_interior_ghost<<<(this->nrow_ - 1) / 256 + 1,
-                                          256,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-            this->nrow_,
-            this->mat_.row_offset,
-            this->mat_.col,
-            this->mat_.val,
-            int_csr_row_ptr,
-            int_csr_col_ind,
-            int_csr_val,
-            gst_csr_row_ptr,
-            gst_csr_col_ind,
-            gst_csr_val);
+        kernel_csr_split_interior_ghost<<<
+            (this->nrow_ - 1) / 256 + 1,
+            256,
+            0,
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(this->nrow_,
+                                                                        this->mat_.row_offset,
+                                                                        this->mat_.col,
+                                                                        this->mat_.val,
+                                                                        int_csr_row_ptr,
+                                                                        int_csr_col_ind,
+                                                                        int_csr_val,
+                                                                        gst_csr_row_ptr,
+                                                                        gst_csr_col_ind,
+                                                                        gst_csr_val);
 
         cast_int->SetDataPtrCSR(
             &int_csr_row_ptr, &int_csr_col_ind, &int_csr_val, int_nnz, this->nrow_, this->nrow_);
@@ -9407,7 +9473,7 @@ namespace rocalution
                 (size - 1) / 256 + 1,
                 256,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 ncol, size, global_offset, this->mat_.col, cast_l2g->vec_, cast_col->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -9446,7 +9512,7 @@ namespace rocalution
                 (this->nnz_ - 1) / 256 + 1,
                 256,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 static_cast<int>(this->nnz_), sorted.vec_, workspace.vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
@@ -9458,7 +9524,7 @@ namespace rocalution
                 (this->nnz_ - 1) / 256 + 1,
                 256,
                 0,
-                HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 static_cast<int>(this->nnz_), workspace.vec_, perm.vec_, this->mat_.col);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -9498,10 +9564,11 @@ namespace rocalution
             (cast_bnd->size_ - 1) / 256 + 1,
             256,
             0,
-            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(static_cast<int>(cast_bnd->size_),
-                                                                  cast_bnd->vec_,
-                                                                  cast_ptr->vec_,
-                                                                  this->mat_.row_offset);
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+            static_cast<int>(cast_bnd->size_),
+            cast_bnd->vec_,
+            cast_ptr->vec_,
+            this->mat_.row_offset);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         // Exclusive sum to obtain offsets
@@ -9515,7 +9582,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         allocate_hip(rocprim_size, &rocprim_buffer);
@@ -9527,7 +9594,7 @@ namespace rocalution
                                 0,
                                 this->nrow_ + 1,
                                 rocprim::plus<int>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         free_hip(&rocprim_buffer);
@@ -9544,7 +9611,8 @@ namespace rocalution
         kernel_csr_copy_ghost_from_global<<<(cast_bnd->size_ - 1) / 256 + 1,
                                             256,
                                             0,
-                                            HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                            HIPSTREAM(
+                                                _get_backend_descriptor()->HIP_stream_current)>>>(
             static_cast<int>(cast_bnd->size_),
             cast_bnd->vec_,
             cast_ptr->vec_,
@@ -9609,18 +9677,18 @@ namespace rocalution
         set_to_zero_hip(this->local_backend_.HIP_block_size, nrow + 1, gst_csr_row_ptr);
 
         // First, we need to determine the number of non-zeros
-        kernel_csr_copy_from_global_nnz<<<(boundary_size - 1) / 256 + 1,
-                                          256,
-                                          0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-            boundary_size,
-            global_column_begin,
-            global_column_end,
-            cast_bnd->vec_,
-            cast_ptr->vec_,
-            cast_col->vec_,
-            int_csr_row_ptr,
-            gst_csr_row_ptr);
+        kernel_csr_copy_from_global_nnz<<<
+            (boundary_size - 1) / 256 + 1,
+            256,
+            0,
+            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(boundary_size,
+                                                                        global_column_begin,
+                                                                        global_column_end,
+                                                                        cast_bnd->vec_,
+                                                                        cast_ptr->vec_,
+                                                                        cast_col->vec_,
+                                                                        int_csr_row_ptr,
+                                                                        gst_csr_row_ptr);
 
         // Exclusive sum to obtain offsets
         size_t rocprim_size;
@@ -9633,7 +9701,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         hipMalloc(&rocprim_buffer, rocprim_size);
         rocprim::exclusive_scan(rocprim_buffer,
                                 rocprim_size,
@@ -9649,7 +9717,7 @@ namespace rocalution
                                 0,
                                 nrow + 1,
                                 rocprim::plus<PtrType>(),
-                                HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         hipFree(rocprim_buffer);
 
         PtrType int_nnz;
@@ -9686,7 +9754,7 @@ namespace rocalution
         kernel_csr_copy_from_global<<<(boundary_size - 1) / 256 + 1,
                                       256,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             boundary_size,
             global_column_begin,
             global_column_end,
@@ -9769,7 +9837,7 @@ namespace rocalution
                             0,
                             nrow,
                             rocprim::maximum<int>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMalloc(&rocprim_buffer, rocprim_size);
@@ -9782,7 +9850,7 @@ namespace rocalution
                             0,
                             nrow,
                             rocprim::maximum<int>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipFree(rocprim_buffer);
@@ -9801,7 +9869,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 8) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9816,7 +9884,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 16) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9831,7 +9899,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 32) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9846,7 +9914,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9861,7 +9929,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9876,7 +9944,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9891,7 +9959,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9906,7 +9974,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9921,7 +9989,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9936,7 +10004,7 @@ namespace rocalution
                         <<<(nrow - 1) / (128 / 64) + 1,
                            128,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9951,7 +10019,7 @@ namespace rocalution
                         <<<(nrow - 1) / (64 / 64) + 1,
                            64,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9979,7 +10047,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 8) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -9994,7 +10062,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 16) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10009,7 +10077,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 32) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10024,7 +10092,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10039,7 +10107,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10054,7 +10122,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10069,7 +10137,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10084,7 +10152,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10099,7 +10167,7 @@ namespace rocalution
                         <<<(nrow - 1) / (128 / 64) + 1,
                            128,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10114,7 +10182,7 @@ namespace rocalution
                         <<<(nrow - 1) / (64 / 64) + 1,
                            64,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10140,7 +10208,7 @@ namespace rocalution
                             0,
                             nrow,
                             rocprim::maximum<int>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMalloc(&rocprim_buffer, rocprim_size);
@@ -10153,7 +10221,7 @@ namespace rocalution
                             0,
                             nrow,
                             rocprim::maximum<int>(),
-                            HIPSTREAM(this->local_backend_.HIP_stream_current));
+                            HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipFree(rocprim_buffer);
@@ -10170,7 +10238,7 @@ namespace rocalution
                                     0,
                                     nrow + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipMalloc(&rocprim_buffer, rocprim_size);
@@ -10183,7 +10251,7 @@ namespace rocalution
                                     0,
                                     nrow + 1,
                                     rocprim::plus<PtrType>(),
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             hipFree(rocprim_buffer);
@@ -10213,7 +10281,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 8) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10233,7 +10301,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 16) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10253,7 +10321,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 32) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10273,7 +10341,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10293,7 +10361,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10313,7 +10381,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10333,7 +10401,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10353,7 +10421,7 @@ namespace rocalution
                         <<<(nrow - 1) / (128 / 64) + 1,
                            128,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10373,7 +10441,7 @@ namespace rocalution
                         <<<(nrow - 1) / (64 / 64) + 1,
                            64,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10407,7 +10475,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 8) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10427,7 +10495,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 16) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10447,7 +10515,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 32) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10467,7 +10535,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10487,7 +10555,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10507,7 +10575,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10527,7 +10595,7 @@ namespace rocalution
                         <<<(nrow - 1) / (256 / 64) + 1,
                            256,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10547,7 +10615,7 @@ namespace rocalution
                         <<<(nrow - 1) / (128 / 64) + 1,
                            128,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,
@@ -10567,7 +10635,7 @@ namespace rocalution
                         <<<(nrow - 1) / (64 / 64) + 1,
                            64,
                            ssize,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                             nrow,
                             this->mat_.row_offset,
                             this->mat_.col,

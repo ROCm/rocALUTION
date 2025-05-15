@@ -210,7 +210,7 @@ namespace rocalution
                      cast_vec->vec_,
                      this->vec_,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -240,7 +240,7 @@ namespace rocalution
                      this->vec_,
                      cast_vec->vec_,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -313,7 +313,7 @@ namespace rocalution
                          hip_cast_vec->vec_,
                          this->vec_,
                          true,
-                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             }
         }
         else
@@ -356,7 +356,7 @@ namespace rocalution
         kernel_copy_offset_from<<<GridSize,
                                   BlockSize,
                                   0,
-                                  HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                  HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
             size, src_offset, dst_offset, cast_src->vec_, this->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
@@ -469,7 +469,8 @@ namespace rocalution
                 kernel_copy_from_float<<<GridSize,
                                          BlockSize,
                                          0,
-                                         HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                         HIPSTREAM(
+                                             _get_backend_descriptor()->HIP_stream_current)>>>(
                     this->size_, hip_cast_vec->vec_, this->vec_);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
             }
@@ -511,7 +512,8 @@ namespace rocalution
                 kernel_copy_from_double<<<GridSize,
                                           BlockSize,
                                           0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                          HIPSTREAM(
+                                              _get_backend_descriptor()->HIP_stream_current)>>>(
                     this->size_, hip_cast_vec->vec_, this->vec_);
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
             }
@@ -608,7 +610,7 @@ namespace rocalution
             kernel_axpy<256><<<(this->size_ - 1) / 256 + 1,
                                256,
                                0,
-                               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                               HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, alpha, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -627,7 +629,7 @@ namespace rocalution
             kernel_axpy<256><<<(this->size_ - 1) / 256 + 1,
                                256,
                                0,
-                               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                               HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, alpha, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -650,7 +652,7 @@ namespace rocalution
             kernel_scaleadd<<<GridSize,
                               BlockSize,
                               0,
-                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                              HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, alpha, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -675,7 +677,7 @@ namespace rocalution
             kernel_scaleaddscale<<<GridSize,
                                    BlockSize,
                                    0,
-                                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, alpha, beta, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -708,7 +710,8 @@ namespace rocalution
             kernel_scaleaddscale_offset<<<GridSize,
                                           BlockSize,
                                           0,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                          HIPSTREAM(
+                                              _get_backend_descriptor()->HIP_stream_current)>>>(
                 size, src_offset, dst_offset, alpha, beta, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -739,7 +742,7 @@ namespace rocalution
             kernel_scaleadd2<<<GridSize,
                                BlockSize,
                                0,
-                               HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                               HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, alpha, beta, gamma, cast_x->vec_, cast_y->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -805,7 +808,7 @@ namespace rocalution
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
             // Synchronize stream to make sure, result is available on the host
-            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
+            hipStreamSynchronize(HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -857,7 +860,7 @@ namespace rocalution
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
             // Synchronize stream to make sure, result is available on the host
-            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
+            hipStreamSynchronize(HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -901,7 +904,7 @@ namespace rocalution
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
             // Synchronize stream to make sure, result is available on the host
-            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
+            hipStreamSynchronize(HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -947,7 +950,7 @@ namespace rocalution
                            this->vec_,
                            dres,
                            this->size_,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current));
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(size, &buffer);
@@ -957,7 +960,7 @@ namespace rocalution
                            this->vec_,
                            dres,
                            this->size_,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current));
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&buffer);
@@ -995,7 +998,7 @@ namespace rocalution
                                  cast_vec->vec_,
                                  this->vec_,
                                  this->size_,
-                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(size, &buffer);
@@ -1006,7 +1009,7 @@ namespace rocalution
                                  cast_vec->vec_,
                                  this->vec_,
                                  this->size_,
-                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&buffer);
@@ -1048,7 +1051,7 @@ namespace rocalution
                                  cast_vec->vec_,
                                  this->vec_,
                                  this->size_,
-                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             allocate_hip(size, &buffer);
@@ -1059,7 +1062,7 @@ namespace rocalution
                                  cast_vec->vec_,
                                  this->vec_,
                                  this->size_,
-                                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             free_hip(&buffer);
@@ -1099,7 +1102,7 @@ namespace rocalution
             CHECK_ROCBLAS_ERROR(status, __FILE__, __LINE__);
 
             // Synchronize stream to make sure, result is available on the host
-            hipStreamSynchronize(HIPSTREAM(this->local_backend_.HIP_stream_current));
+            hipStreamSynchronize(HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
 
@@ -1188,7 +1191,7 @@ namespace rocalution
             kernel_pointwisemult<<<GridSize,
                                    BlockSize,
                                    0,
-                                   HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                   HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, cast_x->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1216,7 +1219,7 @@ namespace rocalution
             kernel_pointwisemult2<<<GridSize,
                                     BlockSize,
                                     0,
-                                    HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                    HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, cast_x->vec_, cast_y->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1244,7 +1247,7 @@ namespace rocalution
             kernel_permute<<<GridSize,
                              BlockSize,
                              0,
-                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, cast_perm->vec_, vec_tmp.vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1272,7 +1275,7 @@ namespace rocalution
             kernel_permute_backward<<<GridSize,
                                       BlockSize,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, cast_perm->vec_, vec_tmp.vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1301,7 +1304,7 @@ namespace rocalution
             kernel_permute<<<GridSize,
                              BlockSize,
                              0,
-                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, cast_perm->vec_, cast_vec->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1331,7 +1334,7 @@ namespace rocalution
             kernel_permute_backward<<<GridSize,
                                       BlockSize,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, cast_perm->vec_, cast_vec->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1361,7 +1364,7 @@ namespace rocalution
             kernel_get_index_values<<<GridSize,
                                       BlockSize,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_idx->size_, cast_idx->vec_, this->vec_, cast_vec->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1388,7 +1391,7 @@ namespace rocalution
             kernel_set_index_values<<<GridSize,
                                       BlockSize,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1415,7 +1418,7 @@ namespace rocalution
             kernel_add_index_values<<<GridSize,
                                       BlockSize,
                                       0,
-                                      HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                      HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1444,7 +1447,7 @@ namespace rocalution
                  this->vec_ + start,
                  values,
                  true,
-                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
     }
 
     template <typename ValueType>
@@ -1461,7 +1464,7 @@ namespace rocalution
                  values,
                  this->vec_ + start,
                  true,
-                 HIPSTREAM(this->local_backend_.HIP_stream_current));
+                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
     }
 
     template <typename ValueType>
@@ -1486,11 +1489,12 @@ namespace rocalution
         assert(cast_vec != NULL);
         assert(cast_vec->size_ == cast_idx->size_);
 
-        kernel_rs_pmis_cf_update_pack<256><<<(cast_idx->size_ - 1) / 256 + 1,
-                                             256,
-                                             0,
-                                             HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
-            cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
+        kernel_rs_pmis_cf_update_pack<256>
+            <<<(cast_idx->size_ - 1) / 256 + 1,
+               256,
+               0,
+               HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
+                cast_idx->size_, cast_idx->vec_, cast_vec->vec_, this->vec_);
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
@@ -1521,7 +1525,7 @@ namespace rocalution
             kernel_power<<<GridSize,
                            BlockSize,
                            0,
-                           HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                           HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 this->size_, power, this->vec_);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -1693,7 +1697,7 @@ namespace rocalution
                                          this->size_,
                                          begin_bit,
                                          end_bit,
-                                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
 
                 hipMalloc(&buffer, size);
@@ -1706,7 +1710,7 @@ namespace rocalution
                                          this->size_,
                                          begin_bit,
                                          end_bit,
-                                         HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                         HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
 
                 hipFree(buffer);
@@ -1737,7 +1741,7 @@ namespace rocalution
                                           this->size_,
                                           begin_bit,
                                           end_bit,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                          HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
 
                 hipMalloc(&buffer, size);
@@ -1752,7 +1756,7 @@ namespace rocalution
                                           this->size_,
                                           begin_bit,
                                           end_bit,
-                                          HIPSTREAM(this->local_backend_.HIP_stream_current));
+                                          HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
 
                 hipFree(buffer);

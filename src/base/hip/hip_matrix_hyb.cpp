@@ -401,27 +401,27 @@ namespace rocalution
                      cast_mat->mat_.ELL.col,
                      this->mat_.ELL.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->ell_nnz_,
                      cast_mat->mat_.ELL.val,
                      this->mat_.ELL.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->coo_nnz_,
                      cast_mat->mat_.COO.row,
                      this->mat_.COO.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->coo_nnz_,
                      cast_mat->mat_.COO.col,
                      this->mat_.COO.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_h2d(this->coo_nnz_,
                      cast_mat->mat_.COO.val,
                      this->mat_.COO.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -464,27 +464,27 @@ namespace rocalution
                      this->mat_.ELL.col,
                      cast_mat->mat_.ELL.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->ell_nnz_,
                      this->mat_.ELL.val,
                      cast_mat->mat_.ELL.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->coo_nnz_,
                      this->mat_.COO.row,
                      cast_mat->mat_.COO.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->coo_nnz_,
                      this->mat_.COO.col,
                      cast_mat->mat_.COO.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2h(this->coo_nnz_,
                      this->mat_.COO.val,
                      cast_mat->mat_.COO.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -526,27 +526,27 @@ namespace rocalution
                      hip_cast_mat->mat_.ELL.col,
                      this->mat_.ELL.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->ell_nnz_,
                      hip_cast_mat->mat_.ELL.val,
                      this->mat_.ELL.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->coo_nnz_,
                      hip_cast_mat->mat_.COO.row,
                      this->mat_.COO.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->coo_nnz_,
                      hip_cast_mat->mat_.COO.col,
                      this->mat_.COO.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->coo_nnz_,
                      hip_cast_mat->mat_.COO.val,
                      this->mat_.COO.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -598,27 +598,27 @@ namespace rocalution
                      this->mat_.ELL.col,
                      hip_cast_mat->mat_.ELL.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->ell_nnz_,
                      this->mat_.ELL.val,
                      hip_cast_mat->mat_.ELL.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->coo_nnz_,
                      this->mat_.COO.row,
                      hip_cast_mat->mat_.COO.row,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->coo_nnz_,
                      this->mat_.COO.col,
                      hip_cast_mat->mat_.COO.col,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
             copy_d2d(this->coo_nnz_,
                      this->mat_.COO.val,
                      hip_cast_mat->mat_.COO.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {

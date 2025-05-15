@@ -324,7 +324,7 @@ namespace rocalution
                      cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -361,7 +361,7 @@ namespace rocalution
                      this->mat_.val,
                      cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -397,7 +397,7 @@ namespace rocalution
                      hip_cast_mat->mat_.val,
                      this->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -443,7 +443,7 @@ namespace rocalution
                      this->mat_.val,
                      hip_cast_mat->mat_.val,
                      true,
-                     HIPSTREAM(this->local_backend_.HIP_stream_current));
+                     HIPSTREAM(_get_backend_descriptor()->HIP_stream_current));
         }
         else
         {
@@ -701,11 +701,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
 
-            kernel_dense_replace_column_vector<<<GridSize,
-                                                 BlockSize,
-                                                 0,
-                                                 HIPSTREAM(
-                                                     this->local_backend_.HIP_stream_current)>>>(
+            kernel_dense_replace_column_vector<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -731,7 +731,8 @@ namespace rocalution
             kernel_dense_replace_row_vector<<<GridSize,
                                               BlockSize,
                                               0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                              HIPSTREAM(
+                                                  _get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -755,11 +756,11 @@ namespace rocalution
             dim3 BlockSize(this->local_backend_.HIP_block_size);
             dim3 GridSize(this->nrow_ / this->local_backend_.HIP_block_size + 1);
 
-            kernel_dense_extract_column_vector<<<GridSize,
-                                                 BlockSize,
-                                                 0,
-                                                 HIPSTREAM(
-                                                     this->local_backend_.HIP_stream_current)>>>(
+            kernel_dense_extract_column_vector<<<
+                GridSize,
+                BlockSize,
+                0,
+                HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
@@ -786,7 +787,8 @@ namespace rocalution
             kernel_dense_extract_row_vector<<<GridSize,
                                               BlockSize,
                                               0,
-                                              HIPSTREAM(this->local_backend_.HIP_stream_current)>>>(
+                                              HIPSTREAM(
+                                                  _get_backend_descriptor()->HIP_stream_current)>>>(
                 cast_vec->vec_, idx, this->nrow_, this->ncol_, this->mat_.val);
             CHECK_HIP_ERROR(__FILE__, __LINE__);
         }
