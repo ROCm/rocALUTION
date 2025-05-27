@@ -178,7 +178,7 @@ if(SUPPORT_HIP)
       list(APPEND HIP_HIPCC_FLAGS "-march=native")
     endif()
 
-    list(APPEND HIP_HIPCC_FLAGS "-O3 -fPIC -std=c++14")
+    list(APPEND HIP_HIPCC_FLAGS "-O3 -fPIC -std=c++17")
     # Use -DNDEBUG compile option for Release and RelWithDebInfo build
     if((${CMAKE_BUILD_TYPE} MATCHES "Release") OR (${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo"))
       list(APPEND HIP_HIPCC_FLAGS "-DNDEBUG")

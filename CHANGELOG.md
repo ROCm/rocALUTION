@@ -7,6 +7,9 @@ Full documentation forrocALUTION is available at [https://rocm.docs.amd.com/proj
 ### Added
 * Added support for gfx950.
 
+### Changed
+* Switch to defaulting to C++17 when building rocALUTION from source. Previously rocALUTION was using C++14 by default.
+
 ### Optimized
 * Improved the user documentation
 
