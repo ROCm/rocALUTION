@@ -362,9 +362,9 @@ File I/O
 Access
 ======
 
-.. doxygenfunction:: rocalution::LocalVector::&operator[](int)
+.. doxygenfunction:: rocalution::LocalVector::operator[](int64_t)
   :outline:
-.. doxygenfunction:: rocalution::LocalVector::&operator[](int) const
+.. doxygenfunction:: rocalution::LocalVector::operator[](int64_t) const
 
 .. note:: 
 

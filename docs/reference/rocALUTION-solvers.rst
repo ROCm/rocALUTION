@@ -226,7 +226,7 @@ Ruge-stueben AMG
 ================
 
 .. doxygenclass:: rocalution::RugeStuebenAMG
-.. doxygenfunction:: rocalution::RugeStuebenAMG::SetCouplingStrength
+.. doxygenfunction:: rocalution::RugeStuebenAMG::SetStrengthThreshold
 
 Pairwise AMG
 ============
