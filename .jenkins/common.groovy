@@ -59,6 +59,7 @@ def runCoverageCommand (platform, project, gfilter, String dirmode = "release")
                 set -x
                 cd ${project.paths.project_build_prefix}/build/${dirmode}
                 export LD_LIBRARY_PATH=/opt/rocm/lib/
+                export ROCALUTION_CODE_COVERAGE=1
                 ${centos7Workaround}
                 GTEST_LISTENER=NO_PASS_LINE_IN_LOG make coverage_cleanup coverage GTEST_FILTER=${gfilter}-*known_bug*
             """
