@@ -252,7 +252,7 @@ if(BUILD_CODE_COVERAGE)
   #
   add_custom_command(TARGET coverage_output
     COMMAND lcov --directory . --base-directory . --capture -o lcoverage/raw_main_coverage.info
-    COMMAND lcov --remove lcoverage/raw_main_coverage.info "'${CMAKE_SOURCE_DIR}/src/utils/rocsparseio.*'" "'${CMAKE_SOURCE_DIR}/src/base/host/host_io.*'" "'${CMAKE_SOURCE_DIR}/clients/*'" "'${CMAKE_SOURCE_DIR}/build/*'" "'/opt/*'" "'/usr/*'" -o lcoverage/main_coverage.info
+    COMMAND lcov --remove lcoverage/raw_main_coverage.info "'${CMAKE_SOURCE_DIR}/src/utils/*'" "'${CMAKE_SOURCE_DIR}/src/base/host/host_io.*'" "'${CMAKE_SOURCE_DIR}/clients/*'" "'${CMAKE_SOURCE_DIR}/build/*'" "'/opt/*'" "'/usr/*'" -o lcoverage/main_coverage.info
     COMMAND genhtml lcoverage/main_coverage.info --output-directory lcoverage
     )
 
