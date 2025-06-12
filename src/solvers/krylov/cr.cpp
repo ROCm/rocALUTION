@@ -212,7 +212,6 @@ namespace rocalution
             {
                 this->z_.MoveToHost();
                 this->t_.MoveToHost();
-                this->precond_->MoveToHost();
             }
         }
     }
@@ -233,7 +232,6 @@ namespace rocalution
             {
                 this->z_.MoveToAccelerator();
                 this->t_.MoveToAccelerator();
-                this->precond_->MoveToAccelerator();
             }
         }
     }

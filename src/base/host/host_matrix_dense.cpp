@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@
 namespace rocalution
 {
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     HostMatrixDENSE<ValueType>::HostMatrixDENSE()
     {
@@ -51,6 +52,7 @@ namespace rocalution
         LOG_INFO("no default constructor");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     HostMatrixDENSE<ValueType>::HostMatrixDENSE(const Rocalution_Backend_Descriptor& local_backend)

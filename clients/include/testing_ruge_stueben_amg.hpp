@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,16 +44,19 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_ruge_stueben_amg(Arguments argus)
 {
-    int          ndim           = argus.size;
-    int          pre_iter       = argus.pre_smooth;
-    int          post_iter      = argus.post_smooth;
-    std::string  smoother       = argus.smoother;
-    unsigned int format         = argus.format;
-    int          cycle          = argus.cycle;
-    bool         scaling        = argus.ordering;
-    bool         rebuildnumeric = argus.rebuildnumeric;
+    int          ndim                = argus.size;
+    int          pre_iter            = argus.pre_smooth;
+    int          post_iter           = argus.post_smooth;
+    std::string  smoother            = argus.smoother;
+    unsigned int format              = argus.format;
+    int          cycle               = argus.cycle;
+    bool         scaling             = argus.ordering;
+    bool         rebuildnumeric      = argus.rebuildnumeric;
+    bool         disable_accelerator = !argus.use_acc;
+    std::string  coarsening_strategy = argus.coarsening_strategy;
 
     // Initialize rocALUTION platform
+    disable_accelerator_rocalution(disable_accelerator);
     set_device_rocalution(device);
     init_rocalution();
 
@@ -89,11 +92,14 @@ bool testing_ruge_stueben_amg(Arguments argus)
     assert(csr_val == NULL);
 
     // Move data to accelerator
-    A.MoveToAccelerator();
-    x.MoveToAccelerator();
-    b.MoveToAccelerator();
-    b2.MoveToAccelerator();
-    e.MoveToAccelerator();
+    if(!disable_accelerator)
+    {
+        A.MoveToAccelerator();
+        x.MoveToAccelerator();
+        b.MoveToAccelerator();
+        b2.MoveToAccelerator();
+        e.MoveToAccelerator();
+    }
 
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
@@ -115,13 +121,23 @@ bool testing_ruge_stueben_amg(Arguments argus)
     RugeStuebenAMG<LocalMatrix<T>, LocalVector<T>, T> p;
 
     // Setup AMG
-    p.SetCoarseningStrategy(PMIS);
-    p.SetInterpolationType(ExtPI);
+    if(coarsening_strategy == "Greedy")
+    {
+        p.SetCoarseningStrategy(Greedy);
+        p.SetInterpolationType(Direct);
+    }
+    else
+    {
+        p.SetCoarseningStrategy(PMIS);
+        p.SetInterpolationType(ExtPI);
+    }
     p.SetCoarsestLevel(300);
     p.SetCycle(cycle);
     p.SetOperator(A);
     p.SetManualSmoothers(true);
     p.SetManualSolver(true);
+    p.SetStrengthThreshold(0.25f);
+    p.SetInterpolationFF1Limit(false);
     p.SetScaling(scaling);
     p.BuildHierarchy();
 
@@ -204,6 +220,7 @@ bool testing_ruge_stueben_amg(Arguments argus)
 
     // Stop rocALUTION platform
     stop_rocalution();
+    disable_accelerator_rocalution(false);
 
     for(int i = 0; i < levels - 1; ++i)
     {

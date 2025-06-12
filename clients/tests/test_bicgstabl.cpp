@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,25 +27,36 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, std::string, unsigned int, int> bicgstabl_tuple;
+typedef std::tuple<int, std::string, unsigned int, int, int> bicgstabl_tuple;
 
 std::vector<int>         bicgstabl_size = {7, 63};
 std::vector<std::string> bicgstabl_precond
     = {"None", "SPAI", "TNS", "Jacobi", "GS", "ILU", "ItILU0", "ILUT", "IC", "MCGS", "MCILU"};
-std::vector<unsigned int> bicgstabl_format = {1, 4, 5, 6, 7};
-std::vector<int>          bicgstabl_level  = {1, 2, 4};
+std::vector<unsigned int> bicgstabl_format  = {1, 4, 5, 6, 7};
+std::vector<int>          bicgstabl_level   = {1, 2, 4};
+std::vector<int>          bicgstabl_use_acc = {1};
 
 // Function to update tests if environment variable is set
 void update_bicgstabl()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         bicgstabl_size.clear();
         bicgstabl_precond.clear();
         bicgstabl_format.clear();
         bicgstabl_level.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        bicgstabl_size.push_back(7);
+        bicgstabl_precond.insert(bicgstabl_precond.end(), {"None", "Jacobi"});
+        bicgstabl_format.push_back(1);
+        bicgstabl_level.push_back(1);
+        bicgstabl_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -98,6 +109,7 @@ Arguments setup_bicgstabl_arguments(bicgstabl_tuple tup)
     arg.precond = std::get<1>(tup);
     arg.format  = std::get<2>(tup);
     arg.index   = std::get<3>(tup);
+    arg.use_acc = std::get<4>(tup);
     return arg;
 }
 
@@ -118,4 +130,5 @@ INSTANTIATE_TEST_CASE_P(bicgstabl,
                         testing::Combine(testing::ValuesIn(bicgstabl_size),
                                          testing::ValuesIn(bicgstabl_precond),
                                          testing::ValuesIn(bicgstabl_format),
-                                         testing::ValuesIn(bicgstabl_level)));
+                                         testing::ValuesIn(bicgstabl_level),
+                                         testing::ValuesIn(bicgstabl_use_acc)));

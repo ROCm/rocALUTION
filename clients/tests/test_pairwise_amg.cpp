@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, std::string, unsigned int, int, int, int, int> pwamg_tuple;
+typedef std::tuple<int, std::string, unsigned int, int, int, int, int, int> pwamg_tuple;
 
 std::vector<int>          pwamg_size           = {63, 134};
 std::vector<std::string>  pwamg_smoother       = {"Jacobi"}; //, "MCILU"};
@@ -36,13 +36,15 @@ std::vector<int>          pwamg_pre_iter       = {1, 2};
 std::vector<int>          pwamg_post_iter      = {1, 2};
 std::vector<int>          pwamg_ordering       = {0, 1, 2, 3, 4, 5};
 std::vector<int>          pwamg_rebuildnumeric = {0, 1};
+std::vector<int>          pwamg_use_acc        = {1};
 
 // Function to update tests if environment variable is set
 void update_pwamg()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         pwamg_size.clear();
         pwamg_smoother.clear();
@@ -51,6 +53,18 @@ void update_pwamg()
         pwamg_post_iter.clear();
         pwamg_ordering.clear();
         pwamg_rebuildnumeric.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        pwamg_size.push_back(63);
+        pwamg_smoother.push_back("Jacobi");
+        pwamg_format.insert(pwamg_format.end(), {1, 7});
+        pwamg_pre_iter.insert(pwamg_pre_iter.end(), {1, 2});
+        pwamg_post_iter.insert(pwamg_post_iter.end(), {1, 2});
+        pwamg_ordering.insert(pwamg_ordering.end(), {0, 1, 2, 3, 4, 5});
+        pwamg_rebuildnumeric.insert(pwamg_rebuildnumeric.end(), {0, 1});
+        pwamg_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -115,6 +129,7 @@ Arguments setup_pwamg_arguments(pwamg_tuple tup)
     arg.post_smooth    = std::get<4>(tup);
     arg.ordering       = std::get<5>(tup);
     arg.rebuildnumeric = std::get<6>(tup);
+    arg.use_acc        = std::get<7>(tup);
     return arg;
 }
 
@@ -130,6 +145,28 @@ TEST_P(parameterized_pairwise_amg, pairwise_amg_double)
     ASSERT_EQ(testing_pairwise_amg<double>(arg), true);
 }
 
+TEST_P(parameterized_pairwise_amg, pairwise_amg_2_double)
+{
+    if(!is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        // Skip this test if not in code coverage mode
+        GTEST_SKIP() << "Skipping pairwise_amg_2_double test unless in code coverage mode.";
+    }
+    Arguments arg = setup_pwamg_arguments(GetParam());
+    ASSERT_EQ(testing_pairwise_amg_2<double>(arg), true);
+}
+
+TEST_P(parameterized_pairwise_amg, pairwise_amg_3_double)
+{
+    if(!is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        // Skip this test if not in code coverage mode
+        GTEST_SKIP() << "Skipping pairwise_amg_3_double test unless in code coverage mode.";
+    }
+    Arguments arg = setup_pwamg_arguments(GetParam());
+    ASSERT_EQ(testing_pairwise_amg_3<double>(arg), true);
+}
+
 INSTANTIATE_TEST_CASE_P(pairwise_amg,
                         parameterized_pairwise_amg,
                         testing::Combine(testing::ValuesIn(pwamg_size),
@@ -138,4 +175,5 @@ INSTANTIATE_TEST_CASE_P(pairwise_amg,
                                          testing::ValuesIn(pwamg_pre_iter),
                                          testing::ValuesIn(pwamg_post_iter),
                                          testing::ValuesIn(pwamg_ordering),
-                                         testing::ValuesIn(pwamg_rebuildnumeric)));
+                                         testing::ValuesIn(pwamg_rebuildnumeric),
+                                         testing::ValuesIn(pwamg_use_acc)));

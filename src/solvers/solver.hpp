@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -245,17 +245,25 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual void SetSolverDescriptor(const SolverDescr& descr);
 
+        // LCOV_EXCL_START
         /** \brief Mark this solver as being a preconditioner */
         inline void FlagPrecond(void)
         {
+            // LCOV_EXCL_STOP
             this->is_precond_ = true;
+            // LCOV_EXCL_START
         }
+        // LCOV_EXCL_STOP
 
+        // LCOV_EXCL_START
         /** \brief Mark this solver as being a smoother */
         inline void FlagSmoother(void)
         {
+            // LCOV_EXCL_STOP
             this->is_smoother_ = true;
+            // LCOV_EXCL_START
         }
+        // LCOV_EXCL_STOP
 
     protected:
         /** \brief Pointer to the operator */

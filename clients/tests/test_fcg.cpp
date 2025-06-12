@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,23 +27,34 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, std::string, unsigned int> fcg_tuple;
+typedef std::tuple<int, std::string, unsigned int, int> fcg_tuple;
 
 std::vector<int>         fcg_size = {7, 63};
 std::vector<std::string> fcg_precond
     = {"None", "Chebyshev", "SPAI", "TNS", "ItILU0", "ILUT", "MCSGS"};
-std::vector<unsigned int> fcg_format = {2, 5, 6, 7};
+std::vector<unsigned int> fcg_format  = {2, 5, 6, 7};
+std::vector<int>          fcg_use_acc = {1};
 
 // Function to update tests if environment variable is set
 void update_fcg()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         fcg_size.clear();
         fcg_precond.clear();
         fcg_format.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        fcg_size.push_back(7);
+        fcg_precond.insert(fcg_precond.end(),
+                           {"None", "Chebyshev", "SPAI", "TNS", "ItILU0", "ILUT", "MCSGS"});
+        fcg_format.insert(fcg_format.end(), {2, 5, 6, 7});
+        fcg_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -92,6 +103,7 @@ Arguments setup_fcg_arguments(fcg_tuple tup)
     arg.size    = std::get<0>(tup);
     arg.precond = std::get<1>(tup);
     arg.format  = std::get<2>(tup);
+    arg.use_acc = std::get<3>(tup);
     return arg;
 }
 
@@ -111,4 +123,5 @@ INSTANTIATE_TEST_CASE_P(fcg,
                         parameterized_fcg,
                         testing::Combine(testing::ValuesIn(fcg_size),
                                          testing::ValuesIn(fcg_precond),
-                                         testing::ValuesIn(fcg_format)));
+                                         testing::ValuesIn(fcg_format),
+                                         testing::ValuesIn(fcg_use_acc)));

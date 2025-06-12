@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
 #include <vector>
 
 typedef std::
-    tuple<int, int, int, std::string, std::string, std::string, unsigned int, int, int, int>
+    tuple<int, int, int, std::string, std::string, std::string, unsigned int, int, int, int, int>
         uaamg_tuple;
 
 std::vector<int>          uaamg_size             = {22, 63, 134, 157};
@@ -41,13 +41,15 @@ std::vector<unsigned int> uaamg_format           = {1, 6};
 std::vector<int>          uaamg_cycle            = {2};
 std::vector<int>          uaamg_scaling          = {1};
 std::vector<int>          uaamg_rebuildnumeric   = {0, 1};
+std::vector<int>          uaamg_use_acc          = {1};
 
 // Function to update tests if environment variable is set
 void update_uaamg()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         uaamg_size.clear();
         uaamg_smoother.clear();
@@ -58,6 +60,20 @@ void update_uaamg()
         uaamg_scaling.clear();
         uaamg_rebuildnumeric.clear();
         uaamg_coarsening_strat.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        uaamg_size.push_back(22);
+        uaamg_smoother.push_back("FSAI");
+        uaamg_format.insert(uaamg_format.end(), {1, 6});
+        uaamg_pre_iter.push_back(2);
+        uaamg_post_iter.push_back(2);
+        uaamg_cycle.push_back(2);
+        uaamg_scaling.push_back(1);
+        uaamg_rebuildnumeric.insert(uaamg_rebuildnumeric.end(), {0, 1});
+        uaamg_coarsening_strat.insert(uaamg_coarsening_strat.end(), {"Greedy", "PMIS"});
+        uaamg_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -131,6 +147,7 @@ Arguments setup_uaamg_arguments(uaamg_tuple tup)
     arg.cycle               = std::get<7>(tup);
     arg.ordering            = std::get<8>(tup);
     arg.rebuildnumeric      = std::get<9>(tup);
+    arg.use_acc             = std::get<10>(tup);
 
     return arg;
 }
@@ -158,4 +175,5 @@ INSTANTIATE_TEST_CASE_P(uaamg,
                                          testing::ValuesIn(uaamg_format),
                                          testing::ValuesIn(uaamg_cycle),
                                          testing::ValuesIn(uaamg_scaling),
-                                         testing::ValuesIn(uaamg_rebuildnumeric)));
+                                         testing::ValuesIn(uaamg_rebuildnumeric),
+                                         testing::ValuesIn(uaamg_use_acc)));

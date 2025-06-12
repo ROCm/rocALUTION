@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,12 +44,14 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_bicgstabl(Arguments argus)
 {
-    int          ndim    = argus.size;
-    std::string  precond = argus.precond;
-    unsigned int format  = argus.format;
-    int          l       = argus.index;
+    int          ndim                = argus.size;
+    std::string  precond             = argus.precond;
+    unsigned int format              = argus.format;
+    int          l                   = argus.index;
+    bool         disable_accelerator = !argus.use_acc;
 
     // Initialize rocALUTION platform
+    disable_accelerator_rocalution(disable_accelerator);
     set_device_rocalution(device);
     init_rocalution();
 
@@ -70,10 +72,13 @@ bool testing_bicgstabl(Arguments argus)
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
     // Move data to accelerator
-    A.MoveToAccelerator();
-    x.MoveToAccelerator();
-    b.MoveToAccelerator();
-    e.MoveToAccelerator();
+    if(!disable_accelerator)
+    {
+        A.MoveToAccelerator();
+        x.MoveToAccelerator();
+        b.MoveToAccelerator();
+        e.MoveToAccelerator();
+    }
 
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
@@ -173,6 +178,7 @@ bool testing_bicgstabl(Arguments argus)
 
     // Stop rocALUTION platform
     stop_rocalution();
+    disable_accelerator_rocalution(false);
 
     return success;
 }

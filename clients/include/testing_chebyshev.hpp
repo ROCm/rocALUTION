@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,21 @@
  * ************************************************************************ */
 
 #pragma once
-#ifndef TESTING_GMRES_HPP
-#define TESTING_GMRES_HPP
 
 #include "utility.hpp"
 
 #include <rocalution/rocalution.hpp>
 
-using namespace rocalution;
-
 template <typename T>
-bool testing_gmres(Arguments argus, bool expectConvergence = true)
+bool testing_chebyshev(Arguments argus)
 {
+    using namespace rocalution;
+
     int          ndim                = argus.size;
-    int          basis               = argus.index;
-    std::string  matrix              = argus.matrix;
     std::string  precond             = argus.precond;
     unsigned int format              = argus.format;
+    std::string  matrix_type         = argus.matrix_type;
+    bool         rebuildnumeric      = argus.rebuildnumeric;
     bool         disable_accelerator = !argus.use_acc;
 
     // Initialize rocALUTION platform
@@ -47,10 +45,15 @@ bool testing_gmres(Arguments argus, bool expectConvergence = true)
     init_rocalution();
 
     // rocALUTION structures
-    LocalMatrix<T> A;
-    LocalVector<T> x;
-    LocalVector<T> b;
-    LocalVector<T> e;
+    LocalMatrix<T>  A;
+    LocalVector<T>  x;
+    LocalVector<T>  b;
+    LocalVector<T>  b_old;
+    LocalVector<T>* b_k;
+    LocalVector<T>* b_k1;
+    LocalVector<T>* b_tmp;
+    LocalVector<T>  e;
+    LocalVector<T>  rhs;
 
     // Generate A
     int* csr_ptr = NULL;
@@ -58,14 +61,29 @@ bool testing_gmres(Arguments argus, bool expectConvergence = true)
     T*   csr_val = NULL;
 
     int nrow = 0;
-    if(matrix == "laplacian")
+    int ncol = 0;
+    if(matrix_type == "Laplacian2D")
+    {
         nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
-    else if(matrix == "permuted_identity")
-        nrow = gen_permuted_identity(ndim, &csr_ptr, &csr_col, &csr_val);
+        ncol = nrow;
+    }
     else
-        return false;
-
+    {
+        stop_rocalution();
+        disable_accelerator_rocalution(false);
+        return true;
+    }
     int nnz = csr_ptr[nrow];
+
+    T* csr_val2 = NULL;
+    if(rebuildnumeric)
+    {
+        csr_val2 = new T[nnz];
+        for(int i = 0; i < nnz; i++)
+        {
+            csr_val2[i] = csr_val[i];
+        }
+    }
 
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
@@ -74,24 +92,29 @@ bool testing_gmres(Arguments argus, bool expectConvergence = true)
     {
         A.MoveToAccelerator();
         x.MoveToAccelerator();
-        b.MoveToAccelerator();
+        rhs.MoveToAccelerator();
         e.MoveToAccelerator();
     }
 
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
-    b.Allocate("b", A.GetM());
+    rhs.Allocate("b", A.GetM());
     e.Allocate("e", A.GetN());
 
-    // b = A * 1
+    T lambda_min;
+    T lambda_max;
+
+    A.Gershgorin(lambda_min, lambda_max);
+
+    // Chebyshev iteration
+    Chebyshev<LocalMatrix<T>, LocalVector<T>, T> ls;
+
+    // Initialize rhs such that A 1 = rhs
     e.Ones();
-    A.Apply(e, &b);
+    A.Apply(e, &rhs);
 
-    // Random initial guess
-    x.SetRandomUniform(12345ULL, -4.0, 6.0);
-
-    // Solver
-    GMRES<LocalMatrix<T>, LocalVector<T>, T> ls;
+    // Initial zero guess
+    x.Zeros();
 
     // Preconditioner
     Preconditioner<LocalMatrix<T>, LocalVector<T>, T>* p;
@@ -143,6 +166,9 @@ bool testing_gmres(Arguments argus, bool expectConvergence = true)
     else
         return false;
 
+    // Set solver operator
+    ls.SetOperator(A);
+
     ls.Verbose(0);
     ls.SetOperator(A);
 
@@ -152,34 +178,41 @@ bool testing_gmres(Arguments argus, bool expectConvergence = true)
         ls.SetPreconditioner(*p);
     }
 
-    ls.Init(1e-6, 0.0, 1e+8, 10000);
-    ls.SetBasisSize(basis);
+    // Set eigenvalues
+    ls.Set(lambda_min, lambda_max);
 
+    // Build solver
     ls.Build();
 
-    // Matrix format
-    A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
+    if(rebuildnumeric)
+    {
+        A.UpdateValuesCSR(csr_val2);
+        delete[] csr_val2;
 
-    ls.Solve(b, &x);
+        A.Apply(e, &rhs);
 
-    // Verify solution
-    x.ScaleAdd(-1.0, e);
-    T nrm2 = x.Norm();
+        ls.ReBuildNumeric();
+        ls.Set(lambda_min, lambda_max);
+    }
 
-    bool success = expectConvergence ? (nrm2 < 1e3) : true;
+    // Solve A x = rhs
+    ls.Solve(rhs, &x);
 
-    // Clean up
+    // Clear solver
     ls.Clear();
     if(p != NULL)
     {
         delete p;
     }
 
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    T error = e.Norm();
+    std::cout << "Chebyshev iteration ||e - x||_2 = " << error << std::endl;
+
     // Stop rocALUTION platform
     stop_rocalution();
     disable_accelerator_rocalution(false);
 
-    return success;
+    return true;
 }
-
-#endif // TESTING_GMRES_HPP

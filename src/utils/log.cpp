@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@ namespace rocalution
         char* str_layer_mode;
         if((str_layer_mode = getenv("ROCALUTION_LAYER")) != NULL)
         {
+            // LCOV_EXCL_START
             if(atoi(str_layer_mode) == 1)
             {
                 if(_get_backend_descriptor()->log_file != NULL)
@@ -66,6 +67,7 @@ namespace rocalution
                 _get_backend_descriptor()->log_file->open(str_name.c_str(),
                                                           std::ios::out | std::ios::trunc);
             }
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -73,12 +75,14 @@ namespace rocalution
     {
         if(_get_backend_descriptor()->log_file != NULL)
         {
+            // LCOV_EXCL_START
             if(_get_backend_descriptor()->log_file->is_open())
             {
                 _get_backend_descriptor()->log_file->close();
                 delete _get_backend_descriptor()->log_file;
                 _get_backend_descriptor()->log_file = NULL;
             }
+            // LCOV_EXCL_STOP
         }
     }
 

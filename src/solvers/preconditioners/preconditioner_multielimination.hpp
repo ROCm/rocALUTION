@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,17 +67,25 @@ namespace rocalution
         ROCALUTION_EXPORT
         virtual ~MultiElimination();
 
+        // LCOV_EXCL_START
         /** \brief Returns the size of the first (diagonal) block of the preconditioner */
         inline int GetSizeDiagBlock(void) const
         {
+            // LCOV_EXCL_STOP
             return this->size_;
+            // LCOV_EXCL_START
         }
+        // LCOV_EXCL_STOP
 
+        // LCOV_EXCL_START
         /** \brief Return the depth of the current level */
         inline int GetLevel(void) const
         {
+            // LCOV_EXCL_STOP
             return this->level_;
+            // LCOV_EXCL_START
         }
+        // LCOV_EXCL_STOP
 
         ROCALUTION_EXPORT
         virtual void Print(void) const;

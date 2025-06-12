@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2022-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,24 +27,36 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, unsigned int, std::string> lu_tuple;
+typedef std::tuple<int, unsigned int, std::string, int> lu_tuple;
 
 std::vector<int>          lu_size        = {7, 16, 21};
 std::vector<unsigned int> lu_format      = {1, 2, 3, 4, 5, 6, 7};
 std::vector<std::string>  lu_matrix_type = {"Laplacian2D"};
+std::vector<int>          lu_use_acc     = {1};
 
 // Function to update tests if environment variable is set
 void update_lu()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         lu_size.clear();
         lu_format.clear();
 
         lu_size.push_back(16);
         lu_format.push_back(2);
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        lu_size.clear();
+        lu_format.clear();
+
+        lu_size.push_back(7);
+        lu_format.insert(lu_format.end(), {1, 2, 3, 4, 5, 6, 7});
+        lu_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -90,6 +102,7 @@ Arguments setup_lu_arguments(lu_tuple tup)
     arg.size        = std::get<0>(tup);
     arg.format      = std::get<1>(tup);
     arg.matrix_type = std::get<2>(tup);
+    arg.use_acc     = std::get<3>(tup);
     return arg;
 }
 
@@ -109,4 +122,5 @@ INSTANTIATE_TEST_CASE_P(lu,
                         parameterized_lu,
                         testing::Combine(testing::ValuesIn(lu_size),
                                          testing::ValuesIn(lu_format),
-                                         testing::ValuesIn(lu_matrix_type)));
+                                         testing::ValuesIn(lu_matrix_type),
+                                         testing::ValuesIn(lu_use_acc)));

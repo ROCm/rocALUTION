@@ -671,6 +671,7 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <class OperatorType, class VectorType, typename ValueType>
     void FixedPoint<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
                                                                            VectorType*       x)
@@ -678,6 +679,7 @@ namespace rocalution
         LOG_INFO("Preconditioner for the Fixed Point method is required");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <class OperatorType, class VectorType, typename ValueType>
     void FixedPoint<OperatorType, VectorType, ValueType>::SolvePrecond_(const VectorType& rhs,

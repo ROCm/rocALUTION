@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,11 +44,13 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_bicgstab(Arguments argus)
 {
-    int          ndim    = argus.size;
-    std::string  precond = argus.precond;
-    unsigned int format  = argus.format;
+    int          ndim                = argus.size;
+    std::string  precond             = argus.precond;
+    unsigned int format              = argus.format;
+    bool         disable_accelerator = !argus.use_acc;
 
     // Initialize rocALUTION platform
+    disable_accelerator_rocalution(disable_accelerator);
     set_device_rocalution(device);
     init_rocalution();
 
@@ -69,10 +71,13 @@ bool testing_bicgstab(Arguments argus)
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
     // Move data to accelerator
-    A.MoveToAccelerator();
-    x.MoveToAccelerator();
-    b.MoveToAccelerator();
-    e.MoveToAccelerator();
+    if(!disable_accelerator)
+    {
+        A.MoveToAccelerator();
+        x.MoveToAccelerator();
+        b.MoveToAccelerator();
+        e.MoveToAccelerator();
+    }
 
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
@@ -148,13 +153,19 @@ bool testing_bicgstab(Arguments argus)
         ls.SetPreconditioner(*p);
     }
 
-    ls.Init(1e-8, 0.0, 1e+8, 10000);
+    ls.Init(1e-8, 0.0, 1e+8, 0, 10000);
+    ls.RecordResidualHistory();
+    auto n_iter = ls.GetIterationCount();
     ls.Build();
 
     // Matrix format
     A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
     ls.Solve(b, &x);
+
+    const std::string filename = "test_recorded_history.txt";
+    ls.RecordHistory(filename);
+    std::remove(filename.c_str());
 
     // Verify solution
     x.ScaleAdd(-1.0, e);
@@ -171,6 +182,7 @@ bool testing_bicgstab(Arguments argus)
 
     // Stop rocALUTION platform
     stop_rocalution();
+    disable_accelerator_rocalution(false);
 
     return success;
 }

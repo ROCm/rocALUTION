@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,23 +27,34 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, std::string, unsigned int> qmrcgstab_tuple;
+typedef std::tuple<int, std::string, unsigned int, int> qmrcgstab_tuple;
 
 std::vector<int>         qmrcgstab_size = {7, 63};
 std::vector<std::string> qmrcgstab_precond
     = {"None", "Chebyshev", "SPAI", "Jacobi", "GS", "ILU", "ItILU0"};
-std::vector<unsigned int> qmrcgstab_format = {1, 2, 3, 7};
+std::vector<unsigned int> qmrcgstab_format  = {1, 2, 3, 7};
+std::vector<int>          qmrcgstab_use_acc = {1};
 
 // Function to update tests if environment variable is set
 void update_qmrcgstab()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         qmrcgstab_size.clear();
         qmrcgstab_precond.clear();
         qmrcgstab_format.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        qmrcgstab_size.push_back(7);
+        qmrcgstab_precond.insert(qmrcgstab_precond.end(),
+                                 {"None", "Chebyshev", "SPAI", "Jacobi", "GS", "ILU", "ItILU0"});
+        qmrcgstab_format.insert(qmrcgstab_format.end(), {1, 2, 3, 7});
+        qmrcgstab_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -92,6 +103,7 @@ Arguments setup_qmrcgstab_arguments(qmrcgstab_tuple tup)
     arg.size    = std::get<0>(tup);
     arg.precond = std::get<1>(tup);
     arg.format  = std::get<2>(tup);
+    arg.use_acc = std::get<3>(tup);
     return arg;
 }
 
@@ -111,4 +123,5 @@ INSTANTIATE_TEST_CASE_P(qmrcgstab,
                         parameterized_qmrcgstab,
                         testing::Combine(testing::ValuesIn(qmrcgstab_size),
                                          testing::ValuesIn(qmrcgstab_precond),
-                                         testing::ValuesIn(qmrcgstab_format)));
+                                         testing::ValuesIn(qmrcgstab_format),
+                                         testing::ValuesIn(qmrcgstab_use_acc)));

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2020 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -78,8 +78,10 @@ namespace rocalution
 
             if(numCPU == 0)
             {
+                // LCOV_EXCL_START
                 LOG_VERBOSE_INFO(2, "Unsuporrted OS, no core information is available");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
             else
             {

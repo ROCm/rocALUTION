@@ -276,7 +276,7 @@ namespace rocalution
     template <class OperatorType, class VectorType, typename ValueType>
     void AS<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(void)
     {
-        log_debug(this, "AS::MoveToAcceleratorLocalData_()", this->build_);
+        log_debug(this, "AS::MoveToHostLocalData_()", this->build_);
 
         if(this->build_ == true)
         {
@@ -295,7 +295,7 @@ namespace rocalution
     template <class OperatorType, class VectorType, typename ValueType>
     void AS<OperatorType, VectorType, ValueType>::MoveToAcceleratorLocalData_(void)
     {
-        log_debug(this, "AS::MoveToHostLocalData_()", this->build_);
+        log_debug(this, "AS::MoveToAcceleratorLocalData_()", this->build_);
 
         if(this->build_ == true)
         {

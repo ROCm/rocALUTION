@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2022-2025 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,16 @@
  * ************************************************************************ */
 
 #pragma once
-#ifndef TESTING_QR_HPP
-#define TESTING_QR_HPP
 
 #include "utility.hpp"
 
 #include <rocalution/rocalution.hpp>
 
-using namespace rocalution;
-
-static bool check_residual(float res)
-{
-    return (res < 1e-3f);
-}
-
-static bool check_residual(double res)
-{
-    return (res < 1e-6);
-}
-
 template <typename T>
-bool testing_qr(Arguments argus)
+bool testing_itsolver(Arguments argus)
 {
+    using namespace rocalution;
+
     int          ndim                = argus.size;
     unsigned int format              = argus.format;
     std::string  matrix_type         = argus.matrix_type;
@@ -79,7 +67,9 @@ bool testing_qr(Arguments argus)
     }
     else
     {
-        return false;
+        stop_rocalution();
+        disable_accelerator_rocalution(false);
+        return true;
     }
     int nnz = csr_ptr[nrow];
 
@@ -99,40 +89,77 @@ bool testing_qr(Arguments argus)
     b.Allocate("b", A.GetM());
     e.Allocate("e", A.GetN());
 
-    // b = A * 1
+    // Linear Solver
+    FixedPoint<LocalMatrix<T>, LocalVector<T>, T> fp;
+
+    // Preconditioner
+    ItILU0<LocalMatrix<T>, LocalVector<T>, T> p;
+
+    // Set iterative ILU stopping criteria
+    p.SetTolerance(1e-8);
+    p.SetMaxIter(50);
+
+    p.SetAlgorithm(ItILU0Algorithm::SyncSplit);
+
+    // Set up iterative triangular solve
+    SolverDescr descr;
+    descr.SetTriSolverAlg(TriSolverAlg_Iterative);
+    descr.SetIterativeSolverMaxIteration(30);
+    descr.SetIterativeSolverTolerance(1e-8);
+
+    descr.DisableIterativeSolverTolerance();
+    descr.EnableIterativeSolverTolerance();
+    SolverDescr descr_new(descr); // Copy the descriptor
+
+    p.SetSolverDescriptor(descr_new);
+
+    // Initialize b such that A 1 = b
     e.Ones();
     A.Apply(e, &b);
 
-    // Random initial guess
-    x.SetRandomUniform(12345ULL, -4.0, 6.0);
+    // Initial zero guess
+    x.Zeros();
 
-    // Solver
-    QR<LocalMatrix<T>, LocalVector<T>, T> dls;
+    // Set solver operator
+    fp.SetOperator(A);
+    // Set solver preconditioner
+    fp.SetPreconditioner(p);
 
-    dls.Verbose(0);
-    dls.SetOperator(A);
+    // Build solver
+    fp.Build();
 
-    dls.Build();
+    // Verbosity output
+    fp.Verbose(1);
 
-    // Matrix format
-    A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
+    fp.InitMinIter(1);
+    fp.InitMaxIter(1000);
+    fp.InitTol(1e-8, 1e-8, 1e-8);
 
-    dls.Solve(b, &x);
+    // Print matrix info
+    A.Info();
 
-    // Verify solution
-    x.ScaleAdd(-1.0, e);
-    T nrm2 = x.Norm();
+    // Solve A x = b
+    fp.Solve(b, &x);
 
-    bool success = check_residual(nrm2);
+    int           niter_preconditioner;
+    const double* history = p.GetConvergenceHistory(&niter_preconditioner);
 
-    // Clean up
-    dls.Clear();
+    auto res_final = fp.GetCurrentResidual();
+    //auto res_init      = fp.GetInitialResidual();
+    //auto niter         = fp.GetNumIterations();
+    auto status_solver = fp.GetSolverStatus();
+    auto ind           = fp.GetAmaxResidualIndex();
+    // Clear solver
+    fp.Clear();
+
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    T error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
 
     // Stop rocALUTION platform
     stop_rocalution();
     disable_accelerator_rocalution(false);
 
-    return success;
+    return true;
 }
-
-#endif // TESTING_QR_HPP

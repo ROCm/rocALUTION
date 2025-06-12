@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,6 +59,7 @@ namespace rocalution
         this->local_backend_ = local_backend;
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     bool BaseVector<ValueType>::Check(void) const
     {
@@ -68,7 +69,6 @@ namespace rocalution
         FATAL_ERROR(__FILE__, __LINE__);
     }
 
-    // LCOV_EXCL_START
     template <typename ValueType>
     void BaseVector<ValueType>::CopyFromData(const ValueType* data)
     {
@@ -104,7 +104,6 @@ namespace rocalution
         LOG_INFO("This function is not available for this backend");
         FATAL_ERROR(__FILE__, __LINE__);
     }
-    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     void BaseVector<ValueType>::CopyFromFloat(const BaseVector<float>& vec)
@@ -157,6 +156,7 @@ namespace rocalution
 
         this->CopyTo(vec);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     AcceleratorVector<ValueType>::AcceleratorVector()
@@ -168,6 +168,7 @@ namespace rocalution
     {
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void AcceleratorVector<ValueType>::CopyFromHostAsync(const HostVector<ValueType>& src)
     {
@@ -181,6 +182,7 @@ namespace rocalution
         // default is no async
         this->CopyToHost(dst);
     }
+    // LCOV_EXCL_STOP
 
     template class BaseVector<double>;
     template class BaseVector<float>;

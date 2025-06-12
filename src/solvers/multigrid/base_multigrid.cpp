@@ -92,6 +92,7 @@ namespace rocalution
         this->levels_ = levels;
     }
 
+    // LCOV_EXCL_START
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetPreconditioner(
         Solver<OperatorType, VectorType, ValueType>& precond)
@@ -100,6 +101,7 @@ namespace rocalution
                  "levels? use SetSmootherLevel() instead of SetPreconditioner!");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseMultiGrid<OperatorType, VectorType, ValueType>::SetSmoother(
@@ -472,11 +474,6 @@ namespace rocalution
                     this->q_level_[i]->MoveToHost();
                 }
             }
-
-            if(this->precond_ != NULL)
-            {
-                this->precond_->MoveToHost();
-            }
         }
     }
 
@@ -549,11 +546,6 @@ namespace rocalution
                         this->q_level_[i]->MoveToAccelerator();
                     }
                 }
-            }
-
-            if(this->precond_ != NULL)
-            {
-                this->precond_->MoveToAccelerator();
             }
         }
     }
@@ -835,12 +827,12 @@ namespace rocalution
             this->Kcycle_(*rc, xc);
             break;
 
+        // LCOV_EXCL_START
         // F-cycle
         case 3:
             this->Fcycle_(*rc, xc);
             break;
 
-        // LCOV_EXCL_START
         default:
             FATAL_ERROR(__FILE__, __LINE__);
             break;
@@ -930,6 +922,7 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseMultiGrid<OperatorType, VectorType, ValueType>::Fcycle_(const VectorType& rhs,
                                                                      VectorType*       x)
@@ -937,6 +930,7 @@ namespace rocalution
         LOG_INFO("BaseMultiGrid:Fcycle_() not implemented yet");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseMultiGrid<OperatorType, VectorType, ValueType>::Kcycle_(const VectorType& rhs,
@@ -1013,6 +1007,7 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     // do nothing
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseMultiGrid<OperatorType, VectorType, ValueType>::SolveNonPrecond_(const VectorType& rhs,
@@ -1034,6 +1029,7 @@ namespace rocalution
             "you are calling it ...");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template class BaseMultiGrid<LocalMatrix<double>, LocalVector<double>, double>;
     template class BaseMultiGrid<LocalMatrix<float>, LocalVector<float>, float>;

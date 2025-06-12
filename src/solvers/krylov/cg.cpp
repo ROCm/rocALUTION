@@ -262,7 +262,6 @@ namespace rocalution
             if(this->precond_ != NULL)
             {
                 this->z_.MoveToHost();
-                this->precond_->MoveToHost();
             }
         }
     }
@@ -281,7 +280,6 @@ namespace rocalution
             if(this->precond_ != NULL)
             {
                 this->z_.MoveToAccelerator();
-                this->precond_->MoveToAccelerator();
             }
         }
     }

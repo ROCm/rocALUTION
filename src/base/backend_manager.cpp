@@ -198,9 +198,11 @@ namespace rocalution
 
         if(_rocalution_check_if_any_obj() == false)
         {
+            // LCOV_EXCL_START
             LOG_INFO("Error: rocALUTION objects have been created before calling the "
                      "init_rocalution()!");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         _get_backend_descriptor()->init = true;

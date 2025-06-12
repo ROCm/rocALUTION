@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,24 +27,35 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, std::string, unsigned int, int> idr_tuple;
+typedef std::tuple<int, std::string, unsigned int, int, int> idr_tuple;
 
 std::vector<int>          idr_size    = {7, 63};
 std::vector<std::string>  idr_precond = {"None", "SPAI", "GS", "ILU", "MCILU"};
 std::vector<unsigned int> idr_format  = {1, 4, 5, 6};
 std::vector<int>          idr_level   = {1, 2};
+std::vector<int>          idr_use_acc = {1};
 
 // Function to update tests if environment variable is set
 void update_idr()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         idr_size.clear();
         idr_precond.clear();
         idr_format.clear();
         idr_level.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        idr_size.push_back(7);
+        idr_precond.insert(idr_precond.end(), {"None", "SPAI", "GS", "ILU", "MCILU"});
+        idr_format.insert(idr_format.end(), {1, 4, 5, 6});
+        idr_level.insert(idr_level.end(), {1, 2});
+        idr_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -97,6 +108,7 @@ Arguments setup_idr_arguments(idr_tuple tup)
     arg.precond = std::get<1>(tup);
     arg.format  = std::get<2>(tup);
     arg.index   = std::get<3>(tup);
+    arg.use_acc = std::get<4>(tup);
     return arg;
 }
 
@@ -117,4 +129,5 @@ INSTANTIATE_TEST_CASE_P(idr,
                         testing::Combine(testing::ValuesIn(idr_size),
                                          testing::ValuesIn(idr_precond),
                                          testing::ValuesIn(idr_format),
-                                         testing::ValuesIn(idr_level)));
+                                         testing::ValuesIn(idr_level),
+                                         testing::ValuesIn(idr_use_acc)));

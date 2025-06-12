@@ -248,8 +248,6 @@ namespace rocalution
                 {
                     this->z_[i]->MoveToHost();
                 }
-
-                this->precond_->MoveToHost();
             }
         }
     }
@@ -272,7 +270,6 @@ namespace rocalution
                 {
                     this->z_[i]->MoveToAccelerator();
                 }
-                this->precond_->MoveToAccelerator();
             }
         }
     }

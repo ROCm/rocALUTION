@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2022-2025 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,43 +22,31 @@
  * ************************************************************************ */
 
 #pragma once
-#ifndef TESTING_QR_HPP
-#define TESTING_QR_HPP
 
 #include "utility.hpp"
 
 #include <rocalution/rocalution.hpp>
 
-using namespace rocalution;
-
-static bool check_residual(float res)
-{
-    return (res < 1e-3f);
-}
-
-static bool check_residual(double res)
-{
-    return (res < 1e-6);
-}
-
 template <typename T>
-bool testing_qr(Arguments argus)
+bool testing_mixed_precision(Arguments argus)
 {
-    int          ndim                = argus.size;
-    unsigned int format              = argus.format;
-    std::string  matrix_type         = argus.matrix_type;
-    bool         disable_accelerator = !argus.use_acc;
+    using namespace rocalution;
+
+    int          ndim           = argus.size;
+    std::string  precond        = argus.precond;
+    unsigned int format         = argus.format;
+    std::string  matrix_type    = argus.matrix_type;
+    bool         rebuildnumeric = argus.rebuildnumeric;
 
     // Initialize rocALUTION platform
-    disable_accelerator_rocalution(disable_accelerator);
     set_device_rocalution(device);
     init_rocalution();
 
     // rocALUTION structures
     LocalMatrix<T> A;
     LocalVector<T> x;
-    LocalVector<T> b;
     LocalVector<T> e;
+    LocalVector<T> rhs;
 
     // Generate A
     int* csr_ptr = NULL;
@@ -72,67 +60,76 @@ bool testing_qr(Arguments argus)
         nrow = gen_2d_laplacian(ndim, &csr_ptr, &csr_col, &csr_val);
         ncol = nrow;
     }
-    else if(matrix_type == "PermutedIdentity")
-    {
-        nrow = gen_permuted_identity(ndim, &csr_ptr, &csr_col, &csr_val);
-        ncol = nrow;
-    }
     else
     {
-        return false;
+        stop_rocalution();
+        disable_accelerator_rocalution(false);
+        return true;
     }
     int nnz = csr_ptr[nrow];
 
-    A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
-
-    // Move data to accelerator
-    if(!disable_accelerator)
+    T* csr_val2 = NULL;
+    if(rebuildnumeric)
     {
-        A.MoveToAccelerator();
-        x.MoveToAccelerator();
-        b.MoveToAccelerator();
-        e.MoveToAccelerator();
+        csr_val2 = new T[nnz];
+        for(int i = 0; i < nnz; i++)
+        {
+            csr_val2[i] = csr_val[i];
+        }
     }
+
+    A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
-    b.Allocate("b", A.GetM());
+    rhs.Allocate("b", A.GetM());
     e.Allocate("e", A.GetN());
 
-    // b = A * 1
+    // Linear Solver
+    MixedPrecisionDC<LocalMatrix<T>,
+                     LocalVector<T>,
+                     T,
+                     LocalMatrix<float>,
+                     LocalVector<float>,
+                     float>
+                                                                   mp;
+    CG<LocalMatrix<float>, LocalVector<float>, float>              cg;
+    MultiColoredILU<LocalMatrix<float>, LocalVector<float>, float> p;
+
+    // Initialize rhs such that A 1 = rhs
     e.Ones();
-    A.Apply(e, &b);
+    A.Apply(e, &rhs);
 
-    // Random initial guess
-    x.SetRandomUniform(12345ULL, -4.0, 6.0);
+    // Initial zero guess
+    x.Zeros();
 
-    // Solver
-    QR<LocalMatrix<T>, LocalVector<T>, T> dls;
+    // setup a lower tol for the inner solver
+    cg.SetPreconditioner(p);
+    cg.Init(1e-5, 1e-2, 1e+20, 100000);
 
-    dls.Verbose(0);
-    dls.SetOperator(A);
+    // setup the mixed-precision DC
+    mp.SetOperator(A);
+    mp.Set(cg);
 
-    dls.Build();
+    // Build solver
+    mp.Build();
 
-    // Matrix format
-    A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
+    // Verbosity output
+    mp.Verbose(1);
 
-    dls.Solve(b, &x);
+    // Solve A x = rhs
+    mp.Solve(rhs, &x);
 
-    // Verify solution
-    x.ScaleAdd(-1.0, e);
-    T nrm2 = x.Norm();
+    // Compute error L2 norm
+    e.ScaleAdd(-1.0, x);
+    T error = e.Norm();
+    std::cout << "||e - x||_2 = " << error << std::endl;
 
-    bool success = check_residual(nrm2);
-
-    // Clean up
-    dls.Clear();
+    // Clear solver
+    mp.Clear();
 
     // Stop rocALUTION platform
     stop_rocalution();
-    disable_accelerator_rocalution(false);
 
-    return success;
+    return true;
 }
-
-#endif // TESTING_QR_HPP

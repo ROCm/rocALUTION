@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,22 +27,32 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, unsigned int, std::string> inversion_tuple;
+typedef std::tuple<int, unsigned int, std::string, int> inversion_tuple;
 
 std::vector<int>          inversion_size        = {7, 16, 21};
 std::vector<unsigned int> inversion_format      = {1, 2, 3, 4, 5, 6, 7};
 std::vector<std::string>  inversion_matrix_type = {"Laplacian2D", "PermutedIdentity"};
+std::vector<int>          inversion_use_acc     = {1};
 
 // Function to update tests if environment variable is set
 void update_inversion()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         inversion_size.clear();
         inversion_format.clear();
         inversion_matrix_type.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        inversion_size.push_back(7);
+        inversion_format.insert(inversion_format.end(), {1, 2, 3, 4, 5, 6, 7});
+        inversion_matrix_type.push_back("Laplacian2D");
+        inversion_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -93,6 +103,7 @@ Arguments setup_inversion_arguments(inversion_tuple tup)
     arg.size        = std::get<0>(tup);
     arg.format      = std::get<1>(tup);
     arg.matrix_type = std::get<2>(tup);
+    arg.use_acc     = std::get<3>(tup);
     return arg;
 }
 
@@ -112,4 +123,5 @@ INSTANTIATE_TEST_CASE_P(inversion,
                         parameterized_inversion,
                         testing::Combine(testing::ValuesIn(inversion_size),
                                          testing::ValuesIn(inversion_format),
-                                         testing::ValuesIn(inversion_matrix_type)));
+                                         testing::ValuesIn(inversion_matrix_type),
+                                         testing::ValuesIn(inversion_use_acc)));
