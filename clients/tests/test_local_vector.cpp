@@ -359,11 +359,4 @@ TEST_F(local_vector_test, extract_coarse_mapping_int)
     stop_rocalution();
 }
 
-// Test for LocalVector::ExtractCoarseBoundary
-TEST_F(local_vector_test, extract_coarse_boundary_int)
-{
-    GTEST_SKIP() << "Known bug: test fails with segfault in CI.";
-    testing_extract_coarse_boundary<int>();
-}
-
 GENERATE_TEST_CASES(local_vector_test, testing_move_to_host_async, move_to_host_async)

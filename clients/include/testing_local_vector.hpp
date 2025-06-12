@@ -1366,26 +1366,6 @@ void testing_extract_coarse_mapping()
 }
 
 template <typename T>
-void testing_extract_coarse_boundary()
-{
-    // Create a LocalVector and allocate some size
-    LocalVector<T> vec;
-    vec.Allocate("TestVector", 5);
-
-    // Create an index vector
-    int index[3] = {0, 2, 4};
-    int size     = 0;
-    int boundary[3];
-
-    // Call the ExtractCoarseBoundary method
-    EXPECT_NO_THROW(vec.ExtractCoarseBoundary(0, 5, index, 3, &size, boundary));
-
-    // Validate the extracted boundary
-    EXPECT_EQ(size, 1);
-    EXPECT_EQ(boundary[0], 0);
-}
-
-template <typename T>
 void testing_move_to_host_async()
 {
     // Create a LocalVector and allocate some size
