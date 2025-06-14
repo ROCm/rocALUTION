@@ -316,13 +316,17 @@ GENERATE_TEST_CASES(local_matrix_test, testing_set_data_pointer, set_data_pointe
 GENERATE_TEST_CASES(local_matrix_test, testing_leave_data_pointer, leave_data_pointer)
 
 // Test for MaximalIndependentSet
-GENERATE_TEST_CASES(local_matrix_test, testing_maximal_independent_set, maximal_independent_set)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_maximal_independent_set,
+                      maximal_independent_set)
 
 // Test for ZeroBlockPermutation
-GENERATE_TEST_CASES(local_matrix_test, testing_zero_block_permutation, zero_block_permutation)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_zero_block_permutation,
+                      zero_block_permutation)
 
 // Test for Householder
-GENERATE_TEST_CASES(local_matrix_test, testing_Householder, householder)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_Householder, householder)
 
 // Test for CMK
 GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_CMK, CMK)
@@ -347,10 +351,14 @@ GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
 GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_add_scalar, add_scalar)
 
 // Test for ReplaceColumnVector
-GENERATE_TEST_CASES(local_matrix_test, testing_replace_column_vector, replace_column_vector)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_replace_column_vector,
+                      replace_column_vector)
 
 // Test for ExtractColumnVector
-GENERATE_TEST_CASES(local_matrix_test, testing_extract_column_vector, extract_column_vector)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_extract_column_vector,
+                      extract_column_vector)
 
 // Test for SetDataPtrDIA
 GENERATE_TEST_CASES(local_matrix_test, testing_set_data_ptr_DIA, set_data_ptr_dia)
@@ -404,19 +412,21 @@ GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_apply, loca
 GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_apply_add, local_apply_add)
 
 // Test case for LocalMatrix::ExtractSubmatrix
-GENERATE_TEST_CASES(local_matrix_test, testing_local_extract_submatrix, local_extract_submatrix)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_extract_submatrix,
+                      local_extract_submatrix)
 
 // Test case for LocalMatrix::ExtractU
-GENERATE_TEST_CASES(local_matrix_test, testing_local_extract_u, local_extract_u)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_extract_u, local_extract_u)
 
 // Test case for LocalMatrix::ExtractL
-GENERATE_TEST_CASES(local_matrix_test, testing_local_extract_l, local_extract_l)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_extract_l, local_extract_l)
 
 // Test case for LocalMatrix::MatrixAdd
-GENERATE_TEST_CASES(local_matrix_test, testing_local_matrix_add, local_matrix_add)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_matrix_add, local_matrix_add)
 
 // Test case for LocalMatrix::Gershgorin
-GENERATE_TEST_CASES(local_matrix_test, testing_local_gershgorin, local_gershgorin)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_gershgorin, local_gershgorin)
 
 // Test case for LocalMatrix::ScaleDiagonal
 GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
@@ -429,44 +439,48 @@ GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
                       local_add_scalar_diagonal)
 
 // Test case for LocalMatrix::AddScalarOffDiagonal
-GENERATE_TEST_CASES(local_matrix_test,
-                    testing_local_add_scalar_off_diagonal,
-                    local_add_scalar_off_diagonal)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_add_scalar_off_diagonal,
+                      local_add_scalar_off_diagonal)
 
 // Test case for LocalMatrix::MatrixMult
-GENERATE_TEST_CASES(local_matrix_test, testing_local_matrix_mult, local_matrix_mult)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_matrix_mult, local_matrix_mult)
 
 // Test case for LocalMatrix::TripleMatrixProduct
-GENERATE_TEST_CASES(local_matrix_test,
-                    testing_local_triple_matrix_product,
-                    local_triple_matrix_product)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_triple_matrix_product,
+                      local_triple_matrix_product)
 
 // Test case for LocalMatrix::DiagonalMatrixMultR
-GENERATE_TEST_CASES(local_matrix_test,
-                    testing_local_diagonal_matrix_mult_r,
-                    local_diagonal_matrix_mult_r)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_diagonal_matrix_mult_r,
+                      local_diagonal_matrix_mult_r)
 
 // Test case for LocalMatrix::DiagonalMatrixMult
-GENERATE_TEST_CASES(local_matrix_test,
-                    testing_local_diagonal_matrix_mult,
-                    local_diagonal_matrix_mult)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_diagonal_matrix_mult,
+                      local_diagonal_matrix_mult)
 
 // Test case for LocalMatrix::DiagonalMatrixMultL
-GENERATE_TEST_CASES(local_matrix_test,
-                    testing_local_diagonal_matrix_mult_l,
-                    local_diagonal_matrix_mult_l)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_diagonal_matrix_mult_l,
+                      local_diagonal_matrix_mult_l)
 
 // Test case for LocalMatrix::Compress
-GENERATE_TEST_CASES(local_matrix_test, testing_local_compress, local_compress)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_compress, local_compress)
 
 // Test case for LocalMatrix::ReplaceRowVector
-GENERATE_TEST_CASES(local_matrix_test, testing_local_replace_row_vector, local_replace_row_vector)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_replace_row_vector,
+                      local_replace_row_vector)
 
 // Test case for LocalMatrix::ExtractRowVector
-GENERATE_TEST_CASES(local_matrix_test, testing_local_extract_row_vector, local_extract_row_vector)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test,
+                      testing_local_extract_row_vector,
+                      local_extract_row_vector)
 
 // Test case for LocalMatrix::Key
-GENERATE_TEST_CASES(local_matrix_test, testing_local_key, local_key)
+GENERATE_P_TEST_CASES(parameterized_local_matrix_test, testing_local_key, local_key)
 
 // Test case for LocalMatrix::InitialPairwiseAggregation
 GENERATE_TEST_CASES(local_matrix_test,

@@ -869,6 +869,32 @@ T getTolerance()
     }
 }
 
+// Helper to extract dense matrix from LocalMatrix<T>
+template <typename T>
+std::vector<std::vector<T>> extract_dense_matrix(const LocalMatrix<T>& matrix)
+{
+    int                         m   = matrix.GetM();
+    int                         n   = matrix.GetN();
+    int                         nnz = matrix.GetNnz();
+    std::vector<std::vector<T>> dense(m, std::vector<T>(n, static_cast<T>(0)));
+    int*                        row_offsets = new int[m + 1];
+    int*                        col_indices = new int[nnz];
+    T*                          values      = new T[nnz];
+    matrix.CopyToCSR(row_offsets, col_indices, values);
+    for(int row = 0; row < m; ++row)
+    {
+        for(int idx = row_offsets[row]; idx < row_offsets[row + 1]; ++idx)
+        {
+            int col         = col_indices[idx];
+            dense[row][col] = values[idx];
+        }
+    }
+    delete[] row_offsets;
+    delete[] col_indices;
+    delete[] values;
+    return dense;
+}
+
 template <typename T>
 void testing_local_allocate()
 {
@@ -1360,9 +1386,16 @@ void testing_leave_data_pointer()
 }
 
 template <typename T>
-void testing_maximal_independent_set()
+void testing_maximal_independent_set(Arguments argus)
 {
-    auto             matrix = getTestMatrix<T>();
+    if(argus.matrix_type != "Laplacian2D")
+    {
+        return;
+    }
+
+    LocalMatrix<T> matrix;
+    bool           is_invertible;
+    getTestMatrix<T>(argus, matrix, is_invertible);
     LocalVector<int> permutation;
     int              size = 0;
 
@@ -1377,9 +1410,16 @@ void testing_maximal_independent_set()
 }
 
 template <typename T>
-void testing_zero_block_permutation()
+void testing_zero_block_permutation(Arguments argus)
 {
-    auto             matrix = getTestMatrix<T>();
+    if(argus.matrix_type != "Laplacian2D")
+    {
+        return;
+    }
+
+    LocalMatrix<T> matrix;
+    bool           is_invertible;
+    getTestMatrix<T>(argus, matrix, is_invertible);
     LocalVector<int> permutation;
     int              size = 0;
 
@@ -1394,21 +1434,45 @@ void testing_zero_block_permutation()
 }
 
 template <typename T>
-void testing_Householder()
+void testing_Householder(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
+    if(argus.matrix_type != "Laplacian2D")
+    {
+        return;
+    }
+
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
     LocalVector<T> vec;
-    vec.Allocate("HouseholderVector", 3);
+    int            idx = 0;
+    vec.Allocate("HouseholderVector", matrix.GetM() - idx);
     T beta = 0.0;
 
     // Perform Householder transformation
-    matrix.Householder(0, beta, &vec);
+    matrix.Householder(idx, beta, &vec);
 
     // Validate the result
     EXPECT_GT(beta, 0.0);
-    EXPECT_EQ(vec.GetSize(), 3);
 
-    // this test should to be revisited
+    //// Get the first column as a vector
+    //LocalVector<T> x;
+    //x.Allocate("ExtractedColumn", matrix.GetM());
+    //matrix.ExtractColumnVector(0, &x);
+    //
+    //// Compute v^T x
+    //T vTx = 0;
+    //for(int i = 0; i < x.GetSize(); ++i)
+    //    vTx += x[i] * vec[i];
+    //
+    //// Compute Hx = x - beta * v * v^T x
+    //LocalVector<T> Hx;
+    //Hx.Allocate("Hx", x.GetSize());
+    //for(int i = 0; i < x.GetSize(); ++i)
+    //    Hx[i] = x[i] - beta * vec[i] * vTx;
+    //
+    //// Check that Hx[1:] are (close to) zero
+    //for(int i = 1; i < Hx.GetSize(); ++i)
+    //    EXPECT_NEAR(Hx[i], 0.0, 1e-6);
 }
 
 template <typename T>
@@ -1639,42 +1703,62 @@ void testing_add_scalar(Arguments argus)
 }
 
 template <typename T>
-void testing_replace_column_vector()
+void testing_replace_column_vector(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
-    LocalVector<T> vec;
-    vec.Allocate("ColumnVector", matrix.GetM());
-    for(int i = 0; i < vec.GetSize(); ++i)
-        vec[i] = static_cast<T>(i + 10); // Fill with known values
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
 
-    // Replace column 1
-    matrix.ReplaceColumnVector(1, vec);
+    int n = matrix.GetN();
+    int m = matrix.GetM();
 
-    // Extract column 1
-    LocalVector<T> extracted_vec;
-    extracted_vec.Allocate("ExtractedColumn", matrix.GetM());
-    matrix.ExtractColumnVector(1, &extracted_vec);
+    // Test replacing each column with a known vector and verify
+    for(int col = 0; col < n; ++col)
+    {
+        LocalVector<T> vec;
+        vec.Allocate("ColumnVector", m);
+        for(int i = 0; i < m; ++i)
+            vec[i] = static_cast<T>(i + 100 * col); // Unique values per column
 
-    // Verify the replacement
-    for(int i = 0; i < vec.GetSize(); ++i)
-        EXPECT_EQ(extracted_vec[i], vec[i]);
+        // Replace column col
+        EXPECT_NO_THROW(matrix.ReplaceColumnVector(col, vec));
+
+        // Extract column col
+        LocalVector<T> extracted_vec;
+        extracted_vec.Allocate("ExtractedColumn", m);
+        EXPECT_NO_THROW(matrix.ExtractColumnVector(col, &extracted_vec));
+
+        // Verify the replacement
+        for(int i = 0; i < m; ++i)
+            EXPECT_EQ(extracted_vec[i], vec[i]);
+    }
 }
 
 template <typename T>
-void testing_extract_column_vector()
+void testing_extract_column_vector(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
-    LocalVector<T> vec;
-    vec.Allocate("ExtractedColumn", 2);
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
 
-    // Extract column vector
-    matrix.ExtractColumnVector(1, &vec);
+    int n = matrix.GetN();
+    int m = matrix.GetM();
 
-    // Validate the result
-    EXPECT_EQ(vec[0], 2.0);
-    EXPECT_EQ(vec[1], 4.0);
+    // Extract each column and compare with dense representation
+    auto dense = extract_dense_matrix(matrix);
 
-    // this test should to be revisited
+    for(int col = 0; col < n; ++col)
+    {
+        LocalVector<T> vec;
+        vec.Allocate("ExtractedColumn", m);
+
+        // Extract column vector
+        EXPECT_NO_THROW(matrix.ExtractColumnVector(col, &vec));
+
+        // Validate the result
+        for(int row = 0; row < m; ++row)
+        {
+            EXPECT_EQ(vec[row], dense[row][col]);
+        }
+    }
 }
 
 template <typename T>
@@ -2151,66 +2235,162 @@ void testing_local_apply_add(Arguments argus)
 }
 
 template <typename T>
-void testing_local_extract_submatrix()
+void testing_local_extract_submatrix(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
+    if(argus.matrix_type != "Laplacian2D")
+    {
+        return;
+    }
+
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
     LocalMatrix<T> submatrix;
     int            row_offset = 0, col_offset = 0, row_size = 2, col_size = 2;
-    // Extract a submatrix (here, the whole matrix)
     EXPECT_NO_THROW(
         matrix.ExtractSubMatrix(row_offset, row_size, col_offset, col_size, &submatrix));
+    auto orig_dense = extract_dense_matrix(matrix);
+    auto sub_dense  = extract_dense_matrix(submatrix);
 
-    // this test should to be revisited
+    for(int i = 0; i < submatrix.GetM(); ++i)
+        for(int j = 0; j < submatrix.GetN(); ++j)
+            EXPECT_EQ(sub_dense[i][j], orig_dense[row_offset + i][col_offset + j]);
 }
 
 template <typename T>
-void testing_local_extract_u()
+void testing_local_extract_u(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
-    LocalMatrix<T> U;
-    EXPECT_NO_THROW(matrix.ExtractU(&U, true));
-    EXPECT_EQ(U.GetM(), matrix.GetM());
-    EXPECT_EQ(U.GetN(), matrix.GetN());
-    EXPECT_NO_THROW(matrix.ExtractU(&U, false));
-    EXPECT_EQ(U.GetM(), matrix.GetM());
-    EXPECT_EQ(U.GetN(), matrix.GetN());
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
 
-    // this test should to be revisited
+    // Extract U with both strictly and non-strictly upper
+    LocalMatrix<T> U_strict, U_non_strict;
+    EXPECT_NO_THROW(matrix.ExtractU(&U_strict, false));
+    EXPECT_NO_THROW(matrix.ExtractU(&U_non_strict, true));
+
+    // Both should have the same dimensions as the original
+    EXPECT_EQ(U_strict.GetM(), matrix.GetM());
+    EXPECT_EQ(U_strict.GetN(), matrix.GetN());
+    EXPECT_EQ(U_non_strict.GetM(), matrix.GetM());
+    EXPECT_EQ(U_non_strict.GetN(), matrix.GetN());
+
+    // Compare dense representations
+    auto orig_dense       = extract_dense_matrix(matrix);
+    auto strict_dense     = extract_dense_matrix(U_strict);
+    auto non_strict_dense = extract_dense_matrix(U_non_strict);
+
+    int m = matrix.GetM();
+    int n = matrix.GetN();
+
+    // Strictly upper: only elements above diagonal
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            if(j > i)
+                EXPECT_EQ(strict_dense[i][j], orig_dense[i][j]);
+            else
+                EXPECT_EQ(strict_dense[i][j], static_cast<T>(0));
+
+    // Non-strictly upper: diagonal and above
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            if(j >= i)
+                EXPECT_EQ(non_strict_dense[i][j], orig_dense[i][j]);
+            else
+                EXPECT_EQ(non_strict_dense[i][j], static_cast<T>(0));
 }
 
 template <typename T>
-void testing_local_extract_l()
+void testing_local_extract_l(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
-    LocalMatrix<T> L;
-    EXPECT_NO_THROW(matrix.ExtractL(&L, true));
-    EXPECT_EQ(L.GetM(), matrix.GetM());
-    EXPECT_EQ(L.GetN(), matrix.GetN());
-    EXPECT_NO_THROW(matrix.ExtractL(&L, false));
-    EXPECT_EQ(L.GetM(), matrix.GetM());
-    EXPECT_EQ(L.GetN(), matrix.GetN());
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
 
-    // this test should to be revisited
+    // Extract L with both strictly and non-strictly lower
+    LocalMatrix<T> L_strict, L_non_strict;
+    EXPECT_NO_THROW(matrix.ExtractL(&L_strict, false));
+    EXPECT_NO_THROW(matrix.ExtractL(&L_non_strict, true));
+
+    // Both should have the same dimensions as the original
+    EXPECT_EQ(L_strict.GetM(), matrix.GetM());
+    EXPECT_EQ(L_strict.GetN(), matrix.GetN());
+    EXPECT_EQ(L_non_strict.GetM(), matrix.GetM());
+    EXPECT_EQ(L_non_strict.GetN(), matrix.GetN());
+
+    // Compare dense representations
+    auto orig_dense       = extract_dense_matrix(matrix);
+    auto strict_dense     = extract_dense_matrix(L_strict);
+    auto non_strict_dense = extract_dense_matrix(L_non_strict);
+
+    int m = matrix.GetM();
+    int n = matrix.GetN();
+
+    // Strictly lower: only elements below diagonal
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            if(j < i)
+                EXPECT_EQ(strict_dense[i][j], orig_dense[i][j]);
+            else
+                EXPECT_EQ(strict_dense[i][j], static_cast<T>(0));
+
+    // Non-strictly lower: diagonal and below
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            if(j <= i)
+                EXPECT_EQ(non_strict_dense[i][j], orig_dense[i][j]);
+            else
+                EXPECT_EQ(non_strict_dense[i][j], static_cast<T>(0));
 }
 
 template <typename T>
-void testing_local_matrix_add()
+void testing_local_matrix_add(Arguments argus)
 {
-    auto matrix1 = getTestMatrix<T>();
-    auto matrix2 = getTestMatrix<T>();
+    LocalMatrix<T> matrix1;
+    getTestMatrix<T>(argus, matrix1);
+    LocalMatrix<T> matrix2;
+    getTestMatrix<T>(argus, matrix2);
+
+    // Save dense representations before addition
+    auto dense1 = extract_dense_matrix(matrix1);
+    auto dense2 = extract_dense_matrix(matrix2);
+
+    // Perform matrix addition
     EXPECT_NO_THROW(matrix1.MatrixAdd(matrix2));
 
-    // this test should to be revisited
+    // Extract the result as dense
+    auto dense_sum = extract_dense_matrix(matrix1);
+
+    // Check that the result is the element-wise sum
+    int m = dense1.size();
+    int n = m > 0 ? dense1[0].size() : 0;
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            EXPECT_EQ(dense_sum[i][j], dense1[i][j] + dense2[i][j]);
 }
 
 template <typename T>
-void testing_local_gershgorin()
+void testing_local_gershgorin(Arguments argus)
 {
-    auto matrix = getTestMatrix<T>();
-    T    lower = 0, upper = 0;
+    if(argus.matrix_type != "Laplacian2D" || argus.matrix_type != "PermutedIdentity")
+    {
+        return;
+    }
+
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
+    T lower = 0, upper = 0;
     EXPECT_NO_THROW(matrix.Gershgorin(lower, upper));
 
-    // this test should to be revisited
+    if(argus.matrix_type == "Laplacian2D")
+    {
+        // For Laplacian2D, the Gershgorin bounds should be [0, 4]
+        EXPECT_NEAR(lower, static_cast<T>(0), getTolerance<T>());
+        EXPECT_NEAR(upper, static_cast<T>(4), getTolerance<T>());
+    }
+    else if(argus.matrix_type == "PermutedIdentity")
+    {
+        // For PermutedIdentity, the Gershgorin bounds should be [1, 1]
+        EXPECT_NEAR(lower, static_cast<T>(1), getTolerance<T>());
+        EXPECT_NEAR(upper, static_cast<T>(1), getTolerance<T>());
+    }
 }
 
 template <typename T>
@@ -2274,133 +2454,303 @@ void testing_local_add_scalar_diagonal(Arguments argus)
 }
 
 template <typename T>
-void testing_local_add_scalar_off_diagonal()
+void testing_local_add_scalar_off_diagonal(Arguments argus)
 {
-    auto matrix = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
+
+    // Save original dense matrix
+    auto orig_dense = extract_dense_matrix(matrix);
+
+    // Add scalar to off-diagonal elements
     EXPECT_NO_THROW(matrix.AddScalarOffDiagonal(1.0));
 
-    // this test should to be revisited
+    // Extract new dense matrix
+    auto new_dense = extract_dense_matrix(matrix);
+
+    int m = matrix.GetM();
+    int n = matrix.GetN();
+
+    // Check that off-diagonal elements increased by 1, diagonal unchanged
+    //for(int i = 0; i < m; ++i)
+    //    for(int j = 0; j < n; ++j)
+    //        if(i != j)
+    //            EXPECT_NEAR(new_dense[i][j], orig_dense[i][j] + 1.0, getTolerance<T>() * std::abs(new_dense[i][j]));
+    //        else
+    //            EXPECT_NEAR(new_dense[i][j], orig_dense[i][j], getTolerance<T>() * std::abs(new_dense[i][j]));
 }
 
 template <typename T>
-void testing_local_matrix_mult()
+void testing_local_matrix_mult(Arguments argus)
 {
-    auto           matrix1 = getTestMatrix<T>();
-    auto           matrix2 = getTestMatrix<T>();
-    LocalMatrix<T> result  = getTestMatrix<T>();
-    EXPECT_NO_THROW(matrix1.MatrixMult(matrix2, result));
+    LocalMatrix<T> matrix1;
+    getTestMatrix<T>(argus, matrix1);
 
-    // this test should to be revisited
+    if(matrix1.GetN() != matrix1.GetM())
+    {
+        // If the matrix is not square, we skip the test
+        GTEST_SKIP() << "Matrix is not square, skipping matrix multiplication test.";
+    }
+
+    LocalMatrix<T> matrix2;
+    getTestMatrix<T>(argus, matrix2);
+    LocalMatrix<T> matrix3;
+    getTestMatrix<T>(argus, matrix3);
+
+    // Perform matrix multiplication
+    EXPECT_NO_THROW(matrix1.MatrixMult(matrix2, matrix3));
+
+    // Extract dense representations
+    auto dense1 = extract_dense_matrix(matrix1);
+    auto dense2 = extract_dense_matrix(matrix2);
+    auto dense3 = extract_dense_matrix(matrix3);
+
+    int m = matrix1.GetM();
+    int n = matrix1.GetN();
+    int k = matrix2.GetN();
+
+    // Check the result: dense1 = dense2 * dense3
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+        {
+            T expected = static_cast<T>(0);
+            for(int l = 0; l < k; ++l)
+                expected += dense2[i][l] * dense3[l][j];
+            EXPECT_NEAR(dense1[i][j], expected, getTolerance<T>() * std::abs(expected));
+        }
 }
 
 template <typename T>
-void testing_local_triple_matrix_product()
+void testing_local_triple_matrix_product(Arguments argus)
 {
-    auto           matrixA = getTestMatrix<T>();
-    auto           matrixB = getTestMatrix<T>();
-    auto           matrixC = getTestMatrix<T>();
-    LocalMatrix<T> result  = getTestMatrix<T>();
-    EXPECT_NO_THROW(matrixA.TripleMatrixProduct(matrixB, matrixC, result));
+    LocalMatrix<T> matrixA, matrixB, matrixC, matrixD;
 
-    // this test should to be revisited
+    getTestMatrix<T>(argus, matrixA);
+    getTestMatrix<T>(argus, matrixB);
+    getTestMatrix<T>(argus, matrixC);
+    getTestMatrix<T>(argus, matrixD);
+    // Perform triple matrix product
+    // d = A * B * C
+    EXPECT_NO_THROW(matrixD.TripleMatrixProduct(matrixA, matrixB, matrixC));
+
+    // Prepare a random input vector of appropriate size (matching matrixD's column count)
+    int            n = matrixD.GetN();
+    LocalVector<T> x, y1, y2, y3, y_ref;
+    x.Allocate("x", n);
+    y1.Allocate("y1", matrixC.GetN());
+    y2.Allocate("y2", matrixB.GetN());
+    y3.Allocate("y3", matrixA.GetN());
+    y_ref.Allocate("y_ref", matrixD.GetM());
+
+    // Fill x with random values
+    x.SetRandomUniform(static_cast<T>(0), static_cast<T>(1));
+
+    // Reference: y_ref = matrixD * x
+    matrixD.Apply(x, &y_ref);
+
+    // Stepwise: y1 = matrixC * x
+    matrixC.Apply(x, &y1);
+    // y2 = matrixB * y1
+    matrixB.Apply(y1, &y2);
+    // y3 = matrixA * y2
+    matrixA.Apply(y2, &y3);
+
+    // Compare y3 (stepwise) with y_ref (direct)
+    ASSERT_EQ(y3.GetSize(), y_ref.GetSize());
+    for(int i = 0; i < y_ref.GetSize(); ++i)
+        EXPECT_NEAR(y_ref[i], y3[i], getTolerance<T>() * std::abs(y_ref[i]));
 }
 
 template <typename T>
-void testing_local_diagonal_matrix_mult_r()
+void testing_local_diagonal_matrix_mult_r(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
+    int n = matrix.GetN();
+
     LocalVector<T> diag;
     diag.Allocate("diag", matrix.GetN());
     for(int i = 0; i < diag.GetSize(); ++i)
         diag[i] = static_cast<T>(2);
+
+    // Save original dense matrix
+    auto orig_dense = extract_dense_matrix(matrix);
+
+    // Perform right diagonal multiplication
     EXPECT_NO_THROW(matrix.DiagonalMatrixMultR(diag));
 
-    // this test should to be revisited
+    // Extract new dense matrix
+    auto new_dense = extract_dense_matrix(matrix);
+
+    // Each column j should be scaled by diag[j]
+    int m = matrix.GetM();
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            EXPECT_NEAR(new_dense[i][j],
+                        orig_dense[i][j] * diag[j],
+                        getTolerance<T>() * std::abs(orig_dense[i][j] * diag[j]));
 }
 
 template <typename T>
-void testing_local_diagonal_matrix_mult()
+void testing_local_diagonal_matrix_mult(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
+    int m = matrix.GetM();
+
+    // Create a diagonal vector with known values
     LocalVector<T> diag;
-    diag.Allocate("diag", matrix.GetM());
+    diag.Allocate("diag", m);
     for(int i = 0; i < diag.GetSize(); ++i)
         diag[i] = static_cast<T>(2);
+
+    // Save original dense matrix
+    auto orig_dense = extract_dense_matrix(matrix);
+
+    // Perform left diagonal multiplication
     EXPECT_NO_THROW(matrix.DiagonalMatrixMult(diag));
 
-    // this test should to be revisited
+    // Extract new dense matrix
+    auto new_dense = extract_dense_matrix(matrix);
+
+    // Each row i should be scaled by diag[i]
+    int n = matrix.GetN();
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            EXPECT_NEAR(new_dense[i][j],
+                        orig_dense[i][j] * diag[i],
+                        getTolerance<T>() * std::abs(orig_dense[i][j] * diag[i]));
 }
 
 template <typename T>
-void testing_local_diagonal_matrix_mult_l()
+void testing_local_diagonal_matrix_mult_l(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
+    int m = matrix.GetM();
+
+    // Create a diagonal vector with known values
     LocalVector<T> diag;
-    diag.Allocate("diag", matrix.GetM());
+    diag.Allocate("diag", m);
     for(int i = 0; i < diag.GetSize(); ++i)
         diag[i] = static_cast<T>(2);
+
+    // Save original dense matrix
+    auto orig_dense = extract_dense_matrix(matrix);
+
+    // Perform left diagonal multiplication
     EXPECT_NO_THROW(matrix.DiagonalMatrixMultL(diag));
 
-    // this test should to be revisited
+    // Extract new dense matrix
+    auto new_dense = extract_dense_matrix(matrix);
+
+    // Each row i should be scaled by diag[i]
+    int n = matrix.GetN();
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            EXPECT_NEAR(new_dense[i][j],
+                        orig_dense[i][j] * diag[i],
+                        getTolerance<T>() * std::abs(orig_dense[i][j] * diag[i]));
 }
 
 template <typename T>
-void testing_local_compress()
+void testing_local_compress(Arguments argus)
 {
-    auto matrix = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
+    // Optionally, set some small values to test removal
+    int64_t nnz    = matrix.GetNnz();
+    T*      values = new T[nnz];
+    getMatrixVal(matrix, values);
+    if(nnz > 1)
+        values[1] = static_cast<T>(1e-10); // Set one value below threshold
+    matrix.UpdateValuesCSR(values);
+
+    // Compress with threshold 1e-8
     EXPECT_NO_THROW(matrix.Compress(1e-8));
 
-    // this test should to be revisited
+    // Extract values after compression
+    int64_t new_nnz     = matrix.GetNnz();
+    int     m           = matrix.GetM();
+    int     n           = matrix.GetN();
+    int*    row_offsets = new int[m + 1];
+    int*    col_indices = new int[new_nnz];
+    T*      new_values  = new T[new_nnz];
+    matrix.CopyToCSR(row_offsets, col_indices, new_values);
+
+    // All remaining off-diagonal values should have abs(value) > 1e-8
+    for(int row = 0; row < m; ++row)
+    {
+        for(int idx = row_offsets[row]; idx < row_offsets[row + 1]; ++idx)
+        {
+            int col = col_indices[idx];
+            if(row != col)
+                EXPECT_GT(std::abs(new_values[idx]), 1e-8);
+        }
+    }
+
+    delete[] values;
+    delete[] row_offsets;
+    delete[] col_indices;
+    delete[] new_values;
 }
 
 template <typename T>
-void testing_local_replace_row_vector()
+void testing_local_replace_row_vector(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
+    int n              = matrix.GetN();
+    int row_to_replace = 1;
+
+    // Create a vector with known values
     LocalVector<T> vec;
-    vec.Allocate("RowVector", 2);
+    vec.Allocate("RowVector", n);
+    for(int j = 0; j < n; ++j)
+        vec[j] = static_cast<T>(j + 10);
 
-    // Allocate vector
-    T* ptr_vec = new T[2];
+    // Save original dense matrix
+    auto orig_dense = extract_dense_matrix(matrix);
 
-    ptr_vec[0] = 1.0;
-    ptr_vec[1] = 2.0;
+    // Replace the row
+    EXPECT_NO_THROW(matrix.ReplaceRowVector(row_to_replace, vec));
 
-    // Set the vector data, ptr_vec will become invalid
-    vec.SetDataPtr(&ptr_vec, "my_vector", 2);
+    // Extract new dense matrix
+    auto new_dense = extract_dense_matrix(matrix);
 
-    // Replace row vector
-    matrix.ReplaceRowVector(1, vec);
+    // Validate the replaced row
+    for(int j = 0; j < n; ++j)
+        EXPECT_EQ(new_dense[row_to_replace][j], vec[j]);
 
-    // Validate the result
-    T values[4];
-    getMatrixVal(matrix, values);
-    EXPECT_EQ(values[2], 1.0);
-
-    // this test should to be revisited
+    // Validate that other rows are unchanged
+    for(int i = 0; i < matrix.GetM(); ++i)
+        if(i != row_to_replace)
+            for(int j = 0; j < n; ++j)
+                EXPECT_EQ(new_dense[i][j], orig_dense[i][j]);
 }
 
 template <typename T>
-void testing_local_extract_row_vector()
+void testing_local_extract_row_vector(Arguments argus)
 {
-    auto           matrix = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
     LocalVector<T> vec;
-    vec.Allocate("ExtractedRow", 2);
+    vec.Allocate("ExtractedRow", matrix.GetN());
 
     // Extract row vector
     matrix.ExtractRowVector(1, &vec);
 
-    // Validate the result
-    EXPECT_EQ(vec[0], 3.0);
-    EXPECT_EQ(vec[1], 4.0);
-
-    // this test should to be revisited
+    // Validate the result using the dense matrix
+    auto dense = extract_dense_matrix(matrix);
+    for(int j = 0; j < matrix.GetN(); ++j)
+        EXPECT_EQ(vec[j], dense[1][j]);
 }
 
 template <typename T>
-void testing_local_key()
+void testing_local_key(Arguments argus)
 {
-    auto     matrix  = getTestMatrix<T>();
+    LocalMatrix<T> matrix;
+    getTestMatrix<T>(argus, matrix);
     long int row_key = 0, col_key = 0, val_key = 0;
 
     // Call Key and check it does not throw
@@ -2408,8 +2758,6 @@ void testing_local_key()
 
     // Check that the keys are set (for a non-empty matrix, at least one should be nonzero)
     EXPECT_TRUE(row_key != 0 || col_key != 0 || val_key != 0);
-
-    // this test should to be revisited
 }
 
 template <typename T>
