@@ -130,6 +130,10 @@ if(SUPPORT_MPI)
   target_compile_definitions(rocalution PRIVATE SUPPORT_MULTINODE)
 endif()
 
+if(BUILD_SUPPORT_COMPLEX)
+  target_compile_definitions(rocalution PRIVATE SUPPORT_COMPLEX)
+endif()
+
 if(SUPPORT_HIP)
   target_compile_definitions(rocalution PRIVATE SUPPORT_HIP)
   list(APPEND package_depends PACKAGE HIP)
@@ -198,6 +202,10 @@ if(SUPPORT_HIP)
   if(SUPPORT_MPI)
     target_compile_definitions(rocalution_hip PRIVATE SUPPORT_MULTINODE)
     target_link_libraries(rocalution_hip PUBLIC MPI::MPI_CXX)
+  endif()
+
+  if(BUILD_SUPPORT_COMPLEX)
+    target_compile_definitions(rocalution_hip PRIVATE SUPPORT_COMPLEX)
   endif()
 
   rocm_set_soversion(rocalution_hip "1.0.0")

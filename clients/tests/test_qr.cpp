@@ -29,10 +29,10 @@
 
 typedef std::tuple<int, unsigned int, std::string, int> qr_tuple;
 
-std::vector<int>          qr_size        = {7, 16, 21};
-std::vector<unsigned int> qr_format      = {1, 2, 3, 4, 5, 6, 7};
-std::vector<std::string>  qr_matrix_type = {"Laplacian2D", "PermutedIdentity"};
-std::vector<int>          qr_use_acc     = {1};
+std::vector<int>          qr_size             = {7, 16, 21};
+std::vector<unsigned int> qr_format           = {1, 2, 3, 4, 5, 6, 7};
+std::vector<std::string>  qr_matrix_type      = {"Laplacian2D", "PermutedIdentity"};
+std::vector<int>          qr_use_host_and_acc = {0};
 
 // Function to update tests if environment variable is set
 void update_qr()
@@ -45,6 +45,7 @@ void update_qr()
         qr_size.clear();
         qr_format.clear();
         qr_matrix_type.clear();
+        qr_use_host_and_acc.clear();
     }
 
     if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
@@ -52,7 +53,13 @@ void update_qr()
         qr_size.push_back(7);
         qr_format.insert(qr_format.end(), {1, 2, 3, 4, 5, 6, 7});
         qr_matrix_type.push_back("Laplacian2D");
-        qr_use_acc.push_back(0);
+        qr_use_host_and_acc.push_back(1);
+    }
+    else if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
+                                "ROCALUTION_EMULATION_REGRESSION",
+                                "ROCALUTION_EMULATION_EXTENDED"}))
+    {
+        qr_use_host_and_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -122,4 +129,4 @@ INSTANTIATE_TEST_CASE_P(qr,
                         testing::Combine(testing::ValuesIn(qr_size),
                                          testing::ValuesIn(qr_format),
                                          testing::ValuesIn(qr_matrix_type),
-                                         testing::ValuesIn(qr_use_acc)));
+                                         testing::ValuesIn(qr_use_host_and_acc)));

@@ -29,10 +29,10 @@
 
 typedef std::tuple<int, unsigned int, std::string, int> inversion_tuple;
 
-std::vector<int>          inversion_size        = {7, 16, 21};
-std::vector<unsigned int> inversion_format      = {1, 2, 3, 4, 5, 6, 7};
-std::vector<std::string>  inversion_matrix_type = {"Laplacian2D", "PermutedIdentity"};
-std::vector<int>          inversion_use_acc     = {1};
+std::vector<int>          inversion_size             = {7, 16, 21};
+std::vector<unsigned int> inversion_format           = {1, 2, 3, 4, 5, 6, 7};
+std::vector<std::string>  inversion_matrix_type      = {"Laplacian2D", "PermutedIdentity"};
+std::vector<int>          inversion_use_host_and_acc = {0};
 
 // Function to update tests if environment variable is set
 void update_inversion()
@@ -45,6 +45,7 @@ void update_inversion()
         inversion_size.clear();
         inversion_format.clear();
         inversion_matrix_type.clear();
+        inversion_use_host_and_acc.clear();
     }
 
     if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
@@ -52,7 +53,13 @@ void update_inversion()
         inversion_size.push_back(7);
         inversion_format.insert(inversion_format.end(), {1, 2, 3, 4, 5, 6, 7});
         inversion_matrix_type.push_back("Laplacian2D");
-        inversion_use_acc.push_back(0);
+        inversion_use_host_and_acc.push_back(1);
+    }
+    else if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
+                                "ROCALUTION_EMULATION_REGRESSION",
+                                "ROCALUTION_EMULATION_EXTENDED"}))
+    {
+        inversion_use_host_and_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -124,4 +131,4 @@ INSTANTIATE_TEST_CASE_P(inversion,
                         testing::Combine(testing::ValuesIn(inversion_size),
                                          testing::ValuesIn(inversion_format),
                                          testing::ValuesIn(inversion_matrix_type),
-                                         testing::ValuesIn(inversion_use_acc)));
+                                         testing::ValuesIn(inversion_use_host_and_acc)));

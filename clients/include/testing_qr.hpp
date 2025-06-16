@@ -44,13 +44,12 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_qr(Arguments argus)
 {
-    int          ndim                = argus.size;
-    unsigned int format              = argus.format;
-    std::string  matrix_type         = argus.matrix_type;
-    bool         disable_accelerator = !argus.use_acc;
+    int          ndim             = argus.size;
+    unsigned int format           = argus.format;
+    std::string  matrix_type      = argus.matrix_type;
+    const bool   use_host_and_acc = argus.use_acc;
 
     // Initialize rocALUTION platform
-    disable_accelerator_rocalution(disable_accelerator);
     set_device_rocalution(device);
     init_rocalution();
 
@@ -85,15 +84,6 @@ bool testing_qr(Arguments argus)
 
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
-    // Move data to accelerator
-    if(!disable_accelerator)
-    {
-        A.MoveToAccelerator();
-        x.MoveToAccelerator();
-        b.MoveToAccelerator();
-        e.MoveToAccelerator();
-    }
-
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
     b.Allocate("b", A.GetM());
@@ -117,20 +107,42 @@ bool testing_qr(Arguments argus)
     // Matrix format
     A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
+    // Move data to accelerator
+    dls.MoveToAccelerator();
+    A.MoveToAccelerator();
+    x.MoveToAccelerator();
+    b.MoveToAccelerator();
+    e.MoveToAccelerator();
+
     dls.Solve(b, &x);
 
     // Verify solution
     x.ScaleAdd(-1.0, e);
-    T nrm2 = x.Norm();
+    T nrm2_acc = x.Norm();
 
-    bool success = check_residual(nrm2);
+    bool success = check_residual(nrm2_acc);
 
+    if(use_host_and_acc)
+    {
+        dls.MoveToHost();
+        A.MoveToHost();
+        x.MoveToHost();
+        e.MoveToHost();
+        b.MoveToHost();
+
+        dls.Solve(b, &x);
+
+        // Verify solution
+        x.ScaleAdd(-1.0, e);
+        T nrm2_host = x.Norm();
+
+        success = success && check_residual(nrm2_host);
+    }
     // Clean up
     dls.Clear();
 
     // Stop rocALUTION platform
     stop_rocalution();
-    disable_accelerator_rocalution(false);
 
     return success;
 }

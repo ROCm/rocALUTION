@@ -29,10 +29,10 @@
 
 typedef std::tuple<int, unsigned int, std::string, int> lu_tuple;
 
-std::vector<int>          lu_size        = {7, 16, 21};
-std::vector<unsigned int> lu_format      = {1, 2, 3, 4, 5, 6, 7};
-std::vector<std::string>  lu_matrix_type = {"Laplacian2D"};
-std::vector<int>          lu_use_acc     = {1};
+std::vector<int>          lu_size             = {7, 16, 21};
+std::vector<unsigned int> lu_format           = {1, 2, 3, 4, 5, 6, 7};
+std::vector<std::string>  lu_matrix_type      = {"Laplacian2D"};
+std::vector<int>          lu_use_host_and_acc = {0};
 
 // Function to update tests if environment variable is set
 void update_lu()
@@ -44,6 +44,7 @@ void update_lu()
     {
         lu_size.clear();
         lu_format.clear();
+        lu_use_host_and_acc.clear();
 
         lu_size.push_back(16);
         lu_format.push_back(2);
@@ -56,7 +57,13 @@ void update_lu()
 
         lu_size.push_back(7);
         lu_format.insert(lu_format.end(), {1, 2, 3, 4, 5, 6, 7});
-        lu_use_acc.push_back(0);
+        lu_use_host_and_acc.push_back(1);
+    }
+    else if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
+                                "ROCALUTION_EMULATION_REGRESSION",
+                                "ROCALUTION_EMULATION_EXTENDED"}))
+    {
+        lu_use_host_and_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -123,4 +130,4 @@ INSTANTIATE_TEST_CASE_P(lu,
                         testing::Combine(testing::ValuesIn(lu_size),
                                          testing::ValuesIn(lu_format),
                                          testing::ValuesIn(lu_matrix_type),
-                                         testing::ValuesIn(lu_use_acc)));
+                                         testing::ValuesIn(lu_use_host_and_acc)));
