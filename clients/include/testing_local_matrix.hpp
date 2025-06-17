@@ -877,10 +877,11 @@ std::vector<std::vector<T>> extract_dense_matrix(const LocalMatrix<T>& matrix)
     int                         n   = matrix.GetN();
     int                         nnz = matrix.GetNnz();
     std::vector<std::vector<T>> dense(m, std::vector<T>(n, static_cast<T>(0)));
-    int*                        row_offsets = new int[m + 1];
-    int*                        col_indices = new int[nnz];
-    T*                          values      = new T[nnz];
-    matrix.CopyToCSR(row_offsets, col_indices, values);
+    std::vector<int>            row_offsets(m + 1);
+    std::vector<int>            col_indices(nnz);
+    std::vector<T>              values(nnz);
+
+    matrix.CopyToCSR(row_offsets.data(), col_indices.data(), values.data());
     for(int row = 0; row < m; ++row)
     {
         for(int idx = row_offsets[row]; idx < row_offsets[row + 1]; ++idx)
@@ -889,9 +890,6 @@ std::vector<std::vector<T>> extract_dense_matrix(const LocalMatrix<T>& matrix)
             dense[row][col] = values[idx];
         }
     }
-    delete[] row_offsets;
-    delete[] col_indices;
-    delete[] values;
     return dense;
 }
 
@@ -1001,21 +999,21 @@ void testing_local_copy_from_async()
     EXPECT_NO_THROW(matrix.Sync());
     EXPECT_EQ(copy_matrix.GetM(), matrix.GetM());
     EXPECT_EQ(copy_matrix.GetN(), matrix.GetN());
+    EXPECT_EQ(copy_matrix.GetNnz(), matrix.GetNnz());
 
-    int64_t nnz = matrix.GetNnz();
+    // Compare dense representations
+    auto dense_orig = extract_dense_matrix(matrix);
+    auto dense_copy = extract_dense_matrix(copy_matrix);
 
-    T* check_values_1 = new T[nnz];
-    T* check_values_2 = new T[nnz];
-
-    getMatrixVal(matrix, check_values_1);
-    getMatrixVal(copy_matrix, check_values_2);
-    for(int64_t i = 0; i < nnz; ++i)
+    EXPECT_EQ(dense_orig.size(), dense_copy.size());
+    for(size_t i = 0; i < dense_orig.size(); ++i)
     {
-        EXPECT_EQ(check_values_1[i], check_values_2[i]);
+        EXPECT_EQ(dense_orig[i].size(), dense_copy[i].size());
+        for(size_t j = 0; j < dense_orig[i].size(); ++j)
+        {
+            EXPECT_EQ(dense_orig[i][j], dense_copy[i][j]);
+        }
     }
-
-    delete[] check_values_1;
-    delete[] check_values_2;
 }
 
 template <typename T>
@@ -1025,35 +1023,43 @@ void testing_local_update_values_csr()
 
     int64_t nnz = matrix.GetNnz();
 
-    T* new_values = new T[nnz];
+    // Use std::vector instead of raw arrays
+    std::vector<T> new_values(nnz);
     for(int64_t i = 0; i < nnz; ++i)
     {
         new_values[i] = static_cast<T>(i + 10); // Fill with some values
     }
 
     // UpdateValuesCSR should update the values in the matrix
-    EXPECT_NO_THROW(matrix.UpdateValuesCSR(new_values));
+    EXPECT_NO_THROW(matrix.UpdateValuesCSR(new_values.data()));
 
-    T* check_values = new T[nnz];
-    getMatrixVal(matrix, check_values);
+    std::vector<T> check_values(nnz);
+    getMatrixVal(matrix, check_values.data());
     for(int64_t i = 0; i < nnz; ++i)
     {
         EXPECT_EQ(check_values[i], new_values[i]);
     }
-
-    delete[] new_values;
-    delete[] check_values;
 }
 
 template <typename T>
 void testing_local_move_to_accelerator()
 {
     auto matrix = getTestMatrix<T>();
-    // MoveToAccelerator should move the matrix to the accelerator (if available)
-    EXPECT_NO_THROW(matrix.MoveToAccelerator());
-    // Optionally, check dimensions remain the same
-    EXPECT_EQ(matrix.GetM(), 2);
-    EXPECT_EQ(matrix.GetN(), 2);
+
+    for(int i = 0; i < 10; i++)
+    {
+        EXPECT_NO_THROW(matrix.MoveToAccelerator());
+    }
+    for(int i = 0; i < 10; i++)
+    {
+        EXPECT_NO_THROW(matrix.MoveToHost());
+    }
+    for(int i = 0; i < 10; i++)
+    {
+        EXPECT_NO_THROW(matrix.MoveToHost());
+        EXPECT_NO_THROW(matrix.MoveToAccelerator());
+    }
+    EXPECT_EQ(matrix.Check(), true);
 }
 
 template <typename T>
@@ -1061,10 +1067,21 @@ void testing_local_move_to_accelerator_async()
 {
     auto matrix = getTestMatrix<T>();
     // MoveToAcceleratorAsync should move the matrix asynchronously
-    EXPECT_NO_THROW(matrix.MoveToAcceleratorAsync());
+    for(int i = 0; i < 10; i++)
+    {
+        EXPECT_NO_THROW(matrix.MoveToAcceleratorAsync());
+    }
+    for(int i = 0; i < 10; i++)
+    {
+        EXPECT_NO_THROW(matrix.MoveToHostAsync());
+    }
+    for(int i = 0; i < 10; i++)
+    {
+        EXPECT_NO_THROW(matrix.MoveToHostAsync());
+        EXPECT_NO_THROW(matrix.MoveToAcceleratorAsync());
+    }
     EXPECT_NO_THROW(matrix.Sync());
-    EXPECT_EQ(matrix.GetM(), 2);
-    EXPECT_EQ(matrix.GetN(), 2);
+    EXPECT_EQ(matrix.Check(), true);
 }
 
 template <typename T>
@@ -1135,20 +1152,19 @@ void testing_local_copy(Arguments argus)
     EXPECT_EQ(copy_matrix.GetM(), matrix.GetM());
     EXPECT_EQ(copy_matrix.GetN(), matrix.GetN());
 
-    int64_t nnz = matrix.GetNnz();
+    // Compare dense representations
+    auto dense_orig = extract_dense_matrix(matrix);
+    auto dense_copy = extract_dense_matrix(copy_matrix);
 
-    T* check_values_1 = new T[nnz];
-    T* check_values_2 = new T[nnz];
-
-    getMatrixVal(matrix, check_values_1);
-    getMatrixVal(copy_matrix, check_values_2);
-    for(int64_t i = 0; i < nnz; ++i)
+    EXPECT_EQ(dense_orig.size(), dense_copy.size());
+    for(size_t i = 0; i < dense_orig.size(); ++i)
     {
-        EXPECT_EQ(check_values_1[i], check_values_2[i]);
+        EXPECT_EQ(dense_orig[i].size(), dense_copy[i].size());
+        for(size_t j = 0; j < dense_orig[i].size(); ++j)
+        {
+            EXPECT_EQ(dense_orig[i][j], dense_copy[i][j]);
+        }
     }
-
-    delete[] check_values_1;
-    delete[] check_values_2;
 }
 
 template <typename T>
@@ -1163,22 +1179,21 @@ void testing_local_scale(Arguments argus)
     // The expected values are obtained by multiplying the original values
     // by the scaling factor.
 
-    int64_t nnz = matrix.GetNnz();
+    // Save original dense matrix
+    auto orig_dense = extract_dense_matrix(matrix);
 
-    T* check_values_1 = new T[nnz];
-    T* check_values_2 = new T[nnz];
-
-    getMatrixVal(matrix, check_values_1);
+    // Scale the matrix by 2.0
     matrix.Scale(2.0);
-    getMatrixVal(matrix, check_values_2);
 
-    for(int64_t i = 0; i < nnz; ++i)
-    {
-        EXPECT_EQ(2.0 * check_values_1[i], check_values_2[i]);
-    }
+    // Extract new dense matrix
+    auto new_dense = extract_dense_matrix(matrix);
 
-    delete[] check_values_1;
-    delete[] check_values_2;
+    // Compare each value
+    int m = matrix.GetM();
+    int n = matrix.GetN();
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            EXPECT_EQ(new_dense[i][j], orig_dense[i][j] * 2.0);
 }
 
 template <typename T>
@@ -1291,19 +1306,19 @@ void testing_clone_matrix(Arguments argus)
     EXPECT_EQ(clone.GetM(), matrix.GetM());
     EXPECT_EQ(clone.GetN(), matrix.GetN());
 
-    int64_t nnz            = matrix.GetNnz();
-    T*      check_values_1 = new T[nnz];
-    T*      check_values_2 = new T[nnz];
+    // Compare dense representations
+    auto dense_orig  = extract_dense_matrix(matrix);
+    auto dense_clone = extract_dense_matrix(clone);
 
-    getMatrixVal(matrix, check_values_1);
-    getMatrixVal(clone, check_values_2);
-    for(int i = 0; i < nnz; ++i)
+    EXPECT_EQ(dense_orig.size(), dense_clone.size());
+    for(size_t i = 0; i < dense_orig.size(); ++i)
     {
-        EXPECT_EQ(check_values_1[i], check_values_2[i]);
+        EXPECT_EQ(dense_orig[i].size(), dense_clone[i].size());
+        for(size_t j = 0; j < dense_orig[i].size(); ++j)
+        {
+            EXPECT_EQ(dense_orig[i][j], dense_clone[i][j]);
+        }
     }
-
-    delete[] check_values_1;
-    delete[] check_values_2;
 }
 
 template <typename T>
@@ -2700,33 +2715,37 @@ void testing_local_replace_row_vector(Arguments argus)
 {
     LocalMatrix<T> matrix;
     getTestMatrix<T>(argus, matrix);
-    int n              = matrix.GetN();
-    int row_to_replace = 1;
+    const int n = matrix.GetN();
 
-    // Create a vector with known values
-    LocalVector<T> vec;
-    vec.Allocate("RowVector", n);
-    for(int j = 0; j < n; ++j)
-        vec[j] = static_cast<T>(j + 10);
+    const int max_row_to_replace = 5 < matrix.GetM() ? 5 : matrix.GetM();
 
-    // Save original dense matrix
-    auto orig_dense = extract_dense_matrix(matrix);
+    for(int row_to_replace = 0; row_to_replace < max_row_to_replace; ++row_to_replace)
+    {
+        // Create a vector with known values
+        LocalVector<T> vec;
+        vec.Allocate("RowVector", n);
+        for(int j = 0; j < n; ++j)
+            vec[j] = static_cast<T>(j + 10);
 
-    // Replace the row
-    EXPECT_NO_THROW(matrix.ReplaceRowVector(row_to_replace, vec));
+        // Save original dense matrix
+        auto orig_dense = extract_dense_matrix(matrix);
 
-    // Extract new dense matrix
-    auto new_dense = extract_dense_matrix(matrix);
+        // Replace the row
+        EXPECT_NO_THROW(matrix.ReplaceRowVector(row_to_replace, vec));
 
-    // Validate the replaced row
-    for(int j = 0; j < n; ++j)
-        EXPECT_EQ(new_dense[row_to_replace][j], vec[j]);
+        // Extract new dense matrix
+        auto new_dense = extract_dense_matrix(matrix);
 
-    // Validate that other rows are unchanged
-    for(int i = 0; i < matrix.GetM(); ++i)
-        if(i != row_to_replace)
-            for(int j = 0; j < n; ++j)
-                EXPECT_EQ(new_dense[i][j], orig_dense[i][j]);
+        // Validate the replaced row
+        for(int j = 0; j < n; ++j)
+            EXPECT_EQ(new_dense[row_to_replace][j], vec[j]);
+
+        // Validate that other rows are unchanged
+        for(int i = 0; i < matrix.GetM(); ++i)
+            if(i != row_to_replace)
+                for(int j = 0; j < n; ++j)
+                    EXPECT_EQ(new_dense[i][j], orig_dense[i][j]);
+    }
 }
 
 template <typename T>
