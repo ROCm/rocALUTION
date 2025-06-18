@@ -27,7 +27,6 @@ function display_help()
   echo "    [--verbose] print additional cmake build information"
   echo "    [--address-sanitizer] Build with address sanitizer enabled. Uses amdclang++ as compiler"
   echo "    [--codecoverage] build with code coverage profiling enabled"
-  echo "    [--rm-legacy-include-dir] Remove legacy include dir Packaging added for file/folder reorg backward compatibility"
 }
 
 # This function is helpful for dockerfiles that do not have sudo installed, but the default user is root
@@ -277,7 +276,6 @@ build_relocatable=false
 build_static=false
 build_address_sanitizer=false
 build_codecoverage=false
-build_freorg_bkwdcomp=false
 compiler=c++
 verb=false
 
@@ -341,9 +339,6 @@ while true; do
         shift ;;
     --codecoverage)
         build_codecoverage=true
-        shift ;;
-    --rm-legacy-include-dir)
-        build_freorg_bkwdcomp=false
         shift ;;
     --mpi)
         mpi_dir=${2}
@@ -511,13 +506,6 @@ pushd .
           exit 1
       fi
       cmake_common_options="${cmake_common_options} -DBUILD_CODE_COVERAGE=ON -DBUILD_SUPPORT_COMPLEX=OFF"
-  fi
-
-  #Enable backward compatibility wrappers
-  if [[ "${build_freorg_bkwdcomp}" == true ]]; then
-    cmake_common_options="${cmake_common_options} -DBUILD_FILE_REORG_BACKWARD_COMPATIBILITY=ON"
-  else
-    cmake_common_options="${cmake_common_options} -DBUILD_FILE_REORG_BACKWARD_COMPATIBILITY=OFF"
   fi
 
   # Verbose cmake
