@@ -168,7 +168,7 @@ namespace rocalution
 
         this->rhs_.CloneBackend(*this->op_);
         this->rhs_1_.CloneBackend(*this->op_);
-        this->rhs_1_.CloneBackend(*this->op_);
+        this->rhs_2_.CloneBackend(*this->op_);
 
         this->permutation_.CloneBackend(this->x_);
 
