@@ -129,10 +129,10 @@ LocalVector<T> getTestVector(int size = 10)
 }
 
 template <typename T>
-void testing_get_interior()
+void testing_get_interior(const Arguments& argus)
 {
-    // Get a LocalVector
-    LocalVector<T> vec = getTestVector<T>();
+    // Get a LocalVector with size from argus
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Call GetInterior
     LocalVector<T>& interior = vec.GetInterior();
@@ -150,10 +150,10 @@ void testing_get_interior()
 }
 
 template <typename T>
-void testing_const_get_interior()
+void testing_const_get_interior(const Arguments& argus)
 {
-    // Get a LocalVector
-    const LocalVector<T> vec = getTestVector<T>();
+    // Get a LocalVector with size from argus
+    const LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Call GetInterior
     const LocalVector<T>& interior = vec.GetInterior();
@@ -171,20 +171,20 @@ void testing_const_get_interior()
 }
 
 template <typename T>
-void testing_check()
+void testing_check(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>();
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Check the vector
     EXPECT_NO_THROW(vec.Check());
 }
 
 template <typename T>
-void testing_zeros()
+void testing_zeros(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>();
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     vec.Zeros();
     // Validate that all elements are set to zero
@@ -195,10 +195,10 @@ void testing_zeros()
 }
 
 template <typename T>
-void testing_ones()
+void testing_ones(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>();
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     vec.Ones();
     // Validate that all elements are set to one
@@ -209,10 +209,10 @@ void testing_ones()
 }
 
 template <typename T>
-void testing_set_values()
+void testing_set_values(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>();
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Set values in the vector
     T value = static_cast<T>(5.0);
@@ -226,10 +226,10 @@ void testing_set_values()
 }
 
 template <typename T>
-void testing_set_random_uniform()
+void testing_set_random_uniform(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>();
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Set random values in the vector
     T min = static_cast<T>(0.0);
@@ -245,10 +245,10 @@ void testing_set_random_uniform()
 }
 
 template <typename T>
-void testing_set_random_normal()
+void testing_set_random_normal(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(1000);
+    LocalVector<T> vec = getTestVector<T>(argus.size > 0 ? argus.size : 1000);
 
     // Set random values in the vector
     T mean = static_cast<T>(0.0);
@@ -275,13 +275,13 @@ void testing_set_random_normal()
 }
 
 template <typename T>
-void testing_copy_from()
+void testing_copy_from(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Create another LocalVector to copy from
-    LocalVector<T> src_vec = getTestVector<T>(5);
+    LocalVector<T> src_vec = getTestVector<T>(argus.size);
 
     // Copy values from the source vector
     EXPECT_NO_THROW(vec.CopyFrom(src_vec));
@@ -294,10 +294,10 @@ void testing_copy_from()
 }
 
 template <typename T>
-void testing_clone_from()
+void testing_clone_from(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Clone the vector
     LocalVector<T> cloned_vec;
@@ -311,10 +311,10 @@ void testing_clone_from()
 }
 
 template <typename T>
-void testing_binary()
+void testing_binary(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Define the filename for the test
     std::string filename = "test_vector.bin";
@@ -337,11 +337,11 @@ void testing_binary()
 }
 
 template <typename T>
-void testing_add_scale()
+void testing_add_scale(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> v = getTestVector<T>(5);
-    LocalVector<T> x = getTestVector<T>(5);
+    LocalVector<T> v = getTestVector<T>(argus.size);
+    LocalVector<T> x = getTestVector<T>(argus.size);
 
     // Define a scaling factor
     T alpha = static_cast<T>(2.0);
@@ -355,13 +355,12 @@ void testing_add_scale()
         EXPECT_EQ(v[i], static_cast<T>((i + 1) * (1 + alpha)));
     }
 }
-
 template <typename T>
-void testing_scale_add()
+void testing_scale_add(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> v = getTestVector<T>(5);
-    LocalVector<T> x = getTestVector<T>(5);
+    LocalVector<T> v = getTestVector<T>(argus.size);
+    LocalVector<T> x = getTestVector<T>(argus.size);
 
     // Define a scaling factor
     T alpha = static_cast<T>(2.0);
@@ -380,19 +379,22 @@ void testing_scale_add()
 }
 
 template <typename T>
-void testing_scale_add_2()
+void testing_scale_add_2(const Arguments& argus)
 {
-    LocalVector<T> v = getTestVector<T>(3);
-    LocalVector<T> x = getTestVector<T>(3);
-    LocalVector<T> y = getTestVector<T>(3);
+    LocalVector<T> v = getTestVector<T>(argus.size);
+    LocalVector<T> x = getTestVector<T>(argus.size);
+    LocalVector<T> y = getTestVector<T>(argus.size);
 
     // Fill x and y with test values
-    x[0] = static_cast<T>(1);
-    x[1] = static_cast<T>(2);
-    x[2] = static_cast<T>(3);
-    y[0] = static_cast<T>(4);
-    y[1] = static_cast<T>(5);
-    y[2] = static_cast<T>(6);
+    if(argus.size >= 3)
+    {
+        x[0] = static_cast<T>(1);
+        x[1] = static_cast<T>(2);
+        x[2] = static_cast<T>(3);
+        y[0] = static_cast<T>(4);
+        y[1] = static_cast<T>(5);
+        y[2] = static_cast<T>(6);
+    }
 
     // v = 1 initially
     v.Ones();
@@ -411,10 +413,10 @@ void testing_scale_add_2()
 }
 
 template <typename T>
-void testing_scale()
+void testing_scale(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Define a scaling factor
     T alpha = static_cast<T>(2.0);
@@ -430,11 +432,11 @@ void testing_scale()
 }
 
 template <typename T>
-void testing_dot()
+void testing_dot(const Arguments& argus)
 {
     // Create two LocalVectors and allocate some size
-    LocalVector<T> vec1 = getTestVector<T>(5);
-    LocalVector<T> vec2 = getTestVector<T>(5);
+    LocalVector<T> vec1 = getTestVector<T>(argus.size);
+    LocalVector<T> vec2 = getTestVector<T>(argus.size);
 
     // Perform the Dot product
     T result = 0.0;
@@ -450,11 +452,11 @@ void testing_dot()
 }
 
 template <typename T>
-void testing_dot_non_conj()
+void testing_dot_non_conj(const Arguments& argus)
 {
     // Create two LocalVectors and allocate some size
-    LocalVector<T> vec1 = getTestVector<T>(5);
-    LocalVector<T> vec2 = getTestVector<T>(5);
+    LocalVector<T> vec1 = getTestVector<T>(argus.size);
+    LocalVector<T> vec2 = getTestVector<T>(argus.size);
 
     // Perform the Dot product without conjugation
     T result = 0.0;
@@ -470,10 +472,10 @@ void testing_dot_non_conj()
 }
 
 template <typename T>
-void testing_norm()
+void testing_norm(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Perform the Norm operation
     T result = 0.0;
@@ -489,10 +491,10 @@ void testing_norm()
 }
 
 template <typename T>
-void testing_reduce()
+void testing_reduce(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Perform the Reduce operation
     T result = 0.0;
@@ -508,11 +510,11 @@ void testing_reduce()
 }
 
 template <typename T>
-void testing_point_wise_mult()
+void testing_point_wise_mult(const Arguments& argus)
 {
     // Create two LocalVectors and allocate some size
-    LocalVector<T> vec1 = getTestVector<T>(5);
-    LocalVector<T> vec2 = getTestVector<T>(5);
+    LocalVector<T> vec1 = getTestVector<T>(argus.size);
+    LocalVector<T> vec2 = getTestVector<T>(argus.size);
 
     // Perform the PointwiseMult operation
     EXPECT_NO_THROW(vec1.PointWiseMult(vec2));
@@ -525,12 +527,12 @@ void testing_point_wise_mult()
 }
 
 template <typename T>
-void testing_point_wise_mult_2()
+void testing_point_wise_mult_2(const Arguments& argus)
 {
     // Create two LocalVectors and allocate some size
-    LocalVector<T> vec1 = getTestVector<T>(5);
-    LocalVector<T> vec2 = getTestVector<T>(5);
-    LocalVector<T> vec3 = getTestVector<T>(5);
+    LocalVector<T> vec1 = getTestVector<T>(argus.size);
+    LocalVector<T> vec2 = getTestVector<T>(argus.size);
+    LocalVector<T> vec3 = getTestVector<T>(argus.size);
 
     // Perform the PointwiseMult operation
     EXPECT_NO_THROW(vec1.PointWiseMult(vec2, vec3));
@@ -543,10 +545,10 @@ void testing_point_wise_mult_2()
 }
 
 template <typename T>
-void testing_leave_data_ptr()
+void testing_leave_data_ptr(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Pointer to data (initialized to NULL)
     T* data_ptr = nullptr;
@@ -562,28 +564,27 @@ void testing_leave_data_ptr()
 }
 
 template <typename T>
-void testing_sync()
+void testing_sync(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Perform a synchronization operation
     EXPECT_NO_THROW(vec.Sync());
 
     // Validate that the vector is still accessible and contains the correct values
-    EXPECT_EQ(vec.GetSize(), 5);
-    EXPECT_EQ(vec[0], static_cast<T>(1.0));
-    EXPECT_EQ(vec[1], static_cast<T>(2.0));
-    EXPECT_EQ(vec[2], static_cast<T>(3.0));
-    EXPECT_EQ(vec[3], static_cast<T>(4.0));
-    EXPECT_EQ(vec[4], static_cast<T>(5.0));
+    EXPECT_EQ(vec.GetSize(), argus.size);
+    for(int i = 0; i < vec.GetSize(); ++i)
+    {
+        EXPECT_EQ(vec[i], static_cast<T>(i + 1));
+    }
 }
 
 template <typename T>
-void testing_copy_from_data()
+void testing_copy_from_data(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Pointer to data
     T data_ptr[5] = {0, 2, 4, 8, 16};
@@ -591,32 +592,34 @@ void testing_copy_from_data()
     // Attempt to copy from the data pointer
     EXPECT_NO_THROW(vec.CopyFromData(data_ptr));
 
-    EXPECT_EQ(vec.GetSize(), 5);
-    EXPECT_EQ(vec[0], static_cast<T>(0.0));
-    EXPECT_EQ(vec[1], static_cast<T>(2.0));
-    EXPECT_EQ(vec[2], static_cast<T>(4.0));
-    EXPECT_EQ(vec[3], static_cast<T>(8.0));
-    EXPECT_EQ(vec[4], static_cast<T>(16.0));
-}
-
-template <typename T>
-void testing_copy_to_host_data()
-{
-    // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
-
-    // Pointer to host data
-    T host_data_ptr[5];
-
-    // Attempt to copy to the host data pointer
-    EXPECT_NO_THROW(vec.CopyToHostData(host_data_ptr));
-
-    for(int i = 0; i < vec.GetSize(); ++i)
+    EXPECT_EQ(vec.GetSize(), argus.size);
+    if(argus.size >= 5)
     {
-        EXPECT_EQ(host_data_ptr[i], static_cast<T>(i + 1));
+        EXPECT_EQ(vec[0], static_cast<T>(0.0));
+        EXPECT_EQ(vec[1], static_cast<T>(2.0));
+        EXPECT_EQ(vec[2], static_cast<T>(4.0));
+        EXPECT_EQ(vec[3], static_cast<T>(8.0));
+        EXPECT_EQ(vec[4], static_cast<T>(16.0));
     }
 }
 
+template <typename T>
+void testing_copy_to_host_data(const Arguments& argus)
+{
+    // Create a LocalVector and allocate some size
+    LocalVector<T> vec = getTestVector<T>(argus.size);
+
+    // Pointer to host data
+    std::vector<T> host_data(argus.size);
+
+    // Attempt to copy to the host data pointer
+    EXPECT_NO_THROW(vec.CopyToHostData(host_data.data()));
+
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(host_data[i], static_cast<T>(i + 1));
+    }
+}
 template <typename T>
 void testing_restriction()
 {
@@ -648,14 +651,14 @@ void testing_restriction()
 }
 
 template <typename T>
-void testing_copy_from_with_offsets()
+void testing_copy_from_with_offsets(const Arguments& argus)
 {
     // Create a source LocalVector and allocate some size
-    LocalVector<T> src_vec = getTestVector<T>(5); // [1, 2, 3, 4, 5]
+    LocalVector<T> src_vec = getTestVector<T>(argus.size);
 
     // Create a destination LocalVector and allocate some size
     LocalVector<T> dst_vec;
-    dst_vec.Allocate("DstVector", 5);
+    dst_vec.Allocate("DstVector", argus.size);
 
     // Fill destination with zeros
     dst_vec.Zeros();
@@ -665,19 +668,22 @@ void testing_copy_from_with_offsets()
     int64_t dst_offset = 2;
     int64_t size       = 3;
 
-    EXPECT_NO_THROW(dst_vec.CopyFrom(src_vec, src_offset, dst_offset, size));
+    if(argus.size >= 5)
+    {
+        EXPECT_NO_THROW(dst_vec.CopyFrom(src_vec, src_offset, dst_offset, size));
 
-    // Validate the copied values
-    // dst_vec should now be [0, 0, 2, 3, 4]
-    EXPECT_EQ(dst_vec[0], static_cast<T>(0));
-    EXPECT_EQ(dst_vec[1], static_cast<T>(0));
-    EXPECT_EQ(dst_vec[2], static_cast<T>(2));
-    EXPECT_EQ(dst_vec[3], static_cast<T>(3));
-    EXPECT_EQ(dst_vec[4], static_cast<T>(4));
+        // Validate the copied values
+        // dst_vec should now be [0, 0, 2, 3, 4]
+        EXPECT_EQ(dst_vec[0], static_cast<T>(0));
+        EXPECT_EQ(dst_vec[1], static_cast<T>(0));
+        EXPECT_EQ(dst_vec[2], static_cast<T>(2));
+        EXPECT_EQ(dst_vec[3], static_cast<T>(3));
+        EXPECT_EQ(dst_vec[4], static_cast<T>(4));
+    }
 }
 
 template <typename T>
-void testing_set_data_ptr_null()
+void testing_set_data_ptr_null(const Arguments& argus)
 {
     // Create a LocalVector
     LocalVector<T> vec;
@@ -696,11 +702,11 @@ void testing_set_data_ptr_null()
 }
 
 template <typename T>
-void testing_info()
+void testing_info(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
     LocalVector<T> vec;
-    vec.Allocate("TestVector", 10);
+    vec.Allocate("TestVector", argus.size);
 
     // Redirect standard output to a stringstream to capture the Info output
     std::stringstream output_stream;
@@ -718,7 +724,8 @@ void testing_info()
 
     // Validate the output contains expected information
     EXPECT_NE(output.find("name=TestVector"), std::string::npos); // Check vector name
-    EXPECT_NE(output.find("size=10"), std::string::npos); // Check vector size
+    EXPECT_NE(output.find("size=" + std::to_string(argus.size)),
+              std::string::npos); // Check vector size
     EXPECT_NE(output.find("prec=" + std::to_string(sizeof(T) * 8) + "bit"),
               std::string::npos); // Check data type
 }
@@ -752,71 +759,75 @@ void testing_sort()
 }
 
 template <typename T>
-void testing_permute_backward()
+void testing_permute_backward(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Create a permutation vector
     LocalVector<int> permutation;
-    permutation.Allocate("PermutationVector", 5);
-    permutation[0] = 4; // Move element at index 4 to index 0
-    permutation[1] = 2; // Move element at index 2 to index 1
-    permutation[2] = 0; // Move element at index 0 to index 2
-    permutation[3] = 3; // Keep element at index 3 in place
-    permutation[4] = 1; // Move element at index 1 to index 4
+    permutation.Allocate("PermutationVector", argus.size);
 
-    // Call the PermuteBackward method
-    EXPECT_NO_THROW(vec.PermuteBackward(permutation));
+    if(argus.size >= 5)
+    {
+        permutation[0] = 4; // Move element at index 4 to index 0
+        permutation[1] = 2; // Move element at index 2 to index 1
+        permutation[2] = 0; // Move element at index 0 to index 2
+        permutation[3] = 3; // Keep element at index 3 in place
+        permutation[4] = 1; // Move element at index 1 to index 4
 
-    // Validate the permuted vector
-    EXPECT_EQ(vec[0], static_cast<T>(5.0)); // Element at index 4
-    EXPECT_EQ(vec[1], static_cast<T>(3.0)); // Element at index 2
-    EXPECT_EQ(vec[2], static_cast<T>(1.0)); // Element at index 0
-    EXPECT_EQ(vec[3], static_cast<T>(4.0)); // Element at index 3
-    EXPECT_EQ(vec[4], static_cast<T>(2.0)); // Element at index 1
+        // Call the PermuteBackward method
+        EXPECT_NO_THROW(vec.PermuteBackward(permutation));
+
+        // Validate the permuted vector
+        EXPECT_EQ(vec[0], static_cast<T>(5.0)); // Element at index 4
+        EXPECT_EQ(vec[1], static_cast<T>(3.0)); // Element at index 2
+        EXPECT_EQ(vec[2], static_cast<T>(1.0)); // Element at index 0
+        EXPECT_EQ(vec[3], static_cast<T>(4.0)); // Element at index 3
+        EXPECT_EQ(vec[4], static_cast<T>(2.0)); // Element at index 1
+    }
 }
 
 template <typename T>
-void testing_inclusive_sum()
+void testing_inclusive_sum(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
     LocalVector<T> input_vec;
-    input_vec.Allocate("InputVector", 5);
+    input_vec.Allocate("InputVector", argus.size);
 
     // Fill the input vector with values
-    input_vec[0] = static_cast<T>(1.0);
-    input_vec[1] = static_cast<T>(2.0);
-    input_vec[2] = static_cast<T>(3.0);
-    input_vec[3] = static_cast<T>(4.0);
-    input_vec[4] = static_cast<T>(5.0);
+    for(int i = 0; i < argus.size; ++i)
+    {
+        input_vec[i] = static_cast<T>(i + 1);
+    }
 
     // Create a LocalVector to store the result
     LocalVector<T> result_vec;
-    result_vec.Allocate("ResultVector", 5);
+    result_vec.Allocate("ResultVector", argus.size);
 
     // Call the InclusiveSum method
     EXPECT_NO_THROW(result_vec.InclusiveSum(input_vec));
 
     // Validate the result
-    EXPECT_EQ(result_vec[0], static_cast<T>(1.0)); // 1
-    EXPECT_EQ(result_vec[1], static_cast<T>(3.0)); // 1 + 2
-    EXPECT_EQ(result_vec[2], static_cast<T>(6.0)); // 1 + 2 + 3
-    EXPECT_EQ(result_vec[3], static_cast<T>(10.0)); // 1 + 2 + 3 + 4
-    EXPECT_EQ(result_vec[4], static_cast<T>(15.0)); // 1 + 2 + 3 + 4 + 5
+    T sum = 0;
+    for(int i = 0; i < argus.size; ++i)
+    {
+        sum += static_cast<T>(i + 1);
+        EXPECT_EQ(result_vec[i], sum);
+    }
 }
 
 template <typename T>
-void testing_power()
+void testing_power(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>();
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Apply the Power method with power = 2.0
     EXPECT_NO_THROW(vec.Power(2.0));
 
     // Validate the results
-    for(int i = 0; i < 5; ++i)
+    for(int i = 0; i < argus.size; ++i)
     {
         EXPECT_EQ(vec[i], static_cast<T>((i + 1) * (i + 1))); // Squared values
     }
@@ -825,28 +836,27 @@ void testing_power()
     EXPECT_NO_THROW(vec.Power(0.5));
 
     // Validate the results
-    for(int i = 0; i < 5; ++i)
+    for(int i = 0; i < argus.size; ++i)
     {
         EXPECT_EQ(vec[i], static_cast<T>(i + 1)); // Original values restored
     }
 }
 
 template <typename T>
-void testing_scale_add_scale()
+void testing_scale_add_scale(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Create another LocalVector for the operation
     LocalVector<T> x;
-    x.Allocate("XVector", 5);
+    x.Allocate("XVector", argus.size);
 
     // Fill the second vector with values
-    x[0] = 5.0f;
-    x[1] = 4.0f;
-    x[2] = 3.0f;
-    x[3] = 2.0f;
-    x[4] = 1.0f;
+    for(int i = 0; i < argus.size; ++i)
+    {
+        x[i] = static_cast<T>(argus.size - i);
+    }
 
     // Define scaling factors
     T alpha = 2.0f;
@@ -856,42 +866,39 @@ void testing_scale_add_scale()
     EXPECT_NO_THROW(vec.ScaleAddScale(alpha, x, beta));
 
     // Validate the result
-    EXPECT_EQ(vec[0], static_cast<T>(alpha * 1.0 + beta * 5.0)); // 2 * 1 + 3 * 5 = 17
-    EXPECT_EQ(vec[1], static_cast<T>(alpha * 2.0 + beta * 4.0)); // 2 * 2 + 3 * 4 = 16
-    EXPECT_EQ(vec[2], static_cast<T>(alpha * 3.0 + beta * 3.0)); // 2 * 3 + 3 * 3 = 15
-    EXPECT_EQ(vec[3], static_cast<T>(alpha * 4.0 + beta * 2.0)); // 2 * 4 + 3 * 2 = 14
-    EXPECT_EQ(vec[4], static_cast<T>(alpha * 5.0 + beta * 1.0)); // 2 * 5 + 3 * 1 = 13
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(vec[i], static_cast<T>(alpha * (i + 1) + beta * (argus.size - i)));
+    }
 }
 
 template <typename T>
-void testing_operator_index_const()
+void testing_operator_index_const(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Create a const reference to the vector
     const LocalVector<T>& const_vec = vec;
 
     // Validate access to elements using the const operator[]
-    EXPECT_EQ(const_vec[0], static_cast<T>(1.0)); // First element
-    EXPECT_EQ(const_vec[1], static_cast<T>(2.0)); // Second element
-    EXPECT_EQ(const_vec[2], static_cast<T>(3.0)); // Third element
-    EXPECT_EQ(const_vec[3], static_cast<T>(4.0)); // Fourth element
-    EXPECT_EQ(const_vec[4], static_cast<T>(5.0)); // Fifth element
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(const_vec[i], static_cast<T>(i + 1));
+    }
 }
 
 template <typename T>
-void testing_read_file_ascii()
+void testing_read_file_ascii(const Arguments& argus)
 {
     // Create a temporary ASCII file with test data
     std::string   filename = "test_vector.txt";
     std::ofstream file(filename);
     ASSERT_TRUE(file.is_open());
-    file << "1.0\n";
-    file << "2.0\n";
-    file << "3.0\n";
-    file << "4.0\n";
-    file << "5.0\n";
+    for(int i = 0; i < argus.size; ++i)
+    {
+        file << static_cast<double>(i + 1) << "\n";
+    }
     file.close();
 
     // Create a LocalVector to read the data into
@@ -901,24 +908,23 @@ void testing_read_file_ascii()
     EXPECT_NO_THROW(vec.ReadFileASCII(filename));
 
     // Validate the vector size
-    EXPECT_EQ(vec.GetSize(), 5);
+    EXPECT_EQ(vec.GetSize(), argus.size);
 
     // Validate the values in the vector
-    EXPECT_EQ(vec[0], static_cast<T>(1.0)); // First element
-    EXPECT_EQ(vec[1], static_cast<T>(2.0)); // Second element
-    EXPECT_EQ(vec[2], static_cast<T>(3.0)); // Third element
-    EXPECT_EQ(vec[3], static_cast<T>(4.0)); // Fourth element
-    EXPECT_EQ(vec[4], static_cast<T>(5.0)); // Fifth element
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(vec[i], static_cast<T>(i + 1));
+    }
 
     // Clean up the temporary file
     std::remove(filename.c_str());
 }
 
 template <typename T>
-void testing_copy_from_async()
+void testing_copy_from_async(const Arguments& argus)
 {
     // Create a source LocalVector and allocate some size
-    LocalVector<T> src_vec = getTestVector<T>(5);
+    LocalVector<T> src_vec = getTestVector<T>(argus.size);
 
     // Create a destination LocalVector
     LocalVector<T> dest_vec;
@@ -931,18 +937,17 @@ void testing_copy_from_async()
 
     // Validate the copied values
     EXPECT_EQ(dest_vec.GetSize(), src_vec.GetSize());
-    EXPECT_EQ(dest_vec[0], static_cast<T>(1.0));
-    EXPECT_EQ(dest_vec[1], static_cast<T>(2.0));
-    EXPECT_EQ(dest_vec[2], static_cast<T>(3.0));
-    EXPECT_EQ(dest_vec[3], static_cast<T>(4.0));
-    EXPECT_EQ(dest_vec[4], static_cast<T>(5.0));
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(dest_vec[i], static_cast<T>(i + 1));
+    }
 }
 
 template <typename T>
-void testing_move_to_accelerator_async()
+void testing_move_to_accelerator_async(const Arguments& argus)
 {
     // Create a source LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Perform the asynchronous move to the accelerator
     EXPECT_NO_THROW(vec.MoveToAcceleratorAsync());
@@ -951,63 +956,59 @@ void testing_move_to_accelerator_async()
     EXPECT_NO_THROW(_rocalution_sync());
 
     // Validate that the vector is still accessible and contains the correct values
-    EXPECT_EQ(vec.GetSize(), 5);
-    EXPECT_EQ(vec[0], static_cast<T>(1.0));
-    EXPECT_EQ(vec[1], static_cast<T>(2.0));
-    EXPECT_EQ(vec[2], static_cast<T>(3.0));
-    EXPECT_EQ(vec[3], static_cast<T>(4.0));
-    EXPECT_EQ(vec[4], static_cast<T>(5.0));
+    EXPECT_EQ(vec.GetSize(), argus.size);
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(vec[i], static_cast<T>(i + 1));
+    }
 }
 
 template <typename T>
-void testing_copy_from_host_data()
+void testing_copy_from_host_data(const Arguments& argus)
 {
     // clang-format off
     // Create a host array with test data
-    T   host_data[] = {static_cast<T>(1.0),
-                       static_cast<T>(2.0),
-                       static_cast<T>(3.0),
-                       static_cast<T>(4.0),
-                       static_cast<T>(5.0)};
+    std::vector<T> host_data(argus.size);
+    for(int i = 0; i < argus.size; ++i)
+    {
+        host_data[i] = static_cast<T>(i + 1);
+    }
     // clang-format on
-    int size = 5;
 
     // Create a LocalVector and allocate the same size
     LocalVector<T> vec;
-    vec.Allocate("TestVector", size);
+    vec.Allocate("TestVector", argus.size);
 
     // Copy data from the host array to the LocalVector
-    EXPECT_NO_THROW(vec.CopyFromHostData(host_data));
+    EXPECT_NO_THROW(vec.CopyFromHostData(host_data.data()));
 
     // Validate the vector size
-    EXPECT_EQ(vec.GetSize(), size);
+    EXPECT_EQ(vec.GetSize(), argus.size);
 
     // Validate the copied values
-    EXPECT_EQ(vec[0], static_cast<T>(1.0));
-    EXPECT_EQ(vec[1], static_cast<T>(2.0));
-    EXPECT_EQ(vec[2], static_cast<T>(3.0));
-    EXPECT_EQ(vec[3], static_cast<T>(4.0));
-    EXPECT_EQ(vec[4], static_cast<T>(5.0));
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(vec[i], static_cast<T>(i + 1));
+    }
 }
 
 template <typename T>
-void testing_copy_to_data()
+void testing_copy_to_data(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Create a host array to store the copied data
-    T host_data[5] = {static_cast<T>(0.0)};
+    std::vector<T> host_data(argus.size, static_cast<T>(0.0));
 
     // Copy data from the LocalVector to the host array
-    EXPECT_NO_THROW(vec.CopyToData(host_data));
+    EXPECT_NO_THROW(vec.CopyToData(host_data.data()));
 
     // Validate the copied values
-    EXPECT_EQ(host_data[0], static_cast<T>(1.0));
-    EXPECT_EQ(host_data[1], static_cast<T>(2.0));
-    EXPECT_EQ(host_data[2], static_cast<T>(3.0));
-    EXPECT_EQ(host_data[3], static_cast<T>(4.0));
-    EXPECT_EQ(host_data[4], static_cast<T>(5.0));
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(host_data[i], static_cast<T>(i + 1));
+    }
 }
 
 // Helper function to read the contents of a file into a string
@@ -1087,73 +1088,90 @@ void testing_scale_add_scale_with_offsets()
 }
 
 template <typename T>
-void testing_inclusive_sum_void()
+void testing_inclusive_sum_void(const Arguments& argus)
 {
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
-    EXPECT_EQ(vec.InclusiveSum(), static_cast<T>(15.0)); // 1 + 2 + 3 + 4 + 5 = 15
+    T expected_sum = 0;
+    for(int i = 0; i < argus.size; ++i)
+    {
+        expected_sum += static_cast<T>(i + 1);
+    }
+    EXPECT_EQ(vec.InclusiveSum(), expected_sum);
 }
 
 template <typename T>
-void testing_inclusive_sum_with_input()
+void testing_inclusive_sum_with_input(const Arguments& argus)
 {
-    LocalVector<T> input_vec = getTestVector<T>(5);
+    LocalVector<T> input_vec = getTestVector<T>(argus.size);
 
     LocalVector<T> result_vec;
-    result_vec.Allocate("ResultVector", 5);
+    result_vec.Allocate("ResultVector", argus.size);
 
     EXPECT_NO_THROW(result_vec.InclusiveSum(input_vec));
 
-    EXPECT_EQ(result_vec[0], static_cast<T>(1.0f)); // 1
-    EXPECT_EQ(result_vec[1], static_cast<T>(3.0f)); // 1 + 2
-    EXPECT_EQ(result_vec[2], static_cast<T>(6.0f)); // 1 + 2 + 3
-    EXPECT_EQ(result_vec[3], static_cast<T>(10.0f)); // 1 + 2 + 3 + 4
-    EXPECT_EQ(result_vec[4], static_cast<T>(15.0f)); // 1 + 2 + 3 + 4 + 5
+    T sum = 0;
+    for(int i = 0; i < argus.size; ++i)
+    {
+        sum += static_cast<T>(i + 1);
+        EXPECT_EQ(result_vec[i], sum);
+    }
 }
 
 template <typename T>
-void testing_exclusive_sum_void()
+void testing_exclusive_sum_void(const Arguments& argus)
 {
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
-    EXPECT_EQ(vec.ExclusiveSum(), static_cast<T>(10.0)); // 0 + 1 + 2 + 3 + 4 = 10
+    T expected_sum = 0;
+    for(int i = 0; i < argus.size - 1; ++i)
+    {
+        expected_sum += static_cast<T>(i + 1);
+    }
+    EXPECT_EQ(vec.ExclusiveSum(), expected_sum);
 }
 
 template <typename T>
-void testing_exclusive_sum_with_input()
+void testing_exclusive_sum_with_input(const Arguments& argus)
 {
-    LocalVector<T> input_vec = getTestVector<T>(5);
+    LocalVector<T> input_vec = getTestVector<T>(argus.size);
 
     LocalVector<T> result_vec;
-    result_vec.Allocate("ResultVector", 5);
+    result_vec.Allocate("ResultVector", argus.size);
 
     EXPECT_NO_THROW(result_vec.ExclusiveSum(input_vec));
 
-    EXPECT_EQ(result_vec[0], static_cast<T>(0.0)); // 0
-    EXPECT_EQ(result_vec[1], static_cast<T>(1.0)); // 0 + 1
-    EXPECT_EQ(result_vec[2], static_cast<T>(3.0)); // 0 + 1 + 2
-    EXPECT_EQ(result_vec[3], static_cast<T>(6.0)); // 0 + 1 + 2 + 3
-    EXPECT_EQ(result_vec[4], static_cast<T>(10.0)); // 0 + 1 + 2 + 3 + 4
+    T sum = 0;
+    for(int i = 0; i < argus.size; ++i)
+    {
+        EXPECT_EQ(result_vec[i], sum);
+        sum += static_cast<T>(i + 1);
+    }
 }
 
 template <typename T>
-void testing_asum()
+void testing_asum(const Arguments& argus)
 {
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
-    EXPECT_EQ(vec.Asum(), static_cast<T>(15.0)); // |1| + |2| + |3| + |4| + |5| = 15
+    T expected_sum = 0;
+    for(int i = 0; i < argus.size; ++i)
+    {
+        expected_sum += std::abs(static_cast<T>(i + 1));
+    }
+    EXPECT_EQ(vec.Asum(), expected_sum);
 }
 
 template <typename T>
-void testing_amax()
+void testing_amax(const Arguments& argus)
 {
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     T   max_value = 0.0;
     int max_index = vec.Amax(max_value);
 
-    EXPECT_EQ(max_index, 4); // Index of the maximum absolute value
-    EXPECT_EQ(max_value, static_cast<T>(5.0)); // Maximum absolute value
+    EXPECT_EQ(max_index, argus.size - 1);
+    EXPECT_EQ(max_value, static_cast<T>(argus.size));
 }
 
 // Helper function to read binary file contents into a vector
@@ -1176,171 +1194,197 @@ std::vector<ValueType> ReadBinaryFile(const std::string& filename, size_t& size_
 }
 
 template <typename T>
-void testing_prolongation()
+void testing_prolongation(const Arguments& argus)
 {
     // Create a coarse-level LocalVector and allocate some size
+    int coarse_size = argus.size > 2 ? argus.size / 2 : 2;
+    int fine_size   = coarse_size * 2;
+
     LocalVector<T> vec_coarse;
-    vec_coarse.Allocate("CoarseVector", 3);
+    vec_coarse.Allocate("CoarseVector", coarse_size);
 
     // Fill the coarse-level vector with values
-    vec_coarse[0] = static_cast<T>(1.0);
-    vec_coarse[1] = static_cast<T>(2.0);
-    vec_coarse[2] = static_cast<T>(3.0);
+    for(int i = 0; i < coarse_size; ++i)
+    {
+        vec_coarse[i] = static_cast<T>(i + 1);
+    }
 
     // Create a mapping vector
     LocalVector<int> map;
-    map.Allocate("MappingVector", 6);
+    map.Allocate("MappingVector", fine_size);
 
     // Define the mapping (fine indices map to coarse indices)
-    map[0] = 0;
-    map[1] = 0;
-    map[2] = 1;
-    map[3] = 1;
-    map[4] = 2;
-    map[5] = 2;
+    for(int i = 0; i < fine_size; ++i)
+    {
+        map[i] = i / 2;
+    }
 
     // Create a fine-level LocalVector to store the result
     LocalVector<T> vec_fine;
-    vec_fine.Allocate("FineVector", 6);
+    vec_fine.Allocate("FineVector", fine_size);
 
     // Perform the prolongation operation
     EXPECT_NO_THROW(vec_fine.Prolongation(vec_coarse, map));
 
     // Validate the prolonged values
-    EXPECT_EQ(vec_fine[0], static_cast<T>(1.0));
-    EXPECT_EQ(vec_fine[1], static_cast<T>(1.0));
-    EXPECT_EQ(vec_fine[2], static_cast<T>(2.0));
-    EXPECT_EQ(vec_fine[3], static_cast<T>(2.0));
-    EXPECT_EQ(vec_fine[4], static_cast<T>(3.0));
-    EXPECT_EQ(vec_fine[5], static_cast<T>(3.0));
+    for(int i = 0; i < fine_size; ++i)
+    {
+        EXPECT_EQ(vec_fine[i], vec_coarse[map[i]]);
+    }
 }
 
 template <typename T>
-void testing_get_index_values()
+void testing_get_index_values(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Create an index vector
+    int              num_indices = std::min(3, argus.size);
     LocalVector<int> index;
-    index.Allocate("IndexVector", 3);
-    index[0] = 0; // First element
-    index[1] = 2; // Third element
-    index[2] = 4; // Fifth element
+    index.Allocate("IndexVector", num_indices);
+    for(int i = 0; i < num_indices; ++i)
+    {
+        index[i] = i * 2;
+    }
 
     // Create a LocalVector to store the values
     LocalVector<T> values;
-    values.Allocate("ValuesVector", 3);
+    values.Allocate("ValuesVector", num_indices);
 
     // Call the GetIndexValues method
     EXPECT_NO_THROW(vec.GetIndexValues(index, &values));
 
     // Validate the retrieved values
-    EXPECT_EQ(values[0], static_cast<T>(1.0)); // First element
-    EXPECT_EQ(values[1], static_cast<T>(3.0)); // Third element
-    EXPECT_EQ(values[2], static_cast<T>(5.0)); // Fifth element
+    for(int i = 0; i < num_indices; ++i)
+    {
+        EXPECT_EQ(values[i], static_cast<T>(index[i] + 1));
+    }
 }
 
 template <typename T>
-void testing_set_index_values()
+void testing_set_index_values(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
     LocalVector<T> vec;
-    vec.Allocate("TestVector", 5);
+    vec.Allocate("TestVector", argus.size);
 
     // Create an index vector
+    int              num_indices = std::min(3, argus.size);
     LocalVector<int> index;
-    index.Allocate("IndexVector", 3);
-    index[0] = 0; // First element
-    index[1] = 2; // Third element
-    index[2] = 4; // Fifth element
+    index.Allocate("IndexVector", num_indices);
+    for(int i = 0; i < num_indices; ++i)
+    {
+        index[i] = i * 2;
+    }
 
     // Create a LocalVector to store the values
     LocalVector<T> values;
-    values.Allocate("ValuesVector", 3);
-    values[0] = static_cast<T>(100.0); // First element
-    values[1] = static_cast<T>(200.0); // Third element
-    values[2] = static_cast<T>(300.0); // Fifth element
+    values.Allocate("ValuesVector", num_indices);
+    for(int i = 0; i < num_indices; ++i)
+    {
+        values[i] = static_cast<T>(100.0 * (i + 1));
+    }
 
     // Call the SetIndexValues method
     EXPECT_NO_THROW(vec.SetIndexValues(index, values));
 
     // Validate the set values
-    EXPECT_EQ(vec[0], static_cast<T>(100.0)); // First element
-    EXPECT_EQ(vec[2], static_cast<T>(200.0)); // Third element
-    EXPECT_EQ(vec[4], static_cast<T>(300.0)); // Fifth element
+    for(int i = 0; i < num_indices; ++i)
+    {
+        EXPECT_EQ(vec[index[i]], static_cast<T>(100.0 * (i + 1)));
+    }
 }
 
 template <typename T>
-void testing_add_index_values()
+void testing_add_index_values(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
     LocalVector<T> vec;
-    vec.Allocate("TestVector", 5);
+    vec.Allocate("TestVector", argus.size);
 
     // Fill the vector with initial values
-    vec[0] = static_cast<T>(10.0);
-    vec[2] = static_cast<T>(20.0);
-    vec[4] = static_cast<T>(30.0);
+    for(int i = 0; i < argus.size; ++i)
+    {
+        vec[i] = static_cast<T>(10.0 * (i + 1));
+    }
 
     // Create an index vector
+    int              num_indices = std::min(3, argus.size);
     LocalVector<int> index;
-    index.Allocate("IndexVector", 3);
-    index[0] = 0; // First element
-    index[1] = 2; // Third element
-    index[2] = 4; // Fifth element
+    index.Allocate("IndexVector", num_indices);
+    for(int i = 0; i < num_indices; ++i)
+    {
+        index[i] = i * 2;
+    }
 
     // Create a LocalVector to store the values to be added
     LocalVector<T> values;
-    values.Allocate("ValuesVector", 3);
-    values[0] = static_cast<T>(5.0); // First element
-    values[1] = static_cast<T>(10.0); // Third element
-    values[2] = static_cast<T>(15.0); // Fifth element
+    values.Allocate("ValuesVector", num_indices);
+    for(int i = 0; i < num_indices; ++i)
+    {
+        values[i] = static_cast<T>(5.0 * (i + 1));
+    }
 
     // Call the AddIndexValues method
     EXPECT_NO_THROW(vec.AddIndexValues(index, values));
 
     // Validate the updated values
-    EXPECT_EQ(vec[0], static_cast<T>(15.0)); // First element: 10 + 5
-    EXPECT_EQ(vec[2], static_cast<T>(30.0)); // Third element: 20 + 10
-    EXPECT_EQ(vec[4], static_cast<T>(45.0)); // Fifth element: 30 + 15
+    for(int i = 0; i < num_indices; ++i)
+    {
+        EXPECT_EQ(vec[index[i]], static_cast<T>(10.0 * (index[i] + 1) + 5.0 * (i + 1)));
+    }
 }
 
 template <typename T>
-void testing_get_continuous_values()
+void testing_get_continuous_values(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
-    // Create an array to store the continuous values
-    T values[3];
+    int num_values = std::min(3, argus.size - 1);
+    if(num_values > 0)
+    {
+        // Create an array to store the continuous values
+        std::vector<T> values(num_values);
 
-    // Call the GetContinuousValues method
-    EXPECT_NO_THROW(vec.GetContinuousValues(1, 4, values));
+        // Call the GetContinuousValues method
+        EXPECT_NO_THROW(vec.GetContinuousValues(1, 1 + num_values, values.data()));
 
-    // Validate the retrieved values
-    EXPECT_EQ(values[0], static_cast<T>(2.0)); // Second element
-    EXPECT_EQ(values[1], static_cast<T>(3.0)); // Third element
-    EXPECT_EQ(values[2], static_cast<T>(4.0)); // Fourth element
+        // Validate the retrieved values
+        for(int i = 0; i < num_values; ++i)
+        {
+            EXPECT_EQ(values[i], static_cast<T>(i + 2));
+        }
+    }
 }
 
 template <typename T>
-void testing_set_continuous_values()
+void testing_set_continuous_values(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
     LocalVector<T> vec;
-    vec.Allocate("TestVector", 5);
+    vec.Allocate("TestVector", argus.size);
 
-    // Create an array of values to set
-    T values[3] = {100.0, 200.0, 300.0};
+    int num_values = std::min(3, argus.size - 1);
+    if(num_values > 0)
+    {
+        // Create an array of values to set
+        std::vector<T> values(num_values);
+        for(int i = 0; i < num_values; ++i)
+        {
+            values[i] = static_cast<T>(100.0 * (i + 1));
+        }
 
-    // Call the SetContinuousValues method
-    EXPECT_NO_THROW(vec.SetContinuousValues(1, 4, values));
+        // Call the SetContinuousValues method
+        EXPECT_NO_THROW(vec.SetContinuousValues(1, 1 + num_values, values.data()));
 
-    // Validate the set values
-    EXPECT_EQ(vec[1], static_cast<T>(100.0)); // Second element
-    EXPECT_EQ(vec[2], static_cast<T>(200.0)); // Third element
-    EXPECT_EQ(vec[3], static_cast<T>(300.0)); // Fourth element
+        // Validate the set values
+        for(int i = 0; i < num_values; ++i)
+        {
+            EXPECT_EQ(vec[1 + i], static_cast<T>(100.0 * (i + 1)));
+        }
+    }
 }
 
 template <typename T>
@@ -1366,10 +1410,10 @@ void testing_extract_coarse_mapping()
 }
 
 template <typename T>
-void testing_move_to_host_async()
+void testing_move_to_host_async(const Arguments& argus)
 {
     // Create a LocalVector and allocate some size
-    LocalVector<T> vec = getTestVector<T>(5);
+    LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Move the vector to the accelerator
     EXPECT_NO_THROW(vec.MoveToAccelerator());
@@ -1381,8 +1425,8 @@ void testing_move_to_host_async()
     EXPECT_NO_THROW(_rocalution_sync());
 
     // Validate that the vector is still accessible and contains the correct values
-    EXPECT_EQ(vec.GetSize(), 5);
-    for(int i = 0; i < 5; ++i)
+    EXPECT_EQ(vec.GetSize(), argus.size);
+    for(int i = 0; i < argus.size; ++i)
     {
         EXPECT_EQ(vec[i], static_cast<T>(i + 1));
     }

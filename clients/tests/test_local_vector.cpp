@@ -25,6 +25,11 @@
 #include "utility.hpp"
 
 #include <gtest/gtest.h>
+
+typedef std::tuple<int> local_vector_tuple;
+
+int local_vector_size[] = {10, 17, 21};
+
 /*
 typedef std::tuple<int, int, int, int, bool, int, bool> backend_tuple;
 
@@ -104,6 +109,24 @@ protected:
     virtual void TearDown() {}
 };
 
+class parameterized_local_vector_test : public testing::TestWithParam<local_vector_tuple>
+{
+protected:
+    parameterized_local_vector_test() {}
+    virtual ~parameterized_local_vector_test() {}
+    virtual void SetUp() override
+    {
+        if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
+                               "ROCALUTION_EMULATION_REGRESSION",
+                               "ROCALUTION_EMULATION_EXTENDED"}))
+        {
+            GTEST_SKIP();
+        }
+    }
+
+    virtual void TearDown() {}
+};
+
 #define TEST_CASE(function, type, disable_accelerator)   \
     disable_accelerator_rocalution(disable_accelerator); \
     set_device_rocalution(0);                            \
@@ -135,70 +158,115 @@ protected:
     GENERATE_TEST_CASES_DEVICE(test_fixture, function, name) \
     GENERATE_TEST_CASES_HOST(test_fixture, function, name)
 
+Arguments setup_local_vector_arguments(local_vector_tuple tup)
+{
+    Arguments arg;
+    arg.size = std::get<0>(tup);
+    return arg;
+}
+
+#define TEST_P_CASE(function, type, disable_accelerator)      \
+    disable_accelerator_rocalution(disable_accelerator);      \
+    set_device_rocalution(0);                                 \
+    init_rocalution();                                        \
+    Arguments arg = setup_local_vector_arguments(GetParam()); \
+    function<type>(arg);                                      \
+    stop_rocalution();                                        \
+    disable_accelerator_rocalution(false);
+
+#define GENERATE_P_TEST_CASES_DEVICE(test_fixture, function, name) \
+    TEST_P(test_fixture, name##_device_float)                      \
+    {                                                              \
+        TEST_P_CASE(function, float, false);                       \
+    }                                                              \
+    TEST_P(test_fixture, name##_device_double)                     \
+    {                                                              \
+        TEST_P_CASE(function, double, false);                      \
+    }
+
+#define GENERATE_P_TEST_CASES_HOST(test_fixture, function, name) \
+    TEST_P(test_fixture, name##_host_float)                      \
+    {                                                            \
+        TEST_P_CASE(function, float, true);                      \
+    }                                                            \
+    TEST_P(test_fixture, name##_host_double)                     \
+    {                                                            \
+        TEST_P_CASE(function, double, true);                     \
+    }
+#define GENERATE_P_TEST_CASES(test_fixture, function, name)    \
+    GENERATE_P_TEST_CASES_DEVICE(test_fixture, function, name) \
+    GENERATE_P_TEST_CASES_HOST(test_fixture, function, name)
+
 // Test for GetInterior
-GENERATE_TEST_CASES(local_vector_test, testing_get_interior, get_interior)
-GENERATE_TEST_CASES(local_vector_test, testing_const_get_interior, const_get_interior)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_get_interior, get_interior)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_const_get_interior,
+                      const_get_interior)
 
 // Test for LocalVector::Check
-GENERATE_TEST_CASES(local_vector_test, testing_check, check)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_check, check)
 
 // Test for LocalVector::SetDataPtr when *ptr == NULL
-GENERATE_TEST_CASES(local_vector_test, testing_set_data_ptr_null, set_data_ptr_null)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_set_data_ptr_null, set_data_ptr_null)
 
 // Test for LocalVector::ScaleAdd2
-GENERATE_TEST_CASES(local_vector_test, testing_scale_add_2, scale_add_2)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_scale_add_2, scale_add_2)
 
 // Test for LocalVector::CopyFrom
-GENERATE_TEST_CASES(local_vector_test, testing_copy_from, copy_from)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_copy_from, copy_from)
 
 // Test for LocalVector::CloneFrom
-GENERATE_TEST_CASES(local_vector_test, testing_clone_from, clone_from)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_clone_from, clone_from)
 
 // Test for Binary
-GENERATE_TEST_CASES(local_vector_test, testing_binary, file_binary)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_binary, file_binary)
 
 // Test for LocalVector::AddScale
-GENERATE_TEST_CASES(local_vector_test, testing_add_scale, add_scale)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_add_scale, add_scale)
 
 // Test for LocalVector::ScaleAdd
-GENERATE_TEST_CASES(local_vector_test, testing_scale_add, scale_add)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_scale_add, scale_add)
 
 // Test for LocalVector::Scale
-GENERATE_TEST_CASES(local_vector_test, testing_scale, scale)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_scale, scale)
 
 // Test for LocalVector::Dot
-GENERATE_TEST_CASES(local_vector_test, testing_dot, dot)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_dot, dot)
 
 // Test for LocalVector::DotNonConj
-GENERATE_TEST_CASES(local_vector_test, testing_dot_non_conj, dot_nonconj)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_dot_non_conj, dot_nonconj)
 
 // Test for LocalVector::Norm
-GENERATE_TEST_CASES(local_vector_test, testing_norm, norm)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_norm, norm)
 
 // Test for LocalVector::Reduce
-GENERATE_TEST_CASES(local_vector_test, testing_reduce, reduce)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_reduce, reduce)
 
 // Test for LocalVector::PointWiseMult
-GENERATE_TEST_CASES(local_vector_test, testing_point_wise_mult, point_wise_mult)
-GENERATE_TEST_CASES(local_vector_test, testing_point_wise_mult_2, point_wise_mult_2)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_point_wise_mult, point_wise_mult)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_point_wise_mult_2, point_wise_mult_2)
 
 // Test for LocalVector::LeaveDataPtr
-GENERATE_TEST_CASES(local_vector_test, testing_leave_data_ptr, leave_data_ptr)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_leave_data_ptr, leave_data_ptr)
 
 // Test for LocalVector::Sync
-GENERATE_TEST_CASES(local_vector_test, testing_sync, sync)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_sync, sync)
 
 // Test for LocalVector::CopyFromData
-GENERATE_TEST_CASES_HOST(local_vector_test, testing_copy_from_data, copy_from_data)
+GENERATE_P_TEST_CASES_HOST(parameterized_local_vector_test, testing_copy_from_data, copy_from_data)
 
 // Test for LocalVector::CopyToHostData
-GENERATE_TEST_CASES_HOST(local_vector_test, testing_copy_to_host_data, copy_to_host_data)
+GENERATE_P_TEST_CASES_HOST(parameterized_local_vector_test,
+                           testing_copy_to_host_data,
+                           copy_to_host_data)
 
 // Test for LocalVector::Restriction
 GENERATE_TEST_CASES(local_vector_test, testing_restriction, restriction)
 
 // Test for LocalVector::CopyFromWithOffsets
-GENERATE_TEST_CASES(local_vector_test, testing_copy_from_with_offsets, copy_from_with_offsets)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_copy_from_with_offsets,
+                      copy_from_with_offsets)
 
 // Test for LocalVector::CopyFromFloat
 TEST_F(local_vector_test, copy_from_float)
@@ -253,57 +321,63 @@ TEST_F(local_vector_test, copy_from_double)
 }
 
 // Test for LocalVector::Info
-GENERATE_TEST_CASES(local_vector_test, testing_info, info)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_info, info)
 
 // Test for LocalVector::Zeros
-GENERATE_TEST_CASES(local_vector_test, testing_zeros, zeros)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_zeros, zeros)
 
 // Test for LocalVector::Ones
-GENERATE_TEST_CASES(local_vector_test, testing_ones, ones)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_ones, ones)
 
 // Test for LocalVector::SetValue
-GENERATE_TEST_CASES(local_vector_test, testing_set_values, set_value)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_set_values, set_value)
 
 // Test for LocalVector::SetRandom
-GENERATE_TEST_CASES(local_vector_test, testing_set_random_uniform, set_random_uniform)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_set_random_uniform,
+                      set_random_uniform)
 
 // Test for LocalVector::SetUniform
-GENERATE_TEST_CASES(local_vector_test, testing_set_random_normal, set_random_normal)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_set_random_normal, set_random_normal)
 
 // Test for LocalVector::Power
-GENERATE_TEST_CASES(local_vector_test, testing_power, power)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_power, power)
 
 // Test for LocalVector::Sort
 GENERATE_TEST_CASES(local_vector_test, testing_sort, sort)
 
 // Test for LocalVector::PermuteBackward
-GENERATE_TEST_CASES(local_vector_test, testing_permute_backward, permute_backward)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_permute_backward, permute_backward)
 
 // Test for LocalVector::InclusiveSum
-GENERATE_TEST_CASES(local_vector_test, testing_inclusive_sum, inclusive_sum)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_inclusive_sum, inclusive_sum)
 
 // Test for LocalVector::ScaleAddScale
-GENERATE_TEST_CASES(local_vector_test, testing_scale_add_scale, scale_add_scale)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_scale_add_scale, scale_add_scale)
 
 // Test for LocalVector::operator[] (const version)
-GENERATE_TEST_CASES(local_vector_test, testing_operator_index_const, operator_index_const)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_operator_index_const,
+                      operator_index_const)
 
 // Test for LocalVector::ReadFileASCII
-GENERATE_TEST_CASES(local_vector_test, testing_read_file_ascii, read_file_ascii)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_read_file_ascii, read_file_ascii)
 
 // Test for LocalVector::CopyFromAsync
-GENERATE_TEST_CASES(local_vector_test, testing_copy_from_async, copy_from_async)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_copy_from_async, copy_from_async)
 
 // Test for LocalVector::MoveToAcceleratorAsync
-GENERATE_TEST_CASES_DEVICE(local_vector_test,
-                           testing_move_to_accelerator_async,
-                           move_to_accelerator_async)
+GENERATE_P_TEST_CASES_DEVICE(parameterized_local_vector_test,
+                             testing_move_to_accelerator_async,
+                             move_to_accelerator_async)
 
 // Test for LocalVector::CopyFromHostData
-GENERATE_TEST_CASES(local_vector_test, testing_copy_from_host_data, copy_from_host_data)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_copy_from_host_data,
+                      copy_from_host_data)
 
 // Test for LocalVector::CopyToData
-GENERATE_TEST_CASES(local_vector_test, testing_copy_to_data, copy_to_data)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_copy_to_data, copy_to_data)
 
 // Test for LocalVector::WriteFileASCII
 GENERATE_TEST_CASES(local_vector_test, testing_write_file_ascii, write_file_ascii)
@@ -314,40 +388,52 @@ GENERATE_TEST_CASES(local_vector_test,
                     scale_add_scale_with_offsets)
 
 // Test for LocalVector::InclusiveSum(void)
-GENERATE_TEST_CASES(local_vector_test, testing_inclusive_sum_void, inclusive_sum_void)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_inclusive_sum_void,
+                      inclusive_sum_void)
 
 // Test for LocalVector::InclusiveSum(const LocalVector<ValueType>& vec)
-GENERATE_TEST_CASES(local_vector_test, testing_inclusive_sum_with_input, inclusive_sum_with_input)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_inclusive_sum_with_input,
+                      inclusive_sum_with_input)
 
 // Test for LocalVector::ExclusiveSum(void)
-GENERATE_TEST_CASES(local_vector_test, testing_exclusive_sum_void, exclusive_sum_void)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_exclusive_sum_void,
+                      exclusive_sum_void)
 
 // Test for LocalVector::ExclusiveSum(const LocalVector<ValueType>& vec)
-GENERATE_TEST_CASES(local_vector_test, testing_exclusive_sum_with_input, exclusive_sum_with_input)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_exclusive_sum_with_input,
+                      exclusive_sum_with_input)
 
 // Test for LocalVector::Asum(void) const
-GENERATE_TEST_CASES(local_vector_test, testing_asum, asum)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_asum, asum)
 
 // Test for LocalVector::Amax(ValueType& value) const
-GENERATE_TEST_CASES(local_vector_test, testing_amax, amax)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_amax, amax)
 
 // Test for LocalVector::Prolongation
-GENERATE_TEST_CASES(local_vector_test, testing_prolongation, prolongation)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_prolongation, prolongation)
 
 // Test for LocalVector::GetIndexValues
-GENERATE_TEST_CASES(local_vector_test, testing_get_index_values, get_index_values)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_get_index_values, get_index_values)
 
 // Test for LocalVector::SetIndexValues
-GENERATE_TEST_CASES(local_vector_test, testing_set_index_values, set_index_values)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_set_index_values, set_index_values)
 
 // Test for LocalVector::AddIndexValues
-GENERATE_TEST_CASES(local_vector_test, testing_add_index_values, add_index_values)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test, testing_add_index_values, add_index_values)
 
 // Test for LocalVector::GetContinuousValues
-GENERATE_TEST_CASES(local_vector_test, testing_get_continuous_values, get_continuous_values)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_get_continuous_values,
+                      get_continuous_values)
 
 // Test for LocalVector::SetContinuousValues
-GENERATE_TEST_CASES(local_vector_test, testing_set_continuous_values, set_continuous_values)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_set_continuous_values,
+                      set_continuous_values)
 
 // Test for LocalVector::ExtractCoarseMapping
 TEST_F(local_vector_test, extract_coarse_mapping_int)
@@ -359,4 +445,10 @@ TEST_F(local_vector_test, extract_coarse_mapping_int)
     stop_rocalution();
 }
 
-GENERATE_TEST_CASES(local_vector_test, testing_move_to_host_async, move_to_host_async)
+GENERATE_P_TEST_CASES(parameterized_local_vector_test,
+                      testing_move_to_host_async,
+                      move_to_host_async)
+
+INSTANTIATE_TEST_CASE_P(local_vector,
+                        parameterized_local_vector_test,
+                        testing::Combine(testing::ValuesIn(local_vector_size)));
