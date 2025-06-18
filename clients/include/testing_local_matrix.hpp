@@ -1618,79 +1618,25 @@ void testing_scale_off_diagonal(Arguments argus)
     LocalMatrix<T> matrix;
     getTestMatrix<T>(argus, matrix);
 
-    // Perform ScaleOffDiagonal
-    matrix.ScaleOffDiagonal(2.0);
+    // Save the original matrix
+    auto orig_dense = extract_dense_matrix(matrix);
 
-    // Validate the result
-    //T values[4];
-    //getMatrixVal(matrix, values);
-    //EXPECT_EQ(values[1], 4.0);
-    //EXPECT_EQ(values[2], 6.0);
+    // Scale off-diagonal elements by 2.0
+    EXPECT_NO_THROW(matrix.ScaleOffDiagonal(2.0));
 
-    //// Save the initial matrix
-    //LocalMatrix<T> original = getTestMatrix<T>();
-    //
-    //// Extract strictly upper and lower triangular parts from the original
-    //LocalMatrix<T> U, L;
-    //original.ExtractU(&U, false); // strictly upper
-    //original.ExtractL(&L, false); // strictly lower
-    //
-    //// Add them together
-    //LocalMatrix<T> off_diag_sum;
-    //off_diag_sum.CloneFrom(U);
-    //off_diag_sum.MatrixAdd(L);
-    //
-    //// Scale strictly upper and lower by 2.0
-    //off_diag_sum.Scale(2.0);
-    //
-    //// Extract diagonal from the original
-    //LocalMatrix<T> diag;
-    //diag.AllocateCSR("diag", original.GetM(), original.GetM(), original.GetN());
-    //LocalVector<T> diag_vec;
-    //original.ExtractDiagonal(&diag_vec);
-    //
-    //// Fill diag matrix with diagonal values
-    //int* row_offsets = new int[original.GetM() + 1];
-    //int* col_indices = new int[original.GetM()];
-    //T*   values      = new T[original.GetM()];
-    //for(int i = 0; i < original.GetM(); ++i)
-    //{
-    //    row_offsets[i] = i;
-    //    col_indices[i] = i;
-    //    values[i]      = diag_vec[i];
-    //}
-    //row_offsets[original.GetM()] = original.GetM();
-    //diag.CopyFromCSR(row_offsets, col_indices, values);
-    //
-    //// Add diagonal to off-diagonal sum
-    //off_diag_sum.MatrixAdd(diag);
-    //
-    //off_diag_sum.Sort(); // Ensure the matrix is sorted
-    //// Now we have the expected off-diagonal sum matrix
-    //// which is the original matrix with off-diagonal elements scaled by 2.0
-    //// and diagonal elements unchanged.
-    //// Now we can test the ScaleOffDiagonal function
-    //
-    //// Now perform ScaleOffDiagonal on the matrix under test
-    //matrix.ScaleOffDiagonal(2.0);
-    //
-    //// Compare values
-    //int64_t nnz             = matrix.GetNnz();
-    //T*      expected_values = new T[nnz];
-    //T*      actual_values   = new T[nnz];
-    //getMatrixVal(off_diag_sum, expected_values);
-    //getMatrixVal(matrix, actual_values);
-    //
-    //for(int64_t i = 0; i < nnz; ++i)
-    //{
-    //    EXPECT_EQ(actual_values[i], expected_values[i]);
-    //}
-    //
-    //delete[] row_offsets;
-    //delete[] col_indices;
-    //delete[] values;
-    //delete[] expected_values;
-    //delete[] actual_values;
+    // Extract new dense matrix
+    auto new_dense = extract_dense_matrix(matrix);
+
+    int m = matrix.GetM();
+    int n = matrix.GetN();
+
+    // Check: diagonal elements unchanged, off-diagonal elements scaled by 2
+    for(int i = 0; i < m; ++i)
+        for(int j = 0; j < n; ++j)
+            if(i == j)
+                EXPECT_EQ(new_dense[i][j], orig_dense[i][j]);
+            else
+                EXPECT_EQ(new_dense[i][j], orig_dense[i][j] * 2.0);
 }
 
 template <typename T>
@@ -2474,25 +2420,58 @@ void testing_local_add_scalar_off_diagonal(Arguments argus)
     LocalMatrix<T> matrix;
     getTestMatrix<T>(argus, matrix);
 
-    // Save original dense matrix
-    auto orig_dense = extract_dense_matrix(matrix);
+    // Extract strictly lower and strictly upper matrices
+    LocalMatrix<T> L, U;
+    matrix.ExtractL(&L, false); // strictly lower
+    matrix.ExtractU(&U, false); // strictly upper
 
-    // Add scalar to off-diagonal elements
+    // Add 1.0 to strictly lower and strictly upper matrices
+    L.AddScalar(1.0);
+    U.AddScalar(1.0);
+
+    // Extract diagonal matrix
+    LocalMatrix<T> D;
+    D.AllocateCSR("diag", matrix.GetM(), matrix.GetM(), matrix.GetN());
+    LocalVector<T> diag_vec;
+    matrix.ExtractDiagonal(&diag_vec);
+    int              m = matrix.GetM();
+    std::vector<int> row_offsets(m + 1), col_indices(m);
+    std::vector<T>   values(m);
+    for(int i = 0; i < m; ++i)
+    {
+        row_offsets[i] = i;
+        col_indices[i] = i;
+        values[i]      = diag_vec[i];
+    }
+    row_offsets[m] = m;
+    D.CopyFromCSR(row_offsets.data(), col_indices.data(), values.data());
+
+    // Now perform AddScalarOffDiagonal on the matrix under test
     EXPECT_NO_THROW(matrix.AddScalarOffDiagonal(1.0));
 
-    // Extract new dense matrix
-    auto new_dense = extract_dense_matrix(matrix);
+    // Validate by applying all matrices to a random vector and comparing results
+    LocalVector<T> x, y_expected, y_actual, y_L, y_U, y_D;
+    int            n = matrix.GetN();
+    x.Allocate("x", n);
+    y_expected.Allocate("y_expected", matrix.GetM());
+    y_actual.Allocate("y_actual", matrix.GetM());
+    y_L.Allocate("y_L", matrix.GetM());
+    y_U.Allocate("y_U", matrix.GetM());
+    y_D.Allocate("y_D", matrix.GetM());
+    x.SetRandomUniform(static_cast<T>(0), static_cast<T>(1));
 
-    int m = matrix.GetM();
-    int n = matrix.GetN();
+    L.Apply(x, &y_L);
+    U.Apply(x, &y_U);
+    D.Apply(x, &y_D);
 
-    // Check that off-diagonal elements increased by 1, diagonal unchanged
-    //for(int i = 0; i < m; ++i)
-    //    for(int j = 0; j < n; ++j)
-    //        if(i != j)
-    //            EXPECT_NEAR(new_dense[i][j], orig_dense[i][j] + 1.0, getTolerance<T>() * std::abs(new_dense[i][j]));
-    //        else
-    //            EXPECT_NEAR(new_dense[i][j], orig_dense[i][j], getTolerance<T>() * std::abs(new_dense[i][j]));
+    // y_expected = y_L + y_U + y_D
+    for(int i = 0; i < y_expected.GetSize(); ++i)
+        y_expected[i] = y_L[i] + y_U[i] + y_D[i];
+
+    matrix.Apply(x, &y_actual);
+
+    for(int i = 0; i < y_actual.GetSize(); ++i)
+        EXPECT_NEAR(y_actual[i], y_expected[i], getTolerance<T>() * std::abs(y_expected[i]));
 }
 
 template <typename T>
