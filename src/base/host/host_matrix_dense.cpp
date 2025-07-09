@@ -399,10 +399,10 @@ namespace rocalution
             }
 
             double squared = std::norm(aii);
-            beta = static_cast<ValueType>(2.0 * squared / (s + squared));
+            beta           = static_cast<ValueType>(2.0 * squared / (s + squared));
 
             cast_vec->vec_[0] = static_cast<ValueType>(1);
-            aii = static_cast<ValueType>(1) / aii;
+            aii               = static_cast<ValueType>(1) / aii;
             for(int i = 1; i < this->nrow_ - idx; ++i)
             {
                 cast_vec->vec_[i] *= aii;
