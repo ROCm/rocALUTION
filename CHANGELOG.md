@@ -2,7 +2,7 @@
 
 Full documentation forrocALUTION is available at [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
-## (Unreleased) rocALUTION 4.0.0
+## (Unreleased) rocALUTION 4.0.1
 
 ### Added
 * Added support for gfx950.
@@ -15,6 +15,7 @@ Full documentation forrocALUTION is available at [https://rocm.docs.amd.com/proj
 
 ### Resolved issues
 * Fix for GPU hashing algorithm when not compiling with -O2/O3
+* Fix for SPAI preconditioner with complex numbers
 
 ## rocALUTION 3.2.3 for ROCm 6.4.1
 

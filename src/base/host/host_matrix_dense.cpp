@@ -368,7 +368,7 @@ namespace rocalution
         assert(cast_vec != NULL);
         assert(cast_vec->GetSize() >= this->nrow_ - idx);
 
-        ValueType s = static_cast<ValueType>(0);
+        double s = 0.0;
 
         for(int i = 1; i < this->nrow_ - idx; ++i)
         {
@@ -377,29 +377,31 @@ namespace rocalution
 
         for(int i = idx + 1; i < this->nrow_; ++i)
         {
-            s += cast_vec->vec_[i - idx] * cast_vec->vec_[i - idx];
+            s += std::norm(cast_vec->vec_[i - idx]);
         }
 
-        if(s == static_cast<ValueType>(0))
+        if(s == 0)
         {
             beta = static_cast<ValueType>(0);
         }
         else
         {
             ValueType aii = this->mat_.val[DENSE_IND(idx, idx, this->nrow_, this->ncol_)];
+            ValueType nrm = std::sqrt(std::norm(aii) + s);
 
-            if(aii <= static_cast<ValueType>(0))
+            if(aii == ValueType(0))
             {
-                aii -= sqrt(aii * aii + s);
+                aii += nrm;
             }
             else
             {
-                aii += sqrt(aii * aii + s);
+                aii += aii / std::sqrt(std::norm(aii)) * nrm;
             }
 
-            ValueType squared = aii * aii;
-            beta              = static_cast<ValueType>(2) * squared / (s + squared);
+            double squared = std::norm(aii);
+            beta = static_cast<ValueType>(2.0 * squared / (s + squared));
 
+            cast_vec->vec_[0] = static_cast<ValueType>(1);
             aii = static_cast<ValueType>(1) / aii;
             for(int i = 1; i < this->nrow_ - idx; ++i)
             {
@@ -433,7 +435,7 @@ namespace rocalution
                     ValueType sum = this->mat_.val[DENSE_IND(i, aj, this->nrow_, this->ncol_)];
                     for(int ai = i + 1; ai < this->nrow_; ++ai)
                     {
-                        sum += v.vec_[ai - i]
+                        sum += rocalution_conj(v.vec_[ai - i])
                                * this->mat_.val[DENSE_IND(ai, aj, this->nrow_, this->ncol_)];
                     }
 
