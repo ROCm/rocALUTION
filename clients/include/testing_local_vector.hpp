@@ -317,7 +317,7 @@ void testing_binary(const Arguments& argus)
     LocalVector<T> vec = getTestVector<T>(argus.size);
 
     // Define the filename for the test
-    std::string filename = "test_vector.bin";
+    std::string filename = get_temp_dir() + "test_vector.bin";
 
     // Write the vector to a binary file
     EXPECT_NO_THROW(vec.WriteFileBinary(filename));
@@ -1027,7 +1027,7 @@ void testing_write_file_ascii()
     LocalVector<T> vec = getTestVector<T>(5);
 
     // Define the filename for the test
-    std::string filename = "test_vector.txt";
+    std::string filename = get_temp_dir() + "test_vector.txt";
 
     // Write the vector to the file
     EXPECT_NO_THROW(vec.WriteFileASCII(filename));
