@@ -1965,7 +1965,7 @@ template <typename T>
 void testing_read_file_MTX()
 {
     // Create a sample MTX file
-    const std::string filename = "test_matrix.mtx";
+    const std::string filename = get_temp_dir() + "test_matrix.mtx";
     CreateSampleMTXFile(filename);
 
     // Create a LocalMatrix
@@ -2069,7 +2069,7 @@ void testing_write_file_MTX()
     matrix.CopyFromCSR(row_offsets, col_indices, values);
 
     // Step 2: Write the matrix to a file in MTX format
-    const std::string filename = "test_matrix.mtx";
+    const std::string filename = get_temp_dir() + "test_matrix.mtx";
     ASSERT_NO_THROW(matrix.WriteFileMTX(filename));
 
     // Step 3: Verify the contents of the file
@@ -2109,7 +2109,7 @@ void testing_write_file_RSIO()
     matrix.CopyFromCSR(row_offsets, col_indices, values);
 
     // Step 2: Write the matrix to a file in RSIO format
-    const std::string filename = "test_matrix.rsio";
+    const std::string filename = get_temp_dir() + "test_matrix.rsio";
     ASSERT_NO_THROW(matrix.WriteFileRSIO(filename));
 
     // Create a LocalMatrix

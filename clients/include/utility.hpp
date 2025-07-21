@@ -308,6 +308,21 @@ static bool is_any_env_var_set(const std::initializer_list<const char*>& vars,
 }
 
 /* ============================================================================================ */
+/*! \brief  Get temporary directory */
+static std::string get_temp_dir()
+{
+#ifdef _WIN32
+    const char* temp = std::getenv("TEMP");
+    if(!temp)
+        temp = std::getenv("TMP");
+    return temp ? std::string(temp) + "\\" : ".\\";
+#else
+    const char* temp = std::getenv("TMPDIR");
+    return temp ? std::string(temp) + "/" : "/tmp/";
+#endif
+}
+
+/* ============================================================================================ */
 
 /*! \brief Class used to parse command arguments in both client & gtest   */
 
