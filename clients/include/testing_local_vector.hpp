@@ -892,7 +892,7 @@ template <typename T>
 void testing_read_file_ascii(const Arguments& argus)
 {
     // Create a temporary ASCII file with test data
-    std::string   filename = "test_vector.txt";
+    std::string   filename = get_temp_dir() + "test_vector.txt";
     std::ofstream file(filename);
     ASSERT_TRUE(file.is_open());
     for(int i = 0; i < argus.size; ++i)

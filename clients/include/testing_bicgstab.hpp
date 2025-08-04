@@ -163,7 +163,7 @@ bool testing_bicgstab(Arguments argus)
 
     ls.Solve(b, &x);
 
-    const std::string filename = "test_recorded_history.txt";
+    const std::string filename = get_temp_dir() + "test_recorded_history.txt";
     ls.RecordHistory(filename);
     std::remove(filename.c_str());
 
