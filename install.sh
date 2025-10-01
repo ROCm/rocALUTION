@@ -16,6 +16,7 @@ function display_help()
   echo "    [-d|--dependencies] install build dependencies"
   echo "    [-r]--relocatable] create a package to support relocatable ROCm"
   echo "    [-c|--clients] build library clients too (combines with -i & -d)"
+  echo "    [-o|--clients-only] build clients only"
   echo "    [-g|--debug] -DCMAKE_BUILD_TYPE=Debug (default is =Release)"
   echo "    [-k|--relwithdebinfo] -DCMAKE_BUILD_TYPE=RelWithDebInfo"
   echo "    [--build-dir] build directory (default is ./build)"
@@ -263,6 +264,7 @@ supported_distro
 install_package=false
 install_dependencies=false
 build_clients=false
+build_clients_only=false
 build_host=false
 build_mpi=false
 mpi_dir=deps/openmpi
@@ -286,7 +288,7 @@ verb=false
 # check if we have a modern version of getopt that can handle whitespace and long parameters
 getopt -T
 if [[ $? -eq 4 ]]; then
-  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,codecoverage,relwithdebinfo,static,compiler:,verbose,address-sanitizer,rm-legacy-include-dir --options hicgdrk -- "$@")
+  GETOPT_PARSE=$(getopt --name "${0}" --longoptions help,install,clients,clients-only,dependencies,debug,build-dir:,host,no-openmp,mpi:,relocatable,codecoverage,relwithdebinfo,static,compiler:,verbose,address-sanitizer,rm-legacy-include-dir --options hicogdrk -- "$@")
 else
   echo "Need a new version of getopt"
   exit 1
@@ -313,6 +315,9 @@ while true; do
         shift ;;
     -c|--clients)
         build_clients=true
+        shift ;;
+    -o|--clients-only)
+        build_clients_only=true
         shift ;;
     -r|--relocatable)
         build_relocatable=true
@@ -475,6 +480,11 @@ pushd .
   # clients
   if [[ "${build_clients}" == true ]]; then
     cmake_client_options="${cmake_client_options} -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON"
+  fi
+
+  # clients only
+  if [[ "${build_clients_only}" == true ]]; then
+    cmake_client_options="${cmake_client_options} -DBUILD_CLIENTS_ONLY=ON -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON"
   fi
 
   # OpenMP

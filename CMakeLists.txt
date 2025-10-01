@@ -69,6 +69,7 @@ option(BUILD_SHARED_LIBS "Build rocALUTION as a shared library" ON)
 option(BUILD_CLIENTS_TESTS "Build tests (requires googletest)" OFF)
 option(BUILD_CLIENTS_BENCHMARKS "Build benchmarks (requires boost)" OFF)
 option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
+option(BUILD_CLIENTS_ONLY "Build only clients" OFF)
 option(BUILD_VERBOSE "Output additional build information" OFF)
 option(BUILD_CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(BUILD_ADDRESS_SANITIZER "Build with address sanitizer enabled" OFF)
@@ -166,10 +167,12 @@ if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
 endif()
 
 # rocALUTION library
-add_subdirectory(src)
+if (NOT BUILD_CLIENTS_ONLY)
+  add_subdirectory(src)
+endif()
 
 # Trigger client builds if selected
-if(BUILD_CLIENTS)
+if(BUILD_CLIENTS_ONLY OR BUILD_CLIENTS)
   add_subdirectory(clients)
 endif()
 

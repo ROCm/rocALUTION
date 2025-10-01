@@ -47,7 +47,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(NOT TARGET rocalution)
+if(NOT TARGET rocalution OR BUILD_CLIENTS_ONLY)
   # This project may compile dependencies for clients
   project(rocalution-clients LANGUAGES CXX)
 
