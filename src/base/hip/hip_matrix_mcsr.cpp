@@ -131,7 +131,8 @@ namespace rocalution
         this->ncol_ = ncol;
         this->nnz_  = nnz;
 
-        hipDeviceSynchronize();
+        DISCARD_HIP_ERROR(hipDeviceSynchronize());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         this->mat_.row_offset = *row_offset;
         this->mat_.col        = *col;
@@ -147,7 +148,8 @@ namespace rocalution
         assert(this->ncol_ >= 0);
         assert(this->nnz_ >= 0);
 
-        hipDeviceSynchronize();
+        DISCARD_HIP_ERROR(hipDeviceSynchronize());
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         *row_offset = this->mat_.row_offset;
         *col        = this->mat_.col;

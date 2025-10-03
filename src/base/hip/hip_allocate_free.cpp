@@ -47,7 +47,7 @@ namespace rocalution
 
             //    *ptr = new DataType[n];
 
-            hipMallocHost((void**)ptr, n * sizeof(DataType));
+            DISCARD_HIP_ERROR(hipMallocHost((void**)ptr, n * sizeof(DataType)));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             assert(*ptr != NULL);
@@ -62,7 +62,7 @@ namespace rocalution
         assert(*ptr != NULL);
 
         //  delete[] *ptr;
-        hipFreeHost(*ptr);
+        DISCARD_HIP_ERROR(hipFreeHost(*ptr));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         *ptr = NULL;
@@ -78,7 +78,7 @@ namespace rocalution
         {
             assert(*ptr == NULL);
 
-            hipMalloc((void**)ptr, n * sizeof(DataType));
+            DISCARD_HIP_ERROR(hipMalloc((void**)ptr, n * sizeof(DataType)));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             assert(*ptr != NULL);
@@ -115,7 +115,7 @@ namespace rocalution
 
         if(*ptr != NULL)
         {
-            hipFree(*ptr);
+            DISCARD_HIP_ERROR(hipFree(*ptr));
             CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             *ptr = NULL;
@@ -154,11 +154,11 @@ namespace rocalution
 
             if(async == false)
             {
-                hipMemset(ptr, 0, n * sizeof(DataType));
+                DISCARD_HIP_ERROR(hipMemset(ptr, 0, n * sizeof(DataType)));
             }
             else
             {
-                hipMemsetAsync(ptr, 0, n * sizeof(DataType), stream);
+                DISCARD_HIP_ERROR(hipMemsetAsync(ptr, 0, n * sizeof(DataType), stream));
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -229,11 +229,12 @@ namespace rocalution
 
             if(async == false)
             {
-                hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToHost);
+                DISCARD_HIP_ERROR(hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToHost));
             }
             else
             {
-                hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToHost, stream);
+                DISCARD_HIP_ERROR(
+                    hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToHost, stream));
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -252,11 +253,12 @@ namespace rocalution
 
             if(async == false)
             {
-                hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyHostToDevice);
+                DISCARD_HIP_ERROR(hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyHostToDevice));
             }
             else
             {
-                hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyHostToDevice, stream);
+                DISCARD_HIP_ERROR(
+                    hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyHostToDevice, stream));
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
@@ -275,11 +277,13 @@ namespace rocalution
 
             if(async == false)
             {
-                hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToDevice);
+                DISCARD_HIP_ERROR(
+                    hipMemcpy(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToDevice));
             }
             else
             {
-                hipMemcpyAsync(dst, src, sizeof(DataType) * n, hipMemcpyDeviceToDevice, stream);
+                DISCARD_HIP_ERROR(hipMemcpyAsync(
+                    dst, src, sizeof(DataType) * n, hipMemcpyDeviceToDevice, stream));
             }
 
             CHECK_HIP_ERROR(__FILE__, __LINE__);
