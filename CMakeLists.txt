@@ -115,7 +115,6 @@ set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU architectures to build for
 
 include(CheckLanguage)
 include(CMakeDependentOption)
-
 check_language(HIP)
 cmake_dependent_option(USE_HIPCXX "Use CMake HIP language support" OFF CMAKE_HIP_COMPILER OFF)
 if(USE_HIPCXX)
