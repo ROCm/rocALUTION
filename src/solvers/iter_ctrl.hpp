@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include "rocalution/export.hpp"
+
 namespace rocalution
 {
 
