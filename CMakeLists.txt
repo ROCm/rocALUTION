@@ -34,18 +34,12 @@ endif()
 # Needed to pickup static library files
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/llvm ${ROCM_PATH})
 
-message("ROCM_PATH : ${ROCM_PATH}")
-message("CMAKE_PREFIX_PATH : ${CMAKE_PREFIX_PATH}")
-
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake
      ${ROCM_PATH}/lib/cmake/hip
      ${ROCM_PATH}/hip/cmake
      ${ROCM_PATH}/cmake)
-
-message("ROCM_PATH : ${ROCM_PATH}")
-message("CMAKE_MODULE_PATH : ${CMAKE_MODULE_PATH}")
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -121,16 +115,11 @@ set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU architectures to build for
 
 include(CheckLanguage)
 include(CMakeDependentOption)
-message("AAAAAAAAAAAAAAAAAAAAAAA")
 check_language(HIP)
-message("BBBBBBBBBBBBBBBBBBBBBBB")
 cmake_dependent_option(USE_HIPCXX "Use CMake HIP language support" OFF CMAKE_HIP_COMPILER OFF)
-message("CCCCCCCCCCCCCCCCCCCCCCC USE_HIPCXX : ${USE_HIPCXX}")
 if(USE_HIPCXX)
-  message("Call enable_language(HIP)")
   enable_language(HIP)
 else()
-  message("Call find_package(HIP MODULE)")
   find_package(HIP MODULE) # hip_add_library is only provided by the find module
   if(NOT HIP_FOUND)
     message("-- HIP not found. Compiling WITHOUT HIP support.")
@@ -139,12 +128,9 @@ endif()
 
 cmake_dependent_option(SUPPORT_HIP "Compile WITH HIP support" ON "USE_HIPCXX OR HIP_FOUND" OFF)
 
-message("DDDDDDDDDDDDDDDDDDDDDD SUPPORT_HIP : ${SUPPORT_HIP}")
-
 # HIP related library dependencies
 if(SUPPORT_HIP)
   if( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
-    message("Call find_package( hip REQUIRED CONFIG PATHS ${HIP_DIR} ${ROCM_PATH} /opt/rocm )")
     find_package( hip REQUIRED CONFIG PATHS ${HIP_DIR} ${ROCM_PATH} /opt/rocm )
   endif( )
   find_package(rocblas REQUIRED)
