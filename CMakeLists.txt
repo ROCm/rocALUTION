@@ -121,10 +121,11 @@ set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU architectures to build for
 
 include(CheckLanguage)
 include(CMakeDependentOption)
-check_language(HIP)
 message("AAAAAAAAAAAAAAAAAAAAAAA")
+check_language(HIP)
+message("BBBBBBBBBBBBBBBBBBBBBBB")
 cmake_dependent_option(USE_HIPCXX "Use CMake HIP language support" OFF CMAKE_HIP_COMPILER OFF)
-message("AAAAAAAAAAAAAAAAAAAAAAA USE_HIPCXX : ${USE_HIPCXX}")
+message("CCCCCCCCCCCCCCCCCCCCCCC USE_HIPCXX : ${USE_HIPCXX}")
 if(USE_HIPCXX)
   message("Call enable_language(HIP)")
   enable_language(HIP)
@@ -138,7 +139,7 @@ endif()
 
 cmake_dependent_option(SUPPORT_HIP "Compile WITH HIP support" ON "USE_HIPCXX OR HIP_FOUND" OFF)
 
-message("BBBBBBBBBBBBBBBBBBBBBBBBBB SUPPORT_HIP : ${SUPPORT_HIP}")
+message("DDDDDDDDDDDDDDDDDDDDDD SUPPORT_HIP : ${SUPPORT_HIP}")
 
 # HIP related library dependencies
 if(SUPPORT_HIP)
