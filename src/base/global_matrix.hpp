@@ -57,31 +57,45 @@ namespace rocalution
     class GlobalMatrix : public Operator<ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         GlobalMatrix();
         /** \brief Initialize a global matrix with a parallel manager */
+        ROCALUTION_EXPORT
         explicit GlobalMatrix(const ParallelManager& pm);
+        ROCALUTION_EXPORT
         virtual ~GlobalMatrix();
 
         /** \brief Return the number of rows in the global matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetM(void) const;
+        ROCALUTION_EXPORT
         /** \brief Return the number of columns in the global matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetN(void) const;
         /** \brief Return the number of non-zeros in the global matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetNnz(void) const;
         /** \brief Return the number of rows in the interior matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetLocalM(void) const;
         /** \brief Return the number of columns in the interior matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetLocalN(void) const;
         /** \brief Return the number of non-zeros in the interior matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetLocalNnz(void) const;
         /** \brief Return the number of rows in the ghost matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetGhostM(void) const;
         /** \brief Return the number of columns in the ghost matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetGhostN(void) const;
         /** \brief Return the number of non-zeros in the ghost matrix. */
+        ROCALUTION_EXPORT
         virtual int64_t GetGhostNnz(void) const;
 
         /** \brief Return the global matrix format id (see matrix_formats.hpp) */
+        ROCALUTION_EXPORT
         unsigned int GetFormat(void) const;
 
         /** \private */
@@ -90,10 +104,13 @@ namespace rocalution
         const LocalMatrix<ValueType>& GetGhost() const;
 
         /** \brief Move all data (i.e. move the part of the global matrix stored on this rank) to the accelerator */
+        ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
         /** \brief Move all data (i.e. move the part of the global matrix stored on this rank) to the host */
+        ROCALUTION_EXPORT
         virtual void MoveToHost(void);
         /** \brief Shows simple info about the matrix. */
+        ROCALUTION_EXPORT
         virtual void Info(void) const;
 
         /** \brief Perform a sanity check of the matrix
@@ -105,20 +122,26 @@ namespace rocalution
         * \retval true if the matrix is ok (empty matrix is also ok).
         * \retval false if there is something wrong with the structure or values.
         */
+        ROCALUTION_EXPORT
         virtual bool Check(void) const;
 
         /** \brief Allocate CSR Matrix */
+        ROCALUTION_EXPORT
         void AllocateCSR(const std::string& name, int64_t local_nnz, int64_t ghost_nnz);
         /** \brief Allocate COO Matrix */
+        ROCALUTION_EXPORT
         void AllocateCOO(const std::string& name, int64_t local_nnz, int64_t ghost_nnz);
 
         /** \brief Clear (free) the matrix */
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the parallel manager of a global matrix */
+        ROCALUTION_EXPORT
         void SetParallelManager(const ParallelManager& pm);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated data */
+        ROCALUTION_EXPORT
         void SetDataPtrCSR(PtrType**   local_row_offset,
                            int**       local_col,
                            ValueType** local_val,
@@ -129,6 +152,7 @@ namespace rocalution
                            int64_t     local_nnz,
                            int64_t     ghost_nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated data */
+        ROCALUTION_EXPORT
         void SetDataPtrCOO(int**       local_row,
                            int**       local_col,
                            ValueType** local_val,
@@ -140,20 +164,25 @@ namespace rocalution
                            int64_t     ghost_nnz);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated local data */
+        ROCALUTION_EXPORT
         void SetLocalDataPtrCSR(
             PtrType** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated local data */
+        ROCALUTION_EXPORT
         void SetLocalDataPtrCOO(
             int** row, int** col, ValueType** val, std::string name, int64_t nnz);
 
         /** \brief Initialize a CSR matrix on the host with externally allocated ghost data */
+        ROCALUTION_EXPORT
         void SetGhostDataPtrCSR(
             PtrType** row_offset, int** col, ValueType** val, std::string name, int64_t nnz);
         /** \brief Initialize a COO matrix on the host with externally allocated ghost data */
+        ROCALUTION_EXPORT
         void SetGhostDataPtrCOO(
             int** row, int** col, ValueType** val, std::string name, int64_t nnz);
 
         /** \brief Leave a CSR matrix to host pointers */
+        ROCALUTION_EXPORT
         void LeaveDataPtrCSR(PtrType**   local_row_offset,
                              int**       local_col,
                              ValueType** local_val,
@@ -161,6 +190,7 @@ namespace rocalution
                              int**       ghost_col,
                              ValueType** ghost_val);
         /** \brief Leave a COO matrix to host pointers */
+        ROCALUTION_EXPORT
         void LeaveDataPtrCOO(int**       local_row,
                              int**       local_col,
                              ValueType** local_val,
@@ -168,73 +198,97 @@ namespace rocalution
                              int**       ghost_col,
                              ValueType** ghost_val);
         /** \brief Leave a local CSR matrix to host pointers */
+        ROCALUTION_EXPORT
         void LeaveLocalDataPtrCSR(PtrType** row_offset, int** col, ValueType** val);
         /** \brief Leave a local COO matrix to host pointers */
+        ROCALUTION_EXPORT
         void LeaveLocalDataPtrCOO(int** row, int** col, ValueType** val);
         /** \brief Leave a CSR ghost matrix to host pointers */
+        ROCALUTION_EXPORT
         void LeaveGhostDataPtrCSR(PtrType** row_offset, int** col, ValueType** val);
         /** \brief Leave a COO ghost matrix to host pointers */
+        ROCALUTION_EXPORT
         void LeaveGhostDataPtrCOO(int** row, int** col, ValueType** val);
 
         /** \brief Clone the entire matrix (values,structure+backend descr) from another
         * GlobalMatrix
         */
+        ROCALUTION_EXPORT
         void CloneFrom(const GlobalMatrix<ValueType>& src);
         /** \brief Copy matrix (values and structure) from another GlobalMatrix */
+        ROCALUTION_EXPORT
         void CopyFrom(const GlobalMatrix<ValueType>& src);
 
         /** \brief Convert the matrix to CSR structure */
+        ROCALUTION_EXPORT
         void ConvertToCSR(void);
         /** \brief Convert the matrix to MCSR structure */
+        ROCALUTION_EXPORT
         void ConvertToMCSR(void);
         /** \brief Convert the matrix to BCSR structure */
+        ROCALUTION_EXPORT
         void ConvertToBCSR(int blockdim);
         /** \brief Convert the matrix to COO structure */
+        ROCALUTION_EXPORT
         void ConvertToCOO(void);
         /** \brief Convert the matrix to ELL structure */
+        ROCALUTION_EXPORT
         void ConvertToELL(void);
         /** \brief Convert the matrix to DIA structure */
+        ROCALUTION_EXPORT
         void ConvertToDIA(void);
         /** \brief Convert the matrix to HYB structure */
+        ROCALUTION_EXPORT
         void ConvertToHYB(void);
         /** \brief Convert the matrix to DENSE structure */
+        ROCALUTION_EXPORT
         void ConvertToDENSE(void);
         /** \brief Convert the matrix to specified matrix ID format */
+        ROCALUTION_EXPORT
         void ConvertTo(unsigned int matrix_format, int blockdim = 1);
 
         /** \brief Perform matrix-vector multiplication, out = this * in; */
+        ROCALUTION_EXPORT
         virtual void Apply(const GlobalVector<ValueType>& in, GlobalVector<ValueType>* out) const;
         /** \brief Perform matrix-vector multiplication, out = scalar * this * in; */
+        ROCALUTION_EXPORT
         virtual void ApplyAdd(const GlobalVector<ValueType>& in,
                               ValueType                      scalar,
                               GlobalVector<ValueType>*       out) const;
 
         /** \brief Transpose the matrix */
+        ROCALUTION_EXPORT
         virtual void Transpose(void);
 
         /** \brief Transpose the matrix */
+        ROCALUTION_EXPORT
         void Transpose(GlobalMatrix<ValueType>* T) const;
 
         /** \brief Triple matrix product C=RAP */
+        ROCALUTION_EXPORT
         void TripleMatrixProduct(const GlobalMatrix<ValueType>& R,
                                  const GlobalMatrix<ValueType>& A,
                                  const GlobalMatrix<ValueType>& P);
 
         /** \brief Read matrix from MTX (Matrix Market Format) file */
+        ROCALUTION_EXPORT
         void ReadFileMTX(const std::string& filename);
         /** \brief Write matrix to MTX (Matrix Market Format) file */
+        ROCALUTION_EXPORT
         void WriteFileMTX(const std::string& filename) const;
         /** \brief Read matrix from CSR (ROCALUTION binary format) file */
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release.")]]
 #endif
+        ROCALUTION_EXPORT
         void ReadFileCSR(const std::string& filename);
         /** \brief Write matrix to CSR (ROCALUTION binary format) file */
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #else
         [[deprecated("This function will be removed in a future release.")]]
 #endif
+        ROCALUTION_EXPORT
         void WriteFileCSR(const std::string& filename) const;
 
         /** \brief Read a matrix from a binary file using rocsparse I/O format */
@@ -251,20 +305,25 @@ namespace rocalution
         * - For CSR matrices, column values are sorted.
         * - For COO matrices, row indices are sorted.
         */
+        ROCALUTION_EXPORT
         void Sort(void);
 
         /** \brief Extract the diagonal values of the matrix into a GlobalVector */
+        ROCALUTION_EXPORT
         void ExtractDiagonal(GlobalVector<ValueType>* vec_diag) const;
 
         /** \brief Extract the inverse (reciprocal) diagonal values of the matrix into a
         * GlobalVector
         */
+        ROCALUTION_EXPORT
         void ExtractInverseDiagonal(GlobalVector<ValueType>* vec_inv_diag) const;
 
         /** \brief Scale all the values in the matrix */
+        ROCALUTION_EXPORT
         void Scale(ValueType alpha);
 
         /** \brief Initial Pairwise Aggregation scheme */
+        ROCALUTION_EXPORT
         void InitialPairwiseAggregation(ValueType         beta,
                                         int&              nc,
                                         LocalVector<int>* G,
@@ -273,6 +332,7 @@ namespace rocalution
                                         int&              rGsize,
                                         int               ordering) const;
         /** \brief Further Pairwise Aggregation scheme */
+        ROCALUTION_EXPORT
         void FurtherPairwiseAggregation(ValueType         beta,
                                         int&              nc,
                                         LocalVector<int>* G,
@@ -281,6 +341,7 @@ namespace rocalution
                                         int&              rGsize,
                                         int               ordering) const;
         /** \brief Build coarse operator for pairwise aggregation scheme */
+        ROCALUTION_EXPORT
         void CoarsenOperator(GlobalMatrix<ValueType>* Ac,
                              int                      nrow,
                              int                      ncol,
@@ -290,6 +351,7 @@ namespace rocalution
                              int                      rGsize) const;
 
         /** \brief Create a restriction and prolongation matrix operator based on an int vector map */
+        ROCALUTION_EXPORT
         void CreateFromMap(const LocalVector<int>&  map,
                            int64_t                  n,
                            int64_t                  m,
@@ -329,15 +391,19 @@ namespace rocalution
                                       GlobalMatrix<ValueType>*    prolong) const;
 
         /** \brief Ruge Stueben coarsening */
+        ROCALUTION_EXPORT
         void RSCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;
         /** \brief Parallel maximal independent set coarsening for RS AMG*/
+        ROCALUTION_EXPORT
         void RSPMISCoarsening(float eps, LocalVector<int>* CFmap, LocalVector<bool>* S) const;
 
         /** \brief Ruge Stueben Direct Interpolation */
+        ROCALUTION_EXPORT
         void RSDirectInterpolation(const LocalVector<int>&  CFmap,
                                    const LocalVector<bool>& S,
                                    GlobalMatrix<ValueType>* prolong) const;
         /** \brief Ruge Stueben Ext+i Interpolation */
+        ROCALUTION_EXPORT
         void RSExtPIInterpolation(const LocalVector<int>&  CFmap,
                                   const LocalVector<bool>& S,
                                   bool                     FF1,

@@ -363,15 +363,19 @@ namespace rocalution
         /** \brief Compute Inclusive sum */
         virtual ValueType InclusiveSum(void) = 0;
         /** \brief Compute Inclusive sum */
+        ROCALUTION_EXPORT
         virtual ValueType InclusiveSum(const LocalVector<ValueType>& vec);
         /** \brief Compute Inclusive sum */
+        ROCALUTION_EXPORT
         virtual ValueType InclusiveSum(const GlobalVector<ValueType>& vec);
 
         /** \brief Compute exclusive sum */
         virtual ValueType ExclusiveSum(void) = 0;
         /** \brief Compute exclusive sum */
+        ROCALUTION_EXPORT
         virtual ValueType ExclusiveSum(const LocalVector<ValueType>& vec);
         /** \brief Compute exclusive sum */
+        ROCALUTION_EXPORT
         virtual ValueType ExclusiveSum(const GlobalVector<ValueType>& vec);
 
         /** \brief Compute the sum of absolute values of the vector, return = sum(|this|) */
