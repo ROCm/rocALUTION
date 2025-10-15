@@ -1863,7 +1863,7 @@ namespace rocalution
             format += sstr.str();
         }
 
-        LOG_INFO("LocalMatrix" 
+        LOG_INFO("LocalMatrix"
                  << " name=" << this->object_name_ << ";"
                  << " rows=" << this->GetM() << ";"
                  << " cols=" << this->GetN() << ";"
