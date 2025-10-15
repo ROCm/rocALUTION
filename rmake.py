@@ -170,6 +170,9 @@ def config_cmd():
     cmake_pack_options = f"-DCPACK_SET_DESTDIR=OFF"
     cmake_options.append( cmake_pack_options )
 
+    if args.clients_only:
+        cmake_options.append( f"-DBUILD_CLIENTS_ONLY=ON -DBUILD_CLIENTS_SAMPLES=ON -DBUILD_CLIENTS_TESTS=ON -DBUILD_CLIENTS_BENCHMARKS=ON" )
+
     if os.getenv('CMAKE_CXX_COMPILER_LAUNCHER'):
         cmake_options.append( f"-DCMAKE_CXX_COMPILER_LAUNCHER={os.getenv('CMAKE_CXX_COMPILER_LAUNCHER')}" )
 

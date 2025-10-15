@@ -2,6 +2,11 @@
 
 Full documentation forrocALUTION is available at [https://rocm.docs.amd.com/projects/rocALUTION/en/latest/](https://rocm.docs.amd.com/projects/rocALUTION/en/latest/).
 
+## (Unreleased) rocALUTION 4.1.0
+
+### Added
+* Added `--clients-only` option to the `install.sh` and `rmake.py` scripts to allow building only the clients while using an already installed version of rocALUTION.
+
 ## rocALUTION 4.0.1 for ROCm 7.1.0
 
 ### Added
