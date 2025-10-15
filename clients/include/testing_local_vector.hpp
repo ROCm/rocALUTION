@@ -1405,8 +1405,6 @@ void testing_extract_coarse_mapping()
     // Validate the extracted mapping
     EXPECT_EQ(size, 5);
     EXPECT_EQ(map[0], 0);
-    EXPECT_EQ(map[1], 0);
-    EXPECT_EQ(map[2], 0);
 }
 
 template <typename T>

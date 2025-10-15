@@ -45,19 +45,26 @@ namespace rocalution
     class MultiColored : public Preconditioner<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         MultiColored();
+        ROCALUTION_EXPORT
         virtual ~MultiColored();
 
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
+        ROCALUTION_EXPORT
         virtual void Build(void);
 
         /** \brief Set a specific matrix type of the decomposed block matrices */
+        ROCALUTION_EXPORT
         void SetPrecondMatrixFormat(unsigned int mat_format, int blockdim = 1);
 
         /** \brief Set if the preconditioner should be decomposed or not */
+        ROCALUTION_EXPORT
         void SetDecomposition(bool decomp);
 
+        ROCALUTION_EXPORT
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
     protected:

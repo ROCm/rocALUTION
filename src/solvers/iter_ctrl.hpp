@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include "rocalution/export.hpp"
+
 namespace rocalution
 {
 
@@ -37,76 +39,100 @@ namespace rocalution
     class IterationControl
     {
     public:
+        ROCALUTION_EXPORT
         IterationControl();
+        ROCALUTION_EXPORT
         ~IterationControl();
 
         // Initialize with absolute/relative/divergence
         // tolerance and maximum number of iterations
+        ROCALUTION_EXPORT
         void Init(double abs, double rel, double div, int max);
 
         // Initialize with absolute/relative/divergence
         // tolerance and minimum/maximum number of iterations
+        ROCALUTION_EXPORT
         void Init(double abs, double rel, double div, int min, int max);
 
         // Initialize with absolute/relative/divergence tolerance
+        ROCALUTION_EXPORT
         void InitTolerance(double abs, double rel, double div);
 
         // Set the minimum number of iterations
+        ROCALUTION_EXPORT
         void InitMinimumIterations(int min);
 
         // Set the maximal number of iterations
+        ROCALUTION_EXPORT
         void InitMaximumIterations(int max);
 
         // Get the minimum number of iterations
+        ROCALUTION_EXPORT
         int GetMinimumIterations(void) const;
 
         // Get the maximal number of iterations
+        ROCALUTION_EXPORT
         int GetMaximumIterations(void) const;
 
         // Initialize the initial residual
+        ROCALUTION_EXPORT
         bool InitResidual(double res);
 
         // Clear (reset)
+        ROCALUTION_EXPORT
         void Clear(void);
 
         // Check the residual (this count also the number of iterations)
+        ROCALUTION_EXPORT
         bool CheckResidual(double res);
 
         // Check the residual and index value for the inf norm
         // (this count also the number of iterations)
+        ROCALUTION_EXPORT
         bool CheckResidual(double res, int64_t index);
 
         // Check the residual (without counting the number of iterations)
+        ROCALUTION_EXPORT
         bool CheckResidualNoCount(double res);
 
         // Check for maximum iterations (without counting the number of iterations)
+        ROCALUTION_EXPORT
         bool CheckMaximumIterNoCount(void);
 
         // Record the history of the residual
+        ROCALUTION_EXPORT
         void RecordHistory(void);
 
         // Write the history of the residual to an ASCII file
+        ROCALUTION_EXPORT
         void WriteHistoryToFile(const std::string& filename) const;
 
         // Provide verbose output of the solver (iter, residual)
+        ROCALUTION_EXPORT
         void Verbose(int verb = 1);
 
         // Print the initialized information of the iteration control
+        ROCALUTION_EXPORT
         void PrintInit(void) const;
 
         // Print the current status (is the any criteria reached or not)
+        ROCALUTION_EXPORT
         void PrintStatus(void);
 
         // Return the iteration count
+        ROCALUTION_EXPORT
         int GetIterationCount(void) const;
 
         // Return the current residual
+        ROCALUTION_EXPORT
         double GetCurrentResidual(void) const;
 
         // Return the current status
+        ROCALUTION_EXPORT
         int GetSolverStatus(void) const;
 
         // Return absolute maximum index of residual vector when using Linf norm
+        ROCALUTION_EXPORT
         int64_t GetAmaxResidualIndex(void) const;
 
     private:

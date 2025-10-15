@@ -60,7 +60,16 @@ namespace rocalution
         _get_backend_descriptor()->ROC_sparse_handle = new rocsparse_handle;
 
         // get last error (if any)
-        hipGetLastError();
+        hipError_t hip_status_t = hipGetLastError();
+
+        if(hip_status_t != hipSuccess)
+        {
+            LOG_VERBOSE_INFO(2,
+                             "*** Warning: HIP error encountered during rocALUTION HIP backend "
+                             "initialization - falling "
+                             "back to host backend");
+            return false;
+        }
 
         // HIP streams
         assert(_get_backend_descriptor()->HIP_stream_default == NULL);
@@ -81,10 +90,8 @@ namespace rocalution
         _get_backend_descriptor()->HIP_stream_current
             = _get_backend_descriptor()->HIP_stream_default;
 
-        hipError_t hip_status_t;
-        int        num_dev;
-        hipGetDeviceCount(&num_dev);
-        hip_status_t = hipGetLastError();
+        int num_dev;
+        hip_status_t = hipGetDeviceCount(&num_dev);
 
         // if querying for device count fails, fall back to host backend
         if(hip_status_t != hipSuccess)
@@ -115,8 +122,7 @@ namespace rocalution
                     dev = _get_backend_descriptor()->HIP_dev;
                 }
 
-                hipSetDevice(dev);
-                hip_status_t = hipGetLastError();
+                hip_status_t = hipSetDevice(dev);
 
                 if(hip_status_t == hipErrorContextAlreadyInUse)
                 {
@@ -168,7 +174,8 @@ namespace rocalution
         }
 
         struct hipDeviceProp_t dev_prop;
-        hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
+        DISCARD_HIP_ERROR(hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         if(dev_prop.major < 3)
         {
@@ -270,8 +277,7 @@ namespace rocalution
 
         int num_dev;
 
-        hipGetDeviceCount(&num_dev);
-        hipGetLastError();
+        DISCARD_HIP_ERROR(hipGetDeviceCount(&num_dev));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         if(_get_backend_descriptor()->HIP_dev >= 0)
@@ -281,7 +287,8 @@ namespace rocalution
             LOG_INFO("Selected HIP device: " << backend_descriptor.HIP_dev);
 
             struct hipDeviceProp_t dev_prop;
-            hipGetDeviceProperties(&dev_prop, backend_descriptor.HIP_dev);
+            DISCARD_HIP_ERROR(hipGetDeviceProperties(&dev_prop, backend_descriptor.HIP_dev));
+            CHECK_HIP_ERROR(__FILE__, __LINE__);
 
             // LOG_INFO("Device number: " << backend_descriptor.HIP_dev);
             LOG_INFO("Device name: " << dev_prop.name);                                        // char name[256];
@@ -351,7 +358,8 @@ namespace rocalution
     std::string rocalution_get_arch_hip(void)
     {
         struct hipDeviceProp_t dev_prop;
-        hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev);
+        DISCARD_HIP_ERROR(hipGetDeviceProperties(&dev_prop, _get_backend_descriptor()->HIP_dev));
+        CHECK_HIP_ERROR(__FILE__, __LINE__);
         return dev_prop.gcnArchName;
     }
 
@@ -459,7 +467,7 @@ namespace rocalution
 
     void rocalution_hip_sync(void)
     {
-        hipDeviceSynchronize();
+        DISCARD_HIP_ERROR(hipDeviceSynchronize());
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 

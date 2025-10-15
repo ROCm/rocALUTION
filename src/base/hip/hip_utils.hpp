@@ -53,6 +53,8 @@
 #define ROCSPARSE_HANDLE(handle) *static_cast<rocsparse_handle*>(handle)
 #define HIPSTREAM(handle) *static_cast<hipStream_t*>(handle)
 
+#define DISCARD_HIP_ERROR(stat_t) std::ignore = stat_t
+
 #define CHECK_HIP_ERROR(file, line)                              \
     {                                                            \
         hipError_t err_t;                                        \

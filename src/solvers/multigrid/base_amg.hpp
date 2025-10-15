@@ -69,7 +69,9 @@ namespace rocalution
     class BaseAMG : public BaseMultiGrid<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         BaseAMG();
+        ROCALUTION_EXPORT
         virtual ~BaseAMG();
 
         ROCALUTION_EXPORT
@@ -78,6 +80,7 @@ namespace rocalution
         virtual void Clear(void);
 
         /** \brief Clear all local data */
+        ROCALUTION_EXPORT
         virtual void ClearLocal(void);
 
         /** \brief Create AMG hierarchy */
@@ -85,6 +88,7 @@ namespace rocalution
         virtual void BuildHierarchy(void);
 
         /** \brief Create AMG smoothers */
+        ROCALUTION_EXPORT
         virtual void BuildSmoothers(void);
 
         /** \brief Set coarsest level for hierarchy creation */
@@ -110,10 +114,13 @@ namespace rocalution
         int GetNumLevels(void);
 
         /** \private */
+        ROCALUTION_EXPORT
         virtual void SetRestrictOperator(OperatorType** op);
         /** \private */
+        ROCALUTION_EXPORT
         virtual void SetProlongOperator(OperatorType** op);
         /** \private */
+        ROCALUTION_EXPORT
         virtual void SetOperatorHierarchy(OperatorType** op);
 
     protected:

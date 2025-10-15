@@ -325,6 +325,7 @@ void testing_preconditioner_all(Arguments argus)
     e.Allocate("e", matrix.GetM());
 
     ls.MoveToAccelerator();
+    p->MoveToAccelerator();
     matrix.MoveToAccelerator();
     x_acc.MoveToAccelerator();
     b.MoveToAccelerator();
@@ -343,6 +344,7 @@ void testing_preconditioner_all(Arguments argus)
     }
 
     ls.MoveToHost();
+    p->MoveToHost();
     matrix.MoveToHost();
     x_acc.MoveToHost();
     e.MoveToHost();

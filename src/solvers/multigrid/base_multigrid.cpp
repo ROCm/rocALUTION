@@ -474,6 +474,11 @@ namespace rocalution
                     this->q_level_[i]->MoveToHost();
                 }
             }
+
+            if(this->precond_ != NULL)
+            {
+                this->precond_->MoveToHost();
+            }
         }
     }
 
@@ -546,6 +551,11 @@ namespace rocalution
                         this->q_level_[i]->MoveToAccelerator();
                     }
                 }
+            }
+
+            if(this->precond_ != NULL)
+            {
+                this->precond_->MoveToAccelerator();
             }
         }
     }

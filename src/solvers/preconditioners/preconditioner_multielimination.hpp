@@ -69,6 +69,7 @@ namespace rocalution
 
         // LCOV_EXCL_START
         /** \brief Returns the size of the first (diagonal) block of the preconditioner */
+        ROCALUTION_EXPORT
         inline int GetSizeDiagBlock(void) const
         {
             // LCOV_EXCL_STOP
@@ -79,6 +80,7 @@ namespace rocalution
 
         // LCOV_EXCL_START
         /** \brief Return the depth of the current level */
+        ROCALUTION_EXPORT
         inline int GetLevel(void) const
         {
             // LCOV_EXCL_STOP
