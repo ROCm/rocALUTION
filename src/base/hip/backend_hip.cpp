@@ -64,8 +64,10 @@ namespace rocalution
 
         if(hip_status_t != hipSuccess)
         {
-            LOG_INFO("HIP error encountered during rocALUTION HIP backend initialization - falling "
-                     "back to host backend");
+            LOG_VERBOSE_INFO(2,
+                             "*** Warning: HIP error encountered during rocALUTION HIP backend "
+                             "initialization - falling "
+                             "back to host backend");
             return false;
         }
 
