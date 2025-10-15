@@ -52,7 +52,9 @@ namespace rocalution
     class BaseMultiGrid : public IterativeLinearSolver<OperatorType, VectorType, ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         BaseMultiGrid();
+        ROCALUTION_EXPORT
         virtual ~BaseMultiGrid();
 
         ROCALUTION_EXPORT
@@ -79,12 +81,15 @@ namespace rocalution
         void SetSmootherPostIter(int iter);
 
         /** \brief Set the restriction operator for each level */
+        ROCALUTION_EXPORT
         virtual void SetRestrictOperator(OperatorType** op) = 0;
 
         /** \brief Set the prolongation operator for each level */
+        ROCALUTION_EXPORT
         virtual void SetProlongOperator(OperatorType** op) = 0;
 
         /** \brief Set the operator for each level */
+        ROCALUTION_EXPORT
         virtual void SetOperatorHierarchy(OperatorType** op) = 0;
 
         /** \brief Enable/disable scaling of intergrid transfers */
@@ -112,12 +117,16 @@ namespace rocalution
         virtual void Solve(const VectorType& rhs, VectorType* x);
 
         /** \brief Build multigrid solver */
+        ROCALUTION_EXPORT
         virtual void Build(void);
         /** \brief Initialize multigrid solver (called from Build()) */
+        ROCALUTION_EXPORT
         virtual void Initialize(void);
         /** \brief Clear multigrid solver */
+        ROCALUTION_EXPORT
         virtual void Clear(void);
         /** \brief Finalize multigrid solver (called from Clear()) */
+        ROCALUTION_EXPORT
         virtual void Finalize(void);
 
     protected:

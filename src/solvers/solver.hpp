@@ -247,6 +247,7 @@ namespace rocalution
 
         // LCOV_EXCL_START
         /** \brief Mark this solver as being a preconditioner */
+        ROCALUTION_EXPORT
         inline void FlagPrecond(void)
         {
             // LCOV_EXCL_STOP
@@ -257,6 +258,7 @@ namespace rocalution
 
         // LCOV_EXCL_START
         /** \brief Mark this solver as being a smoother */
+        ROCALUTION_EXPORT
         inline void FlagSmoother(void)
         {
             // LCOV_EXCL_STOP

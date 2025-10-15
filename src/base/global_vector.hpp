@@ -52,17 +52,23 @@ namespace rocalution
     class GlobalVector : public Vector<ValueType>
     {
     public:
+        ROCALUTION_EXPORT
         GlobalVector();
         /** \brief Initialize a global vector with a parallel manager */
+        ROCALUTION_EXPORT
         explicit GlobalVector(const ParallelManager& pm);
+        ROCALUTION_EXPORT
         virtual ~GlobalVector();
 
         /** \brief Move all data (i.e. move the part of the global vector stored on this rank) to the accelerator */
+        ROCALUTION_EXPORT
         virtual void MoveToAccelerator(void);
         /** \brief Move all data (i.e. move the part of the global vector stored on this rank) to the host */
+        ROCALUTION_EXPORT
         virtual void MoveToHost(void);
 
         /** \brief Shows simple info about the matrix. */
+        ROCALUTION_EXPORT
         virtual void Info(void) const;
 
         /** \brief Perform a sanity check of the vector
@@ -73,11 +79,14 @@ namespace rocalution
         * \retval true if the vector is ok (empty vector is also ok).
         * \retval false if there is something wrong with the values.
         */
+        ROCALUTION_EXPORT
         virtual bool Check(void) const;
 
         /** \brief Return the size of the global vector. */
+        ROCALUTION_EXPORT
         virtual int64_t GetSize(void) const;
         /** \brief Return the size of the interior part of the global vector. */
+        ROCALUTION_EXPORT
         virtual int64_t GetLocalSize(void) const;
 
         /** \private */
@@ -86,105 +95,143 @@ namespace rocalution
         LocalVector<ValueType>& GetInterior();
 
         /** \brief Allocate a global vector with name and size */
+        ROCALUTION_EXPORT
         virtual void Allocate(std::string name, int64_t size);
 
         /** \brief Clear (free) the vector */
+        ROCALUTION_EXPORT
         virtual void Clear(void);
 
         /** \brief Set the parallel manager of a global vector */
+        ROCALUTION_EXPORT
         void SetParallelManager(const ParallelManager& pm);
 
         /** \brief Set all vector interior values to zero */
+        ROCALUTION_EXPORT
         virtual void Zeros(void);
         /** \brief Set all vector interior values to ones */
+        ROCALUTION_EXPORT
         virtual void Ones(void);
         /** \brief Set the values of the interior vector to given argument */
+        ROCALUTION_EXPORT
         virtual void SetValues(ValueType val);
         /** \brief Set the values of the interior vector to random uniformly distributed values (between -1 and 1) */
+        ROCALUTION_EXPORT
         virtual void SetRandomUniform(unsigned long long seed,
                                       ValueType          a = static_cast<ValueType>(-1),
                                       ValueType          b = static_cast<ValueType>(1));
         /** \brief Set the values of the interior vector to random normally distributed values (between 0 and 1) */
+        ROCALUTION_EXPORT
         virtual void SetRandomNormal(unsigned long long seed,
                                      ValueType          mean = static_cast<ValueType>(0),
                                      ValueType          var  = static_cast<ValueType>(1));
         /** \brief Clone the entire vector (values,structure+backend descr) from another
         * GlobalVector
         */
+        ROCALUTION_EXPORT
         void CloneFrom(const GlobalVector<ValueType>& src);
 
         /** \brief Access operator (only for host data) */
+        ROCALUTION_EXPORT
         ValueType& operator[](int64_t i);
         /** \brief Access operator (only for host data) */
+        ROCALUTION_EXPORT
         const ValueType& operator[](int64_t i) const;
 
         /** \brief Initialize the local part of a global vector with externally allocated
       * data
       */
+        ROCALUTION_EXPORT
         void SetDataPtr(ValueType** ptr, std::string name, int64_t size);
         /** \brief Get a pointer to the data from the local part of a global vector and free
       * the global vector object
       */
+        ROCALUTION_EXPORT
         void LeaveDataPtr(ValueType** ptr);
 
         /** \brief Copy vector (values and structure) from another GlobalVector */
+        ROCALUTION_EXPORT
         virtual void CopyFrom(const GlobalVector<ValueType>& src);
         /** \brief Read GlobalVector from ASCII file. This method reads the current ranks interior vector from the file */
+        ROCALUTION_EXPORT
         virtual void ReadFileASCII(const std::string& filename);
         /** \brief Write GlobalVector to ASCII file. This method writes the current ranks interior vector to the file */
+        ROCALUTION_EXPORT
         virtual void WriteFileASCII(const std::string& filename) const;
         /** \brief Read GlobalVector from binary file. This method reads the current ranks interior vector from the file */
+        ROCALUTION_EXPORT
         virtual void ReadFileBinary(const std::string& filename);
         /** \brief Write GlobalVector to binary file. This method writes the current ranks interior vector to the file */
+        ROCALUTION_EXPORT
         virtual void WriteFileBinary(const std::string& filename) const;
 
         /** \brief Perform scalar-vector multiplication and add it to another vector, this = this + alpha * x; */
+        ROCALUTION_EXPORT
         virtual void AddScale(const GlobalVector<ValueType>& x, ValueType alpha);
         /** \brief Perform scalar-vector multiplication and add another vector, this = alpha * this + x; */
+        ROCALUTION_EXPORT
         virtual void ScaleAdd(ValueType alpha, const GlobalVector<ValueType>& x);
         /** \brief Perform vector update of type this = alpha*this + x*beta + y*gamma */
+        ROCALUTION_EXPORT
         virtual void ScaleAdd2(ValueType                      alpha,
                                const GlobalVector<ValueType>& x,
                                ValueType                      beta,
                                const GlobalVector<ValueType>& y,
                                ValueType                      gamma);
         /** \brief Perform scalar-vector multiplication and add another scaled vector (i.e. axpby), this = alpha * this + beta * x; */
+        ROCALUTION_EXPORT
         virtual void
             ScaleAddScale(ValueType alpha, const GlobalVector<ValueType>& x, ValueType beta);
         /** \brief Scale vector, this = alpha * this; */
+        ROCALUTION_EXPORT
         virtual void Scale(ValueType alpha);
         /** \brief Perform dot product */
+        ROCALUTION_EXPORT
         virtual ValueType Dot(const GlobalVector<ValueType>& x) const;
         /** \brief Perform non conjugate (when T is complex) dot product */
+        ROCALUTION_EXPORT
         virtual ValueType DotNonConj(const GlobalVector<ValueType>& x) const;
         /** \brief Compute L2 (Euclidean) norm of vector */
+        ROCALUTION_EXPORT
         virtual ValueType Norm(void) const;
         /** \brief Reduce (sum) the vector components */
+        ROCALUTION_EXPORT
         virtual ValueType Reduce(void) const;
         /** \brief Compute inclsuive sum of vector */
+        ROCALUTION_EXPORT
         virtual ValueType InclusiveSum(void);
         /** \brief Compute inclsuive sum of vector */
+        ROCALUTION_EXPORT
         virtual ValueType InclusiveSum(const GlobalVector<ValueType>& vec);
         /** \brief Compute exclsuive sum of vector */
+        ROCALUTION_EXPORT
         virtual ValueType ExclusiveSum(void);
         /** \brief Compute exclsuive sum of vector */
+        ROCALUTION_EXPORT
         virtual ValueType ExclusiveSum(const GlobalVector<ValueType>& vec);
         /** \brief Compute absolute value sum of vector components */
+        ROCALUTION_EXPORT
         virtual ValueType Asum(void) const;
         /** \brief Compute maximum absolute value component of vector */
+        ROCALUTION_EXPORT
         virtual int64_t Amax(ValueType& value) const;
         /** \brief Perform pointwise multiplication of vector */
+        ROCALUTION_EXPORT
         virtual void PointWiseMult(const GlobalVector<ValueType>& x);
         /** \brief Perform pointwise multiplication of vector */
+        ROCALUTION_EXPORT
         virtual void PointWiseMult(const GlobalVector<ValueType>& x,
                                    const GlobalVector<ValueType>& y);
         /** \brief Take the power of each vector component */
+        ROCALUTION_EXPORT
         virtual void Power(double power);
 
         /** \brief Restriction operator based on restriction mapping vector */
+        ROCALUTION_EXPORT
         void Restriction(const GlobalVector<ValueType>& vec_fine, const LocalVector<int>& map);
 
         /** \brief Prolongation operator based on restriction mapping vector */
+        ROCALUTION_EXPORT
         void Prolongation(const GlobalVector<ValueType>& vec_coarse, const LocalVector<int>& map);
 
     protected:

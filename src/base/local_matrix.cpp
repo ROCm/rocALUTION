@@ -3308,7 +3308,7 @@ namespace rocalution
 
                 err = mat_csr.matrix_->ItLUSolve(
                     max_iter, tolerance, use_tol, *in.vector_, out->vector_);
-                if((err == false))
+                if(err == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::ItLUSolve() failed");
                     mat_csr.Info();
@@ -3428,7 +3428,7 @@ namespace rocalution
 
                 err = mat_csr.matrix_->ItLLSolve(
                     max_iter, tolerance, use_tol, *in.vector_, out->vector_);
-                if((err == false))
+                if(err == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
                     mat_csr.Info();
@@ -3535,7 +3535,7 @@ namespace rocalution
 
                 err = mat_csr.matrix_->ItLLSolve(
                     max_iter, tolerance, use_tol, *in.vector_, *inv_diag.vector_, out->vector_);
-                if((err == false))
+                if(err == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
                     mat_csr.Info();
@@ -3655,7 +3655,7 @@ namespace rocalution
 
                 err = mat_csr.matrix_->ItLSolve(
                     max_iter, tolerance, use_tol, *in.vector_, out->vector_);
-                if((err == false))
+                if(err == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::ItLSolve() failed");
                     mat_csr.Info();
@@ -3772,7 +3772,7 @@ namespace rocalution
 
                 err = mat_csr.matrix_->ItUSolve(
                     max_iter, tolerance, use_tol, *in.vector_, out->vector_);
-                if((err == false))
+                if(err == false)
                 {
                     LOG_INFO("Computation of LocalMatrix::ItUSolve() failed");
                     mat_csr.Info();
