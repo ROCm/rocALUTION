@@ -8,14 +8,14 @@ Full documentation forrocALUTION is available at [https://rocm.docs.amd.com/proj
 * Added support for gfx950.
 
 ### Changed
-* Switch to defaulting to C++17 when building rocALUTION from source. Previously rocALUTION was using C++14 by default.
+* Updated the default build standard to C++17 when compiling rocALUTION from source (previously C++14).
 
 ### Optimized
-* Improved the user documentation
+* Improved and expanded user documentation.
 
 ### Resolved issues
-* Fix for GPU hashing algorithm when not compiling with -O2/O3
-* Fix for SPAI preconditioner with complex numbers
+* Fixed a bug in the GPU hashing algorithm that occurred when not compiling with -O2/-O3.
+* Fixed an issue with the SPAI preconditioner when using complex numbers.
 
 ## rocALUTION 3.2.3 for ROCm 6.4.1
 
