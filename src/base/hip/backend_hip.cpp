@@ -473,16 +473,16 @@ namespace rocalution
 
     void rocalution_hip_sync_default(void)
     {
-        hipStreamSynchronize(
-            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_default)));
+        DISCARD_HIP_ERROR(hipStreamSynchronize(
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_default))));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
     }
 
     void rocalution_hip_sync_interior(void)
     {
 #ifdef SUPPORT_MULTINODE
-        hipStreamSynchronize(
-            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_interior)));
+        DISCARD_HIP_ERROR(hipStreamSynchronize(
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_interior))));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 #endif
     }
@@ -490,8 +490,8 @@ namespace rocalution
     void rocalution_hip_sync_ghost(void)
     {
 #ifdef SUPPORT_MULTINODE
-        hipStreamSynchronize(
-            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_ghost)));
+        DISCARD_HIP_ERROR(hipStreamSynchronize(
+            *(static_cast<hipStream_t*>(_get_backend_descriptor()->HIP_stream_ghost))));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 #endif
     }
