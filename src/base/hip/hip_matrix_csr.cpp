@@ -5014,23 +5014,25 @@ namespace rocalution
         size_t size   = 0;
 
         // Exclusive sum to obtain pointers
-        DISCARD_HIP_ERROR(rocprimTexclusivesum(buffer,
-                             size,
-                             this->mat_.row_offset,
-                             this->mat_.row_offset,
-                             this->nrow_ + 1,
-                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)));
+        DISCARD_HIP_ERROR(
+            rocprimTexclusivesum(buffer,
+                                 size,
+                                 this->mat_.row_offset,
+                                 this->mat_.row_offset,
+                                 this->nrow_ + 1,
+                                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         DISCARD_HIP_ERROR(hipMalloc(&buffer, size));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
-        DISCARD_HIP_ERROR(rocprimTexclusivesum(buffer,
-                             size,
-                             this->mat_.row_offset,
-                             this->mat_.row_offset,
-                             this->nrow_ + 1,
-                             HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)));
+        DISCARD_HIP_ERROR(
+            rocprimTexclusivesum(buffer,
+                                 size,
+                                 this->mat_.row_offset,
+                                 this->mat_.row_offset,
+                                 this->nrow_ + 1,
+                                 HIPSTREAM(_get_backend_descriptor()->HIP_stream_current)));
         CHECK_HIP_ERROR(__FILE__, __LINE__);
 
         DISCARD_HIP_ERROR(hipFree(buffer));
