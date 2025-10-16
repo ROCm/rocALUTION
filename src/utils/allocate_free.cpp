@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,7 +122,7 @@ namespace rocalution
 
         // *********************************************************
         // C++ style
-        delete[] * ptr;
+        delete[] *ptr;
         // *********************************************************
 
         // *********************************************************
@@ -190,84 +190,77 @@ namespace rocalution
         }
     }
 
-    template ROCALUTION_EXPORT void allocate_host<float>(int64_t, float**);
-    template ROCALUTION_EXPORT void allocate_host<double>(int64_t, double**);
+    template void allocate_host<float>(int64_t, float**);
+    template void allocate_host<double>(int64_t, double**);
 #ifdef SUPPORT_COMPLEX
-    template ROCALUTION_EXPORT void allocate_host<std::complex<float>>(int64_t,
-                                                                       std::complex<float>**);
-    template ROCALUTION_EXPORT void allocate_host<std::complex<double>>(int64_t,
-                                                                        std::complex<double>**);
+    template void allocate_host<std::complex<float>>(int64_t, std::complex<float>**);
+    template void allocate_host<std::complex<double>>(int64_t, std::complex<double>**);
 #endif
-    template ROCALUTION_EXPORT void allocate_host<bool>(int64_t, bool**);
-    template ROCALUTION_EXPORT void allocate_host<int>(int64_t, int**);
-    template ROCALUTION_EXPORT void allocate_host<unsigned int>(int64_t, unsigned int**);
-    template ROCALUTION_EXPORT void allocate_host<int64_t>(int64_t, int64_t**);
-    template ROCALUTION_EXPORT void allocate_host<char>(int64_t, char**);
+    template void allocate_host<bool>(int64_t, bool**);
+    template void allocate_host<int>(int64_t, int**);
+    template void allocate_host<unsigned int>(int64_t, unsigned int**);
+    template void allocate_host<int64_t>(int64_t, int64_t**);
+    template void allocate_host<char>(int64_t, char**);
 #ifdef SUPPORT_MULTINODE
-    template ROCALUTION_EXPORT void allocate_host<MRequest>(int64_t, MRequest**);
+    template void allocate_host<MRequest>(int64_t, MRequest**);
 #endif
 
 #ifndef SUPPORT_HIP
-    template ROCALUTION_EXPORT void allocate_pinned<float>(int64_t, float**);
-    template ROCALUTION_EXPORT void allocate_pinned<double>(int64_t, double**);
+    template void allocate_pinned<float>(int64_t, float**);
+    template void allocate_pinned<double>(int64_t, double**);
 #ifdef SUPPORT_COMPLEX
-    template ROCALUTION_EXPORT void allocate_pinned<std::complex<float>>(int64_t,
-                                                                         std::complex<float>**);
-    template ROCALUTION_EXPORT void allocate_pinned<std::complex<double>>(int64_t,
-                                                                          std::complex<double>**);
+    template void allocate_pinned<std::complex<float>>(int64_t, std::complex<float>**);
+    template void allocate_pinned<std::complex<double>>(int64_t, std::complex<double>**);
 #endif
 #endif
 
-    template ROCALUTION_EXPORT void free_host<float>(float**);
-    template ROCALUTION_EXPORT void free_host<double>(double**);
+    template void free_host<float>(float**);
+    template void free_host<double>(double**);
 #ifdef SUPPORT_COMPLEX
-    template ROCALUTION_EXPORT void free_host<std::complex<float>>(std::complex<float>**);
-    template ROCALUTION_EXPORT void free_host<std::complex<double>>(std::complex<double>**);
+    template void free_host<std::complex<float>>(std::complex<float>**);
+    template void free_host<std::complex<double>>(std::complex<double>**);
 #endif
-    template ROCALUTION_EXPORT void free_host<bool>(bool**);
-    template ROCALUTION_EXPORT void free_host<int>(int**);
-    template ROCALUTION_EXPORT void free_host<unsigned int>(unsigned int**);
-    template ROCALUTION_EXPORT void free_host<int64_t>(int64_t**);
-    template ROCALUTION_EXPORT void free_host<char>(char**);
+    template void free_host<bool>(bool**);
+    template void free_host<int>(int**);
+    template void free_host<unsigned int>(unsigned int**);
+    template void free_host<int64_t>(int64_t**);
+    template void free_host<char>(char**);
 #ifdef SUPPORT_MULTINODE
-    template ROCALUTION_EXPORT void free_host<MRequest>(MRequest**);
+    template void free_host<MRequest>(MRequest**);
 #endif
 
 #ifndef SUPPORT_HIP
-    template ROCALUTION_EXPORT void free_pinned<float>(float**);
-    template ROCALUTION_EXPORT void free_pinned<double>(double**);
+    template void free_pinned<float>(float**);
+    template void free_pinned<double>(double**);
 #ifdef SUPPORT_COMPLEX
-    template ROCALUTION_EXPORT void free_pinned<std::complex<float>>(std::complex<float>**);
-    template ROCALUTION_EXPORT void free_pinned<std::complex<double>>(std::complex<double>**);
+    template void free_pinned<std::complex<float>>(std::complex<float>**);
+    template void free_pinned<std::complex<double>>(std::complex<double>**);
 #endif
 #endif
 
-    template ROCALUTION_EXPORT void set_to_zero_host<float>(int64_t, float*);
-    template ROCALUTION_EXPORT void set_to_zero_host<double>(int64_t, double*);
+    template void set_to_zero_host<float>(int64_t, float*);
+    template void set_to_zero_host<double>(int64_t, double*);
 #ifdef SUPPORT_COMPLEX
-    template ROCALUTION_EXPORT void set_to_zero_host<std::complex<float>>(int64_t,
-                                                                          std::complex<float>*);
-    template ROCALUTION_EXPORT void set_to_zero_host<std::complex<double>>(int64_t,
-                                                                           std::complex<double>*);
+    template void set_to_zero_host<std::complex<float>>(int64_t, std::complex<float>*);
+    template void set_to_zero_host<std::complex<double>>(int64_t, std::complex<double>*);
 #endif
-    template ROCALUTION_EXPORT void set_to_zero_host<bool>(int64_t, bool*);
-    template ROCALUTION_EXPORT void set_to_zero_host<int>(int64_t, int*);
-    template ROCALUTION_EXPORT void set_to_zero_host<unsigned int>(int64_t, unsigned int*);
-    template ROCALUTION_EXPORT void set_to_zero_host<int64_t>(int64_t, int64_t*);
-    template ROCALUTION_EXPORT void set_to_zero_host<char>(int64_t, char*);
+    template void set_to_zero_host<bool>(int64_t, bool*);
+    template void set_to_zero_host<int>(int64_t, int*);
+    template void set_to_zero_host<unsigned int>(int64_t, unsigned int*);
+    template void set_to_zero_host<int64_t>(int64_t, int64_t*);
+    template void set_to_zero_host<char>(int64_t, char*);
 
-    template ROCALUTION_EXPORT void copy_h2h<float>(int64_t, const float*, float*);
-    template ROCALUTION_EXPORT void copy_h2h<double>(int64_t, const double*, double*);
+    template void copy_h2h<float>(int64_t, const float*, float*);
+    template void copy_h2h<double>(int64_t, const double*, double*);
 #ifdef SUPPORT_COMPLEX
-    template ROCALUTION_EXPORT void
+    template void
         copy_h2h<std::complex<float>>(int64_t, const std::complex<float>*, std::complex<float>*);
-    template ROCALUTION_EXPORT void
+    template void
         copy_h2h<std::complex<double>>(int64_t, const std::complex<double>*, std::complex<double>*);
 #endif
-    template ROCALUTION_EXPORT void copy_h2h<bool>(int64_t, const bool*, bool*);
-    template ROCALUTION_EXPORT void copy_h2h<int>(int64_t, const int*, int*);
-    template ROCALUTION_EXPORT void
-        copy_h2h<unsigned int>(int64_t, const unsigned int*, unsigned int*);
-    template ROCALUTION_EXPORT void copy_h2h<int64_t>(int64_t, const int64_t*, int64_t*);
-    template ROCALUTION_EXPORT void copy_h2h<char>(int64_t, const char*, char*);
+    template void copy_h2h<bool>(int64_t, const bool*, bool*);
+    template void copy_h2h<int>(int64_t, const int*, int*);
+    template void copy_h2h<unsigned int>(int64_t, const unsigned int*, unsigned int*);
+    template void copy_h2h<int64_t>(int64_t, const int64_t*, int64_t*);
+    template void copy_h2h<char>(int64_t, const char*, char*);
 } // namespace rocalution
