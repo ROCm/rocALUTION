@@ -96,7 +96,7 @@ namespace rocalution
 
             if(_rocalution_available_accelerator() == true)
             {
-                hipHostMalloc((void**)ptr, n * sizeof(DataType));
+                DISCARD_HIP_ERROR(hipHostMalloc((void**)ptr, n * sizeof(DataType)));
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
             }
             else
@@ -131,7 +131,7 @@ namespace rocalution
         {
             if(_rocalution_available_accelerator() == true)
             {
-                hipHostFree(*ptr);
+                DISCARD_HIP_ERROR(hipHostFree(*ptr));
                 CHECK_HIP_ERROR(__FILE__, __LINE__);
             }
             else
