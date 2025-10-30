@@ -438,6 +438,7 @@ namespace rocalution
         log_debug(this, "MixedPrecisionDC::SolveNonPrecond_()", " #*# end");
     }
 
+    // LCOV_EXCL_START
     template <class OperatorTypeH,
               class VectorTypeH,
               typename ValueTypeH,
@@ -461,6 +462,7 @@ namespace rocalution
             "the preconditioner to the internal solver?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template class MixedPrecisionDC<LocalMatrix<double>,
                                     LocalVector<double>,

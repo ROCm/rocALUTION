@@ -130,6 +130,10 @@ if(SUPPORT_MPI)
   target_compile_definitions(rocalution PRIVATE SUPPORT_MULTINODE)
 endif()
 
+if(BUILD_SUPPORT_COMPLEX)
+  target_compile_definitions(rocalution PRIVATE SUPPORT_COMPLEX)
+endif()
+
 if(SUPPORT_HIP)
   target_compile_definitions(rocalution PRIVATE SUPPORT_HIP)
   list(APPEND package_depends PACKAGE HIP)
@@ -200,6 +204,10 @@ if(SUPPORT_HIP)
     target_link_libraries(rocalution_hip PUBLIC MPI::MPI_CXX)
   endif()
 
+  if(BUILD_SUPPORT_COMPLEX)
+    target_compile_definitions(rocalution_hip PRIVATE SUPPORT_COMPLEX)
+  endif()
+
   rocm_set_soversion(rocalution_hip "1.0.0")
   set_target_properties(rocalution_hip PROPERTIES DEBUG_POSTFIX "-d")
 
@@ -224,27 +232,6 @@ if(WIN32 AND BUILD_CLIENTS AND BUILD_SHARED_LIBS)
     add_custom_command(TARGET rocalution POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/staging/rocalution.pdb ${PROJECT_BINARY_DIR}/clients/staging/rocalution.pdb )
   endif()
 endif()
-
-#Install the warpper for header filers for backward compatibility
-if(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY AND NOT WIN32)
-  rocm_wrap_header_file(
-    ${PUBLIC_HEADERS}
-    GUARDS SYMLINK WRAPPER
-    WRAPPER_LOCATIONS rocalution/${CMAKE_INSTALL_INCLUDEDIR}
-    OUTPUT_LOCATIONS rocalution/wrapper/include
-  )
-  rocm_wrap_header_file(
-    version.hpp export.hpp
-    GUARDS SYMLINK WRAPPER
-    WRAPPER_LOCATIONS rocalution/${CMAKE_INSTALL_INCLUDEDIR}
-    OUTPUT_LOCATIONS rocalution/wrapper/include
-  )
-  rocm_install(
-    DIRECTORY
-    "${PROJECT_BINARY_DIR}/rocalution/wrapper/"
-    DESTINATION rocalution/
-  )
-endif( )
 
 # Install targets
 if(SUPPORT_HIP)

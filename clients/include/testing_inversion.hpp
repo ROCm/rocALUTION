@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2022 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2022-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,9 +44,10 @@ static bool check_residual(double res)
 template <typename T>
 bool testing_inversion(Arguments argus)
 {
-    int          ndim        = argus.size;
-    unsigned int format      = argus.format;
-    std::string  matrix_type = argus.matrix_type;
+    int          ndim             = argus.size;
+    unsigned int format           = argus.format;
+    std::string  matrix_type      = argus.matrix_type;
+    const bool   use_host_and_acc = argus.use_acc;
 
     // Initialize rocALUTION platform
     set_device_rocalution(device);
@@ -83,12 +84,6 @@ bool testing_inversion(Arguments argus)
 
     A.SetDataPtrCSR(&csr_ptr, &csr_col, &csr_val, "A", nnz, nrow, nrow);
 
-    // Move data to accelerator
-    A.MoveToAccelerator();
-    x.MoveToAccelerator();
-    b.MoveToAccelerator();
-    e.MoveToAccelerator();
-
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
     b.Allocate("b", A.GetM());
@@ -112,13 +107,37 @@ bool testing_inversion(Arguments argus)
     // Matrix format
     A.ConvertTo(format, format == BCSR ? argus.blockdim : 1);
 
+    // Move data to accelerator
+    dls.MoveToAccelerator();
+    A.MoveToAccelerator();
+    x.MoveToAccelerator();
+    b.MoveToAccelerator();
+    e.MoveToAccelerator();
+
     dls.Solve(b, &x);
 
     // Verify solution
     x.ScaleAdd(-1.0, e);
-    T nrm2 = x.Norm();
+    T nrm2_acc = x.Norm();
 
-    bool success = check_residual(nrm2);
+    bool success = check_residual(nrm2_acc);
+
+    if(use_host_and_acc)
+    {
+        dls.MoveToHost();
+        A.MoveToHost();
+        x.MoveToHost();
+        e.MoveToHost();
+        b.MoveToHost();
+
+        dls.Solve(b, &x);
+
+        // Verify solution
+        x.ScaleAdd(-1.0, e);
+        T nrm2_host = x.Norm();
+
+        success = success && check_residual(nrm2_host);
+    }
 
     // Clean up
     dls.Clear();

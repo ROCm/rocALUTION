@@ -328,8 +328,10 @@ namespace rocalution
 
         if(!file.is_open())
         {
+            // LCOV_EXCL_START
             LOG_INFO("Can not open file [write]:" << filename);
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         file.setf(std::ios::scientific);

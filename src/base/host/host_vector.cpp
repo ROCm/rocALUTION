@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +54,7 @@
 namespace rocalution
 {
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     HostVector<ValueType>::HostVector()
     {
@@ -61,6 +62,7 @@ namespace rocalution
         LOG_INFO("no default constructor");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     HostVector<ValueType>::HostVector(const Rocalution_Backend_Descriptor& local_backend)
@@ -97,16 +99,20 @@ namespace rocalution
                 if((std::abs(this->vec_[i]) == std::numeric_limits<ValueType>::infinity()) || // inf
                    (this->vec_[i] != this->vec_[i]))
                 { // NaN
+                    // LCOV_EXCL_START
                     LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector data");
                     return false;
+                    // LCOV_EXCL_STOP
                 }
             }
 
             if((std::abs(this->size_) == std::numeric_limits<int64_t>::infinity()) || // inf
                (this->size_ != this->size_))
             { // NaN
+                // LCOV_EXCL_START
                 LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector size");
                 return false;
+                // LCOV_EXCL_STOP
             }
         }
         else
@@ -128,8 +134,10 @@ namespace rocalution
             if(std::abs(this->size_) == std::numeric_limits<int64_t>::infinity())
             {
                 // inf
+                // LCOV_EXCL_START
                 LOG_VERBOSE_INFO(2, "*** error: Vector:Check - problems with vector size");
                 return false;
+                // LCOV_EXCL_STOP
             }
         }
         else
@@ -254,12 +262,14 @@ namespace rocalution
         vec->CopyFrom(*this);
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void HostVector<ValueType>::CopyFromFloat(const BaseVector<float>& vec)
     {
         LOG_INFO("Mixed precision for non-complex to complex casting is not allowed");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <>
     void HostVector<double>::CopyFromFloat(const BaseVector<float>& vec)
@@ -286,6 +296,7 @@ namespace rocalution
         }
         else
         {
+            // LCOV_EXCL_START
             LOG_INFO("No cross backend casting");
             FATAL_ERROR(__FILE__, __LINE__);
         }
@@ -297,6 +308,7 @@ namespace rocalution
         LOG_INFO("Mixed precision for non-complex to complex casting is not allowed");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <>
     void HostVector<float>::CopyFromDouble(const BaseVector<double>& vec)
@@ -323,8 +335,10 @@ namespace rocalution
         }
         else
         {
+            // LCOV_EXCL_START
             LOG_INFO("No cross backend casting");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -404,12 +418,14 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <>
     void HostVector<bool>::SetRandomNormal(unsigned long long seed, bool mean, bool var)
     {
         LOG_INFO("What is bool HostVector<ValueType>::SetRandomNormal(void) const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     void HostVector<ValueType>::ReadFileASCII(const std::string& filename)
@@ -424,8 +440,10 @@ namespace rocalution
 
         if(!file.is_open())
         {
+            // LCOV_EXCL_START
             LOG_INFO("Can not open vector file [read]:" << filename);
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         this->Clear();
@@ -463,8 +481,10 @@ namespace rocalution
 
         if(!file.is_open())
         {
+            // LCOV_EXCL_START
             LOG_INFO("Can not open vector file [write]:" << filename);
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         file.setf(std::ios::scientific);
@@ -488,8 +508,10 @@ namespace rocalution
 
         if(!in.is_open())
         {
+            // LCOV_EXCL_START
             LOG_INFO("ReadFileBinary: filename=" << filename << "; cannot open file");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Header
@@ -498,8 +520,10 @@ namespace rocalution
 
         if(header != "#rocALUTION binary vector file")
         {
+            // LCOV_EXCL_START
             LOG_INFO("ReadFileBinary: filename=" << filename << " is not a rocALUTION vector");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // rocALUTION version
@@ -554,15 +578,19 @@ namespace rocalution
         }
         else
         {
+            // LCOV_EXCL_START
             LOG_INFO("ReadFileBinary: filename=" << filename << "; internal error");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Check ifstream status
         if(!in)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ReadFileBinary: filename=" << filename << "; could not read from file");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         in.close();
@@ -579,8 +607,10 @@ namespace rocalution
 
         if(!out.is_open())
         {
+            // LCOV_EXCL_START
             LOG_INFO("WriteFileBinary: filename=" << filename << "; cannot open file");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Header
@@ -615,15 +645,19 @@ namespace rocalution
         }
         else // TODO complex
         {
+            // LCOV_EXCL_START
             LOG_INFO("WriteFileBinary: filename=" << filename << "; internal error");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Check ofstream status
         if(!out)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ReadFileBinary: filename=" << filename << "; could not write to file");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         out.close();
@@ -760,12 +794,14 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <>
     void HostVector<bool>::Scale(bool alpha)
     {
         LOG_INFO("What is bool HostVector<ValueType>::Scale(void) const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     ValueType HostVector<ValueType>::Dot(const BaseVector<ValueType>& x) const
@@ -970,12 +1006,14 @@ namespace rocalution
         return std::complex<double>(asum_real, asum_imag);
     }
 
+    // LCOV_EXCL_START
     template <>
     bool HostVector<bool>::Asum(void) const
     {
         LOG_INFO("What is bool HostVector<ValueType>::Asum(void) const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     int64_t HostVector<ValueType>::Amax(ValueType& value) const
@@ -1008,12 +1046,14 @@ namespace rocalution
         return index;
     }
 
+    // LCOV_EXCL_START
     template <>
     int64_t HostVector<bool>::Amax(bool& value) const
     {
         LOG_INFO("What is int64_t HostVector<ValueType>::Amax(void) const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     ValueType HostVector<ValueType>::Norm(void) const
@@ -1075,6 +1115,7 @@ namespace rocalution
         return res;
     }
 
+    // LCOV_EXCL_START
     template <>
     int HostVector<int>::Norm(void) const
     {
@@ -1095,6 +1136,7 @@ namespace rocalution
         LOG_INFO("What is bool HostVector<ValueType>::Norm(void) const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     ValueType HostVector<ValueType>::Reduce(void) const
@@ -1246,12 +1288,14 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <>
     void HostVector<bool>::PointWiseMult(const BaseVector<bool>& x)
     {
         LOG_INFO("What is bool HostVector<ValueType>::PointWiseMult() const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     void HostVector<ValueType>::PointWiseMult(const BaseVector<ValueType>& x,
@@ -1276,12 +1320,14 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <>
     void HostVector<bool>::PointWiseMult(const BaseVector<bool>& x, const BaseVector<bool>& y)
     {
         LOG_INFO("What is bool HostVector<ValueType>::PointWiseMult() const?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     void HostVector<ValueType>::CopyFrom(const BaseVector<ValueType>& src,
@@ -1582,6 +1628,7 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void HostVector<ValueType>::ExtractCoarseMapping(
         int64_t start, int64_t end, const int* index, int nc, int* size, int* map) const
@@ -1589,6 +1636,7 @@ namespace rocalution
         LOG_INFO("double/float HostVector<ValueType>::ExtractCoarseMapping() not available");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <>
     void HostVector<int>::ExtractCoarseMapping(
@@ -1631,6 +1679,7 @@ namespace rocalution
         *size = ind;
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void HostVector<ValueType>::ExtractCoarseBoundary(
         int64_t start, int64_t end, const int* index, int nc, int* size, int* boundary) const
@@ -1638,6 +1687,7 @@ namespace rocalution
         LOG_INFO("double/float HostVector<ValueType>::ExtractCoarseBoundary() not available");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <>
     void HostVector<int>::ExtractCoarseBoundary(
@@ -1785,6 +1835,7 @@ namespace rocalution
         }
     }
 
+    // LCOV_EXCL_START
     template <>
     void HostVector<std::complex<float>>::Sort(BaseVector<std::complex<float>>* sorted,
                                                BaseVector<int>*                 perm) const
@@ -1800,6 +1851,7 @@ namespace rocalution
         LOG_INFO("HostVector::Sort(), how to sort complex numbers?");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template class HostVector<bool>;
     template class HostVector<double>;

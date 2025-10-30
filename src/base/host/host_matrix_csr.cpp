@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,6 +66,7 @@
 namespace rocalution
 {
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     HostMatrixCSR<ValueType>::HostMatrixCSR()
     {
@@ -73,6 +74,7 @@ namespace rocalution
         LOG_INFO("no default constructor");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     HostMatrixCSR<ValueType>::HostMatrixCSR(const Rocalution_Backend_Descriptor& local_backend)
@@ -151,24 +153,30 @@ namespace rocalution
             if((std::abs(this->nnz_) == std::numeric_limits<int64_t>::infinity()) || // inf
                (this->nnz_ != this->nnz_))
             { // NaN
+                // LCOV_EXCL_START
                 LOG_VERBOSE_INFO(2, "*** error: Matrix CSR:Check - problems with matrix nnz");
                 return false;
+                // LCOV_EXCL_STOP
             }
 
             // nrow
             if((std::abs(this->nrow_) == std::numeric_limits<int>::infinity()) || // inf
                (this->nrow_ != this->nrow_))
             { // NaN
+                // LCOV_EXCL_START
                 LOG_VERBOSE_INFO(2, "*** error: Matrix CSR:Check - problems with matrix nrow");
                 return false;
+                // LCOV_EXCL_STOP
             }
 
             // ncol
             if((std::abs(this->ncol_) == std::numeric_limits<int>::infinity()) || // inf
                (this->ncol_ != this->ncol_))
             { // NaN
+                // LCOV_EXCL_START
                 LOG_VERBOSE_INFO(2, "*** error: Matrix CSR:Check - problems with matrix ncol");
                 return false;
+                // LCOV_EXCL_STOP
             }
 
             for(int ai = 0; ai < this->nrow_ + 1; ++ai)
@@ -176,10 +184,12 @@ namespace rocalution
                 PtrType row = this->mat_.row_offset[ai];
                 if((row < 0) || (row > this->nnz_))
                 {
+                    // LCOV_EXCL_START
                     LOG_VERBOSE_INFO(
                         2,
                         "*** error: Matrix CSR:Check - problems with matrix row offset pointers");
                     return false;
+                    // LCOV_EXCL_STOP
                 }
             }
 
@@ -195,25 +205,31 @@ namespace rocalution
 
                     if((col < 0) || (col > this->ncol_))
                     {
+                        // LCOV_EXCL_START
                         LOG_VERBOSE_INFO(
                             2, "*** error: Matrix CSR:Check - problems with matrix col values");
                         return false;
+                        // LCOV_EXCL_STOP
                     }
 
                     if(col == prev_col)
                     {
+                        // LCOV_EXCL_START
                         LOG_VERBOSE_INFO(2,
                                          "*** error: Matrix CSR:Check - problems with matrix col "
                                          "values - the matrix has duplicated column entries");
                         return false;
+                        // LCOV_EXCL_STOP
                     }
 
                     ValueType val = this->mat_.val[aj];
                     if((val == std::numeric_limits<ValueType>::infinity()) || (val != val))
                     {
+                        // LCOV_EXCL_START
                         LOG_VERBOSE_INFO(
                             2, "*** error: Matrix CSR:Check - problems with matrix values");
                         return false;
+                        // LCOV_EXCL_STOP
                     }
 
                     if((aj > this->mat_.row_offset[ai]) && (s >= col))
@@ -1498,8 +1514,10 @@ namespace rocalution
 
         if(!status)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ItLUAnalyse() failed");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         status = host_csritsv_buffer_size(host_sparse_operation_none,
@@ -1515,8 +1533,10 @@ namespace rocalution
 
         if(!status)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ItLUAnalyse() failed");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         buffer_size = std::max(L_buffer_size, U_buffer_size);
@@ -1615,8 +1635,10 @@ namespace rocalution
 
             if(!status)
             {
+                // LCOV_EXCL_START
                 LOG_INFO("ItLUSolve() failed to solve L");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             // Solve U
@@ -1640,8 +1662,10 @@ namespace rocalution
 
             if(!status)
             {
+                // LCOV_EXCL_START
                 LOG_INFO("ItLUSolve() failed to solve U");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
         }
 
@@ -1681,8 +1705,10 @@ namespace rocalution
 
         if(!status)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ItLLAnalyse() failed");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         status = host_csritsv_buffer_size(host_sparse_operation_transpose,
@@ -1698,8 +1724,10 @@ namespace rocalution
 
         if(!status)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ItLLAnalyse() failed");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         buffer_size = std::max(L_buffer_size, Lt_buffer_size);
@@ -1798,8 +1826,10 @@ namespace rocalution
 
             if(!status)
             {
+                // LCOV_EXCL_START
                 LOG_INFO("ItLLSolve() failed");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             // Solve Lt
@@ -1823,8 +1853,10 @@ namespace rocalution
 
             if(!status)
             {
+                // LCOV_EXCL_START
                 LOG_INFO("ItLLSolve() failed");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
         }
 
@@ -1871,8 +1903,10 @@ namespace rocalution
 
         if(!status)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ItLAnalyse() failed");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Check buffer size
@@ -1958,8 +1992,10 @@ namespace rocalution
 
             if(!status)
             {
+                // LCOV_EXCL_START
                 LOG_INFO("ItLSolve() failed");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
         }
 
@@ -1995,8 +2031,10 @@ namespace rocalution
 
         if(!status)
         {
+            // LCOV_EXCL_START
             LOG_INFO("ItUAnalyse() failed");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Check buffer size
@@ -2082,8 +2120,10 @@ namespace rocalution
 
             if(!status)
             {
+                // LCOV_EXCL_START
                 LOG_INFO("ItUSolve() failed");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
         }
 
@@ -2275,11 +2315,13 @@ namespace rocalution
 
                 if(col_tmp == NULL || val_tmp == NULL)
                 {
+                    // LCOV_EXCL_START
                     free(col);
                     free(val);
 
                     LOG_INFO("ILUTFactorize failed on realloc");
                     FATAL_ERROR(__FILE__, __LINE__);
+                    // LCOV_EXCL_STOP
                 }
                 else
                 {
@@ -2404,8 +2446,10 @@ namespace rocalution
                 // Check for numeric zero
                 if(inv_diag == static_cast<ValueType>(0))
                 {
+                    // LCOV_EXCL_START
                     LOG_INFO("IC breakdown: division by zero");
                     FATAL_ERROR(__FILE__, __LINE__);
+                    // LCOV_EXCL_STOP
                 }
 
                 inv_diag = static_cast<ValueType>(1) / inv_diag;
@@ -2429,9 +2473,11 @@ namespace rocalution
 
             if(!has_diag)
             {
+                // LCOV_EXCL_START
                 // Structural zero
                 LOG_INFO("IC breakdown: structural zero diagonal");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             // Process diagonal entry
@@ -2441,8 +2487,10 @@ namespace rocalution
             // Check for numerical zero
             if(diag_entry == static_cast<ValueType>(0))
             {
+                // LCOV_EXCL_START
                 LOG_INFO("IC breakdown: division by zero");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             // Store inverse diagonal entry
@@ -5249,6 +5297,7 @@ namespace rocalution
         return *ti;
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::AMGExtractBoundaryState(
         const BaseVector<PtrType>&   bnd_csr_row_ptr,
@@ -5335,6 +5384,7 @@ namespace rocalution
 
         return true;
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::AMGPMISFindMaxNeighbourNode(
@@ -5976,6 +6026,7 @@ namespace rocalution
         // Ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_gst != NULL);
             assert(cast_pg != NULL);
 
@@ -5988,6 +6039,7 @@ namespace rocalution
 
             // Number of ghost rows is identical to interior
             cast_pg->nrow_ = this->nrow_;
+            // LCOV_EXCL_STOP
         }
 
         // Count number of entries in interior prolong
@@ -6032,6 +6084,7 @@ namespace rocalution
 
             if(global == true)
             {
+                // LCOV_EXCL_START
                 PtrType gst_row_begin = cast_gst->mat_.row_offset[i];
                 PtrType gst_row_end   = cast_gst->mat_.row_offset[i + 1];
 
@@ -6063,6 +6116,7 @@ namespace rocalution
                 }
 
                 cast_pg->mat_.row_offset[i + 1] = gst_set.size();
+                // LCOV_EXCL_STOP
             }
 
             cast_pi->mat_.row_offset[i + 1] = int_set.size();
@@ -6132,6 +6186,7 @@ namespace rocalution
         // Once again for the ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_gst != NULL);
             assert(cast_pg != NULL);
             assert(cast_glo != NULL);
@@ -6154,6 +6209,7 @@ namespace rocalution
             set_to_zero_host(cast_pg->nnz_, cast_pg->mat_.val);
 
             cast_glo->Allocate(cast_pg->nnz_);
+            // LCOV_EXCL_STOP
         }
 
         // Fill the interpolation matrix.
@@ -6184,6 +6240,7 @@ namespace rocalution
 
             if(global == true)
             {
+                // LCOV_EXCL_START
                 for(PtrType j = cast_gst->mat_.row_offset[i]; j < cast_gst->mat_.row_offset[i + 1];
                     ++j)
                 {
@@ -6199,6 +6256,7 @@ namespace rocalution
                         }
                     }
                 }
+                // LCOV_EXCL_STOP
             }
 
             dia = static_cast<ValueType>(1) / dia;
@@ -6259,6 +6317,7 @@ namespace rocalution
             }
             if(global == true)
             {
+                // LCOV_EXCL_START
                 PtrType pg_row_begin = cast_pg->mat_.row_offset[i];
                 PtrType pg_row_end   = pg_row_begin;
 
@@ -6314,6 +6373,7 @@ namespace rocalution
                     cast_glo->vec_[pg_row_end]    = it->first;
                     ++pg_row_end;
                 }
+                // LCOV_EXCL_STOP
             }
 
             for(auto it = int_table.begin(); it != int_table.end(); it++)
@@ -6368,6 +6428,7 @@ namespace rocalution
         // Ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_gst != NULL);
             assert(cast_pg != NULL);
 
@@ -6380,6 +6441,7 @@ namespace rocalution
 
             // Number of ghost rows is identical to interior
             cast_pg->nrow_ = this->nrow_;
+            // LCOV_EXCL_STOP
         }
 
         // Count number of entries in interior prolong
@@ -6460,6 +6522,7 @@ namespace rocalution
         // Once again for the ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_gst != NULL);
             assert(cast_pg != NULL);
             assert(cast_glo != NULL);
@@ -6482,6 +6545,7 @@ namespace rocalution
             set_to_zero_host(cast_pg->nnz_, cast_pg->mat_.val);
 
             cast_glo->Allocate(cast_pg->nnz_);
+            // LCOV_EXCL_STOP
         }
 
         // Count number of entries in interior prolong
@@ -7541,6 +7605,7 @@ namespace rocalution
         // Ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_gst != NULL);
             assert(cast_pg != NULL);
 
@@ -7552,6 +7617,7 @@ namespace rocalution
 
             // Number of ghost rows is identical to interior
             cast_pg->nrow_ = this->nrow_;
+            // LCOV_EXCL_STOP
         }
 
 #ifdef _OPENMP
@@ -7713,10 +7779,12 @@ namespace rocalution
         // Ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_l2g != NULL);
             assert(cast_gst != NULL);
             assert(cast_pg != NULL);
             assert(cast_glo != NULL);
+            // LCOV_EXCL_STOP
         }
 
         // Exclusive sum to obtain row offset pointers of P
@@ -7746,6 +7814,7 @@ namespace rocalution
         // Once again for the ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             for(int i = this->nrow_; i > 0; --i)
             {
                 cast_pg->mat_.row_offset[i] = cast_pg->mat_.row_offset[i - 1];
@@ -7765,6 +7834,7 @@ namespace rocalution
             allocate_host(cast_pg->nnz_, &cast_pg->mat_.val);
 
             cast_glo->Allocate(cast_pg->nnz_);
+            // LCOV_EXCL_STOP
         }
 
 #ifdef _OPENMP
@@ -7944,6 +8014,7 @@ namespace rocalution
         return true;
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::RSExtPIBoundaryNnz(const BaseVector<int>&       boundary,
                                                       const BaseVector<int>&       CFmap,
@@ -8115,6 +8186,7 @@ namespace rocalution
 
         return true;
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::RSExtPIProlongNnz(int64_t                    global_column_begin,
@@ -8163,6 +8235,7 @@ namespace rocalution
         // Ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_l2g != NULL);
             assert(cast_gst != NULL);
             assert(cast_ptr != NULL);
@@ -8177,6 +8250,7 @@ namespace rocalution
 
             // Number of ghost rows is identical to interior
             cast_pg->nrow_ = this->nrow_;
+            // LCOV_EXCL_STOP
         }
 
 #ifdef _OPENMP
@@ -8455,6 +8529,7 @@ namespace rocalution
         // Ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             assert(cast_l2g != NULL);
             assert(cast_gst != NULL);
             assert(cast_ptr != NULL);
@@ -8464,6 +8539,7 @@ namespace rocalution
             assert(cast_ext_val != NULL);
             assert(cast_pg != NULL);
             assert(cast_glo != NULL);
+            // LCOV_EXCL_STOP
         }
 
         // Exclusive sum to obtain row offset pointers of P
@@ -8493,6 +8569,7 @@ namespace rocalution
         // Once again for the ghost part
         if(global == true)
         {
+            // LCOV_EXCL_START
             for(int i = this->nrow_; i > 0; --i)
             {
                 cast_pg->mat_.row_offset[i] = cast_pg->mat_.row_offset[i - 1];
@@ -8512,6 +8589,7 @@ namespace rocalution
             allocate_host(cast_pg->nnz_, &cast_pg->mat_.val);
 
             cast_glo->Allocate(cast_pg->nnz_);
+            // LCOV_EXCL_STOP
         }
 
         // Extract diagonal matrix entries
@@ -10523,6 +10601,7 @@ namespace rocalution
         return true;
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     bool HostMatrixCSR<ValueType>::ExtractGlobalColumnIndices(int     ncol,
                                                               int64_t global_offset,
@@ -11490,6 +11569,8 @@ namespace rocalution
 
         return true;
     }
+
+    // LCOV_EXCL_STOP
 
     template class HostMatrixCSR<double>;
     template class HostMatrixCSR<float>;

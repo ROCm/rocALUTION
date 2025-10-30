@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -119,6 +119,8 @@ namespace rocalution
         {
             bool err = this->matrix_->Zeros();
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::Zeros() failed");
@@ -160,6 +162,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -1276,6 +1280,8 @@ namespace rocalution
 
         bool err = this->matrix_->ReadFileMTX(filename);
 
+        // LCOV_EXCL_START
+
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == COO))
         {
             LOG_INFO("Execution of LocalMatrix::ReadFileMTX() failed");
@@ -1310,6 +1316,7 @@ namespace rocalution
 
             this->ConvertTo(format, blockdim);
         }
+        // LCOV_EXCL_STOP
         else
         {
             this->Sort();
@@ -1337,6 +1344,8 @@ namespace rocalution
 
         bool err = this->matrix_->WriteFileMTX(filename);
 
+        // LCOV_EXCL_START
+
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == COO))
         {
             LOG_INFO("Execution of LocalMatrix::WriteFileMTX() failed");
@@ -1362,9 +1371,12 @@ namespace rocalution
             }
         }
 
+        // LCOV_EXCL_STOP
+
         LOG_INFO("WriteFileMTX: filename=" << filename << "; done");
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void LocalMatrix<ValueType>::ReadFileCSR(const std::string& filename)
     {
@@ -1418,6 +1430,8 @@ namespace rocalution
         LOG_INFO("ReadFileCSR: filename=" << filename << "; done");
     }
 
+    // LCOV_EXCL_STOP
+
     template <typename ValueType>
     void LocalMatrix<ValueType>::ReadFileRSIO(const std::string& filename,
                                               bool               maintain_initial_format)
@@ -1446,8 +1460,10 @@ namespace rocalution
 
         if(status != rocsparseio_status_success)
         {
+            // LCOV_EXCL_START
             LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: cannot open file");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Get format
@@ -1456,8 +1472,10 @@ namespace rocalution
 
         if(status != rocsparseio_status_success)
         {
+            // LCOV_EXCL_START
             LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: cannot read format");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Close file
@@ -1465,8 +1483,10 @@ namespace rocalution
 
         if(status != rocsparseio_status_success)
         {
+            // LCOV_EXCL_START
             LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: cannot close file");
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         switch(rsio_format)
@@ -1519,19 +1539,23 @@ namespace rocalution
             this->ConvertToMCSR();
             break;
         }
+        // LCOV_EXCL_START
         case rocsparseio_format_dense_vector:
         {
             LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed: unknown format");
             FATAL_ERROR(__FILE__, __LINE__);
         }
+            // LCOV_EXCL_STOP
         }
 
         // Read in matrix
         if(!this->matrix_->ReadFileRSIO(filename))
         {
+            // LCOV_EXCL_START
             LOG_INFO("Execution of LocalMatrix::ReadFileRSIO() failed");
             this->Info();
             FATAL_ERROR(__FILE__, __LINE__);
+            // LCOV_EXCL_STOP
         }
 
         // Move back to initial backend
@@ -1564,6 +1588,7 @@ namespace rocalution
         LOG_INFO("ReadFileRSIO: filename=" << filename << "; done");
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void LocalMatrix<ValueType>::WriteFileCSR(const std::string& filename) const
     {
@@ -1604,6 +1629,7 @@ namespace rocalution
 
         LOG_INFO("WriteFileCSR: filename=" << filename << "; done");
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     void LocalMatrix<ValueType>::WriteFileRSIO(const std::string& filename) const
@@ -1617,6 +1643,8 @@ namespace rocalution
 #endif
 
         bool err = this->matrix_->WriteFileRSIO(filename);
+
+        // LCOV_EXCL_START
 
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
@@ -1652,6 +1680,8 @@ namespace rocalution
                 FATAL_ERROR(__FILE__, __LINE__);
             }
         }
+
+        // LCOV_EXCL_STOP
 
         LOG_INFO("WriteFileRSIO: filename=" << filename << "; done");
     }
@@ -2105,9 +2135,11 @@ namespace rocalution
                     // If CSR conversion fails too, exit with error
                     if(new_mat->ConvertFrom(*this->matrix_host_) == false)
                     {
+                        // LCOV_EXCL_START
                         LOG_INFO("Unsupported (on host) conversion to CSR");
                         this->Info();
                         FATAL_ERROR(__FILE__, __LINE__);
+                        // LCOV_EXCL_STOP
                     }
                 }
 
@@ -2231,6 +2263,8 @@ namespace rocalution
 
             bool err = this->matrix_->ExtractDiagonal(vec_diag->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::ExtractDiagonal() failed");
@@ -2270,6 +2304,8 @@ namespace rocalution
                     vec_diag->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -2297,6 +2333,8 @@ namespace rocalution
                                    std::min(this->GetLocalM(), this->GetLocalN()));
 
             bool err = this->matrix_->ExtractInverseDiagonal(vec_inv_diag->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -2338,6 +2376,8 @@ namespace rocalution
                     vec_inv_diag->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -2391,6 +2431,8 @@ namespace rocalution
                                                   static_cast<int>(col_size),
                                                   mat->matrix_);
         }
+
+        // LCOV_EXCL_START
 
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
@@ -2453,6 +2495,8 @@ namespace rocalution
                                  "the host due to size = 1");
             }
         }
+
+        // LCOV_EXCL_STOP
 
         std::ostringstream row_begin;
         std::ostringstream row_end;
@@ -2561,6 +2605,8 @@ namespace rocalution
                 err = this->matrix_->ExtractU(U->matrix_);
             }
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::ExtractU() failed");
@@ -2612,6 +2658,8 @@ namespace rocalution
                     U->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -2646,6 +2694,8 @@ namespace rocalution
             {
                 err = this->matrix_->ExtractL(L->matrix_);
             }
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -2698,6 +2748,8 @@ namespace rocalution
                     L->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -2750,6 +2802,8 @@ namespace rocalution
         {
             bool err = this->matrix_->LUSolve(*in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::LUSolve() failed");
@@ -2797,6 +2851,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -2845,6 +2901,8 @@ namespace rocalution
         {
             bool err = this->matrix_->LLSolve(*in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::LLSolve() failed");
@@ -2886,6 +2944,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -2914,6 +2974,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->LLSolve(*in.vector_, *inv_diag.vector_, out->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -2961,6 +3023,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3009,6 +3073,8 @@ namespace rocalution
         {
             bool err = this->matrix_->LSolve(*in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::LSolve() failed");
@@ -3050,6 +3116,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3098,6 +3166,8 @@ namespace rocalution
         {
             bool err = this->matrix_->USolve(*in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::USolve() failed");
@@ -3139,6 +3209,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3198,6 +3270,8 @@ namespace rocalution
             bool err
                 = this->matrix_->ItLUSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::ItLUSolve() failed");
@@ -3255,6 +3329,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3314,6 +3390,8 @@ namespace rocalution
             bool err
                 = this->matrix_->ItLLSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::ItLLSolve() failed");
@@ -3371,6 +3449,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3417,6 +3497,8 @@ namespace rocalution
         {
             bool err = this->matrix_->ItLLSolve(
                 max_iter, tolerance, use_tol, *in.vector_, *inv_diag.vector_, out->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -3474,6 +3556,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3534,6 +3618,8 @@ namespace rocalution
             bool err
                 = this->matrix_->ItLSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::ItLSolve() failed");
@@ -3590,6 +3676,7 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3650,6 +3737,8 @@ namespace rocalution
             bool err
                 = this->matrix_->ItUSolve(max_iter, tolerance, use_tol, *in.vector_, out->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::ItUSolve() failed");
@@ -3704,6 +3793,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -3719,6 +3810,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ILU0Factorize();
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -3761,6 +3854,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -3790,6 +3885,8 @@ namespace rocalution
         {
             bool err
                 = this->matrix_->ItILU0Factorize(alg, option, max_iter, tolerance, niter, history);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->GetFormat() == CSR) && (this->is_host_() == true))
             {
@@ -3835,6 +3932,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -3857,6 +3956,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ILUTFactorize(t, maxrow);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -3899,6 +4000,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -3933,6 +4036,8 @@ namespace rocalution
                     structure.SymbolicPower(p + 1);
 
                     bool err = this->matrix_->ILUpFactorizeNumeric(p, *structure.matrix_);
+
+                    // LCOV_EXCL_START
 
                     if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
                     {
@@ -3980,6 +4085,8 @@ namespace rocalution
                         }
                     }
 
+                    // LCOV_EXCL_STOP
+
                     // without control levels
                 }
                 else
@@ -3991,6 +4098,8 @@ namespace rocalution
                     this->MatrixAdd(values);
 
                     bool err = this->matrix_->ILU0Factorize();
+
+                    // LCOV_EXCL_START
 
                     if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
                     {
@@ -4035,6 +4144,8 @@ namespace rocalution
                             this->MoveToAccelerator();
                         }
                     }
+
+                    // LCOV_EXCL_STOP
                 }
             }
         }
@@ -4063,6 +4174,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ICFactorize(inv_diag->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4107,6 +4220,8 @@ namespace rocalution
                     inv_diag->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -4141,6 +4256,8 @@ namespace rocalution
             permutation->CloneBackend(*this);
 
             bool err = this->matrix_->MultiColoring(num_colors, size_colors, permutation->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4183,6 +4300,8 @@ namespace rocalution
                     permutation->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -4212,6 +4331,8 @@ namespace rocalution
             permutation->CloneBackend(*this);
 
             bool err = this->matrix_->MaximalIndependentSet(size, permutation->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4255,6 +4376,8 @@ namespace rocalution
                     permutation->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -4282,6 +4405,8 @@ namespace rocalution
             permutation->Allocate(vec_perm_name, this->GetLocalM());
 
             bool err = this->matrix_->ZeroBlockPermutation(size, permutation->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4325,6 +4450,8 @@ namespace rocalution
                     permutation->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -4345,6 +4472,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Householder(idx, beta, vec->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
             {
@@ -4385,6 +4514,8 @@ namespace rocalution
                     vec->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -4400,6 +4531,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->QRDecompose();
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
             {
@@ -4442,6 +4575,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -4467,6 +4602,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->QRSolve(*in.vector_, out->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
             {
@@ -4511,6 +4648,8 @@ namespace rocalution
                     out->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -4534,6 +4673,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Permute(*permutation.vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4578,6 +4719,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -4605,6 +4748,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->PermuteBackward(*permutation.vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == COO))
             {
@@ -4650,6 +4795,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -4676,6 +4823,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->CMK(permutation->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4716,6 +4865,8 @@ namespace rocalution
                     permutation->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
         std::string vec_name      = "CMK permutation of " + this->object_name_;
@@ -4745,6 +4896,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->RCMK(permutation->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4786,6 +4939,8 @@ namespace rocalution
                     permutation->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
         std::string vec_name      = "RCMK permutation of " + this->object_name_;
@@ -4815,6 +4970,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ConnectivityOrder(permutation->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4858,6 +5015,8 @@ namespace rocalution
                     permutation->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
         std::string vec_name      = "ConnectivityOrder permutation of " + this->object_name_;
@@ -4878,6 +5037,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->SymbolicPower(p);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -4920,6 +5081,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -4949,6 +5112,8 @@ namespace rocalution
 #endif
 
         bool err = this->matrix_->MatrixAdd(*mat.matrix_, alpha, beta, structure);
+
+        // LCOV_EXCL_START
 
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
@@ -4992,6 +5157,8 @@ namespace rocalution
             }
         }
 
+        // LCOV_EXCL_STOP
+
 #ifdef DEBUG_MODE
         this->Check();
 #endif
@@ -5009,6 +5176,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Gershgorin(lambda_min, lambda_max);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5045,6 +5214,8 @@ namespace rocalution
                         2, "*** warning: LocalMatrix::Gershgorin() is performed on the host");
                 }
             }
+
+            // LCOV_EXCL_STop
         }
     }
 
@@ -5060,6 +5231,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Scale(alpha);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5102,6 +5275,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5121,6 +5296,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ScaleDiagonal(alpha);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5163,6 +5340,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5182,6 +5361,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ScaleOffDiagonal(alpha);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5225,6 +5406,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5244,6 +5427,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->AddScalar(alpha);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5286,6 +5471,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5305,6 +5492,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->AddScalarDiagonal(alpha);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5349,6 +5538,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5368,6 +5559,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->AddScalarOffDiagonal(alpha);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5412,6 +5605,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5460,6 +5655,8 @@ namespace rocalution
 
         bool err = this->matrix_->MatMatMult(*A.matrix_, *B.matrix_);
 
+        // LCOV_EXCL_START
+
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::MatMatMult() failed");
@@ -5505,6 +5702,8 @@ namespace rocalution
                 this->MoveToAccelerator();
             }
         }
+
+        // LCOV_EXCL_STOP
 
 #ifdef DEBUG_MODE
         this->Check();
@@ -5611,6 +5810,8 @@ namespace rocalution
         {
             bool err = this->matrix_->DiagonalMatrixMultR(*diag.vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::DiagonalMatrixMultR() failed");
@@ -5656,6 +5857,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5686,6 +5889,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->DiagonalMatrixMultL(*diag.vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5732,6 +5937,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5753,6 +5960,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Compress(drop_off);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5795,6 +6004,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5814,6 +6025,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Transpose();
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5856,6 +6069,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5881,6 +6096,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Transpose(T->matrix_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5924,6 +6141,8 @@ namespace rocalution
                     T->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -5939,6 +6158,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Sort();
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -5983,6 +6204,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -6002,6 +6225,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Key(row_key, col_key, val_key);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -6038,9 +6263,12 @@ namespace rocalution
                     LOG_VERBOSE_INFO(2, "*** warning: LocalMatrix::Key() is performed on the host");
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void LocalMatrix<ValueType>::AMGConnect(ValueType eps, LocalVector<int>* connections) const
     {
@@ -6403,6 +6631,7 @@ namespace rocalution
         prolong->Check();
 #endif
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     void
@@ -6466,9 +6695,11 @@ namespace rocalution
 
             if((status == false) && (this->is_host_() == true))
             {
+                // LCOV_EXCL_START
                 LOG_INFO("Computation of LocalMatrix::AMGGreedyAggregate() failed");
                 this->Info();
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             if(status == false)
@@ -6485,9 +6716,11 @@ namespace rocalution
                        *connections->vector_, aggregates->vector_, aggregate_root_nodes->vector_)
                    == false)
                 {
+                    // LCOV_EXCL_START
                     LOG_INFO("Computation of LocalMatrix::AMGGreedyAggregate() failed");
                     mat_host.Info();
                     FATAL_ERROR(__FILE__, __LINE__);
+                    // LCOV_EXCL_STOP
                 }
 
                 if(this->is_accel_() == true)
@@ -6730,6 +6963,7 @@ namespace rocalution
                                                                       prolong->matrix_,
                                                                       NULL);
 
+        // LCOV_EXCL_START
         if((err == false) && (csr_ptr->is_host_() == true) && (csr_ptr->GetFormat() == CSR))
         {
             LOG_INFO("Computation of LocalMatrix::ILU0Factorize() failed");
@@ -6819,6 +7053,7 @@ namespace rocalution
                 f2c_map.MoveToAccelerator();
                 prolong->MoveToAccelerator();
             }
+            // LCOV_EXCL_STOP
         }
         else
         {
@@ -6961,6 +7196,8 @@ namespace rocalution
         {
             bool err = this->matrix_->RSCoarsening(eps, CFmap->vector_, S->vector_);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::RSCoarsening() failed");
@@ -7003,6 +7240,8 @@ namespace rocalution
                     S->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
         std::string CFmap_name = "CF map of " + this->object_name_;
@@ -7343,6 +7582,8 @@ namespace rocalution
             bool err = this->matrix_->InitialPairwiseAggregation(
                 beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
+            // LCOV_EXCL_START
+
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
@@ -7387,6 +7628,8 @@ namespace rocalution
                     G->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -7431,6 +7674,7 @@ namespace rocalution
             bool err = this->matrix_->InitialPairwiseAggregation(
                 *mat.matrix_, beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
 
+            // LCOV_EXCL_START
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
                 LOG_INFO("Computation of LocalMatrix::InitialPairwiseAggregation() failed");
@@ -7479,6 +7723,7 @@ namespace rocalution
                     G->MoveToAccelerator();
                 }
             }
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -7516,6 +7761,8 @@ namespace rocalution
         {
             bool err = this->matrix_->FurtherPairwiseAggregation(
                 beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -7561,6 +7808,8 @@ namespace rocalution
                     G->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -7604,6 +7853,8 @@ namespace rocalution
         {
             bool err = this->matrix_->FurtherPairwiseAggregation(
                 *mat.matrix_, beta, nc, G->vector_, Gsize, rG, rGsize, ordering);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -7652,6 +7903,8 @@ namespace rocalution
                     G->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -7695,6 +7948,8 @@ namespace rocalution
         {
             bool err = this->matrix_->CoarsenOperator(
                 Ac->matrix_, nrow, ncol, *G.vector_, Gsize, rG, rGsize);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -7749,6 +8004,8 @@ namespace rocalution
                     Ac->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -7777,6 +8034,8 @@ namespace rocalution
         {
             bool err = this->matrix_->CreateFromMap(
                 *map.vector_, static_cast<int>(n), static_cast<int>(m));
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -7823,6 +8082,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -7855,6 +8116,8 @@ namespace rocalution
 
         bool err = this->matrix_->CreateFromMap(
             *map.vector_, static_cast<int>(n), static_cast<int>(m), pro->matrix_);
+
+        // LCOV_EXCL_START
 
         if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
         {
@@ -7905,6 +8168,8 @@ namespace rocalution
             }
         }
 
+        // LCOV_EXCL_STOP
+
 #ifdef DEBUG_MODE
         this->Check();
         pro->Check();
@@ -7923,6 +8188,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->LUFactorize();
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
             {
@@ -7965,6 +8232,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -8001,6 +8270,8 @@ namespace rocalution
             {
                 err = this->matrix_->FSAI(power, NULL);
             }
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8058,6 +8329,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -8079,6 +8352,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->SPAI();
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8121,6 +8396,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -8140,6 +8417,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->Invert();
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == DENSE))
             {
@@ -8182,6 +8461,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -8207,6 +8488,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ReplaceColumnVector(idx, *vec.vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8259,6 +8542,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -8285,6 +8570,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ExtractColumnVector(idx, vec->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8328,6 +8615,8 @@ namespace rocalution
                     vec->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -8349,6 +8638,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ReplaceRowVector(idx, *vec.vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8400,6 +8691,8 @@ namespace rocalution
                     this->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -8426,6 +8719,8 @@ namespace rocalution
         if(this->GetNnz() > 0)
         {
             bool err = this->matrix_->ExtractRowVector(idx, vec->vector_);
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8468,9 +8763,12 @@ namespace rocalution
                     vec->MoveToAccelerator();
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     void LocalMatrix<ValueType>::CompressAdd(const LocalVector<int64_t>&   l2g,
                                              const LocalVector<int64_t>&   global_ghost_col,
@@ -8565,6 +8863,8 @@ namespace rocalution
 #endif
     }
 
+    // LCOV_EXCL_STOP
+
     template <typename ValueType>
     void LocalMatrix<ValueType>::RSExtPIProlongNnz(int64_t                     global_column_begin,
                                                    int64_t                     global_column_end,
@@ -8630,6 +8930,8 @@ namespace rocalution
                 f2c->vector_,
                 prolong_int->matrix_,
                 (prolong_gst != NULL ? prolong_gst->matrix_ : NULL));
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8724,6 +9026,8 @@ namespace rocalution
                     }
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE
@@ -8818,6 +9122,8 @@ namespace rocalution
                 prolong_int->matrix_,
                 (prolong_gst != NULL ? prolong_gst->matrix_ : NULL),
                 (global_ghost_col != NULL ? global_ghost_col->vector_ : NULL));
+
+            // LCOV_EXCL_START
 
             if((err == false) && (this->is_host_() == true) && (this->GetFormat() == CSR))
             {
@@ -8933,6 +9239,8 @@ namespace rocalution
                     }
                 }
             }
+
+            // LCOV_EXCL_STOP
         }
 
 #ifdef DEBUG_MODE

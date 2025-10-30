@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -204,8 +204,10 @@ namespace rocalution
 
             if(this->op_->GetM() <= static_cast<int64_t>(this->coarse_size_))
             {
+                // LCOV_EXCL_START
                 LOG_INFO("Problem size too small for AMG, use Krylov solver instead");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             // Lists for the building procedure
@@ -237,8 +239,10 @@ namespace rocalution
             // The very first level is not allowed to fail
             if(success == false)
             {
+                // LCOV_EXCL_START
                 LOG_INFO("Could not build initial AMG level");
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             ++this->levels_;
@@ -409,6 +413,7 @@ namespace rocalution
     {
     }
 
+    // LCOV_EXCL_START
     template <class OperatorType, class VectorType, typename ValueType>
     void BaseAMG<OperatorType, VectorType, ValueType>::SetRestrictOperator(OperatorType** op)
     {
@@ -434,6 +439,7 @@ namespace rocalution
             "external operators");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template class BaseAMG<LocalMatrix<double>, LocalVector<double>, double>;
     template class BaseAMG<LocalMatrix<float>, LocalVector<float>, float>;

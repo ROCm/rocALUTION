@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +73,7 @@ namespace rocalution
         assert(_get_backend_descriptor()->init == true);
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     BaseRocalution<ValueType>::BaseRocalution(const BaseRocalution<ValueType>& src)
     {
@@ -81,6 +82,7 @@ namespace rocalution
         LOG_INFO("no copy constructor");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     BaseRocalution<ValueType>::~BaseRocalution()
@@ -88,6 +90,7 @@ namespace rocalution
         log_debug(this, "BaseRocalution::~BaseRocalution()");
     }
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     BaseRocalution<ValueType>&
         BaseRocalution<ValueType>::operator=(const BaseRocalution<ValueType>& src)
@@ -97,6 +100,7 @@ namespace rocalution
         LOG_INFO("no overloaded operator=()");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     void BaseRocalution<ValueType>::CloneBackend(const BaseRocalution<ValueType>& src)

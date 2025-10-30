@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,23 +27,27 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, std::string, unsigned int, int, int, int, int, int> rsamg_tuple;
+typedef std::tuple<int, std::string, unsigned int, int, int, int, int, int, int, std::string>
+    rsamg_tuple;
 
-std::vector<int>          rsamg_size           = {63, 134};
-std::vector<std::string>  rsamg_smoother       = {"Jacobi"};
-std::vector<unsigned int> rsamg_format         = {1, 7};
-std::vector<int>          rsamg_pre_iter       = {1, 2};
-std::vector<int>          rsamg_post_iter      = {1, 2};
-std::vector<int>          rsamg_cycle          = {0, 1};
-std::vector<int>          rsamg_scaling        = {0, 1};
-std::vector<int>          rsamg_rebuildnumeric = {0, 1};
+std::vector<int>          rsamg_size                = {63, 134};
+std::vector<std::string>  rsamg_smoother            = {"Jacobi"};
+std::vector<unsigned int> rsamg_format              = {1, 7};
+std::vector<int>          rsamg_pre_iter            = {1, 2};
+std::vector<int>          rsamg_post_iter           = {1, 2};
+std::vector<int>          rsamg_cycle               = {0, 1};
+std::vector<int>          rsamg_scaling             = {0, 1};
+std::vector<int>          rsamg_rebuildnumeric      = {0, 1};
+std::vector<int>          rsamg_use_acc             = {1};
+std::vector<std::string>  rsamg_coarsening_strategy = {"PMIS"};
 
 // Function to update tests if environment variable is set
 void update_rsamg()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         rsamg_size.clear();
         rsamg_smoother.clear();
@@ -53,6 +57,20 @@ void update_rsamg()
         rsamg_cycle.clear();
         rsamg_scaling.clear();
         rsamg_rebuildnumeric.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        rsamg_size.push_back(63);
+        rsamg_smoother.push_back("Jacobi");
+        rsamg_format.insert(rsamg_format.end(), {1, 7});
+        rsamg_pre_iter.insert(rsamg_pre_iter.end(), {1, 2});
+        rsamg_post_iter.insert(rsamg_post_iter.end(), {1, 2});
+        rsamg_cycle.insert(rsamg_cycle.end(), {0, 1});
+        rsamg_scaling.insert(rsamg_scaling.end(), {0, 1});
+        rsamg_rebuildnumeric.insert(rsamg_rebuildnumeric.end(), {0, 1});
+        rsamg_use_acc.push_back(0);
+        rsamg_coarsening_strategy.push_back("Greedy");
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -113,14 +131,16 @@ protected:
 Arguments setup_rsamg_arguments(rsamg_tuple tup)
 {
     Arguments arg;
-    arg.size           = std::get<0>(tup);
-    arg.smoother       = std::get<1>(tup);
-    arg.format         = std::get<2>(tup);
-    arg.pre_smooth     = std::get<3>(tup);
-    arg.post_smooth    = std::get<4>(tup);
-    arg.cycle          = std::get<5>(tup);
-    arg.ordering       = std::get<6>(tup);
-    arg.rebuildnumeric = std::get<7>(tup);
+    arg.size                = std::get<0>(tup);
+    arg.smoother            = std::get<1>(tup);
+    arg.format              = std::get<2>(tup);
+    arg.pre_smooth          = std::get<3>(tup);
+    arg.post_smooth         = std::get<4>(tup);
+    arg.cycle               = std::get<5>(tup);
+    arg.ordering            = std::get<6>(tup);
+    arg.rebuildnumeric      = std::get<7>(tup);
+    arg.use_acc             = std::get<8>(tup);
+    arg.coarsening_strategy = std::get<9>(tup);
     return arg;
 }
 
@@ -145,4 +165,6 @@ INSTANTIATE_TEST_CASE_P(ruge_stueben_amg,
                                          testing::ValuesIn(rsamg_post_iter),
                                          testing::ValuesIn(rsamg_cycle),
                                          testing::ValuesIn(rsamg_scaling),
-                                         testing::ValuesIn(rsamg_rebuildnumeric)));
+                                         testing::ValuesIn(rsamg_rebuildnumeric),
+                                         testing::ValuesIn(rsamg_use_acc),
+                                         testing::ValuesIn(rsamg_coarsening_strategy)));

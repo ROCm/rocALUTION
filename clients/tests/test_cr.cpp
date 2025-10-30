@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,23 +27,35 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, std::string, unsigned int> cr_tuple;
+typedef std::tuple<int, std::string, unsigned int, int> cr_tuple;
 
 std::vector<int>         cr_size = {7, 63};
 std::vector<std::string> cr_precond
     = {"None", "Chebyshev", "FSAI", "Jacobi", "SGS", "ILU", "ItILU0", "IC", "MCSGS"};
-std::vector<unsigned int> cr_format = {2, 4, 7};
+std::vector<unsigned int> cr_format  = {2, 4, 7};
+std::vector<int>          cr_use_acc = {1};
 
 // Function to update tests if environment variable is set
 void update_cr()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         cr_size.clear();
         cr_precond.clear();
         cr_format.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        cr_size.push_back(7);
+        cr_precond.insert(
+            cr_precond.end(),
+            {"None", "Chebyshev", "FSAI", "Jacobi", "SGS", "ILU", "ItILU0", "IC", "MCSGS"});
+        cr_format.insert(cr_format.end(), {2, 4, 7});
+        cr_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -92,6 +104,7 @@ Arguments setup_cr_arguments(cr_tuple tup)
     arg.size    = std::get<0>(tup);
     arg.precond = std::get<1>(tup);
     arg.format  = std::get<2>(tup);
+    arg.use_acc = std::get<3>(tup);
     return arg;
 }
 /* TODO there _MIGHT_ be some issue with float accuracy
@@ -111,4 +124,5 @@ INSTANTIATE_TEST_CASE_P(cr,
                         parameterized_cr,
                         testing::Combine(testing::ValuesIn(cr_size),
                                          testing::ValuesIn(cr_precond),
-                                         testing::ValuesIn(cr_format)));
+                                         testing::ValuesIn(cr_format),
+                                         testing::ValuesIn(cr_use_acc)));

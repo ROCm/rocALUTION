@@ -64,6 +64,4 @@
 #define assert_dbg(a) ;
 #endif
 
-#define SUPPORT_COMPLEX
-
 #endif // ROCALUTION_UTILS_DEF_HPP_

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,8 +54,10 @@ bool testing_saamg(Arguments argus)
     int          cycle               = argus.cycle;
     bool         scaling             = argus.ordering;
     bool         rebuildnumeric      = argus.rebuildnumeric;
+    bool         disable_accelerator = !argus.use_acc;
 
     // Initialize rocALUTION platform
+    disable_accelerator_rocalution(disable_accelerator);
     set_device_rocalution(device);
     init_rocalution();
 
@@ -103,11 +105,14 @@ bool testing_saamg(Arguments argus)
     assert(csr_val == NULL);
 
     // Move data to accelerator
-    A.MoveToAccelerator();
-    x.MoveToAccelerator();
-    b.MoveToAccelerator();
-    b2.MoveToAccelerator();
-    e.MoveToAccelerator();
+    if(!disable_accelerator)
+    {
+        A.MoveToAccelerator();
+        x.MoveToAccelerator();
+        b.MoveToAccelerator();
+        b2.MoveToAccelerator();
+        e.MoveToAccelerator();
+    }
 
     // Allocate x, b and e
     x.Allocate("x", A.GetN());
@@ -148,6 +153,8 @@ bool testing_saamg(Arguments argus)
     {
         return false;
     }
+
+    p.SetLumpingStrategy(LumpingStrategy::AddWeakConnections);
 
     p.SetCouplingStrength(0.001);
     p.SetInterpRelax(2.0 / 3.0);
@@ -225,6 +232,7 @@ bool testing_saamg(Arguments argus)
 
     // Stop rocALUTION platform
     stop_rocalution();
+    disable_accelerator_rocalution(false);
 
     for(int i = 0; i < levels - 1; ++i)
     {

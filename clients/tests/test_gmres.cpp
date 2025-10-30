@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, int, std::string, std::string, unsigned int> gmres_tuple;
+typedef std::tuple<int, int, std::string, std::string, unsigned int, int> gmres_tuple;
 
 std::vector<int>         gmres_size               = {7, 63};
 std::vector<int>         gmres_basis              = {20, 60};
@@ -37,18 +37,29 @@ std::vector<std::string> gmres_precond
     = {"None", "Chebyshev", "GS", "ILU", "ItILU0", "ILUT", "MCGS", "MCILU"};
 std::vector<std::string>  gmres_bad_precond = {"MCGS"};
 std::vector<unsigned int> gmres_format      = {1, 2, 5, 6};
+std::vector<int>          gmres_use_acc     = {1};
 
 // Function to update tests if environment variable is set
 void update_gmres()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         gmres_size.clear();
         gmres_basis.clear();
         gmres_precond.clear();
         gmres_format.clear();
+    }
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        gmres_size.push_back(7);
+        gmres_basis.push_back(20);
+        gmres_precond.insert(gmres_precond.end(),
+                             {"None", "Chebyshev", "GS", "ILU", "ItILU0", "ILUT", "MCGS", "MCILU"});
+        gmres_format.insert(gmres_format.end(), {1, 2, 5, 6});
+        gmres_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -103,7 +114,8 @@ protected:
     {
         if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                                "ROCALUTION_EMULATION_REGRESSION",
-                               "ROCALUTION_EMULATION_EXTENDED"}))
+                               "ROCALUTION_EMULATION_EXTENDED"})
+           && !is_env_var_set("ROCALUTION_CODE_COVERAGE"))
         {
             GTEST_SKIP();
         }
@@ -120,6 +132,7 @@ Arguments setup_gmres_arguments(gmres_tuple tup)
     arg.matrix  = std::get<2>(tup);
     arg.precond = std::get<3>(tup);
     arg.format  = std::get<4>(tup);
+    arg.use_acc = std::get<5>(tup);
     return arg;
 }
 
@@ -147,7 +160,8 @@ INSTANTIATE_TEST_CASE_P(gmres,
                                          testing::ValuesIn(gmres_basis),
                                          testing::ValuesIn(gmres_matrix),
                                          testing::ValuesIn(gmres_precond),
-                                         testing::ValuesIn(gmres_format)));
+                                         testing::ValuesIn(gmres_format),
+                                         testing::ValuesIn(gmres_use_acc)));
 
 INSTANTIATE_TEST_CASE_P(gmres_bad_precond,
                         parameterized_gmres_bad_precond,
@@ -155,4 +169,5 @@ INSTANTIATE_TEST_CASE_P(gmres_bad_precond,
                                          testing::ValuesIn(gmres_basis),
                                          testing::ValuesIn(gmres_bad_precond_matrix),
                                          testing::ValuesIn(gmres_bad_precond),
-                                         testing::ValuesIn(gmres_format)));
+                                         testing::ValuesIn(gmres_format),
+                                         testing::ValuesIn(gmres_use_acc)));

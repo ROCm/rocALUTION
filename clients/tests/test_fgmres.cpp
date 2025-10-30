@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,24 +27,36 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-typedef std::tuple<int, int, std::string, unsigned int> fgmres_tuple;
+typedef std::tuple<int, int, std::string, unsigned int, int> fgmres_tuple;
 
 std::vector<int>          fgmres_size    = {7, 63};
 std::vector<int>          fgmres_basis   = {20, 60};
 std::vector<std::string>  fgmres_precond = {"None", "SPAI", "TNS", "Jacobi", "GS", "ILUT", "MCGS"};
 std::vector<unsigned int> fgmres_format  = {1, 4, 5, 7};
+std::vector<int>          fgmres_use_acc = {1};
 
 // Function to update tests if environment variable is set
 void update_fgmres()
 {
     if(is_any_env_var_set({"ROCALUTION_EMULATION_SMOKE",
                            "ROCALUTION_EMULATION_REGRESSION",
-                           "ROCALUTION_EMULATION_EXTENDED"}))
+                           "ROCALUTION_EMULATION_EXTENDED",
+                           "ROCALUTION_CODE_COVERAGE"}))
     {
         fgmres_size.clear();
         fgmres_basis.clear();
         fgmres_precond.clear();
         fgmres_format.clear();
+    }
+
+    if(is_env_var_set("ROCALUTION_CODE_COVERAGE"))
+    {
+        fgmres_size.push_back(7);
+        fgmres_basis.push_back(20);
+        fgmres_precond.insert(fgmres_precond.end(),
+                              {"None", "SPAI", "TNS", "Jacobi", "GS", "ILUT", "MCGS"});
+        fgmres_format.insert(fgmres_format.end(), {1, 4, 5, 7});
+        fgmres_use_acc.push_back(0);
     }
 
     if(is_env_var_set("ROCALUTION_EMULATION_SMOKE"))
@@ -97,6 +109,7 @@ Arguments setup_fgmres_arguments(fgmres_tuple tup)
     arg.index   = std::get<1>(tup);
     arg.precond = std::get<2>(tup);
     arg.format  = std::get<3>(tup);
+    arg.use_acc = std::get<4>(tup);
     return arg;
 }
 
@@ -117,4 +130,5 @@ INSTANTIATE_TEST_CASE_P(fgmres,
                         testing::Combine(testing::ValuesIn(fgmres_size),
                                          testing::ValuesIn(fgmres_basis),
                                          testing::ValuesIn(fgmres_precond),
-                                         testing::ValuesIn(fgmres_format)));
+                                         testing::ValuesIn(fgmres_format),
+                                         testing::ValuesIn(fgmres_use_acc)));

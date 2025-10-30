@@ -1,5 +1,5 @@
 # ########################################################################
-# Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+# Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +49,11 @@ set(ROCALUTION_TEST_SOURCES
   test_ruge_stueben_amg.cpp
   test_saamg.cpp
   test_uaamg.cpp
+# Other tests
+  test_preconditioner.cpp
+  test_itersolver.cpp
+  test_chebyshev.cpp
+  test_mixed_precision.cpp
 )
 
 if(NOT WIN32)

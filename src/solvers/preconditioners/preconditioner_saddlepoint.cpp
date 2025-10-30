@@ -168,7 +168,7 @@ namespace rocalution
 
         this->rhs_.CloneBackend(*this->op_);
         this->rhs_1_.CloneBackend(*this->op_);
-        this->rhs_1_.CloneBackend(*this->op_);
+        this->rhs_2_.CloneBackend(*this->op_);
 
         this->permutation_.CloneBackend(this->x_);
 
@@ -266,6 +266,7 @@ namespace rocalution
         log_debug(this, "DiagJacobiSaddlePointPrecond::Solve()", " #*# end");
     }
 
+    // LCOV_EXCL_START
     template <class OperatorType, class VectorType, typename ValueType>
     void DiagJacobiSaddlePointPrecond<OperatorType, VectorType, ValueType>::MoveToHostLocalData_(
         void)
@@ -328,6 +329,7 @@ namespace rocalution
             this->S_solver_->MoveToAccelerator();
         }
     }
+    // LCOV_EXCL_STOP
 
     template class DiagJacobiSaddlePointPrecond<LocalMatrix<double>, LocalVector<double>, double>;
     template class DiagJacobiSaddlePointPrecond<LocalMatrix<float>, LocalVector<float>, float>;

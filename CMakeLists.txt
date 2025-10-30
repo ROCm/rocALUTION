@@ -72,11 +72,11 @@ option(BUILD_CLIENTS_SAMPLES "Build examples" ON)
 option(BUILD_VERBOSE "Output additional build information" OFF)
 option(BUILD_CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(BUILD_ADDRESS_SANITIZER "Build with address sanitizer enabled" OFF)
-option(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY "Build with file/folder reorg with backward compatibility enabled" OFF)
 option(BUILD_GLOBALTYPE_64 "Support global number of rows / columns exceeding 32 bits" OFF)
 option(BUILD_LOCALTYPE_64 "Support local number of rows / columns exceeding 32 bits" OFF)
 option(BUILD_PTRTYPE_64 "Support local number of non-zeros exceeding 32 bits" OFF)
 option(BUILD_OPTCPU "Enable all instruction subsets supported by the local machine" OFF)
+option(BUILD_SUPPORT_COMPLEX "Enable complex number support" ON)
 
 # Dependencies
 include(cmake/Dependencies.cmake)
@@ -152,7 +152,7 @@ endif()
 
 
 # Setup version
-rocm_setup_version(VERSION "4.0.0")
+rocm_setup_version(VERSION "4.0.1")
 
 if(BUILD_CLIENTS_SAMPLES OR BUILD_CLIENTS_BENCHMARKS OR BUILD_CLIENTS_TESTS)
   set( BUILD_CLIENTS ON )
@@ -252,7 +252,7 @@ if(BUILD_CODE_COVERAGE)
   #
   add_custom_command(TARGET coverage_output
     COMMAND lcov --directory . --base-directory . --capture -o lcoverage/raw_main_coverage.info
-    COMMAND lcov --remove lcoverage/raw_main_coverage.info "'${CMAKE_SOURCE_DIR}/src/utils/rocsparseio.*'" "'${CMAKE_SOURCE_DIR}/src/base/host/host_io.*'" "'${CMAKE_SOURCE_DIR}/clients/*'" "'${CMAKE_SOURCE_DIR}/build/*'" "'/opt/*'" "'/usr/*'" -o lcoverage/main_coverage.info
+    COMMAND lcov --remove lcoverage/raw_main_coverage.info "'${CMAKE_SOURCE_DIR}/src/utils/*'" "'${CMAKE_SOURCE_DIR}/src/base/host/host_io.*'" "'${CMAKE_SOURCE_DIR}/clients/*'" "'${CMAKE_SOURCE_DIR}/build/*'" "'/opt/*'" "'/usr/*'" -o lcoverage/main_coverage.info
     COMMAND genhtml lcoverage/main_coverage.info --output-directory lcoverage
     )
 

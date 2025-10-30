@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2023 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1055,9 +1055,11 @@ namespace rocalution
 
             if((err == false) && (this->is_host_() == true))
             {
+                // LCOV_EXCL_START
                 LOG_INFO("Computation of LocalVector::Restriction() fail");
                 this->Info();
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             if(err == false)
@@ -1072,9 +1074,11 @@ namespace rocalution
 
                 if(this->vector_->Restriction(*vec_fine_tmp.vector_, *map_tmp.vector_) == false)
                 {
+                    // LCOV_EXCL_START
                     LOG_INFO("Computation of LocalVector::Restriction() fail");
                     this->Info();
                     FATAL_ERROR(__FILE__, __LINE__);
+                    // LCOV_EXCL_STOP
                 }
 
                 LOG_VERBOSE_INFO(
@@ -1105,9 +1109,11 @@ namespace rocalution
 
             if((err == false) && (this->is_host_() == true))
             {
+                // LCOV_EXCL_START
                 LOG_INFO("Computation of LocalVector::Prolongation() fail");
                 this->Info();
                 FATAL_ERROR(__FILE__, __LINE__);
+                // LCOV_EXCL_STOP
             }
 
             if(err == false)
@@ -1122,9 +1128,11 @@ namespace rocalution
 
                 if(this->vector_->Prolongation(*vec_coarse_tmp.vector_, *map_tmp.vector_) == false)
                 {
+                    // LCOV_EXCL_START
                     LOG_INFO("Computation of LocalVector::Prolongation() fail");
                     this->Info();
                     FATAL_ERROR(__FILE__, __LINE__);
+                    // LCOV_EXCL_STOP
                 }
 
                 LOG_VERBOSE_INFO(

@@ -1,5 +1,5 @@
 /* ************************************************************************
- * Copyright (C) 2018-2024 Advanced Micro Devices, Inc. All rights Reserved.
+ * Copyright (C) 2018-2025 Advanced Micro Devices, Inc. All rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@
 namespace rocalution
 {
 
+    // LCOV_EXCL_START
     template <typename ValueType>
     HostMatrixDENSE<ValueType>::HostMatrixDENSE()
     {
@@ -51,6 +52,7 @@ namespace rocalution
         LOG_INFO("no default constructor");
         FATAL_ERROR(__FILE__, __LINE__);
     }
+    // LCOV_EXCL_STOP
 
     template <typename ValueType>
     HostMatrixDENSE<ValueType>::HostMatrixDENSE(const Rocalution_Backend_Descriptor& local_backend)
@@ -366,7 +368,7 @@ namespace rocalution
         assert(cast_vec != NULL);
         assert(cast_vec->GetSize() >= this->nrow_ - idx);
 
-        ValueType s = static_cast<ValueType>(0);
+        double s = 0.0;
 
         for(int i = 1; i < this->nrow_ - idx; ++i)
         {
@@ -375,30 +377,32 @@ namespace rocalution
 
         for(int i = idx + 1; i < this->nrow_; ++i)
         {
-            s += cast_vec->vec_[i - idx] * cast_vec->vec_[i - idx];
+            s += std::norm(cast_vec->vec_[i - idx]);
         }
 
-        if(s == static_cast<ValueType>(0))
+        if(s == 0)
         {
             beta = static_cast<ValueType>(0);
         }
         else
         {
             ValueType aii = this->mat_.val[DENSE_IND(idx, idx, this->nrow_, this->ncol_)];
+            ValueType nrm = std::sqrt(std::norm(aii) + s);
 
-            if(aii <= static_cast<ValueType>(0))
+            if(aii == ValueType(0))
             {
-                aii -= sqrt(aii * aii + s);
+                aii += nrm;
             }
             else
             {
-                aii += sqrt(aii * aii + s);
+                aii += aii / std::sqrt(std::norm(aii)) * nrm;
             }
 
-            ValueType squared = aii * aii;
-            beta              = static_cast<ValueType>(2) * squared / (s + squared);
+            double squared = std::norm(aii);
+            beta           = static_cast<ValueType>(2.0 * squared / (s + squared));
 
-            aii = static_cast<ValueType>(1) / aii;
+            cast_vec->vec_[0] = static_cast<ValueType>(1);
+            aii               = static_cast<ValueType>(1) / aii;
             for(int i = 1; i < this->nrow_ - idx; ++i)
             {
                 cast_vec->vec_[i] *= aii;
@@ -431,7 +435,7 @@ namespace rocalution
                     ValueType sum = this->mat_.val[DENSE_IND(i, aj, this->nrow_, this->ncol_)];
                     for(int ai = i + 1; ai < this->nrow_; ++ai)
                     {
-                        sum += v.vec_[ai - i]
+                        sum += rocalution_conj(v.vec_[ai - i])
                                * this->mat_.val[DENSE_IND(ai, aj, this->nrow_, this->ncol_)];
                     }
 
