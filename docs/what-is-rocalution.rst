@@ -99,7 +99,7 @@ You can improve solver performance using a broad set of preconditioners:
   - Additive Schwarz and Restricted Additive Schwarz methods
   - Variable-type preconditioners
 
-Design and Portability
+Design and portability
 ------------------------------------------------------------------------
 
 rocALUTION is built on a generic and robust design that allows you to extend the library with new solvers, preconditioners, and hardware backends.
