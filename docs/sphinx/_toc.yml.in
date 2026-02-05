@@ -22,7 +22,7 @@ subtrees:
     - file: how-to/include-rocALUTION.rst
       title: Include rocALUTION
 
-  - caption: Samples
+  - caption: Examples
     entries:
     - file: tutorials/rocALUTION-client-examples
 

@@ -8,10 +8,10 @@ What is rocALUTION?
 ======================
 
 rocALUTION is a sparse linear algebra library designed for fine-grained parallelism on modern hardware.
-Use rocALUTION to solve large sparse linear systems efficiently on CPUs and GPUs using the AMD ROCm runtime and toolchains.
+Use rocALUTION to efficiently solve large sparse linear systems on CPUs and GPUs using the AMD ROCm runtime and toolchains.
 The library targets multi-core CPUs, many-core processors, and AMD GPUs.
-Its primary goal is to provide a portable, high-performance framework for iterative sparse solvers while hiding backend-specific complexity from you.
-rocALUTION acts as middleware between parallel backends and and application-specific packages.
+Its primary goal is to provide a portable, high-performance framework for iterative sparse solvers while hiding backend-specific complexity.
+rocALUTION acts as middleware between parallel backends and application-specific packages.
 Implemented in C++ and HIP, rocALUTION offers a flexible and extensible design that integrates easily with other scientific computing libraries.
 
 Overview

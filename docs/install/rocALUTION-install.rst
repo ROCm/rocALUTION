@@ -7,7 +7,7 @@
 Install rocALUTION
 ********************************
 
-You can install rocALUTION as part of the AMD ROCm software stack or the HIP SDK for Windows, or you can build it directly from source.
+You can install rocALUTION as part of the AMD ROCm software stack or `HIP SDK <https://rocm.docs.amd.com/projects/install-on-windows/en/latest/>`__ for Windows, or you can build it directly from source.
 The installation method you choose depends on your operating system and whether you need a custom configuration, such as multi-node execution.
 
 Install on Linux
@@ -25,18 +25,18 @@ Prerequisites
 
 Building rocALUTION from source on Linux requires the following prerequisites:
 
-- `CMake <https://cmake.org/>`_
-- `rocBLAS <https://rocm.docs.amd.com/projects/rocBLAS/en/latest/index.html>`_
-- `rocSPARSE <https://rocm.docs.amd.com/projects/rocSPARSE/en/latest/index.html>`_
-- `rocRAND <https://rocm.docs.amd.com/projects/rocRAND/en/latest/index.html>`_
-- `rocPRIM <https://rocm.docs.amd.com/projects/rocPRIM/en/latest/index.html>`_
+- `CMake <https://cmake.org/>`__
+- `rocBLAS <https://rocm.docs.amd.com/projects/rocBLAS/en/latest/index.html>`__
+- `rocSPARSE <https://rocm.docs.amd.com/projects/rocSPARSE/en/latest/index.html>`__
+- `rocRAND <https://rocm.docs.amd.com/projects/rocRAND/en/latest/index.html>`__
+- `rocPRIM <https://rocm.docs.amd.com/projects/rocPRIM/en/latest/index.html>`__
 
 Ensure that these components are installed before building rocALUTION. Refer to their respective documentation for installation instructions.
 
 For multi-node configurations, you must also install:
 
-- `OpenMP <https://www.openmp.org/>`_
-- `MPI <https://www.mcs.anl.gov/research/projects/mpi/>`_
+- `OpenMP <https://www.openmp.org/>`__
+- `MPI <https://www.mcs.anl.gov/research/projects/mpi/>`__
 
 Build from source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -74,6 +74,18 @@ Build from source
       make install
 
    The library is installed under the ROCm installation directory.
+
+Test your rocALUTION installation on Linux
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To test your installation on Linux, run a CG solver on a Laplacian matrix:
+
+.. code:: shell
+
+   cd rocALUTION; cd build
+   wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
+   gzip -d gr_30_30.mtx.gz
+   ./clients/staging/cg gr_30_30.mtx
 
 Install on Windows
 --------------------------------
@@ -139,3 +151,28 @@ Build from source
       python3 rmake.py -ci
 
    You can also omit the ``i`` option to build the library and clients without installing the library.
+
+
+Test your rocALUTION installation on Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To test your installation on Windows, run a CG solver on a Laplacian matrix. On Windows, use Windows Subsystem for Linux (WSL).
+
+1. Install WSL (run in PowerShell as Administrator):
+
+   .. code-block:: powershell
+
+      wsl --install
+
+2. Reboot and open the **Ubuntu** application.
+
+3. Run the test:
+
+   .. code-block:: shell
+
+      sudo apt update
+      sudo apt install -y wget gzip
+      cd rocALUTION/build
+      wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
+      gzip -d gr_30_30.mtx.gz
+      ./clients/staging/cg gr_30_30.mtx

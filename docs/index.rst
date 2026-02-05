@@ -33,7 +33,7 @@ The rocALUTION public repository is located at `https://github.com/ROCm/rocALUTI
     * :doc:`Extend rocALUTION <how-to/extending-rocALUTION>`
     * :doc:`Include rocALUTION in your source code <how-to/include-rocALUTION>`
 
-  .. grid-item-card:: Samples
+  .. grid-item-card:: Examples
 
     * :ref:`clients`
 
