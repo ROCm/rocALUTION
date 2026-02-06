@@ -78,14 +78,38 @@ Build from source
 Test your rocALUTION installation on Linux
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To test your installation on Linux, run a CG solver on a Laplacian matrix:
+To verify that rocALUTION was built and installed correctly on Linux, run the Conjugate Gradient (CG) solver client on a sample Laplacian matrix.
 
-.. code:: shell
+These steps assume that rocALUTION was built with client applications enabled (the default configuration).
 
-   cd rocALUTION; cd build
-   wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
-   gzip -d gr_30_30.mtx.gz
-   ./clients/staging/cg gr_30_30.mtx
+1. Open a terminal and ensure the ROCm environment is available
+   (for example, ``rocminfo`` and ``hipcc`` are in your ``PATH``).
+
+2. Change to the rocALUTION build directory:
+
+   .. code-block:: shell
+
+      cd rocALUTION/build
+
+3. Download a test matrix in Matrix Market format:
+
+   .. code-block:: shell
+
+      wget https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
+
+4. Extract the matrix file:
+
+   .. code-block:: shell
+
+      gzip -d gr_30_30.mtx.gz
+
+5. Run the CG solver client:
+
+   .. code-block:: shell
+
+      ./clients/staging/cg gr_30_30.mtx
+
+If the installation is successful, the solver prints iteration and residual information and converges without errors.
 
 Install on Windows
 --------------------------------
@@ -156,23 +180,33 @@ Build from source
 Test your rocALUTION installation on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To test your installation on Windows, run a CG solver on a Laplacian matrix. On Windows, use Windows Subsystem for Linux (WSL).
+To verify that rocALUTION was built correctly on Windows, run the Conjugate Gradient (CG) solver client on a sample Laplacian matrix using the Windows-built executables.
 
-1. Install WSL (run in PowerShell as Administrator):
+1. Open a **Developer Command Prompt** or **PowerShell** with your HIP environment initialized
+   (ensure ``hipcc`` is available in your ``PATH``).
 
-   .. code-block:: powershell
-
-      wsl --install
-
-2. Reboot and open the **Ubuntu** application.
-
-3. Run the test:
+2. Change to the rocALUTION build directory:
 
    .. code-block:: shell
 
-      sudo apt update
-      sudo apt install -y wget gzip
-      cd rocALUTION/build
-      wget ftp://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
-      gzip -d gr_30_30.mtx.gz
-      ./clients/staging/cg gr_30_30.mtx
+      cd rocALUTION\build
+
+3. Download a test matrix in Matrix Market format:
+
+   .. code-block:: shell
+
+      curl -LO https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
+
+4. Extract the matrix file:
+
+   .. code-block:: shell
+
+      tar -xzf gr_30_30.mtx.gz
+
+5. Run the CG solver client:
+
+   .. code-block:: shell
+
+      .\clients\staging\cg.exe gr_30_30.mtx
+
+If the installation is successful, the solver prints iteration information and converges to a solution without errors.
