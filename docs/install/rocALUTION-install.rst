@@ -85,11 +85,11 @@ These steps assume that rocALUTION was built with client applications enabled (t
 1. Open a terminal and ensure the ROCm environment is available
    (for example, ``rocminfo`` and ``hipcc`` are in your ``PATH``).
 
-2. Change to the rocALUTION build directory:
+2. Change to the CG solver client directory:
 
    .. code-block:: shell
 
-      cd rocALUTION/build
+      cd rocALUTION/build/release/clients/staging
 
 3. Download a test matrix in Matrix Market format:
 
@@ -107,7 +107,7 @@ These steps assume that rocALUTION was built with client applications enabled (t
 
    .. code-block:: shell
 
-      ./clients/staging/cg gr_30_30.mtx
+      ./cg gr_30_30.mtx
 
 If the installation is successful, the solver prints iteration and residual information and converges without errors.
 
@@ -178,18 +178,25 @@ Build from source
 
 
 Test your rocALUTION installation on Windows
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To verify that rocALUTION was built correctly on Windows, run the Conjugate Gradient (CG) solver client on a sample Laplacian matrix using the Windows-built executables.
+To verify that rocALUTION was built correctly, run the Conjugate Gradient (CG) solver client on a sample Laplacian matrix.
 
-1. Open a **Developer Command Prompt** or **PowerShell** with your HIP environment initialized
+1. Open a **Command Prompt** or **PowerShell** with your HIP environment initialized
    (ensure ``hipcc`` is available in your ``PATH``).
 
-2. Change to the rocALUTION build directory:
+2. Change to the directory containing the built CG client.
+   For a Release build:
 
    .. code-block:: shell
 
-      cd rocALUTION\build
+      cd rocALUTION\build\release\clients\staging
+
+   For a Debug build:
+
+   .. code-block:: shell
+
+      cd rocALUTION\build\debug\clients\staging
 
 3. Download a test matrix in Matrix Market format:
 
@@ -197,16 +204,16 @@ To verify that rocALUTION was built correctly on Windows, run the Conjugate Grad
 
       curl -LO https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/laplace/gr_30_30.mtx.gz
 
-4. Extract the matrix file:
+4. Decompress the matrix file:
 
    .. code-block:: shell
 
-      tar -xzf gr_30_30.mtx.gz
+      gunzip gr_30_30.mtx.gz
 
-5. Run the CG solver client:
+5. Run the CG solver:
 
    .. code-block:: shell
 
-      .\clients\staging\cg.exe gr_30_30.mtx
+      .\cg.exe gr_30_30.mtx
 
 If the installation is successful, the solver prints iteration information and converges to a solution without errors.
