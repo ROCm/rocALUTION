@@ -85,11 +85,18 @@ These steps assume that rocALUTION was built with client applications enabled (t
 1. Open a terminal and ensure the ROCm environment is available
    (for example, ``rocminfo`` and ``hipcc`` are in your ``PATH``).
 
-2. Change to the CG solver client directory:
+2. Change to the directory containing the built CG client.
+   For a Release build:
 
    .. code-block:: shell
 
-      cd rocALUTION/build/release/clients/staging
+      cd rocALUTION\build\release\clients\staging
+
+   For a Debug build:
+
+   .. code-block:: shell
+
+      cd rocALUTION\build\debug\clients\staging
 
 3. Download a test matrix in Matrix Market format:
 
