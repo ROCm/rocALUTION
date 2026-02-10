@@ -8,28 +8,62 @@
 rocALUTION design and philosophy
 **********************************
 
-rocALUTION is written in C++ and HIP.
+rocALUTION is implemented in C++ and HIP and is designed to separate algorithmic logic from hardware-specific details.
+This allows you to write portable sparse linear algebra code without binding it to a specific execution device at compile time.
 
-The rocALUTION objects are designed to be separate from the actual hardware specification.
-Once you declare a matrix, a vector, or a solver, these rocALUTION objects are initially allocated on the host (CPU).
-Then, every object can be moved to a selected accelerator using a simple function call.
-The whole execution mechanism is based on the Run-Time Type Information (RTTI), which allows you to select the location and method for performing the operations at run-time.
-This is in contrast to the template-based libraries that require this information at compile-time.
+Design overview
+-----------------
 
-The philosophy of the library is to abstract the hardware-specific functions and routines from the actual program that describes the algorithm.
-It is difficult and almost impossible for most of the large simulation softwares based on sparse computation to adapt and port their implementation to suit every new technology.
-On the other hand, the new high performance accelerators and devices can decrease the computational time significantly in many critical parts.
+rocALUTION objects are intentionally decoupled from the underlying hardware:
 
-This abstraction layer of the hardware-specific routines is the core of the rocALUTION design.
-It is built to explore fine-grained level of parallelism suited for multi/many-core devices.
-This is in contrast to most of the parallel sparse libraries that are based mainly on domain decomposition techniques.
-That's why the design of the iterative solvers and preconditioners is very different.
-Another cornerstone of rocALUTION is the native support for accelerators where the memory allocation, transfers, and specific hardware functions are handled internally in the library.
+- When you declare a matrix, vector, or solver, the object is initially allocated on the host (CPU).
+- You can move any object to a selected accelerator using a simple function call.
+- The execution model is based on run-time type information (RTTI), allowing you to select the execution location and method at run time.
+- This approach differs from template-based libraries, which require hardware decisions to be made at compile time.
 
-rocALUTION doesn't make the use of accelerator technologies mandatory.
-Even if you offload your algorithms and solvers on the accelerator device, the same source code can be compiled and executed on a system without an accelerator.
+This design allows you to use the same source code across different hardware configurations without modification.
 
-Naturally, not all routines and algorithms can be performed efficiently on many-core systems (i.e. on accelerators).
-To provide full functionality, the library has internal mechanisms to check if a particular routine is implemented on the accelerator.
-If not, the object is moved to the host and the routine is computed there.
-This ensures that your code runs on any accelerator, regardless of the available functionality for it.
+Hardware abstraction philosophy
+--------------------------------
+
+The core philosophy of rocALUTION is to abstract hardware-specific functions from the code that describes your algorithm.
+This abstraction addresses two common challenges:
+
+1. Large simulation codes based on sparse computations are difficult to port and maintain across rapidly evolving hardware architectures.
+2. Modern high-performance accelerators can significantly reduce execution time for critical computational kernels.
+
+By separating these concerns, rocALUTION enables you to focus on algorithm design while still benefiting from hardware acceleration.
+
+Parallelism and accelerator support
+-------------------------------------
+
+The hardware abstraction layer is a central element of the rocALUTION design:
+
+- It is built to explore fine-grained parallelism suitable for multi-core and many-core devices.
+- This approach differs from many parallel sparse libraries that rely primarily on domain decomposition techniques.
+- As a result, the design of iterative solvers and preconditioners in rocALUTION is fundamentally different.
+
+Another key aspect of the design is native accelerator support:
+
+- Memory allocation, data transfers, and hardware-specific operations are handled internally by the library.
+- You do not need to manage device-specific details explicitly in your application code.
+
+Optional accelerator usage
+---------------------------
+
+rocALUTION does not require you to use accelerator hardware:
+
+- You can compile and run the same source code on systems with or without accelerators.
+- Offloading algorithms and solvers to an accelerator is optional and does not affect code portability.
+
+Fallback mechanisms
+---------------------
+
+Not all routines can be executed efficiently on many-core accelerator devices.
+To ensure full functionality, rocALUTION includes internal fallback mechanisms:
+
+- The library checks at run time whether a specific routine is implemented on the selected accelerator.
+- If the routine is not available, the associated object is moved back to the host.
+- The computation is then performed on the CPU automatically.
+
+This behavior ensures that your application runs correctly on any supported accelerator, regardless of feature availability.
