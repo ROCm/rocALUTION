@@ -8,27 +8,24 @@ subtrees:
 
   - caption: Install
     entries:
-    - file: install/rocALUTION-prerequisites.rst
-    - file: install/rocALUTION-general-install.rst
-    - file: install/rocALUTION-linux-build-and-install.rst
-    - file: install/rocALUTION-windows-build-and-install.rst
-  
+    - file: install/rocALUTION-install.rst
+
   - caption: Conceptual
     entries:
     - file: conceptual/rocALUTION-design.rst
     - file: conceptual/rocALUTION-organization.rst
-    
+
   - caption: How to
     entries:
     - file: how-to/extending-rocALUTION.rst
       title: Extend rocALUTION
     - file: how-to/include-rocALUTION.rst
       title: Include rocALUTION
-  
-  - caption: Samples
+
+  - caption: Examples
     entries:
     - file: tutorials/rocALUTION-client-examples
-  
+
   - caption: Reference
     entries:
     - file: reference/rocALUTION-api-basics.rst
@@ -40,7 +37,6 @@ subtrees:
     - file: reference/rocALUTION-api.rst
     - file: reference/rocALUTION-functionality-table.rst
     - file: reference/rocALUTION-library-notes.rst
-
 
   - caption: About
     entries:
