@@ -18,11 +18,7 @@ The rocALUTION public repository is located at `https://github.com/ROCm/rocALUTI
 
   .. grid-item-card:: Install
 
-    * :doc:`rocALUTION prerequisites <install/rocALUTION-prerequisites>`
-    * :doc:`rocALUTION installation <install/rocALUTION-general-install>`
-    
-      * :doc:`Installing rocALUTION on Linux <install/rocALUTION-linux-build-and-install>`
-      * :doc:`Installing rocALUTION on Windows <install/rocALUTION-windows-build-and-install>`
+    * :doc:`Install rocALUTION <install/rocALUTION-install>`
 
 .. grid:: 2
   :gutter: 3
@@ -37,7 +33,7 @@ The rocALUTION public repository is located at `https://github.com/ROCm/rocALUTI
     * :doc:`Extend rocALUTION <how-to/extending-rocALUTION>`
     * :doc:`Include rocALUTION in your source code <how-to/include-rocALUTION>`
 
-  .. grid-item-card:: Samples
+  .. grid-item-card:: Examples
 
     * :ref:`clients`
 
