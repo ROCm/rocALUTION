@@ -31,7 +31,7 @@ typedef std::tuple<int, std::string, unsigned int, int, int> idr_tuple;
 
 std::vector<int>          idr_size    = {7, 63};
 std::vector<std::string>  idr_precond = {"None", "SPAI", "GS", "ILU", "MCILU"};
-std::vector<unsigned int> idr_format  = {1, 4, 5, 6};
+std::vector<unsigned int> idr_format  = {1, 5, 6};
 std::vector<int>          idr_level   = {1, 2};
 std::vector<int>          idr_use_acc = {1};
 
