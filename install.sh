@@ -158,8 +158,8 @@ install_packages( )
   # OpenMP
   if [[ "${build_omp}" == true ]]; then
     library_dependencies_ubuntu+=( "libomp5" "libomp-dev" )
-    library_dependencies_centos+=( "" ) # TODO
-    library_dependencies_fedora+=( "" ) # TODO
+    library_dependencies_centos+=( "libomp-devel" )
+    library_dependencies_fedora+=( "libomp-devel" )
     library_dependencies_sles+=( "libgomp1" )
   fi
 
