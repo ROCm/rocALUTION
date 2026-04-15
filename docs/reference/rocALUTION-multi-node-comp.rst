@@ -69,13 +69,9 @@ The parallel manager class hosts the following functions:
 
 .. doxygenfunction:: rocalution::ParallelManager::SetMPICommunicator
 .. doxygenfunction:: rocalution::ParallelManager::Clear
-.. doxygenfunction:: rocalution::ParallelManager::GetGlobalSize
-.. doxygenfunction:: rocalution::ParallelManager::GetLocalSize
 .. doxygenfunction:: rocalution::ParallelManager::GetNumReceivers
 .. doxygenfunction:: rocalution::ParallelManager::GetNumSenders
 .. doxygenfunction:: rocalution::ParallelManager::GetNumProcs
-.. doxygenfunction:: rocalution::ParallelManager::SetGlobalSize
-.. doxygenfunction:: rocalution::ParallelManager::SetLocalSize
 .. doxygenfunction:: rocalution::ParallelManager::SetBoundaryIndex
 .. doxygenfunction:: rocalution::ParallelManager::SetReceivers
 .. doxygenfunction:: rocalution::ParallelManager::SetSenders
