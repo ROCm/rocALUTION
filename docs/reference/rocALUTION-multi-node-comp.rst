@@ -69,13 +69,17 @@ The parallel manager class hosts the following functions:
 
 .. doxygenfunction:: rocalution::ParallelManager::SetMPICommunicator
 .. doxygenfunction:: rocalution::ParallelManager::Clear
-.. doxygenfunction:: rocalution::ParallelManager::GetGlobalSize
-.. doxygenfunction:: rocalution::ParallelManager::GetLocalSize
+.. doxygenfunction:: rocalution::ParallelManager::GetGlobalNrow
+.. doxygenfunction:: rocalution::ParallelManager::GetGlobalNcol
+.. doxygenfunction:: rocalution::ParallelManager::GetLocalNrow
+.. doxygenfunction:: rocalution::ParallelManager::GetLocalNcol
 .. doxygenfunction:: rocalution::ParallelManager::GetNumReceivers
 .. doxygenfunction:: rocalution::ParallelManager::GetNumSenders
 .. doxygenfunction:: rocalution::ParallelManager::GetNumProcs
-.. doxygenfunction:: rocalution::ParallelManager::SetGlobalSize
-.. doxygenfunction:: rocalution::ParallelManager::SetLocalSize
+.. doxygenfunction:: rocalution::ParallelManager::SetGlobalNrow
+.. doxygenfunction:: rocalution::ParallelManager::SetGlobalNcol
+.. doxygenfunction:: rocalution::ParallelManager::SetLocalNrow
+.. doxygenfunction:: rocalution::ParallelManager::SetLocalNcol
 .. doxygenfunction:: rocalution::ParallelManager::SetBoundaryIndex
 .. doxygenfunction:: rocalution::ParallelManager::SetReceivers
 .. doxygenfunction:: rocalution::ParallelManager::SetSenders
@@ -92,7 +96,8 @@ Global matrices and vectors
 ===========================
 .. doxygenfunction:: rocalution::GlobalMatrix::GetInterior
 .. doxygenfunction:: rocalution::GlobalMatrix::GetGhost
-.. doxygenfunction:: rocalution::GlobalVector::GetInterior
+.. doxygenfunction:: rocalution::GlobalVector::GetInterior() const
+.. doxygenfunction:: rocalution::GlobalVector::GetInterior()
 
 The global matrices and vectors store their data via two local objects. For the global matrix, the interior can be access via the :cpp:func:`rocalution::GlobalMatrix::GetInterior` and :cpp:func:`rocalution::GlobalMatrix::GetGhost` functions, which point to two valid local matrices. Similarily, the global vector can be accessed by :cpp:func:`rocalution::GlobalVector::GetInterior`.
 

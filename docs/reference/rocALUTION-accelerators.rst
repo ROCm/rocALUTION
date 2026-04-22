@@ -5,7 +5,7 @@
 .. _backends:
 
 ******************************
-rocALUTIN accelerator support
+rocALUTION accelerator support
 ******************************
 
 The rocALUTION structure is embedded with the support for accelerator devices. It is recommended to use accelerators to decrease the computational time.
