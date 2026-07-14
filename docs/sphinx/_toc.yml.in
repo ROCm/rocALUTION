@@ -9,6 +9,7 @@ subtrees:
   - caption: Install
     entries:
     - file: install/rocALUTION-install.rst
+      title: Install rocALUTION
 
   - caption: Conceptual
     entries:
@@ -41,4 +42,5 @@ subtrees:
   - caption: About
     entries:
     - file: license
+
 
