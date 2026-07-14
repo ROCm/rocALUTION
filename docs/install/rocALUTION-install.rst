@@ -78,7 +78,7 @@ Given a version of rocALUTION, you must use versions of these dependencies that 
 Download rocALUTION
 ^^^^^^^^^^^^^^^^^^^^^
 
-You can find the rocALUTION source code in the `rocALUTION folder <https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocalution>`__ of the `rocm-libraries GitHub <https://github.com/ROCm/rocm-libraries>`__.
+You can find the rocALUTION source code in the `https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocalution <https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocalution>`__ repository.
 
 To limit your local checkout to only the rocALUTION project, configure ``sparse-checkout`` before you clone.
 The partial clone feature (``--filter=blob:none``) reduces how much data you download.

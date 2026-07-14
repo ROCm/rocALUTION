@@ -120,4 +120,5 @@ rocALUTION supports multiple sparse and dense matrix storage formats:
 - Diagonal (DIA)
 - Hybrid ELL and COO (HYB)
 
-rocALUTION is open source software released under the `MIT License <./license.html>`_. You can find the source code in the `rocm-libraries <https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocalution>`__ repository.
+rocALUTION is open source software released under the `MIT License <./license.html>`__. 
+You can find the source code in the `https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocalution <https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocalution>`__ repository.
